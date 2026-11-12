@@ -1,10 +1,12 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
+    "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
+    "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.test.tsx",
     "packages/react/src/utils/useFormatLocale.ts",
@@ -15,10 +17,12 @@
     "packages/react/src/utils/valueToPercent.ts"
   ],
   "sources": [
+    "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
+    "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.ts",
     "packages/react/src/utils/useIsHydrating.ts",
