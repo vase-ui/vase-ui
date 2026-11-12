@@ -4,6 +4,8 @@ import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
+const contextOptions = { timezoneId: 'UTC' };
+
 export default defineConfig({
   plugins: [vue(), vueJsx()],
   define: {
@@ -40,13 +42,25 @@ export default defineConfig({
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             enabled: true,
-            provider: playwright({ contextOptions: { timezoneId: 'UTC' } }),
+            provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
             commands: { renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
-              { browser: 'firefox', name: 'firefox' },
+              {
+                browser: 'firefox',
+                name: 'firefox',
+                // Vitest sets this preference to `true`. With that value, Firefox sometimes crashes
+                // a page when the page starts. With `false`, Vitest mocks a module by request
+                // interception, not by import map.
+                provider: playwright({
+                  contextOptions,
+                  launchOptions: {
+                    firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false },
+                  },
+                }),
+              },
               { browser: 'webkit', name: 'webkit' },
             ],
           },
