@@ -391,7 +391,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set.
-- A family whose server render depends on an id, a locale, a prehydration script or a portal adds a page to the Nuxt fixture, `fixtures/nuxt`. The fixture tests then read the server HTML of the page and hydrate the page.
+- A family whose server render depends on an id, a locale, a prehydration script or a portal adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`.
 
 The hydration state:
 
