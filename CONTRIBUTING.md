@@ -38,12 +38,15 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 
 | Command                                          | Function                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script and of the parity scripts. Then it runs ESLint, the Prettier check and `pnpm cost:check`.                                                                                                                                              |
+| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script, of the parity scripts and of the documentation scripts. Then it runs ESLint, the Prettier check, `pnpm cost:check` and `pnpm status:check`.                                                                                           |
 | `pnpm test:lint-rules`                           | Runs the tests of the lint rules in `eslint.config.js`.                                                                                                                                                                                                                                     |
 | `pnpm test:cost`                                 | Runs the tests of the cost script, `scripts/cost/render.ts`.                                                                                                                                                                                                                                |
 | `pnpm test:parity`                               | Runs the tests of the parity scripts in `scripts/parity`.                                                                                                                                                                                                                                   |
+| `pnpm test:docs`                                 | Runs the tests of the documentation scripts in `scripts/docs`.                                                                                                                                                                                                                              |
 | `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
 | `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
+| `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families`.                                                                                                                                                                                                           |
+| `pnpm status:check`                              | Fails when the status line of `README.md` differs from the family files in `parity/families`.                                                                                                                                                                                               |
 | `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
 | `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
@@ -51,6 +54,9 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
 | `pnpm build`                                     | Builds `packages/vue/dist`.                                                                                                                                                                                                                                                                 |
 | `pnpm check:package`                             | Builds the package with two fixture families. It checks that npm packs the license and the notices. Then it checks the result with publint, Are the Types Wrong and a consumer project.                                                                                                     |
+| `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders and the code samples in `docs`.                                                                                                                                                                               |
+| `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
+| `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
 | `pnpm test`                                      | Runs all tests.                                                                                                                                                                                                                                                                             |
 | `pnpm test:node`                                 | Runs the tests that have no DOM.                                                                                                                                                                                                                                                            |
 | `pnpm test:browser`                              | Runs the browser tests in Chromium, Firefox and WebKit.                                                                                                                                                                                                                                     |
@@ -60,12 +66,15 @@ To run one test file, add a part of its name: `pnpm test:chromium SinglePart`.
 
 `--upstream <path>` is the path of a local clone of Base UI. The scripts read the clone through git at the commit that they need, so the clone can be at another commit.
 
+The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck`, `pnpm docs:build` or `pnpm docs:dev`.
+
 ### Tool versions
 
 - `typescript` stays at version 6. The parity scripts use its compiler API. The main export of `typescript` 7 gives only its version.
 - `vue-component-meta` and `vue-tsc` must have the same version. The two packages then read an SFC with the same `@vue/language-core`.
 - `vue-component-meta` has a pnpm patch in `patches`. Without the patch, the package lists no exposed member of an SFC that has `generic`.
 - When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14` and install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
+- `vitepress` stays at exactly `2.0.0-alpha.21`, a prerelease. The stable release, 1.6.4, installs a second Vite from the 5.x line. `pnpm audit` lists advisories for that line, and no 5.x release corrects them. The prerelease uses the Vite of `packages/vue`. Install the stable 2.0 release when VitePress publishes it.
 
 ## Pull requests
 
@@ -606,6 +615,26 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 - A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
 - `pnpm parity:check` fails on a due row that has no such title.
+
+## Documentation site
+
+The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.github.io/vase-ui/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails.
+
+- A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
+- A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
+- A folder with pages is one sidebar group. The title of the group is the folder name with a capital first letter.
+- Each page in the navigation has `order: <whole number>` in its front matter. A group shows its pages in the sequence of `order`, then of title.
+- The title of a page in the navigation is its first-level heading.
+- The build fails when a page in the navigation has no `order` or no first-level heading.
+- A code sample is a Vue file under `docs/examples/<page>`. The page imports the file, renders it and shows its source with `<<<`, as `docs/quick-start.md` does. `pnpm docs:typecheck` then checks the sample against the built package.
+- `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
+- Text from `parity/` and from Base UI commits is data. Show it with text interpolation, never with `v-html`. ESLint refuses `v-html` in `docs/**/*.vue`. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
+- Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
+- A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
+- The status line shows `N of 38`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
+- The total, 38, is `BASE_UI_COMPONENT_COUNT` in `scripts/docs/components.ts`. `pnpm parity:extract --upstream <path> --counts` prints that number for the tracked commit.
+- The site uses the default theme of VitePress. Do not add the folder `docs/.vitepress/theme`. When that folder exists, VitePress uses it and not the default theme. A page imports its components from `docs/.vitepress/components`.
+- The text of a page follows [Voice](#voice).
 
 ## Text
 

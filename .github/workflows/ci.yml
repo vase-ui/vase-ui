@@ -32,6 +32,8 @@ jobs:
       - run: pnpm build
       - run: pnpm check:package
       - run: pnpm parity:check
+      - run: pnpm docs:typecheck
+      - run: pnpm docs:build
 
   test-node:
     runs-on: ubuntu-latest
