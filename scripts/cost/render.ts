@@ -9,7 +9,15 @@ const COUNTS = [
   'cache_creation_input_tokens',
   'cache_read_input_tokens',
 ] as const;
-const FIELDS = [...COUNTS, 'total'] as const;
+const FIELDS = [...COUNTS, 'cache_creation_5m', 'cache_creation_1h', 'total'] as const;
+
+const PRICED_TOKENS = [
+  ['input_tokens', 'input'],
+  ['cache_creation_5m', 'cache_write_5m'],
+  ['cache_creation_1h', 'cache_write_1h'],
+  ['cache_read_input_tokens', 'cache_read'],
+  ['output_tokens', 'output'],
+] as const;
 
 const MODEL_COLUMNS = [
   ['Output', 'output_tokens'],
@@ -22,23 +30,38 @@ const WORK_LABELS = new Map([
   ['research and plan', 'Research and plan'],
   ['spikes', 'Experiments'],
   ['coordination', 'Coordination'],
+  ['other', 'Other'],
 ]);
 
 const MEASURED_AT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/;
+const READ_ON = /^\d{4}-\d{2}-\d{2}$/;
 const MODEL_ID = /^([a-z]+(?:-[a-z]+)*)-(\d+)-(\d+)$/;
+const PRICE = /^\d+(?:\.\d{1,4})?$/;
+const USD = /^\d+\.\d{2}$/;
 const START = '<!-- cost:start -->';
 const END = '<!-- cost:end -->';
 
-type Field = (typeof FIELDS)[number];
+// The code reads a price as ten-thousandths of a dollar for one million tokens.
+// A token count times such a price is then a whole number of hundred-millionths of a cent.
+const PARTS_PER_CENT = 10n ** 8n;
 
-export type Usage = Record<Field, number>;
+type Field = (typeof FIELDS)[number];
+type PriceName = (typeof PRICED_TOKENS)[number][1];
+
+export type Usage = Record<Field, number> & { usd: string };
 
 export interface Row {
   measuredAt: string;
   commit: string;
+  prices: {
+    readOn: string;
+    source: string;
+    unit: string;
+    models: Record<string, Record<PriceName, string>>;
+  };
   byModel: Record<string, Usage>;
   byWork: Record<string, Usage>;
-  total: Usage;
+  total: Usage & { cache_creation_lifetime_not_reported: number };
 }
 
 interface Line {
@@ -48,6 +71,39 @@ interface Line {
 
 function add(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0);
+}
+
+function hasForm(value: unknown, form: RegExp): boolean {
+  return typeof value === 'string' && form.test(value);
+}
+
+function readPrice(price: string): bigint {
+  const [dollars, fraction = ''] = price.split('.');
+  return BigInt(dollars + fraction.padEnd(4, '0'));
+}
+
+function readCents(usd: string): bigint {
+  const [dollars, cents] = usd.split('.');
+  return BigInt(dollars + cents);
+}
+
+function formatCents(cents: bigint): string {
+  return `${cents / 100n}.${String(cents % 100n).padStart(2, '0')}`;
+}
+
+function exactPrice(usage: Usage, prices: Record<PriceName, string>): bigint {
+  return PRICED_TOKENS.reduce(
+    (sum, [tokens, price]) => sum + BigInt(usage[tokens]) * readPrice(prices[price]),
+    0n,
+  );
+}
+
+function roundToCents(parts: bigint): bigint {
+  const cents = parts / PARTS_PER_CENT;
+  const twiceRest = (parts % PARTS_PER_CENT) * 2n;
+  // An exact half cent goes to the even cent. The measurements round this way.
+  const up = twiceRest > PARTS_PER_CENT || (twiceRest === PARTS_PER_CENT && cents % 2n === 1n);
+  return up ? cents + 1n : cents;
 }
 
 function modelLabel(id: string): string {
@@ -79,22 +135,81 @@ function workLabel(key: string): string {
   return label;
 }
 
-function checkSum(where: string, usage: Usage): void {
+function checkEntry(where: string, usage: Usage): void {
   const counted = add(COUNTS.map((field) => usage[field]));
   if (usage.total !== counted) {
     throw new Error(`${where}: total is ${usage.total}, but the four counts add up to ${counted}.`);
+  }
+  const lifetimes = usage.cache_creation_5m + usage.cache_creation_1h;
+  if (usage.cache_creation_input_tokens !== lifetimes) {
+    throw new Error(
+      `${where}: cache_creation_input_tokens is ${usage.cache_creation_input_tokens}, but the two lifetimes add up to ${lifetimes}.`,
+    );
+  }
+  if (!hasForm(usage.usd, USD)) {
+    throw new Error(`${where}: usd must be a string with two decimals, such as "12.30".`);
   }
 }
 
 function checkGroup(name: string, group: Record<string, Usage>, total: Usage): void {
   for (const [key, usage] of Object.entries(group)) {
-    checkSum(`${name} "${key}"`, usage);
+    checkEntry(`${name} "${key}"`, usage);
   }
   for (const field of FIELDS) {
     const added = add(Object.values(group).map((usage) => usage[field]));
     if (added !== total[field]) {
       throw new Error(`${name} adds up to ${added} in ${field}, but total has ${total[field]}.`);
     }
+  }
+}
+
+function checkPrices(row: Row): void {
+  if (!READ_ON.test(row.prices.readOn)) {
+    throw new Error('prices.readOn must have the form 2026-11-12.');
+  }
+  for (const id of Object.keys(row.byModel)) {
+    const prices = row.prices.models[id];
+    if (prices === undefined) {
+      throw new Error(`prices has no model "${id}".`);
+    }
+    for (const [, name] of PRICED_TOKENS) {
+      if (!hasForm(prices[name], PRICE)) {
+        throw new Error(
+          `prices of "${id}": ${name} must be a string of digits with at most 4 decimals.`,
+        );
+      }
+    }
+  }
+}
+
+function checkUsd(row: Row): void {
+  let exactTotal = 0n;
+  for (const [id, usage] of Object.entries(row.byModel)) {
+    const exact = exactPrice(usage, row.prices.models[id]);
+    exactTotal += exact;
+    const cents = roundToCents(exact);
+    if (readCents(usage.usd) !== cents) {
+      throw new Error(
+        `byModel "${id}": usd is ${usage.usd}, but the tokens at the prices of the row cost ${formatCents(cents)}.`,
+      );
+    }
+  }
+  const totalCents = roundToCents(exactTotal);
+  if (readCents(row.total.usd) !== totalCents) {
+    throw new Error(
+      `total: usd is ${row.total.usd}, but the models cost ${formatCents(totalCents)} together.`,
+    );
+  }
+  // A work key mixes models, so its exact price is not known.
+  // Each work price is at most half a cent from its exact price.
+  const works = Object.values(row.byWork);
+  const workCents = works.reduce((sum, usage) => sum + readCents(usage.usd), 0n);
+  const workParts = workCents * PARTS_PER_CENT;
+  const gap = workParts > exactTotal ? workParts - exactTotal : exactTotal - workParts;
+  if (gap * 2n > BigInt(works.length) * PARTS_PER_CENT) {
+    throw new Error(
+      `byWork adds up to ${formatCents(workCents)} in usd, but the models cost ${formatCents(totalCents)} together. The two can differ by half a cent for each work key.`,
+    );
   }
 }
 
@@ -111,9 +226,11 @@ function checkRow(row: Row, previous: Row | undefined): void {
   for (const key of Object.keys(row.byWork)) {
     workLabel(key);
   }
-  checkSum('total', row.total);
+  checkEntry('total', row.total);
   checkGroup('byModel', row.byModel, row.total);
   checkGroup('byWork', row.byWork, row.total);
+  checkPrices(row);
+  checkUsd(row);
 }
 
 export function validate(history: Row[]): void {
@@ -133,8 +250,12 @@ function largestFirst(a: Line, b: Line): number {
   return b.total - a.total || a.label.localeCompare(b.label, 'en');
 }
 
-function formatNumber(value: number): string {
+function formatNumber(value: number | bigint): string {
   return value.toLocaleString('en-US');
+}
+
+function formatPrice(cents: bigint): string {
+  return `$${formatNumber(cents / 100n)}.${String(cents % 100n).padStart(2, '0')}`;
 }
 
 function table(header: string[], rows: string[][]): string {
@@ -148,30 +269,32 @@ function modelTable(row: Row): string {
     .map(([id, usage]) => ({ label: modelLabel(id), ...usage }))
     .sort(largestFirst);
   return table(
-    ['Model', ...MODEL_COLUMNS.map(([title]) => title)],
+    ['Model', ...MODEL_COLUMNS.map(([title]) => title), 'API price'],
     [...models, { label: 'Total', ...row.total }].map((line) => [
       line.label,
       ...MODEL_COLUMNS.map(([, field]) => formatNumber(line[field])),
+      formatPrice(readCents(line.usd)),
     ]),
   );
 }
 
 function workTable(row: Row): string {
-  const totals = new Map<string, number>();
+  const totals = new Map<string, { total: number; cents: bigint }>();
   for (const [key, usage] of Object.entries(row.byWork)) {
     const label = workLabel(key);
-    totals.set(label, (totals.get(label) ?? 0) + usage.total);
+    const sum = totals.get(label) ?? { total: 0, cents: 0n };
+    totals.set(label, { total: sum.total + usage.total, cents: sum.cents + readCents(usage.usd) });
   }
-  const work = [...totals].map(([label, total]) => ({ label, total })).sort(largestFirst);
+  const work = [...totals].map(([label, sum]) => ({ label, ...sum })).sort(largestFirst);
   return table(
-    ['Work', 'All tokens'],
-    work.map(({ label, total }) => [label, formatNumber(total)]),
+    ['Work', 'All tokens', 'API price'],
+    work.map(({ label, total, cents }) => [label, formatNumber(total), formatPrice(cents)]),
   );
 }
 
 export async function renderBlock(row: Row, readmePath: string): Promise<string> {
   const markdown = [
-    `Measured on ${row.measuredAt.slice(0, 10)} (UTC).`,
+    `Measured on ${row.measuredAt.slice(0, 10)} (UTC). Prices read on ${row.prices.readOn}.`,
     modelTable(row),
     workTable(row),
   ].join('\n\n');
