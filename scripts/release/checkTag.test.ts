@@ -23,6 +23,12 @@ const rows: { name: string; tag: string; version: string; problem?: string }[] =
     problem: 'CalVer',
   },
   {
+    name: 'the year has three digits',
+    tag: 'v202.11.0',
+    version: '202.11.0',
+    problem: 'CalVer',
+  },
+  {
     name: 'the month has a leading zero',
     tag: 'v2026.01.0',
     version: '2026.01.0',
