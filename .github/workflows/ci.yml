@@ -116,7 +116,7 @@ jobs:
 
   measure-firefox:
     name: measure-firefox (${{ matrix.arm }}, ${{ matrix.run }})
-    runs-on: ${{ matrix.arm == 'os-24' && 'ubuntu-24.04' || 'ubuntu-latest' }}
+    runs-on: ${{ contains(matrix.arm, 'os-24') && 'ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       contents: read
@@ -186,9 +186,9 @@ jobs:
           - 60
         arm:
           - plain
-          - debug
-          - pref-off
-          - one-page
+          - stress
+          - stress-pref-off
+          - stress-os-24
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -212,9 +212,14 @@ jobs:
           RUN: ${{ matrix.run }}
         run: |
           case "$ARM" in
-            debug) export DEBUG='pw:browser,vitest:browser:*' ;;
-            pref-off) export FIREFOX_ARM=pref-off ;;
-            one-page) export VITEST_MAX_WORKERS=1 ;;
+            *debug*|*stress*) export DEBUG='pw:browser,vitest:browser:*' ;;
+          esac
+          case "$ARM" in
+            *pref-off*) export FIREFOX_ARM=pref-off ;;
+          esac
+          case "$ARM" in
+            *one-page*) export VITEST_MAX_WORKERS=1 ;;
+            *stress*) export VITEST_MAX_WORKERS=24 ;;
           esac
           set +e
           pnpm test:firefox 2>&1 | tee output.log
