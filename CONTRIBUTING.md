@@ -111,6 +111,7 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
+- A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row.
 - A `returnTypeDifferences` row names one function: `{ "entry": "useDirection", "returns": "ComputedRef<TextDirection>", "reason": "…" }`.
 - `entry` is the title of the function in the `types.md`. `returns` is the return type of the Vase UI function, as `pnpm parity:check` prints it.
 - `pnpm parity:check` fails on a difference when no row gives the Vase UI type and no exception row names the entry. It also fails on a stale row.
@@ -232,7 +233,8 @@ The template of each such part has two lines and no wrapper component:
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
 - Each such part has one internal SFC, `<Part>Children.vue`.
-- That SFC reads the state of the part with `inject`. It renders the nodes around its default slot, in upstream's order.
+- That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`.
+- It renders the nodes around its default slot, in upstream's order.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`.
@@ -243,6 +245,13 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SliderThumbChildren" />
 <component :is="as" v-else v-bind="elementProps()"><SliderThumbChildren><slot :state="state" /></SliderThumbChildren></component>
 ```
+
+A part whose own node is text, such as `Progress.Value`, has four more rules:
+
+- `<Part>Children.vue` shows the default slot of the consumer when there is one. If there is none, it shows the text. Write the two as one `v-if` chain: `<slot v-if="$slots.default" … />`, then `<template v-else-if="…">{{ text }}</template>`.
+- The part gives a default slot to `<Part>Children.vue` only when the consumer has one: `<template v-if="$slots.default" #default="content"><slot v-bind="content" :state="state" /></template>`.
+- Do not write an interpolation that can be empty. Do not render a `<slot>` that the consumer did not give. A client-only render then leaves empty text nodes in the element, and `toBeEmptyDOMElement` fails. A `v-if` chain that renders nothing leaves one comment, and the matcher ignores a comment.
+- Give `describeConformance` no `childrenSelector` for such a part, because a selector cannot match a text node. Add a case that mounts `children` in the `#render` slot and compares the text.
 
 ### Element targets
 
@@ -289,6 +298,8 @@ Rules:
 - Upstream types some Boolean props with a generic parameter, such as `multiple?: Multiple | undefined`. Declare such a prop as `multiple?: (Multiple & boolean) | undefined`.
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
+- Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
+- Do not give a constant of `setup` the name of a prop. The SFC compiler then reports that name as a constant, and `pnpm parity:check` does not find the prop. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
 
 ### State and `v-model`
 
@@ -333,7 +344,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
 - Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
 - The ref is a `ComputedRef` when the composable computes the value: `useDirection()` returns `ComputedRef<TextDirection>`. It is a `Readonly<Ref<T>>` when the composable writes the value: `useTransitionStatus()` returns `mounted` and `transitionStatus` in this form.
-- Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root.
+- Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root. The label of a root does not call it, because the root makes the id of the label. See [Server render](#server-render).
 
 ## Rules for the source
 
@@ -370,12 +381,36 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 - Each part must render with `renderToString` in Node with no DOM.
 - Code in setup does not touch `window` or `document`.
-- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`.
+- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. Two attributes are exceptions: the `aria-labelledby` of a root with a label part, and an `aria-valuetext` in a locale format. Each can change when the root is mounted.
 - Hydration must give no warning. The hydrated DOM must be equal to a client-only render. Vue does not compare `aria-*`, `role` or `data-*`.
+- A part with no style of its own gives no `style` key to the element. An empty object or `undefined` as `style` gives `style=""` in the server HTML.
 - One internal SFC, `PrehydrationScript`, renders each prehydration script. It renders the script only while the part hydrates.
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set.
+
+The hydration state:
+
+- `useIsHydrating()` and `useIsHydrated()` are in `src/common/hydration.ts`. Each returns a `ComputedRef<boolean>`.
+- `useIsHydrating()` gives `true` on a server. On the client, it gives `true` until the component that calls it is mounted.
+- Vue has no public API that tells a hydration from a client-only mount in `setup`. The helpers use two facts of the lifecycle.
+- A server render never calls `onMounted`. An app that hydrates calls it after the hydration of the component.
+- The first render of a client-only mount thus also reads `true`. The component renders again in the flush after the mount, before a paint.
+- Each call is for the component that calls it. A part that can hydrate after its root calls the helper itself. An example is an async component in `<Suspense>`.
+- Do not keep the result in a module variable or in the context of the root.
+- For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
+- The server HTML and the first client render then have the same text.
+
+The label of a root:
+
+- A root with a label part calls `useLabelId()` of `src/utils/useRegisteredLabelId.ts`. The root binds `labelId` to `aria-labelledby`. It provides `setLabelId` and `defaultLabelId` in its context.
+- The label calls `useRegisteredLabelId(() => props.id, setLabelId, defaultLabelId)` and binds the result to `id`. The result is the `id` prop, or the id that the root made.
+- A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML.
+- Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
+- After the mount, a root with no label has no `aria-labelledby`. A root whose label has an `id` prop has that id. Vue gives no warning, and the hydrated DOM is equal to a client-only render.
+- Until the page hydrates, the server HTML of those two roots points at the generated id.
+- An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
+- Two labels with no `id` in one root get the same id.
 
 ### What Vue replaces
 
@@ -387,6 +422,17 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - Only three registries are shared between copies, on `Symbol.for` keys: the scroll-lock count, the modal marks and the Escape stack.
 - Each shared registry is a plain object with a `version` field. Fields are only added.
 - Direction and CSP stay as `DirectionProvider` and `CSPProvider`. There is no global configuration provider.
+
+### Context of a root
+
+A root gives values to its parts with `provide` and `inject`. Use `progress/root/ProgressRootContext.ts` as the model.
+
+- The context is a plain object. Each field that can change is a `ComputedRef`. A function is a plain function.
+- A part can then destructure the context in `setup` and keep reactivity. A part that reads one field renders again only when that field changes.
+- The context file exports the key with the type `InjectionKey<Context>`. It exports `use<Root>Context()` beside the key.
+- `use<Root>Context()` calls `inject(key, undefined)`. With one argument, Vue gives a warning of its own when there is no provider.
+- When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
+- The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
 
 ### DOM event names
 
@@ -465,6 +511,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - The code is the documentation. Correct a name or the structure before you add a comment.
 - A comment stays only where it gives a reason that the code cannot show.
 - Do not write the history of the code in a comment.
+- Write the reason for a node of a template as a comment in the script block. A comment in a template becomes a DOM node in a development build.
 
 ## Tests
 
@@ -475,6 +522,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - With `false`, Vitest mocks a module in Firefox by request interception, not by import map. Do not set `browser.importMapMocks` to `true`: Vitest then refuses a mock in Firefox.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
+- A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`.
 - There is no jsdom.
 - A file with a name that ends in `.spec.ts` or `.spec.tsx` is a type test. vue-tsc checks it, and no test runner runs it.
 
@@ -482,44 +530,47 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. It is TSX, so it differs from the upstream file only by these rules:
 
-| Base UI test                                                             | Vase UI test                                                                                                                                                   |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `from '@base-ui/react/<entry>'`                                          | `from '@vase-ui/vue/<entry>'`                                                                                                                                  |
-| `from '@base-ui/react'`                                                  | `from '@vase-ui/vue'`                                                                                                                                          |
-| `from '@base-ui/utils/<file>'`                                           | A relative path to `src/common/<file>`                                                                                                                         |
-| `from '@mui/internal-test-utils'`                                        | `from '#test-utils'`                                                                                                                                           |
-| A global name with `BASE_UI`, such as `BASE_UI_ANIMATIONS_DISABLED`      | The Vase UI name, such as `VASE_UI_ANIMATIONS_DISABLED`. See [Layout and names](#layout-and-names).                                                            |
-| `className`                                                              | `class`                                                                                                                                                        |
-| `tabIndex` as a prop or as a key of a props object                       | `tabindex`. An assertion on the DOM property keeps `tabIndex`.                                                                                                 |
-| `render={<x />}`, an element with no props                               | `as`                                                                                                                                                           |
-| `render={<x a={b} />}`, an element with props of its own                 | `v-slots={{ render }}`. The function returns `<x {...props} a={b} />`, with the own props after the spread.                                                    |
-| A render function                                                        | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns.                                             |
-| A function as children: `<Part>{(args) => …}</Part>`                     | `v-slots={{ default: (args: Type) => … }}`                                                                                                                     |
-| A handler key of a DOM event, such as `onKeyDown`                        | The Vue key, such as `onKeydown`. See [DOM event names](#dom-event-names).                                                                                     |
-| A `Capture` listener on an element, such as `onClickCapture={fn}`        | A spread: `{...{ onClickCapture: fn }}`                                                                                                                        |
-| `{ nativeEvent: new MouseEvent('click') }`                               | `new MouseEvent('click')`                                                                                                                                      |
-| `ref` on the outermost vnode, or on a child of a plain element           | A function for `render`: `render(() => <Button ref={ref} />)`                                                                                                  |
-| A `Wrapper` that forwards a ref                                          | A `Wrapper` that exposes `element`                                                                                                                             |
-| `React.createRef()` and `ref.current`                                    | A function ref that writes a variable, or a `shallowRef`. A ref on a part gives the component, so read its `element`.                                          |
-| `useMergedRefs(a, b)`                                                    | A function ref that calls each ref                                                                                                                             |
-| `React.useState` in a test component                                     | A `shallowRef` in the setup function of `defineComponent`                                                                                                      |
-| `useIsoLayoutEffect` or `React.useEffect` in a test component            | `onMounted`. Where a dependency changes in the test, add the `watch` of [What differs from the React source](#what-differs-from-the-react-source).             |
-| `useStableCallback(fn)`                                                  | `fn`                                                                                                                                                           |
-| A commit count from `React.Profiler`                                     | A count of the calls of a `MutationObserver` that observes `container` with `childList` and `subtree`                                                          |
-| `ReactDOM.createPortal(children, container)`                             | `<Teleport to={container}>`                                                                                                                                    |
-| `React.lazy(loader)`                                                     | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions                                                                           |
-| `act(fn)`                                                                | `fn()`, then `await flushMicrotasks()`                                                                                                                         |
-| `renderHook(() => useX())`                                               | A component in the test that calls the composable in `setup` and gives the result to the test                                                                  |
-| A function component that calls a hook and spreads the rest of its props | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`. |
-| `renderToString` of the renderer, with no `hydrate()`                    | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.               |
-| `renderToString` of the renderer, then `hydrate()`                       | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser.                      |
-| `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert the call and its message. The message starts with `Vase UI:`.     |
-| `childNodes`, `firstChild` or `nextSibling` on the element of a part     | `children` or `querySelector`                                                                                                                                  |
-| A number as a length in a style object, such as `top: 1`                 | A string with its unit, such as `top: '1px'`                                                                                                                   |
-| An event                                                                 | Add `await`                                                                                                                                                    |
-| An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check) | No change                                                                                                                                                      |
-| `isJSDOM`                                                                | Always `false`                                                                                                                                                 |
-| An `eslint-disable` comment that ESLint reports                          | Remove it                                                                                                                                                      |
+| Base UI test                                                               | Vase UI test                                                                                                                                                   |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `from '@base-ui/react/<entry>'`                                            | `from '@vase-ui/vue/<entry>'`                                                                                                                                  |
+| `from '@base-ui/react'`                                                    | `from '@vase-ui/vue'`                                                                                                                                          |
+| `from '@base-ui/utils/<file>'`                                             | A relative path to `src/common/<file>`                                                                                                                         |
+| `from '@mui/internal-test-utils'`                                          | `from '#test-utils'`                                                                                                                                           |
+| A global name with `BASE_UI`, such as `BASE_UI_ANIMATIONS_DISABLED`        | The Vase UI name, such as `VASE_UI_ANIMATIONS_DISABLED`. See [Layout and names](#layout-and-names).                                                            |
+| `className`                                                                | `class`                                                                                                                                                        |
+| `tabIndex` as a prop or as a key of a props object                         | `tabindex`. An assertion on the DOM property keeps `tabIndex`.                                                                                                 |
+| `render={<x />}`, an element with no props                                 | `as`                                                                                                                                                           |
+| `render={<x a={b} />}`, an element with props of its own                   | `v-slots={{ render }}`. The function returns `<x {...props} a={b} />`, with the own props after the spread.                                                    |
+| A render function                                                          | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns.                                             |
+| A function as children: `<Part>{(args) => …}</Part>`                       | `v-slots={{ default: (args: Type) => … }}`                                                                                                                     |
+| A handler key of a DOM event, such as `onKeyDown`                          | The Vue key, such as `onKeydown`. See [DOM event names](#dom-event-names).                                                                                     |
+| A `Capture` listener on an element, such as `onClickCapture={fn}`          | A spread: `{...{ onClickCapture: fn }}`                                                                                                                        |
+| `{ nativeEvent: new MouseEvent('click') }`                                 | `new MouseEvent('click')`                                                                                                                                      |
+| `ref` on the outermost vnode, or on a child of a plain element             | A function for `render`: `render(() => <Button ref={ref} />)`                                                                                                  |
+| A `Wrapper` that forwards a ref                                            | A `Wrapper` that exposes `element`                                                                                                                             |
+| `React.createRef()` and `ref.current`                                      | A function ref that writes a variable, or a `shallowRef`. A ref on a part gives the component, so read its `element`.                                          |
+| `useMergedRefs(a, b)`                                                      | A function ref that calls each ref                                                                                                                             |
+| `React.useState` in a test component                                       | A `shallowRef` in the setup function of `defineComponent`                                                                                                      |
+| `useIsoLayoutEffect` or `React.useEffect` in a test component              | `onMounted`. Where a dependency changes in the test, add the `watch` of [What differs from the React source](#what-differs-from-the-react-source).             |
+| `useStableCallback(fn)`                                                    | `fn`                                                                                                                                                           |
+| A commit count from `React.Profiler`                                       | A count of the calls of a `MutationObserver` that observes `container` with `childList` and `subtree`                                                          |
+| `ReactDOM.createPortal(children, container)`                               | `<Teleport to={container}>`                                                                                                                                    |
+| `React.lazy(loader)`                                                       | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions                                                                           |
+| `act(fn)`                                                                  | `fn()`, then `await flushMicrotasks()`                                                                                                                         |
+| `renderHook(() => useX())`                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                  |
+| A function component that calls a hook and spreads the rest of its props   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`. |
+| `renderToString` of the renderer, with no `hydrate()`                      | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.               |
+| `renderToString` of the renderer, then `hydrate()`                         | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser.                      |
+| A `React.Suspense` around a part, so that the part hydrates after its root | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers).             |
+| `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                  | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert the call and its message. The message starts with `Vase UI:`.     |
+| `childNodes`, `firstChild` or `nextSibling` on the element of a part       | `children` or `querySelector`                                                                                                                                  |
+| A number as a length in a style object, such as `top: 1`                   | A string with its unit, such as `top: '1px'`                                                                                                                   |
+| `toHaveComputedStyle(obj)`                                                 | `toHaveStyle(obj)`, which also reads the computed style                                                                                                        |
+| `toHaveComputedStyle({})`                                                  | `not.toHaveAttribute('style')`, because `toHaveStyle({})` fails for an empty object                                                                            |
+| An event                                                                   | Add `await`                                                                                                                                                    |
+| An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check)   | No change                                                                                                                                                      |
+| `isJSDOM`                                                                  | Always `false`                                                                                                                                                 |
+| An `eslint-disable` comment that ESLint reports                            | Remove it                                                                                                                                                      |
 
 - TypeScript cannot infer the type of the parameter of a `v-slots` function.
 - Vue's JSX types declare no `Capture` attribute. Vue reads the suffix at run time.
@@ -540,6 +591,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - `createRenderer()` has no `renderToString`. A server render runs in Node with no DOM.
 - A row for a `describe` block also covers each case of the block that has no counterpart. Give the block a `replaced` row only when each case of the block moves to the `.node.test.tsx` file. `useButton` does this for `server-side rendering`.
 - Vue renders an async component after its loader resolves. `flushMicrotasks` waits for that render.
+- A spy as a slot gets one object with the slot props. Assert the fields of the first argument of the last call: `spy.mock.lastCall?.[0].value`.
 
 ### Test helpers
 
@@ -555,17 +607,32 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `fireEvent` is a function of the test helpers. It dispatches the event, waits for `nextTick()` and returns the result of the dispatch. Upstream tests read that result, which is `false` when a listener prevents the default action.
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
+- `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
+- A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
 
 The hydration helpers:
 
 - `renderOnServer(file, props)` resolves to the server HTML of a component. `file` is the path of a Vue file from the root of the package, such as `test/fixtures/PlainPart.vue`.
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
+- A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
+- The props go to Node as JSON, so a prop cannot be a function.
+- To assert on the server HTML before the hydration, parse it in a `<template>` element. That parse has no side effect.
 - `hydrate(component, { serverHtml, props })` hydrates that HTML. The rules below are its contract.
 - It inserts the HTML with `Range.createContextualFragment`, because `innerHTML` does not run an inline script.
 - It records the Vue warnings of its two apps as `render` does, and it reads the messages that the test setup records. Vue writes some hydration messages only to the console.
 - After mount and two ticks, it fails the test on a Vue warning or a console call. It also fails the test when the hydrated DOM differs from a client-only render.
 - The comparison ignores comments and the order of the attributes.
 - It compares the `style` of each element as the browser parses it, so `border:0` is equal to `border: 0px`. An empty `style` attribute is equal to no `style` attribute.
+
+`hydrate` cannot test a part that hydrates after the two ticks, such as an async component in `<Suspense>`. Hydrate such a part by hand, as `progress/value/ProgressValue.test.tsx` does:
+
+1. Put the server HTML in a container in the document, and get the element.
+2. Make the app with `createSSRApp(fixture, props)`.
+3. Register the unmount of the app and the removal of the container with `onTestFinished`.
+4. Mount the app on the container.
+5. Call `await waitFor(…)` with one assertion on the new text.
+6. Assert that the element is the same node. After a mismatch, Vue discards the server nodes.
+7. Assert that `takeReportedMessages()` returns an empty list.
 
 ### Test rules
 
@@ -579,6 +646,7 @@ The hydration helpers:
 - A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
+- A part that throws in `setup` makes `render` reject with the error. Vue then warns `Unhandled error during execution of setup function`, and the test expects that warning.
 - When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.
 - `test/setup.ts` sets `globalThis.VASE_UI_ANIMATIONS_DISABLED` to `true` when it loads and after each test. A test that needs a real animation sets it to `false`.
 - A test that counts the transitions of an element reads no style and no layout. A read starts the transition that the part must start, and the test then passes with a broken part.
@@ -589,6 +657,7 @@ The hydration helpers:
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test belongs in the file of the part whose prop or behavior it asserts.
 - For text in a locale format, compute the expected text with the same locale and options as the component.
+- Do not write a generated id in a test. Vue 3.5.0 gives `v:0` where a later version gives `v-0`. Read the id from the element or from the HTML.
 - `pnpm parity:check` reads the test files in `packages/vue` with the TypeScript parser. On `it`, `test` and `describe` it accepts only these modifiers: `skipIf`, `runIf`, `each`, `for`, `skip` and `todo`.
 - It refuses `.only`. It also refuses each other modifier, such as `it.concurrent` or `test.extend(…)`, and a table in a tagged template. It cannot read these forms. Write a table as an array.
 

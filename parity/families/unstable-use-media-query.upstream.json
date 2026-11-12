@@ -1,0 +1,42 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/unstable-use-media-query/**"
+  ],
+  "sources": [
+    "packages/react/src/unstable-use-media-query/index.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/unstable-use-media-query/index.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useMediaQuery"
+          ],
+          "title": "returns defaultMatches when matchMedia is unavailable"
+        },
+        {
+          "describe": [
+            "useMediaQuery"
+          ],
+          "title": "subscribes to the provided matchMedia and updates on change"
+        },
+        {
+          "describe": [
+            "useMediaQuery"
+          ],
+          "title": "uses ssrMatchMedia for the server snapshot"
+        },
+        {
+          "describe": [
+            "useMediaQuery"
+          ],
+          "title": "uses the client matchMedia result as the server snapshot when noSsr is set"
+        }
+      ]
+    }
+  ],
+  "surface": []
+}

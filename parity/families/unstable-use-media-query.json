@@ -1,0 +1,25 @@
+{
+  "upstreamPaths": ["packages/react/src/unstable-use-media-query/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/unstable-use-media-query/index.test.tsx",
+      "describe": ["useMediaQuery"],
+      "title": "uses ssrMatchMedia for the server snapshot",
+      "kind": "replaced",
+      "test": "packages/vue/src/unstable-use-media-query/index.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/unstable-use-media-query/index.test.tsx",
+      "describe": ["useMediaQuery"],
+      "title": "uses the client matchMedia result as the server snapshot when noSsr is set",
+      "kind": "replaced",
+      "test": "packages/vue/src/unstable-use-media-query/index.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

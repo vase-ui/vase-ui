@@ -1,0 +1,22 @@
+{
+  "upstreamPaths": ["packages/react/src/meter/**", "docs/src/app/(docs)/react/components/meter/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "docs/src/app/(docs)/react/components/meter/types.md",
+      "entry": "Root",
+      "prop": "aria-valuetext",
+      "kind": "not-applicable",
+      "reason": "The row documents a native attribute that the React part does not read. In Vase UI the attribute goes to the element through the attributes, with its type from `HTMLAttributes`. A declared prop would take it out of the attributes."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Label",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

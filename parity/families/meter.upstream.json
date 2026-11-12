@@ -1,0 +1,483 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/meter/**",
+    "docs/src/app/(docs)/react/components/meter/**"
+  ],
+  "sources": [
+    "packages/react/src/meter/index.parts.ts",
+    "packages/react/src/meter/index.ts",
+    "packages/react/src/meter/indicator/MeterIndicator.tsx",
+    "packages/react/src/meter/label/MeterLabel.tsx",
+    "packages/react/src/meter/root/MeterRoot.tsx",
+    "packages/react/src/meter/root/MeterRootContext.ts",
+    "packages/react/src/meter/track/MeterTrack.tsx",
+    "packages/react/src/meter/value/MeterValue.tsx"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/meter/indicator/MeterIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Meter.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Meter.Indicator />",
+            "value bounds"
+          ],
+          "title": "clamps the width to 100% when the value exceeds max"
+        },
+        {
+          "describe": [
+            "<Meter.Indicator />",
+            "value bounds"
+          ],
+          "title": "clamps the width to 0% when the value is below min"
+        },
+        {
+          "describe": [
+            "<Meter.Indicator />",
+            "value bounds"
+          ],
+          "title": "produces a finite width when min equals max"
+        },
+        {
+          "describe": [
+            "<Meter.Indicator />",
+            "internal styles"
+          ],
+          "title": "sets positioning styles",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Meter.Indicator />",
+            "internal styles"
+          ],
+          "title": "sets zero width when value is 0",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/meter/label/MeterLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Meter.Label />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Meter.Label />"
+          ],
+          "title": "updates and clears the meter label association"
+        },
+        {
+          "describe": [
+            "<Meter.Label />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Meter.Root>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/meter/root/MeterRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Meter.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "ARIA attributes"
+          ],
+          "title": "sets the correct aria attributes"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "ARIA attributes"
+          ],
+          "title": "defaults aria-valuetext to the localized formatted value, matching Meter.Value"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "ARIA attributes"
+          ],
+          "title": "rounds the default aria-valuetext like the displayed value"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "ARIA attributes"
+          ],
+          "title": "refreshes aria-valuenow, aria-valuetext, the value text, and the indicator when value changes"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "prop: getAriaValueText"
+          ],
+          "title": "uses the returned text and receives the formatted and raw value"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "range"
+          ],
+          "title": "formats the value as its position within a custom range and keeps the indicator in sync"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "range"
+          ],
+          "title": "formats the value relative to a non-zero min"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "range"
+          ],
+          "title": "keeps range attributes, formatted text, and the indicator synchronized on rerender"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "range"
+          ],
+          "title": "normalizes aria attributes when $label"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "prop: format"
+          ],
+          "title": "formats the value"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "prop: format"
+          ],
+          "title": "formats the clamped value while clamping range attributes and indicator width"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "prop: locale"
+          ],
+          "title": "sets the locale when formatting the value"
+        },
+        {
+          "describe": [
+            "<Meter.Root />",
+            "server-side rendering"
+          ],
+          "title": "formats with en-US until hydrated, then with the runtime locale"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/meter/track/MeterTrack.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Meter.Track />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/meter/value/MeterValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Meter.Value />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Meter.Value />",
+            "prop: children"
+          ],
+          "title": "renders the value when children is not provided"
+        },
+        {
+          "describe": [
+            "<Meter.Value />",
+            "prop: children"
+          ],
+          "title": "renders a formatted value when a format is provided"
+        },
+        {
+          "describe": [
+            "<Meter.Value />",
+            "prop: children"
+          ],
+          "title": "accepts a render function"
+        },
+        {
+          "describe": [
+            "<Meter.Value />",
+            "prop: children"
+          ],
+          "title": "passes updated arguments to the render function when value changes"
+        },
+        {
+          "describe": [
+            "<Meter.Value />",
+            "server-side rendering"
+          ],
+          "title": "hydrates $name without a mismatch, then uses the runtime locale"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/meter/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "aria-valuetext",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "getAriaValueText",
+              "required": false,
+              "type": "((formattedValue: string, value: number) => string)",
+              "default": null
+            },
+            {
+              "name": "locale",
+              "required": false,
+              "type": "Intl.LocalesArgument",
+              "default": null
+            },
+            {
+              "name": "min",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "max",
+              "required": false,
+              "type": "number",
+              "default": "100"
+            },
+            {
+              "name": "format",
+              "required": false,
+              "type": "Intl.NumberFormatOptions",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Meter.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Meter.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Meter.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MeterRootState",
+            "fields": [],
+            "code": "type MeterRootState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Value",
+          "tag": "span",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "((formattedValue: string, value: number) => React.ReactNode) | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Meter.Value.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Meter.Value.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Meter.Value.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MeterValueState",
+            "fields": [],
+            "code": "type MeterValueState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Meter.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Meter.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Meter.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MeterIndicatorState",
+            "fields": [],
+            "code": "type MeterIndicatorState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Track",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Meter.Track.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Meter.Track.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Meter.Track.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MeterTrackState",
+            "fields": [],
+            "code": "type MeterTrackState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Label",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Meter.Label.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Meter.Label.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Meter.Label.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MeterLabelState",
+            "fields": [],
+            "code": "type MeterLabelState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [],
+      "externalTypes": []
+    }
+  ]
+}
