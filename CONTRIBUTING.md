@@ -381,7 +381,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 - Each part must render with `renderToString` in Node with no DOM.
 - Code in setup does not touch `window` or `document`.
-- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. The one exception is the `aria-labelledby` of a root with a label part, which changes when the root is mounted.
+- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. Two attributes are exceptions: the `aria-labelledby` of a root with a label part, and an `aria-valuetext` in a locale format. Each can change when the root is mounted.
 - Hydration must give no warning. The hydrated DOM must be equal to a client-only render. Vue does not compare `aria-*`, `role` or `data-*`.
 - A part with no style of its own gives no `style` key to the element. An empty object or `undefined` as `style` gives `style=""` in the server HTML.
 - One internal SFC, `PrehydrationScript`, renders each prehydration script. It renders the script only while the part hydrates.
