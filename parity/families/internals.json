@@ -5,6 +5,7 @@
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
@@ -150,6 +151,50 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/internals/field-constants/constants.ts",
       "reason": "The cases test `fieldValidityMapping` of the field constants, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts",
+      "kind": "waits-on",
+      "reason": "The file finds the native `<label>` of a control that is not a labelable element. The pull request that adds the helpers of a field control ports it. No code on `main` uses it."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel", "%s"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
+      "reason": "The cases render `Select.Label`, `Combobox.Label` and `Field.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the same behavior with a fixture label and control."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "preserves native label activation inside a shadow root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Root`, `Field.Label` and `Field.Control`, which Vase UI does not have. The case \"gives a native label `for` with the id of the control and moves no focus itself\" tests the part of this behavior that `useLabel` owns."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "focuses a control in the light DOM from a label in a shadow root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
+      "reason": "The case renders `Combobox.Root`, `Combobox.Label` and `Combobox.Trigger`, which Vase UI does not have. The case \"focuses a control in the light DOM from a label in a shadow root\" in the block \"with a fixture label and control\" tests the same behavior with no Combobox."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "focuses a control in an ancestor shadow root from a label in a nested shadow root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
+      "reason": "The case renders `Combobox.Root`, `Combobox.Label` and `Combobox.Trigger`, which Vase UI does not have. The case \"focuses a control in an ancestor shadow root from a label in a nested shadow root\" in the block \"with a fixture label and control\" tests the same behavior with no Combobox."
+    },
+    {
+      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "describe": ["useLabel"],
+      "title": "does not throw when a label is clicked in a detached React root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/trigger/SelectTrigger.tsx",
+      "reason": "The case renders `Field.Root`, `Field.Label`, `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
     }
   ],
   "surfaceAdditions": [],

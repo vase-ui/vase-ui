@@ -6,6 +6,7 @@
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
@@ -38,6 +39,12 @@
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
+    "packages/react/src/internals/labelable-provider/LabelableContext.ts",
+    "packages/react/src/internals/labelable-provider/LabelableProvider.tsx",
+    "packages/react/src/internals/labelable-provider/index.ts",
+    "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts",
+    "packages/react/src/internals/labelable-provider/useLabel.ts",
+    "packages/react/src/internals/labelable-provider/useLabelableId.ts",
     "packages/react/src/internals/noop.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
@@ -106,6 +113,55 @@
             "getStateAttributesProps"
           ],
           "title": "supports nulls returned from custom mapping"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useLabel",
+            "%s"
+          ],
+          "title": "focuses the trigger without opening the popup in the document"
+        },
+        {
+          "describe": [
+            "useLabel",
+            "%s"
+          ],
+          "title": "focuses the trigger in its shadow root without opening the popup (outer matching ID: %s)"
+        },
+        {
+          "describe": [
+            "useLabel"
+          ],
+          "title": "preserves native label activation inside a shadow root"
+        },
+        {
+          "describe": [
+            "useLabel"
+          ],
+          "title": "focuses a control in the light DOM from a label in a shadow root"
+        },
+        {
+          "describe": [
+            "useLabel"
+          ],
+          "title": "focuses a control in an ancestor shadow root from a label in a nested shadow root"
+        },
+        {
+          "describe": [
+            "useLabel"
+          ],
+          "title": "does not throw when a label is clicked in a detached React root"
+        },
+        {
+          "describe": [
+            "useLabel"
+          ],
+          "title": "does not focus the control when a composed click originates inside a nested button"
         }
       ]
     },
