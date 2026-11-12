@@ -17,6 +17,12 @@ const rows: { name: string; tag: string; version: string; problem?: string }[] =
   },
   { name: 'the tag has no `v`', tag: '2026.11.0', version: '2026.11.0', problem: 'v2026.11.0' },
   {
+    name: 'the year has five digits',
+    tag: 'v20266.11.0',
+    version: '20266.11.0',
+    problem: 'CalVer',
+  },
+  {
     name: 'the month has a leading zero',
     tag: 'v2026.01.0',
     version: '2026.01.0',
