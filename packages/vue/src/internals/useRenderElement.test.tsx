@@ -1,5 +1,5 @@
 import { vi, expect, describe, it } from 'vitest';
-import { defineComponent, h, onMounted, shallowRef } from 'vue';
+import { defineAsyncComponent, defineComponent, h, onMounted, shallowRef } from 'vue';
 import type {
   ButtonHTMLAttributes,
   Component,
@@ -7,7 +7,7 @@ import type {
   ImgHTMLAttributes,
   Slots,
 } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { useRenderElement } from './useRenderElement';
@@ -395,6 +395,33 @@ describe('useRenderElement', () => {
       expect(element.style.padding).toBe('10px');
       expect(element.style.color).toBe('rgb(255, 0, 0)');
       expect(element.style.fontSize).toBe('16px');
+    });
+
+    it('handles lazy elements', async () => {
+      const LazyComponent = defineAsyncComponent(() =>
+        Promise.resolve(defineComponent({ setup: () => () => <div data-lazy="true" /> })),
+      );
+      let component: ComponentWithElement | null = null;
+
+      const Test = () => (
+        <TestComponent
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+          active
+          as={LazyComponent}
+          data-testid="lazy"
+        />
+      );
+      const { container } = await render(<Test />);
+      await flushMicrotasks();
+
+      const element = container.firstElementChild;
+      expect(element).not.toBe(null);
+      expect(element?.getAttribute('data-testid')).toBe('lazy');
+      expect(element?.getAttribute('data-lazy')).toBe('true');
+      expect(element?.className).toContain('test-component');
+      expect(component!.element).toBe(element);
     });
 
     it('handles render element with existing ref', async () => {

@@ -73,13 +73,6 @@
     },
     {
       "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
-      "describe": ["useRenderElement", "prop: render"],
-      "title": "handles lazy elements",
-      "kind": "not-applicable",
-      "reason": "The case uses `React.lazy`, which Vue does not have."
-    },
-    {
-      "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
       "describe": [
         "useRenderElement",
         "prop: render",
