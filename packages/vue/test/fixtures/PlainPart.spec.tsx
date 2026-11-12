@@ -24,7 +24,7 @@ export const renderSlotWithRef = (
   <PlainPart
     v-slots={{
       render: ({ props }: { props: HTMLProps }) => (
-        <span {...props} ref={(element) => props.ref(element as Element | null)} />
+        <span {...props} ref={(element) => props.ref(element)} />
       ),
     }}
   />
