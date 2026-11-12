@@ -1,0 +1,240 @@
+import assert from 'node:assert/strict';
+import { dirname } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { ESLint } from 'eslint';
+
+const eslint = new ESLint({ cwd: dirname(fileURLToPath(import.meta.url)) });
+
+async function lint(filePath, code) {
+  const [{ messages }] = await eslint.lintText(code, { filePath });
+  return messages.map(({ ruleId, message }) => ({ ruleId, message }));
+}
+
+const SRC = 'packages/vue/src/dialog';
+
+const SCRIPT_ONLY_TEMPLATE = '\n<template>\n  <div />\n</template>\n';
+
+const reported = [
+  {
+    name: 'an import of getCurrentInstance',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { getCurrentInstance } from 'vue';\n\nexport const instance = getCurrentInstance();\n",
+    ruleId: 'no-restricted-imports',
+    hint: 'provide',
+  },
+  {
+    name: 'an import of cloneVNode',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { cloneVNode } from 'vue';\n\nexport const clone = cloneVNode;\n",
+    ruleId: 'no-restricted-imports',
+    hint: '#render',
+  },
+  {
+    name: 'an import of withDirectives',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { withDirectives } from 'vue';\n\nexport const apply = withDirectives;\n",
+    ruleId: 'no-restricted-imports',
+    hint: 'composable',
+  },
+  {
+    name: 'an import of resolveDirective',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { resolveDirective } from 'vue';\n\nexport const resolve = resolveDirective;\n",
+    ruleId: 'no-restricted-imports',
+    hint: 'composable',
+  },
+  {
+    name: 'an import of defineComponent',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { defineComponent } from 'vue';\n\nexport const define = defineComponent;\n",
+    ruleId: 'no-restricted-imports',
+    hint: '<script setup lang="ts">',
+  },
+  {
+    name: 'a call of a slot through a variable',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { useSlots } from 'vue';\n\nconst slots = useSlots();\n\nexport const content = slots.default?.();\n",
+    ruleId: 'no-restricted-syntax',
+    hint: 'template',
+  },
+  {
+    name: 'a call of a slot through useSlots',
+    file: `${SRC}/useRoot.ts`,
+    code: "import { useSlots } from 'vue';\n\nexport const content = useSlots().default?.();\n",
+    ruleId: 'no-restricted-syntax',
+    hint: 'template',
+  },
+  {
+    name: 'a call of a slot through $slots',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const read = (instance: { $slots: Record<string, () => unknown> }) =>\n  instance.$slots.default();\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'template',
+  },
+  {
+    name: 'a read of $el',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const read = (instance: { $el: unknown }) => instance.$el;\n',
+    ruleId: 'no-restricted-properties',
+    hint: 'resolveElement',
+  },
+  {
+    name: 'a read of $parent',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const read = (instance: { $parent: unknown }) => instance.$parent;\n',
+    ruleId: 'no-restricted-properties',
+    hint: 'provide',
+  },
+  {
+    name: 'a read of $parent in resolveElement.ts',
+    file: 'packages/vue/src/internals/resolveElement.ts',
+    code: 'export const read = (instance: { $parent: unknown }) => instance.$parent;\n',
+    ruleId: 'no-restricted-properties',
+    hint: 'provide',
+  },
+  {
+    name: 'a read of $el in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts"></script>\n\n<template>\n  <div>{{ $el }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'resolveElement',
+  },
+  {
+    name: 'a read of $parent in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts"></script>\n\n<template>\n  <div>{{ $parent }}</div>\n</template>\n`,
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'provide',
+  },
+  {
+    name: 'a directive variable in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nconst vFocus = {};\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+    ruleId: 'no-restricted-syntax',
+    hint: 'composable',
+  },
+  {
+    name: 'a directive function in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nfunction vFocus() {}\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+    ruleId: 'no-restricted-syntax',
+    hint: 'composable',
+  },
+  {
+    name: 'a directive import in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\nimport vFocus from './focus';\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+    ruleId: 'no-restricted-syntax',
+    hint: 'composable',
+  },
+  {
+    name: 'a custom directive in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div v-focus />\n</template>\n',
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'composable',
+  },
+  {
+    name: 'v-memo',
+    file: `${SRC}/DialogRoot.vue`,
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div v-memo="[1]" />\n</template>\n',
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'Remove it',
+  },
+  {
+    name: 'the Options API',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script lang="ts">\nexport default {\n  data() {\n    return { open: false };\n  },\n};\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+    ruleId: 'vue/component-api-style',
+    hint: '<script setup>',
+  },
+  {
+    name: 'a script block with no lang',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup>\nconst open = true;\n</script>\n\n<template>\n  <div>{{ open }}</div>\n</template>\n`,
+    ruleId: 'vue/block-lang',
+    hint: 'lang',
+  },
+  ...['document', 'window', 'navigator'].map((name) => ({
+    name: `the global ${name}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const value = ${name};\n`,
+    ruleId: 'no-restricted-globals',
+    hint: 'ownerDocument',
+  })),
+  {
+    name: 'a DOM global through globalThis',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const value = globalThis.document;\n',
+    ruleId: 'no-restricted-globals',
+    hint: 'ownerDocument',
+  },
+  ...['HTMLElement', 'Element', 'Node', 'Event', 'ShadowRoot'].map((className) => ({
+    name: `instanceof ${className}`,
+    file: `${SRC}/useRoot.ts`,
+    code: `export const check = (value: unknown) => value instanceof ${className};\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: 'nodeType',
+  })),
+  {
+    name: 'a TSX file',
+    file: `${SRC}/DialogRoot.tsx`,
+    code: 'export const value = 1;\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'SFC',
+  },
+];
+
+const passed = [
+  {
+    name: 'a DOM global in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "export const element = document.createElement('div');\n",
+  },
+  {
+    name: 'a DOM global in a .test.ts file',
+    file: `${SRC}/DialogRoot.test.ts`,
+    code: "export const element = document.createElement('div');\n",
+  },
+  {
+    name: 'a DOM global in a .spec.ts file',
+    file: `${SRC}/DialogRoot.spec.ts`,
+    code: "export const element = document.createElement('div');\n",
+  },
+  {
+    name: 'a TSX test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: 'export const element = <div />;\n',
+  },
+  {
+    name: 'a read of $el in resolveElement.ts',
+    file: 'packages/vue/src/internals/resolveElement.ts',
+    code: 'export const read = (instance: { $el: unknown }) => instance.$el;\n',
+  },
+  {
+    name: 'instanceof the class of ownerWindow',
+    file: `${SRC}/useRoot.ts`,
+    code: 'declare function ownerWindow(element: Element): Window & typeof globalThis;\n\nexport const check = (value: unknown, element: Element) =>\n  value instanceof ownerWindow(element).HTMLElement;\n',
+  },
+  {
+    name: 'defineOptions in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script setup lang="ts">\ndefineOptions({ inheritAttrs: false });\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+  },
+];
+
+for (const { name, file, code, ruleId, hint } of reported) {
+  test(`reports ${name}`, async () => {
+    const messages = await lint(file, code);
+    const message = messages.find((candidate) => candidate.ruleId === ruleId);
+    assert.ok(message, `Expected ${ruleId}. Got ${JSON.stringify(messages)}.`);
+    assert.ok(message.message.includes(hint), `Message "${message.message}" lacks "${hint}".`);
+  });
+}
+
+for (const { name, file, code } of passed) {
+  test(`accepts ${name}`, async () => {
+    assert.deepEqual(await lint(file, code), []);
+  });
+}

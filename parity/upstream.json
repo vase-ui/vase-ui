@@ -1,0 +1,27 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "describe": "v1.9.0-149-g5aacdbb7",
+  "release": "1.9.0",
+  "commits": [
+    {
+      "sha": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+      "date": "2026-11-10T11:38:07+01:00",
+      "subject": "[docs][popover] Add close button to demos (#6095)",
+      "paths": [
+        "docs/src/app/(docs)/react/components/popover/demos/_index.module.css",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-controlled/css-modules/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-controlled/tailwind/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-full/css-modules/index.module.css",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-full/css-modules/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-full/tailwind/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-simple/css-modules/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/detached-triggers-simple/tailwind/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/hero/css-modules/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/hero/tailwind/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/open-on-hover/css-modules/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/demos/open-on-hover/tailwind/index.tsx",
+        "docs/src/app/(docs)/react/components/popover/page.mdx"
+      ]
+    }
+  ]
+}
