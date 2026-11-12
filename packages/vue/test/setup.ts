@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
 import { reset } from '../src/common/error';
 import { resetAnimationFrameScheduler } from '../src/common/useAnimationFrame';
