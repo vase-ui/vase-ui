@@ -18,23 +18,36 @@ pnpm install
 pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 ```
 
-| Command                | Function                                                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm lint`            | Runs the tests of the lint rules and of the cost script. Then it runs ESLint, the Prettier check and `pnpm cost:check`.           |
-| `pnpm test:lint-rules` | Runs the tests of the lint rules in `eslint.config.js`.                                                                           |
-| `pnpm test:cost`       | Runs the tests of the cost script, `scripts/cost/render.ts`.                                                                      |
-| `pnpm cost:render`     | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                 |
-| `pnpm cost:check`      | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                      |
-| `pnpm format`          | Formats the files with Prettier.                                                                                                  |
-| `pnpm typecheck`       | Writes the barrel. Then it runs vue-tsc on the package.                                                                           |
-| `pnpm build`           | Builds `packages/vue/dist`.                                                                                                       |
-| `pnpm check:package`   | Builds the package with two fixture families. Then it checks the result with publint, Are the Types Wrong and a consumer project. |
-| `pnpm test`            | Runs all tests.                                                                                                                   |
-| `pnpm test:node`       | Runs the tests that have no DOM.                                                                                                  |
-| `pnpm test:browser`    | Runs the browser tests in Chromium, Firefox and WebKit.                                                                           |
-| `pnpm test:chromium`   | Runs the browser tests in Chromium. `test:firefox` and `test:webkit` do the same for their engine.                                |
+| Command                                          | Function                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script and of the parity scripts. Then it runs ESLint, the Prettier check and `pnpm cost:check`.                                                                                                                                              |
+| `pnpm test:lint-rules`                           | Runs the tests of the lint rules in `eslint.config.js`.                                                                                                                                                                                                                                     |
+| `pnpm test:cost`                                 | Runs the tests of the cost script, `scripts/cost/render.ts`.                                                                                                                                                                                                                                |
+| `pnpm test:parity`                               | Runs the tests of the parity scripts in `scripts/parity`.                                                                                                                                                                                                                                   |
+| `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
+| `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
+| `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
+| `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing. It fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
+| `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
+| `pnpm format`                                    | Formats the files with Prettier.                                                                                                                                                                                                                                                            |
+| `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
+| `pnpm build`                                     | Builds `packages/vue/dist`.                                                                                                                                                                                                                                                                 |
+| `pnpm check:package`                             | Builds the package with two fixture families. Then it checks the result with publint, Are the Types Wrong and a consumer project.                                                                                                                                                           |
+| `pnpm test`                                      | Runs all tests.                                                                                                                                                                                                                                                                             |
+| `pnpm test:node`                                 | Runs the tests that have no DOM.                                                                                                                                                                                                                                                            |
+| `pnpm test:browser`                              | Runs the browser tests in Chromium, Firefox and WebKit.                                                                                                                                                                                                                                     |
+| `pnpm test:chromium`                             | Runs the browser tests in Chromium. `test:firefox` and `test:webkit` do the same for their engine.                                                                                                                                                                                          |
 
 To run one test file, add a part of its name: `pnpm test:chromium SinglePart`.
+
+`--upstream <path>` is the path of a local clone of Base UI. The scripts read the clone through git at the commit that they need, so the clone can be at another commit.
+
+### Tool versions
+
+- `typescript` stays at version 6. The parity scripts use its compiler API. The main export of `typescript` 7 gives only its version.
+- `vue-component-meta` and `vue-tsc` must have the same version. The two packages then read an SFC with the same `@vue/language-core`.
+- `vue-component-meta` has a pnpm patch in `patches`. Without the patch, the package lists no exposed member of an SFC that has `generic`.
+- When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14` and install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
 
 ## Pull requests
 
@@ -46,20 +59,31 @@ To run one test file, add a part of its name: `pnpm test:chromium SinglePart`.
 
 ## Source of the port
 
-- `parity/upstream.json` records the Base UI commit that Vase UI tracks.
+- `parity/upstream.json` records the Base UI commit that Vase UI tracks. `pnpm parity:track` writes it.
 - `parity/scope.json` lists what Vase UI does not port, each with its reason. It also lists the Base UI paths that are out of scope.
 - Port from Base UI at the tracked commit.
 - The other sources are the code and documentation of Vue, the web standards, and the libraries that Vase UI depends on.
 - A ported file keeps the "Modified" or "@see" comment of its upstream file.
 
-Each family has a file `parity/families/<family>.json`. It has four keys:
+Each family has a file `parity/families/<family>.json`. It has five keys. `pnpm parity:check` refuses a file that lacks one:
 
-| Key                    | Content                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| `upstreamPaths`        | The Base UI paths that the family ports.                                                  |
-| `matchedCommit`        | The Base UI commit that the family matches.                                               |
-| `exceptions`           | The exception rows of the family. See [Exception rows](#exception-rows).                  |
-| `notApplicableCommits` | The Base UI commits that touch these paths and do not apply to Vue, each with its reason. |
+| Key                    | Content                                                                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `upstreamPaths`        | The Base UI paths that the family ports, as globs. A component family also names its `types.md`: `docs/src/app/(docs)/react/components/<family>/types.md`. |
+| `matchedCommit`        | The Base UI commit that the family matches.                                                                                                                |
+| `exceptions`           | The exception rows of the family. See [Exception rows](#exception-rows).                                                                                   |
+| `surfaceAdditions`     | The props, emits, slots and exposed members of a part that no Base UI row maps to, each with its reason.                                                   |
+| `notApplicableCommits` | The Base UI commits that touch these paths and do not apply to Vue, each with its reason.                                                                  |
+
+- A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
+- `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
+- A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
+
+Each family also has an extract, `parity/families/<family>.upstream.json`. It holds the facts of Base UI at `matchedCommit`: the source files, the type tests, the test cases and the rows of each `types.md`.
+
+- `pnpm parity:extract` writes the extract. Do not edit it.
+- Run the command after each change of `upstreamPaths` or `matchedCommit`. Commit the extract in the same pull request as the family file.
+- CI has no copy of Base UI, so `pnpm parity:check` reads the committed extract.
 
 ## Layout and names
 
@@ -70,6 +94,9 @@ Each family has a file `parity/families/<family>.json`. It has four keys:
 | `packages/react/test`         | `packages/vue/test`         |
 
 - Folder, file and part names are the same as upstream: `dialog/root/DialogRoot.vue`.
+- The counterpart of an upstream file is the file at the mapped path with the same name. The counterpart of a `.ts` or `.tsx` file can be a `.ts`, `.tsx` or `.vue` file. The counterpart of a test or a type test must be a `.ts` or `.tsx` file.
+- The counterpart of an upstream folder is the folder at the mapped path.
+- A file keeps the `BaseUi` or `BaseUI` of its upstream name, because `pnpm parity:check` finds a counterpart by its path: `useBaseUiId.ts`, `createBaseUIEventDetails.ts`. The names in the file change: `useVaseUiId`, `VaseUIChangeEventDetails`.
 - The vocabulary is that of upstream's `GLOSSARY.md`: Popup, Root, Trigger, Anchor, Positioner.
 - A family is one upstream folder.
 - State attributes (`data-open`) and CSS variables keep upstream's names and values. Upstream CSS then works with no change.
@@ -118,16 +145,16 @@ A family with one part declares the constant and its namespace in `index.ts`.
 
 ### Parts that render an element
 
-| API                                                              | Function                                                                  | Base UI form                   |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
-| `as` prop: `string \| Component`. The default is upstream's tag. | Sets the element or the component that the part renders.                  | `render={<a />}`               |
-| `#render` slot with the slot props `{ props, state }`            | Replaces the element. Bind `props` on your element: `<a v-bind="props">`. | `render={(props, state) => …}` |
-| Default slot with the slot props `{ state }`                     | Holds the content.                                                        | `children`                     |
-| `class` and `style` attributes                                   | Vue merges them. Your class comes first, and your style wins.             | `className`, `style`           |
-| `stateClass` prop: `(state) => ClassValue`                       | Gives a class that depends on the state.                                  | `className` as a function      |
-| `stateStyle` prop: `(state) => StyleValue`                       | Gives a style that depends on the state.                                  | `style` as a function          |
-| `nativeButton` prop, where upstream has it                       | The same as upstream.                                                     | `nativeButton`                 |
-| Exposed `element`                                                | Gives the DOM element through a template ref.                             | `ref`                          |
+| API                                                              | Function                                                                                                                                                                                                         | Base UI form                   |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `as` prop: `string \| Component`. The default is upstream's tag. | Sets the element or the component that the part renders.                                                                                                                                                         | `render={<a />}`               |
+| `#render` slot with the slot props `{ props, state }`            | Replaces the element. Bind `props` on your element: `<a v-bind="props">`.                                                                                                                                        | `render={(props, state) => …}` |
+| Default slot with the slot props `{ state }`                     | Holds the content.                                                                                                                                                                                               | `children`                     |
+| `class` and `style` attributes                                   | The part merges them with its own class and style. The class order is `class`, `stateClass`, then the class of the part. For one style property, `stateStyle` wins over `style`, and `style` wins over the part. | `className`, `style`           |
+| `stateClass` prop: `(state) => ClassValue`                       | Gives a class that depends on the state.                                                                                                                                                                         | `className` as a function      |
+| `stateStyle` prop: `(state) => StyleValue`                       | Gives a style that depends on the state.                                                                                                                                                                         | `style` as a function          |
+| `nativeButton` prop, where upstream has it                       | The same as upstream.                                                                                                                                                                                            | `nativeButton`                 |
+| Exposed `element`                                                | Gives the DOM element through a template ref.                                                                                                                                                                    | `ref`                          |
 
 - `props` of the `#render` slot holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter.
 - Under `#render`, the part does not render its default slot. Put the content in your element.
@@ -139,9 +166,12 @@ A family with one part declares the constant and its namespace in `index.ts`.
 - If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
 - Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
 - Each part sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
-- The exported props interface of a part extends the attributes of its default tag through `/* @vue-ignore */`: `interface ButtonProps extends /* @vue-ignore */ Omit<ButtonHTMLAttributes, 'disabled'>`.
+- The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`, `stateClass` and `stateStyle`.
+- The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
+- `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - TSX and templates then accept the native attributes and listeners, with their types.
 - The SFC compiler ignores the extended type, so the run-time props are only the declared props. A native attribute stays in `$attrs`.
+- Omit a native attribute that the part declares as a prop: `Omit<ButtonHTMLAttributes, 'disabled'>`.
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part.
 - There is no `asChild` prop, and no part clones a vnode.
 
@@ -167,6 +197,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`.
+- The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
 
 <!-- prettier-ignore -->
 ```vue
@@ -180,11 +211,15 @@ One helper, `resolveElement(value)`, changes a value into an element:
 
 - An element stays the same. A ref on a functional component is its root element, so it also stays the same.
 - A component that exposes an element as `element` gives that element. Each Vase UI part does this. A wrapper component of a consumer can do it too.
+- A component that exposes an empty `element` (`null` or `undefined`) gives `null`, with no warning. Its root element can be the wrong element.
+- If `element` has a value that is not an element and not empty, the next rule applies. An example is a string prop with the name `element`.
 - Another component gives `$el` when that is an element. If not, the result is `null` and a development build shows a warning.
 
 Rules:
 
 - The `ref` setter of a part calls `resolveElement`. Thus `as="RouterLink"` and `<RouterLink v-bind="props">` work.
+- A part calls `resolveElement` again at mount. A component can set its exposed `element` after its render. At mount, the element exists.
+- The ref of a component with no `expose` also gives access to its props. If such a component has a prop `element` with no value, `resolveElement` gives `null`.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
 - Find an element by its `nodeType`. Do not use `instanceof`.
 
@@ -201,9 +236,12 @@ Rules:
 - `ref` is not merged.
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
 
-### `useRender`
+### `useRenderElement` and `useRender`
 
-`useRender({ state, props, stateAttributesMapping, enabled })` is public. It is the composable that the parts use.
+- Each part calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
+- Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
+- A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
+- `useRender` is public. It gives the API of a part to a component of a consumer.
 
 ### Props
 
@@ -224,7 +262,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
 - A consumer writes `v-model:open`, `v-model:value`, `v-model:checked` or `v-model:pressed`. There is no `modelValue` alias.
-- One composable does this: `useControlled({ controlled: () => props.x, default: props.defaultX, name })`.
+- One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
+- `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
 
 `details` is upstream's object:
@@ -251,7 +290,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on list parts, `{ value }` on `Select.Value`.
 - Type the slots with `defineSlots`. A root with a value type uses `generic="Value"`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
-- An id is `props.id ?? useId()`, made in setup. The ids of the parts derive from the id of the root.
+- Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root.
 
 ## Rules for the source
 
@@ -378,6 +417,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 - A test file runs in Chromium, Firefox and WebKit.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
+- A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
 - There is no jsdom.
 - A file with a name that ends in `.spec.ts` or `.spec.tsx` is a type test. vue-tsc checks it, and no test runner runs it.
 
@@ -385,25 +425,31 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 
 A ported test is a file at the mapped path with the same `describe` and `it` titles as upstream. It is TSX, so it differs from the upstream file only by these rules:
 
-| Base UI test                                                             | Vase UI test                                                                                                       |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `from '@base-ui/react/<entry>'`                                          | `from '@vase-ui/vue/<entry>'`                                                                                      |
-| `from '@base-ui/react'`                                                  | `from '@vase-ui/vue'`                                                                                              |
-| `from '@base-ui/utils/<file>'`                                           | A relative path to `src/common/<file>`                                                                             |
-| `className`                                                              | `class`                                                                                                            |
-| `render={<x />}`                                                         | `as`                                                                                                               |
-| A render function                                                        | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns. |
-| A handler key of a DOM event, such as `onKeyDown`                        | The Vue key, such as `onKeydown`. See [DOM event names](#dom-event-names).                                         |
-| `{ nativeEvent: new MouseEvent('click') }`                               | `new MouseEvent('click')`                                                                                          |
-| `ref` on the outermost vnode, or on a child of a plain element           | A function for `render`: `render(() => <Button ref={ref} />)`                                                      |
-| A `Wrapper` that forwards a ref                                          | A `Wrapper` that exposes `element`                                                                                 |
-| `act(fn)`                                                                | `fn()`, then `await flushMicrotasks()`                                                                             |
-| `childNodes`, `firstChild` or `nextSibling` on the element of a part     | `children` or `querySelector`                                                                                      |
-| A number as a length in a style object, such as `top: 1`                 | A string with its unit, such as `top: '1px'`                                                                       |
-| An event                                                                 | Add `await`                                                                                                        |
-| An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check) | No change                                                                                                          |
-| `isJSDOM`                                                                | Always `false`                                                                                                     |
-| An `eslint-disable` comment that ESLint reports                          | Remove it                                                                                                          |
+| Base UI test                                                             | Vase UI test                                                                                                                     |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `from '@base-ui/react/<entry>'`                                          | `from '@vase-ui/vue/<entry>'`                                                                                                    |
+| `from '@base-ui/react'`                                                  | `from '@vase-ui/vue'`                                                                                                            |
+| `from '@base-ui/utils/<file>'`                                           | A relative path to `src/common/<file>`                                                                                           |
+| `from '@mui/internal-test-utils'`                                        | `from '#test-utils'`                                                                                                             |
+| `className`                                                              | `class`                                                                                                                          |
+| `render={<x />}`                                                         | `as`                                                                                                                             |
+| A render function                                                        | `v-slots={{ render }}`. Give its parameter a type. Move the children of the part into the element that it returns.               |
+| A function as children: `<Part>{(args) => …}</Part>`                     | `v-slots={{ default: (args: Type) => … }}`                                                                                       |
+| A handler key of a DOM event, such as `onKeyDown`                        | The Vue key, such as `onKeydown`. See [DOM event names](#dom-event-names).                                                       |
+| `{ nativeEvent: new MouseEvent('click') }`                               | `new MouseEvent('click')`                                                                                                        |
+| `ref` on the outermost vnode, or on a child of a plain element           | A function for `render`: `render(() => <Button ref={ref} />)`                                                                    |
+| A `Wrapper` that forwards a ref                                          | A `Wrapper` that exposes `element`                                                                                               |
+| `React.createRef()` and `ref.current`                                    | A function ref that writes a variable, or a `shallowRef`. A ref on a part gives the component, so read its `element`.            |
+| `React.lazy(loader)`                                                     | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions                                             |
+| `act(fn)`                                                                | `fn()`, then `await flushMicrotasks()`                                                                                           |
+| `renderHook(() => useX())`                                               | A component in the test that calls the composable in `setup` and gives the result to the test                                    |
+| `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                | A spy on `console.error` or `console.warn`. Call `fn`, then assert the call and its message. The message starts with `Vase UI:`. |
+| `childNodes`, `firstChild` or `nextSibling` on the element of a part     | `children` or `querySelector`                                                                                                    |
+| A number as a length in a style object, such as `top: 1`                 | A string with its unit, such as `top: '1px'`                                                                                     |
+| An event                                                                 | Add `await`                                                                                                                      |
+| An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check) | No change                                                                                                                        |
+| `isJSDOM`                                                                | Always `false`                                                                                                                   |
+| An `eslint-disable` comment that ESLint reports                          | Remove it                                                                                                                        |
 
 - TypeScript cannot infer the type of the parameter of a `v-slots` function.
 - A Vue handler gets the DOM event. It has no `nativeEvent`.
@@ -414,20 +460,30 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A case under `skipIf(isJSDOM)` runs.
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
 - ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
+- `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
+- `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
+- `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
+- Vue renders an async component after its loader resolves. `flushMicrotasks` waits for that render.
 
 ### Test helpers
 
 This section is the contract of the test helpers. Each helper must obey it. The helpers keep upstream's names.
 
 - `createRenderer()` returns `{ render }`.
-- `render` takes a vnode or a function that returns a vnode. It resolves to the queries, `user`, `rerender` and `setProps`.
+- `render` takes a vnode or a function that returns a vnode. It resolves to the queries, `container`, `unmount`, `user`, `rerender` and `setProps`.
+- `render` mounts the vnode with `createApp`. The helpers do not use `@testing-library/vue`, because it depends on another version of `@testing-library/dom`.
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
-- After a mount, `render` waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
+- After a mount, a `rerender` or a `setProps`, the helper waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
+- Under fake timers, the helper does not wait. It moves the fake clock by 1 ms and runs no timer, because a fake clock does not move by itself.
 - `fireEvent` is a function of the test helpers. It dispatches the event, waits for `nextTick()` and returns the result of the dispatch. Upstream tests read that result, which is `false` when a listener prevents the default action.
+- `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
+- `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
 
-The hydration helper:
+The hydration helpers:
 
-- It gets the server HTML from a render in Node with no DOM, as a server makes it.
+- `renderOnServer(file, props)` resolves to the server HTML of a component. `file` is the path of a Vue file from the root of the package, such as `test/fixtures/PlainPart.vue`.
+- The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
+- `hydrate(component, { serverHtml, props })` hydrates that HTML. The rules below are its contract.
 - It inserts the HTML with `Range.createContextualFragment`, because `innerHTML` does not run an inline script.
 - Its `warnHandler` collects the warnings and does not throw. After a `warnHandler` throws, Vue gives no more warnings on that page.
 - It records each call to `console.warn` and `console.error` during the whole test. Vue writes some hydration messages only to the console.
@@ -439,26 +495,74 @@ The hydration helper:
 - Use only the Vitest APIs: `expect`, `vi.fn` and the DOM matchers.
 - Put one assertion in each `waitFor`.
 - Do not put a negative assertion in `waitFor`: it passes on the first try. Advance the timers or flush first, then assert.
-- A test must fail when the behaviour in its title breaks. Break the behaviour in the source, make sure that the test fails, then put the source back.
+- A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
-- A test belongs in the file of the part whose prop or behaviour it asserts.
+- A test belongs in the file of the part whose prop or behavior it asserts.
 - For text in a locale format, compute the expected text with the same locale and options as the component.
+- `pnpm parity:check` reads the test files in `packages/vue` with the TypeScript parser. On `it`, `test` and `describe` it accepts only these modifiers: `skipIf`, `runIf`, `each`, `for`, `skip` and `todo`.
+- It refuses `.only`. It also refuses each other modifier, such as `it.concurrent` or `test.extend(…)`, and a table in a tagged template. It cannot read these forms. Write a table as an array.
 
 ### Exception rows
 
-Each upstream test case has a Vase UI test with the same path and title, or an exception row. The rows of a family are in the `exceptions` list of its family file. Each row has a `kind`, the upstream path or case that it names, and a `reason`. A row can name a case, a `describe` block or a file. There are four kinds:
+`pnpm parity:check` compares each family with its extract. Each upstream thing in this table needs its counterpart or an exception row:
 
-| Kind             | Meaning                                                                                                                | The row gives                                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `replaced`       | Another Vase UI test covers the case.                                                                                  | The path of that test and the reason.                                                                                            |
-| `not-applicable` | The case tests something that only React has. The kind also covers an upstream file that no Base UI component imports. | The reason, for example StrictMode, React 17 or 18, `React.lazy`, the React Compiler, jsdom internals, or a file with no import. |
-| `engine`         | The case does not run in one engine because of the browser.                                                            | The engine, the reason, and a link to a browser bug or an upstream issue.                                                        |
-| `waits-on`       | The case renders a family or an upstream path that `main` does not have.                                               | The family or the path.                                                                                                          |
+| Upstream thing                                             | Counterpart in Vase UI                                                                                             |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| A source file or a type test                               | The file at the mapped path. See [Layout and names](#layout-and-names).                                            |
+| A test case                                                | A case in the test file at the mapped path, with the same `describe` titles and the same title.                    |
+| A call of a shared suite, such as `describeConformance(…)` | The same call in the same `describe` block.                                                                        |
+| An entry of a `types.md`, and each row of its props table  | The export of the family, and the prop, emit, slot or exposed member that [API convention](#api-convention) gives. |
 
-- A ported case can add an engine condition only with an `engine` row. A defect of the port never goes there.
+The rows of a family are in the `exceptions` list of its family file. A row names one upstream thing. The family files write the fields in this order:
+
+| Field                               | Content                                                                                          | The row has it when                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `upstream`                          | One upstream path that the extract holds.                                                        | Always.                                   |
+| `describe`                          | The titles of the `describe` blocks, from the outermost. It is `[]` for a case at the top level. | It names a block, a case or a suite call. |
+| `title`                             | The title of the case.                                                                           | It names a case.                          |
+| `suite`                             | The name of the function of the suite call.                                                      | It names a suite call.                    |
+| `entry`                             | The title of an entry of the `types.md`, such as `Root`.                                         | It names an entry or a prop row.          |
+| `prop`                              | The name of a row of the props table of that entry.                                              | It names a prop row.                      |
+| `kind`                              | One of the four kinds.                                                                           | Always.                                   |
+| `test`, `engine`, `link`, `waitsOn` | See the table of the kinds.                                                                      | The kind needs it.                        |
+| `reason`                            | The reason.                                                                                      | Always.                                   |
+
+The thing that a row names decides which kinds the row can have:
+
+| The row names                              | Kinds                                    |
+| ------------------------------------------ | ---------------------------------------- |
+| A source file                              | `not-applicable`, `waits-on`             |
+| A type test, or a suite call               | `replaced`, `not-applicable`, `waits-on` |
+| A test file, a `describe` block, or a case | Each of the four kinds                   |
+| An entry of a `types.md`, or a prop row    | `not-applicable`, `waits-on`             |
+
+| Kind             | Meaning                                                                                                                  | The row gives                                                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `replaced`       | Another Vase UI test covers the thing.                                                                                   | `test`: the path of that test.                                                                                                                                                             |
+| `not-applicable` | The thing is for something that only React has. The kind also covers an upstream file that no Base UI component imports. | Only the reason. Examples are StrictMode, React 17 or 18 and the React Compiler. More examples are the lazy wrapper of the React Flight client, jsdom internals and a file with no import. |
+| `engine`         | The case does not run in one engine because of the browser.                                                              | `engine`: `chromium`, `firefox` or `webkit`. `link`: an `https://` link to a browser bug or an upstream issue.                                                                             |
+| `waits-on`       | The thing waits for an upstream file or folder that has no counterpart on `main`.                                        | `waitsOn`: that upstream path, with no `/` at its end. A row that names a source file has no `waitsOn`, because it waits for the file itself.                                              |
+
+- A row that names a source file also covers the cases in that file.
+- A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
+- `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
+
+### Rows of `parity/better`
+
+Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID>.json`:
+
+| Key        | Content                                                                                                                                                                                   |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `BUG-<number>` for the correction of a Base UI issue, with the number of the issue. `VUE-<number>` for a behavior that is specific to the Vue port. The file name is the id plus `.json`. |
+| `evidence` | One or more `https://` links: an issue, a standard, or a line of source at a tag or a commit.                                                                                             |
+| `behavior` | What Vase UI does.                                                                                                                                                                        |
+| `dueWith`  | One upstream path, with no `/` at its end. The row is due when the path has a counterpart.                                                                                                |
+
+- A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
+- `pnpm parity:check` fails on a due row that has no such title.
 
 ## Text
 
