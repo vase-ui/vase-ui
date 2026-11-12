@@ -21,9 +21,18 @@ export function resolveElement(
     return value;
   }
 
-  // A wrapper can set `element` after its render, so the root element can be the wrong element.
+  // The public instance of a component with no `expose` answers `in` for its props too,
+  // so `element` can be a prop of another type.
+  // A wrapper can set the exposed `element` after its render. The root element can be the wrong
+  // element, so an empty `element` gives `null`.
   if ('element' in value) {
-    return isElement(value.element) ? value.element : null;
+    const exposed = value.element;
+    if (isElement(exposed)) {
+      return exposed;
+    }
+    if (exposed == null) {
+      return null;
+    }
   }
 
   if (isElement(value.$el)) {

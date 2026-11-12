@@ -55,19 +55,36 @@ describe('resolveElement', () => {
     expect(resolveElement(value)).toBe(document.querySelector('[data-testid="inner"]'));
   });
 
-  it('returns null for a component that exposes an empty element, and not its root element', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it.each([
+    { name: 'null', exposed: null },
+    { name: 'undefined', exposed: undefined },
+  ])(
+    'returns null for a component that exposes an empty element, and not its root element ($name)',
+    async ({ exposed }) => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const Target = defineComponent({
+        setup(_, { expose }) {
+          expose({ element: shallowRef<Element | null | undefined>(exposed) });
+          return () => <div />;
+        },
+      });
+
+      const value = await getRefValue(Target);
+
+      expect(resolveElement(value)).toBeNull();
+      expect(warnSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns the root element of a component that has a string prop named element', async () => {
     const Target = defineComponent({
-      setup(_, { expose }) {
-        expose({ element: shallowRef<Element | null>(null) });
-        return () => <div />;
-      },
+      props: { element: { type: String, default: 'section' } },
+      setup: (props) => () => h(props.element, { 'data-testid': 'root' }),
     });
 
     const value = await getRefValue(Target);
 
-    expect(resolveElement(value)).toBeNull();
-    expect(warnSpy).not.toHaveBeenCalled();
+    expect(resolveElement(value)).toBe(document.querySelector('[data-testid="root"]'));
   });
 
   it('returns the root element of a component', async () => {
