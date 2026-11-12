@@ -1,0 +1,686 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/avatar/**",
+    "docs/src/app/(docs)/react/components/avatar/**"
+  ],
+  "sources": [
+    "packages/react/src/avatar/fallback/AvatarFallback.tsx",
+    "packages/react/src/avatar/image/AvatarImage.tsx",
+    "packages/react/src/avatar/image/AvatarImageDataAttributes.ts",
+    "packages/react/src/avatar/image/useImageLoadingStatus.ts",
+    "packages/react/src/avatar/index.parts.ts",
+    "packages/react/src/avatar/index.ts",
+    "packages/react/src/avatar/root/AvatarRoot.tsx",
+    "packages/react/src/avatar/root/AvatarRootContext.ts",
+    "packages/react/src/avatar/root/stateAttributesMapping.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/avatar/Avatar.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/avatar/fallback/AvatarFallback.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Avatar.Fallback />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />"
+          ],
+          "title": "should not render the children if the image loaded",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />"
+          ],
+          "title": "should render the fallback if the image fails to load",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />"
+          ],
+          "title": "shows the fallback when a loaded image is unmounted",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "prop: delay"
+          ],
+          "title": "shows the fallback when the delay has elapsed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "prop: delay"
+          ],
+          "title": "shows the fallback immediately when delay is 0",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "prop: delay"
+          ],
+          "title": "shows the fallback when delay changes to 0",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "prop: delay"
+          ],
+          "title": "keeps the fallback visible when delay changes from undefined to a number",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "prop: delay"
+          ],
+          "title": "keeps the fallback visible across a number -> undefined -> number delay change",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />"
+          ],
+          "title": "keeps fallback mounted and image unmounted while the image is loading",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Fallback />",
+            "regression"
+          ],
+          "title": "keeps only one of image or fallback mounted when switching to image",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/avatar/image/AvatarImage.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Avatar.Image />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Avatar.Image />"
+          ],
+          "title": "passes native image props to the rendered image",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />"
+          ],
+          "title": "shows the image when only srcSet is provided",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />"
+          ],
+          "title": "passes responsive image props to the loading probe",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: onLoadingStatusChange"
+          ],
+          "title": "fires when the image loads",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: onLoadingStatusChange"
+          ],
+          "title": "fires when the image errors",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: onLoadingStatusChange"
+          ],
+          "title": "fires for cached image errors without emitting idle",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "mounts the image while loading without preloading it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "derives the status from the rendered element load event",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "keeps the image mounted when it fails to load",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "calls the user onError handler",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "calls the user onLoad handler",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "lets a user handler prevent the status update",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "resets the status when a rendered image changes source",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "resets the status when the src prop changes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "renders the image in the server HTML and resolves cached images on hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "loads the image without a detached preload",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "reports an error when there is no source",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "preserves loaded status when the render element changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "hides the image from assistive technology until it loads",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "keeps the image hidden from assistive technology after an error",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "hides the image from assistive technology again when the source changes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "preserves an explicitly provided aria-hidden value",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "marks the not-loaded states with data attributes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "does not override source props in a render callback",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "applies the source props after the ones configuring the request",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "keeps the status reported by an element that does not forward a ref",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "prop: keepMounted"
+          ],
+          "title": "resets the status when the source changes to an unloaded one",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "animations"
+          ],
+          "title": "triggers enter animation via data-starting-style when mounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "animations"
+          ],
+          "title": "applies data-ending-style before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "animations"
+          ],
+          "title": "does not apply the not-loaded state attributes without keepMounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "animations"
+          ],
+          "title": "does not apply data-ending-style with keepMounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "animations"
+          ],
+          "title": "does not replay the enter animation for a cached image on hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />",
+            "cached images"
+          ],
+          "title": "does not flash fallback for a cached image during SSR hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Avatar.Image />"
+          ],
+          "title": "shows the image immediately for a cached src",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/avatar/root/AvatarRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Avatar.Root />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/avatar/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Avatar.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Avatar.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Avatar.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AvatarRootState",
+            "fields": [
+              {
+                "name": "imageLoadingStatus",
+                "optional": false,
+                "type": "ImageLoadingStatus"
+              }
+            ],
+            "code": "type AvatarRootState = {\n    imageLoadingStatus: ImageLoadingStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Image",
+          "tag": "img",
+          "props": [
+            {
+              "name": "onLoadingStatusChange",
+              "required": false,
+              "type": "((status: ImageLoadingStatus) => void)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Avatar.Image.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Avatar.Image.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>, state: Avatar.Image.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AvatarImageState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "imageLoadingStatus",
+                "optional": false,
+                "type": "ImageLoadingStatus"
+              }
+            ],
+            "code": "type AvatarImageState = {\n    transitionStatus: TransitionStatus;\n    imageLoadingStatus: ImageLoadingStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-error",
+              "type": null
+            },
+            {
+              "name": "data-loading",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Fallback",
+          "tag": "span",
+          "props": [
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Avatar.Fallback.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Avatar.Fallback.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Avatar.Fallback.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AvatarFallbackState",
+            "fields": [
+              {
+                "name": "imageLoadingStatus",
+                "optional": false,
+                "type": "ImageLoadingStatus"
+              }
+            ],
+            "code": "type AvatarFallbackState = {\n    imageLoadingStatus: ImageLoadingStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "AvatarImageDataAttributes",
+          "code": "declare namespace AvatarImageDataAttributes {\n    const loading: 'data-loading';\n    const error: 'data-error';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "loading",
+              "value": "data-loading"
+            },
+            {
+              "name": "error",
+              "value": "data-error"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "ImageLoadingStatus",
+          "code": "type ImageLoadingStatus = 'idle' | 'loading' | 'loaded' | 'error';"
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
