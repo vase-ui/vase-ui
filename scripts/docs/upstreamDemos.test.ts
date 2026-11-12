@@ -72,10 +72,10 @@ test('an upstream folder with no demos gives a record with no files', () => {
 });
 
 test('a family with no docs folder in its upstream paths is an error that says what to add', () => {
-  assert.throws(
-    () => read(makeFamily(['packages/react/src/button/**']), []),
-    /parity\/families\/button\.json: "upstreamPaths" has no docs folder\. Add the glob .* Then run `pnpm parity:extract --upstream <path> button`\./,
-  );
+  assert.throws(() => read(makeFamily(['packages/react/src/button/**']), []), {
+    message:
+      'parity/families/button.json: "upstreamPaths" has no docs folder. Add the glob "docs/src/app/(docs)/react/components/button/**" or "docs/src/app/(docs)/react/utils/button/**". Then run `pnpm parity:extract --upstream <path> button`.',
+  });
 });
 
 function makeRecord(commit = COMMIT): DemoRecord {
