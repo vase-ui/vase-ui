@@ -1,8 +1,2 @@
 packages:
   - packages/*
-
-# Both versions were less than one day old when they were pinned. Without these entries, a frozen
-# install fails the minimum release age check. Remove them in the next dependency update.
-minimumReleaseAgeExclude:
-  - prettier@3.10.0
-  - vite@8.3.8

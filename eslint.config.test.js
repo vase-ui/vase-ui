@@ -136,6 +136,13 @@ const reported = [
     hint: 'composable',
   },
   {
+    name: 'a custom directive named generic in a template',
+    file: `${SRC}/DialogRoot.vue`,
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div v-generic />\n</template>\n',
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'composable',
+  },
+  {
     name: 'v-memo',
     file: `${SRC}/DialogRoot.vue`,
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div v-memo="[1]" />\n</template>\n',
@@ -221,6 +228,41 @@ const passed = [
     name: 'defineOptions in script setup',
     file: `${SRC}/DialogRoot.vue`,
     code: `<script setup lang="ts">\ndefineOptions({ inheritAttrs: false });\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+  },
+  {
+    name: 'a generic part',
+    file: `${SRC}/DialogRoot.vue`,
+    code: `<script lang="ts">\nexport interface DialogRootProps<Payload = unknown> {\n  payload?: Payload | undefined;\n}\n</script>\n\n<script setup lang="ts" generic="Payload">\ndefineProps<DialogRootProps<Payload>>();\n</script>\n${SCRIPT_ONLY_TEMPLATE}`,
+  },
+  {
+    name: 'any in a source file',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const value: any = 1;\n',
+  },
+  {
+    name: 'any in a test file',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: 'export const value: any = 1;\n',
+  },
+  {
+    name: 'an empty object type in a source file',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export type Empty = {};\n',
+  },
+  {
+    name: 'an unused argument, variable and caught error that start with an underscore',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export function read(_value: unknown) {\n  const _unused = 1;\n  try {\n    return 1;\n  } catch (_error) {\n    return 2;\n  }\n}\n',
+  },
+  {
+    name: 'an unused sibling of a rest property',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const omit = ({ render, ...rest }: { render: unknown; id: string }) => rest;\n',
+  },
+  {
+    name: 'an unused declaration and an expression statement in a spec file',
+    file: `${SRC}/DialogRoot.spec.ts`,
+    code: 'declare const names: string[];\n\nconst unused = names;\nnames.length;\n',
   },
 ];
 

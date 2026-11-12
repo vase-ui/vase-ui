@@ -22,7 +22,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm lint`          | Tests the lint rules. Then it runs ESLint and the Prettier check.                                                                 |
 | `pnpm format`        | Formats the files with Prettier.                                                                                                  |
-| `pnpm typecheck`     | Runs vue-tsc on the package.                                                                                                      |
+| `pnpm typecheck`     | Writes the barrel. Then it runs vue-tsc on the package.                                                                           |
 | `pnpm build`         | Builds `packages/vue/dist`.                                                                                                       |
 | `pnpm check:package` | Builds the package with two fixture families. Then it checks the result with publint, Are the Types Wrong and a consumer project. |
 | `pnpm test`          | Runs all tests.                                                                                                                   |
@@ -71,7 +71,7 @@ The package is `@vase-ui/vue`. It is ESM only.
 - Each upstream folder that has a package export is one entry point with the same name: `@vase-ui/vue/dialog`, `@vase-ui/vue/merge-props`, `@vase-ui/vue/use-render`.
 - `@vase-ui/vue` is a barrel of the entry points.
 - A folder `packages/vue/src/<name>` that has an `index.ts` file is an entry point.
-- No list names the entry points. `package.json` has the one pattern `./*`, and the build writes the barrel `src/index.ts`. Do not commit the barrel.
+- No list names the entry points. `package.json` has the one pattern `./*`. The build and `pnpm typecheck` write the barrel `src/index.ts`. Do not commit the barrel.
 - `internals`, `utils` and `common` are not entry points.
 - A folder with a name that starts with `unstable-` is an entry point, but the barrel does not include it.
 
@@ -324,6 +324,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | Base UI test                                                             | Vase UI test                  |
 | ------------------------------------------------------------------------ | ----------------------------- |
 | `from '@base-ui/react/<entry>'`                                          | `from '@vase-ui/vue/<entry>'` |
+| `from '@base-ui/react'`                                                  | `from '@vase-ui/vue'`         |
 | `className`                                                              | `class`                       |
 | `render={<x />}`                                                         | `as`                          |
 | A render function                                                        | `v-slots={{ render }}`        |
@@ -332,9 +333,11 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | An event                                                                 | Add `await`                   |
 | An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check) | No change                     |
 | `isJSDOM`                                                                | Always `false`                |
+| An `eslint-disable` comment that ESLint reports                          | Remove it                     |
 
 - A case under `skipIf(isJSDOM)` runs.
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
+- ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 
 ### Test rules
 

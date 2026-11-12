@@ -85,7 +85,8 @@ const BUILT_IN_DIRECTIVES =
 const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "VAttribute[directive=true][key.name.name='memo']", message: MESSAGES.vMemo },
   {
-    selector: `VAttribute[directive=true]:not([key.name.name=/^(?:${BUILT_IN_DIRECTIVES}|memo)$/])`,
+    // vue-eslint-parser reads the `generic` attribute of `<script setup>` as a directive.
+    selector: `VElement:not([name='script']) > VStartTag > VAttribute[directive=true]:not([key.name.name=/^(?:${BUILT_IN_DIRECTIVES}|memo)$/])`,
     message: MESSAGES.customDirective,
   },
   { selector: "Identifier[name='$el']", message: MESSAGES.$el },
@@ -97,7 +98,7 @@ export default defineConfig([
     '**/dist/',
     '**/.package-check/',
     '**/node_modules/',
-    // The build writes these barrels.
+    // Scripts write these barrels.
     'packages/vue/src/index.ts',
     'packages/vue/test/package-check/index.ts',
   ]),
@@ -129,6 +130,28 @@ export default defineConfig([
       '@typescript-eslint/no-namespace': 'off',
       // Part files keep the names of the Base UI files, such as `Separator.vue`.
       'vue/multi-word-component-names': 'off',
+      // The port keeps the shape of the Base UI code, which uses `any`.
+      '@typescript-eslint/no-explicit-any': 'off',
+      // The port keeps the shape of the Base UI code, which uses `{}` as a type.
+      '@typescript-eslint/no-empty-object-type': 'off',
+      // The port keeps the shape of the Base UI code, which has unused `_` names and rest siblings.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
+  {
+    // A type test declares values and reads them only to check their types.
+    files: ['**/*.spec.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
   {
