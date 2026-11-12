@@ -222,7 +222,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - The part emits `xChange(value, details)` and then `update:x(value)`, synchronously.
 - The part does not emit `update:x` when `details.isCanceled` is true.
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
-- Do not throw to stop a change. A listener that throws stops `update:x` only in a development build that has no `app.config.errorHandler`. In all other conditions, Vue reports the error and the part emits `update:x`.
+- Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
 - A consumer writes `v-model:open`, `v-model:value`, `v-model:checked` or `v-model:pressed`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: props.defaultX, name })`.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
@@ -326,7 +326,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - React implements `onFocus` and `onBlur` with `focusin` and `focusout`.
 - React calls `onChange` of a text input on each `input` event.
 - To stop the focus handler of a part, call `event.preventVaseUIHandler()` from a `focusin` or `focusout` listener.
-- ESLint reports a React name from a fixed list, with or without the `Capture` suffix. It reports an object key, a property read and a JSX attribute, in `packages/vue/src`, in test files and in `packages/vue/test`.
+- ESLint reports a React name from a fixed list, with or without the `Capture` suffix. It reports an object key, a property read and a JSX attribute in script, in `packages/vue/src`, in test files and in `packages/vue/test`. It does not read a template.
 - The lint rule has a fixed list of names, because a pattern for a second capital also matches a component event, such as `onOpenChange`.
 - The list does not have `onFocus`, `onBlur` and `onChange`. Each is a valid Vue key with another meaning.
 
