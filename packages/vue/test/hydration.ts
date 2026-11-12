@@ -122,9 +122,12 @@ function serializeChildren(element: Element): string {
   return Array.from(element.childNodes, serialize).join('');
 }
 
-// Text keeps its text, a comment is dropped, attributes are in the order of their names, and
-// `style` is a sorted list of declarations. Vue keeps the comment anchors of a server render where
-// a client-only render has empty text nodes, and the server writes `style` in its own format.
+// Text keeps its text, and attributes are in the order of their names.
+// A comment is dropped, because Vue keeps the comment anchors of a server render where a
+// client-only render has empty text nodes.
+// `style` is the style that the browser parsed, and an empty style has no attribute.
+// Vue writes `border:0` on a server and does not patch `style` when it hydrates.
+// A browser writes `border: 0px` for a client-only render.
 function serialize(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.nodeValue ?? '';
@@ -133,26 +136,15 @@ function serialize(node: Node): string {
     return '';
   }
 
-  const element = node as Element;
+  const element = node as Element & ElementCSSInlineStyle;
   const attributes = Array.from(element.attributes, ({ name, value }) => ({
     name,
-    value: name === 'style' ? normalizeStyle(value) : value,
-  })).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    value: name === 'style' ? element.style.cssText : value,
+  }))
+    .filter(({ name, value }) => name !== 'style' || value !== '')
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const tag = element.localName;
   const attributeText = attributes.map(({ name, value }) => ` ${name}="${value}"`).join('');
 
   return `<${tag}${attributeText}>${serializeChildren(element)}</${tag}>`;
-}
-
-function normalizeStyle(style: string): string {
-  return style
-    .split(';')
-    .map((declaration) => declaration.trim())
-    .filter(Boolean)
-    .map((declaration) => {
-      const colon = declaration.indexOf(':');
-      return `${declaration.slice(0, colon).trim()}:${declaration.slice(colon + 1).trim()}`;
-    })
-    .sort()
-    .join(';');
 }
