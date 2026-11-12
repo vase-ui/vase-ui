@@ -1,0 +1,49 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/csp-provider/**",
+    "packages/react/src/internals/csp-context/**",
+    "docs/src/app/(docs)/react/utils/csp-provider/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/internals/csp-context/index.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/csp-context`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
+      "describe": ["<CSPProvider />"],
+      "title": "does not render inline style tags when disableStyleElements is true",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
+      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
+      "describe": ["<CSPProvider />"],
+      "title": "does not render Select inline style tags when disableStyleElements is true",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/popup/SelectPopup.tsx",
+      "reason": "The case renders `Select.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
+      "describe": ["<CSPProvider />"],
+      "title": "applies nonce to inline style tags",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
+      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
+      "describe": ["<CSPProvider />"],
+      "title": "renders inline style tags by default",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
+      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+    }
+  ],
+  "surfaceAdditions": [],
+  "notApplicableCommits": []
+}
