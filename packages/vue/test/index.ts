@@ -17,4 +17,5 @@ export { cloneElement } from './cloneElement';
 export { createDescribe } from './createDescribe';
 export { randomStringValue } from './randomStringValue';
 export { renderOnServer, hydrate } from './hydration';
+export { takeReportedMessages } from './reportedMessages';
 export { expectNoAxeViolations } from './axe';

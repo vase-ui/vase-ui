@@ -4,7 +4,7 @@ import type { VNode } from 'vue';
 import { cloneElement } from '../cloneElement';
 import type { VaseUiConformanceTestsOptions } from '../describeConformance';
 import { randomStringValue } from '../randomStringValue';
-import { throwMissingPropError } from './utils';
+import { childrenSlots, throwMissingPropError } from './utils';
 
 export function testPropForwarding(
   element: VNode,
@@ -41,7 +41,9 @@ export function testPropForwarding(
 
       await render(
         cloneElement(element, otherProps, {
-          render: ({ props }: any) => <Element {...props} data-testid="custom-root" />,
+          render: ({ props, children }: any) => (
+            <Element {...props} data-testid="custom-root" v-slots={childrenSlots(children)} />
+          ),
         }),
       );
 
@@ -89,8 +91,13 @@ export function testPropForwarding(
           element,
           { ...(button && { nativeButton }) },
           {
-            render: ({ props }: any) => (
-              <Element {...props} style={{ color: 'green' }} data-testid="custom-root" />
+            render: ({ props, children }: any) => (
+              <Element
+                {...props}
+                style={{ color: 'green' }}
+                data-testid="custom-root"
+                v-slots={childrenSlots(children)}
+              />
             ),
           },
         ),

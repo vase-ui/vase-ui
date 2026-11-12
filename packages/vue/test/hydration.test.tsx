@@ -1,4 +1,4 @@
-import { expect, describe, it, vi } from 'vitest';
+import { expect, describe, it } from 'vitest';
 import { defineComponent, h, nextTick, onMounted, ref, warn } from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
@@ -135,17 +135,13 @@ describe('hydrate', () => {
 });
 
 describe('after a hydration', () => {
-  it('removes the containers and restores the console when the test ends', async ({
-    onTestFinished,
-  }) => {
+  it('removes the containers when the test ends', async ({ onTestFinished }) => {
     const hydrated: { container?: HTMLElement } = {};
 
     // The hooks of `onTestFinished` run in reverse order, so this hook runs after the hooks of
     // `hydrate`.
     onTestFinished(() => {
       expect(hydrated.container?.isConnected).toBe(false);
-      expect(vi.isMockFunction(console.warn)).toBe(false);
-      expect(vi.isMockFunction(console.error)).toBe(false);
     });
 
     const serverHtml = await renderOnServer(FIXTURE);
@@ -153,7 +149,5 @@ describe('after a hydration', () => {
     hydrated.container = container;
 
     expect(container.isConnected).toBe(true);
-    expect(vi.isMockFunction(console.warn)).toBe(true);
-    expect(vi.isMockFunction(console.error)).toBe(true);
   });
 });

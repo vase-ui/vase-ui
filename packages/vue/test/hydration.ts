@@ -1,6 +1,7 @@
-import { onTestFinished, vi } from 'vitest';
+import { onTestFinished } from 'vitest';
 import { createApp, createSSRApp, nextTick } from 'vue';
 import type { App, Component } from 'vue';
+import { recordVueWarnings, takeReportedMessages } from './reportedMessages';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
@@ -19,11 +20,6 @@ export interface HydrateOptions {
 
 export interface HydrateResult {
   container: HTMLElement;
-  /**
-   * The Vue warnings and the calls to `console.warn` and `console.error`.
-   * The list stays live until the test ends.
-   */
-  messages: readonly string[];
 }
 
 /**
@@ -46,41 +42,6 @@ export async function renderOnServer(
   return html;
 }
 
-let consoleMessages: string[] | undefined;
-
-// Vue writes some hydration messages only to the console. The spies cover the whole test, because a
-// part can warn after `hydrate` resolves.
-function recordConsole(): string[] {
-  if (consoleMessages) {
-    return consoleMessages;
-  }
-
-  const messages: string[] = [];
-  const spies = (['warn', 'error'] as const).map((method) =>
-    vi.spyOn(console, method).mockImplementation((...args: unknown[]) => {
-      messages.push(`console.${method}: ${args.map(String).join(' ')}`);
-    }),
-  );
-
-  consoleMessages = messages;
-  onTestFinished(() => {
-    for (const spy of spies) {
-      spy.mockRestore();
-    }
-    consoleMessages = undefined;
-  });
-
-  return messages;
-}
-
-// The handler records the warning and never throws. After a `warnHandler` throws, Vue gives no
-// more warnings on that page.
-function recordWarnings(app: App, messages: string[]) {
-  app.config.warnHandler = (message, _instance, trace) => {
-    messages.push(`Vue warning: ${message}${trace ? `\n${trace}` : ''}`);
-  };
-}
-
 async function mountAndSettle(app: App, container: HTMLElement) {
   app.mount(container);
   await nextTick();
@@ -96,7 +57,6 @@ export async function hydrate(
   component: Component,
   { serverHtml, props }: HydrateOptions,
 ): Promise<HydrateResult> {
-  const messages = recordConsole();
   const apps: App[] = [];
   const containers: HTMLElement[] = [];
 
@@ -128,18 +88,20 @@ export async function hydrate(
 
   const hydratingApp = createSSRApp(component, props);
   apps.push(hydratingApp);
-  recordWarnings(hydratingApp, messages);
+  recordVueWarnings(hydratingApp);
   await mountAndSettle(hydratingApp, container);
 
   const clientContainer = createContainer();
   const clientApp = createApp(component, props);
   apps.push(clientApp);
-  recordWarnings(clientApp, messages);
+  recordVueWarnings(clientApp);
   await mountAndSettle(clientApp, clientContainer);
 
   const hydratedDom = serializeChildren(container);
   const clientDom = serializeChildren(clientContainer);
 
+  // Vue writes some hydration messages only to the console.
+  const messages = takeReportedMessages();
   const problems: string[] = [];
   if (messages.length > 0) {
     problems.push(`Vue and the console reported:\n${messages.join('\n')}`);
@@ -153,7 +115,7 @@ export async function hydrate(
     throw new Error(`The hydration is not clean.\n\n${problems.join('\n\n')}`);
   }
 
-  return { container, messages };
+  return { container };
 }
 
 function serializeChildren(element: Element): string {

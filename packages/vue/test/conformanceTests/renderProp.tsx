@@ -5,7 +5,7 @@ import type { VNode } from 'vue';
 import { cloneElement } from '../cloneElement';
 import type { VaseUiConformanceTestsOptions } from '../describeConformance';
 import { randomStringValue } from '../randomStringValue';
-import { throwMissingPropError } from './utils';
+import { childrenSlots, throwMissingPropError } from './utils';
 
 type ComponentWithElement = { element: Element | null };
 
@@ -29,16 +29,16 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
   const Wrapper = defineComponent({
     name: 'Wrapper',
     inheritAttrs: false,
-    setup(_, { attrs, expose }) {
+    setup(_, { attrs, expose, slots }) {
       const inner = shallowRef<Element | null>(null);
       expose({ element: inner });
       return () =>
         wrappingAllowed ? (
           <div data-testid="vase-ui-wrapper">
-            <Element {...attrs} ref={inner} data-testid="wrapped" />
+            <Element {...attrs} ref={inner} data-testid="wrapped" v-slots={slots} />
           </div>
         ) : (
-          <Element {...attrs} ref={inner} data-testid="wrapped" />
+          <Element {...attrs} ref={inner} data-testid="wrapped" v-slots={slots} />
         );
     },
   });
@@ -52,7 +52,9 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
           element,
           { ...(button && { nativeButton }) },
           {
-            render: ({ props }: any) => <Wrapper {...props} data-test-value={testValue} />,
+            render: ({ props, children }: any) => (
+              <Wrapper {...props} data-test-value={testValue} v-slots={childrenSlots(children)} />
+            ),
           },
         ),
       );
@@ -92,7 +94,9 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
             ...(button && { nativeButton }),
           },
           {
-            render: ({ props }: any) => <Wrapper {...props} />,
+            render: ({ props, children }: any) => (
+              <Wrapper {...props} v-slots={childrenSlots(children)} />
+            ),
           },
         );
 
@@ -120,13 +124,14 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
           {
             // `ref` is not merged. A `ref` on the element of the slot replaces the setter of the
             // part, so the own ref of the element calls `props.ref` itself.
-            render: ({ props }: any) => (
+            render: ({ props, children }: any) => (
               <Wrapper
                 {...props}
                 ref={(value: ComponentWithElement | null) => {
                   props.ref(value);
                   componentB = value;
                 }}
+                v-slots={childrenSlots(children)}
               />
             ),
           },
@@ -154,7 +159,9 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
             ...(button && { nativeButton }),
           },
           {
-            render: ({ props }: any) => <Element {...props} class="render-prop-classname" />,
+            render: ({ props, children }: any) => (
+              <Element {...props} class="render-prop-classname" v-slots={childrenSlots(children)} />
+            ),
           },
         );
 
@@ -175,7 +182,9 @@ export function testRenderProp(element: VNode, getOptions: () => VaseUiConforman
             ...(button && { nativeButton }),
           },
           {
-            render: ({ props }: any) => <Element {...props} class="render-prop-classname" />,
+            render: ({ props, children }: any) => (
+              <Element {...props} class="render-prop-classname" v-slots={childrenSlots(children)} />
+            ),
           },
         );
 

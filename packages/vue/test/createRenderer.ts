@@ -5,6 +5,7 @@ import { afterEach, vi } from 'vitest';
 import { createApp, nextTick, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import { cloneElement } from './cloneElement';
+import { recordVueWarnings } from './reportedMessages';
 
 /**
  * A vnode, or a function that returns a vnode. A vnode that has a `ref` must be made in a render
@@ -50,6 +51,7 @@ export function createRenderer() {
     const app = createApp({
       render: () => (typeof current.value === 'function' ? current.value() : current.value),
     });
+    recordVueWarnings(app);
     const container = document.createElement('div');
     document.body.append(container);
     app.mount(container);
