@@ -63,9 +63,9 @@ Vase UI is a port, so the hard part was done before we started. The engineers be
 
 ## Contributing
 
-Start with a [Discussion](https://github.com/vase-ui/vase-ui/discussions/new) instead of opening a pull request. If we accept the proposal, a Mathematic maintainer or agent will implement it. When we implement your proposal, the pull request will link to the Discussion and credit you as the proposal's original author. GitHub restricts pull request creation to Mathematic maintainers and repository collaborators with write, maintain, or admin access, plus authorized maintenance agents. See [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for the full process.
+Vase UI is built in the open, and for now you can only watch. Issues, Discussions and outside pull requests are off while the port is in progress. To follow along, watch the repository: each pull request on `main` is one step of the port, and [the parity page](https://vase-ui.github.io/vase-ui/parity) shows where it stands. See [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for the rules that the port follows.
 
-Do not report a security problem in a Discussion. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
+Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
 <!-- #region donation -->
 
