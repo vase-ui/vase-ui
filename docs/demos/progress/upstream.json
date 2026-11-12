@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/progress/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "d6e4ea9f651f865f51a7de87df72526413f4d46728af71448c66f1e2528ffb3c",
+    "hero/css-modules/index.tsx": "8b650ab6f3ad373c0cf343bf851e2ff7ed001db10bdad011e4d8f96443c34893"
+  }
+}
