@@ -8,6 +8,7 @@ import vueParser from 'vue-eslint-parser';
 
 const SOURCE_FILES = ['packages/vue/src/**/*.{ts,vue}'];
 const TEST_FILES = ['**/*.test.*', '**/*.spec.*'];
+const TEST_SCRIPT_FILES = TEST_FILES.map((testFiles) => [testFiles, '**/*.{js,mjs,ts,tsx,vue}']);
 
 const MESSAGES = {
   getCurrentInstance:
@@ -25,6 +26,8 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
+  reactEventProp: (reactKey, vueKey) =>
+    `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
 
 const RESTRICTED_IMPORTS = [
@@ -51,6 +54,78 @@ const RESTRICTED_PROPERTIES = [
   { property: '$parent', message: MESSAGES.$parent },
 ];
 
+// The rule uses a fixed list of names. A pattern for a second capital also matches a
+// component event, such as `onOpenChange`.
+const VUE_KEY_OF_REACT_EVENT_PROP = {
+  onAnimationEnd: 'onAnimationend',
+  onAnimationIteration: 'onAnimationiteration',
+  onAnimationStart: 'onAnimationstart',
+  onAuxClick: 'onAuxclick',
+  onBeforeInput: 'onBeforeinput',
+  onBeforeToggle: 'onBeforetoggle',
+  onCanPlay: 'onCanplay',
+  onCanPlayThrough: 'onCanplaythrough',
+  onCompositionEnd: 'onCompositionend',
+  onCompositionStart: 'onCompositionstart',
+  onCompositionUpdate: 'onCompositionupdate',
+  onContextMenu: 'onContextmenu',
+  onDoubleClick: 'onDblclick',
+  onDragEnd: 'onDragend',
+  onDragEnter: 'onDragenter',
+  onDragExit: 'onDragexit',
+  onDragLeave: 'onDragleave',
+  onDragOver: 'onDragover',
+  onDragStart: 'onDragstart',
+  onDurationChange: 'onDurationchange',
+  onGotPointerCapture: 'onGotpointercapture',
+  onKeyDown: 'onKeydown',
+  onKeyPress: 'onKeypress',
+  onKeyUp: 'onKeyup',
+  onLoadStart: 'onLoadstart',
+  onLoadedData: 'onLoadeddata',
+  onLoadedMetadata: 'onLoadedmetadata',
+  onLostPointerCapture: 'onLostpointercapture',
+  onMouseDown: 'onMousedown',
+  onMouseEnter: 'onMouseenter',
+  onMouseLeave: 'onMouseleave',
+  onMouseMove: 'onMousemove',
+  onMouseOut: 'onMouseout',
+  onMouseOver: 'onMouseover',
+  onMouseUp: 'onMouseup',
+  onPointerCancel: 'onPointercancel',
+  onPointerDown: 'onPointerdown',
+  onPointerEnter: 'onPointerenter',
+  onPointerLeave: 'onPointerleave',
+  onPointerMove: 'onPointermove',
+  onPointerOut: 'onPointerout',
+  onPointerOver: 'onPointerover',
+  onPointerUp: 'onPointerup',
+  onRateChange: 'onRatechange',
+  onScrollEnd: 'onScrollend',
+  onTimeUpdate: 'onTimeupdate',
+  onTouchCancel: 'onTouchcancel',
+  onTouchEnd: 'onTouchend',
+  onTouchMove: 'onTouchmove',
+  onTouchStart: 'onTouchstart',
+  onTransitionCancel: 'onTransitioncancel',
+  onTransitionEnd: 'onTransitionend',
+  onTransitionRun: 'onTransitionrun',
+  onTransitionStart: 'onTransitionstart',
+  onVolumeChange: 'onVolumechange',
+};
+
+const RESTRICTED_REACT_EVENT_PROP_SYNTAX = Object.entries(VUE_KEY_OF_REACT_EVENT_PROP).flatMap(
+  ([reactKey, vueKey]) =>
+    ['', 'Capture'].map((suffix) => ({
+      selector: [
+        `Property[key.name='${reactKey}${suffix}']`,
+        `MemberExpression[computed=false][property.name='${reactKey}${suffix}']`,
+        `JSXAttribute[name.name='${reactKey}${suffix}']`,
+      ].join(', '),
+      message: MESSAGES.reactEventProp(`${reactKey}${suffix}`, `${vueKey}${suffix}`),
+    })),
+);
+
 const RESTRICTED_SYNTAX = [
   {
     selector: [
@@ -65,6 +140,7 @@ const RESTRICTED_SYNTAX = [
       "BinaryExpression[operator='instanceof'][right.name=/^(?:Node|Text|Comment|Document|DocumentFragment|ShadowRoot|Window|Range|Selection|[A-Za-z]*Element|[A-Za-z]*Event)$/]",
     message: MESSAGES.domInstanceof,
   },
+  ...RESTRICTED_REACT_EVENT_PROP_SYNTAX,
 ];
 
 const RESTRICTED_SYNTAX_IN_VUE_FILES = [
@@ -176,6 +252,10 @@ export default defineConfig([
     files: ['packages/vue/src/**/*.tsx'],
     ignores: TEST_FILES,
     rules: { 'no-restricted-syntax': ['error', { selector: 'Program', message: MESSAGES.tsx }] },
+  },
+  {
+    files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
+    rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
   {
     files: ['packages/vue/src/internals/resolveElement.ts'],
