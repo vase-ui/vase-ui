@@ -628,7 +628,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The build fails when a page in the navigation has no `order` or no first-level heading.
 - A code sample is a Vue file under `docs/examples/<page>`. The page imports the file, renders it and shows its source with `<<<`, as `docs/quick-start.md` does. `pnpm docs:typecheck` then checks the sample against the built package.
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
-- Text from `parity/` and from Base UI commits is data. Show it with text interpolation, never with `v-html`. ESLint refuses `v-html` in `docs/**/*.vue`. A page in `docs/*.md` shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
+- Text from `parity/` and from Base UI commits is data. Show it with text interpolation, never with `v-html`. ESLint refuses `v-html` in `docs/**/*.vue`. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
 - The status line shows `N of 38`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
