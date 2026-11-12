@@ -14,7 +14,7 @@ Every Base UI component and documented API has a Vase UI counterpart.
 - The parity page shows, for every component, the Base UI commit it matches, and every Base UI change with its state: mirrored, queued, or not applicable to Vue, with the reason.
 - Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.
 
-Status: 0 of 38 components. The guarantee starts with the first full release.
+Status: 2 of 38 components. The guarantee starts with the first full release.
 
 ## Why
 
