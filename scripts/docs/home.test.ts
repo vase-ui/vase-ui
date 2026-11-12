@@ -17,7 +17,7 @@ for (const { target, file, region } of includes) {
   test(`${target} points to a file that has one start line and one end line of the region`, () => {
     assert.notEqual(region, undefined, `${target} has no region name.`);
     const path = join(DOCS_ROOT, file);
-    assert.ok(existsSync(path), `${path} does not exist. VitePress then keeps the comment.`);
+    assert.ok(existsSync(path), `${path} does not exist.`);
     const lines = readFileSync(path, 'utf8')
       .split(/\r?\n/)
       .map((line) => line.trim());
