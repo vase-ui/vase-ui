@@ -4,7 +4,7 @@
 
 Vase UI is a port, so the people on this page did the hard part before we started. They spent years on focus management, screen readers and browser bugs. We carried their work across, and we thank each of them.
 
-Each list is GitHub's contributor list of the project, read on `2026-11-12` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation accounts. It also does not have a person whose commits GitHub links to no account.
+Each list is GitHub's contributor list of the project, read on `2026-11-12` (UTC). A list starts with the person who has the most commits. People with the same number of commits are in the sequence of their account names. A list does not have automation. GitHub links the commits of some people to no account. A list shows each of these people by the name in their commits, with no link. The sequence uses that name for a person who has no account name. A list does not have such a name when the page cannot show it as plain text.
 
 ## Base UI
 
@@ -104,9 +104,12 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [SaidMarar](https://github.com/SaidMarar)
 - [Shorif](https://github.com/Shorifpatwary)
 - [Wonsuk Choi](https://github.com/sukvvon)
+- Takeichi Kanzaki Cabrera
 - [Martin Vik](https://github.com/vikuscz)
+- Weslen Nascimento
 - [Grant Forrest](https://github.com/a-type)
 - [Aaron Lademann](https://github.com/aaronlademann-wf)
+- Abdallah Elroby
 - [Andrey Briginets](https://github.com/abriginets)
 - [Alexandru Comanescu](https://github.com/acomanescu)
 - [Adam Fitzgibbon](https://github.com/adamfitzgibbon)
@@ -114,9 +117,12 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [adamhylander](https://github.com/adamhylander)
 - [Adam Nowicki](https://github.com/adamowski10)
 - [Adam Sundberg](https://github.com/AdamSundberg)
+- Adebiyi Adedotun
+- adi carmel
 - [ABDERRAHMANE ELFANNIR](https://github.com/aelfannir)
 - [Ahmad Reza](https://github.com/ahmad-reza619)
 - [Samuel Tschiedel](https://github.com/aisamu)
+- alaumh
 - [alex-js-ltd](https://github.com/alex-js-ltd)
 - [Allan Alexandre](https://github.com/alexandesigner)
 - [Alexandre Le Lain](https://github.com/alexandre-lelain)
@@ -138,6 +144,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [binh1298](https://github.com/binh1298)
 - [Richard Chapman](https://github.com/chapmanio)
 - [Kiran Kumar Chaudhary](https://github.com/chaudharykiran)
+- Chawin Tan
 - [Hao](https://github.com/chiahao)
 - [Spencer Steffen](https://github.com/citrus)
 - [Cody Schaaf](https://github.com/CodySchaaf)
@@ -147,6 +154,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [DV](https://github.com/DarhkVoyd)
 - [DarkKnight1992](https://github.com/DarkKnight1992)
 - [Sergei Aleksandrovich](https://github.com/DarthSim)
+- David Alberto Serrano Garcia
 - [David Cnoops](https://github.com/DavidCnoops)
 - [Jeon Suyeol](https://github.com/devxoul)
 - [Divyam Madhok](https://github.com/divyammadhok)
@@ -156,6 +164,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Edmund](https://github.com/EdmundMai)
 - [Edward Horsey](https://github.com/edwardhorsey)
 - [gyeongmin](https://github.com/eggbread)
+- Eldar B
 - [embeddedt](https://github.com/embeddedt)
 - [Emil Nordling](https://github.com/EmilNordling)
 - [Emmanuel Ferdman](https://github.com/emmanuel-ferdman)
@@ -210,6 +219,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [komkanit](https://github.com/komkanit)
 - [Sai Kousthubha Das Kalvakolanu](https://github.com/kskd1804)
 - [Kyrre Gjerstad](https://github.com/kyrregjerstad)
+- LaneRamp
 - [Leonidas](https://github.com/leonidaz)
 - [Liang Chun](https://github.com/liangchunn)
 - [Jonah](https://github.com/Lioness100)
@@ -224,6 +234,8 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Mark Miro](https://github.com/markmiro)
 - [Marten](https://github.com/martenbjork)
 - [marwen](https://github.com/marwenilo)
+- Mathias Vestergaard
+- Matt Hooper
 - [Matthew Henschke](https://github.com/matthenschke)
 - [Michael Bayucot](https://github.com/mbayucot-archive)
 - [mbruhler](https://github.com/mbruhler)
@@ -286,6 +298,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Silviu Alexandru Avram](https://github.com/silviuaavram)
 - [Kevin Soruco](https://github.com/skevprog)
 - [Batrić Perović](https://github.com/skrabe)
+- Sliman Said
 - [Solomon Astley](https://github.com/solastley)
 - [Spoko Dev](https://github.com/spokodev)
 - [Ren yiwei](https://github.com/SSDWGG)
@@ -321,6 +334,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Vishruth Raj](https://github.com/VishruthR)
 - [Vlad Jerca](https://github.com/vladjerca)
 - [Wan Xiankai](https://github.com/wanxiankai)
+- Weslen do Nascimento
 - [Will Honey](https://github.com/willhoney7)
 - [William Will](https://github.com/willwill96)
 - [YuGilJong](https://github.com/XionWCFM)
@@ -328,6 +342,7 @@ The contributors of [mui/base-ui](https://github.com/mui/base-ui) at commit `fb9
 - [Yona Alexander Voss-Andreae](https://github.com/Yonava)
 - [Zach Parks](https://github.com/ZachCMP)
 - [zignis](https://github.com/zignis)
+- 齐天大圣
 
 ## Floating UI
 
@@ -356,6 +371,7 @@ The contributors of [floating-ui/floating-ui](https://github.com/floating-ui/flo
 - [Alex Smirnov](https://github.com/AlexFSmirnov)
 - [Takeru Chuganji](https://github.com/chuganzy)
 - [YuChao Liang](https://github.com/cuyl)
+- Gilles Yvetot
 - [Jacob Wright](https://github.com/jacwright)
 - [Javier Morales](https://github.com/JavierM42)
 - [Jarda Snajdr](https://github.com/jsnajdr)
@@ -408,6 +424,7 @@ The contributors of [floating-ui/floating-ui](https://github.com/floating-ui/flo
 - [Guillaume Lecomte](https://github.com/guillaume86)
 - [Honza Gál](https://github.com/gynekolog)
 - [Huijie Wei](https://github.com/huijiewei)
+- Ian Walter
 - [inokawa](https://github.com/inokawa)
 - [Inom](https://github.com/inomdzhon)
 - [Islam](https://github.com/islami00)
@@ -425,17 +442,20 @@ The contributors of [floating-ui/floating-ui](https://github.com/floating-ui/flo
 - [Sergiu Cazac](https://github.com/kilobyte2007)
 - [Kirk Ouimet](https://github.com/kirkouimet)
 - [Dmitry Kokovtsev](https://github.com/kokovtsev)
+- ktmouk
 - [ling1726](https://github.com/ling1726)
 - [lio-mengxiang](https://github.com/lio-mengxiang)
 - [Laurie Poulter](https://github.com/lpoulter)
 - [Ludovic Thomas](https://github.com/ludovicthomas)
 - [Mads](https://github.com/maesse)
 - [Ibrahim Elkamali](https://github.com/Marve10s)
+- Mateusz Daniluk
 - [Mato Ilic](https://github.com/matoilic)
 - [Amadeusz Starzykiewicz](https://github.com/megawebmaster)
 - [Nathan Bierema](https://github.com/Methuselah96)
 - [Mochammad Fadhlan Al-Ghiffari](https://github.com/MFA-G)
 - [Michael Bull](https://github.com/michaelbull)
+- Mike Reinstein
 - [Marija Najdova](https://github.com/mnajdova)
 - [Dave Cole](https://github.com/mrdavidjcole)
 - [Mark Skelton](https://github.com/mskelton)
