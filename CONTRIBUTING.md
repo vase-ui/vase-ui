@@ -47,8 +47,8 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm test:release`                              | Runs the tests of the release script, `scripts/release/checkTag.ts`.                                                                                                                                                                                                                        |
 | `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
 | `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
-| `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families`.                                                                                                                                                                                                           |
-| `pnpm status:check`                              | Fails when the status line of `README.md` differs from the family files in `parity/families`.                                                                                                                                                                                               |
+| `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families` and from `parity/upstream.json`.                                                                                                                                                                           |
+| `pnpm status:check`                              | Fails when the status line of `README.md` differs from the line that `pnpm status:render` writes.                                                                                                                                                                                           |
 | `pnpm thanks:render`                             | Writes `THANKS.md` from GitHub's contributor lists of Base UI, Floating UI and aria-hidden. It uses your `gh` login.                                                                                                                                                                        |
 | `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
@@ -91,26 +91,31 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 
 ## Source of the port
 
-- `parity/upstream.json` records the Base UI commit that Vase UI tracks. `pnpm parity:track` writes it.
+- `parity/upstream.json` records the Base UI commit that Vase UI tracks. Its key `components` lists the folders of `docs/src/app/(docs)/react/components/` at that commit. `pnpm parity:track` writes the file.
 - `parity/scope.json` lists what Vase UI does not port, each with its reason. It also lists the Base UI paths that are out of scope.
 - Port from Base UI at the tracked commit.
 - The other sources are the code and documentation of Vue, the web standards, and the libraries that Vase UI depends on.
 - A ported file keeps the "Modified" or "@see" comment of its upstream file.
 
-Each family has a file `parity/families/<family>.json`. It has five keys. `pnpm parity:check` refuses a file that lacks one:
+Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm parity:check` refuses a file that lacks one:
 
-| Key                    | Content                                                                                                                                                                                                      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `upstreamPaths`        | The Base UI paths that the family ports, as globs. A family with a docs folder also names that folder: `docs/src/app/(docs)/react/components/<family>/**`, or `docs/src/app/(docs)/react/utils/<family>/**`. |
-| `matchedCommit`        | The Base UI commit that the family matches.                                                                                                                                                                  |
-| `exceptions`           | The exception rows of the family. See [Exception rows](#exception-rows).                                                                                                                                     |
-| `surfaceAdditions`     | The props, emits, slots and exposed members of a part that no Base UI row maps to, each with its reason.                                                                                                     |
-| `notApplicableCommits` | The Base UI commits that touch these paths and do not apply to Vue, each with its reason.                                                                                                                    |
+| Key                     | Content                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `upstreamPaths`         | The Base UI paths that the family ports, as globs. A family with a docs folder also names that folder: `docs/src/app/(docs)/react/components/<family>/**`, or `docs/src/app/(docs)/react/utils/<family>/**`. |
+| `matchedCommit`         | The Base UI commit that the family matches.                                                                                                                                                                  |
+| `exceptions`            | The exception rows of the family. See [Exception rows](#exception-rows).                                                                                                                                     |
+| `surfaceAdditions`      | The props, emits, slots and exposed members of a part that no Base UI row maps to, each with its reason.                                                                                                     |
+| `returnTypeDifferences` | The functions that return a different type from the type that Base UI documents, each with the Vase UI type and the reason.                                                                                  |
+| `notApplicableCommits`  | The Base UI commits that touch these paths and do not apply to Vue, each with its reason.                                                                                                                    |
 
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
-- The extract reads only the `types.md` of the docs folder. Without that folder, `pnpm parity:check` does not compare the props, emits, slots and exposed members of the family.
+- A `returnTypeDifferences` row names one function: `{ "entry": "useDirection", "returns": "ComputedRef<TextDirection>", "reason": "…" }`.
+- `entry` is the title of the function in the `types.md`. `returns` is the return type of the Vase UI function, as `pnpm parity:check` prints it.
+- `pnpm parity:check` fails on a difference when no row gives the Vase UI type and no exception row names the entry. It also fails on a stale row.
+- A row is stale when Vase UI returns the type that Base UI documents. It is also stale when the extract has no return value for the entry. It is also stale when an exception row names the entry and `returns` is not the type that Vase UI returns.
+- The extract reads only the `types.md` of the docs folder. Without that folder, `pnpm parity:check` does not compare the props, emits, slots, exposed members and return types of the family.
 - A family also names the folder of its context, where upstream has that folder under `internals`: `packages/react/src/internals/direction-context/**`. `pnpm parity:check` then checks the files of the context as part of the family that provides it.
 
 Each family also has an extract, `parity/families/<family>.upstream.json`. It holds the facts of Base UI at `matchedCommit`: the source files, the type tests, the test cases and the rows of each `types.md`.
@@ -601,7 +606,7 @@ The thing that a row names decides which kinds the row can have:
 | `replaced`       | Another Vase UI test covers the thing.                                                                                   | `test`: the path of that test.                                                                                                                                                             |
 | `not-applicable` | The thing is for something that only React has. The kind also covers an upstream file that no Base UI component imports. | Only the reason. Examples are StrictMode, React 17 or 18 and the React Compiler. More examples are the lazy wrapper of the React Flight client, jsdom internals and a file with no import. |
 | `engine`         | The case does not run in one engine because of the browser.                                                              | `engine`: `chromium`, `firefox` or `webkit`. `link`: an `https://` link to a browser bug or an upstream issue.                                                                             |
-| `waits-on`       | The thing waits for an upstream file or folder that has no counterpart on `main`.                                        | `waitsOn`: that upstream path, with no `/` at its end. A row that names a source file has no `waitsOn`, because it waits for the file itself.                                              |
+| `waits-on`       | The thing waits for an upstream file or folder that has no counterpart on `main`.                                        | `waitsOn`: that upstream path. `pnpm parity:check` refuses a path with `/` at its end. A row that names a source file has no `waitsOn`, because it waits for the file itself.              |
 
 - A row that names a source file also covers the cases in that file.
 - A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
@@ -617,7 +622,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 | `id`       | `BUG-<number>` for the correction of a Base UI issue, with the number of the issue. `VUE-<number>` for a behavior that is specific to the Vue port. The file name is the id plus `.json`. |
 | `evidence` | One or more `https://` links. Each link is an issue, a pull request, a standard, a Vue documentation page, or a line of source at a tag or a commit.                                      |
 | `behavior` | What Vase UI does.                                                                                                                                                                        |
-| `dueWith`  | One upstream path, with no `/` at its end. The row is due when the path has a counterpart.                                                                                                |
+| `dueWith`  | One upstream path. `pnpm parity:check` refuses a path with `/` at its end. The row is due when the path has a counterpart.                                                                |
 
 - A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
 - `pnpm parity:check` fails on a due row that has no such title.
@@ -636,11 +641,12 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A page that is not a component page has its samples in `docs/examples/<page>`. The page imports each sample and renders it, as `docs/quick-start.md` does.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
-- Text from `parity/` and from Base UI commits is data. Show it with text interpolation, never with `v-html`. ESLint refuses `v-html` in `docs/**/*.vue`. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
+- The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
+- Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use `v-html`, `innerHTML`, `outerHTML` or `insertAdjacentHTML`. In `docs/**/*.vue`, ESLint refuses `v-html` and a call of `insertAdjacentHTML`. It refuses `innerHTML` and `outerHTML` as a prop, an object key or an assignment target, and it accepts a read. It does not see a dynamic argument, a key in quotes, a computed key or member, or an object from a `.ts` module. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
-- The status line shows `N of 38`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
-- The total, 38, is `BASE_UI_COMPONENT_COUNT` in `scripts/docs/components.ts`. `pnpm parity:extract --upstream <path> --counts` prints that number for the tracked commit.
+- The status line shows `N of T`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
+- T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - The site uses the default theme of VitePress. Do not add the folder `docs/.vitepress/theme`. When that folder exists, VitePress uses it and not the default theme. A page imports its components from `docs/.vitepress/components`.
 - The text of a page follows [Voice](#voice).
 
@@ -651,7 +657,7 @@ A component page is `docs/components/<family>.md`. Use `docs/components/button.m
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
-- The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
+- The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
 - Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
 - `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file. It also fails when a demo folder has a style sheet that Base UI does not have.
@@ -664,8 +670,11 @@ A component page is `docs/components/<family>.md`. Use `docs/components/button.m
 
 - `docs/thanks.md` includes the region `thanks` of `THANKS.md`.
 - `pnpm thanks:render` writes `THANKS.md`. Do not edit the file.
-- A display name in `THANKS.md` is data: the owner of an account controls it. The include puts it into the page with no component, and VitePress compiles the page as a Vue template.
-- Two guards make sure that the page has only the text that the script writes. The script writes a display name only when it matches the pattern `DISPLAY_NAME` of `scripts/thanks/render.ts`. For each other name, it writes the account name. `pnpm test:thanks` writes the file again from the date, the commits and the people that it holds. It fails when the two texts differ.
+- A name in `THANKS.md` is data. The owner of an account controls a display name. The author of a commit controls the name of a person with no linked account. The include puts each name into the page with no component, and VitePress compiles the page as a Vue template.
+- Two guards make sure that the page has only the text that the script writes. The first is the test of each name in the script. The second is `pnpm test:thanks`.
+- The script writes a display name only when `isDisplayName` of `scripts/thanks/render.ts` accepts it. The name must match the pattern `DISPLAY_NAME`, with at most 100 characters and at most three combining marks in a row. For each other name, the script writes the account name.
+- A person with no linked account has no account name, and the name is plain text, not the text of a link. The script lists that person only when `isPlainText` accepts the name. `isDisplayName` must accept it, and each dot must follow a letter and precede a space or the end of the name. The script prints the number of names that it does not list. It does not keep the e-mail address that GitHub gives for that person.
+- `pnpm test:thanks` writes the file again from the date, the commits and the people that it holds. It fails when the two texts differ. A list item that is not a profile link counts as a name with no link. `renderThanks` refuses such a name when `isPlainText` does not accept it.
 - After a change of the fixed text in `scripts/thanks/render.ts`, run `pnpm thanks:render` and commit `THANKS.md` in the same pull request. Until then, `pnpm test:thanks` fails, because `THANKS.md` differs from the text that the script writes.
 - Run `pnpm thanks:render` before each release, and commit `THANKS.md`.
 
