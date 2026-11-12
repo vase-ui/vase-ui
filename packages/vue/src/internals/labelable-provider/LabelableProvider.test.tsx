@@ -6,6 +6,7 @@ import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableMessage from '../../../test/fixtures/LabelableMessage.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import LabelableHydration from './LabelableHydration.test.vue';
+import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
 
 describe('labelable provider', () => {
   const { render } = createRenderer();
@@ -84,6 +85,18 @@ describe('labelable provider', () => {
         await rerender(<TwoControls first={false} second />);
 
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+      });
+
+      it('keeps the selected id when a control with no id is mounted beside it', async () => {
+        await render(
+          <LabelableScope>
+            <LabelableControl id="a" />
+            <LabelableControl />
+            <LabelableLabel data-testid="label">Label</LabelableLabel>
+          </LabelableScope>,
+        );
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
       });
     });
 
@@ -175,6 +188,37 @@ describe('labelable provider', () => {
       await rerender(<LabelAndControl showLabel={false} />);
 
       expect(screen.getByTestId('control')).not.toHaveAttribute('aria-labelledby');
+    });
+
+    it('names the control with the last label that is left', async () => {
+      const TwoLabels = defineComponent(
+        (props: { second: boolean }) => () => (
+          <LabelableScope>
+            <LabelableLabel id="first-label" />
+            {props.second && <LabelableLabel id="second-label" />}
+            <LabelableControl data-testid="control" />
+          </LabelableScope>
+        ),
+        { props: ['second'] },
+      );
+      const { rerender } = await render(<TwoLabels second />);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'second-label');
+
+      await rerender(<TwoLabels second={false} />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'first-label');
+    });
+
+    // The compiled template of the fixture mounts the new label before it unmounts the old label.
+    // A render function in TSX reuses the label component, so it does not show this order.
+    it('keeps the name of the control when a label before it replaces a label after it', async () => {
+      const { rerender } = await render(<LabelableLabelPosition labelBeforeControl={false} />);
+      const control = screen.getByTestId('control');
+      expect(control).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
+
+      await rerender(<LabelableLabelPosition labelBeforeControl />);
+
+      expect(control).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
     });
   });
 

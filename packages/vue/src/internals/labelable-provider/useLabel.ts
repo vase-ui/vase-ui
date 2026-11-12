@@ -1,10 +1,8 @@
 import { isHTMLElement, isShadowRoot } from '@floating-ui/utils/dom';
-import { computed, toValue } from 'vue';
+import { computed, onScopeDispose, toValue, watch } from 'vue';
 import type { ComputedRef, LabelHTMLAttributes, MaybeRefOrGetter } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
-import { useRegisteredLabelId } from '../../utils/useRegisteredLabelId';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
 import { useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
 
@@ -15,23 +13,27 @@ import { useLabelableContext } from './LabelableContext';
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
   const {
     controlId: contextControlId,
-    setLabelId: setContextLabelId,
+    labelId: contextLabelId,
+    registerLabelId,
     defaultLabelId,
   } = useLabelableContext();
 
   // The id of a label that has no provider.
   const ownId = useVaseUiId();
 
-  const syncLabelId: LabelIdSetter = (next) => {
-    setContextLabelId(next);
-    params.setLabelId?.(next);
-  };
+  const id = computed(() => toValue(params.id) ?? defaultLabelId.value ?? ownId.value);
 
-  const id = useRegisteredLabelId(
-    () => toValue(params.id),
-    syncLabelId,
-    () => defaultLabelId.value ?? ownId.value,
-  );
+  // A direct call in `setup` puts the id in the server HTML of each part that renders after this
+  // label.
+  const source = Symbol();
+  function register(nextId: string | undefined) {
+    registerLabelId(source, nextId);
+    params.setLabelId?.(nextId ?? contextLabelId.value);
+  }
+
+  register(id.value);
+  watch(id, register);
+  onScopeDispose(() => register(undefined));
 
   const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
 
@@ -93,7 +95,8 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
 export interface UseLabelParameters {
   /**
    * The `id` of the label.
-   * The default is the id that the provider made for the label.
+   * The default is the id that the provider made for the label. With no provider, it is a
+   * generated id.
    */
   id?: MaybeRefOrGetter<string | undefined> | undefined;
   /**
@@ -106,9 +109,11 @@ export interface UseLabelParameters {
    */
   native?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
-   * Gives the id of the label to the state of the part, as the setter of the provider gets it.
+   * Gives the id of the label to the state of the part.
+   * When the label goes away, the part gets the id of the label that is left in the provider.
+   * It gets `undefined` when no label is left.
    */
-  setLabelId?: LabelIdSetter | undefined;
+  setLabelId?: ((labelId: string | undefined) => void) | undefined;
   /**
    * A focus handler for a label that is not native.
    * If it is omitted, the click focuses the control that has the resolved id.

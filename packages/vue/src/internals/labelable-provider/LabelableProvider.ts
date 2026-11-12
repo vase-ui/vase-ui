@@ -1,5 +1,4 @@
 import { computed, provide, shallowRef } from 'vue';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
 import { useVaseUiId } from '../useBaseUiId';
 import { LabelableContext, useLabelableContext } from './LabelableContext';
 import type { MessageIdsSetter } from './LabelableContext';
@@ -20,16 +19,17 @@ export function provideLabelableContext(): LabelableContext {
   const controlIdState = shallowRef<string | null>(defaultControlId.value);
   const registeredLabelId = shallowRef<string | undefined>();
   const messageIdsState = shallowRef<string[]>([]);
-  const registrations = new Map<symbol, string | null>();
+  const controlRegistrations = new Map<symbol, string | null>();
+  const labelRegistrations = new Map<symbol, string>();
 
   function registerControlId(source: symbol, nextId: string | null | undefined) {
     if (nextId === undefined) {
-      registrations.delete(source);
+      controlRegistrations.delete(source);
     } else {
-      registrations.set(source, nextId);
+      controlRegistrations.set(source, nextId);
     }
 
-    const ids = Array.from(registrations.values());
+    const ids = Array.from(controlRegistrations.values());
     // With no registration, the id stays between the unmount of a control and the mount of the
     // next. A control that comes back with the same id then changes nothing, and a control with no
     // id resets the id through `resetControlId`.
@@ -43,14 +43,23 @@ export function provideLabelableContext(): LabelableContext {
   }
 
   function resetControlId() {
-    if (registrations.size === 0) {
+    if (controlRegistrations.size === 0) {
       controlIdState.value = defaultControlId.value;
     }
   }
 
-  const setLabelId: LabelIdSetter = (next) => {
-    registeredLabelId.value = typeof next === 'function' ? next(registeredLabelId.value) : next;
-  };
+  // A label registers by source, as a control does. Two labels in one provider can have the same id,
+  // and a label can mount before the label that it replaces unmounts. A removal by id value would
+  // then remove the id of the new label.
+  function registerLabelId(source: symbol, nextId: string | undefined) {
+    if (nextId === undefined) {
+      labelRegistrations.delete(source);
+    } else {
+      labelRegistrations.set(source, nextId);
+    }
+
+    registeredLabelId.value = Array.from(labelRegistrations.values()).at(-1);
+  }
 
   const setMessageIds: MessageIdsSetter = (next) => {
     messageIdsState.value = typeof next === 'function' ? next(messageIdsState.value) : next;
@@ -73,7 +82,7 @@ export function provideLabelableContext(): LabelableContext {
     registerControlId,
     resetControlId,
     labelId: computed(() => registeredLabelId.value),
-    setLabelId,
+    registerLabelId,
     defaultLabelId,
     messageIds: computed(() => messageIdsState.value),
     setMessageIds,

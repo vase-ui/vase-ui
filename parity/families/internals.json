@@ -167,7 +167,7 @@
       "describe": ["useLabel", "%s"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The cases render `Select.Label`, `Combobox.Label` and `Field.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the same behavior with a fixture label and control."
+      "reason": "The cases render `Select.Label`, `Combobox.Label` and `Field.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",

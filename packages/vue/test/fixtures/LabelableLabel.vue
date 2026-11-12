@@ -7,7 +7,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     id?: string | undefined;
-    native?: boolean;
+    native?: boolean | undefined;
   }>(),
   { native: true },
 );

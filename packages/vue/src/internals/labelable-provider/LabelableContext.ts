@@ -1,7 +1,6 @@
 import { computed, inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
 import { NOOP } from '../noop';
 
 export type MessageIdsSetter = (next: string[] | ((current: string[]) => string[])) => void;
@@ -16,10 +15,11 @@ export interface LabelableContext {
   registerControlId: (source: symbol, id: string | null | undefined) => void;
   resetControlId: () => void;
   /**
-   * The `id` that a label registered.
+   * The `id` of the last label that is registered.
+   * It is `undefined` when no label is registered.
    */
   labelId: ComputedRef<string | undefined>;
-  setLabelId: LabelIdSetter;
+  registerLabelId: (source: symbol, id: string | undefined) => void;
   /**
    * The `id` that the provider made for a label that has no `id` of its own.
    */
@@ -44,7 +44,7 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   registerControlId: NOOP,
   resetControlId: NOOP,
   labelId: computed(() => undefined),
-  setLabelId: NOOP,
+  registerLabelId: NOOP,
   defaultLabelId: computed(() => undefined),
   messageIds: computed(() => EMPTY_ARRAY),
   setMessageIds: NOOP,

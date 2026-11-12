@@ -5,7 +5,6 @@ import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#tes
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
-import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
 import { useLabel } from './useLabel';
 
 // A container for `<Teleport>` in a shadow root. The shadow root is in the document, or in another
@@ -264,11 +263,12 @@ describe('useLabel', () => {
 
     it('gives setLabelId the id of the label, and `undefined` when the label goes away', async () => {
       let labelId: string | undefined;
-      const setLabelId: LabelIdSetter = (next) => {
-        labelId = typeof next === 'function' ? next(labelId) : next;
-      };
       const Probe = defineComponent(() => {
-        const labelProps = useLabel({ setLabelId });
+        const labelProps = useLabel({
+          setLabelId(next) {
+            labelId = next;
+          },
+        });
         return () => <div data-testid="label" {...labelProps.value} />;
       });
       const Test = defineComponent(
@@ -286,6 +286,42 @@ describe('useLabel', () => {
       await rerender(<Test show={false} />);
 
       expect(labelId).toBeUndefined();
+    });
+
+    it('gives setLabelId the id of the label that is left, and `undefined` when no label is left', async () => {
+      const labelIds: Record<string, string | undefined> = {};
+      const Probe = defineComponent(
+        (props: { name: string }) => {
+          const labelProps = useLabel({
+            id: () => `${props.name}-label`,
+            setLabelId(next) {
+              labelIds[props.name] = next;
+            },
+          });
+          return () => <div {...labelProps.value} />;
+        },
+        { props: ['name'] },
+      );
+      const Test = defineComponent(
+        (props: { first: boolean; second: boolean }) => () => (
+          <LabelableScope>
+            {props.first && <Probe name="first" />}
+            {props.second && <Probe name="second" />}
+          </LabelableScope>
+        ),
+        { props: ['first', 'second'] },
+      );
+
+      const { rerender } = await render(<Test first second />);
+      expect(labelIds).toEqual({ first: 'first-label', second: 'second-label' });
+
+      await rerender(<Test first second={false} />);
+
+      expect(labelIds.second).toBe('first-label');
+
+      await rerender(<Test first={false} second={false} />);
+
+      expect(labelIds.first).toBeUndefined();
     });
   });
 });

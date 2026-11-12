@@ -11,7 +11,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     id?: string | null | undefined;
-    enabled?: boolean;
+    enabled?: boolean | undefined;
   }>(),
   { enabled: true },
 );
