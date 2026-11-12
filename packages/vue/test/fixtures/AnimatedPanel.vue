@@ -38,7 +38,7 @@ export interface AnimatedPanelProps
    */
   enableIdleState?: boolean | undefined;
   /**
-   * Whether a panel that mounts open still goes through `'starting'`.
+   * Whether a panel that mounts open still gets the `'starting'` status.
    * The part reads it one time, in `setup`.
    * @default false
    */

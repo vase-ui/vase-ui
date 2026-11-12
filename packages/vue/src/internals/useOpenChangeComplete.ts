@@ -37,7 +37,7 @@ export function useOpenChangeComplete(parameters: UseOpenChangeCompleteParameter
 
 export interface UseOpenChangeCompleteParameters {
   /**
-   * Whether the hook is enabled.
+   * Whether the composable is enabled.
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -46,7 +46,7 @@ export interface UseOpenChangeCompleteParameters {
    */
   open?: MaybeRefOrGetter<boolean | undefined>;
   /**
-   * Ref to the element being closed.
+   * The element that closes, or a ref or a getter for it.
    */
   ref: MaybeRefOrGetter<HTMLElement | null | undefined>;
   /**

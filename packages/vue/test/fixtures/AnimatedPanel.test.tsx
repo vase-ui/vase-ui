@@ -21,7 +21,7 @@ interface FrameProbeResult {
 }
 
 /**
- * Finds out if a frame paints between the end of the exit animation and the removal of the panel.
+ * Tells if a frame paints between the end of the exit animation and the removal of the panel.
  * The reaction to the end reads the time of the timeline and requests one frame. If the removal
  * is done in that frame callback, no frame ran between the end and the removal. The time of the
  * callback shows that it belongs to the frame of the end.

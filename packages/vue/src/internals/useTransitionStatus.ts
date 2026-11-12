@@ -38,8 +38,8 @@ function registerFrameEffect(sources: WatchSource[], effect: () => number | unde
  *   through `'starting'`. Off by default so content that was open on the first render (a
  *   `defaultOpen` popup on page load, SSR'd markup) doesn't animate in.
  * @param element - the element that gets `data-starting-style`, or a ref or a getter for it. When
- *   the status is `'starting'`, the hook reads the layout of the element one time before it removes
- *   the status. Leave it out for an element that has no enter transition.
+ *   the status is `'starting'`, the composable reads the layout of the element one time before it
+ *   removes the status. Omit it for an element that has no enter transition.
  */
 export function useTransitionStatus(
   open: WatchSource<boolean>,
@@ -56,8 +56,9 @@ export function useTransitionStatus(
   const transitionStatus = shallowRef<TransitionStatus>(
     isOpen() && enableIdleState ? 'idle' : undefined,
   );
-  // Starting at `false` while open lets the first run of the watcher below give the `'starting'`
-  // status. The watcher runs in `setup`, so the element mounts with that status.
+  // With `animateInitialOpen`, `mounted` starts at `false` while open. The first run of the
+  // watcher below then gives the `'starting'` status. The watcher runs in `setup`, so the element
+  // mounts with that status.
   const mounted = shallowRef(isOpen() && !animateInitialOpen);
 
   function setMounted(nextMounted: boolean) {
