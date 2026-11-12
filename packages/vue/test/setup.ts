@@ -11,8 +11,12 @@ if (typeof document !== 'undefined') {
   await import('@testing-library/jest-dom/vitest');
 }
 
+// Animations are off in each test. A test that needs a real animation sets this to `false`.
+globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+
 afterEach(() => {
   vi.resetAllMocks();
+  globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
   // `warn` and `error` share one log-once store, so this also clears the warnings that it holds.
   reset();
   // Drops animation frame callbacks that were scheduled and never ran, for example when fake timers

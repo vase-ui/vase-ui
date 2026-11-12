@@ -1,10 +1,18 @@
 {
   "upstreamPaths": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/useFocusableWhenDisabled.ts"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [],
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/resolveRef.ts",
+      "kind": "not-applicable",
+      "reason": "The file reads the `current` of a React ref object. Vue `toValue` reads a ref, a getter or a value."
+    }
+  ],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []

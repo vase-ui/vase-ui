@@ -2,10 +2,14 @@
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/useFocusableWhenDisabled.ts"
   ],
   "sources": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/useFocusableWhenDisabled.ts"
   ],
   "typeTests": [],
