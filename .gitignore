@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.package-check/
+packages/vue/src/index.ts
+packages/vue/test/package-check/index.ts
+packages/vue/LICENSE
+packages/vue/README.md
+*.log
+.DS_Store
+*.tsbuildinfo
+.eslintcache

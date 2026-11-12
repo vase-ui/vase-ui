@@ -1,0 +1,86 @@
+{
+  "notPorted": [
+    {
+      "what": "`filter-dropdown` as a public entry",
+      "upstream": ["packages/react/src/filter-dropdown/**"],
+      "reason": "Base UI has no package export, no index file and no docs page for it. Vase UI ports it only as the internal dependency of Menu."
+    },
+    {
+      "what": "the 35 `./internals/*` entry points",
+      "upstream": ["packages/react/package.json:74-108"],
+      "reason": "Base UI does not document them. Vase UI ports the code that a component needs as internal modules and exports none of them."
+    },
+    {
+      "what": "the temporal adapters",
+      "upstream": [
+        "packages/react/src/internals/temporal/**",
+        "packages/react/src/internals/temporal-adapter-date-fns/**",
+        "packages/react/src/internals/temporal-adapter-luxon/**"
+      ],
+      "reason": "No Base UI component imports them at the tracked commit."
+    },
+    {
+      "what": "`createSelector` and `createSelectorMemoized`",
+      "upstream": ["packages/utils/src/store/createSelector*.ts"],
+      "reason": "No Base UI component imports them. Vue `computed` does this work."
+    },
+    {
+      "what": "`StoreInspector`",
+      "upstream": ["packages/utils/src/store/StoreInspector.*"],
+      "reason": "A React development panel. No component imports it."
+    },
+    {
+      "what": "the React 17 and 18 shims",
+      "upstream": [
+        "packages/utils/src/reactVersion.*",
+        "packages/utils/src/safeReact.*",
+        "packages/utils/src/getReactElementRef.*",
+        "packages/utils/src/inertValue.*"
+      ],
+      "reason": "They exist only to support old React versions."
+    },
+    {
+      "what": "Accordion `loopFocus` and `orientation` props",
+      "upstream": [
+        "packages/react/src/accordion/root/AccordionRoot.tsx:187-194",
+        "packages/react/src/accordion/root/AccordionRoot.tsx:207-215"
+      ],
+      "reason": "Deprecated upstream; they have no effect."
+    },
+    {
+      "what": "Context Menu `positionMethod` and `closeParentOnEsc` props",
+      "upstream": [
+        "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx:42-46",
+        "packages/react/src/context-menu/root/ContextMenuRoot.tsx:88-92"
+      ],
+      "reason": "Deprecated upstream; \"This prop has no effect on Context Menu.\""
+    }
+  ],
+  "outOfScope": [
+    {
+      "paths": [".circleci/**", ".github/**", "netlify/**", "netlify.toml", "renovate.json"],
+      "reason": "CI and repository automation."
+    },
+    {
+      "paths": ["docs/**"],
+      "except": [
+        "docs/src/app/(docs)/react/components/**",
+        "docs/src/app/(docs)/react/utils/**",
+        "docs/src/app/(docs)/react/handbook/**"
+      ],
+      "reason": "The docs site and Base UI's own overview and release pages. The component, utility and handbook pages and their demos are in scope."
+    },
+    {
+      "paths": ["test/**"],
+      "reason": "Base UI's benchmark, bundle size, end-to-end, visual regression, screen reader and package resolution suites."
+    },
+    {
+      "paths": ["scripts/**", "playground/**", "examples/**", "patches/**"],
+      "reason": "Repository tools, playgrounds and example apps."
+    },
+    {
+      "paths": ["packages/*/*", "packages/react/scripts/**"],
+      "reason": "Package configuration, readme and changelog files."
+    }
+  ]
+}

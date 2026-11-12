@@ -1,0 +1,31 @@
+{
+  "name": "@vase-ui/monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "build": "pnpm --filter @vase-ui/vue build",
+    "typecheck": "pnpm --filter @vase-ui/vue typecheck",
+    "check:package": "pnpm --filter @vase-ui/vue check:package",
+    "test": "pnpm --filter @vase-ui/vue test",
+    "test:node": "pnpm --filter @vase-ui/vue test:node",
+    "test:browser": "pnpm --filter @vase-ui/vue test:browser",
+    "test:chromium": "pnpm --filter @vase-ui/vue test:chromium",
+    "test:firefox": "pnpm --filter @vase-ui/vue test:firefox",
+    "test:webkit": "pnpm --filter @vase-ui/vue test:webkit",
+    "test:lint-rules": "node --test eslint.config.test.js",
+    "lint": "pnpm test:lint-rules && eslint . --max-warnings 0 && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-vue": "10.12.1",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vue-eslint-parser": "10.4.2"
+  }
+}

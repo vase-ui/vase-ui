@@ -1,0 +1,72 @@
+{
+  "name": "@vase-ui/vue",
+  "version": "2026.11.0",
+  "description": "Base UI, arranged for Vue.",
+  "license": "MIT",
+  "keywords": [
+    "vue",
+    "base-ui",
+    "unstyled",
+    "a11y"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vase-ui/vase-ui.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/vase-ui/vase-ui/issues"
+  },
+  "homepage": "https://github.com/vase-ui/vase-ui#readme",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*/index.d.ts",
+      "default": "./dist/*/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "next"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "node scripts/writeBarrel.ts && vue-tsc --noEmit",
+    "check:package": "node scripts/checkPackage.ts",
+    "test": "vitest run",
+    "test:node": "vitest run --project node",
+    "test:browser": "vitest run --project chromium --project firefox --project webkit",
+    "test:chromium": "vitest run --project chromium",
+    "test:firefox": "vitest run --project firefox",
+    "test:webkit": "vitest run --project webkit",
+    "prepack": "pnpm build && cp ../../LICENSE ../../README.md ."
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0 || ^3.6.0-0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
+    "@types/node": "26.6.6",
+    "@vitejs/plugin-vue": "6.0.10",
+    "@vitejs/plugin-vue-jsx": "5.1.6",
+    "@vitest/browser-playwright": "5.1.0",
+    "playwright": "1.65.0",
+    "publint": "0.3.25",
+    "tsdown": "0.23.7",
+    "typescript": "6.0.3",
+    "unplugin-vue": "8.0.1",
+    "vite": "8.3.7",
+    "vitest": "5.1.0",
+    "vue": "3.5.45",
+    "vue-tsc": "3.3.14"
+  }
+}
