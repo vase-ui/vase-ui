@@ -13,6 +13,7 @@
     "test:chromium": "pnpm --filter @vase-ui/vue test:chromium",
     "test:firefox": "pnpm --filter @vase-ui/vue test:firefox",
     "test:webkit": "pnpm --filter @vase-ui/vue test:webkit",
+    "test:nuxt": "pnpm --filter @vase-ui/nuxt-fixture test",
     "test:lint-rules": "node --test eslint.config.test.js",
     "test:cost": "node --test scripts/cost/render.test.ts",
     "test:parity": "node --test \"scripts/parity/*.test.ts\"",

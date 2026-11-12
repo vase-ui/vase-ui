@@ -1,0 +1,37 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/collapsible/**",
+    "docs/src/app/(docs)/react/components/collapsible/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx",
+      "describe": ["<Collapsible.Panel />", "server-side rendering"],
+      "kind": "replaced",
+      "test": "packages/vue/src/collapsible/panel/CollapsiblePanel.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The two cases are in the test file that the Node project runs, with the same titles."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "entry": "Panel",
+      "prop": "keepMounted",
+      "kind": "not-applicable",
+      "reason": "The part must tell an absent `keepMounted` from `keepMounted={false}`, because only the explicit `false` gets a warning when `hiddenUntilFound` is set. A Boolean prop that is absent is `false` in Vue, so the declared default is `undefined`. The part uses `false` for an absent prop, which is the default that Base UI documents."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Panel",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for `aria-controls`, so it is a declared prop. Base UI reads it from the native attributes of the panel, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

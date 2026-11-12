@@ -1,6 +1,11 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
+    "packages/react/src/internals/composite/composite.ts",
+    "packages/react/src/internals/composite/composite.test.ts",
+    "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/listIndex.ts",
+    "packages/react/src/internals/composite/listIndex.test.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
@@ -36,6 +41,9 @@
   ],
   "sources": [
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
+    "packages/react/src/internals/composite/composite.ts",
+    "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
@@ -75,6 +83,71 @@
     "packages/react/src/internals/useRenderElement.spec.tsx"
   ],
   "cases": [
+    {
+      "file": "packages/react/src/internals/composite/composite.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "Composite",
+            "scrollIntoViewIfNeeded"
+          ],
+          "title": "uses the left scroll margin when checking left overflow in RTL"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/composite/listIndex.test.ts",
+      "rows": [
+        {
+          "describe": [],
+          "title": "treats hidden visibility styles as hidden"
+        },
+        {
+          "describe": [],
+          "title": "uses CSS visibility fallbacks when checkVisibility is unavailable"
+        },
+        {
+          "describe": [],
+          "title": "always treats natively disabled elements as disabled, unlike aria-disabled ones"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "steps to the adjacent index"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "wraps at either end when looping"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "stays at either end without looping"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "leaves the list at either end when escaping is allowed"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "enters the list at the far end from outside it"
+        },
+        {
+          "describe": [
+            "getNextListIndex"
+          ],
+          "title": "skips disabled indices"
+        }
+      ]
+    },
     {
       "file": "packages/react/src/internals/getStateAttributesProps.test.ts",
       "rows": [
