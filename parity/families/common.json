@@ -143,11 +143,6 @@
       "reason": "Only code that the Base UI build generates calls it: a Babel plugin replaces each error message with a code. The Vase UI build keeps the full messages."
     },
     {
-      "upstream": "packages/utils/src/hydration.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
-    },
-    {
       "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
@@ -251,16 +246,18 @@
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
       "describe": ["hydration", "useIsHydrated"],
-      "kind": "waits-on",
-      "waitsOn": "packages/utils/src/hydration.ts",
-      "reason": "The block tests `hydration.ts`. Vase UI does not have that file yet."
+      "title": "does not report hydrated while rendering on the server",
+      "kind": "replaced",
+      "test": "packages/vue/src/common/hydration.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
       "upstream": "packages/utils/src/hydration.test.tsx",
       "describe": ["hydration", "useIsHydrating"],
-      "kind": "waits-on",
-      "waitsOn": "packages/utils/src/hydration.ts",
-      "reason": "The block tests `hydration.ts`. Vase UI does not have that file yet."
+      "title": "reports hydrating while rendering on the server",
+      "kind": "replaced",
+      "test": "packages/vue/src/common/hydration.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     }
   ],
   "surfaceAdditions": [],

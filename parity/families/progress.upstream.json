@@ -1,0 +1,684 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/progress/**",
+    "docs/src/app/(docs)/react/components/progress/**"
+  ],
+  "sources": [
+    "packages/react/src/progress/index.parts.ts",
+    "packages/react/src/progress/index.ts",
+    "packages/react/src/progress/indicator/ProgressIndicator.tsx",
+    "packages/react/src/progress/indicator/ProgressIndicatorDataAttributes.ts",
+    "packages/react/src/progress/label/ProgressLabel.tsx",
+    "packages/react/src/progress/label/ProgressLabelDataAttributes.ts",
+    "packages/react/src/progress/root/ProgressRoot.tsx",
+    "packages/react/src/progress/root/ProgressRootContext.tsx",
+    "packages/react/src/progress/root/ProgressRootDataAttributes.ts",
+    "packages/react/src/progress/root/stateAttributesMapping.ts",
+    "packages/react/src/progress/track/ProgressTrack.tsx",
+    "packages/react/src/progress/track/ProgressTrackDataAttributes.ts",
+    "packages/react/src/progress/value/ProgressValue.tsx",
+    "packages/react/src/progress/value/ProgressValueDataAttributes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/progress/indicator/ProgressIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Progress.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Progress.Indicator />",
+            "internal styles"
+          ],
+          "title": "determinate",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Progress.Indicator />",
+            "internal styles"
+          ],
+          "title": "sets zero width when value is 0",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Progress.Indicator />",
+            "internal styles"
+          ],
+          "title": "indeterminate",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/progress/label/ProgressLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Progress.Label />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Progress.Label />"
+          ],
+          "title": "updates and clears the progress bar label association"
+        },
+        {
+          "describe": [
+            "<Progress.Label />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Progress.Root>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/progress/root/ProgressRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Progress.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "ARIA attributes"
+          ],
+          "title": "sets the correct aria attributes"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "ARIA attributes"
+          ],
+          "title": "should update aria-valuenow when value changes"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "data attributes"
+          ],
+          "title": "keeps every composed part synchronized through the status cycle"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "normalizes the formatted value, aria-valuetext, and indicator within a custom range"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "clamps aria-valuenow, the value text, and the indicator when the value overshoots max"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "clamps aria-valuenow, the value text, and the indicator when the value undershoots min"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "formats the clamped value $expectedValue when a custom-formatted value $value is outside the range"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "reports complete when the value reaches or exceeds max"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "normalizes aria attributes when min equals max"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "range"
+          ],
+          "title": "keeps non-finite value %s indeterminate"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "prop: getAriaValueText"
+          ],
+          "title": "receives the formatted and raw values for determinate and indeterminate states"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "prop: format"
+          ],
+          "title": "formats the value"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "prop: format"
+          ],
+          "title": "reflects format changes without lagging a commit"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "prop: locale"
+          ],
+          "title": "sets the locale when formatting the value"
+        },
+        {
+          "describe": [
+            "<Progress.Root />",
+            "server-side rendering"
+          ],
+          "title": "formats with en-US until hydrated, then with the runtime locale"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/progress/track/ProgressTrack.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Progress.Track />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/progress/value/ProgressValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Progress.Value />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Progress.Value />",
+            "prop: children"
+          ],
+          "title": "renders the value when children is not provided"
+        },
+        {
+          "describe": [
+            "<Progress.Value />",
+            "prop: children"
+          ],
+          "title": "renders a formatted value when a format is provided"
+        },
+        {
+          "describe": [
+            "<Progress.Value />",
+            "prop: children",
+            "it accepts a render function"
+          ],
+          "title": "numerical value"
+        },
+        {
+          "describe": [
+            "<Progress.Value />",
+            "prop: children",
+            "it accepts a render function"
+          ],
+          "title": "indeterminate value %s"
+        },
+        {
+          "describe": [
+            "<Progress.Value />",
+            "server-side rendering"
+          ],
+          "title": "hydrates $name without a mismatch, then uses the runtime locale"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/progress/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "number | null",
+              "default": null
+            },
+            {
+              "name": "aria-valuetext",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "getAriaValueText",
+              "required": false,
+              "type": "((formattedValue: string, value: number | null) => string)",
+              "default": null
+            },
+            {
+              "name": "locale",
+              "required": false,
+              "type": "Intl.LocalesArgument",
+              "default": null
+            },
+            {
+              "name": "min",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "max",
+              "required": false,
+              "type": "number",
+              "default": "100"
+            },
+            {
+              "name": "format",
+              "required": false,
+              "type": "Intl.NumberFormatOptions",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Progress.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Progress.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Progress.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ProgressRootState",
+            "fields": [
+              {
+                "name": "status",
+                "optional": false,
+                "type": "Progress.Status"
+              }
+            ],
+            "code": "type ProgressRootState = {\n    status: Progress.Status;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-progressing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Value",
+          "tag": "span",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "((formattedValue: string | null, value: number | null) => React.ReactNode) | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Progress.Value.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Progress.Value.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Progress.Value.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ProgressValueState",
+            "fields": [
+              {
+                "name": "status",
+                "optional": false,
+                "type": "Progress.Status"
+              }
+            ],
+            "code": "type ProgressValueState = {\n    status: Progress.Status;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-progressing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Progress.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Progress.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Progress.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ProgressIndicatorState",
+            "fields": [
+              {
+                "name": "status",
+                "optional": false,
+                "type": "Progress.Status"
+              }
+            ],
+            "code": "type ProgressIndicatorState = {\n    status: Progress.Status;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-progressing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Track",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Progress.Track.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Progress.Track.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Progress.Track.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ProgressTrackState",
+            "fields": [
+              {
+                "name": "status",
+                "optional": false,
+                "type": "Progress.Status"
+              }
+            ],
+            "code": "type ProgressTrackState = {\n    status: Progress.Status;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-progressing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Label",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Progress.Label.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Progress.Label.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Progress.Label.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ProgressLabelState",
+            "fields": [
+              {
+                "name": "status",
+                "optional": false,
+                "type": "Progress.Status"
+              }
+            ],
+            "code": "type ProgressLabelState = {\n    status: Progress.Status;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-progressing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "Progress.Status",
+          "code": "type ProgressStatus = 'indeterminate' | 'progressing' | 'complete';"
+        },
+        {
+          "name": "ProgressIndicatorDataAttributes",
+          "code": "declare namespace ProgressIndicatorDataAttributes {\n    const complete: 'data-complete';\n    const indeterminate: 'data-indeterminate';\n    const progressing: 'data-progressing';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "progressing",
+              "value": "data-progressing"
+            }
+          ]
+        },
+        {
+          "name": "ProgressLabelDataAttributes",
+          "code": "declare namespace ProgressLabelDataAttributes {\n    const complete: 'data-complete';\n    const indeterminate: 'data-indeterminate';\n    const progressing: 'data-progressing';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "progressing",
+              "value": "data-progressing"
+            }
+          ]
+        },
+        {
+          "name": "ProgressRootDataAttributes",
+          "code": "declare namespace ProgressRootDataAttributes {\n    const complete: 'data-complete';\n    const indeterminate: 'data-indeterminate';\n    const progressing: 'data-progressing';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "progressing",
+              "value": "data-progressing"
+            }
+          ]
+        },
+        {
+          "name": "ProgressTrackDataAttributes",
+          "code": "declare namespace ProgressTrackDataAttributes {\n    const complete: 'data-complete';\n    const indeterminate: 'data-indeterminate';\n    const progressing: 'data-progressing';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "progressing",
+              "value": "data-progressing"
+            }
+          ]
+        },
+        {
+          "name": "ProgressValueDataAttributes",
+          "code": "declare namespace ProgressValueDataAttributes {\n    const complete: 'data-complete';\n    const indeterminate: 'data-indeterminate';\n    const progressing: 'data-progressing';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "progressing",
+              "value": "data-progressing"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
