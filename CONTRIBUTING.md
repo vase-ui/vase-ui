@@ -331,7 +331,8 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
-- Where an upstream hook returns a value that can change, the composable returns a `ComputedRef` of that value: `useDirection()` returns `ComputedRef<TextDirection>`. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
+- Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
+- The ref is a `ComputedRef` when the composable computes the value: `useDirection()` returns `ComputedRef<TextDirection>`. It is a `Readonly<Ref<T>>` when the composable writes the value: `useTransitionStatus()` returns `mounted` and `transitionStatus` in this form.
 - Where upstream calls `useBaseUiId`, call `useVaseUiId(() => props.id)` in setup. It gives the `id` prop, or a generated id with the prefix `vase-ui-`. The ids of the parts derive from the id of the root.
 
 ## Rules for the source
@@ -413,17 +414,26 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 
 ### What differs from the React source
 
-- Vue has no `flushSync`. Replace each call with one of two forms.
+- Vue has no `flushSync`. Replace each call with one of three forms.
 - If the next line does not read the DOM, write the state and nothing else. Vue queues its flush as a microtask. A microtask runs before the next paint.
 - If the next line reads the DOM or moves focus, write the state and `await nextTick()`. Then run the next line. Each replacement of this form must have a test of its own.
 - In an event handler, call `preventDefault` and `stopPropagation` before the first `await`. A handler returns at its first `await`. The browser then completes the dispatch of the event.
+- If upstream calls `flushSync` for each callback of a queue, run the callbacks in sequence. Each callback runs after the Vue flush of the callback before it, so it reads the state that the earlier callback changed.
+- `useAnimationsFinished` uses this form for each completion that is not batched. Only microtasks wait, so the browser does not paint before the completion runs.
+- An error of a completion goes to `reportError`. The later completions still run.
+- An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`, with no `immediate`. `run` then runs at mount and after each DOM update that follows a change of a source.
+- Do not use `watchPostEffect` for an effect. In Vue 3.5.0, a server render runs it one time. The `watch` with a callback and no `immediate` does not run on a server.
 - The transition status runs on a `flush: 'sync'` watcher. It replaces a state write during render.
-- `useTransitionStatus` reads layout one time (`void element.offsetHeight`) after the DOM update that applies `data-starting-style`. It then removes the attribute in the next animation frame, as upstream.
+- `useTransitionStatus` has a fifth parameter, `element`, that upstream does not have. It is the element that gets `data-starting-style`, or a ref or a getter for it.
+- After the DOM update that applies `data-starting-style`, the composable reads the layout of that element one time, with `getBoundingClientRect()`. It then removes the attribute in the next animation frame, as upstream.
+- The read is not `offsetHeight`, because an `<svg>` has no such property.
 - Without that read, Vue removes the attribute before the first style computation. The enter transition then does not start.
+- Omit `element` only when the element has no enter transition.
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
+- A part gives a Boolean attribute, such as `hidden`, the value `true` or `undefined`, never `false`. On an element that is not HTML, such as an `<svg>`, Vue writes `false` as `hidden="false"`.
 - The popup tree is the only link between a teleported child popup and its parent.
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
@@ -460,6 +470,8 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 ### Where a test runs
 
 - A test file runs in Chromium, Firefox and WebKit.
+- `packages/vue/vitest.config.ts` sets the Firefox preference `dom.multiple_import_maps.enabled` to `false`. Vitest sets it to `true`, and Firefox then sometimes crashes a page when the page starts.
+- With `false`, Vitest mocks a module in Firefox by request interception, not by import map. Do not set `browser.importMapMocks` to `true`: Vitest then refuses a mock in Firefox.
 - A test file with a name that ends in `.node.test.ts` or `.node.test.tsx` runs in Node with no DOM. Use it for server render and for logic that must work with no DOM.
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
 - There is no jsdom.
@@ -475,6 +487,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `from '@base-ui/react'`                                                  | `from '@vase-ui/vue'`                                                                                                                                          |
 | `from '@base-ui/utils/<file>'`                                           | A relative path to `src/common/<file>`                                                                                                                         |
 | `from '@mui/internal-test-utils'`                                        | `from '#test-utils'`                                                                                                                                           |
+| A global name with `BASE_UI`, such as `BASE_UI_ANIMATIONS_DISABLED`      | The Vase UI name, such as `VASE_UI_ANIMATIONS_DISABLED`. See [Layout and names](#layout-and-names).                                                            |
 | `className`                                                              | `class`                                                                                                                                                        |
 | `tabIndex` as a prop or as a key of a props object                       | `tabindex`. An assertion on the DOM property keeps `tabIndex`.                                                                                                 |
 | `render={<x />}`, an element with no props                               | `as`                                                                                                                                                           |
@@ -489,6 +502,10 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `React.createRef()` and `ref.current`                                    | A function ref that writes a variable, or a `shallowRef`. A ref on a part gives the component, so read its `element`.                                          |
 | `useMergedRefs(a, b)`                                                    | A function ref that calls each ref                                                                                                                             |
 | `React.useState` in a test component                                     | A `shallowRef` in the setup function of `defineComponent`                                                                                                      |
+| `useIsoLayoutEffect` or `React.useEffect` in a test component            | `onMounted`. Where a dependency changes in the test, add the `watch` of [What differs from the React source](#what-differs-from-the-react-source).             |
+| `useStableCallback(fn)`                                                  | `fn`                                                                                                                                                           |
+| A commit count from `React.Profiler`                                     | A count of the calls of a `MutationObserver` that observes `container` with `childList` and `subtree`                                                          |
+| `ReactDOM.createPortal(children, container)`                             | `<Teleport to={container}>`                                                                                                                                    |
 | `React.lazy(loader)`                                                     | `defineAsyncComponent(loader)`, then `await flushMicrotasks()` before the assertions                                                                           |
 | `act(fn)`                                                                | `fn()`, then `await flushMicrotasks()`                                                                                                                         |
 | `renderHook(() => useX())`                                               | A component in the test that calls the composable in `setup` and gives the result to the test                                                                  |
@@ -509,6 +526,8 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - Vue binds a `ref` to the component whose render function makes the vnode. A vnode from the body of a test has no such component, so Vue drops its `ref`.
 - Vue has no ref forwarding. `resolveElement` reads the `element` that the `Wrapper` exposes.
 - `act` is a React function. `flushMicrotasks` is one of the test helpers.
+- A function in `setup` reads the current props, so it needs no `useStableCallback`.
+- Vue has no `Profiler`. A `MutationObserver` gets one call for the DOM changes of one Vue flush.
 - Vue puts empty text nodes around a fragment. `childNodes` has them. `children` does not.
 - A case under `skipIf(isJSDOM)` runs.
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
@@ -560,6 +579,10 @@ The hydration helpers:
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
 - When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.
+- `test/setup.ts` sets `globalThis.VASE_UI_ANIMATIONS_DISABLED` to `true` when it loads and after each test. A test that needs a real animation sets it to `false`.
+- A test that counts the transitions of an element reads no style and no layout of that element. A read starts the transition that the part must start, and the test then passes with a broken part.
+- Put the cases of such a test that use a real pointer event in a file of their own. `test/fixtures/AnimatedPanel.click.test.tsx` is an example. A real pointer event comes from `userEvent` of `vitest/browser`.
+- A real pointer event makes Chromium compute style before the next frame callback. A later case of the same file then passes with a broken part.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
