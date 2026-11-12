@@ -63,7 +63,7 @@
     },
     {
       "paths": ["*", ".*"],
-      "reason": "Files at the root of the repository: the configuration of the workspace and its tools, the license, the readme and the changelogs."
+      "reason": "Files at the root of the repository: the configuration and lock files of the workspace and its tools, and the documents about the project."
     },
     {
       "paths": [".agents/**", ".claude/**", ".codex/**", ".vscode/**"],
