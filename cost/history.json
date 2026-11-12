@@ -1,0 +1,66 @@
+[
+  {
+    "measuredAt": "2026-11-12T00:54Z",
+    "commit": "6f85e44f13890922af095454d5ca6d30307c5b2a",
+    "byModel": {
+      "claude-fable-5-2": {
+        "input_tokens": 596,
+        "output_tokens": 795540,
+        "cache_creation_input_tokens": 4969677,
+        "cache_read_input_tokens": 56659262,
+        "total": 62425075
+      },
+      "claude-opus-5-5": {
+        "input_tokens": 168,
+        "output_tokens": 120211,
+        "cache_creation_input_tokens": 520136,
+        "cache_read_input_tokens": 14755772,
+        "total": 15396287
+      },
+      "claude-sonnet-5-5": {
+        "input_tokens": 3058,
+        "output_tokens": 2964523,
+        "cache_creation_input_tokens": 13082476,
+        "cache_read_input_tokens": 375340773,
+        "total": 391390830
+      }
+    },
+    "byWork": {
+      "coordination": {
+        "input_tokens": 200,
+        "output_tokens": 108896,
+        "cache_creation_input_tokens": 1207040,
+        "cache_read_input_tokens": 14045939,
+        "total": 15362075
+      },
+      "research and plan": {
+        "input_tokens": 884,
+        "output_tokens": 687608,
+        "cache_creation_input_tokens": 2228253,
+        "cache_read_input_tokens": 69493391,
+        "total": 72410136
+      },
+      "spikes": {
+        "input_tokens": 1872,
+        "output_tokens": 2227680,
+        "cache_creation_input_tokens": 10912759,
+        "cache_read_input_tokens": 260128764,
+        "total": 273271075
+      },
+      "unit scaffold": {
+        "input_tokens": 866,
+        "output_tokens": 856090,
+        "cache_creation_input_tokens": 4224237,
+        "cache_read_input_tokens": 103087713,
+        "total": 108168906
+      }
+    },
+    "total": {
+      "input_tokens": 3822,
+      "output_tokens": 3880274,
+      "cache_creation_input_tokens": 18572289,
+      "cache_read_input_tokens": 446755807,
+      "total": 469212192
+    }
+  }
+]

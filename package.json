@@ -14,7 +14,10 @@
     "test:firefox": "pnpm --filter @vase-ui/vue test:firefox",
     "test:webkit": "pnpm --filter @vase-ui/vue test:webkit",
     "test:lint-rules": "node --test eslint.config.test.js",
-    "lint": "pnpm test:lint-rules && eslint . --max-warnings 0 && prettier --check .",
+    "test:cost": "node --test scripts/cost/render.test.ts",
+    "cost:render": "node scripts/cost/render.ts",
+    "cost:check": "node scripts/cost/render.ts --check",
+    "lint": "pnpm test:lint-rules && pnpm test:cost && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check",
     "format": "prettier --write ."
   },
   "devDependencies": {
