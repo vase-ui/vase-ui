@@ -12,6 +12,16 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
 
+interface RangeRootAttributes {
+  role: string;
+  'data-progressing': string | null;
+}
+
+const RANGE_PAGES: { path: string; rootAttributes: RangeRootAttributes }[] = [
+  { path: '/progress', rootAttributes: { role: 'progressbar', 'data-progressing': '' } },
+  { path: '/meter', rootAttributes: { role: 'meter', 'data-progressing': null } },
+];
+
 async function readAttributes(locator: Locator, attributeNames: string[]) {
   const values = await Promise.all(attributeNames.map((name) => locator.getAttribute(name)));
   return Object.fromEntries(attributeNames.map((name, index) => [name, values[index]]));
@@ -75,7 +85,7 @@ async function expectSeparatorPage(page: Page) {
   });
 }
 
-async function expectCurrencyRoot(page: Page) {
+async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttributes) {
   const attributeNames = [
     'role',
     'aria-valuemin',
@@ -89,13 +99,12 @@ async function expectCurrencyRoot(page: Page) {
 
   expect(labelId).toBeTruthy();
   expect(await readAttributes(page.getByTestId('currency-root'), attributeNames)).toEqual({
-    role: 'progressbar',
+    ...rootAttributes,
     'aria-valuemin': '1000',
     'aria-valuemax': '5000',
     'aria-valuenow': '2000',
     'aria-valuetext': CURRENCY_TEXT,
     'aria-labelledby': labelId,
-    'data-progressing': '',
   });
   expect(await page.getByTestId('currency-value').textContent()).toBe(CURRENCY_TEXT);
   expect(
@@ -105,8 +114,8 @@ async function expectCurrencyRoot(page: Page) {
   ).toBe('25%');
 }
 
-async function expectProgressPage(page: Page) {
-  await expectCurrencyRoot(page);
+async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
+  await expectCurrencyRoot(page, rootAttributes);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
 }
 
@@ -145,12 +154,22 @@ async function expectUseRenderPage(page: Page) {
   expect(await page.getByTestId('calls').locator('li').allTextContents()).toEqual([]);
 }
 
+// The server renders `defaultMatches`. The default screen of the browser is wider than the query,
+// so the value stays `true` after the mount.
+async function expectMediaQueryPage(page: Page) {
+  expect(await page.getByTestId('wide').textContent()).toBe('true');
+}
+
 const PAGES = [
   { path: '/button', expectPage: expectButtonPage },
   { path: '/separator', expectPage: expectSeparatorPage },
-  { path: '/progress', expectPage: expectProgressPage },
+  ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
+    path,
+    expectPage: (page: Page) => expectRangePage(page, rootAttributes),
+  })),
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
+  { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
 ];
 
 const MODES = [
@@ -220,19 +239,34 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await counter.textContent()).toBe('Count 1');
   });
 
-  it('formats a value with the locale of the visitor after hydration', async () => {
-    const page = await createPage(undefined, { locale: 'de-DE' });
+  it.each(RANGE_PAGES)(
+    'formats a value of $path with the locale of the visitor after hydration',
+    async ({ path, rootAttributes }) => {
+      const page = await createPage(undefined, { locale: 'de-DE' });
+      const messages = collectMessages(page);
+
+      await page.goto(url(path), { waitUntil: 'hydration' });
+      await waitForTwoFrames(page);
+
+      const visitorText = await page.evaluate(() =>
+        new Intl.NumberFormat(undefined, { style: 'percent' }).format(0.42),
+      );
+      expect(visitorText).not.toBe(PERCENT_TEXT);
+      expect(await page.getByTestId('percent-value').textContent()).toBe(visitorText);
+      await expectCurrencyRoot(page, rootAttributes);
+      expect(messages).toEqual([]);
+    },
+  );
+
+  it('shows the media query of the visitor after hydration', async () => {
+    // The screen is narrower than the query, so the real value differs from `defaultMatches`.
+    const page = await createPage(undefined, { viewport: { width: 400, height: 800 } });
     const messages = collectMessages(page);
 
-    await page.goto(url('/progress'), { waitUntil: 'hydration' });
+    await page.goto(url('/unstable-use-media-query'), { waitUntil: 'hydration' });
     await waitForTwoFrames(page);
 
-    const visitorText = await page.evaluate(() =>
-      new Intl.NumberFormat(undefined, { style: 'percent' }).format(0.42),
-    );
-    expect(visitorText).not.toBe(PERCENT_TEXT);
-    expect(await page.getByTestId('percent-value').textContent()).toBe(visitorText);
-    await expectCurrencyRoot(page);
+    expect(await page.getByTestId('wide').textContent()).toBe('false');
     expect(messages).toEqual([]);
   });
 
