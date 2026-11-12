@@ -1,5 +1,5 @@
 import { computePosition, platform } from '@floating-ui/vue';
-import type { Strategy } from '@floating-ui/vue';
+import type { Placement, Strategy } from '@floating-ui/vue';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { adaptiveOrigin } from './adaptiveOriginMiddleware';
 
@@ -73,7 +73,9 @@ describe('adaptiveOrigin', () => {
   });
 
   // In these engines the visual viewport has the size of the document element. A fake visual
-  // viewport of another size shows which of the two sizes the middleware reads.
+  // viewport of another size shows which of the two sizes the middleware reads. WebKit adds the
+  // offsets of the visual viewport to the position of a fixed element. Without them in the fake,
+  // the position is NaN there, and `toBe` passes for two NaN values.
   it.each([
     { name: 'the visual viewport for the fixed strategy', strategy: 'fixed', fromViewport: true },
     {
@@ -82,20 +84,28 @@ describe('adaptiveOrigin', () => {
       fromViewport: false,
     },
   ] as const)('reads the size of $name', async ({ strategy, fromViewport }) => {
-    const visualViewport = { width: 250, height: 350 } as VisualViewport;
+    const visualViewport = {
+      width: 250,
+      height: 350,
+      offsetLeft: 0,
+      offsetTop: 0,
+    } as VisualViewport;
     const spy = vi.spyOn(window, 'visualViewport', 'get').mockReturnValue(visualViewport);
     onTestFinished(() => spy.mockRestore());
     const { anchor, floating } = createParts(strategy, { transition: 'transform 1s' });
-    const config = { strategy, placement: 'left' } as const;
+    const adaptiveAt = (placement: Placement) =>
+      computePosition(anchor, floating, { strategy, placement, middleware: [adaptiveOrigin] });
 
-    const plain = await computePosition(anchor, floating, config);
-    const adaptive = await computePosition(anchor, floating, {
-      ...config,
-      middleware: [adaptiveOrigin],
-    });
+    const { x } = await adaptiveAt('left');
+    const { y } = await adaptiveAt('top');
 
+    // `x` is the distance from the left edge of the anchor to the right edge of the area that the
+    // middleware reads. `y` is the distance from the top edge of the anchor to the bottom edge of
+    // that area.
     const width = fromViewport ? visualViewport.width : document.documentElement.clientWidth;
-    expect(adaptive.x).toBe(width - (plain.x + floatingSize.width));
+    const height = fromViewport ? visualViewport.height : document.documentElement.clientHeight;
+    expect(x).toBe(width - anchorBox.left);
+    expect(y).toBe(height - anchorBox.top);
   });
 
   // The rectangle of the popup must be the same when it is placed from the left and top edges
