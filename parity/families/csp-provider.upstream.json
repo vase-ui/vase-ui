@@ -1,0 +1,92 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/csp-provider/**",
+    "packages/react/src/internals/csp-context/**",
+    "docs/src/app/(docs)/react/utils/csp-provider/**"
+  ],
+  "sources": [
+    "packages/react/src/csp-provider/CSPProvider.tsx",
+    "packages/react/src/csp-provider/index.parts.ts",
+    "packages/react/src/csp-provider/index.ts",
+    "packages/react/src/internals/csp-context/CSPContext.tsx",
+    "packages/react/src/internals/csp-context/index.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/csp-provider/CSPProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<CSPProvider />"
+          ],
+          "title": "does not render inline style tags when disableStyleElements is true"
+        },
+        {
+          "describe": [
+            "<CSPProvider />"
+          ],
+          "title": "does not render Select inline style tags when disableStyleElements is true"
+        },
+        {
+          "describe": [
+            "<CSPProvider />"
+          ],
+          "title": "applies nonce to inline style tags"
+        },
+        {
+          "describe": [
+            "<CSPProvider />"
+          ],
+          "title": "renders inline style tags by default"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/csp-provider/types.md",
+      "parts": [
+        {
+          "name": "CSPProvider",
+          "tag": null,
+          "props": [
+            {
+              "name": "disableStyleElements",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "nonce",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CSPProviderState",
+            "fields": [],
+            "code": "type CSPProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [],
+      "externalTypes": []
+    }
+  ]
+}
