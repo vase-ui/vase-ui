@@ -96,6 +96,26 @@ describe('hydrate', () => {
     );
   });
 
+  it('passes for a state that a part writes after two ticks of its own', async () => {
+    // The helper waits two ticks after each mount. With fewer ticks, it compares the client-only
+    // render before that render shows the last state.
+    const LateState = defineComponent({
+      setup() {
+        const text = ref('first');
+        onMounted(async () => {
+          await nextTick();
+          await nextTick();
+          text.value = 'last';
+        });
+        return () => h('i', text.value);
+      },
+    });
+
+    const { container } = await hydrate(LateState, { serverHtml: '<i>first</i>' });
+
+    expect(container.textContent).toBe('last');
+  });
+
   it('runs the inline script of the server HTML', async () => {
     const globals = globalThis as { vaseUiHydrationScriptRuns?: number };
     const runsBefore = globals.vaseUiHydrationScriptRuns ?? 0;
