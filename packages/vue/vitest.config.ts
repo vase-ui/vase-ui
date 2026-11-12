@@ -51,8 +51,8 @@ export default defineConfig({
               {
                 browser: 'firefox',
                 name: 'firefox',
-                // Vitest turns this preference on. With it on, Firefox sometimes crashes a page
-                // when the page starts. With it off, Vitest mocks a module by request
+                // Vitest sets this preference to `true`. With that value, Firefox sometimes crashes
+                // a page when the page starts. With `false`, Vitest mocks a module by request
                 // interception, not by import map.
                 provider: playwright({
                   contextOptions,
