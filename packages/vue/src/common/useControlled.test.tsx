@@ -180,8 +180,8 @@ describe('useControlled', () => {
       expect(errorSpy).not.toHaveBeenCalled();
     });
 
-    // Vue compares the default only when it gets a new value, as when a parent makes the value in
-    // its render function. These cases give a new value of equal content.
+    // Vue runs the comparison only when the default is a new value. A parent that makes the value
+    // in its render function gives a new value on each render. These cases do the same.
     it('does not warn when an array', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
