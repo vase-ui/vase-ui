@@ -36,9 +36,11 @@ function wordsOf(state: string): string {
           </ul>
           <template v-else-if="change.other">
             {{ wordsOf(change.other.state) }}.
-            <template v-if="change.other.state === 'out-of-scope'">
-              <TextWithCode v-for="reason in change.other.reasons" :key="reason" :text="reason" />
-            </template>
+            <ul v-if="change.other.state === 'out-of-scope' && change.other.reasons.length > 0">
+              <li v-for="reason in change.other.reasons" :key="reason">
+                <TextWithCode :text="reason" />
+              </li>
+            </ul>
           </template>
         </td>
       </tr>
