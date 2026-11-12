@@ -83,18 +83,17 @@ async function main(): Promise<void> {
     cpSync(`../../${file}`, `${PACKAGE_DIRECTORY}/${file}`);
   }
 
-  console.log('[4/9] Check that npm packs the license and the notices');
+  console.log('[4/9] Pack the package folder as a release does, through prepack');
   const [pack]: { files: { path: string }[] }[] = JSON.parse(
-    execFileSync('npm', ['pack', '--dry-run', '--json'], {
-      cwd: PACKAGE_DIRECTORY,
+    execFileSync('npm', ['pack', '--dry-run', '--json', '--foreground-scripts=false'], {
       encoding: 'utf8',
     }),
   );
   const packedPaths = pack.files.map((file) => file.path);
-  for (const file of LICENSE_FILES) {
+  for (const file of [...LICENSE_FILES, 'README.md']) {
     assert.ok(
       packedPaths.includes(file),
-      `${file} must be in the packed files. Add it to "files" in package.json.`,
+      `${file} must be in the packed files. Copy it in "prepack". If npm does not pack it by default, list it in "files".`,
     );
     console.log(`  ${file}: packed`);
   }

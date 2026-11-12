@@ -1,0 +1,60 @@
+# The trusted publisher of `@vase-ui/vue` on npmjs.com names this file and the environment `npm`.
+# npm refuses the release after a change of either name.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check that the tagged commit is on main
+        run: git merge-base --is-ancestor HEAD origin/main
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check-tag "$GITHUB_REF_NAME"
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm check:package
+      - run: pnpm parity:check
+      - run: pnpm docs:typecheck
+      - run: pnpm docs:build
+
+  stage:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+      # `publishConfig.tag` has the same value. Without `--tag`, npm logs the wrong tag, `latest`.
+      # With `--provenance`, the release fails when npm cannot make the provenance statement.
+      - run: npm stage publish --tag next --provenance
+        working-directory: packages/vue
