@@ -45,7 +45,7 @@
     {
       "upstream": ["packages/utils/src/useIsoLayoutEffect.ts"],
       "kind": "not-applicable",
-      "reason": "Vue has `onMounted`, `onBeforeUnmount` and watchers with `flush: 'post'`. None of them runs on a server."
+      "reason": "Vue has `onMounted`, `onBeforeUnmount` and watchers with `flush: 'post'`. The two hooks do not run on a server. A watcher with `flush: 'post'` runs on a server only when it has `immediate`."
     },
     {
       "upstream": [
