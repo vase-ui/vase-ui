@@ -1,0 +1,16 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/button/**",
+    "docs/src/app/(docs)/react/components/button/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Button",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "notApplicableCommits": []
+}
