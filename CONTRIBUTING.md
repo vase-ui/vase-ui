@@ -500,7 +500,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
 - `createRenderer()` has no `renderToString`. A server render runs in Node with no DOM.
-- A row for a `describe` block also covers each case of the block that has no counterpart. Use that row only when each case of the block moves to the `.node.test.tsx` file. `useButton` does this for `server-side rendering`.
+- A row for a `describe` block also covers each case of the block that has no counterpart. Give the block a `replaced` row only when each case of the block moves to the `.node.test.tsx` file. `useButton` does this for `server-side rendering`.
 - Vue renders an async component after its loader resolves. `flushMicrotasks` waits for that render.
 
 ### Test helpers
