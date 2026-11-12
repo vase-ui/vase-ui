@@ -1,5 +1,8 @@
 # The trusted publisher of `@vase-ui/vue` on npmjs.com names this file and the environment `npm`.
 # npm refuses the release after a change of either name.
+# The trusted publisher allows `npm stage publish` only. Do not give it `--allow-publish`.
+# Each step of the job `stage` can get an OIDC token. This includes the install and the `prepack` build.
+# With `--allow-publish`, any of these steps can make a version public with no approval.
 name: Release
 
 on:
