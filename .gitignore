@@ -4,6 +4,7 @@ dist/
 packages/vue/src/index.ts
 packages/vue/test/package-check/index.ts
 packages/vue/LICENSE
+packages/vue/THIRD_PARTY_NOTICES.md
 packages/vue/README.md
 *.log
 .DS_Store

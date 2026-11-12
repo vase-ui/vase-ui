@@ -1,0 +1,89 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/direction-provider/**",
+    "packages/react/src/internals/direction-context/**",
+    "docs/src/app/(docs)/react/utils/direction-provider/**"
+  ],
+  "sources": [
+    "packages/react/src/direction-provider/DirectionProvider.tsx",
+    "packages/react/src/direction-provider/index.parts.ts",
+    "packages/react/src/direction-provider/index.ts",
+    "packages/react/src/internals/direction-context/DirectionContext.tsx",
+    "packages/react/src/internals/direction-context/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/direction-provider/DirectionProvider.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/direction-provider/DirectionProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<DirectionProvider />"
+          ],
+          "title": "defaults useDirection to ltr outside a provider"
+        },
+        {
+          "describe": [
+            "<DirectionProvider />"
+          ],
+          "title": "provides the configured direction to descendants"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/direction-provider/types.md",
+      "parts": [
+        {
+          "name": "DirectionProvider",
+          "tag": null,
+          "props": [
+            {
+              "name": "direction",
+              "required": false,
+              "type": "TextDirection",
+              "default": "'ltr'"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "DirectionProviderState",
+            "fields": [],
+            "code": "type DirectionProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [
+        {
+          "name": "useDirection",
+          "tables": [],
+          "code": [
+            "type ReturnValue = TextDirection;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "TextDirection",
+          "code": "type TextDirection = 'ltr' | 'rtl';"
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}

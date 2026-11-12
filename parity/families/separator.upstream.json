@@ -1,0 +1,117 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/separator/**",
+    "docs/src/app/(docs)/react/components/separator/**"
+  ],
+  "sources": [
+    "packages/react/src/separator/Separator.tsx",
+    "packages/react/src/separator/SeparatorDataAttributes.ts",
+    "packages/react/src/separator/index.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/separator/Separator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Separator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Separator />"
+          ],
+          "title": "renders a div with the `separator` role"
+        },
+        {
+          "describe": [
+            "<Separator />",
+            "prop: orientation"
+          ],
+          "title": "sets aria-orientation=\"$orientation\""
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/separator/types.md",
+      "parts": [
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Separator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Separator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Separator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type SeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "SeparatorDataAttributes",
+          "code": "declare namespace SeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ]
+}

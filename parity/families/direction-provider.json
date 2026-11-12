@@ -1,0 +1,17 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/direction-provider/**",
+    "packages/react/src/internals/direction-context/**",
+    "docs/src/app/(docs)/react/utils/direction-provider/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/internals/direction-context/index.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/direction-context`, and Vase UI has no entry point for an internal module."
+    }
+  ],
+  "surfaceAdditions": [],
+  "notApplicableCommits": []
+}
