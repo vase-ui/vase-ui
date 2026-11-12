@@ -22,8 +22,6 @@ React gets the good component libraries first. Vue gets to wait. We think the Vu
 
 ## What this costs
 
-Vase UI is free. Arranging it was not.
-
 AI agents build and maintain Vase UI. The tables show every token that they have used so far. The count includes the research, the plan, the experiments, the failed rounds and the discarded work. It does not count a person's time or CI minutes.
 
 <!-- cost:start -->
@@ -54,5 +52,11 @@ Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/b
 ## Thanks
 
 Vase UI is a port, so the hard part was done before we started. The engineers behind Base UI, and behind Floating UI and aria-hidden before it, spent years on focus management, screen readers and browser bugs. We carried their work across. Every one of them is named in [THANKS.md](THANKS.md).
+
+## Contributing
+
+Start with a [Discussion](https://github.com/vase-ui/vase-ui/discussions/new) instead of opening a pull request. If we accept the proposal, a Mathematic maintainer or agent will implement it. When we implement your proposal, the pull request will link to the Discussion and credit you as the proposal's original author. GitHub restricts pull request creation to Mathematic maintainers and repository collaborators with write, maintain, or admin access, plus authorized maintenance agents. See [CONTRIBUTING.md](https://github.com/vase-ui/vase-ui/blob/main/CONTRIBUTING.md) for the full process.
+
+Do not report a security problem in a Discussion. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
 > This project is free and open-source work by a 501(c)(3) non-profit. If you find it useful, please consider [donating](https://github.com/sponsors/mathematic-inc).
