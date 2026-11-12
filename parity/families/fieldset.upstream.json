@@ -1,0 +1,219 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/fieldset/**",
+    "docs/src/app/(docs)/react/components/fieldset/**"
+  ],
+  "sources": [
+    "packages/react/src/fieldset/index.parts.ts",
+    "packages/react/src/fieldset/index.ts",
+    "packages/react/src/fieldset/legend/FieldsetLegend.tsx",
+    "packages/react/src/fieldset/legend/FieldsetLegendDataAttributes.ts",
+    "packages/react/src/fieldset/root/FieldsetRoot.tsx",
+    "packages/react/src/fieldset/root/FieldsetRootContext.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "should set aria-labelledby on the fieldset automatically"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "should set aria-labelledby on the fieldset with custom id"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "reflects the disabled state"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "updates and clears the legend association"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Fieldset.Root>"
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "does not set `aria-labelledby` during SSR when legend is absent",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Fieldset.Legend />"
+          ],
+          "title": "sets `aria-labelledby` after hydration without a custom legend id",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Fieldset.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Fieldset.Root />"
+          ],
+          "title": "sets the native disabled attribute"
+        },
+        {
+          "describe": [
+            "<Fieldset.Root />"
+          ],
+          "title": "keeps nested fieldsets disabled when an ancestor fieldset is disabled"
+        },
+        {
+          "describe": [
+            "<Fieldset.Root />"
+          ],
+          "title": "updates nested disabled precedence in both directions"
+        },
+        {
+          "describe": [
+            "<Fieldset.Root />"
+          ],
+          "title": "passes disabled to rendered Base UI roots"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/fieldset/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "fieldset",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Fieldset.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Fieldset.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Fieldset.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldsetRootState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldsetRootState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Legend",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Fieldset.Legend.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Fieldset.Legend.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Fieldset.Legend.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldsetLegendState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldsetLegendState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "FieldsetLegendDataAttributes",
+          "code": "declare namespace FieldsetLegendDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
