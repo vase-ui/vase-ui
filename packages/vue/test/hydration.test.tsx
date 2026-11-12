@@ -3,8 +3,10 @@ import { defineComponent, h, nextTick, onMounted, ref, warn } from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
 import PlainPart from './fixtures/PlainPart.vue';
+import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
+const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
 
 describe('hydrate', () => {
   it('passes for the clean fixture', async () => {
@@ -61,6 +63,53 @@ describe('hydrate', () => {
     const error = await hydrate(PlainPart, { serverHtml, props: { active: false } }).catch(
       (caught: Error) => caught,
     );
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);
+    expect((error as Error).message).not.toMatch(/Vue and the console reported/);
+  });
+
+  it.each([
+    {
+      name: 'a style that a browser writes in another format',
+      elementStyle: {
+        border: 0,
+        lineHeight: 1.5,
+        '--x': '1px',
+        margin: '0 auto',
+        color: 'red !important',
+      },
+      serverText: 'border:0;',
+    },
+    { name: 'an empty style object', elementStyle: {}, serverText: 'style=""' },
+  ])('passes for $name', async ({ elementStyle, serverText }) => {
+    const serverHtml = await renderOnServer(STYLED_ELEMENT, { elementStyle });
+
+    // The case tests the helper only while the server HTML has this text.
+    // When Vue changes its format, this assertion fails.
+    expect(serverHtml).toContain(serverText);
+    await hydrate(StyledElement, { serverHtml, props: { elementStyle } });
+  });
+
+  it.each([
+    {
+      name: 'another value of a style property',
+      serverStyle: { border: 0, lineHeight: 2 },
+      clientStyle: { border: 0, lineHeight: 1.5 },
+    },
+    {
+      name: 'a style property that only the server HTML has',
+      serverStyle: { border: 0, lineHeight: 1.5 },
+      clientStyle: { border: 0 },
+    },
+  ])('fails with the DOM difference only for $name', async ({ serverStyle, clientStyle }) => {
+    const serverHtml = await renderOnServer(STYLED_ELEMENT, { elementStyle: serverStyle });
+
+    // Vue does not patch `style`, and `data-allow-mismatch` stops its warning.
+    const error = await hydrate(StyledElement, {
+      serverHtml,
+      props: { elementStyle: clientStyle },
+    }).catch((caught: Error) => caught);
 
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toMatch(/The hydrated DOM differs from a client-only render/);

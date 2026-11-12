@@ -544,7 +544,8 @@ The hydration helpers:
 - It inserts the HTML with `Range.createContextualFragment`, because `innerHTML` does not run an inline script.
 - It records the Vue warnings of its two apps as `render` does, and it reads the messages that the test setup records. Vue writes some hydration messages only to the console.
 - After mount and two ticks, it fails the test on a Vue warning or a console call. It also fails the test when the hydrated DOM differs from a client-only render.
-- The comparison ignores comments, the order of the attributes and the format of `style`.
+- The comparison ignores comments and the order of the attributes.
+- It compares the `style` of each element as the browser parses it, so `border:0` is equal to `border: 0px`. An empty `style` attribute is equal to no `style` attribute.
 
 ### Test rules
 
