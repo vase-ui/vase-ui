@@ -24,6 +24,12 @@ export function extractFile(name: string): string {
   return `${FAMILIES_FOLDER}/${name}.upstream.json`;
 }
 
+export function extractCommand(name: string): string {
+  return `pnpm parity:extract --upstream <path> ${name}`;
+}
+
+export const TRACK_COMMAND = 'pnpm parity:track <sha> --upstream <path>';
+
 export interface FamilyFiles {
   name: string;
   family?: FamilyFile;
@@ -69,7 +75,7 @@ function readJson<T>(
 export function readUpstreamFile(root: string): { upstream?: UpstreamFile; problems: string[] } {
   const problems: string[] = [];
   if (!existsSync(join(root, UPSTREAM_FILE))) {
-    problems.push(`${UPSTREAM_FILE}: the file does not exist. Run \`pnpm parity:track\`.`);
+    problems.push(`${UPSTREAM_FILE}: the file does not exist. Restore it from git.`);
     return { problems };
   }
   const upstream = readJson<UpstreamFile>(root, UPSTREAM_FILE, validateUpstreamFile, problems);

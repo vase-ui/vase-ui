@@ -173,7 +173,7 @@ const staleRows: { name: string; exceptions: ExceptionRow[]; message: RegExp }[]
     name: 'a file that the extract does not have',
     exceptions: [row({ upstream: 'packages/utils/src/none.test.ts', kind: 'not-applicable' })],
     message:
-      /stale row exceptions\[0\] \(packages\/utils\/src\/none\.test\.ts\): the extract has nothing that the row names/,
+      /stale row exceptions\[0\] \(packages\/utils\/src\/none\.test\.ts\): the extract has nothing that the row names\. Remove the row, or run `pnpm parity:extract --upstream <path> sample` if the family paths changed\./,
   },
   {
     name: 'a block that the extract does not have',

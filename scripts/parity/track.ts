@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { UpstreamFile } from './parityFiles.ts';
-import { readUpstreamFile, REPOSITORY_ROOT, UPSTREAM_FILE } from './repository.ts';
+import { readUpstreamFile, REPOSITORY_ROOT, TRACK_COMMAND, UPSTREAM_FILE } from './repository.ts';
 import {
   countCommitsSince,
   isAncestor,
@@ -44,7 +44,7 @@ function main(): void {
     options: { upstream: { type: 'string' } },
   });
   if (positionals.length !== 1) {
-    throw new Error('Pass one commit: pnpm parity:track <sha> --upstream <path>.');
+    throw new Error(`Pass one commit: ${TRACK_COMMAND}.`);
   }
   if (values.upstream === undefined) {
     throw new Error('Pass --upstream <path>, the path of a local clone of Base UI.');

@@ -2,7 +2,13 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { buildExtract, countTree, formatCounts, missingPaths } from './extractFamily.ts';
-import { extractFile, familyFile, readParityFiles, REPOSITORY_ROOT } from './repository.ts';
+import {
+  extractCommand,
+  extractFile,
+  familyFile,
+  readParityFiles,
+  REPOSITORY_ROOT,
+} from './repository.ts';
 import { listFiles, readFileAt, resolveCommit } from './upstreamClone.ts';
 
 function main(): void {
@@ -78,10 +84,10 @@ function main(): void {
       writeFileSync(join(REPOSITORY_ROOT, path), text);
       console.log(`Wrote ${path}.`);
     } else if (!existsSync(join(REPOSITORY_ROOT, path))) {
-      console.error(`${path} does not exist. Run \`pnpm parity:extract ${name}\`.`);
+      console.error(`${path} does not exist. Run \`${extractCommand(name)}\`.`);
       process.exitCode = 1;
     } else if (readFileSync(join(REPOSITORY_ROOT, path), 'utf8') !== text) {
-      console.error(`${path} differs from a fresh extract. Run \`pnpm parity:extract ${name}\`.`);
+      console.error(`${path} differs from a fresh extract. Run \`${extractCommand(name)}\`.`);
       process.exitCode = 1;
     }
   }

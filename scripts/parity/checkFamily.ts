@@ -4,6 +4,7 @@ import { isSourceFileTarget, labelOf, targetOf } from './parityFiles.ts';
 import type { Engine, FamilyExtract, ExceptionRow, FamilyFile, Target } from './parityFiles.ts';
 import { counterparts, hasCounterpart, isTestFile, isTypeTestFile } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
+import { extractCommand } from './repository.ts';
 
 export interface VaseTree {
   files: VaseFiles;
@@ -201,7 +202,7 @@ export function checkFamily(
     if (!targetExists(item.target, extract)) {
       reported.add(item.index);
       problem(
-        `stale row ${where(item)}: the extract has nothing that the row names. Remove the row, or run \`pnpm parity:extract\` if the family paths changed.`,
+        `stale row ${where(item)}: the extract has nothing that the row names. Remove the row, or run \`${extractCommand(name)}\` if the family paths changed.`,
       );
     }
   }

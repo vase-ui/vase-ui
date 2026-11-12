@@ -7,7 +7,13 @@ import type { SurfaceSummary, Tally } from './checkSurface.ts';
 import type { BetterRow, FamilyFile, UpstreamFile } from './parityFiles.ts';
 import { hasCounterpart, isTestFile, matchesAny } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
-import { extractFile, familyFile, UPSTREAM_FILE } from './repository.ts';
+import {
+  extractCommand,
+  extractFile,
+  familyFile,
+  TRACK_COMMAND,
+  UPSTREAM_FILE,
+} from './repository.ts';
 import type { FamilyFiles, ParityFiles } from './repository.ts';
 import type { VaseProject } from './vaseSurface.ts';
 
@@ -33,6 +39,7 @@ export interface CheckInput {
   files: VaseFiles;
   /** The absolute path of the repository root. */
   root: string;
+  /** The rows of a Vase UI test file. It throws an error of one line that says what is wrong with the file. */
   rowsOf: (path: string) => TestRow[];
   project: () => VaseProject;
 }
@@ -43,7 +50,7 @@ function checkCommits(name: string, family: FamilyFile, upstream: UpstreamFile):
   const matched = shas.indexOf(family.matchedCommit);
   if (matched === -1) {
     problems.push(
-      `${name}: matchedCommit ${family.matchedCommit} is not a commit of ${UPSTREAM_FILE}. Use a commit from that file, or run \`pnpm parity:track\`.`,
+      `${name}: matchedCommit ${family.matchedCommit} is not a commit of ${UPSTREAM_FILE}. Use a commit from that file, or run \`${TRACK_COMMAND}\`.`,
     );
   }
   family.notApplicableCommits.forEach(({ sha }, index) => {
@@ -73,7 +80,7 @@ function checkFreshExtract(name: string, files: FamilyFiles): string[] {
   if (!family || !extract) {
     return [];
   }
-  const rerun = `Run \`pnpm parity:extract --upstream <path> ${name}\`.`;
+  const rerun = `Run \`${extractCommand(name)}\`.`;
   const problems: string[] = [];
   if (extract.commit !== family.matchedCommit) {
     problems.push(
@@ -117,11 +124,26 @@ export function checkRepository(input: CheckInput): CheckResult {
   const problems = [...parity.problems];
   const families: FamilyReport[] = [];
 
+  // One refused file must not hide the other problems. It gives one problem and has no rows.
+  const refused = new Set<string>();
+  const rowsOf = (path: string): TestRow[] => {
+    if (refused.has(path)) {
+      return [];
+    }
+    try {
+      return input.rowsOf(path);
+    } catch (error) {
+      refused.add(path);
+      problems.push(error instanceof Error ? error.message : String(error));
+      return [];
+    }
+  };
+
   for (const found of [...parity.families].sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
     const { name, family, extract } = found;
     if (found.hasFamilyFile && !found.hasExtract) {
       problems.push(
-        `${name}: ${extractFile(name)} does not exist. Run \`pnpm parity:extract --upstream <path> ${name}\`.`,
+        `${name}: ${extractFile(name)} does not exist. Run \`${extractCommand(name)}\`.`,
       );
     } else if (!found.hasFamilyFile) {
       problems.push(
@@ -139,11 +161,14 @@ export function checkRepository(input: CheckInput): CheckResult {
     if (stale.length > 0) {
       continue;
     }
-    const vase = { files, rowsOf: input.rowsOf };
-    const cases = checkFamily(name, family, extract, vase);
+    const cases = checkFamily(name, family, extract, { files, rowsOf });
     problems.push(...cases.problems);
     const report: FamilyReport = { name, summary: cases.summary };
-    if (extract.surface.length > 0 || family.exceptions.some(({ entry }) => entry !== undefined)) {
+    if (
+      extract.surface.length > 0 ||
+      family.surfaceAdditions.length > 0 ||
+      family.exceptions.some(({ entry }) => entry !== undefined)
+    ) {
       const surface = checkSurface({ name, family, extract, files, root, project: input.project });
       problems.push(...surface.problems);
       report.surface = surface.summary;
@@ -155,7 +180,7 @@ export function checkRepository(input: CheckInput): CheckResult {
     [...files.paths]
       .filter(isTestFile)
       .sort()
-      .flatMap((path) => input.rowsOf(path)),
+      .flatMap((path) => rowsOf(path)),
   );
   problems.push(...better.problems);
   return { problems, families, better: better.summary };

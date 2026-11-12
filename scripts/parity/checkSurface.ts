@@ -5,6 +5,7 @@ import { labelOf, MEMBER_KINDS, memberOf, targetOf } from './parityFiles.ts';
 import type { ExceptionRow, FamilyExtract, FamilyFile, MemberKind, Target } from './parityFiles.ts';
 import { hasCounterpart, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
+import { extractCommand } from './repository.ts';
 import type { SurfaceFile, SurfacePart } from './typesMd.ts';
 import type { ComponentSurface, ExportMatch, VaseProject } from './vaseSurface.ts';
 
@@ -448,7 +449,7 @@ export function checkSurface(options: {
       problem(
         'stale row',
         where(item),
-        'the extract has nothing that the row names. Remove the row, or run `pnpm parity:extract` if the family paths changed.',
+        `the extract has nothing that the row names. Remove the row, or run \`${extractCommand(name)}\` if the family paths changed.`,
       );
     }
   }

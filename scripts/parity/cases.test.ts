@@ -182,17 +182,27 @@ const refusals: { name: string; source: string; message: RegExp }[] = [
   {
     name: '.only on a case',
     source: `\n it.only('a', () => {});`,
-    message: /^sample\.test\.ts:2: the modifier "only" is not supported/,
+    message: /^sample\.test\.ts:2: `\.only` is not allowed\. Remove it\.$/,
   },
   {
     name: '.only on a block',
     source: `describe('a', () => {\n  describe.only('b', () => {});\n});`,
-    message: /^sample\.test\.ts:2: the modifier "only" is not supported/,
+    message: /^sample\.test\.ts:2: `\.only` is not allowed\. Remove it\.$/,
   },
   {
     name: '.only on a suite call',
     source: `describe('a', () => {\n  describeConformance.only(Button);\n});`,
-    message: /^sample\.test\.ts:2: `\.only` is not allowed/,
+    message: /^sample\.test\.ts:2: `\.only` is not allowed\. Remove it\.$/,
+  },
+  {
+    name: '.only after skipIf',
+    source: `it.skipIf(isJSDOM).only('a', () => {});`,
+    message: /^sample\.test\.ts:1: `\.only` is not allowed\. Remove it\.$/,
+  },
+  {
+    name: '.only after each',
+    source: `it.each([1, 2]).only('a', () => {});`,
+    message: /^sample\.test\.ts:1: `\.only` is not allowed\. Remove it\.$/,
   },
   {
     name: 'a tagged template table',
@@ -202,6 +212,11 @@ const refusals: { name: string; source: string; message: RegExp }[] = [
   {
     name: 'a modifier that the reader does not know',
     source: `it.concurrent('a', () => {});`,
+    message: /^sample\.test\.ts:1: the modifier "concurrent" is not supported/,
+  },
+  {
+    name: 'a modifier that the reader does not know, after skipIf',
+    source: `it.skipIf(isJSDOM).concurrent('a', () => {});`,
     message: /^sample\.test\.ts:1: the modifier "concurrent" is not supported/,
   },
 ];

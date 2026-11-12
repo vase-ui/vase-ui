@@ -156,7 +156,7 @@ const wrongFiles: { name: string; change: (parity: ParityFiles) => void; message
       parity.families[0].extract = undefined;
     },
     message:
-      /^sample: parity\/families\/sample\.upstream\.json does not exist\. Run `pnpm parity:extract/,
+      /^sample: parity\/families\/sample\.upstream\.json does not exist\. Run `pnpm parity:extract --upstream <path> sample`\./,
   },
   {
     name: 'an extract with no family file',
@@ -173,7 +173,7 @@ const wrongFiles: { name: string; change: (parity: ParityFiles) => void; message
       parity.families[0].extract!.commit = FIRST;
     },
     message:
-      /^sample: parity\/families\/sample\.upstream\.json was read at commit a+, but matchedCommit is b+\. Run `pnpm parity:extract/,
+      /^sample: parity\/families\/sample\.upstream\.json was read at commit a+, but matchedCommit is b+\. Run `pnpm parity:extract --upstream <path> sample`\./,
   },
   {
     name: 'an extract that was read with other upstream paths',
@@ -181,7 +181,7 @@ const wrongFiles: { name: string; change: (parity: ParityFiles) => void; message
       parity.families[0].extract!.upstreamPaths = ['packages/utils/src/*'];
     },
     message:
-      /^sample: parity\/families\/sample\.upstream\.json was read with other "upstreamPaths" than parity\/families\/sample\.json\. Run `pnpm parity:extract/,
+      /^sample: parity\/families\/sample\.upstream\.json was read with other "upstreamPaths" than parity\/families\/sample\.json\. Run `pnpm parity:extract --upstream <path> sample`\./,
   },
   {
     name: 'a matchedCommit that is not in the tracked commits',
@@ -189,7 +189,8 @@ const wrongFiles: { name: string; change: (parity: ParityFiles) => void; message
       parity.families[0].family!.matchedCommit = 'c'.repeat(40);
       parity.families[0].extract!.commit = 'c'.repeat(40);
     },
-    message: /^sample: matchedCommit c+ is not a commit of parity\/upstream\.json\./,
+    message:
+      /^sample: matchedCommit c+ is not a commit of parity\/upstream\.json\. Use a commit from that file, or run `pnpm parity:track <sha> --upstream <path>`\./,
   },
   {
     name: 'a not-applicable commit that is not in the tracked commits',
@@ -237,4 +238,64 @@ test('a not-applicable commit that changes a path of the family and is not after
   const parity = makeParity();
   parity.families[0].family!.notApplicableCommits = [{ sha: FIRST, reason: 'A reason.' }];
   assert.deepEqual(run(parity).problems, []);
+});
+
+test('a "surfaceAdditions" row of a family with no surface is a stale row', () => {
+  const parity = makeParity();
+  parity.families[0].family!.surfaceAdditions = [
+    { entry: 'Ghost', prop: 'ghost', reason: 'A reason.' },
+  ];
+  assert.deepEqual(run(parity).problems, [
+    'sample: stale row surfaceAdditions[0] (Ghost, prop ghost): the extract has no part `Ghost`. Remove the row.',
+  ]);
+});
+
+test('a test file that the reader refuses is one problem, and the other families are still checked', () => {
+  const refusedFile = 'packages/vue/src/common/refused.test.ts';
+  const refusal = `${refusedFile}:6: the modifier "only" is not supported. Remove it, or teach scripts/parity/cases.ts the form.`;
+  const parity = makeParity();
+  parity.families[0].name = 'refused';
+  parity.families[0].extract!.cases = [
+    { file: 'packages/utils/src/refused.test.ts', rows: [{ describe: [], title: 'a' }] },
+  ];
+  parity.families.push({
+    name: 'other',
+    family: makeFamily(),
+    extract: { ...makeExtract(), sources: ['packages/utils/src/other.ts'] },
+    hasFamilyFile: true,
+    hasExtract: true,
+  });
+  // A due row makes the check read the refused file again.
+  parity.better = [betterRow('VUE-1')];
+  const result = checkRepository({
+    parity,
+    files: vaseFiles([refusedFile, COUNTERPART]),
+    root: '/none',
+    rowsOf: (path) => {
+      if (path === refusedFile) {
+        throw new Error(refusal);
+      }
+      return [];
+    },
+    project: () => {
+      throw new Error('A family with no surface must not make the project.');
+    },
+  });
+  assert.equal(result.problems.filter((problem) => problem === refusal).length, 1);
+  assert.equal(
+    result.problems.some((problem) =>
+      problem.startsWith('refused: uncovered case "a" in packages/utils/src/refused.test.ts'),
+    ),
+    true,
+    result.problems.join('\n'),
+  );
+  assert.equal(
+    result.problems.some((problem) => problem.startsWith('other: uncovered source file')),
+    true,
+    result.problems.join('\n'),
+  );
+  assert.deepEqual(
+    formatSummary(result).map((line) => line.split(':')[0]),
+    ['other', 'refused', 'parity/better'],
+  );
 });

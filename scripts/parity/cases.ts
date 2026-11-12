@@ -33,8 +33,22 @@ const PLAIN_MODIFIERS = new Set(['skip', 'todo']);
 const HOOKS = new Set(['beforeEach', 'afterEach', 'beforeAll', 'afterAll']);
 const DECLARATIONS = new Set(['it', 'test', 'describe']);
 
+const ONLY_IS_NOT_ALLOWED = '`.only` is not allowed. Remove it.';
+
 function squash(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
+}
+
+function rootOf(expression: ts.Expression): ts.Expression {
+  let root = expression;
+  while (ts.isPropertyAccessExpression(root) || ts.isCallExpression(root)) {
+    root = root.expression;
+  }
+  return root;
+}
+
+function isDeclarationName(node: ts.Node): node is ts.Identifier {
+  return ts.isIdentifier(node) && DECLARATIONS.has(node.text);
 }
 
 export function readTestRows(path: string, text: string): TestRow[] {
@@ -63,16 +77,16 @@ export function readTestRows(path: string, text: string): TestRow[] {
         callee = callee.expression.expression;
       } else if (ts.isPropertyAccessExpression(callee)) {
         const name = callee.name.text;
-        const isDeclaration =
-          ts.isIdentifier(callee.expression) && DECLARATIONS.has(callee.expression.text);
-        if (!PLAIN_MODIFIERS.has(name) && !isDeclaration) {
-          return undefined;
-        }
         if (!PLAIN_MODIFIERS.has(name)) {
-          fail(
-            call,
-            `the modifier "${name}" is not supported. Remove it, or teach scripts/parity/cases.ts the form.`,
-          );
+          if (isDeclarationName(rootOf(callee.expression))) {
+            fail(
+              call,
+              name === 'only'
+                ? ONLY_IS_NOT_ALLOWED
+                : `the modifier "${name}" is not supported. Remove it, or teach scripts/parity/cases.ts the form.`,
+            );
+          }
+          return undefined;
         }
         conditions.unshift(name);
         callee = callee.expression;
@@ -80,7 +94,7 @@ export function readTestRows(path: string, text: string): TestRow[] {
         break;
       }
     }
-    if (!ts.isIdentifier(callee) || !DECLARATIONS.has(callee.text)) {
+    if (!isDeclarationName(callee)) {
       return undefined;
     }
     return { isBlock: callee.text === 'describe', conditions };
@@ -115,7 +129,7 @@ export function readTestRows(path: string, text: string): TestRow[] {
     const own: string[] = [];
     if (ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)) {
       if (callee.name.text === 'only') {
-        fail(call, '`.only` is not allowed. Remove it.');
+        fail(call, ONLY_IS_NOT_ALLOWED);
       }
       if (PLAIN_MODIFIERS.has(callee.name.text)) {
         own.push(callee.name.text);
@@ -135,14 +149,8 @@ export function readTestRows(path: string, text: string): TestRow[] {
   }
 
   function visit(node: ts.Node, context: Context): void {
-    if (ts.isTaggedTemplateExpression(node)) {
-      let tag: ts.Expression = node.tag;
-      while (ts.isPropertyAccessExpression(tag) || ts.isCallExpression(tag)) {
-        tag = tag.expression;
-      }
-      if (ts.isIdentifier(tag) && DECLARATIONS.has(tag.text)) {
-        fail(node, 'a tagged template table is not supported. Write the table as an array.');
-      }
+    if (ts.isTaggedTemplateExpression(node) && isDeclarationName(rootOf(node.tag))) {
+      fail(node, 'a tagged template table is not supported. Write the table as an array.');
     }
     if (ts.isCallExpression(node)) {
       const found = declarationOf(node);

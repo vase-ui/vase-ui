@@ -423,7 +423,7 @@ test('an entry row for an entry that the extract does not have is stale', () => 
   assert.equal(problems.length, 2);
   assert.match(
     problems[0],
-    /stale row exceptions\[0\] .*entry "Ghost"\): the extract has nothing that the row names/,
+    /stale row exceptions\[0\] .*entry "Ghost"\): the extract has nothing that the row names\. Remove the row, or run `pnpm parity:extract --upstream <path> sample` if the family paths changed\./,
   );
   assert.match(
     problems[1],
