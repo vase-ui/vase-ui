@@ -636,6 +636,7 @@ describe('Vue rules', () => {
           () => {
             log.push('inner');
           },
+          null,
           () => {
             log.push('outer');
           },
@@ -674,6 +675,33 @@ describe('Vue rules', () => {
     mergedProps.onClick(new MouseEvent('click'));
 
     expect(log).toEqual(['first', 'second']);
+  });
+
+  it('merges an array of handlers that a props getter returns', () => {
+    const log: string[] = [];
+
+    const mergedProps = mergeProps<any>(
+      () => ({
+        onClick: [
+          () => {
+            log.push('a');
+          },
+          () => {
+            log.push('b');
+          },
+        ],
+      }),
+      {
+        onClick() {
+          log.push('c');
+        },
+      },
+    );
+
+    expect(mergedProps.onClick).toBeTypeOf('function');
+    mergedProps.onClick(new MouseEvent('click'));
+
+    expect(log).toEqual(['c', 'a', 'b']);
   });
 
   it.each([
