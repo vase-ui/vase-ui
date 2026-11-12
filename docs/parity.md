@@ -13,7 +13,7 @@ import ParitySummary from './.vitepress/components/ParitySummary.vue';
 
 # Parity
 
-This page shows the state of each Vase UI family against Base UI. The site build makes it from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
+This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports, and the column Component shows which families are components. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
 
 <ParitySummary />
 
