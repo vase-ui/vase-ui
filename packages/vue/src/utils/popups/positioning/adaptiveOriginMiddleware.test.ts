@@ -73,9 +73,10 @@ describe('adaptiveOrigin', () => {
   });
 
   // In these engines the visual viewport has the size of the document element. A fake visual
-  // viewport of another size shows which of the two sizes the middleware reads. WebKit adds the
-  // offsets of the visual viewport to the position of a fixed element. Without them in the fake,
-  // the position is NaN there, and `toBe` passes for two NaN values.
+  // viewport of another size shows which of the two sizes the middleware reads. In WebKit,
+  // Floating UI adds the offsets of the visual viewport to the rectangle of the anchor for the
+  // fixed strategy. Without the offsets in the fake, each coordinate is NaN there, and the
+  // fixed row fails.
   it.each([
     { name: 'the visual viewport for the fixed strategy', strategy: 'fixed', fromViewport: true },
     {
