@@ -447,7 +447,8 @@ describe('<Collapsible.Root />', () => {
   });
 
   describe('v-model:open', () => {
-    // The sync watcher records the write of the parent value in the order of the calls.
+    // The sync watcher logs each write of the parent value, so `calls` shows the order of the two
+    // events.
     function createModelApp(
       calls: string[],
       model: { value: boolean },

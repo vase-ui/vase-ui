@@ -628,7 +628,8 @@ describe('<Collapsible.Panel />', () => {
       };
 
       try {
-        // A ref on a vnode that the body of the test makes is lost, so the ref is in a render function.
+        // Vue drops a ref on a vnode that the body of the test makes. The ref is therefore in a
+        // render function.
         await render(() => (
           <Collapsible.Root defaultOpen>
             <Collapsible.Trigger>Trigger</Collapsible.Trigger>
@@ -1003,7 +1004,7 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it('does not replay open transitions when revealing a panel opened by the user', async () => {
-      // Wait for the initial opening transition before checking for Activity replays.
+      // Wait for the first opening transition before the checks for a replay after `KeepAlive`.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
       const App = defineComponent(() => {
@@ -1673,7 +1674,7 @@ describe('<Collapsible.Panel />', () => {
               data-testid="panel"
               hiddenUntilFound
               keepMounted
-              // Verifies canceled beforematch does not install the temporary 0s override.
+              // A canceled `beforematch` must not install the temporary `0s` override.
               style={{ transitionDuration: '123ms' }}
             >
               {PANEL_CONTENT}
@@ -1743,10 +1744,9 @@ describe('<Collapsible.Panel />', () => {
       let startingStyleWhenRevealed: boolean | undefined;
       let heightWhenRevealed: string | undefined;
 
-      // Registered after the component's own listener, so this observes the panel
-      // from where the browser does: the same task, once `beforematch` handling is
-      // done. The browser drops `hidden` and measures the match there, and a panel
-      // still holding its collapsed starting styles measures as zero-sized.
+      // This listener comes after the listener of the panel, so it sees the panel as the browser
+      // does. The browser removes `hidden` and measures the match in the task that dispatches
+      // `beforematch`. A panel that keeps its collapsed starting styles has no size at that time.
       panel.addEventListener('beforematch', () => {
         startingStyleWhenRevealed = panel.hasAttribute('data-starting-style');
         panel.removeAttribute('hidden');
@@ -1796,7 +1796,8 @@ describe('<Collapsible.Panel />', () => {
                 nextOpen: boolean,
                 eventDetails: Collapsible.Root.ChangeEventDetails,
               ) => {
-                // Opts out of find-in-page reveals while still honoring the trigger.
+                // A find-in-page reveal gets no response here. A press of the trigger still opens the
+                // panel.
                 if (eventDetails.reason === REASONS.none) {
                   return;
                 }
@@ -1805,7 +1806,7 @@ describe('<Collapsible.Panel />', () => {
               }}
             >
               <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-              {/* A render of the parent does not render a Vue part again. The attribute changes, so the panel renders again. */}
+              {/* A part renders again only when its props change. The attribute changes, so the panel renders again. */}
               <Collapsible.Panel
                 class="transition-test-panel"
                 data-testid="panel"
@@ -1888,7 +1889,8 @@ describe('<Collapsible.Panel />', () => {
                 nextOpen: boolean,
                 eventDetails: Collapsible.Root.ChangeEventDetails,
               ) => {
-                // Opts out of find-in-page reveals while still honoring the trigger.
+                // A find-in-page reveal gets no response here. A press of the trigger still opens
+                // the panel.
                 if (eventDetails.reason === REASONS.none) {
                   return;
                 }
@@ -1910,9 +1912,9 @@ describe('<Collapsible.Panel />', () => {
       const panel = screen.getByTestId('panel');
       const trigger = screen.getByRole('button', { name: 'Trigger' });
 
-      // A full open/close cycle reaches the steady state where the closed panel
-      // no longer carries `data-starting-style` (keyframe panels only hold it
-      // until the animation type has been detected).
+      // A full open and close cycle reaches the steady state. The closed panel then has no
+      // `data-starting-style`. A keyframe panel keeps the attribute only until the part detects the
+      // animation type.
       await user.click(trigger);
       await user.click(trigger);
 
