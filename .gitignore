@@ -1,5 +1,7 @@
 node_modules/
 dist/
+.nuxt/
+.output/
 .package-check/
 packages/vue/src/index.ts
 packages/vue/test/package-check/index.ts

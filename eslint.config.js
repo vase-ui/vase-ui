@@ -193,6 +193,8 @@ const RESTRICTED_HTML_SYNTAX = [
 export default defineConfig([
   globalIgnores([
     '**/dist/',
+    '**/.nuxt/',
+    '**/.output/',
     '**/.package-check/',
     '**/.vitepress/cache/',
     '**/node_modules/',
