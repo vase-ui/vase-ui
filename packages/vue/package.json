@@ -58,10 +58,13 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
     "@types/node": "26.6.6",
     "@vitejs/plugin-vue": "6.0.10",
     "@vitejs/plugin-vue-jsx": "5.1.6",
     "@vitest/browser-playwright": "5.1.0",
+    "axe-core": "4.14.0",
     "playwright": "1.65.0",
     "publint": "0.3.25",
     "tsdown": "0.23.7",
