@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
 import type { TestRow } from '../parity/cases.ts';
 import type { FileTally, RowTally } from '../parity/checkFamily.ts';
@@ -310,20 +310,24 @@ after(() => {
   }
 });
 
-function makeParityRoot(scopeText?: string): string {
+function makeParityRoot(files: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), 'parity-report-'));
   roots.push(root);
-  mkdirSync(join(root, 'parity'));
-  if (scopeText !== undefined) {
-    writeFileSync(join(root, 'parity', 'scope.json'), scopeText);
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
   }
   return root;
 }
 
 test('loadParityReport throws when the check finds a problem', () => {
+  const root = makeParityRoot({
+    'parity/upstream.json': JSON.stringify(upstream),
+    'parity/families/alpha.json': JSON.stringify(alpha),
+  });
   assert.throws(
-    () => loadParityReport(makeParityRoot()),
-    /^Error: The parity page needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nparity\/upstream\.json: the file does not exist/,
+    () => loadParityReport(root),
+    /^Error: The parity page needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nalpha: parity\/families\/alpha\.upstream\.json does not exist/,
   );
 });
 
@@ -340,6 +344,6 @@ for (const { name, text, message } of [
   { name: 'a file that is not JSON', text: '{', message: /^Error: parity\/scope\.json: / },
 ]) {
   test(`readScope throws for ${name}`, () => {
-    assert.throws(() => readScope(makeParityRoot(text)), message);
+    assert.throws(() => readScope(makeParityRoot({ 'parity/scope.json': text })), message);
   });
 }
