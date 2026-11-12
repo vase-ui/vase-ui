@@ -10,3 +10,5 @@ packages/vue/README.md
 .DS_Store
 *.tsbuildinfo
 .eslintcache
+docs/.vitepress/cache/
+*.timestamp-*.mjs
