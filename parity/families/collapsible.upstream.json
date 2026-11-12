@@ -1,0 +1,880 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/collapsible/**",
+    "docs/src/app/(docs)/react/components/collapsible/**"
+  ],
+  "sources": [
+    "packages/react/src/collapsible/index.parts.ts",
+    "packages/react/src/collapsible/index.ts",
+    "packages/react/src/collapsible/panel/CollapsiblePanel.tsx",
+    "packages/react/src/collapsible/panel/CollapsiblePanelCssVars.ts",
+    "packages/react/src/collapsible/panel/CollapsiblePanelDataAttributes.ts",
+    "packages/react/src/collapsible/panel/useCollapsiblePanel.ts",
+    "packages/react/src/collapsible/root/CollapsibleRoot.tsx",
+    "packages/react/src/collapsible/root/CollapsibleRootContext.ts",
+    "packages/react/src/collapsible/root/CollapsibleRootDataAttributes.ts",
+    "packages/react/src/collapsible/root/stateAttributesMapping.ts",
+    "packages/react/src/collapsible/root/useCollapsibleRoot.ts",
+    "packages/react/src/collapsible/trigger/CollapsibleTrigger.tsx",
+    "packages/react/src/collapsible/trigger/CollapsibleTriggerDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/collapsible/root/CollapsibleRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/collapsible/panel/CollapsiblePanel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Collapsible.Panel />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />"
+          ],
+          "title": "warns when hiddenUntilFound overrides keepMounted={false}"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: keepMounted"
+          ],
+          "title": "does not unmount the panel when true"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: keepMounted"
+          ],
+          "title": "hides the panel after external controlled close when true and no animations are applied",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />"
+          ],
+          "title": "unmounts a panel that mounts after the close has already entered the ending phase"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "applies data-starting-style while opening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "restores a measured height before applying closing transition styles",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "unmounts a zero-size panel without waiting for unrelated transitions",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "finishes closing when the render function removes the panel element",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "preserves inline alignment styles while measuring an opening panel",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "keeps exit transitions working after a close is interrupted by reopening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "keeps the measured size when an open animation finishes during a close commit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS transitions"
+          ],
+          "title": "does not restart the entrance transition when a close animation finishes after reopening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS animations"
+          ],
+          "title": "does not run the mount animation when initially open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS animations"
+          ],
+          "title": "animates on reopen after an initially open panel is removed by the render function",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS animations"
+          ],
+          "title": "still animates on close and reopen after being initially open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS animations"
+          ],
+          "title": "restores measured dimensions before applying a closing keyframe animation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "CSS animations"
+          ],
+          "title": "still animates on reopen after being initially open when only open keyframes are defined",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "server-side rendering"
+          ],
+          "title": "suppresses the initial keyframe animation when rendered open"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "server-side rendering"
+          ],
+          "title": "suppresses the initial keyframe animation from inline styles when rendered open"
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open transitions when revealing an initially open panel",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open transitions when revealing a panel opened by the user",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open keyframe animations when revealing an initially open panel",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open keyframe animations when revealing a panel opened by the user",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open keyframe animations from inline styles when revealing a panel opened by the user",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "interrupted beforematch opens"
+          ],
+          "title": "keeps the temporary zero animation duration until the panel closes",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19 || !('onbeforematch' in window))"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "interrupted beforematch opens"
+          ],
+          "title": "restores the transition duration before the first close after a beforematch open",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19 || !('onbeforematch' in window))"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "interrupted beforematch opens"
+          ],
+          "title": "does not suppress a later animated open after a no-motion beforematch open",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19 || !('onbeforematch' in window))"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "interrupted beforematch opens"
+          ],
+          "title": "restores the inline transition duration when an instant open is interrupted",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19 || !('onbeforematch' in window))"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "interrupted beforematch opens"
+          ],
+          "title": "does not keep a hidden transition running after a hiddenUntilFound panel closes",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19 || !('onbeforematch' in window))"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: hiddenUntilFound"
+          ],
+          "title": "does not open or suppress the next trigger open when beforematch is canceled",
+          "conditions": [
+            "skipIf(!('onbeforematch' in window) || isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: hiddenUntilFound"
+          ],
+          "title": "expands the panel while beforematch is being dispatched",
+          "conditions": [
+            "skipIf(!('onbeforematch' in window) || isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: hiddenUntilFound"
+          ],
+          "title": "re-collapses the panel when the open state never arrives",
+          "conditions": [
+            "skipIf(!('onbeforematch' in window) || isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: hiddenUntilFound"
+          ],
+          "title": "re-collapses a keyframe panel when the open state never arrives",
+          "conditions": [
+            "skipIf(!('onbeforematch' in window) || isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Panel />",
+            "prop: hiddenUntilFound"
+          ],
+          "title": "uses `hidden=\"until-found\" to hide panel when true",
+          "conditions": [
+            "skipIf(!('onbeforematch' in window) || isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/collapsible/root/CollapsibleRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Collapsible.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "ARIA attributes"
+          ],
+          "title": "sets ARIA attributes"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "ARIA attributes"
+          ],
+          "title": "references manual panel id in trigger aria-controls"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "ARIA attributes"
+          ],
+          "title": "unregisters and restores the generated panel id when the panel remounts"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "collapsible status"
+          ],
+          "title": "disabled status"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "collapsible status"
+          ],
+          "title": "does not toggle or call onOpenChange when clicked while disabled"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "calls onOpenChange with eventDetails"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "eventDetails.cancel() prevents opening while uncontrolled"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "eventDetails.cancel() prevents closing while uncontrolled"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "open state"
+          ],
+          "title": "controlled trigger presses request open and close state changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "open state"
+          ],
+          "title": "does not change controlled open state without an external update",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "open state"
+          ],
+          "title": "controlled mode",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "open state"
+          ],
+          "title": "uncontrolled mode",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "state callbacks"
+          ],
+          "title": "passes state to className and style callbacks"
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "keyboard interactions"
+          ],
+          "title": "key: $key does not toggle or call onOpenChange when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Collapsible.Root />",
+            "keyboard interactions"
+          ],
+          "title": "key: $key should toggle the Collapsible",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/collapsible/trigger/CollapsibleTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "throws when rendered outside a Collapsible.Root"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "renders the disabled attribute when disabled"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "stays disabled when the root is disabled and `disabled={false}` is passed"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "adds data-disabled when only the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "removes a disabled non-native trigger from the tab order"
+        },
+        {
+          "describe": [
+            "<Collapsible.Trigger />"
+          ],
+          "title": "forwards the id prop"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/collapsible/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Collapsible.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Collapsible.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Collapsible.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Collapsible.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CollapsibleRootState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type CollapsibleRootState = {\n    open: boolean;\n    disabled: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "CollapsibleRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "none"
+            ],
+            "code": "type CollapsibleRootChangeEventReason = 'trigger-press' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "CollapsibleRootChangeEventDetails",
+            "code": "type CollapsibleRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Collapsible.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Collapsible.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Collapsible.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CollapsibleTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type CollapsibleTriggerState = {\n    open: boolean;\n    disabled: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-panel-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Panel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "hiddenUntilFound",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Collapsible.Panel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Collapsible.Panel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Collapsible.Panel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CollapsiblePanelState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type CollapsiblePanelState = {\n    transitionStatus: TransitionStatus;\n    open: boolean;\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--collapsible-panel-height",
+              "type": "number"
+            },
+            {
+              "name": "--collapsible-panel-width",
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "CollapsiblePanelCssVariables",
+          "code": "declare namespace CollapsiblePanelCssVariables {\n    const collapsiblePanelHeight: '--collapsible-panel-height';\n    const collapsiblePanelWidth: '--collapsible-panel-width';\n}",
+          "constants": [
+            {
+              "name": "collapsiblePanelHeight",
+              "value": "--collapsible-panel-height"
+            },
+            {
+              "name": "collapsiblePanelWidth",
+              "value": "--collapsible-panel-width"
+            }
+          ]
+        },
+        {
+          "name": "CollapsiblePanelDataAttributes",
+          "code": "declare namespace CollapsiblePanelDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "CollapsibleRootDataAttributes",
+          "code": "declare namespace CollapsibleRootDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "CollapsibleTriggerDataAttributes",
+          "code": "declare namespace CollapsibleTriggerDataAttributes {\n    const panelOpen: 'data-panel-open';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "panelOpen",
+              "value": "data-panel-open"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+import * as CollapsiblePanelDataAttributes from '../collapsible/panel/CollapsiblePanelDataAttributes';
+import * as CollapsibleTriggerDataAttributes from '../collapsible/trigger/CollapsibleTriggerDataAttributes';
+import type { StateAttributesMapping } from '../internals/getStateAttributesProps';
+
+const PANEL_OPEN_HOOK = {
+  [CollapsiblePanelDataAttributes.open]: '',
+};
+
+const PANEL_CLOSED_HOOK = {
+  [CollapsiblePanelDataAttributes.closed]: '',
+};
+
+export const triggerOpenStateMapping: StateAttributesMapping<{
+  open: boolean;
+}> = {
+  open(value): Record<string, string> | null {
+    if (value) {
+      return {
+        [CollapsibleTriggerDataAttributes.panelOpen]: '',
+      };
+    }
+    return null;
+  },
+};
+
+export const collapsibleOpenStateMapping = {
+  open(value): Record<string, string> | null {
+    if (value) {
+      return PANEL_OPEN_HOOK;
+    }
+    return PANEL_CLOSED_HOOK;
+  },
+} satisfies StateAttributesMapping<{
+  open: boolean;
+}>;
