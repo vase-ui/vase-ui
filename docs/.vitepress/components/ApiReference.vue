@@ -28,8 +28,9 @@ const MEMBER_TABLES = [
   { key: 'cssVariables', title: 'CSS variables', columns: ['Variable', 'Type', 'Description'] },
 ] as const;
 
+// The prefix makes the id different from the slug of a Markdown heading, such as the page title.
 function idOf(name: string): string {
-  return name.toLowerCase().replaceAll('.', '-');
+  return `api-${name.toLowerCase().replaceAll('.', '-')}`;
 }
 </script>
 
