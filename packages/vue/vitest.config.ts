@@ -4,6 +4,9 @@ import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
+// TEMPORARY: arm switch of the measurement job.
+const firefoxArm = process.env.FIREFOX_ARM;
+
 export default defineConfig({
   plugins: [vue(), vueJsx()],
   define: {
@@ -46,7 +49,18 @@ export default defineConfig({
             commands: { renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
-              { browser: 'firefox', name: 'firefox' },
+              {
+                browser: 'firefox',
+                name: 'firefox',
+                ...(firefoxArm === 'pref-off' && {
+                  provider: playwright({
+                    contextOptions: { timezoneId: 'UTC' },
+                    launchOptions: {
+                      firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false },
+                    },
+                  }),
+                }),
+              },
               { browser: 'webkit', name: 'webkit' },
             ],
           },
