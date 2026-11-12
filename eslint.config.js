@@ -26,6 +26,7 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
+  innerHTML: 'A bound `innerHTML` renders data as HTML. Use text interpolation.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -169,6 +170,16 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "Identifier[name='$parent']", message: MESSAGES.$parent },
 ];
 
+const RESTRICTED_INNER_HTML_SYNTAX = [
+  {
+    // `:innerHTML`, `v-bind:innerHTML` and `.innerHTML`. The parser writes the argument in lower
+    // case in `name`, so the selector reads `rawName`.
+    selector: "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName='innerHTML']",
+    message: MESSAGES.innerHTML,
+  },
+  { selector: "Property[key.name='innerHTML']", message: MESSAGES.innerHTML },
+];
+
 export default defineConfig([
   globalIgnores([
     '**/dist/',
@@ -259,9 +270,14 @@ export default defineConfig([
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
   {
-    // Text from parity/ and from Base UI commits is data. `v-html` would render it as HTML.
+    // Text from parity/ and from Base UI commits is data. A page must not render it as HTML, with
+    // `v-html` or with `innerHTML` as a prop or as an object key, in the template or in a script.
     files: ['docs/**/*.vue'],
-    rules: { 'vue/no-v-html': 'error' },
+    rules: {
+      'vue/no-v-html': 'error',
+      'vue/no-restricted-syntax': ['error', ...RESTRICTED_INNER_HTML_SYNTAX],
+      'no-restricted-syntax': ['error', ...RESTRICTED_INNER_HTML_SYNTAX],
+    },
   },
   {
     // The style sheet of a demo is a byte copy of the Base UI file. The copy shows that the data
