@@ -180,19 +180,18 @@ describe('useControlled', () => {
       expect(errorSpy).not.toHaveBeenCalled();
     });
 
+    // Vue compares the default only when it gets a new value, as when a parent makes the value in
+    // its render function. These cases give a new value of equal content.
     it('does not warn when an array', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const TestComponentArray = defineComponent(() => {
-        useControlled({
-          controlled: () => undefined,
-          default: () => [],
-          name: 'TestComponent',
-        });
-        return () => null;
-      });
+      const { setProps } = await render(
+        <TestComponent defaultValue={[]} v-slots={renderNothing} />,
+      );
 
-      await render(<TestComponentArray />);
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      await setProps({ defaultValue: [] });
 
       expect(errorSpy).not.toHaveBeenCalled();
     });
@@ -200,18 +199,17 @@ describe('useControlled', () => {
     it('does not throw when defaultValue has React elements', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const TestComponentArray = defineComponent(() => {
-        useControlled({
-          controlled: () => undefined,
-          default: () => ({
-            value: <span />,
-          }),
-          name: 'TestComponent',
-        });
-        return () => null;
-      });
+      // The render function makes the vnode, so the vnode holds the parent in `ctx`.
+      const Parent = defineComponent(
+        () => () => <TestComponent defaultValue={{ value: <span /> }} v-slots={renderNothing} />,
+        { props: ['renders'] },
+      );
 
-      await render(<TestComponentArray />);
+      const { setProps } = await render(<Parent />);
+
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      await setProps({ renders: 1 });
 
       expect(errorSpy).not.toHaveBeenCalled();
     });
@@ -220,18 +218,13 @@ describe('useControlled', () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const fn = () => 100;
 
-      const TestComponentArray = defineComponent(() => {
-        useControlled({
-          controlled: () => undefined,
-          default: () => ({
-            value: fn,
-          }),
-          name: 'TestComponent',
-        });
-        return () => null;
-      });
+      const { setProps } = await render(
+        <TestComponent defaultValue={{ value: fn }} v-slots={renderNothing} />,
+      );
 
-      await render(<TestComponentArray />);
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      await setProps({ defaultValue: { value: fn } });
 
       expect(errorSpy).not.toHaveBeenCalled();
     });
