@@ -4,8 +4,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
 
-// TEMPORARY: arm switch of the measurement job.
-const firefoxArm = process.env.FIREFOX_ARM;
+const contextOptions = { timezoneId: 'UTC' };
 
 export default defineConfig({
   plugins: [vue(), vueJsx()],
@@ -43,7 +42,7 @@ export default defineConfig({
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             enabled: true,
-            provider: playwright({ contextOptions: { timezoneId: 'UTC' } }),
+            provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
             commands: { renderOnServer },
@@ -52,13 +51,13 @@ export default defineConfig({
               {
                 browser: 'firefox',
                 name: 'firefox',
-                ...(firefoxArm === 'pref-off' && {
-                  provider: playwright({
-                    contextOptions: { timezoneId: 'UTC' },
-                    launchOptions: {
-                      firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false },
-                    },
-                  }),
+                // Vitest turns this preference on. With it on, Firefox sometimes crashes a page
+                // at its start. Remove this option when Firefox no longer crashes.
+                provider: playwright({
+                  contextOptions,
+                  launchOptions: {
+                    firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false },
+                  },
                 }),
               },
               { browser: 'webkit', name: 'webkit' },
