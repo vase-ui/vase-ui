@@ -1,26 +1,18 @@
 # How to contribute to Vase UI
 
-Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section tells you how to propose a change. The other sections give the rules of the port to the maintainers and agents that write the code.
+Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section says what is open to people outside the project. The other sections give the rules of the port to the maintainers and agents that write the code.
 
 The port is in progress. Some rules name a helper that a later pull request adds.
 
-## Start with a Discussion
+## Contributions are closed for now
 
-Mathematic uses AI agents to maintain this repository. A review of an unsolicited pull request usually takes more time than an agent needs to implement an agreed proposal.
+Mathematic uses AI agents to maintain this repository. While the port is in progress, the repository takes no contributions from outside.
 
-If you want to contribute:
+- Issues and Discussions are off.
+- GitHub lets only repository collaborators and authorized maintenance agents open a pull request or write a comment.
+- To follow the work, watch the repository. Each pull request is one step of the port.
 
-1. [Start a Discussion](https://github.com/vase-ui/vase-ui/discussions/new). Describe the problem and your proposed solution.
-2. Wait for a Mathematic maintainer to review the proposal. The maintainer decides whether to implement it.
-3. If we accept the proposal, a Mathematic maintainer or agent opens the pull request.
-
-The pull request links to the Discussion and credits you as the original author of the proposal.
-
-GitHub restricts pull request creation to Mathematic maintainers, to repository collaborators with write, maintain or admin access, and to authorized maintenance agents. Everyone else uses Discussions.
-
-Issues are off. Report a bug in a Discussion.
-
-Do not report a security problem in a Discussion. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
+Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
 ## Setup
 
@@ -62,10 +54,12 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders, the code samples and the demos in `docs`.                                                                                                                                                                    |
 | `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
-| `pnpm test`                                      | Runs all tests.                                                                                                                                                                                                                                                                             |
+| `pnpm --filter @vase-ui/nuxt-fixture dev`        | Starts the development server of the Nuxt fixture, `fixtures/nuxt`. Run `pnpm build` first.                                                                                                                                                                                                 |
+| `pnpm test`                                      | Runs all tests of `packages/vue`. It does not run `pnpm test:nuxt`.                                                                                                                                                                                                                         |
 | `pnpm test:node`                                 | Runs the tests that have no DOM.                                                                                                                                                                                                                                                            |
 | `pnpm test:browser`                              | Runs the browser tests in Chromium, Firefox and WebKit.                                                                                                                                                                                                                                     |
 | `pnpm test:chromium`                             | Runs the browser tests in Chromium. `test:firefox` and `test:webkit` do the same for their engine.                                                                                                                                                                                          |
+| `pnpm test:nuxt`                                 | Runs the tests of the Nuxt fixture, `fixtures/nuxt`, in Chromium. It tests a production build and then the development server. Run `pnpm build` first.                                                                                                                                      |
 
 To run one test file, add a part of its name: `pnpm test:chromium SinglePart`.
 
@@ -80,6 +74,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - `vue-component-meta` has a pnpm patch in `patches`. Without the patch, the package lists no exposed member of an SFC that has `generic`.
 - When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14` and install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
 - `vitepress` stays at exactly `2.0.0-alpha.21`, a prerelease. The stable release, 1.6.4, installs a second Vite from the 5.x line. `pnpm audit` lists advisories for that line, and no 5.x release corrects them. The prerelease uses the Vite of `packages/vue`. Install the stable 2.0 release when VitePress publishes it.
+- The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token. Keep the entry `false`.
 
 ## Pull requests
 
@@ -388,6 +383,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - Add `data-allow-mismatch` to each element that the script changes, with the category of each change, such as `style`. Vue accepts a class, style or attribute mismatch only on the element that has the attribute with that category.
 - The part binds the attribute only while it hydrates, so the hydrated DOM stays equal to a client-only render.
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set.
+- The server render of some families depends on an id, a locale, a prehydration script or a portal. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`.
 
 The hydration state:
 
@@ -525,6 +521,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`.
 - There is no jsdom.
 - A file with a name that ends in `.spec.ts` or `.spec.tsx` is a type test. vue-tsc checks it, and no test runner runs it.
+- The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
 
 ### How to port a test
 
@@ -787,7 +784,7 @@ The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vu
 The workflow runs on a push of a `v*` tag. It has two jobs:
 
 - `check` fails when the tagged commit is not on `main`, or when `pnpm release:check-tag` fails. Then it runs the commands of the job `check` of CI. Change the two lists together.
-- `stage` runs `npm stage publish` in `packages/vue`. npm trusted publishing gives it access. A staged version is not public.
+- `stage` installs `@vase-ui/vue` and the workspace root, with `--filter @vase-ui/vue`. The install step can get an OIDC token. The filter adds no dependency or script of another workspace project. The exception is the optional peers that pnpm resolves for `@vase-ui/vue` from those projects, such as `esbuild`. Keep the filter when you add a workspace project. Then `stage` runs `npm stage publish` in `packages/vue`. npm trusted publishing gives it access. A staged version is not public.
 
 To make a release:
 
