@@ -1,0 +1,1346 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/utils/src/**"
+  ],
+  "sources": [
+    "packages/utils/src/addEventListener.ts",
+    "packages/utils/src/areArraysEqual.ts",
+    "packages/utils/src/clamp.ts",
+    "packages/utils/src/createLogOnce.ts",
+    "packages/utils/src/empty.ts",
+    "packages/utils/src/error.ts",
+    "packages/utils/src/fastHooks.ts",
+    "packages/utils/src/fastObjectShallowCompare.ts",
+    "packages/utils/src/formatErrorMessage.ts",
+    "packages/utils/src/formatNumber.ts",
+    "packages/utils/src/generateId.ts",
+    "packages/utils/src/getDefaultFormSubmitter.ts",
+    "packages/utils/src/getReactElementRef.ts",
+    "packages/utils/src/hydration.ts",
+    "packages/utils/src/inertValue.ts",
+    "packages/utils/src/isElementDisabled.ts",
+    "packages/utils/src/isHTMLElement.ts",
+    "packages/utils/src/isMouseWithinBounds.ts",
+    "packages/utils/src/lruMemoize.ts",
+    "packages/utils/src/mergeCleanups.ts",
+    "packages/utils/src/mergeObjects.ts",
+    "packages/utils/src/owner.ts",
+    "packages/utils/src/platform/engine.ts",
+    "packages/utils/src/platform/env.ts",
+    "packages/utils/src/platform/index.ts",
+    "packages/utils/src/platform/media-query.ts",
+    "packages/utils/src/platform/os.ts",
+    "packages/utils/src/platform/parts.ts",
+    "packages/utils/src/platform/screen-reader.ts",
+    "packages/utils/src/platform/shared.ts",
+    "packages/utils/src/reactVersion.ts",
+    "packages/utils/src/safeReact.ts",
+    "packages/utils/src/shadowDom.ts",
+    "packages/utils/src/store/ReactStore.ts",
+    "packages/utils/src/store/Store.ts",
+    "packages/utils/src/store/StoreInspector.tsx",
+    "packages/utils/src/store/createSelector.ts",
+    "packages/utils/src/store/createSelectorMemoized.ts",
+    "packages/utils/src/store/index.ts",
+    "packages/utils/src/store/useStore.ts",
+    "packages/utils/src/stringifyLocale.ts",
+    "packages/utils/src/testUtils.ts",
+    "packages/utils/src/useAnimationFrame.ts",
+    "packages/utils/src/useControlled.ts",
+    "packages/utils/src/useEnhancedClickHandler.ts",
+    "packages/utils/src/useForcedRerendering.ts",
+    "packages/utils/src/useId.ts",
+    "packages/utils/src/useIdleCallback.ts",
+    "packages/utils/src/useInterval.ts",
+    "packages/utils/src/useIsoLayoutEffect.ts",
+    "packages/utils/src/useMergedRefs.ts",
+    "packages/utils/src/useOnFirstRender.ts",
+    "packages/utils/src/useOnMount.ts",
+    "packages/utils/src/usePreviousValue.ts",
+    "packages/utils/src/useRefWithInit.ts",
+    "packages/utils/src/useScrollLock.ts",
+    "packages/utils/src/useStableCallback.ts",
+    "packages/utils/src/useTimeout.ts",
+    "packages/utils/src/useValueAsRef.ts",
+    "packages/utils/src/visuallyHidden.ts",
+    "packages/utils/src/warn.ts"
+  ],
+  "typeTests": [
+    "packages/utils/src/addEventListener.spec.ts",
+    "packages/utils/src/store/ReactStore.spec.ts",
+    "packages/utils/src/store/Store.spec.ts",
+    "packages/utils/src/store/createSelector.spec.ts",
+    "packages/utils/src/store/createSelectorMemoized.spec.ts",
+    "packages/utils/src/useControlled.spec.ts"
+  ],
+  "cases": [
+    {
+      "file": "packages/utils/src/addEventListener.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "addEventListener"
+          ],
+          "title": "adds the listener and returns an unsubscribe function"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/areArraysEqual.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "returns true for arrays with the same elements in the same order"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "returns false when elements differ"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "returns false when lengths differ"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "returns true for the same array reference"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "returns true for two empty arrays"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "treats NaN as equal to NaN (Object.is semantics)"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "treats 0 as different from -0 (Object.is semantics)"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "compares by reference by default"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "uses the provided comparer"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "lets the provided comparer override Object.is semantics"
+        },
+        {
+          "describe": [
+            "areArraysEqual"
+          ],
+          "title": "consults the provided comparer even for the same array reference"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/clamp.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "clamp"
+          ],
+          "title": "clamps a value based on min and max"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/createLogOnce.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "createLogOnce"
+          ],
+          "title": "creates a logger with a custom prefix"
+        },
+        {
+          "describe": [
+            "createLogOnce"
+          ],
+          "title": "creates a logger without a prefix"
+        },
+        {
+          "describe": [
+            "createLogOnce"
+          ],
+          "title": "joins multiple messages with a space"
+        },
+        {
+          "describe": [
+            "createLogOnce"
+          ],
+          "title": "deduplicates each severity independently"
+        },
+        {
+          "describe": [
+            "createLogOnce"
+          ],
+          "title": "logs again after reset"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/empty.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "empty"
+          ],
+          "title": "keeps the shared EMPTY_ARRAY frozen"
+        },
+        {
+          "describe": [
+            "empty"
+          ],
+          "title": "keeps the shared EMPTY_OBJECT frozen"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/formatErrorMessage.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "formatErrorMessage",
+            "default export"
+          ],
+          "title": "formats error message with code only"
+        },
+        {
+          "describe": [
+            "formatErrorMessage",
+            "default export"
+          ],
+          "title": "formats error message with code and args"
+        },
+        {
+          "describe": [
+            "formatErrorMessage",
+            "createFormatErrorMessage"
+          ],
+          "title": "creates a formatter with custom URL and prefix"
+        },
+        {
+          "describe": [
+            "formatErrorMessage",
+            "createFormatErrorMessage"
+          ],
+          "title": "creates a formatter that handles args correctly"
+        },
+        {
+          "describe": [
+            "formatErrorMessage",
+            "createFormatErrorMessage"
+          ],
+          "title": "handles special characters in args"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/formatNumber.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "formatNumber",
+            "getFormatter"
+          ],
+          "title": "caches the formatter based on options"
+        },
+        {
+          "describe": [
+            "formatNumber",
+            "getFormatter"
+          ],
+          "title": "caches different Intl.Locale objects separately"
+        },
+        {
+          "describe": [
+            "formatNumber",
+            "formatNumber"
+          ],
+          "title": "formats a number"
+        },
+        {
+          "describe": [
+            "formatNumber",
+            "formatNumber"
+          ],
+          "title": "formats a number with different options"
+        },
+        {
+          "describe": [
+            "formatNumber",
+            "formatNumber"
+          ],
+          "title": "returns an empty string for null"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/getDefaultFormSubmitter.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getDefaultFormSubmitter"
+          ],
+          "title": "returns the first submit button associated with the form"
+        },
+        {
+          "describe": [
+            "getDefaultFormSubmitter"
+          ],
+          "title": "returns a disabled submit button when it is first in form.elements"
+        },
+        {
+          "describe": [
+            "getDefaultFormSubmitter"
+          ],
+          "title": "supports buttons with the default submit type"
+        },
+        {
+          "describe": [
+            "getDefaultFormSubmitter"
+          ],
+          "title": "supports input submitters from form.elements and ignores non-submit controls"
+        },
+        {
+          "describe": [
+            "getDefaultFormSubmitter"
+          ],
+          "title": "returns null when there is no default submitter"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/getReactElementRef.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "getReactElementRef"
+          ],
+          "title": "returns null when not provided a React element"
+        },
+        {
+          "describe": [
+            "getReactElementRef"
+          ],
+          "title": "returns the ref of a React element"
+        },
+        {
+          "describe": [
+            "getReactElementRef"
+          ],
+          "title": "returns null for a fragment"
+        },
+        {
+          "describe": [
+            "getReactElementRef"
+          ],
+          "title": "returns null for an element without a ref"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/hydration.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "hydration",
+            "useIsHydrated"
+          ],
+          "title": "reports hydrated once mounted on the client"
+        },
+        {
+          "describe": [
+            "hydration",
+            "useIsHydrated"
+          ],
+          "title": "does not report hydrated while rendering on the server"
+        },
+        {
+          "describe": [
+            "hydration",
+            "useIsHydrating"
+          ],
+          "title": "does not report hydrating for a client-only mount"
+        },
+        {
+          "describe": [
+            "hydration",
+            "useIsHydrating"
+          ],
+          "title": "reports hydrating while rendering on the server"
+        },
+        {
+          "describe": [
+            "hydration",
+            "React 17 paths"
+          ],
+          "title": "never reports hydrated on the server",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "hydration",
+            "React 17 paths"
+          ],
+          "title": "reports hydrated once mounted on the client",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "hydration",
+            "React 17 paths"
+          ],
+          "title": "reports hydrating while rendering on the server",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "hydration",
+            "React 17 paths"
+          ],
+          "title": "stops reporting hydrating once mounted on the client",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/mergeCleanups.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "mergeCleanups"
+          ],
+          "title": "calls each cleanup in order and skips empty values"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/shadowDom.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "closest"
+          ],
+          "title": "finds an ancestor across nested shadow roots from a non-Element node"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "closest"
+          ],
+          "title": "follows the composed tree through slots"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "closest"
+          ],
+          "title": "returns null for a detached node instead of falling back to the document element"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "closest"
+          ],
+          "title": "preserves native selector validation"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "closest"
+          ],
+          "title": "finds an interactive ancestor outside a composed event target shadow root"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "getTarget"
+          ],
+          "title": "returns the composed-path target while the event is being dispatched"
+        },
+        {
+          "describe": [
+            "shadow DOM utilities",
+            "getTarget"
+          ],
+          "title": "falls back to `target` once dispatch has completed"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/store/ReactStore.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "create() constructs a fully wired ReactStore instance"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "syncs internal state from controlled prop"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "syncs internal state from controlled prop when the store changes"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "warns on switching from uncontrolled to controlled"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "warns on switching from controlled to uncontrolled"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useProp updates a single key when the passed value changes"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useProp syncs the same value when the store changes"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useProps applies multiple keys from a props object"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useSyncedValues depends on entries instead of object identity"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "warns if useSyncedValues keys change between renders"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useSyncedValueWithCleanup synchronizes value and resets on cleanup"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "useStateSetter returns a stable callback that updates the store state"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "supports nested stores as state values"
+        },
+        {
+          "describe": [
+            "ReactStore"
+          ],
+          "title": "updates useState result when selector arguments change in a fast component"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "accepts selector functions"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "calls listener immediately with current selector result on subscription"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "calls listener when selector result changes"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "does not call listener when selector result is unchanged"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "calls listener when any dependency of the selector changes"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "provides the store instance to the listener"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "returns an unsubscribe function that stops observing"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "supports multiple observers on the same selector"
+        },
+        {
+          "describe": [
+            "ReactStore",
+            "observeSelector"
+          ],
+          "title": "supports observers on different selectors"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/store/Store.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "Store",
+            "Store.create"
+          ],
+          "title": "returns a Store instance seeded with the given state"
+        },
+        {
+          "describe": [
+            "Store",
+            "Store.create"
+          ],
+          "title": "produces an independent instance per call"
+        },
+        {
+          "describe": [
+            "Store",
+            "Store.create"
+          ],
+          "title": "constructs an instance of the subclass it is called on"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "notifies subscribers with the new state"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "does not notify when setState receives the current state reference"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "unsubscribing stops notifications"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "set() writes a single key and skips same-value writes"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "update() merges changed keys and skips no-op updates"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "notifyAll() renews the state reference and notifies"
+        },
+        {
+          "describe": [
+            "Store"
+          ],
+          "title": "a nested setState from a listener stops the outer notification pass"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/store/StoreInspector.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "StoreInspector"
+          ],
+          "title": "marks a reference back to the store reached through a Map as circular"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/store/createSelector.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "returns the input function when called with a single selector"
+        },
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "supports one input selector plus a combiner"
+        },
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "supports six input selectors plus a combiner"
+        },
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "supports seven input selectors plus a combiner"
+        },
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "throws when given one more than the maximum (eight input selectors plus a combiner)"
+        },
+        {
+          "describe": [
+            "createSelector"
+          ],
+          "title": "passes extra args through to every input selector and to the combiner"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/store/createSelectorMemoized.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "uses an identity input selector when only a combiner is provided"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "supports a zero-parameter combiner called with the state"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "passes extra arguments to a single combiner alongside the state"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "re-runs the combiner when input selector results change"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "caches separately per state identity"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "passes one extra argument to the combiner and memoizes on it"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "passes two extra arguments to the combiner"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "passes three extra arguments to the combiner"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "throws when the combiner takes more than three extra arguments"
+        },
+        {
+          "describe": [
+            "createSelectorMemoized"
+          ],
+          "title": "throws when Function.length under-reports the combiner parameters"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "produces a working factory when no options are provided"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "forwards options through to the underlying reselect creator"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "merges object memoizeOptions over the Object.is equality default"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "does not forward the lruMemoize defaults to a custom memoizer"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "does not break a custom memoizer that defaults its options parameter"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "forwards custom memoizeOptions to a custom memoizer verbatim"
+        },
+        {
+          "describe": [
+            "createSelectorMemoizedWithOptions"
+          ],
+          "title": "preserves the result reference with a resultEqualityCheck option"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/stringifyLocale.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "stringifyLocale"
+          ],
+          "title": "stringifies Intl locale arguments for cache keys"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useAnimationFrame.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "AnimationFrame"
+          ],
+          "title": "keeps callback accounting correct when a frame is canceled more than once"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useControlled.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useControlled"
+          ],
+          "title": "works correctly when is not controlled"
+        },
+        {
+          "describe": [
+            "useControlled"
+          ],
+          "title": "works correctly when is controlled"
+        },
+        {
+          "describe": [
+            "useControlled"
+          ],
+          "title": "warns when switching from uncontrolled to controlled"
+        },
+        {
+          "describe": [
+            "useControlled"
+          ],
+          "title": "warns and falls back to the default when switching from controlled to uncontrolled"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "stores a function default value instead of calling it"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "warns when changed after initial rendering"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not warn when controlled"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not warn when NaN"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not warn when an array"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not throw when defaultValue has React elements"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not throw when defaultValue has function"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "does not throw when defaultValue has bigint"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "should warn only when defaultValue changes"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "should warn only when defaultValue has functions/components and changes"
+        },
+        {
+          "describe": [
+            "useControlled",
+            "prop: defaultValue"
+          ],
+          "title": "should not fail on null values"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useId.react17.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "returns the provided id"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "generates an id if one isn't provided"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "generates an id with the provided prefix"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "generates an id when the provided id is removed"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "never renders without an id once the provided id is removed"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "does not rerender after mounting with a provided id"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "keeps the generated id when the provided id is added and removed again"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "does not regenerate the id on subsequent renders"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "returns an empty string id override as-is"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "matches the server markup on the first client render"
+        },
+        {
+          "describe": [
+            "useId with the React 17 id fallback"
+          ],
+          "title": "returns undefined on the server"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useId.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "returns the provided ID"
+        },
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "generates an ID if one isn't provided"
+        },
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "can be suffixed"
+        },
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "can be used in in IDREF attributes"
+        },
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "provides an ID on server in React 18"
+        },
+        {
+          "describe": [
+            "useId"
+          ],
+          "title": "can be prefixed"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useIdleCallback.fallback.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "IdleCallback fallback"
+          ],
+          "title": "schedules and cancels callbacks when requestIdleCallback is unavailable"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useIdleCallback.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "create() returns a new instance each time"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "runs the scheduled callback after the current task"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "clear() cancels a pending callback"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "start() clears any previously scheduled callback"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "can be reused after the callback has run"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "IdleCallback class"
+          ],
+          "title": "disposeEffect() returns the clear function"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "useIdleCallback"
+          ],
+          "title": "returns a stable scheduler across re-renders"
+        },
+        {
+          "describe": [
+            "IdleCallback",
+            "useIdleCallback"
+          ],
+          "title": "cancels a pending callback on unmount"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/useMergedRefs.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useMergedRefs"
+          ],
+          "title": "returns a single ref-setter function that forks the ref to its inputs"
+        },
+        {
+          "describe": [
+            "useMergedRefs"
+          ],
+          "title": "forks if only one of the branches requires a ref"
+        },
+        {
+          "describe": [
+            "useMergedRefs"
+          ],
+          "title": "does nothing if none of the forked branches requires a ref"
+        },
+        {
+          "describe": [
+            "useMergedRefs",
+            "changing refs"
+          ],
+          "title": "handles changing from no ref to some ref"
+        },
+        {
+          "describe": [
+            "useMergedRefs",
+            "changing refs"
+          ],
+          "title": "cleans up detached refs"
+        },
+        {
+          "describe": [
+            "useMergedRefs"
+          ],
+          "title": "calls clean up function if it exists"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/usePreviousValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should return null on the first render"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should return the previous value on subsequent renders"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should work with primitive values"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should treat NaN as unchanged"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should return the previous value when changing to NaN"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should distinguish positive and negative zero"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should ignore renders where the value does not change"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should work with object values"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should handle undefined and null values"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should handle rapid value changes"
+        },
+        {
+          "describe": [
+            "usePrevious"
+          ],
+          "title": "should maintain type safety"
+        }
+      ]
+    },
+    {
+      "file": "packages/utils/src/visuallyHidden.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "visuallyHidden",
+            "$name"
+          ],
+          "title": "does not overflow a %s scroller with %s content",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "visuallyHidden",
+            "$name"
+          ],
+          "title": "does not scroll the page when focused",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "visuallyHidden"
+          ],
+          "title": "places visuallyHidden just above the viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": []
+}

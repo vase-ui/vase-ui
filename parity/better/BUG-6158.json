@@ -1,0 +1,6 @@
+{
+  "id": "BUG-6158",
+  "evidence": ["https://github.com/mui/base-ui/issues/6158"],
+  "behavior": "Escape closes the popup when the key comes directly after `compositionend`.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
+}

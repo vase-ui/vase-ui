@@ -1,227 +1,268 @@
 {
   "upstreamPaths": ["packages/utils/src/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "sourceExceptions": [
+  "exceptions": [
     {
-      "upstream": [
-        "packages/utils/src/fastHooks.ts",
-        "packages/utils/src/store/ReactStore.ts",
-        "packages/utils/src/store/Store.ts",
-        "packages/utils/src/store/index.ts",
-        "packages/utils/src/store/useStore.ts"
-      ],
+      "upstream": "packages/utils/src/fastHooks.ts",
       "kind": "not-applicable",
       "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
     },
     {
-      "upstream": [
-        "packages/utils/src/lruMemoize.ts",
-        "packages/utils/src/store/createSelector.ts",
-        "packages/utils/src/store/createSelectorMemoized.ts"
-      ],
+      "upstream": "packages/utils/src/store/ReactStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+    },
+    {
+      "upstream": "packages/utils/src/store/Store.ts",
+      "kind": "not-applicable",
+      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+    },
+    {
+      "upstream": "packages/utils/src/store/index.ts",
+      "kind": "not-applicable",
+      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+    },
+    {
+      "upstream": "packages/utils/src/store/useStore.ts",
+      "kind": "not-applicable",
+      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+    },
+    {
+      "upstream": "packages/utils/src/lruMemoize.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the selector factories, and Vue `computed` does this work. `lruMemoize` is a re-export of `reselect` that only `createSelectorMemoized` uses."
     },
     {
-      "upstream": ["packages/utils/src/store/StoreInspector.tsx"],
+      "upstream": "packages/utils/src/store/createSelector.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the selector factories, and Vue `computed` does this work. `lruMemoize` is a re-export of `reselect` that only `createSelectorMemoized` uses."
+    },
+    {
+      "upstream": "packages/utils/src/store/createSelectorMemoized.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the selector factories, and Vue `computed` does this work. `lruMemoize` is a re-export of `reselect` that only `createSelectorMemoized` uses."
+    },
+    {
+      "upstream": "packages/utils/src/store/StoreInspector.tsx",
       "kind": "not-applicable",
       "reason": "A React development panel. No component imports it."
     },
     {
-      "upstream": [
-        "packages/utils/src/getReactElementRef.ts",
-        "packages/utils/src/inertValue.ts",
-        "packages/utils/src/reactVersion.ts",
-        "packages/utils/src/safeReact.ts"
-      ],
+      "upstream": "packages/utils/src/getReactElementRef.ts",
       "kind": "not-applicable",
-      "reason": "They exist only to support old React versions."
+      "reason": "The file exists only to support old React versions."
     },
     {
-      "upstream": ["packages/utils/src/useStableCallback.ts"],
+      "upstream": "packages/utils/src/inertValue.ts",
+      "kind": "not-applicable",
+      "reason": "The file exists only to support old React versions."
+    },
+    {
+      "upstream": "packages/utils/src/reactVersion.ts",
+      "kind": "not-applicable",
+      "reason": "The file exists only to support old React versions."
+    },
+    {
+      "upstream": "packages/utils/src/safeReact.ts",
+      "kind": "not-applicable",
+      "reason": "The file exists only to support old React versions."
+    },
+    {
+      "upstream": "packages/utils/src/useStableCallback.ts",
       "kind": "not-applicable",
       "reason": "Vue runs `setup` one time, so a function made there keeps its identity. It reads the current state when it runs."
     },
     {
-      "upstream": ["packages/utils/src/useIsoLayoutEffect.ts"],
+      "upstream": "packages/utils/src/useIsoLayoutEffect.ts",
       "kind": "not-applicable",
       "reason": "Vue has `onMounted`, `onBeforeUnmount` and `watch` with `flush: 'post'`. The two hooks do not run on a server. A `watch` callback with `flush: 'post'` runs on a server only when it has `immediate`."
     },
     {
-      "upstream": [
-        "packages/utils/src/useOnFirstRender.ts",
-        "packages/utils/src/useRefWithInit.ts"
-      ],
+      "upstream": "packages/utils/src/useOnFirstRender.ts",
       "kind": "not-applicable",
       "reason": "Vue runs `setup` one time. A value made there is made one time, and code there runs one time."
     },
     {
-      "upstream": ["packages/utils/src/useValueAsRef.ts"],
+      "upstream": "packages/utils/src/useRefWithInit.ts",
+      "kind": "not-applicable",
+      "reason": "Vue runs `setup` one time. A value made there is made one time, and code there runs one time."
+    },
+    {
+      "upstream": "packages/utils/src/useValueAsRef.ts",
       "kind": "not-applicable",
       "reason": "A getter or a ref gives the current value. A read outside an effect adds no dependency."
     },
     {
-      "upstream": ["packages/utils/src/useOnMount.ts"],
+      "upstream": "packages/utils/src/useOnMount.ts",
       "kind": "not-applicable",
       "reason": "`onMounted` and `onScopeDispose` do this work."
     },
     {
-      "upstream": ["packages/utils/src/useForcedRerendering.ts"],
+      "upstream": "packages/utils/src/useForcedRerendering.ts",
       "kind": "not-applicable",
       "reason": "A change of reactive state renders the component again, and `triggerRef` forces it."
     },
     {
-      "upstream": ["packages/utils/src/useMergedRefs.ts"],
+      "upstream": "packages/utils/src/useMergedRefs.ts",
       "kind": "not-applicable",
       "reason": "A part has one `ref` setter function, which gives the element to each internal user. Vue has no ref objects to merge."
     },
     {
-      "upstream": ["packages/utils/src/usePreviousValue.ts"],
+      "upstream": "packages/utils/src/usePreviousValue.ts",
       "kind": "not-applicable",
       "reason": "A Vue `watch` callback gets the old value of its source, with the same `Object.is` comparison."
     },
     {
-      "upstream": ["packages/utils/src/useId.ts"],
+      "upstream": "packages/utils/src/useId.ts",
       "kind": "not-applicable",
       "reason": "The file wraps React `useId` and holds a fallback for React 17. Vue `useId` gives the ids."
     },
     {
-      "upstream": [
-        "packages/utils/src/fastObjectShallowCompare.ts",
-        "packages/utils/src/useIdleCallback.ts"
-      ],
+      "upstream": "packages/utils/src/fastObjectShallowCompare.ts",
       "kind": "not-applicable",
-      "reason": "No Base UI component imports them at the matched commit."
+      "reason": "No Base UI component imports the file at the matched commit."
     },
     {
-      "upstream": ["packages/utils/src/isMouseWithinBounds.ts"],
+      "upstream": "packages/utils/src/useIdleCallback.ts",
+      "kind": "not-applicable",
+      "reason": "No Base UI component imports the file at the matched commit."
+    },
+    {
+      "upstream": "packages/utils/src/isMouseWithinBounds.ts",
       "kind": "not-applicable",
       "reason": "Base UI marks it as deprecated, and no component imports it. The components use `isMouseWithinBounds` of `packages/react/src/utils/getPseudoElementBounds.ts`."
     },
     {
-      "upstream": ["packages/utils/src/isHTMLElement.ts"],
+      "upstream": "packages/utils/src/isHTMLElement.ts",
       "kind": "not-applicable",
       "reason": "A re-export of `@floating-ui/utils/dom`. Base UI components import `isHTMLElement` from that package, and Vase UI does the same."
     },
     {
-      "upstream": ["packages/utils/src/formatErrorMessage.ts"],
+      "upstream": "packages/utils/src/formatErrorMessage.ts",
       "kind": "not-applicable",
       "reason": "Only code that the Base UI build generates calls it: a Babel plugin replaces each error message with a code. The Vase UI build keeps the full messages."
     },
     {
-      "upstream": [
-        "packages/utils/src/hydration.ts",
-        "packages/utils/src/useEnhancedClickHandler.ts",
-        "packages/utils/src/useScrollLock.ts"
-      ],
+      "upstream": "packages/utils/src/hydration.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
-    }
-  ],
-  "testExceptions": [
+    },
     {
-      "file": "packages/utils/src/store/Store.test.ts",
+      "upstream": "packages/utils/src/useEnhancedClickHandler.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
+    },
+    {
+      "upstream": "packages/utils/src/useScrollLock.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
+    },
+    {
+      "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
       "reason": "Vue reactivity replaces the `Store` class."
     },
     {
-      "file": "packages/utils/src/store/Store.spec.ts",
+      "upstream": "packages/utils/src/store/Store.spec.ts",
       "kind": "not-applicable",
       "reason": "Vue reactivity replaces the `Store` class."
     },
     {
-      "file": "packages/utils/src/store/ReactStore.test.tsx",
+      "upstream": "packages/utils/src/store/ReactStore.test.tsx",
       "kind": "not-applicable",
       "reason": "Vue reactivity replaces `ReactStore` and its hooks."
     },
     {
-      "file": "packages/utils/src/store/ReactStore.spec.ts",
+      "upstream": "packages/utils/src/store/ReactStore.spec.ts",
       "kind": "not-applicable",
       "reason": "Vue reactivity replaces `ReactStore` and its hooks."
     },
     {
-      "file": "packages/utils/src/store/createSelector.test.ts",
+      "upstream": "packages/utils/src/store/createSelector.test.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the selector factories. Vue `computed` does this work."
     },
     {
-      "file": "packages/utils/src/store/createSelector.spec.ts",
+      "upstream": "packages/utils/src/store/createSelector.spec.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the selector factories. Vue `computed` does this work."
     },
     {
-      "file": "packages/utils/src/store/createSelectorMemoized.test.ts",
+      "upstream": "packages/utils/src/store/createSelectorMemoized.test.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the selector factories. Vue `computed` does this work."
     },
     {
-      "file": "packages/utils/src/store/createSelectorMemoized.spec.ts",
+      "upstream": "packages/utils/src/store/createSelectorMemoized.spec.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the selector factories. Vue `computed` does this work."
     },
     {
-      "file": "packages/utils/src/store/StoreInspector.test.tsx",
+      "upstream": "packages/utils/src/store/StoreInspector.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests a React development panel that no component imports."
     },
     {
-      "file": "packages/utils/src/getReactElementRef.test.tsx",
+      "upstream": "packages/utils/src/getReactElementRef.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests a helper that reads the ref of a React element in React 17, 18 and 19."
     },
     {
-      "file": "packages/utils/src/useId.test.tsx",
+      "upstream": "packages/utils/src/useId.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests a wrapper of React `useId`. Vue `useId` gives the ids."
     },
     {
-      "file": "packages/utils/src/useId.react17.test.tsx",
+      "upstream": "packages/utils/src/useId.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests the id fallback for React 17."
     },
     {
-      "file": "packages/utils/src/useIdleCallback.test.tsx",
+      "upstream": "packages/utils/src/useIdleCallback.test.tsx",
       "kind": "not-applicable",
       "reason": "No Base UI component imports `useIdleCallback` at the matched commit."
     },
     {
-      "file": "packages/utils/src/useIdleCallback.fallback.test.ts",
+      "upstream": "packages/utils/src/useIdleCallback.fallback.test.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports `useIdleCallback` at the matched commit."
     },
     {
-      "file": "packages/utils/src/useMergedRefs.test.tsx",
+      "upstream": "packages/utils/src/useMergedRefs.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests the merge of React refs. A Vue part has one `ref` setter function."
     },
     {
-      "file": "packages/utils/src/usePreviousValue.test.tsx",
+      "upstream": "packages/utils/src/usePreviousValue.test.tsx",
       "kind": "not-applicable",
       "reason": "It tests a React state hook. A Vue `watch` callback gets the old value of its source, with the same `Object.is` comparison."
     },
     {
-      "file": "packages/utils/src/formatErrorMessage.test.ts",
+      "upstream": "packages/utils/src/formatErrorMessage.test.ts",
       "kind": "not-applicable",
       "reason": "Only code that the Base UI build generates calls `formatErrorMessage`. The Vase UI build keeps the full messages."
     },
     {
-      "file": "packages/utils/src/hydration.test.tsx",
+      "upstream": "packages/utils/src/hydration.test.tsx",
       "describe": ["hydration", "React 17 paths"],
       "kind": "not-applicable",
       "reason": "The cases test the code path for React 17."
     },
     {
-      "file": "packages/utils/src/hydration.test.tsx",
+      "upstream": "packages/utils/src/hydration.test.tsx",
       "describe": ["hydration", "useIsHydrated"],
       "kind": "waits-on",
-      "waitsOn": "packages/utils/src/hydration.ts"
+      "waitsOn": "packages/utils/src/hydration.ts",
+      "reason": "The block tests `hydration.ts`. Vase UI does not have that file yet."
     },
     {
-      "file": "packages/utils/src/hydration.test.tsx",
+      "upstream": "packages/utils/src/hydration.test.tsx",
       "describe": ["hydration", "useIsHydrating"],
       "kind": "waits-on",
-      "waitsOn": "packages/utils/src/hydration.ts"
+      "waitsOn": "packages/utils/src/hydration.ts",
+      "reason": "The block tests `hydration.ts`. Vase UI does not have that file yet."
     }
   ],
+  "surfaceAdditions": [],
   "notApplicableCommits": []
 }

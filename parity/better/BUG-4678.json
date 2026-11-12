@@ -1,0 +1,10 @@
+{
+  "id": "BUG-4678",
+  "evidence": [
+    "https://github.com/mui/base-ui/issues/4678",
+    "https://github.com/mui/base-ui/issues/5577",
+    "https://html.spec.whatwg.org/multipage/interaction.html#the-inert-attribute"
+  ],
+  "behavior": "A Dialog, an Alert Dialog or a Drawer with `modal` set to `true` sets `inert` on the nodes outside the popup. Tab cannot reach those nodes, and a press cannot reach an element that is drawn above the backdrop. Live regions, scripts, nested portal nodes and focus guards do not get `inert`, as in Base UI. `modal=\"trap-focus\"` and all other popups keep the `aria-hidden` marks of Base UI.",
+  "dueWith": "packages/react/src/utils/popups/focus/markOthers.ts"
+}

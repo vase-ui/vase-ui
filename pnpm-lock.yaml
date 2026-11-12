@@ -187,6 +187,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  vue-component-meta@3.3.14: bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d
+
 importers:
 
   .:
@@ -194,6 +197,9 @@ importers:
       '@eslint/js':
         specifier: 10.0.1
         version: 10.0.1(eslint@10.14.0(supports-color@7.2.0))
+      '@types/node':
+        specifier: 26.6.6
+        version: 26.6.6
       eslint:
         specifier: 10.14.0
         version: 10.14.0(supports-color@7.2.0)
@@ -206,6 +212,9 @@ importers:
       globals:
         specifier: 17.14.0
         version: 17.14.0
+      marked:
+        specifier: 18.2.0
+        version: 18.2.0
       prettier:
         specifier: 3.9.10
         version: 3.9.10
@@ -215,6 +224,12 @@ importers:
       typescript-eslint:
         specifier: 8.72.2
         version: 8.72.2(eslint@10.14.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
+      vue:
+        specifier: 3.5.45
+        version: 3.5.45(typescript@6.0.3)
+      vue-component-meta:
+        specifier: 3.3.14
+        version: 3.3.14(patch_hash=bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d)(typescript@6.0.3)
       vue-eslint-parser:
         specifier: 10.4.2
         version: 10.4.2(eslint@10.14.0(supports-color@7.2.0))(supports-color@7.2.0)
@@ -1504,6 +1519,11 @@ packages:
     peerDependencies:
       marked: '>=1 <19'
 
+  marked@18.2.0:
+    resolution: {integrity: sha512-KaeL+tAbtvI930q7HE2PN5lYXYdT8EiSmxHlN6F3rsfb57wd5mp5W5TLazpdj4inTQBJdgjYwbs40W/0VUGU+Q==}
+    engines: {node: '>= 20'}
+    hasBin: true
+
   marked@9.1.6:
     resolution: {integrity: sha512-jcByLnIFkd5gSXZmjNvS1TlmRhCXZjIzHYlaGkPlLIekG55JDR2Z4va9tZwCiP+/RDERiNhMOFu01xd6O5ct1Q==}
     engines: {node: '>= 16'}
@@ -2012,6 +2032,14 @@ packages:
 
   vscode-uri@3.2.0:
     resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
+
+  vue-component-meta@3.3.14:
+    resolution: {integrity: sha512-OQT0AVGbFjmo/aIsyrNN8M3zR3D7U3SNyQPzVlotl89dxIdhhy95wYALiiFrHkBWyvTLRxMRQ3cqkbOMHEh8DQ==}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   vue-eslint-parser@10.4.2:
     resolution: {integrity: sha512-WMpzulb50kb6snghzoGzS++62wcOszAk/piYcnvzdStM8Wni/BmogYltpoOFv2eK9hDbXxvwFQgnwZGpAoUfpA==}
@@ -3300,6 +3328,8 @@ snapshots:
       node-emoji: 2.2.0
       supports-hyperlinks: 3.2.0
 
+  marked@18.2.0: {}
+
   marked@9.1.6: {}
 
   minimatch@10.2.6:
@@ -3724,6 +3754,14 @@ snapshots:
   vscode-languageserver-types@3.18.5: {}
 
   vscode-uri@3.2.0: {}
+
+  vue-component-meta@3.3.14(patch_hash=bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d)(typescript@6.0.3):
+    dependencies:
+      '@volar/typescript': 2.4.30(typescript@6.0.3)
+      '@vue/language-core': 3.3.14
+      path-browserify: 1.0.1
+    optionalDependencies:
+      typescript: 6.0.3
 
   vue-eslint-parser@10.4.2(eslint@10.14.0(supports-color@7.2.0))(supports-color@7.2.0):
     dependencies:

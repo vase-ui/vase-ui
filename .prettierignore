@@ -1,1 +1,3 @@
 pnpm-lock.yaml
+parity/upstream.json
+parity/families/*.upstream.json

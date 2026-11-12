@@ -1,0 +1,6 @@
+{
+  "id": "BUG-5237",
+  "evidence": ["https://github.com/mui/base-ui/issues/5237"],
+  "behavior": "The focus guards pass the axe rule `button-name` in WebKit.",
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx"
+}

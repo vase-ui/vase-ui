@@ -1,0 +1,6 @@
+{
+  "id": "BUG-5424",
+  "evidence": ["https://github.com/mui/base-ui/issues/5424"],
+  "behavior": "A Number Field submits the number that it shows.",
+  "dueWith": "packages/react/src/number-field/root/NumberFieldRoot.tsx"
+}
