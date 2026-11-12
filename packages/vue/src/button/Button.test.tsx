@@ -239,6 +239,7 @@ describe('<Button />', () => {
 
       const element = container.firstElementChild as HTMLElement;
       expect(element).not.toHaveAttribute('disabled');
+      expect(element).not.toHaveAttribute('data-disabled');
 
       await setProps({ disabled: true });
 
