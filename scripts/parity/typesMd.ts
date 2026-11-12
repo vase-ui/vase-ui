@@ -133,7 +133,7 @@ const FOLDED_SUFFIXES = new Set([
 
 const printer = ts.createPrinter({ removeComments: true, newLine: ts.NewLineKind.LineFeed });
 
-function squash(text: string): string {
+export function squash(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
@@ -412,6 +412,19 @@ function otherTables(content: EntryContent): TableRows[] {
 
 function printedCode(file: string, title: string, content: EntryContent): string[] {
   return content.code.map((block) => printCode(file, title, block));
+}
+
+/** The type in the `type ReturnValue = …;` of the code of an entry, or `undefined` when the entry has none. */
+export function documentedReturnType(code: readonly string[] | undefined): string | undefined {
+  for (const block of code ?? []) {
+    const source = ts.createSourceFile('block.ts', block, ts.ScriptTarget.Latest, true);
+    for (const statement of source.statements) {
+      if (ts.isTypeAliasDeclaration(statement) && statement.name.text === 'ReturnValue') {
+        return squash(statement.type.getText(source));
+      }
+    }
+  }
+  return undefined;
 }
 
 function propRow(row: string[]): PropRow {

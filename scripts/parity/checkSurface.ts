@@ -6,6 +6,7 @@ import type { ExceptionRow, FamilyExtract, FamilyFile, MemberKind, Target } from
 import { hasCounterpart, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import { extractCommand } from './repository.ts';
+import { documentedReturnType, squash } from './typesMd.ts';
 import type { SurfaceFile, SurfacePart } from './typesMd.ts';
 import type { ComponentSurface, ExportMatch, VaseProject } from './vaseSurface.ts';
 
@@ -58,6 +59,12 @@ interface Context {
   members: Map<string, PartMembers[]>;
   /** The parts whose Vase UI component was read. */
   read: Set<string>;
+  /** The titles of the entries that document a return value. */
+  documentedReturns: Set<string>;
+  /** The titles of those entries whose Vase UI export returns the documented type. */
+  equalReturns: Set<string>;
+  /** The titles of those entries whose Vase UI export returns another type, which a "returnTypeDifferences" row states. */
+  acceptedReturns: Set<string>;
 }
 
 const MEMBER_LABELS: MembersByKind<string> = {
@@ -232,6 +239,46 @@ function compareConstants(
   }
 }
 
+function compareReturnType(
+  context: Context,
+  title: string,
+  code: string[] | undefined,
+  match: ExportMatch | undefined,
+  add: Add,
+): void {
+  const documented = documentedReturnType(code);
+  if (documented === undefined) {
+    return;
+  }
+  context.documentedReturns.add(title);
+  if (!match) {
+    return;
+  }
+  const text = context.project?.readReturnType(match);
+  if (text === undefined) {
+    add(
+      `the export ${inlineCode(match.path)} is not a function, but Base UI documents the return value ${inlineCode(documented)}. Make it a function, or add an exception row.`,
+    );
+    return;
+  }
+  const returns = squash(text);
+  if (returns === documented) {
+    context.equalReturns.add(title);
+    return;
+  }
+  const row = context.family.returnTypeDifferences.find((item) => item.entry === title);
+  if (row?.returns === returns) {
+    context.acceptedReturns.add(title);
+    return;
+  }
+  const types = `the return type is ${inlineCode(returns)}, but Base UI documents ${inlineCode(documented)}.`;
+  add(
+    row
+      ? `${types} The "returnTypeDifferences" row has "returns": ${JSON.stringify(row.returns)}. Correct the row, or change the return type.`
+      : `${types} Add this row to "returnTypeDifferences" with a reason, or change the return type: ${JSON.stringify({ entry: title, returns, reason: '' })}`,
+  );
+}
+
 function comparePart(
   context: Context,
   file: SurfaceFile,
@@ -241,6 +288,7 @@ function comparePart(
   add: Add,
 ): void {
   const match = findOne(part.name, add);
+  compareReturnType(context, part.name, part.code, match, add);
   if (part.props === null) {
     return;
   }
@@ -317,8 +365,9 @@ function compareFile(context: Context, file: SurfaceFile): void {
   for (const part of file.parts) {
     comparePart(context, file, part, entry, findOne, adder(part.name));
   }
-  for (const { name } of file.functions) {
-    findOne(name, adder(name));
+  for (const { name, code } of file.functions) {
+    const add = adder(name);
+    compareReturnType(context, name, code, findOne(name, add), add);
   }
   for (const type of file.additionalTypes) {
     if (!type.constants) {
@@ -429,6 +478,9 @@ export function checkSurface(options: {
     usedAdditions: new Set(),
     members: new Map(),
     read: new Set(),
+    documentedReturns: new Set(),
+    equalReturns: new Set(),
+    acceptedReturns: new Set(),
   };
   for (const file of extract.surface) {
     compareFile(context, file);
@@ -501,6 +553,29 @@ export function checkSurface(options: {
       `surfaceAdditions[${index}] (${row.entry}, ${kind} ${member})`,
       `${reason}. Remove the row.`,
     );
+  });
+
+  family.returnTypeDifferences.forEach((row, index) => {
+    // An entry row excuses the differences that would check this row.
+    const excused =
+      !context.acceptedReturns.has(row.entry) &&
+      rows.some(
+        ({ row: exception, target }) => target.type === 'entry' && exception.entry === row.entry,
+      );
+    const reason = !context.documentedReturns.has(row.entry)
+      ? `the extract has no return value for ${inlineCode(row.entry)}`
+      : context.equalReturns.has(row.entry)
+        ? `Vase UI returns the type that Base UI documents for ${inlineCode(row.entry)}`
+        : excused
+          ? `an exception row covers the entry ${inlineCode(row.entry)}`
+          : undefined;
+    if (reason !== undefined) {
+      problem(
+        'stale row',
+        `returnTypeDifferences[${index}] (${row.entry})`,
+        `${reason}. Remove the row.`,
+      );
+    }
   });
 
   return { problems, summary: summarize(extract, rows, context, remaining) };

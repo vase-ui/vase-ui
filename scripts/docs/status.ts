@@ -28,8 +28,10 @@ export function replaceStatus(readme: string, line: string): string {
 
 function main(): void {
   const { values } = parseArgs({ options: { check: { type: 'boolean' } } });
-  const { families, problems } = readParityFiles(REPOSITORY_ROOT, { readExtracts: false });
-  if (problems.length > 0) {
+  const { upstream, families, problems } = readParityFiles(REPOSITORY_ROOT, {
+    readExtracts: false,
+  });
+  if (problems.length > 0 || upstream === undefined) {
     for (const problem of problems) {
       console.error(problem);
     }
@@ -38,14 +40,15 @@ function main(): void {
   }
   const readmePath = join(REPOSITORY_ROOT, 'README.md');
   const readme = readFileSync(readmePath, 'utf8');
-  const updated = replaceStatus(readme, renderStatusLine(countComponents(families)));
+  const updated = replaceStatus(
+    readme,
+    renderStatusLine(countComponents(families, upstream.components)),
+  );
   if (updated === readme) {
     return;
   }
   if (values.check) {
-    console.error(
-      'README.md differs from the family files in parity/families. Run `pnpm status:render`.',
-    );
+    console.error('README.md differs from the files in parity. Run `pnpm status:render`.');
     process.exitCode = 1;
     return;
   }

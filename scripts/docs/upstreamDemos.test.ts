@@ -13,7 +13,7 @@ const STYLE = '.Button {\n  margin: 0;\n}\n';
 const STYLE_PATH = 'hero/css-modules/index.module.css';
 const TSX_PATH = 'hero/css-modules/index.tsx';
 const VUE_PATH = 'hero/css-modules/index.vue';
-const RERUN = 'Run `node scripts/docs/upstreamDemos.ts --upstream <path> button`.';
+const RERUN = 'Run `pnpm docs:demos --upstream <path> button`.';
 
 const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 
@@ -23,6 +23,7 @@ function makeFamily(upstreamPaths: string[]): FamilyFile {
     matchedCommit: COMMIT,
     exceptions: [],
     surfaceAdditions: [],
+    returnTypeDifferences: [],
     notApplicableCommits: [],
   };
 }

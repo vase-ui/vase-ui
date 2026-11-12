@@ -33,6 +33,7 @@ function makeFamily(exceptions: ExceptionRow[] = []): FamilyFile {
     matchedCommit: COMMIT,
     exceptions,
     surfaceAdditions: [],
+    returnTypeDifferences: [],
     notApplicableCommits: [],
   };
 }
