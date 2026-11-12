@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { automationRule, profileLink, renderThanks, sortContributors } from './render.ts';
+import { automationRule, profileLink, PROJECTS, renderThanks, sortContributors } from './render.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const REPOSITORY = 'first-org/first-project';
@@ -122,6 +122,7 @@ for (const { name, displayName } of [
   { name: 'a name with a backtick', displayName: 'First `Example`' },
   { name: 'a name with &', displayName: 'First &amp; Example' },
   { name: 'a name with a quotation mark', displayName: 'First "Example" Second' },
+  { name: 'a name that starts with a hyphen', displayName: '-First Example' },
 ]) {
   test(`profileLink uses the login for ${name}`, () => {
     assert.equal(
@@ -192,44 +193,28 @@ The contributors of [second-org/second-project](https://github.com/second-org/se
   assert.ok(!text.includes('@'));
 });
 
-// A missing region gives a page with no list. A hand edit can add what the script never writes.
-const thanks = () => readFileSync(join(ROOT, 'THANKS.md'), 'utf8');
-
-test('each list line of THANKS.md is a profile link with a text that profileLink allows', () => {
-  const lines = thanks()
-    .split(/\r?\n/)
-    .filter((line) => line.startsWith('- '));
-  assert.ok(lines.length > 0, 'THANKS.md has no list line.');
-  for (const line of lines) {
-    const found = /^- \[(.+)\]\(https:\/\/github\.com\/([A-Za-z0-9-]+)\)$/.exec(line);
-    assert.ok(found, `This list line is not a profile link: ${line}`);
-    const [, text, login] = found;
-    assert.equal(
-      profileLink({ login, name: text }, 'THANKS.md'),
-      `[${text}](https://github.com/${login})`,
-      `This list line has a text that profileLink does not allow: ${line}`,
-    );
-  }
-});
-
-test('THANKS.md has no @', () => {
-  const lines = thanks()
-    .split(/\r?\n/)
-    .filter((line) => line.includes('@'));
-  assert.deepEqual(lines, []);
-});
-
-test('THANKS.md has one line that starts the region thanks, before one line that ends it', () => {
-  const lines = thanks()
-    .split(/\r?\n/)
-    .map((line) => line.trim());
-  const startsAt = (marker: string) =>
-    lines.flatMap((line, index) => (line === `<!-- #${marker} thanks -->` ? [index] : []));
-  const starts = startsAt('region');
-  const ends = startsAt('endregion');
-  assert.equal(starts.length, 1, 'THANKS.md must have one line "<!-- #region thanks -->".');
-  assert.equal(ends.length, 1, 'THANKS.md must have one line "<!-- #endregion thanks -->".');
-  assert.ok(starts[0] < ends[0], 'In THANKS.md, the end of the region comes before its start.');
+// VitePress copies the region into the site page. It allows HTML in the page and compiles the page
+// as a Vue template. A line that the script does not write, such as raw HTML or `{{ }}`, then
+// reaches the site. GitHub folds the diff of a generated file such as THANKS.md, so a reviewer can
+// miss such a line.
+// This test writes the file again from the date, the commits and the people that it holds, and
+// compares the two texts. The date and the commits go into the new text as they are, so their
+// patterns must stay strict. A text goes through `profileLink`, so its pattern can be wide.
+test('THANKS.md has only what renderThanks writes', () => {
+  const text = readFileSync(join(ROOT, 'THANKS.md'), 'utf8');
+  const [start, ...sections] = text.split('\n## ');
+  const projects = PROJECTS.map((project, index) => {
+    const section = sections[index] ?? '';
+    return {
+      ...project,
+      commit: /at commit `([0-9a-f]{40})`/.exec(section)?.[1] ?? '',
+      people: [...section.matchAll(/^- \[(.+)\]\(https:\/\/github\.com\/([A-Za-z0-9-]+)\)$/gm)].map(
+        ([, name, login]) => ({ login, name }),
+      ),
+    };
+  });
+  const readOn = /read on `(\d{4}-\d{2}-\d{2})`/.exec(start)?.[1] ?? '';
+  assert.deepEqual(text.split('\n'), renderThanks({ readOn, projects }).split('\n'));
 });
 
 test('docs/thanks.md includes the region thanks of THANKS.md', () => {

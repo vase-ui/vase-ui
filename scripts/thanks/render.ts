@@ -20,7 +20,7 @@ export interface ProjectSection extends Project {
   people: Person[];
 }
 
-const PROJECTS: Project[] = [
+export const PROJECTS: Project[] = [
   { repository: 'mui/base-ui', title: 'Base UI', relation: 'Vase UI is a port of Base UI.' },
   {
     repository: 'floating-ui/floating-ui',
