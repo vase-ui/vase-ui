@@ -119,6 +119,13 @@ async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) 
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
 }
 
+async function expectFieldsetPage(page: Page) {
+  const legendId = await page.getByTestId('legend').getAttribute('id');
+
+  expect(legendId).toBeTruthy();
+  expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -167,6 +174,7 @@ const PAGES = [
     path,
     expectPage: (page: Page) => expectRangePage(page, rootAttributes),
   })),
+  { path: '/fieldset', expectPage: expectFieldsetPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
