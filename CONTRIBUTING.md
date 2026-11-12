@@ -38,12 +38,13 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 
 | Command                                          | Function                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script, of the parity scripts, of the documentation scripts and of the thanks script. Then it runs ESLint, the Prettier check, `pnpm cost:check` and `pnpm status:check`.                                                                     |
+| `pnpm lint`                                      | Runs the tests of the lint rules and of the cost, parity, documentation, thanks and release scripts. Then it runs ESLint, the Prettier check, `pnpm cost:check` and `pnpm status:check`.                                                                                                    |
 | `pnpm test:lint-rules`                           | Runs the tests of the lint rules in `eslint.config.js`.                                                                                                                                                                                                                                     |
 | `pnpm test:cost`                                 | Runs the tests of the cost script, `scripts/cost/render.ts`.                                                                                                                                                                                                                                |
 | `pnpm test:parity`                               | Runs the tests of the parity scripts in `scripts/parity`.                                                                                                                                                                                                                                   |
 | `pnpm test:docs`                                 | Runs the tests of the documentation scripts in `scripts/docs`.                                                                                                                                                                                                                              |
 | `pnpm test:thanks`                               | Runs the tests of the thanks script, `scripts/thanks/render.ts`. It also fails when `THANKS.md` has text that the script does not write.                                                                                                                                                    |
+| `pnpm test:release`                              | Runs the tests of the release script, `scripts/release/checkTag.ts`.                                                                                                                                                                                                                        |
 | `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
 | `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
 | `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families`.                                                                                                                                                                                                           |
@@ -56,7 +57,8 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm format`                                    | Formats the files with Prettier.                                                                                                                                                                                                                                                            |
 | `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
 | `pnpm build`                                     | Builds `packages/vue/dist`.                                                                                                                                                                                                                                                                 |
-| `pnpm check:package`                             | Builds the package with two fixture families. It checks that npm packs the license and the notices. Then it checks the result with publint, Are the Types Wrong and a consumer project.                                                                                                     |
+| `pnpm check:package`                             | Builds the package with two fixture families. It packs the package folder through `prepack`, as a release does. It fails when the packed files lack the license, the notices or the readme. Then it checks the result with publint, Are the Types Wrong and a consumer project.             |
+| `pnpm release:check-tag <tag>`                   | Fails when the tag is not `v` plus the version in `packages/vue/package.json`, or when that version does not have the form `YYYY.M.MICRO`.                                                                                                                                                  |
 | `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders, the code samples and the demos in `docs`.                                                                                                                                                                    |
 | `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
@@ -488,7 +490,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | A function component that calls a hook and spreads the rest of its props | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`. |
 | `renderToString` of the renderer, with no `hydrate()`                    | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.               |
 | `renderToString` of the renderer, then `hydrate()`                       | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser.                      |
-| `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                | A spy on `console.error` or `console.warn`. Call `fn`, then assert the call and its message. The message starts with `Vase UI:`.                               |
+| `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert the call and its message. The message starts with `Vase UI:`.     |
 | `childNodes`, `firstChild` or `nextSibling` on the element of a part     | `children` or `querySelector`                                                                                                                                  |
 | A number as a length in a style object, such as `top: 1`                 | A string with its unit, such as `top: '1px'`                                                                                                                   |
 | An event                                                                 | Add `await`                                                                                                                                                    |
@@ -521,13 +523,13 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `createRenderer()` returns `{ render }`.
 - `render` takes a vnode or a function that returns a vnode. It resolves to the queries, `container`, `unmount`, `user`, `rerender` and `setProps`.
 - `render` mounts the vnode with `createApp`. The helpers do not use `@testing-library/vue`, because it depends on another version of `@testing-library/dom`.
+- The app of `render` records each Vue warning for the check of the test setup. Its `warnHandler` does not throw. After a `warnHandler` throws, Vue gives no more warnings on that page.
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
 - After a mount, a `rerender` or a `setProps`, the helper waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
 - Under fake timers, the helper does not wait. It moves the fake clock by 1 ms and runs no timer, because a fake clock does not move by itself.
 - `fireEvent` is a function of the test helpers. It dispatches the event, waits for `nextTick()` and returns the result of the dispatch. Upstream tests read that result, which is `false` when a listener prevents the default action.
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
-- The `render` option of `describeConformance` can call the `render` of `createRenderer()` and then make an assertion. Each case of the suite then makes that assertion.
 
 The hydration helpers:
 
@@ -535,8 +537,7 @@ The hydration helpers:
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
 - `hydrate(component, { serverHtml, props })` hydrates that HTML. The rules below are its contract.
 - It inserts the HTML with `Range.createContextualFragment`, because `innerHTML` does not run an inline script.
-- Its `warnHandler` collects the warnings and does not throw. After a `warnHandler` throws, Vue gives no more warnings on that page.
-- It records each call to `console.warn` and `console.error` during the whole test. Vue writes some hydration messages only to the console.
+- It records the Vue warnings of its two apps as `render` does, and it reads the messages that the test setup records. Vue writes some hydration messages only to the console.
 - After mount and two ticks, it fails the test on a Vue warning or a console call. It also fails the test when the hydrated DOM differs from a client-only render.
 - The comparison ignores comments, the order of the attributes and the format of `style`.
 
@@ -550,6 +551,9 @@ The hydration helpers:
 - Put one assertion in each `waitFor`.
 - Do not put a negative assertion in `waitFor`: it passes on the first try. Advance the timers or flush first, then assert.
 - A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
+- A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
+- When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
+- When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
@@ -664,6 +668,31 @@ A component page is `docs/components/<family>.md`. Use `docs/components/button.m
 - Two guards make sure that the page has only the text that the script writes. The script writes a display name only when it matches the pattern `DISPLAY_NAME` of `scripts/thanks/render.ts`. For each other name, it writes the account name. `pnpm test:thanks` writes the file again from the date, the commits and the people that it holds. It fails when the two texts differ.
 - After a change of the fixed text in `scripts/thanks/render.ts`, run `pnpm thanks:render` and commit `THANKS.md` in the same pull request. Until then, `pnpm test:thanks` fails, because `THANKS.md` differs from the text that the script writes.
 - Run `pnpm thanks:render` before each release, and commit `THANKS.md`.
+
+## Releases
+
+The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vue` on npm. The repository holds no npm token.
+
+- A version is `YYYY.M.MICRO`, such as `2026.12.0`. The month has no leading zero, and `MICRO` starts at 0.
+- The tag of a release is `v` plus the version: `v2026.12.0`. A ruleset lets only an organization admin create, change or delete a `v*` tag.
+- A release before full parity with Base UI has the dist-tag `next`. `publishConfig.tag` in `packages/vue/package.json`, the `--tag` option in the workflow and the install commands of `docs/quick-start.md` hold that tag. Change them together.
+- The trusted publisher of the package on npmjs.com names the file `release.yml` and the environment `npm`. npm refuses the release after a change of either name.
+- The trusted publisher allows `npm stage publish` only. Do not give it `--allow-publish`. Each step of the job `stage` can get an OIDC token. With `--allow-publish`, each of these steps can make a version public with no approval.
+- The workflow writes no release notes and makes no GitHub Release.
+- A maintainer publishes the first version of a package by hand, because npm sets a trusted publisher only for a package that exists.
+
+The workflow runs on a push of a `v*` tag. It has two jobs:
+
+- `check` fails when the tagged commit is not on `main`, or when `pnpm release:check-tag` fails. Then it runs the commands of the job `check` of CI. Change the two lists together.
+- `stage` runs `npm stage publish` in `packages/vue`. npm trusted publishing gives it access. A staged version is not public.
+
+To make a release:
+
+1. Do the step that [Thanks page](#thanks-page) gives for a release.
+2. Merge a pull request that changes `version` in `packages/vue/package.json`.
+3. Make sure that CI passes on that commit of `main`. The workflow does not run `pnpm test`.
+4. As an organization admin, push the tag of that commit: `git tag v2026.12.0 <commit>`, then `git push origin v2026.12.0`.
+5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public.
 
 ## Text
 
