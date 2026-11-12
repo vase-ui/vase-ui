@@ -53,7 +53,7 @@ Measured on 2026-11-12 (UTC). Prices read on 2026-11-12.
 
 "All tokens" also counts the uncached input, which has no column. "API price" is what these tokens cost in US dollars at the API's [list prices](https://platform.claude.com/docs/en/about-claude/pricing) on the date that the prices were read. Cache writes are priced by their lifetime, 5 minutes or 1 hour. For a few messages the API reports more cache writes than the sum of the two lifetimes, and we price that rest as 5-minute writes. Each price is rounded to the cent, so the prices in a table do not always add up to the total.
 
-Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/blob/main/cost/history.json). We update the count at each release.
+Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/blob/main/cost/history.json). We update the count at each release and at the end of each stage of the port.
 
 <!-- #endregion home -->
 

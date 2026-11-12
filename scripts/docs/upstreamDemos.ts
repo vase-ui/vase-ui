@@ -51,7 +51,7 @@ function recordPath(name: string): string {
 }
 
 function command(name: string): string {
-  return `node scripts/docs/upstreamDemos.ts --upstream <path> ${name}`;
+  return `pnpm docs:demos --upstream <path> ${name}`;
 }
 
 function sha256(data: string | Uint8Array): string {
