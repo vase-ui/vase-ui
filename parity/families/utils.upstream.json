@@ -2,17 +2,82 @@
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
-    "packages/react/src/utils/useFocusableWhenDisabled.ts"
+    "packages/react/src/utils/useFocusableWhenDisabled.ts",
+    "packages/react/src/utils/useFormatLocale.test.tsx",
+    "packages/react/src/utils/useFormatLocale.ts",
+    "packages/react/src/utils/useIsHydrating.test.tsx",
+    "packages/react/src/utils/useIsHydrating.ts",
+    "packages/react/src/utils/useRegisteredLabelId.test.tsx",
+    "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/valueToPercent.ts"
   ],
   "sources": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
-    "packages/react/src/utils/useFocusableWhenDisabled.ts"
+    "packages/react/src/utils/useFocusableWhenDisabled.ts",
+    "packages/react/src/utils/useFormatLocale.ts",
+    "packages/react/src/utils/useIsHydrating.ts",
+    "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/valueToPercent.ts"
   ],
   "typeTests": [],
-  "cases": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/useFormatLocale.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useFormatLocale"
+          ],
+          "title": "returns the runtime locale on the first client-only render"
+        },
+        {
+          "describe": [
+            "useFormatLocale"
+          ],
+          "title": "returns $name"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/useIsHydrating.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useIsHydrating"
+          ],
+          "title": "returns false for client-only mounts"
+        },
+        {
+          "describe": [
+            "useIsHydrating"
+          ],
+          "title": "returns true before hydration for server-rendered markup"
+        },
+        {
+          "describe": [
+            "useIsHydrating"
+          ],
+          "title": "switches to false after hydration completes"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/useRegisteredLabelId.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useRegisteredLabelId"
+          ],
+          "title": "does not let an older label cleanup clear a newer label"
+        }
+      ]
+    }
+  ],
   "surface": []
 }

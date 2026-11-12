@@ -1,9 +1,17 @@
 {
   "upstreamPaths": [
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
+    "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
-    "packages/react/src/utils/useFocusableWhenDisabled.ts"
+    "packages/react/src/utils/useFocusableWhenDisabled.ts",
+    "packages/react/src/utils/useFormatLocale.test.tsx",
+    "packages/react/src/utils/useFormatLocale.ts",
+    "packages/react/src/utils/useIsHydrating.test.tsx",
+    "packages/react/src/utils/useIsHydrating.ts",
+    "packages/react/src/utils/useRegisteredLabelId.test.tsx",
+    "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/valueToPercent.ts"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
@@ -11,6 +19,21 @@
       "upstream": "packages/react/src/utils/resolveRef.ts",
       "kind": "not-applicable",
       "reason": "The file reads the `current` of a React ref object. Vue `toValue` reads a ref, a getter or a value."
+    },
+    {
+      "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",
+      "describe": ["useFormatLocale"],
+      "title": "returns the runtime locale on the first client-only render",
+      "kind": "not-applicable",
+      "reason": "React tells a hydration from a client-only mount with the server snapshot of `useSyncExternalStore`. Vue has no public API that tells them apart in `setup`, so the first render of a client-only mount also gets en-US. The case \"returns en-US for the first render of a client-only mount, then the runtime locale\" states what Vase UI does."
+    },
+    {
+      "upstream": "packages/react/src/utils/useIsHydrating.test.tsx",
+      "describe": ["useIsHydrating"],
+      "title": "returns true before hydration for server-rendered markup",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/useIsHydrating.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     }
   ],
   "surfaceAdditions": [],

@@ -1,6 +1,7 @@
 export * from '../src/common/testUtils';
 export { createRenderer } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
+export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
   enterWithMouse,
   firePointer,
