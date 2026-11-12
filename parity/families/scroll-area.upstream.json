@@ -1,0 +1,1717 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/scroll-area/**",
+    "docs/src/app/(docs)/react/components/scroll-area/**"
+  ],
+  "sources": [
+    "packages/react/src/scroll-area/constants.ts",
+    "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+    "packages/react/src/scroll-area/content/ScrollAreaContentDataAttributes.ts",
+    "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+    "packages/react/src/scroll-area/index.parts.ts",
+    "packages/react/src/scroll-area/index.ts",
+    "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
+    "packages/react/src/scroll-area/root/ScrollAreaRootContext.ts",
+    "packages/react/src/scroll-area/root/ScrollAreaRootCssVars.ts",
+    "packages/react/src/scroll-area/root/ScrollAreaRootDataAttributes.ts",
+    "packages/react/src/scroll-area/root/stateAttributes.ts",
+    "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+    "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarContext.ts",
+    "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarCssVars.ts",
+    "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarDataAttributes.ts",
+    "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+    "packages/react/src/scroll-area/thumb/ScrollAreaThumbDataAttributes.ts",
+    "packages/react/src/scroll-area/utils/getOffset.ts",
+    "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+    "packages/react/src/scroll-area/viewport/ScrollAreaViewportContext.ts",
+    "packages/react/src/scroll-area/viewport/ScrollAreaViewportCssVars.ts",
+    "packages/react/src/scroll-area/viewport/ScrollAreaViewportDataAttributes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Content />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Content />"
+          ],
+          "title": "throws a descriptive error when rendered outside <ScrollArea.Viewport>"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Content />"
+          ],
+          "title": "recomputes overflow when observed content resizes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Content />"
+          ],
+          "title": "supports a custom content renderer that does not forward its ref"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Corner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Corner />"
+          ],
+          "title": "is hidden from the accessibility tree by default"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Corner />"
+          ],
+          "title": "allows overriding aria-hidden"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Corner />",
+            "interactions"
+          ],
+          "title": "should apply correct corner size when both scrollbars are present",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "data-scrolling attribute"
+          ],
+          "title": "adds [data-scrolling] attribute when viewport is scrolled"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "recomputes thumb size when becoming visible without requiring scroll",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "shows scrollbars after mount compute before the first ResizeObserver measurement",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "shows keepMounted scrollbar track and thumb after mount compute",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "recomputes corner size when content starts overflowing",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "clears corner, overflow attributes, and metrics when content stops overflowing",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "should correctly set thumb height and width based on scrollable content",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "should not add padding for overlay scrollbars",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "accounts for scrollbar padding",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "accounts for scrollbar margin",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "sizing"
+          ],
+          "title": "accounts for thumb margin",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "recomputes horizontal overflow edges when direction changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "measures content mounted after the viewport initial measurement",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "applies data attributes on root, viewport and scrollbars based on overflow and edges",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "treats near-edge scroll offsets as fully scrolled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "respects overflowEdgeThreshold and exposes scroll metrics",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "applies numeric overflowEdgeThreshold to every edge",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "recomputes overflow edges when overflowEdgeThreshold changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "does not add state attributes when content does not overflow",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "overflow data attributes"
+          ],
+          "title": "correctly handles RTL",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Root />",
+            "context stability"
+          ],
+          "title": "does not re-render parts on scroll when the corner size is unchanged",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />"
+          ],
+          "title": "is hidden from the accessibility tree by default"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />"
+          ],
+          "title": "allows overriding aria-hidden"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />"
+          ],
+          "title": "sets the orientation data attribute"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />"
+          ],
+          "title": "supports a custom scrollbar renderer that does not forward its ref"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "data-scrolling attribute"
+          ],
+          "title": "adds [data-scrolling] attribute when viewport is scrolled in the correct direction"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "data-hovering attribute"
+          ],
+          "title": "detects a viewport that is already hovered on mount"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "data-hovering attribute"
+          ],
+          "title": "does not enter hover state for touch pointers"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "data-hovering attribute"
+          ],
+          "title": "adds [data-hovering] when the synthetic pointer target differs from the native path"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "ignores non-primary pointer presses"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "handles a track press when no viewport is mounted"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "does not start a track gesture without a thumb"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "ignores thumb clicks when the native path differs from the synthetic target"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "marks the scroll area as scrolling when pressing the track"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track pointer down"
+          ],
+          "title": "clears track drag state on pointer cancel"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track mouse down"
+          ],
+          "title": "cancels a $name press on the track so focus stays on the active element"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track mouse down"
+          ],
+          "title": "cancels the press on the thumb so focus stays on the active element"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track click by axis"
+          ],
+          "title": "scrolls down when clicking below the thumb on a vertical track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track click by axis"
+          ],
+          "title": "scrolls right when clicking the end of a horizontal LTR track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "track click by axis"
+          ],
+          "title": "scrolls into the negative RTL range when clicking a horizontal RTL track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "scroll snap on track press"
+          ],
+          "title": "does not snap the initial jump-to-click position",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "non-positive thumb offset"
+          ],
+          "title": "does not jump the scroll when dragging a thumb that fills the track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "non-positive thumb offset"
+          ],
+          "title": "does not jump the scroll when dragging a thumb taller than the track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "non-positive thumb offset"
+          ],
+          "title": "does not jump the scroll when clicking a track whose thumb fills the track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "non-positive thumb offset"
+          ],
+          "title": "does not jump the scroll when clicking a track whose thumb is taller than the track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "allows horizontal scrolling away from the RTL start edge"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "clamps horizontal LTR wheel scrolling at both edges"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "clamps horizontal RTL wheel scrolling at both edges"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "clamps vertical wheel scrolling at both edges"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "preventDefaults only when it consumes the scroll, allowing chaining at edges"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "ignores zero-delta wheel events"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "does not intercept browser zoom gestures"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "marks the scroll area as scrolling when wheeling over the scrollbar"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "marks the scroll area as scrolling when wheeling over the horizontal scrollbar"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "does not mark the scroll area as scrolling when chaining at an edge"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "wheel"
+          ],
+          "title": "registers after the horizontal scrollbar becomes visible",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Scrollbar />",
+            "data overflow attributes (scrollbars)"
+          ],
+          "title": "applies data attributes on vertical and horizontal scrollbars",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "throws a descriptive error when rendered outside <ScrollArea.Scrollbar>"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "handles a thumb gesture when no viewport is mounted"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "handles the scrollbar unmounting from a user pointer-move callback"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "handles the viewport unmounting from a user pointer-up callback"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "horizontal dragging"
+          ],
+          "title": "updates LTR scroll position and pointer capture state",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "horizontal dragging"
+          ],
+          "title": "uses the negative RTL range and clears scrolling on pointer cancel",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "clears scrolling state on pointer cancel without releasing stale capture"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "ends a drag whose release was missed instead of scrolling on hover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />"
+          ],
+          "title": "clears horizontal scrolling state on pointer cancel"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "scroll snap"
+          ],
+          "title": "disables viewport scroll snap while dragging and restores it on release"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "scroll snap"
+          ],
+          "title": "restores viewport scroll snap on pointer cancel"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "scroll snap"
+          ],
+          "title": "ignores a second pointer while a drag is active"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "scroll snap"
+          ],
+          "title": "lets a new pointer take over when capture was silently dropped"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "scroll snap"
+          ],
+          "title": "ignores non-primary pointer presses"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Thumb />",
+            "data-scrolling attribute"
+          ],
+          "title": "adds [data-scrolling] attribute when viewport is scrolled in the correct direction"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ScrollArea.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />"
+          ],
+          "title": "does not use a presentational role on the focusable viewport"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />"
+          ],
+          "title": "handles a user scroll callback unmounting the viewport"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "subtree animations"
+          ],
+          "title": "releases a completed animation target while another animation is paused",
+          "conditions": [
+            "skipIf(isJSDOM)",
+            "skipIf(!platform.engine.blink)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "subtree animations"
+          ],
+          "title": "recomputes overflow after a subtree animation finishes with %s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "subtree animations"
+          ],
+          "title": "ignores an animation finishing after its viewport unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "adds [data-scrolling] attribute when viewport is scrolled"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "ignores data-scrolling during programmatic scroll"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "adds [data-scrolling] in touch modality even when the gesture delivers no events"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "keeps ignoring programmatic scrolls in mouse modality"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "restores programmatic scroll suppression after modality flips back to mouse"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "data-scrolling attribute"
+          ],
+          "title": "removes [data-scrolling] after timeout"
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overflow data attributes (viewport)"
+          ],
+          "title": "applies data attributes on viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the thumb to the start edge while overscrolling past the top",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the thumb to the end edge while overscrolling past the bottom",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "restores the resting thumb size once the viewport settles back into range",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the horizontal thumb to the inline start while overscrolling (LTR)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the horizontal thumb to the inline end while overscrolling (LTR)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the horizontal thumb to the inline start while overscrolling (RTL)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />",
+            "overscroll feedback"
+          ],
+          "title": "shrinks and pins the horizontal thumb to the inline end while overscrolling (RTL)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ScrollArea.Viewport />"
+          ],
+          "title": "throws a descriptive error when rendered outside <ScrollArea.Root>"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "overflowEdgeThreshold",
+              "required": false,
+              "type": "number | Partial<{ xStart: number; xEnd: number; yStart: number; yEnd: number }>",
+              "default": "0"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaRootState",
+            "fields": [
+              {
+                "name": "scrolling",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowX",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowY",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "cornerHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ScrollAreaRootState = {\n    scrolling: boolean;\n    hasOverflowX: boolean;\n    hasOverflowY: boolean;\n    overflowXStart: boolean;\n    overflowXEnd: boolean;\n    overflowYStart: boolean;\n    overflowYEnd: boolean;\n    cornerHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-has-overflow-x",
+              "type": null
+            },
+            {
+              "name": "data-has-overflow-y",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-start",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-start",
+              "type": null
+            },
+            {
+              "name": "data-scrolling",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--scroll-area-corner-height",
+              "type": "number"
+            },
+            {
+              "name": "--scroll-area-corner-width",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Content",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Content.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Content.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Content.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaContentState",
+            "fields": [
+              {
+                "name": "scrolling",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowX",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowY",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "cornerHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ScrollAreaContentState = {\n    scrolling: boolean;\n    hasOverflowX: boolean;\n    hasOverflowY: boolean;\n    overflowXStart: boolean;\n    overflowXEnd: boolean;\n    overflowYStart: boolean;\n    overflowYEnd: boolean;\n    cornerHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-has-overflow-x",
+              "type": null
+            },
+            {
+              "name": "data-has-overflow-y",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-start",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-start",
+              "type": null
+            },
+            {
+              "name": "data-scrolling",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaViewportState",
+            "fields": [
+              {
+                "name": "scrolling",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowX",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowY",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "cornerHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ScrollAreaViewportState = {\n    scrolling: boolean;\n    hasOverflowX: boolean;\n    hasOverflowY: boolean;\n    overflowXStart: boolean;\n    overflowXEnd: boolean;\n    overflowYStart: boolean;\n    overflowYEnd: boolean;\n    cornerHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-has-overflow-x",
+              "type": null
+            },
+            {
+              "name": "data-has-overflow-y",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-start",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-start",
+              "type": null
+            },
+            {
+              "name": "data-scrolling",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--scroll-area-overflow-x-end",
+              "type": "number"
+            },
+            {
+              "name": "--scroll-area-overflow-x-start",
+              "type": "number"
+            },
+            {
+              "name": "--scroll-area-overflow-y-end",
+              "type": "number"
+            },
+            {
+              "name": "--scroll-area-overflow-y-start",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Thumb",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Thumb.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Thumb.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Thumb.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaThumbState",
+            "fields": [
+              {
+                "name": "scrolling",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "'horizontal' | 'vertical'"
+              }
+            ],
+            "code": "type ScrollAreaThumbState = {\n    scrolling: boolean;\n    orientation: 'horizontal' | 'vertical';\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-scrolling",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Scrollbar",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "'vertical' | 'horizontal'",
+              "default": "'vertical'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Scrollbar.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Scrollbar.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Scrollbar.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaScrollbarState",
+            "fields": [
+              {
+                "name": "hovering",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrolling",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "'vertical' | 'horizontal'"
+              },
+              {
+                "name": "hasOverflowX",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasOverflowY",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowXEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYStart",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "overflowYEnd",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "cornerHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ScrollAreaScrollbarState = {\n    hovering: boolean;\n    scrolling: boolean;\n    orientation: 'vertical' | 'horizontal';\n    hasOverflowX: boolean;\n    hasOverflowY: boolean;\n    overflowXStart: boolean;\n    overflowXEnd: boolean;\n    overflowYStart: boolean;\n    overflowYEnd: boolean;\n    cornerHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-has-overflow-x",
+              "type": null
+            },
+            {
+              "name": "data-has-overflow-y",
+              "type": null
+            },
+            {
+              "name": "data-hovering",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-x-start",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-end",
+              "type": null
+            },
+            {
+              "name": "data-overflow-y-start",
+              "type": null
+            },
+            {
+              "name": "data-scrolling",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--scroll-area-thumb-height",
+              "type": "number"
+            },
+            {
+              "name": "--scroll-area-thumb-width",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Corner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ScrollArea.Corner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ScrollArea.Corner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ScrollArea.Corner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ScrollAreaCornerState",
+            "fields": [],
+            "code": "type ScrollAreaCornerState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "Coords",
+          "code": "type Coords = {\n    x: number;\n    y: number;\n};"
+        },
+        {
+          "name": "HiddenState",
+          "code": "type HiddenState = {\n    x: boolean;\n    y: boolean;\n    corner: boolean;\n};"
+        },
+        {
+          "name": "OverflowEdges",
+          "code": "type OverflowEdges = {\n    xStart: boolean;\n    xEnd: boolean;\n    yStart: boolean;\n    yEnd: boolean;\n};"
+        },
+        {
+          "name": "ScrollAreaContentDataAttributes",
+          "code": "declare namespace ScrollAreaContentDataAttributes {\n    const scrolling: 'data-scrolling';\n    const hasOverflowX: 'data-has-overflow-x';\n    const hasOverflowY: 'data-has-overflow-y';\n    const overflowXStart: 'data-overflow-x-start';\n    const overflowXEnd: 'data-overflow-x-end';\n    const overflowYStart: 'data-overflow-y-start';\n    const overflowYEnd: 'data-overflow-y-end';\n}",
+          "constants": [
+            {
+              "name": "scrolling",
+              "value": "data-scrolling"
+            },
+            {
+              "name": "hasOverflowX",
+              "value": "data-has-overflow-x"
+            },
+            {
+              "name": "hasOverflowY",
+              "value": "data-has-overflow-y"
+            },
+            {
+              "name": "overflowXStart",
+              "value": "data-overflow-x-start"
+            },
+            {
+              "name": "overflowXEnd",
+              "value": "data-overflow-x-end"
+            },
+            {
+              "name": "overflowYStart",
+              "value": "data-overflow-y-start"
+            },
+            {
+              "name": "overflowYEnd",
+              "value": "data-overflow-y-end"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaRootCssVariables",
+          "code": "declare namespace ScrollAreaRootCssVariables {\n    const scrollAreaCornerHeight: '--scroll-area-corner-height';\n    const scrollAreaCornerWidth: '--scroll-area-corner-width';\n}",
+          "constants": [
+            {
+              "name": "scrollAreaCornerHeight",
+              "value": "--scroll-area-corner-height"
+            },
+            {
+              "name": "scrollAreaCornerWidth",
+              "value": "--scroll-area-corner-width"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaRootDataAttributes",
+          "code": "declare namespace ScrollAreaRootDataAttributes {\n    const scrolling: 'data-scrolling';\n    const hasOverflowX: 'data-has-overflow-x';\n    const hasOverflowY: 'data-has-overflow-y';\n    const overflowXStart: 'data-overflow-x-start';\n    const overflowXEnd: 'data-overflow-x-end';\n    const overflowYStart: 'data-overflow-y-start';\n    const overflowYEnd: 'data-overflow-y-end';\n}",
+          "constants": [
+            {
+              "name": "scrolling",
+              "value": "data-scrolling"
+            },
+            {
+              "name": "hasOverflowX",
+              "value": "data-has-overflow-x"
+            },
+            {
+              "name": "hasOverflowY",
+              "value": "data-has-overflow-y"
+            },
+            {
+              "name": "overflowXStart",
+              "value": "data-overflow-x-start"
+            },
+            {
+              "name": "overflowXEnd",
+              "value": "data-overflow-x-end"
+            },
+            {
+              "name": "overflowYStart",
+              "value": "data-overflow-y-start"
+            },
+            {
+              "name": "overflowYEnd",
+              "value": "data-overflow-y-end"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaScrollbarCssVariables",
+          "code": "declare namespace ScrollAreaScrollbarCssVariables {\n    const scrollAreaThumbHeight: '--scroll-area-thumb-height';\n    const scrollAreaThumbWidth: '--scroll-area-thumb-width';\n}",
+          "constants": [
+            {
+              "name": "scrollAreaThumbHeight",
+              "value": "--scroll-area-thumb-height"
+            },
+            {
+              "name": "scrollAreaThumbWidth",
+              "value": "--scroll-area-thumb-width"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaScrollbarDataAttributes",
+          "code": "declare namespace ScrollAreaScrollbarDataAttributes {\n    const orientation: 'data-orientation';\n    const hovering: 'data-hovering';\n    const scrolling: 'data-scrolling';\n    const hasOverflowX: 'data-has-overflow-x';\n    const hasOverflowY: 'data-has-overflow-y';\n    const overflowXStart: 'data-overflow-x-start';\n    const overflowXEnd: 'data-overflow-x-end';\n    const overflowYStart: 'data-overflow-y-start';\n    const overflowYEnd: 'data-overflow-y-end';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "hovering",
+              "value": "data-hovering"
+            },
+            {
+              "name": "scrolling",
+              "value": "data-scrolling"
+            },
+            {
+              "name": "hasOverflowX",
+              "value": "data-has-overflow-x"
+            },
+            {
+              "name": "hasOverflowY",
+              "value": "data-has-overflow-y"
+            },
+            {
+              "name": "overflowXStart",
+              "value": "data-overflow-x-start"
+            },
+            {
+              "name": "overflowXEnd",
+              "value": "data-overflow-x-end"
+            },
+            {
+              "name": "overflowYStart",
+              "value": "data-overflow-y-start"
+            },
+            {
+              "name": "overflowYEnd",
+              "value": "data-overflow-y-end"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaThumbDataAttributes",
+          "code": "declare namespace ScrollAreaThumbDataAttributes {\n    const orientation: 'data-orientation';\n    const scrolling: 'data-scrolling';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "scrolling",
+              "value": "data-scrolling"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaViewportCssVariables",
+          "code": "declare namespace ScrollAreaViewportCssVariables {\n    const scrollAreaOverflowXStart: '--scroll-area-overflow-x-start';\n    const scrollAreaOverflowXEnd: '--scroll-area-overflow-x-end';\n    const scrollAreaOverflowYStart: '--scroll-area-overflow-y-start';\n    const scrollAreaOverflowYEnd: '--scroll-area-overflow-y-end';\n}",
+          "constants": [
+            {
+              "name": "scrollAreaOverflowXStart",
+              "value": "--scroll-area-overflow-x-start"
+            },
+            {
+              "name": "scrollAreaOverflowXEnd",
+              "value": "--scroll-area-overflow-x-end"
+            },
+            {
+              "name": "scrollAreaOverflowYStart",
+              "value": "--scroll-area-overflow-y-start"
+            },
+            {
+              "name": "scrollAreaOverflowYEnd",
+              "value": "--scroll-area-overflow-y-end"
+            }
+          ]
+        },
+        {
+          "name": "ScrollAreaViewportDataAttributes",
+          "code": "declare namespace ScrollAreaViewportDataAttributes {\n    const scrolling: 'data-scrolling';\n    const hasOverflowX: 'data-has-overflow-x';\n    const hasOverflowY: 'data-has-overflow-y';\n    const overflowXStart: 'data-overflow-x-start';\n    const overflowXEnd: 'data-overflow-x-end';\n    const overflowYStart: 'data-overflow-y-start';\n    const overflowYEnd: 'data-overflow-y-end';\n}",
+          "constants": [
+            {
+              "name": "scrolling",
+              "value": "data-scrolling"
+            },
+            {
+              "name": "hasOverflowX",
+              "value": "data-has-overflow-x"
+            },
+            {
+              "name": "hasOverflowY",
+              "value": "data-has-overflow-y"
+            },
+            {
+              "name": "overflowXStart",
+              "value": "data-overflow-x-start"
+            },
+            {
+              "name": "overflowXEnd",
+              "value": "data-overflow-x-end"
+            },
+            {
+              "name": "overflowYStart",
+              "value": "data-overflow-y-start"
+            },
+            {
+              "name": "overflowYEnd",
+              "value": "data-overflow-y-end"
+            }
+          ]
+        },
+        {
+          "name": "Size",
+          "code": "type Size = {\n    width: number;\n    height: number;\n};"
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
