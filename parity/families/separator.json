@@ -1,0 +1,10 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/separator/**",
+    "docs/src/app/(docs)/react/components/separator/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [],
+  "surfaceAdditions": [],
+  "notApplicableCommits": []
+}
