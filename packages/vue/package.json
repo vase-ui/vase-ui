@@ -15,13 +15,14 @@
     "directory": "packages/vue"
   },
   "bugs": {
-    "url": "https://github.com/vase-ui/vase-ui/issues"
+    "url": "https://github.com/vase-ui/vase-ui/discussions"
   },
   "homepage": "https://github.com/vase-ui/vase-ui#readme",
   "type": "module",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "exports": {
     ".": {
@@ -48,7 +49,7 @@
     "test:chromium": "vitest run --project chromium",
     "test:firefox": "vitest run --project firefox",
     "test:webkit": "vitest run --project webkit",
-    "prepack": "pnpm build && cp ../../LICENSE ../../README.md ."
+    "prepack": "pnpm build && cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ../../README.md ."
   },
   "dependencies": {
     "@floating-ui/utils": "^0.2.12"

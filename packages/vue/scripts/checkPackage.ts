@@ -20,6 +20,7 @@ process.chdir(fileURLToPath(new URL('..', import.meta.url)));
 const PACKAGE_DIRECTORY = '.package-check';
 const DIST_DIRECTORY = `${PACKAGE_DIRECTORY}/dist`;
 const CONSUMER_DIRECTORY = 'test/package-check/consumer';
+const LICENSE_FILES = ['LICENSE', 'THIRD_PARTY_NOTICES.md'];
 
 function runBin(name: string, args: string[]): void {
   execFileSync(join('node_modules', '.bin', name), args, { stdio: 'inherit' });
@@ -50,10 +51,10 @@ function expectContent(file: string, code: string, text: string, expected: boole
 }
 
 async function main(): Promise<void> {
-  console.log(`[1/8] Remove ${PACKAGE_DIRECTORY}`);
+  console.log(`[1/9] Remove ${PACKAGE_DIRECTORY}`);
   rmSync(PACKAGE_DIRECTORY, { recursive: true, force: true });
 
-  console.log('[2/8] Build the package with the fixture families');
+  console.log('[2/9] Build the package with the fixture families');
   writeBarrel('test/package-check/index.ts', ['src', 'test/package-check/src']);
   const entry = {
     index: 'test/package-check/index.ts',
@@ -73,18 +74,35 @@ async function main(): Promise<void> {
     `Each index.js in dist must be the barrel or a family. Found: ${entryFiles.join(', ')}`,
   );
 
-  console.log('[3/8] Write the manifest, the license and the readme');
+  console.log('[3/9] Write the manifest, the license, the notices and the readme');
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
   delete manifest.scripts;
   delete manifest.devDependencies;
   writeFileSync(`${PACKAGE_DIRECTORY}/package.json`, `${JSON.stringify(manifest, null, 2)}\n`);
-  cpSync('../../LICENSE', `${PACKAGE_DIRECTORY}/LICENSE`);
-  cpSync('../../README.md', `${PACKAGE_DIRECTORY}/README.md`);
+  for (const file of [...LICENSE_FILES, 'README.md']) {
+    cpSync(`../../${file}`, `${PACKAGE_DIRECTORY}/${file}`);
+  }
 
-  console.log('[4/8] Run publint');
+  console.log('[4/9] Check that npm packs the license and the notices');
+  const [pack]: { files: { path: string }[] }[] = JSON.parse(
+    execFileSync('npm', ['pack', '--dry-run', '--json'], {
+      cwd: PACKAGE_DIRECTORY,
+      encoding: 'utf8',
+    }),
+  );
+  const packedPaths = pack.files.map((file) => file.path);
+  for (const file of LICENSE_FILES) {
+    assert.ok(
+      packedPaths.includes(file),
+      `${file} must be in the packed files. Add it to "files" in package.json.`,
+    );
+    console.log(`  ${file}: packed`);
+  }
+
+  console.log('[5/9] Run publint');
   runBin('publint', ['run', '--strict', '--pack', 'npm', PACKAGE_DIRECTORY]);
 
-  console.log('[5/8] Run Are the Types Wrong');
+  console.log('[6/9] Run Are the Types Wrong');
   runBin('attw', [
     '--pack',
     PACKAGE_DIRECTORY,
@@ -96,16 +114,16 @@ async function main(): Promise<void> {
     ...entryFiles.filter((file) => file !== 'index.js').map((file) => dirname(file)),
   ]);
 
-  console.log('[6/8] Link the package into the consumer project');
+  console.log('[7/9] Link the package into the consumer project');
   const link = join(CONSUMER_DIRECTORY, 'node_modules/@vase-ui/vue');
   rmSync(link, { recursive: true, force: true });
   mkdirSync(dirname(link), { recursive: true });
   symlinkSync(resolve(PACKAGE_DIRECTORY), link, 'dir');
 
-  console.log('[7/8] Type-check the consumer project');
+  console.log('[8/9] Type-check the consumer project');
   runBin('tsc', ['-p', CONSUMER_DIRECTORY]);
 
-  console.log('[8/8] Bundle the consumer files and load the package in Node');
+  console.log('[9/9] Bundle the consumer files and load the package in Node');
   const singlePart = await bundleConsumerFile('singlePart.ts');
   const multiPartRoot = await bundleConsumerFile('multiPartRoot.ts');
   expectContent('singlePart.ts', singlePart, 'data-single-part', true);
