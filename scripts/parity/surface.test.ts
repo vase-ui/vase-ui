@@ -84,7 +84,10 @@ function withEdits<T>(path: string, edits: [string, string][], run: () => T): T 
 
 test('the fixture family matches its types.md, with the exposed members of a generic SFC', () => {
   const [root] = project.findExports(join(SAMPLE, 'index.ts'), 'Root');
-  assert.deepEqual([...(project.readComponent(root)?.exposed ?? [])].sort(), ['close', 'unmount']);
+  assert.deepEqual([...(project.readComponent(root)?.exposed.keys() ?? [])].sort(), [
+    'close',
+    'unmount',
+  ]);
   assert.deepEqual(check().problems, []);
   assert.deepEqual(check().summary, {
     entries: { total: 5, matched: 5, excepted: 0 },
@@ -358,6 +361,93 @@ test('the description of an event is the text of its JSDoc', () => {
     emits?.get('openChangeComplete')?.description,
     'Fires after the animations of the change end.',
   );
+});
+
+test('the type of a prop and the arguments of an event are the type texts of vue-component-meta', () => {
+  const entry = join(SAMPLE, 'index.ts');
+  const [popup] = project.findExports(entry, 'Popup');
+  const [root] = project.findExports(entry, 'Root');
+  const props = project.readComponent(popup)?.props;
+  assert.equal(props?.get('name')?.type, 'string');
+  assert.equal(props?.get('side')?.type, '"bottom" | "top" | undefined');
+  const emits = project.readComponent(root)?.emits;
+  assert.equal(
+    emits?.get('openChange')?.type,
+    '[open: boolean, details: SampleRootChangeEventDetails]',
+  );
+  assert.equal(emits?.get('update:open')?.type, '[open: boolean]');
+});
+
+test('the slot props of a slot are the properties of its first parameter', () => {
+  const entry = join(SAMPLE, 'index.ts');
+  const [popup] = project.findExports(entry, 'Popup');
+  const [root] = project.findExports(entry, 'Root');
+  assert.deepEqual(project.readComponent(popup)?.slots.get('render')?.props, [
+    { name: 'props', type: 'Record<string, unknown>' },
+    { name: 'state', type: 'SamplePopupState' },
+  ]);
+  assert.deepEqual(project.readComponent(root)?.slots.get('default')?.props, [
+    { name: 'payload', type: 'Payload | undefined' },
+  ]);
+});
+
+test('an exposed member has its type and its JSDoc', () => {
+  const entry = join(SAMPLE, 'index.ts');
+  const [root] = project.findExports(entry, 'Root');
+  const [popup] = project.findExports(entry, 'Popup');
+  assert.deepEqual(project.readComponent(root)?.exposed.get('close'), {
+    type: '() => void',
+    description: '',
+  });
+  assert.equal(project.readComponent(popup)?.exposed.get('element')?.type, 'Element | null');
+  const close = withEdits(
+    ROOT,
+    [
+      [
+        'defineExpose({ close, unmount });',
+        'defineExpose({\n  /** Closes the sample. */\n  close,\n  unmount,\n});',
+      ],
+    ],
+    () => project.readComponent(project.findExports(entry, 'Root')[0])?.exposed.get('close'),
+  );
+  assert.deepEqual(close, { type: '() => void', description: 'Closes the sample.' });
+});
+
+test('the description of a component is the JSDoc of its export', () => {
+  const entry = join(SAMPLE, 'index.ts');
+  const read = () => project.readComponent(project.findExports(entry, 'Popup')[0])?.description;
+  assert.equal(read(), '');
+  const popup = 'export const Popup: typeof SamplePopup = SamplePopup;';
+  const description = withEdits(
+    PARTS,
+    [[popup, `/** A container for the content of the sample. */\n${popup}`]],
+    read,
+  );
+  assert.equal(description, 'A container for the content of the sample.');
+});
+
+test('a constant has its JSDoc and the text of its @type tag', () => {
+  const entry = join(SAMPLE, 'index.ts');
+  assert.deepEqual(project.readConstants(entry, 'SamplePopupDataAttributes'), [
+    { name: 'open', value: 'data-open', description: '', type: null },
+    { name: 'closed', value: 'data-closed', description: '', type: null },
+  ]);
+  const constants = withEdits(
+    DATA_ATTRIBUTES,
+    [
+      [
+        "export const open = 'data-open';",
+        "/**\n * Present when the sample is open.\n * @type {'true' | 'false'}\n */\nexport const open = 'data-open';",
+      ],
+    ],
+    () => project.readConstants(entry, 'SamplePopupDataAttributes'),
+  );
+  assert.deepEqual(constants?.[0], {
+    name: 'open',
+    value: 'data-open',
+    description: 'Present when the sample is open.',
+    type: "'true' | 'false'",
+  });
 });
 
 test('readEmitDescriptions reads the property form and the call signature form', () => {
