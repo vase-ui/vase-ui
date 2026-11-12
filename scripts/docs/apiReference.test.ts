@@ -237,8 +237,8 @@ test('the reader throws and says what to do for a family with no family file', (
 });
 
 test('the reader throws and says what to do for a family whose extract has no types.md', () => {
-  assert.throws(
-    () => read('internals'),
-    /^Error: parity\/families\/internals\.upstream\.json has no types\.md, so the API reference of internals has no source\. Add the glob .* Then run `pnpm parity:extract --upstream <path> internals`\.$/,
-  );
+  assert.throws(() => read('internals'), {
+    message:
+      'parity/families/internals.upstream.json has no types.md, so the API reference of internals has no source. Add the glob "docs/src/app/(docs)/react/components/internals/**" or "docs/src/app/(docs)/react/utils/internals/**" to "upstreamPaths" in parity/families/internals.json. Then run `pnpm parity:extract --upstream <path> internals`.',
+  });
 });

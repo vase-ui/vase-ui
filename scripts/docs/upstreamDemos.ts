@@ -3,12 +3,16 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { FamilyFile } from '../parity/parityFiles.ts';
-import { familyFile, readParityFiles, REPOSITORY_ROOT } from '../parity/repository.ts';
+import {
+  extractCommand,
+  familyFile,
+  readParityFiles,
+  REPOSITORY_ROOT,
+} from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { listFiles, readFileAt, resolveCommit } from '../parity/upstreamClone.ts';
 import { listFamilyPages } from './familyPages.ts';
-
-const DOCS_FOLDER_PREFIX = 'docs/src/app/(docs)/react/';
+import { DOCS_FOLDER_PREFIX, docsFolderGlobs } from './upstreamDocs.ts';
 
 /** A demo of Base UI has one folder for each variant. The Tailwind variants are not ported. */
 const TAILWIND_FOLDER = 'tailwind';
@@ -59,7 +63,7 @@ function upstreamDemosFolder(name: string, family: FamilyFile): string {
   );
   if (glob === undefined) {
     throw new Error(
-      `${familyFile(name)}: "upstreamPaths" has no docs folder. Add the glob "${DOCS_FOLDER_PREFIX}components/${name}/**" or "${DOCS_FOLDER_PREFIX}utils/${name}/**". Then run \`pnpm parity:extract --upstream <path> ${name}\`.`,
+      `${familyFile(name)}: "upstreamPaths" has no docs folder. Add the glob ${docsFolderGlobs(name)}. Then run \`${extractCommand(name)}\`.`,
     );
   }
   return `${glob.slice(0, -'/**'.length)}/demos`;

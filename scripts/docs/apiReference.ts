@@ -12,6 +12,7 @@ import type { FamilyFiles } from '../parity/repository.ts';
 import type { SurfaceFile } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import type { ComponentSurface, MemberSurface, VaseProject } from '../parity/vaseSurface.ts';
+import { docsFolderGlobs } from './upstreamDocs.ts';
 
 export interface ApiProp {
   name: string;
@@ -137,7 +138,7 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
     const typesFiles = files.extract?.surface ?? [];
     if (typesFiles.length === 0) {
       throw new Error(
-        `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob "docs/src/app/(docs)/react/components/${family}/**" to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
+        `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
       );
     }
     const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
