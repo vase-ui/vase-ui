@@ -26,6 +26,11 @@ function exitsWithZero(clone: string, args: string[]): boolean {
 
 // The clone is read through its git objects, never through its files, so its working tree does not matter.
 export function resolveCommit(clone: string, revision: string): string {
+  if (!exitsWithZero(clone, ['rev-parse', '--git-dir'])) {
+    throw new Error(
+      `${clone} is not a git clone. Pass the path of a local clone of Base UI in --upstream.`,
+    );
+  }
   if (!exitsWithZero(clone, ['cat-file', '-e', `${revision}^{commit}`])) {
     throw new Error(
       `The clone ${clone} has no commit ${revision}. Run \`git fetch\` in the clone, then run this command again.`,

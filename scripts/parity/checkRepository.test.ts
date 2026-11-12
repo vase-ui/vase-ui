@@ -252,7 +252,7 @@ test('a "surfaceAdditions" row of a family with no surface is a stale row', () =
 
 test('a test file that the reader refuses is one problem, and the other families are still checked', () => {
   const refusedFile = 'packages/vue/src/common/refused.test.ts';
-  const refusal = `${refusedFile}:6: the modifier "only" is not supported. Remove it, or teach scripts/parity/cases.ts the form.`;
+  const refusal = `${refusedFile}:6: \`.only\` is not allowed. Remove it.`;
   const parity = makeParity();
   parity.families[0].name = 'refused';
   parity.families[0].extract!.cases = [

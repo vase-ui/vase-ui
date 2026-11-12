@@ -100,6 +100,14 @@ test('buildUpstream refuses a commit that the clone does not have, and says to f
   });
 });
 
+test('buildUpstream refuses a folder that is not a git repository, and does not say to fetch', (t) => {
+  const folder = mkdtempSync(join(tmpdir(), 'parity-plain-'));
+  t.after(() => rmSync(folder, { recursive: true, force: true }));
+  assert.throws(() => buildUpstream(folder, change, current), {
+    message: `${folder} is not a git clone. Pass the path of a local clone of Base UI in --upstream.`,
+  });
+});
+
 test('a file is read at the named commit when the working tree has other text', () => {
   writeFileSync(join(repository, 'b.txt'), 'other text in the working tree');
   assert.equal(readFileAt(repository, change, 'b.txt'), 'two');
