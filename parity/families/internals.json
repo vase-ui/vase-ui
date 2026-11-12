@@ -1,5 +1,10 @@
 {
   "upstreamPaths": [
+    "packages/react/src/internals/composite/composite.ts",
+    "packages/react/src/internals/composite/composite.test.ts",
+    "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/listIndex.ts",
+    "packages/react/src/internals/composite/listIndex.test.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
