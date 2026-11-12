@@ -428,6 +428,37 @@ test('a returnTypeDifferences row for an entry with no documented return value i
   ]);
 });
 
+test('an entry row makes a returnTypeDifferences row stale, unless the row states the Vase UI type', () => {
+  const stale = (index: number, entry: string) =>
+    `sample: stale row returnTypeDifferences[${index}] (${entry}): an exception row covers the entry \`${entry}\`. Remove the row.`;
+  const wrong = { ...HANDLE_ROW, returns: 'Bogus<Never>' };
+  assert.deepEqual(check(makeFamily([entryRow('createHandle')], undefined, [wrong])).problems, [
+    stale(0, 'createHandle'),
+  ]);
+
+  const ghostRow = { ...HANDLE_ROW, entry: 'useGhost' };
+  const ghost: FamilyExtract = {
+    ...extract,
+    surface: [
+      {
+        ...surface,
+        functions: [
+          ...surface.functions,
+          { name: 'useGhost', tables: [], code: ['type ReturnValue = string;'] },
+        ],
+      },
+    ],
+  };
+  assert.deepEqual(
+    check(makeFamily([entryRow('useGhost')], undefined, [HANDLE_ROW, ghostRow]), ghost).problems,
+    [stale(1, 'useGhost')],
+  );
+
+  assert.deepEqual(check(makeFamily([entryRow('createHandle')])).problems, [
+    `sample: stale row exceptions[0] (${TYPES_MD}, entry "createHandle"): it covers no difference. Remove the row.`,
+  ]);
+});
+
 test('the description of an event is the text of its JSDoc', () => {
   const [root] = project.findExports(join(SAMPLE, 'index.ts'), 'Root');
   const emits = project.readComponent(root)?.emits;

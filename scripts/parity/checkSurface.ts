@@ -63,6 +63,8 @@ interface Context {
   documentedReturns: Set<string>;
   /** The titles of those entries whose Vase UI export returns the documented type. */
   equalReturns: Set<string>;
+  /** The titles of those entries whose Vase UI export returns another type, which a "returnTypeDifferences" row states. */
+  acceptedReturns: Set<string>;
 }
 
 const MEMBER_LABELS: MembersByKind<string> = {
@@ -266,6 +268,7 @@ function compareReturnType(
   }
   const row = context.family.returnTypeDifferences.find((item) => item.entry === title);
   if (row?.returns === returns) {
+    context.acceptedReturns.add(title);
     return;
   }
   const types = `the return type is ${inlineCode(returns)}, but Base UI documents ${inlineCode(documented)}.`;
@@ -477,6 +480,7 @@ export function checkSurface(options: {
     read: new Set(),
     documentedReturns: new Set(),
     equalReturns: new Set(),
+    acceptedReturns: new Set(),
   };
   for (const file of extract.surface) {
     compareFile(context, file);
@@ -552,11 +556,19 @@ export function checkSurface(options: {
   });
 
   family.returnTypeDifferences.forEach((row, index) => {
+    // An entry row excuses the differences that would check this row.
+    const excused =
+      !context.acceptedReturns.has(row.entry) &&
+      rows.some(
+        ({ row: exception, target }) => target.type === 'entry' && exception.entry === row.entry,
+      );
     const reason = !context.documentedReturns.has(row.entry)
       ? `the extract has no return value for ${inlineCode(row.entry)}`
       : context.equalReturns.has(row.entry)
         ? `Vase UI returns the type that Base UI documents for ${inlineCode(row.entry)}`
-        : undefined;
+        : excused
+          ? `an exception row covers the entry ${inlineCode(row.entry)}`
+          : undefined;
     if (reason !== undefined) {
       problem(
         'stale row',
