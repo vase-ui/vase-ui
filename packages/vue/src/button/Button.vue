@@ -6,48 +6,57 @@ import type {
   NativeButtonProps,
   VaseUIComponentProps,
   WithVaseUIEvent,
-} from '../../src/internals/types';
+} from '../internals/types';
 
-export interface ButtonPartState {
-  /** Whether the part ignores user interaction. */
+export interface ButtonState {
+  /**
+   * Whether the button should ignore user interaction.
+   */
   disabled: boolean;
 }
 
-export interface ButtonPartProps
+export interface ButtonProps
   extends
     NativeButtonProps,
-    VaseUIComponentProps<ButtonPartState>,
+    VaseUIComponentProps<ButtonState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<ButtonHTMLAttributes>, 'disabled'> {
   /**
-   * Whether the part ignores user interaction.
+   * Whether the button should ignore user interaction.
    * @default false
    */
   disabled?: boolean | undefined;
+  /**
+   * Whether the button should be focusable when disabled.
+   * @default false
+   */
+  focusableWhenDisabled?: boolean | undefined;
 }
 </script>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useButton } from '../../src/internals/use-button';
-import { useRenderElement } from '../../src/internals/useRenderElement';
+import { useButton } from '../internals/use-button';
+import { useRenderElement } from '../internals/useRenderElement';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<ButtonPartProps>(), {
+const props = withDefaults(defineProps<ButtonProps>(), {
   as: 'button',
   disabled: false,
+  focusableWhenDisabled: false,
   nativeButton: true,
 });
 
 defineSlots<{
-  default(props: { state: ButtonPartState }): unknown;
-  render: ComponentRenderFn<HTMLProps, ButtonPartState>;
+  default(props: { state: ButtonState }): unknown;
+  render: ComponentRenderFn<HTMLProps, ButtonState>;
 }>();
 
-const state = computed<ButtonPartState>(() => ({ disabled: props.disabled }));
+const state = computed<ButtonState>(() => ({ disabled: props.disabled }));
 
 const { getButtonProps, buttonRef } = useButton({
   disabled: () => props.disabled,
+  focusableWhenDisabled: () => props.focusableWhenDisabled,
   native: () => props.nativeButton,
 });
 

@@ -1,0 +1,173 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/button/**",
+    "docs/src/app/(docs)/react/components/button/**"
+  ],
+  "sources": [
+    "packages/react/src/button/Button.tsx",
+    "packages/react/src/button/ButtonDataAttributes.ts",
+    "packages/react/src/button/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/button/Button.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/button/Button.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Button />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: nativeButton"
+          ],
+          "title": "custom link element: Space activates the link without scrolling the page"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: nativeButton"
+          ],
+          "title": "custom element: applies button semantics and dispatches real clicks from keyboard activation"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: nativeButton"
+          ],
+          "title": "custom element: keyboard activation clicks carry modifier key state"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: disabled"
+          ],
+          "title": "native button: uses the disabled attribute and is not focusable"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: disabled"
+          ],
+          "title": "custom element: applies aria-disabled and is not focusable"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "native button: prevents interactions but remains focusable"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "native button: allows hover handlers while blocking activation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "keeps focus and suppresses interactions after becoming disabled"
+        },
+        {
+          "describe": [
+            "<Button />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "custom element: prevents interactions but remains focusable"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/button/types.md",
+      "parts": [
+        {
+          "name": "Button",
+          "tag": "button",
+          "props": [
+            {
+              "name": "focusableWhenDisabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Button.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Button.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Button.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ButtonState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ButtonState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "ButtonDataAttributes",
+          "code": "declare namespace ButtonDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
