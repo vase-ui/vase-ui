@@ -152,8 +152,8 @@ function membersOf(expected: ExpectedSurface, actual: ComponentSurface): PartMem
     actual: {
       prop: new Set(actual.props.keys()),
       emit: new Set(actual.emits.keys()),
-      slot: actual.slots,
-      exposed: actual.exposed,
+      slot: new Set(actual.slots.keys()),
+      exposed: new Set(actual.exposed.keys()),
     },
   };
 }

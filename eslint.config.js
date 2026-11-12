@@ -264,6 +264,21 @@ export default defineConfig([
     rules: { 'vue/no-v-html': 'error' },
   },
   {
+    // The style sheet of a demo is a byte copy of the Base UI file. The copy shows that the data
+    // attributes and CSS variables of Vase UI are those of Base UI. A demo has no style of its own.
+    files: ['docs/demos/**/*.vue'],
+    rules: {
+      'vue/no-restricted-block': [
+        'error',
+        {
+          element: 'style',
+          message:
+            'The styles of a demo come from the copied style sheet of Base UI. Remove the style block.',
+        },
+      ],
+    },
+  },
+  {
     files: ['packages/vue/src/internals/resolveElement.ts'],
     rules: {
       'no-restricted-properties': [

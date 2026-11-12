@@ -240,6 +240,13 @@ const reported = [
     ruleId: 'vue/no-v-html',
     hint: 'XSS',
   },
+  {
+    name: 'a style block in a demo',
+    file: 'docs/demos/sample/hero/css-modules/index.vue',
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
+    ruleId: 'vue/no-restricted-block',
+    hint: 'copied style sheet',
+  },
 ];
 
 const passed = [
@@ -327,6 +334,11 @@ const passed = [
     name: 'a local function that has a React name',
     file: `${SRC}/DialogRoot.test.tsx`,
     code: "const onKeyDown = () => {};\n\ndocument.addEventListener('keydown', onKeyDown);\n",
+  },
+  {
+    name: 'a scoped style block in a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style scoped>\n.sample {\n  color: red;\n}\n</style>\n',
   },
 ];
 

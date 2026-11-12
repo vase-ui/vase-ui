@@ -11,6 +11,11 @@ export default defineConfig({
   },
   resolve: {
     tsconfigPaths: true,
+    // A demo is outside this package, so the `paths` of this package do not apply to it.
+    // A test job has no `dist`.
+    alias: [
+      { find: /^@vase-ui\/vue\/([^/]+)$/, replacement: `${import.meta.dirname}/src/$1/index.ts` },
+    ],
   },
   test: {
     sequence: {

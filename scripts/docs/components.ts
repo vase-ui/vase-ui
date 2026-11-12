@@ -1,13 +1,14 @@
 import { isSourceFileTarget, targetOf } from '../parity/parityFiles.ts';
 import type { FamilyFile } from '../parity/parityFiles.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
+import { DOCS_FOLDER_PREFIX } from './upstreamDocs.ts';
 
 // The number of folders under `docs/src/app/(docs)/react/components` in Base UI at the tracked commit.
 // `pnpm parity:extract --upstream <path> --counts` prints it as `Components (38 types.md files)`.
 // `parity/upstream.json` does not hold it.
 export const BASE_UI_COMPONENT_COUNT = 38;
 
-const COMPONENT_DOCS_ROOT = 'docs/src/app/(docs)/react/components/';
+const COMPONENT_DOCS_ROOT = `${DOCS_FOLDER_PREFIX}components/`;
 
 export function isComponentFamily(family: FamilyFile): boolean {
   return family.upstreamPaths.some((path) => path.startsWith(COMPONENT_DOCS_ROOT));

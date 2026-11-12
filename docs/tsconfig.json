@@ -10,11 +10,18 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"]
+    "types": ["node", "vitepress/client"]
   },
   "vueCompilerOptions": {
     "strictTemplates": true
   },
-  "include": [".vitepress/**/*.ts", ".vitepress/**/*.vue", "*.data.ts", "examples/**/*.vue"],
+  "include": [
+    ".vitepress/**/*.ts",
+    ".vitepress/**/*.vue",
+    "*.data.ts",
+    "components/**/*.vue",
+    "demos/**/*.vue",
+    "examples/**/*.vue"
+  ],
   "exclude": [".vitepress/cache", ".vitepress/dist"]
 }

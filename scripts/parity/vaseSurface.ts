@@ -7,13 +7,36 @@ export interface PropSurface {
   required: boolean;
   default: string | null;
   description: string;
+  type: string;
+}
+
+/** An emit or an exposed member. For an emit, `type` is the list of its arguments. */
+export interface MemberSurface {
+  type: string;
+  description: string;
+}
+
+export interface SlotSurface {
+  description: string;
+  props: { name: string; type: string }[];
 }
 
 export interface ComponentSurface {
+  /** The JSDoc of the export. */
+  description: string;
   props: Map<string, PropSurface>;
-  emits: Map<string, { description: string }>;
-  slots: Set<string>;
-  exposed: Set<string>;
+  emits: Map<string, MemberSurface>;
+  slots: Map<string, SlotSurface>;
+  exposed: Map<string, MemberSurface>;
+}
+
+export interface ConstantSurface {
+  name: string;
+  /** `undefined` when the constant is not a string. */
+  value: string | undefined;
+  description: string;
+  /** The text of the `@type` tag, without the braces. */
+  type: string | null;
 }
 
 export interface ExportMatch {
@@ -30,11 +53,8 @@ export interface VaseProject {
   readFields: (entryFile: string, typeName: string) => string[] | undefined;
   /** The string values of an exported union type. `undefined` when there is no such type or it is not a union of strings. */
   readUnionValues: (entryFile: string, typeName: string) => string[] | undefined;
-  /** The constants of an exported namespace. A value is `undefined` when the constant is not a string. */
-  readConstants: (
-    entryFile: string,
-    namespaceName: string,
-  ) => { name: string; value: string | undefined }[] | undefined;
+  /** The constants of an exported namespace, or `undefined` when the entry file has no such namespace. */
+  readConstants: (entryFile: string, namespaceName: string) => ConstantSurface[] | undefined;
   /** Gives vue-component-meta and the SFC compiler another text for a file. */
   updateFile: (path: string, text: string) => void;
 }
@@ -127,6 +147,17 @@ export function createVaseProject(tsconfig: string): VaseProject {
   };
   const resolve = (symbol: ts.Symbol): ts.Symbol =>
     symbol.flags & ts.SymbolFlags.Alias ? typeChecker().getAliasedSymbol(symbol) : symbol;
+  // The flags and the clean-up are those of vue-component-meta, so a slot prop reads like a prop.
+  const typeText = (type: ts.Type): string =>
+    typeChecker()
+      .typeToString(
+        type,
+        undefined,
+        ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation,
+      )
+      .replace(/import\(.*?\)\./g, '');
+  const documentationOf = (symbol: ts.Symbol): string =>
+    ts.displayPartsToString(symbol.getDocumentationComment(typeChecker()));
   const directExport = (entryFile: string, name: string): ts.Symbol | undefined => {
     const entry = entrySymbol(entryFile);
     return (
@@ -208,16 +239,36 @@ export function createVaseProject(tsconfig: string): VaseProject {
           required: prop.required,
           default: prop.default ?? null,
           description: prop.description,
+          type: prop.type,
         });
       }
       const emitDescriptions = readEmitDescriptions(source, file);
       return {
+        description: documentationOf(resolve(symbol)),
         props,
         emits: new Map(
-          meta.events.map(({ name }) => [name, { description: emitDescriptions.get(name) ?? '' }]),
+          meta.events.map(({ name, type }) => [
+            name,
+            { type, description: emitDescriptions.get(name) ?? '' },
+          ]),
         ),
-        slots: new Set(meta.slots.map(({ name }) => name)),
-        exposed: new Set(meta.exposed.map(({ name }) => name)),
+        slots: new Map(
+          meta.slots.map((slot) => [
+            slot.name,
+            {
+              description: slot.description,
+              props: typeChecker()
+                .getPropertiesOfType(slot.getTypeObject())
+                .map((property) => ({
+                  name: property.getName(),
+                  type: typeText(typeChecker().getTypeOfSymbol(property)),
+                })),
+            },
+          ]),
+        ),
+        exposed: new Map(
+          meta.exposed.map(({ name, type, description }) => [name, { type, description }]),
+        ),
       };
     },
 
@@ -254,7 +305,15 @@ export function createVaseProject(tsconfig: string): VaseProject {
         .getExportsOfModule(namespace)
         .map((member) => {
           const type = typeChecker().getTypeOfSymbol(member);
-          return { name: member.getName(), value: type.isStringLiteral() ? type.value : undefined };
+          const typeTag = member
+            .getJsDocTags(typeChecker())
+            .find(({ name }) => name === 'type')?.text;
+          return {
+            name: member.getName(),
+            value: type.isStringLiteral() ? type.value : undefined,
+            description: documentationOf(member),
+            type: typeTag ? ts.displayPartsToString(typeTag).replace(/^\{(.*)\}$/s, '$1') : null,
+          };
         });
     },
 
