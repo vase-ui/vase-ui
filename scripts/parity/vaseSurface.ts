@@ -30,6 +30,37 @@ export interface ComponentSurface {
   exposed: Map<string, MemberSurface>;
 }
 
+export interface ParameterSurface {
+  name: string;
+  type: string;
+  /** Whether the signature marks the parameter as optional, or a shorter overload lacks it. */
+  optional: boolean;
+  /** The text of the `@param` tag. */
+  description: string;
+}
+
+export interface FunctionSurface {
+  /** The JSDoc of the export. */
+  description: string;
+  /** The parameters of the signature that has the most parameters. */
+  parameters: ParameterSurface[];
+  returns: {
+    /** The text that `readReturnType` gives. */
+    type: string;
+    /** The text of the `@returns` tag. */
+    description: string;
+  };
+}
+
+export interface PropertySurface {
+  name: string;
+  type: string;
+  optional: boolean;
+  /** The text of the `@default` tag, or `null`. */
+  default: string | null;
+  description: string;
+}
+
 export interface ConstantSurface {
   name: string;
   /** `undefined` when the constant is not a string. */
@@ -57,6 +88,10 @@ export interface VaseProject {
   readConstants: (entryFile: string, namespaceName: string) => ConstantSurface[] | undefined;
   /** The return type of each call signature of the export, joined with ` | `. `undefined` when the export has no call signature. */
   readReturnType: (match: ExportMatch) => string | undefined;
+  /** The parameters and the return value of an exported function. `undefined` when the export has no call signature. */
+  readFunction: (match: ExportMatch) => FunctionSurface | undefined;
+  /** The properties of the declared type of an exported type. `undefined` when the export is not a type. */
+  readProperties: (match: ExportMatch) => PropertySurface[] | undefined;
   /** Gives vue-component-meta and the SFC compiler another text for a file. */
   updateFile: (path: string, text: string) => void;
 }
@@ -160,6 +195,10 @@ export function createVaseProject(tsconfig: string): VaseProject {
       .replace(/import\(.*?\)\./g, '');
   const documentationOf = (symbol: ts.Symbol): string =>
     ts.displayPartsToString(symbol.getDocumentationComment(typeChecker()));
+  const tagText = (symbol: ts.Symbol, ...names: string[]): string | undefined => {
+    const tag = symbol.getJsDocTags(typeChecker()).find(({ name }) => names.includes(name));
+    return tag?.text && ts.displayPartsToString(tag.text);
+  };
   const directExport = (entryFile: string, name: string): ts.Symbol | undefined => {
     const entry = entrySymbol(entryFile);
     return (
@@ -198,7 +237,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
 
   const readSource = (path: string): string => sources.get(path) ?? readFileSync(path, 'utf8');
 
-  return {
+  const project: VaseProject = {
     findExports(entryFile, name) {
       const entry = entrySymbol(entryFile);
       if (!entry) {
@@ -330,9 +369,64 @@ export function createVaseProject(tsconfig: string): VaseProject {
       return [...new Set(texts)].join(' | ');
     },
 
+    readFunction(match) {
+      const returnType = project.readReturnType(match);
+      if (returnType === undefined) {
+        return undefined;
+      }
+      const resolved = resolve(match.symbol);
+      const signatures = typeChecker().getTypeOfSymbol(resolved).getCallSignatures();
+      const longest = signatures.reduce((best, signature) =>
+        signature.parameters.length > best.parameters.length ? signature : best,
+      );
+      return {
+        description: documentationOf(resolved),
+        parameters: longest.parameters.map((parameter, index) => {
+          const declaration = parameter.valueDeclaration;
+          return {
+            name: parameter.getName(),
+            type: typeText(typeChecker().getTypeOfSymbol(parameter)),
+            optional:
+              (declaration !== undefined &&
+                ts.isParameter(declaration) &&
+                typeChecker().isOptionalParameter(declaration)) ||
+              signatures.some((signature) => signature.parameters.length <= index),
+            description: documentationOf(parameter),
+          };
+        }),
+        returns: {
+          type: returnType,
+          description: tagText(resolved, 'returns', 'return') ?? '',
+        },
+      };
+    },
+
+    readProperties({ symbol }) {
+      const resolved = resolve(symbol);
+      if (!(resolved.flags & ts.SymbolFlags.Type)) {
+        return undefined;
+      }
+      const type = typeChecker().getDeclaredTypeOfSymbol(resolved);
+      // A union of literals has the properties of its apparent type, such as `String`. They are not its own.
+      if (!(type.flags & (ts.TypeFlags.Object | ts.TypeFlags.Intersection))) {
+        return [];
+      }
+      return typeChecker()
+        .getPropertiesOfType(type)
+        .map((property) => ({
+          name: property.getName(),
+          type: typeText(typeChecker().getTypeOfSymbol(property)),
+          optional: (property.flags & ts.SymbolFlags.Optional) !== 0,
+          default: tagText(property, 'default') ?? null,
+          description: documentationOf(property),
+        }));
+    },
+
     updateFile(path, text) {
       sources.set(path, text);
       checker.updateFile(path, text);
     },
   };
+
+  return project;
 }

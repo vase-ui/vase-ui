@@ -4,18 +4,46 @@ import { useData } from 'vitepress';
 import type { ApiReference } from '../../../scripts/docs/apiReference.ts';
 import TextWithCode from './TextWithCode.vue';
 
+const props = defineProps<{
+  /**
+   * The name of one function or type of the reference, such as `mergeProps`. The page writes the
+   * heading and the text. With no name, the component shows each part of the family.
+   */
+  name?: string;
+}>();
+
 // `transformPageData` in the site configuration adds `apiReference`.
 // The type of the page data lacks that key.
 const { page } = useData();
-const parts = computed(() => {
-  const reference = (page.value as { apiReference?: ApiReference }).apiReference;
-  if (!reference) {
+const reference = computed(() => {
+  const found = (page.value as { apiReference?: ApiReference }).apiReference;
+  if (!found) {
     throw new Error(
       `${page.value.relativePath} has no API reference. Put <ApiReference /> only on a family page, such as docs/components/button.md.`,
     );
   }
-  return reference.parts;
+  return found;
 });
+const parts = computed(() => (props.name === undefined ? reference.value.parts : []));
+const named = computed(() => {
+  const { name } = props;
+  if (name === undefined) {
+    return undefined;
+  }
+  const { functions, types } = reference.value;
+  const apiFunction = functions.find((item) => item.name === name);
+  const apiType = types.find((item) => item.name === name);
+  if (!apiFunction && !apiType) {
+    const names = [...functions, ...types].map((item) => item.name).join(', ');
+    throw new Error(
+      `${page.value.relativePath} has <ApiReference name="${name}" />, but the API reference of its family has no function or type with that name, so the page shows nothing. Use one of these names: ${names}.`,
+    );
+  }
+  return { apiFunction, apiType };
+});
+const showsDefault = computed(
+  () => named.value?.apiType?.properties.some((property) => property.default !== null) ?? false,
+);
 
 const MEMBER_TABLES = [
   { key: 'events', title: 'Events', columns: ['Event', 'Arguments', 'Description'] },
@@ -35,6 +63,62 @@ function idOf(name: string): string {
 </script>
 
 <template>
+  <template v-if="named?.apiFunction">
+    <template v-if="named.apiFunction.parameters.length > 0">
+      <h4>Parameters</h4>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Parameter</th>
+            <th scope="col">Type</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="parameter in named.apiFunction.parameters" :key="parameter.name">
+            <td>
+              <code>{{ parameter.optional ? `${parameter.name}?` : parameter.name }}</code>
+            </td>
+            <td>
+              <code>{{ parameter.type }}</code>
+            </td>
+            <td><TextWithCode :text="parameter.description" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+    <h4>Return value</h4>
+    <p v-if="named.apiFunction.returns.description">
+      <TextWithCode :text="named.apiFunction.returns.description" />
+    </p>
+    <p>
+      <code>{{ named.apiFunction.returns.type }}</code>
+    </p>
+  </template>
+  <table v-else-if="named?.apiType">
+    <thead>
+      <tr>
+        <th scope="col">Property</th>
+        <th scope="col">Type</th>
+        <th v-if="showsDefault" scope="col">Default</th>
+        <th scope="col">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="property in named.apiType.properties" :key="property.name">
+        <td>
+          <code>{{ property.optional ? `${property.name}?` : property.name }}</code>
+        </td>
+        <td>
+          <code>{{ property.type }}</code>
+        </td>
+        <td v-if="showsDefault">
+          <code v-if="property.default !== null">{{ property.default }}</code>
+        </td>
+        <td><TextWithCode :text="property.description" /></td>
+      </tr>
+    </tbody>
+  </table>
   <section v-for="part in parts" :key="part.name">
     <h3 :id="idOf(part.name)">{{ part.name }}</h3>
     <p v-if="part.description"><TextWithCode :text="part.description" /></p>

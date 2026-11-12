@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { test } from 'node:test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { after, test } from 'node:test';
 import type { FamilyFile } from '../parity/parityFiles.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
-import { checkDemos, loadDemoFamilies, readUpstreamDemos } from './upstreamDemos.ts';
+import {
+  checkDemos,
+  expectedFiles,
+  loadDemoFamilies,
+  loadEntryPoints,
+  readUpstreamDemos,
+} from './upstreamDemos.ts';
 import type { DemoFamily, DemoRecord } from './upstreamDemos.ts';
 
 const COMMIT = 'a'.repeat(40);
@@ -14,6 +23,7 @@ const STYLE_PATH = 'hero/css-modules/index.module.css';
 const TSX_PATH = 'hero/css-modules/index.tsx';
 const VUE_PATH = 'hero/css-modules/index.vue';
 const RERUN = 'Run `pnpm docs:demos --upstream <path> button`.';
+const ENTRY_POINTS = new Set(['button']);
 
 const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 
@@ -79,6 +89,69 @@ test('a family with no docs folder in its upstream paths is an error that says w
   });
 });
 
+test('the record names the other entry points that each demo imports, sorted and with no repeat', () => {
+  const texts = new Map([
+    [
+      `${DEMOS}/hero/css-modules/index.tsx`,
+      [
+        "import * as React from 'react';",
+        "import { Slider } from '@base-ui/react/slider';",
+        "import { Button } from '@base-ui/react/button';",
+        "import { Toggle } from '@base-ui/react/toggle';",
+        "import styles from './index.module.css';",
+      ].join('\n'),
+    ],
+    [
+      `${DEMOS}/hero/css-modules/helper.ts`,
+      "export { Toggle } from '@base-ui/react/toggle';\nimport type { Foo } from '@base-ui/react/button/foo';\n",
+    ],
+    [`${DEMOS}/hero/tailwind/index.tsx`, "import { Menu } from '@base-ui/react/menu';"],
+    [`${DEMOS}/loading/css-modules/index.tsx`, "import { Button } from '@base-ui/react/button';"],
+    [`${DEMOS}/loading/css-modules/index.module.css`, '.Button {}\n'],
+  ]);
+  const { record } = readUpstreamDemos('button', BUTTON, [...texts.keys()], (path) =>
+    texts.get(path)!,
+  );
+  assert.deepEqual(record.entryPoints, { hero: ['slider', 'toggle'] });
+});
+
+test('a record whose demos import only their own entry point has no key for entry points', () => {
+  const path = `${DEMOS}/hero/css-modules/index.tsx`;
+  const { record } = readUpstreamDemos(
+    'button',
+    BUTTON,
+    [path],
+    () => "import { Button } from '@base-ui/react/button';",
+  );
+  assert.equal(Object.hasOwn(record, 'entryPoints'), false);
+});
+
+test('the record file has each array on one line and the files on lines of their own, as Prettier writes them', async () => {
+  const record: DemoRecord = {
+    commit: COMMIT,
+    upstream: DEMOS,
+    files: { [TSX_PATH]: sha256('tsx') },
+    entryPoints: { hero: ['slider', 'toggle'] },
+  };
+  const files = await expectedFiles('button', { record, styles: new Map() });
+  assert.equal(
+    files.get('docs/demos/button/upstream.json'),
+    [
+      '{',
+      `  "commit": "${COMMIT}",`,
+      `  "upstream": "${DEMOS}",`,
+      '  "files": {',
+      `    "${TSX_PATH}": "${sha256('tsx')}"`,
+      '  },',
+      '  "entryPoints": {',
+      '    "hero": ["slider", "toggle"]',
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
+  );
+});
+
 function makeRecord(commit = COMMIT): DemoRecord {
   return {
     commit,
@@ -102,7 +175,22 @@ function makeDemoFamily(overrides: Partial<DemoFamily> = {}): DemoFamily {
 }
 
 test('a family with a record, the copies and the Vue file of each demo has no problem', () => {
-  assert.deepEqual(checkDemos([makeDemoFamily()]), []);
+  assert.deepEqual(checkDemos([makeDemoFamily()], ENTRY_POINTS), []);
+});
+
+const WAITING = makeDemoFamily({
+  record: { ...makeRecord(), entryPoints: { hero: ['button', 'toggle'] } },
+  files: new Map([[STYLE_PATH, sha256(STYLE)]]),
+});
+
+test('the check has no problem for a demo with no Vue file while an entry point that it imports is absent', () => {
+  assert.deepEqual(checkDemos([WAITING], ENTRY_POINTS), []);
+});
+
+test('the check reports a demo with no Vue file when each entry point that it imports exists', () => {
+  assert.deepEqual(checkDemos([WAITING], new Set([...ENTRY_POINTS, 'toggle'])), [
+    'docs/demos/button/hero/css-modules/index.vue does not exist. Base UI has the demo hero. Port it.',
+  ]);
 });
 
 const failures: { name: string; family: DemoFamily; problem: string }[] = [
@@ -159,12 +247,35 @@ const failures: { name: string; family: DemoFamily; problem: string }[] = [
 
 for (const { name, family, problem } of failures) {
   test(`the check reports ${name} and nothing else`, () => {
-    assert.deepEqual(checkDemos([family]), [problem]);
+    assert.deepEqual(checkDemos([family], ENTRY_POINTS), [problem]);
   });
 }
+
+const roots: string[] = [];
+
+after(() => {
+  for (const root of roots) {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('the entry points are the folders of the source that have an index.ts', () => {
+  const root = mkdtempSync(join(tmpdir(), 'entry-points-'));
+  roots.push(root);
+  for (const path of [
+    'packages/vue/src/button/index.ts',
+    'packages/vue/src/unstable-use-media-query/index.ts',
+    'packages/vue/src/common/owner.ts',
+    'packages/vue/src/index.ts',
+  ]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), '');
+  }
+  assert.deepEqual(loadEntryPoints(root), new Set(['button', 'unstable-use-media-query']));
+});
 
 test('each copied style sheet of the repository matches its record', () => {
   const families = loadDemoFamilies(REPOSITORY_ROOT);
   assert.notEqual(families.length, 0);
-  assert.deepEqual(checkDemos(families), []);
+  assert.deepEqual(checkDemos(families, loadEntryPoints(REPOSITORY_ROOT)), []);
 });

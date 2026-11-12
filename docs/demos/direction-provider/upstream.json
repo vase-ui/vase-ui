@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/utils/direction-provider/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
+    "hero/css-modules/index.tsx": "abdb01c2b8d56b41b51a0bb6d0a834bef3e06ef531c11c5df26fa0df67359e93"
+  },
+  "entryPoints": {
+    "hero": ["slider"]
+  }
+}
