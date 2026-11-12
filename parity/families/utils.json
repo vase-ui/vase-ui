@@ -1,5 +1,6 @@
 {
   "upstreamPaths": [
+    "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
@@ -7,6 +8,7 @@
     "packages/react/src/utils/popups/event.ts",
     "packages/react/src/utils/popups/event.test.ts",
     "packages/react/src/utils/resolveRef.ts",
+    "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
     "packages/react/src/utils/scrollEdges.ts",
     "packages/react/src/utils/styles.tsx",
@@ -25,6 +27,11 @@
       "upstream": "packages/react/src/utils/resolveRef.ts",
       "kind": "not-applicable",
       "reason": "The file reads the `current` of a React ref object. Vue `toValue` reads a ref, a getter or a value."
+    },
+    {
+      "upstream": "packages/react/src/utils/resolveStyle.ts",
+      "kind": "not-applicable",
+      "reason": "The file resolves the React `style` prop, which is an object or a function of the state. In Vase UI the `style` attribute and the `stateStyle` prop do this, and `useRenderElement` merges them. No Vase UI code needs the function."
     },
     {
       "upstream": "packages/react/src/utils/useFormatLocale.test.tsx",

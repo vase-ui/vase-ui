@@ -1,5 +1,9 @@
+allowBuilds:
+  # The install script only makes the launcher faster. The binary is in the platform package.
+  esbuild: false
 packages:
   - docs
+  - fixtures/*
   - packages/*
 patchedDependencies:
   vue-component-meta@3.3.14: patches/vue-component-meta@3.3.14.patch
