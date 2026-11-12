@@ -1,7 +1,27 @@
 {
-  "upstreamPaths": ["packages/react/src/merge-props/**"],
+  "upstreamPaths": [
+    "packages/react/src/merge-props/**",
+    "docs/src/app/(docs)/react/utils/merge-props/**"
+  ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [],
   "surfaceAdditions": [],
+  "returnTypeDifferences": [
+    {
+      "entry": "makeEventPreventable",
+      "returns": "VaseUIEvent<T>",
+      "reason": "Vue has no synthetic event. The event is the DOM event, and `VaseUIEvent` adds `preventVaseUIHandler()` to it."
+    },
+    {
+      "entry": "mergeProps",
+      "returns": "WithVaseUIEvent<NativeElements[T]>",
+      "reason": "The type is the Vue form of the Base UI type: the attributes of the element `T`. Each listener gets a `VaseUIEvent`."
+    },
+    {
+      "entry": "mergePropsN",
+      "returns": "WithVaseUIEvent<NativeElements[T]>",
+      "reason": "The type is the Vue form of the Base UI type: the attributes of the element `T`. Each listener gets a `VaseUIEvent`."
+    }
+  ],
   "notApplicableCommits": []
 }

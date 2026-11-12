@@ -6,6 +6,9 @@ const MAPPED_ROOTS = [
   { upstream: 'packages/react/test/', vase: 'packages/vue/test/' },
 ];
 
+/** The folder of Base UI that holds one docs folder for each component and each utility. */
+export const DOCS_FOLDER_PREFIX = 'docs/src/app/(docs)/react/';
+
 export const UPSTREAM_ROOTS = MAPPED_ROOTS.map(({ upstream }) => upstream);
 export const VASE_SOURCE_ROOT = 'packages/vue/src';
 export const VASE_ROOTS = [VASE_SOURCE_ROOT, 'packages/vue/test'];

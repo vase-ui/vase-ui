@@ -5,10 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import type { UpstreamFile } from './parityFiles.ts';
-import { buildUpstream } from './track.ts';
+import { DOCS_FOLDER_PREFIX } from './paths.ts';
+import { buildUpstream, componentFolders } from './track.ts';
 import { listFiles, readFileAt } from './upstreamClone.ts';
 
 const DATE = '2026-01-02T03:04:05+01:00';
+const COMPONENTS = `${DOCS_FOLDER_PREFIX}components/`;
 const repository = mkdtempSync(join(tmpdir(), 'parity-track-'));
 after(() => rmSync(repository, { recursive: true, force: true }));
 
@@ -38,9 +40,10 @@ function commit(subject: string): string {
 
 git('init', '--initial-branch', 'main');
 writeFileSync(join(repository, 'seed.txt'), 'seed');
+mkdirSync(join(repository, COMPONENTS, 'button'), { recursive: true });
+writeFileSync(join(repository, COMPONENTS, 'button', 'page.mdx'), 'page');
 commit('Root');
 writeFileSync(join(repository, 'a.txt'), 'one');
-mkdirSync(join(repository, 'docs'));
 writeFileSync(join(repository, 'docs', 'x.md'), 'doc');
 const start = commit('Start');
 git('tag', 'v1.0.0');
@@ -53,6 +56,7 @@ const current: UpstreamFile = {
   commit: start,
   describe: 'old',
   release: '0',
+  components: ['old'],
   commits: [{ sha: start, date: 'old', subject: 'old', paths: [] }],
 };
 
@@ -79,6 +83,10 @@ test('buildUpstream gives the tag as describe on the tagged commit', () => {
     built.commits.map(({ sha }) => sha),
     [start],
   );
+});
+
+test('buildUpstream lists the component folders of the commit', () => {
+  assert.deepEqual(buildUpstream(repository, change, current).components, ['button']);
 });
 
 test('buildUpstream accepts a short name of a commit and gives the full sha', () => {
@@ -112,5 +120,35 @@ test('a file is read at the named commit when the working tree has other text', 
   writeFileSync(join(repository, 'b.txt'), 'other text in the working tree');
   assert.equal(readFileAt(repository, change, 'b.txt'), 'two');
   assert.equal(readFileAt(repository, rename, 'b.txt'), 'one');
-  assert.deepEqual(listFiles(repository, change), ['b.txt', 'docs/x.md', 'seed.txt']);
+  assert.deepEqual(listFiles(repository, change), [
+    'b.txt',
+    `${COMPONENTS}button/page.mdx`,
+    'docs/x.md',
+    'seed.txt',
+  ]);
+});
+
+test('componentFolders gives one sorted name for each folder, and none for a file that is directly in the components folder', () => {
+  const files = [
+    `${COMPONENTS}page.mdx`,
+    `${COMPONENTS}tabs/page.mdx`,
+    `${COMPONENTS}checkbox/types.md`,
+    `${COMPONENTS}checkbox/demos/hero/css-modules/index.tsx`,
+    `${COMPONENTS}checkbox-group/types.md`,
+    `${COMPONENTS}accordion/types.md`,
+    `${DOCS_FOLDER_PREFIX}utils/merge-props/types.md`,
+    'packages/react/src/button/Button.tsx',
+  ];
+  assert.deepEqual(componentFolders(files, change), [
+    'accordion',
+    'checkbox',
+    'checkbox-group',
+    'tabs',
+  ]);
+});
+
+test('componentFolders throws when no folder is under the components folder', () => {
+  assert.throws(() => componentFolders([`${COMPONENTS}page.mdx`, 'docs/x.md'], change), {
+    message: `Commit ${change} has no folder under ${COMPONENTS}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
+  });
 });

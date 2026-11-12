@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { isSuiteRow, readTestRows } from '../parity/cases.ts';
+import { isSuiteRow } from '../parity/cases.ts';
 import type { TestRow } from '../parity/cases.ts';
+import { runParityCheck } from '../parity/check.ts';
 import type { FileTally, RowTally } from '../parity/checkFamily.ts';
-import { checkBetter, checkRepository } from '../parity/checkRepository.ts';
+import { checkBetter } from '../parity/checkRepository.ts';
 import type { CheckResult, FamilyReport } from '../parity/checkRepository.ts';
 import type { SurfaceSummary } from '../parity/checkSurface.ts';
 import { labelOf, memberOf, targetOf } from '../parity/parityFiles.ts';
@@ -13,20 +13,14 @@ import type {
   ExceptionRow,
   FamilyFile,
   MemberKind,
+  ReturnTypeDifference,
   UpstreamFile,
 } from '../parity/parityFiles.ts';
-import { isTestFile, isUnderMappedRoot, matchesAny, vaseFiles } from '../parity/paths.ts';
+import { isTestFile, isUnderMappedRoot, matchesAny } from '../parity/paths.ts';
 import type { VaseFiles } from '../parity/paths.ts';
-import {
-  listVaseFiles,
-  readParityFiles,
-  readRepositoryFile,
-  REPOSITORY_ROOT,
-} from '../parity/repository.ts';
+import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
 import { array, nonEmptyString, object, problemsOf } from '../parity/validate.ts';
-import { createVaseProject } from '../parity/vaseSurface.ts';
-import type { VaseProject } from '../parity/vaseSurface.ts';
 import { countComponents, isComponentFamily } from './components.ts';
 import { renderStatusLine } from './status.ts';
 
@@ -34,7 +28,7 @@ export type CommitState = 'mirrored' | 'queued' | 'not-applicable';
 
 export interface ParityReport {
   upstream: { commit: string; describe: string; release: string; date: string };
-  status: { done: number; total: number; line: string };
+  status: { done: number; total: number; notStarted: string[]; line: string };
   families: FamilyEntry[];
   changes: Change[];
   edgeCases: EdgeCase[];
@@ -61,6 +55,7 @@ export interface FamilyEntry {
     waitsOn?: string;
   }[];
   surfaceAdditions: { entry: string; kind: MemberKind; name: string; reason: string }[];
+  returnTypeDifferences: ReturnTypeDifference[];
   queued: { count: number; oldest?: string };
 }
 
@@ -232,6 +227,7 @@ function familyEntryOf(
       ...memberOf(row),
       reason: row.reason,
     })),
+    returnTypeDifferences: family.returnTypeDifferences,
     queued: { count: queued.length, oldest: queued.at(-1)?.date },
   };
 }
@@ -279,7 +275,7 @@ export function buildParityReport(input: ReportInput): ParityReport {
       : [];
   });
   const changes = changesOf(upstream, families, scope);
-  const counts = countComponents(input.families);
+  const counts = countComponents(input.families, upstream.components);
   return {
     upstream: {
       commit: upstream.commit,
@@ -297,31 +293,13 @@ export function buildParityReport(input: ReportInput): ParityReport {
 
 /** Runs the check of `pnpm parity:check` and builds the data of the parity page. It throws when the check finds a problem. */
 export function loadParityReport(root = REPOSITORY_ROOT): ParityReport {
-  const rowCache = new Map<string, TestRow[]>();
-  let project: VaseProject | undefined;
-  const parity = readParityFiles(root, { readExtracts: true });
-  const files = vaseFiles(listVaseFiles(root));
-  const rowsOf = (path: string): TestRow[] => {
-    let rows = rowCache.get(path);
-    if (!rows) {
-      rows = readTestRows(path, readRepositoryFile(root, path));
-      rowCache.set(path, rows);
-    }
-    return rows;
-  };
-  const check = checkRepository({
-    parity,
-    files,
-    root,
-    rowsOf,
-    project: () => (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json'))),
-  });
+  const { parity, files, rowsOf, result } = runParityCheck(root);
   const { upstream } = parity;
-  if (check.problems.length > 0 || upstream === undefined) {
+  if (result.problems.length > 0 || upstream === undefined) {
     throw new Error(
       [
         'The parity page needs a clean parity check. Run `pnpm parity:check` and correct each problem.',
-        ...check.problems,
+        ...result.problems,
       ].join('\n'),
     );
   }
@@ -329,7 +307,7 @@ export function loadParityReport(root = REPOSITORY_ROOT): ParityReport {
     upstream,
     families: parity.families,
     better: parity.better,
-    check,
+    check: result,
     scope: readScope(root),
     files,
     rowsOf,

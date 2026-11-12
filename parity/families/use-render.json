@@ -6,5 +6,12 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [],
   "surfaceAdditions": [],
+  "returnTypeDifferences": [
+    {
+      "entry": "useRender",
+      "returns": "useRender.ReturnValue<RenderedElementType>",
+      "reason": "A composable cannot return the rendered element. It returns `element`, `elementProps` and `tag`. The template of the component renders the element."
+    }
+  ],
   "notApplicableCommits": []
 }

@@ -1,6 +1,8 @@
+import { basename, dirname } from 'node:path';
 import { isSuiteRow, readTestRows } from './cases.ts';
 import type { FamilyExtract, FamilyFile } from './parityFiles.ts';
 import {
+  DOCS_FOLDER_PREFIX,
   isDeclarationFile,
   isScriptFile,
   isTestFile,
@@ -102,8 +104,10 @@ function countSurface(surface: FamilyExtract['surface']): SurfaceCounts {
 export function countTree(files: readonly string[], read: (path: string) => string): Counts {
   const surfaceFiles = (folder: string): FamilyExtract['surface'] =>
     files
-      .filter((file) =>
-        new RegExp(`^docs/src/app/\\(docs\\)/react/${folder}/[^/]+/types\\.md$`).test(file),
+      .filter(
+        (file) =>
+          basename(file) === 'types.md' &&
+          dirname(dirname(file)) === `${DOCS_FOLDER_PREFIX}${folder}`,
       )
       .sort()
       .map((file) => readTypesMd(file, read(file)));

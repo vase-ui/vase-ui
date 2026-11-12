@@ -2,15 +2,35 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { UpstreamFile } from './parityFiles.ts';
+import { DOCS_FOLDER_PREFIX } from './paths.ts';
 import { readUpstreamFile, REPOSITORY_ROOT, TRACK_COMMAND, UPSTREAM_FILE } from './repository.ts';
 import {
   countCommitsSince,
   isAncestor,
   listCommitsAfter,
+  listFiles,
   nearestReleaseTag,
   readCommit,
   resolveCommit,
 } from './upstreamClone.ts';
+
+/** The names of the folders that hold the docs of one component each, sorted. */
+export function componentFolders(files: readonly string[], commit: string): string[] {
+  const root = `${DOCS_FOLDER_PREFIX}components/`;
+  const names = new Set<string>();
+  for (const file of files) {
+    const end = file.indexOf('/', root.length);
+    if (file.startsWith(root) && end !== -1) {
+      names.add(file.slice(root.length, end));
+    }
+  }
+  if (names.size === 0) {
+    throw new Error(
+      `Commit ${commit} has no folder under ${root}. Correct DOCS_FOLDER_PREFIX in scripts/parity/paths.ts.`,
+    );
+  }
+  return [...names].sort();
+}
 
 export function buildUpstream(
   clone: string,
@@ -34,6 +54,7 @@ export function buildUpstream(
     commit,
     describe: count === 0 ? tag : `${tag}-${count}-g${commit.slice(0, 8)}`,
     release: tag.replace(/^v/, ''),
+    components: componentFolders(listFiles(clone, commit), commit),
     commits,
   };
 }
