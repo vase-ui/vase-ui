@@ -8,7 +8,9 @@ describe('SinglePart', () => {
   });
 
   it('renders on a server', async () => {
-    // `SinglePart` writes a development marker on purpose. `scripts/checkPackage.ts` reads it.
+    // `SinglePart` writes a development marker on purpose. The package check
+    // (`packages/vue/scripts/checkPackage.ts`) makes sure that a production bundle does not
+    // contain it.
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const html = await renderToString(<SinglePart orientation="vertical">text</SinglePart>);

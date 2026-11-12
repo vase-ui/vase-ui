@@ -37,7 +37,7 @@ export function failOnReportedMessages(): void {
       messages = undefined;
       if (list.length > 0) {
         throw new Error(
-          `The test gave messages that it did not expect. To expect a message, assert the result of takeReportedMessages().\n\n${list.join('\n')}`,
+          `The test gave messages that it did not expect. To expect a Vue warning, assert the result of takeReportedMessages(). To expect a \`Vase UI:\` message, use a console spy that has mockImplementation.\n\n${list.join('\n')}`,
         );
       }
     });
