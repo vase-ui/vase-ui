@@ -1,6 +1,9 @@
 import { afterEach, vi } from 'vitest';
 import { reset } from '../src/common/error';
 import { resetAnimationFrameScheduler } from '../src/common/useAnimationFrame';
+import { failOnReportedMessages } from './reportedMessages';
+
+failOnReportedMessages();
 
 // `css.escape`, a dependency of jest-dom, defines the global `CSS`. In Node, that global hides
 // the `ReferenceError` that code gets on a server when it uses `CSS` with no check.

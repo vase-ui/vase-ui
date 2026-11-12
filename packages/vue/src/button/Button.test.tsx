@@ -18,16 +18,7 @@ describe('<Button />', () => {
   const { render } = createRenderer();
 
   describeConformance(<Button />, () => ({
-    // The suite has no assertion on `nativeButton`. `useButton` reports a tag that does not match
-    // `nativeButton` with `console.error`, so this assertion fails a case that gives the wrong
-    // value, or a case where `useButton` checks the wrong element. It is in `render` because
-    // `test/setup.ts` resets the mocks in an `afterEach` hook that runs before one in this file.
-    render: async (node) => {
-      const errorSpy = vi.spyOn(console, 'error');
-      const result = await render(node);
-      expect(errorSpy).not.toHaveBeenCalled();
-      return result;
-    },
+    render,
     refInstanceof: window.HTMLButtonElement,
     testRenderPropWith: 'button',
     button: true,
