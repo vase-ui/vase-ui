@@ -58,8 +58,16 @@
   ],
   "outOfScope": [
     {
-      "paths": [".circleci/**", ".github/**", "netlify/**", "netlify.toml", "renovate.json"],
+      "paths": [".circleci/**", ".github/**", "netlify/**"],
       "reason": "CI and repository automation."
+    },
+    {
+      "paths": ["*", ".*"],
+      "reason": "Files at the root of the repository: the configuration of the workspace and its tools, the license, the readme and the changelogs."
+    },
+    {
+      "paths": [".agents/**", ".claude/**", ".codex/**", ".vscode/**"],
+      "reason": "Settings of editors and of coding tools."
     },
     {
       "paths": ["docs/**"],

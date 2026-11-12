@@ -23,6 +23,7 @@ function makeFamily(upstreamPaths: string[]): FamilyFile {
     matchedCommit: COMMIT,
     exceptions: [],
     surfaceAdditions: [],
+    returnTypeDifferences: [],
     notApplicableCommits: [],
   };
 }

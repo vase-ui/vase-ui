@@ -13,5 +13,12 @@
     }
   ],
   "surfaceAdditions": [],
+  "returnTypeDifferences": [
+    {
+      "entry": "useDirection",
+      "returns": "ComputedRef<TextDirection>",
+      "reason": "`setup` runs one time, so a plain value does not follow a change of the provider. The composable returns a `ComputedRef` of the direction."
+    }
+  ],
   "notApplicableCommits": []
 }

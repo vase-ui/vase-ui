@@ -5,6 +5,9 @@ import { baseUiCommitUrl } from './links.ts';
 
 <template>
   <p>{{ data.status.line }}</p>
+  <p v-if="data.status.notStarted.length > 0">
+    Not started ({{ data.status.notStarted.length }}): {{ data.status.notStarted.join(', ') }}
+  </p>
   <table>
     <thead>
       <tr>
