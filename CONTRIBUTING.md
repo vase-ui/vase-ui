@@ -82,7 +82,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - `vue-component-meta` has a pnpm patch in `patches`. Without the patch, the package lists no exposed member of an SFC that has `generic`.
 - When a release of `vue-component-meta` has the same correction, run `pnpm patch-remove vue-component-meta@3.3.14` and install that release. The test of `pnpm test:parity` for the exposed members of a generic SFC fails when the release lacks the correction.
 - `vitepress` stays at exactly `2.0.0-alpha.21`, a prerelease. The stable release, 1.6.4, installs a second Vite from the 5.x line. `pnpm audit` lists advisories for that line, and no 5.x release corrects them. The prerelease uses the Vite of `packages/vue`. Install the stable 2.0 release when VitePress publishes it.
-- The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`.
+- The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token. Keep the entry `false`.
 
 ## Pull requests
 
@@ -792,7 +792,7 @@ The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vu
 The workflow runs on a push of a `v*` tag. It has two jobs:
 
 - `check` fails when the tagged commit is not on `main`, or when `pnpm release:check-tag` fails. Then it runs the commands of the job `check` of CI. Change the two lists together.
-- `stage` installs only `@vase-ui/vue` and the workspace root, with `--filter @vase-ui/vue`. The install step can get an OIDC token. Each other workspace project adds code to that step. Keep the filter when you add a workspace project. Then `stage` runs `npm stage publish` in `packages/vue`. npm trusted publishing gives it access. A staged version is not public.
+- `stage` installs `@vase-ui/vue` and the workspace root, with `--filter @vase-ui/vue`. The install step can get an OIDC token. The filter adds no dependency or script of another workspace project. The exception is the optional peers that pnpm resolves for `@vase-ui/vue` from those projects, such as `esbuild`. Keep the filter when you add a workspace project. Then `stage` runs `npm stage publish` in `packages/vue`. npm trusted publishing gives it access. A staged version is not public.
 
 To make a release:
 

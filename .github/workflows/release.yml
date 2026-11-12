@@ -56,8 +56,9 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      # Install only the package that this job stages.
+      # Install only `@vase-ui/vue` and the workspace root.
       # Each other workspace project adds code to a step that can get the OIDC token.
+      # The install adds none of their dependencies or scripts, only the optional peers that pnpm resolves from them.
       - run: pnpm install --frozen-lockfile --filter @vase-ui/vue
       # `publishConfig.tag` has the same value. Without `--tag`, npm logs the wrong tag, `latest`.
       # With `--provenance`, the release fails when npm cannot make the provenance statement.
