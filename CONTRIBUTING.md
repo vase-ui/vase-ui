@@ -1,26 +1,18 @@
 # How to contribute to Vase UI
 
-Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section tells you how to propose a change. The other sections give the rules of the port to the maintainers and agents that write the code.
+Vase UI is a port of [Base UI](https://base-ui.com) to Vue 3. The first section says what is open to people outside the project. The other sections give the rules of the port to the maintainers and agents that write the code.
 
 The port is in progress. Some rules name a helper that a later pull request adds.
 
-## Start with a Discussion
+## Contributions are closed for now
 
-Mathematic uses AI agents to maintain this repository. A review of an unsolicited pull request usually takes more time than an agent needs to implement an agreed proposal.
+Mathematic uses AI agents to maintain this repository. While the port is in progress, the repository takes no contributions from outside.
 
-If you want to contribute:
+- Issues and Discussions are off.
+- GitHub lets only repository collaborators and authorized maintenance agents open a pull request or write a comment.
+- To follow the work, watch the repository. Each pull request is one step of the port.
 
-1. [Start a Discussion](https://github.com/vase-ui/vase-ui/discussions/new). Describe the problem and your proposed solution.
-2. Wait for a Mathematic maintainer to review the proposal. The maintainer decides whether to implement it.
-3. If we accept the proposal, a Mathematic maintainer or agent opens the pull request.
-
-The pull request links to the Discussion and credits you as the original author of the proposal.
-
-GitHub restricts pull request creation to Mathematic maintainers, to repository collaborators with write, maintain or admin access, and to authorized maintenance agents. Everyone else uses Discussions.
-
-Issues are off. Report a bug in a Discussion.
-
-Do not report a security problem in a Discussion. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
+Do not report a security problem in public. Use [GitHub's private vulnerability reporting](https://github.com/vase-ui/vase-ui/security/advisories/new).
 
 ## Setup
 
