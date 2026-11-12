@@ -1,7 +1,10 @@
 packages:
+  - docs
   - packages/*
 patchedDependencies:
   vue-component-meta@3.3.14: patches/vue-component-meta@3.3.14.patch
 permissions:
+  esbuild:
+    build: false
   tsdown:
     skills: false

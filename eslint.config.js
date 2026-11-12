@@ -173,6 +173,7 @@ export default defineConfig([
   globalIgnores([
     '**/dist/',
     '**/.package-check/',
+    '**/.vitepress/cache/',
     '**/node_modules/',
     // Scripts write these barrels.
     'packages/vue/src/index.ts',
@@ -256,6 +257,11 @@ export default defineConfig([
   {
     files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}'],
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
+  },
+  {
+    // Text from parity/ and from Base UI commits is data. `v-html` would render it as HTML.
+    files: ['docs/**/*.vue'],
+    rules: { 'vue/no-v-html': 'error' },
   },
   {
     files: ['packages/vue/src/internals/resolveElement.ts'],

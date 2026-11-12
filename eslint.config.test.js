@@ -233,6 +233,13 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'onMouseenter',
   },
+  {
+    name: 'v-html in a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\nconst html = "";\n</script>\n\n<template>\n  <div v-html="html" />\n</template>\n',
+    ruleId: 'vue/no-v-html',
+    hint: 'XSS',
+  },
 ];
 
 const passed = [
