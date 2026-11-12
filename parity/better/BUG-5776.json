@@ -1,0 +1,6 @@
+{
+  "id": "BUG-5776",
+  "evidence": ["https://github.com/mui/base-ui/issues/5776"],
+  "behavior": "Typeahead on a closed trigger does not select a disabled item.",
+  "dueWith": "packages/react/src/combobox/trigger/ComboboxTrigger.tsx"
+}

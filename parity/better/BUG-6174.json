@@ -1,0 +1,6 @@
+{
+  "id": "BUG-6174",
+  "evidence": ["https://github.com/mui/base-ui/issues/6174"],
+  "behavior": "The timers of a toast start again when focus goes into an iframe on the page.",
+  "dueWith": "packages/react/src/toast/viewport/ToastViewport.tsx"
+}

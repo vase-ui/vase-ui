@@ -1,0 +1,6 @@
+{
+  "id": "VUE-2",
+  "evidence": ["https://github.com/mui/base-ui/issues/5597"],
+  "behavior": "The server HTML has the label ids, the `aria-*` attributes and the roving tabindex. The DOM after hydration is equal to the DOM of a render with no server HTML.",
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
+}

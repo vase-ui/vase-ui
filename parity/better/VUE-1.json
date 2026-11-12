@@ -1,0 +1,8 @@
+{
+  "id": "VUE-1",
+  "evidence": [
+    "https://github.com/vuejs/core/blob/v3.5.45/packages/runtime-core/src/componentProps.ts#L499-L502"
+  ],
+  "behavior": "A controlled Boolean prop that the consumer does not give stays `undefined`, and the part is uncontrolled. The same is true for an `undefined` binding, for kebab case and camel case, and for a Boolean prop with a generic type. `:open=\"false\"`, `v-model:open` and a bare attribute make the part controlled.",
+  "dueWith": "packages/utils/src/useControlled.ts"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-5",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/keep-alive.html",
+    "https://github.com/mui/base-ui/pull/5952"
+  ],
+  "behavior": "When `KeepAlive` deactivates a popup, the popup keeps its open state. It releases the scroll lock, the modal marks, the document listeners and the timers. When `KeepAlive` activates the popup again, the popup takes them back.",
+  "dueWith": "packages/react/src/utils/popups/portal/FloatingPortal.tsx"
+}

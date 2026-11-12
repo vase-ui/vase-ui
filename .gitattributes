@@ -1,1 +1,3 @@
 * text=auto eol=lf
+parity/upstream.json linguist-generated
+parity/families/*.upstream.json linguist-generated

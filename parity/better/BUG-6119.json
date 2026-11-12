@@ -1,0 +1,6 @@
+{
+  "id": "BUG-6119",
+  "evidence": ["https://github.com/mui/base-ui/issues/6119"],
+  "behavior": "The scroll lock makes no layout probe while a transition runs.",
+  "dueWith": "packages/utils/src/useScrollLock.ts"
+}

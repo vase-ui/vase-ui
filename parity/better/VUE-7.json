@@ -1,0 +1,6 @@
+{
+  "id": "VUE-7",
+  "evidence": ["https://github.com/mui/base-ui/issues/3570"],
+  "behavior": "When hydration ends and the pointer is over a trigger that opens on hover, the popup opens.",
+  "dueWith": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx"
+}

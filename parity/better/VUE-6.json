@@ -1,0 +1,8 @@
+{
+  "id": "VUE-6",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useScrollLock.ts#L304"
+  ],
+  "behavior": "Two copies of the library on one page share one scroll-lock count, one set of modal marks and one Escape stack.",
+  "dueWith": "packages/react/src/utils/popups/tree/FloatingTree.tsx"
+}
