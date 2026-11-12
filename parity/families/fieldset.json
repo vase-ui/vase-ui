@@ -1,0 +1,55 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/fieldset/**",
+    "docs/src/app/(docs)/react/components/fieldset/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
+      "describe": ["<Fieldset.Root />"],
+      "title": "keeps nested fieldsets disabled when an ancestor fieldset is disabled",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Control`, which Vase UI does not have. The case \"disables an inner root inside a disabled outer root\" tests the same behavior with no Field."
+    },
+    {
+      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
+      "describe": ["<Fieldset.Root />"],
+      "title": "updates nested disabled precedence in both directions",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Control`, which Vase UI does not have. The case \"follows a change of the disabled prop of the outer and of the inner root\" tests the same behavior with no Field."
+    },
+    {
+      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
+      "describe": ["<Fieldset.Root />"],
+      "title": "passes disabled to rendered Base UI roots",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/thumb/SliderThumb.tsx",
+      "reason": "The case renders `RadioGroup`, `CheckboxGroup`, `Checkbox.Root` and four parts of Slider, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The pull request that adds that file names the next file that has no counterpart."
+    },
+    {
+      "upstream": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",
+      "describe": ["<Fieldset.Legend />"],
+      "title": "does not set `aria-labelledby` during SSR when legend is absent",
+      "kind": "replaced",
+      "test": "packages/vue/src/fieldset/legend/FieldsetLegend.node.test.tsx",
+      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The result differs from Base UI on purpose. The root assumes a legend until it is mounted, so the server HTML points at the generated id. An `aria-labelledby` with no valid IDREF gives no name (step 2B of https://www.w3.org/TR/accname-1.2/#computation-steps), so `aria-label` and the native name still apply. The case \"renders the generated id in the aria-labelledby of a root that has no legend\" asserts the server HTML. The case \"has no aria-labelledby when it has no legend\" in `FieldsetRoot.test.tsx` asserts that the mounted root has none."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for the state and the context, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Legend",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for `aria-labelledby`, so it is a declared prop. Base UI reads it from the native attributes of the legend, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
