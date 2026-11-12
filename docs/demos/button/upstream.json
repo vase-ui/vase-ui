@@ -1,0 +1,10 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/button/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "43df8635fba928911de9987b66b135272016019131f395dd4212df1bb55e66af",
+    "hero/css-modules/index.tsx": "7aedbd0fc8707918c80f157f515e447308ba386291924904e690a0610fb7cc68",
+    "loading/css-modules/index.module.css": "43df8635fba928911de9987b66b135272016019131f395dd4212df1bb55e66af",
+    "loading/css-modules/index.tsx": "de6ff521f1376b9f781077aaf3fd3f6bb0c24d31b16b6bb4060bdafb367ddf79"
+  }
+}

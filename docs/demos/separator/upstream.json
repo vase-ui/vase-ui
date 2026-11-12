@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/separator/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9f9f09aad33f5566525d7adacd8e807085819294d4403462df782a1620dc03c8",
+    "hero/css-modules/index.tsx": "ace1fe33122efb63c2cd983ebdcc180d9afc43625270233b495404752f212ed9"
+  }
+}
