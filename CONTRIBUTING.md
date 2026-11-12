@@ -27,7 +27,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
 | `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
 | `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
-| `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing. It fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
+| `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
 | `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
 | `pnpm format`                                    | Formats the files with Prettier.                                                                                                                                                                                                                                                            |
 | `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
@@ -238,7 +238,7 @@ Rules:
 
 ### `useRenderElement` and `useRender`
 
-- Each part calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
+- Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
 - A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
 - `useRender` is public. It gives the API of a part to a component of a consumer.
@@ -557,7 +557,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 | Key        | Content                                                                                                                                                                                   |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`       | `BUG-<number>` for the correction of a Base UI issue, with the number of the issue. `VUE-<number>` for a behavior that is specific to the Vue port. The file name is the id plus `.json`. |
-| `evidence` | One or more `https://` links: an issue, a standard, or a line of source at a tag or a commit.                                                                                             |
+| `evidence` | One or more `https://` links. Each link is an issue, a pull request, a standard, a Vue documentation page, or a line of source at a tag or a commit.                                      |
 | `behavior` | What Vase UI does.                                                                                                                                                                        |
 | `dueWith`  | One upstream path, with no `/` at its end. The row is due when the path has a counterpart.                                                                                                |
 
