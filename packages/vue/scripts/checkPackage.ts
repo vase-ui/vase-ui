@@ -1,14 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build as buildPackage } from 'tsdown';
@@ -20,7 +12,7 @@ process.chdir(fileURLToPath(new URL('..', import.meta.url)));
 const PACKAGE_DIRECTORY = '.package-check';
 const DIST_DIRECTORY = `${PACKAGE_DIRECTORY}/dist`;
 const CONSUMER_DIRECTORY = 'test/package-check/consumer';
-const LICENSE_FILES = ['LICENSE', 'THIRD_PARTY_NOTICES.md'];
+const PREPACK_FILES = ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md'];
 
 function runBin(name: string, args: string[]): void {
   execFileSync(join('node_modules', '.bin', name), args, { stdio: 'inherit' });
@@ -51,8 +43,12 @@ function expectContent(file: string, code: string, text: string, expected: boole
 }
 
 async function main(): Promise<void> {
-  console.log(`[1/9] Remove ${PACKAGE_DIRECTORY}`);
+  console.log(`[1/9] Remove ${PACKAGE_DIRECTORY} and the files that prepack copies`);
   rmSync(PACKAGE_DIRECTORY, { recursive: true, force: true });
+  // A copy from an earlier run can make npm pack a file that "prepack" does not copy.
+  for (const file of PREPACK_FILES) {
+    rmSync(file, { force: true });
+  }
 
   console.log('[2/9] Build the package with the fixture families');
   writeBarrel('test/package-check/index.ts', ['src', 'test/package-check/src']);
@@ -74,14 +70,11 @@ async function main(): Promise<void> {
     `Each index.js in dist must be the barrel or a family. Found: ${entryFiles.join(', ')}`,
   );
 
-  console.log('[3/9] Write the manifest, the license, the notices and the readme');
+  console.log(`[3/9] Write the manifest into ${PACKAGE_DIRECTORY}`);
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
   delete manifest.scripts;
   delete manifest.devDependencies;
   writeFileSync(`${PACKAGE_DIRECTORY}/package.json`, `${JSON.stringify(manifest, null, 2)}\n`);
-  for (const file of [...LICENSE_FILES, 'README.md']) {
-    cpSync(`../../${file}`, `${PACKAGE_DIRECTORY}/${file}`);
-  }
 
   console.log('[4/9] Pack the package folder as a release does, through prepack');
   const [pack]: { files: { path: string }[] }[] = JSON.parse(
@@ -90,7 +83,7 @@ async function main(): Promise<void> {
     }),
   );
   const packedPaths = pack.files.map((file) => file.path);
-  for (const file of [...LICENSE_FILES, 'README.md']) {
+  for (const file of PREPACK_FILES) {
     assert.ok(
       packedPaths.includes(file),
       `${file} must be in the packed files. Copy it in "prepack". If npm does not pack it by default, list it in "files".`,
