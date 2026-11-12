@@ -191,6 +191,48 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'SFC',
   },
+  {
+    name: 'a React event key in an object',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const props = { onKeyDown() {} };\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onKeydown',
+  },
+  {
+    name: 'a read of a React event key',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const read = (props: Record<string, unknown>) => props.onPointerDown;\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onPointerdown',
+  },
+  {
+    name: 'a React event key with the Capture suffix',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const props = { onMouseDownCapture() {} };\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onMousedownCapture',
+  },
+  {
+    name: 'a React event key in script setup',
+    file: `${SRC}/DialogRoot.vue`,
+    code: '<script setup lang="ts">\nconst props = { onMouseMove() {} };\n</script>\n\n<template>\n  <div v-bind="props" />\n</template>\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onMousemove',
+  },
+  {
+    name: 'a React event prop in a TSX test',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: 'export const element = <button onDoubleClick={() => {}} />;\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onDblclick',
+  },
+  {
+    name: 'a React event key in a test helper',
+    file: 'packages/vue/test/describeConformance.tsx',
+    code: 'export const props = { onMouseEnter() {} };\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'onMouseenter',
+  },
 ];
 
 const passed = [
@@ -264,6 +306,21 @@ const passed = [
     file: `${SRC}/DialogRoot.spec.ts`,
     code: 'declare const names: string[];\n\nconst unused = names;\nnames.length;\n',
   },
+  {
+    name: 'Vue event keys and component event keys in a source file',
+    file: `${SRC}/useRoot.ts`,
+    code: 'export const props = {\n  onKeydown() {},\n  onClickCapture() {},\n  onFocusin() {},\n  onDblclick() {},\n  onOpenChange() {},\n  onValueChange() {},\n};\n',
+  },
+  {
+    name: 'Vue event props and a component event prop in a TSX test',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: 'export const element = (\n  <button onClickCapture={() => {}} onKeydown={() => {}} onOpenChange={() => {}} />\n);\n',
+  },
+  {
+    name: 'a local function that has a React name',
+    file: `${SRC}/DialogRoot.test.tsx`,
+    code: "const onKeyDown = () => {};\n\ndocument.addEventListener('keydown', onKeyDown);\n",
+  },
 ];
 
 for (const { name, file, code, ruleId, hint } of reported) {
@@ -280,3 +337,7 @@ for (const { name, file, code } of passed) {
     assert.deepEqual(await lint(file, code), []);
   });
 }
+
+test('does not lint a file that has a test name and is not a script', async () => {
+  assert.equal(await eslint.calculateConfigForFile('packages/vue/tsconfig.test.json'), undefined);
+});
