@@ -161,11 +161,18 @@ for (const { name, displayName, text } of [
     text: "First O'Example-Second O’Example Jr.",
   },
   {
-    name: 'a name with a combining mark',
+    name: 'a name with a combining mark that has a composed form',
     displayName: 'First Example\u0301',
-    text: 'First Example\u0301',
+    text: 'First Exampl\u00e9',
   },
   { name: 'a name in another script', displayName: 'Первый Пример', text: 'Первый Пример' },
+  { name: 'a name in a script that has combining marks', displayName: 'अनिल', text: 'अनिल' },
+  {
+    name: 'a name with three combining marks in a row',
+    displayName: 'First Ex\u0301\u0302\u0303',
+    text: 'First Ex\u0301\u0302\u0303',
+  },
+  { name: 'a name of 100 characters', displayName: 'A'.repeat(100), text: 'A'.repeat(100) },
   { name: 'a name with numbers', displayName: '1st Example 2', text: '1st Example 2' },
   {
     name: 'a name with extra white space',
@@ -192,6 +199,12 @@ const REJECTED_NAMES = [
   { name: 'a name with &', displayName: 'First &amp; Example' },
   { name: 'a name with a quotation mark', displayName: 'First "Example" Second' },
   { name: 'a name that starts with a hyphen', displayName: '-First Example' },
+  { name: 'a name that starts with a combining mark', displayName: '\u0301First Example' },
+  {
+    name: 'a name with four combining marks in a row',
+    displayName: 'First Ex\u0301\u0302\u0303\u0304',
+  },
+  { name: 'a name of 101 characters', displayName: 'A'.repeat(101) },
 ];
 
 for (const { name, displayName } of [
@@ -218,6 +231,20 @@ for (const login of ['first_example', 'first example', 'first/example', '']) {
 }
 
 const unlinked = (name: string, contributions = 1) => ({ name, contributions });
+
+/** Each sequence of the items. */
+function permutations<T>(items: T[]): T[][] {
+  if (items.length <= 1) {
+    return [items];
+  }
+  return items.flatMap((item, index) =>
+    permutations([...items.slice(0, index), ...items.slice(index + 1)]).map((rest) => [
+      item,
+      ...rest,
+    ]),
+  );
+}
+
 const FIRST_LINKED = { login: 'first-example', name: 'First Example' };
 const NO_REMOVALS = { automation: 0, sameAsLinked: 0, notPlainText: 0, mergedByName: 0 };
 
@@ -247,6 +274,11 @@ for (const { name, author, linked } of [
     name: 'the login of a linked person in other letter case',
     author: 'First-Example',
     linked: { login: 'first-example', name: null },
+  },
+  {
+    name: 'the display name of a linked person in the other normalization form',
+    author: 'Jose\u0301 Example',
+    linked: { login: 'first-example', name: 'Jos\u00e9 Example' },
   },
   {
     name: 'a display name that the page does not show',
@@ -292,7 +324,7 @@ for (const { name, author } of [
 for (const { name, author } of [
   { name: 'a dot at the end', author: 'Example Jr.' },
   { name: 'a dot before a space', author: 'F. Example' },
-  { name: 'a dot after a letter with a combining mark', author: 'Jose\u0301. Example' },
+  { name: 'a dot after a letter with a combining mark', author: 'First Ex\u0301. Example' },
 ]) {
   test(`selectUnlinkedPeople lists a name with ${name}`, () => {
     assert.deepEqual(selectUnlinkedPeople([unlinked(author, 4)], [FIRST_LINKED]), {
@@ -321,17 +353,35 @@ for (const { name, authors, person } of [
     person: unlinked('Third Example', 4),
   },
   {
+    name: 'the spelling of the entry with the most commits among three',
+    authors: [
+      unlinked('third example', 2),
+      unlinked('THIRD EXAMPLE', 2),
+      unlinked('Third Example', 3),
+    ],
+    person: unlinked('Third Example', 7),
+  },
+  {
+    name: 'the first spelling by code units among three entries with equal commits',
+    authors: [
+      unlinked('third example', 2),
+      unlinked('Third Example', 2),
+      unlinked('THIRD EXAMPLE', 2),
+    ],
+    person: unlinked('THIRD EXAMPLE', 6),
+  },
+  {
     name: 'names that differ only in white space',
     authors: [unlinked(' Third  Example', 1), unlinked('Third Example\t', 1)],
     person: unlinked('Third Example', 2),
   },
 ]) {
-  test(`selectUnlinkedPeople merges two entries with one name and keeps ${name}`, () => {
-    for (const input of [authors, [...authors].reverse()]) {
+  test(`selectUnlinkedPeople merges entries with one name and keeps ${name}`, () => {
+    for (const input of permutations(authors)) {
       assert.deepEqual(selectUnlinkedPeople(input, []), {
         people: [person],
         ...NO_REMOVALS,
-        mergedByName: 1,
+        mergedByName: authors.length - 1,
       });
     }
   });
@@ -411,6 +461,7 @@ for (const { name, text } of [
   { name: 'an e-mail address', text: EMAIL },
   { name: 'a dot after a number', text: '1. Example' },
   { name: 'a dot before a letter in a domain name', text: 'www.example.com' },
+  { name: 'more than 100 characters', text: 'A'.repeat(101) },
 ]) {
   test(`renderThanks throws for a name with no link that has ${name}, and names the project`, () => {
     assert.throws(

@@ -48,8 +48,13 @@ const AUTOMATION_AUTHORS = new Set(['dependabot', 'github-actions', 'renovate'])
 
 const LOGIN = /^[A-Za-z0-9-]+$/;
 // A display name is text that a stranger controls, and the site compiles this file as a Vue
-// template. This pattern rejects `{{ }}`, HTML, Markdown syntax and `@`.
-const DISPLAY_NAME = /^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .'’-]*$/u;
+// template. This pattern rejects `{{ }}`, HTML, Markdown syntax and `@`. A mark acts on the
+// character before it, so a name starts with a letter or a number.
+const DISPLAY_NAME = /^[\p{L}\p{N}][\p{L}\p{M}\p{N} .'’-]*$/u;
+// A long name can hold a message to the readers of the page, and a stack of marks can cover the
+// lines around it. So a name has at most 100 characters and at most three marks in a row.
+const MAX_NAME_LENGTH = 100;
+const FOUR_MARKS_IN_A_ROW = /\p{M}{4}/u;
 // A name with no link is the plain text of a list item. There, `- 1. Example` is an ordered list
 // (CommonMark), and `- www.example.com` is a link on github.com (GitHub Flavored Markdown).
 // So each dot must follow a letter and precede a space or the end of the name.
@@ -94,12 +99,20 @@ export function sortContributors<
   );
 }
 
+// NFC puts a letter and its marks in one character where Unicode has one. So the two forms of a
+// name have one text, and the check of the marks counts only the marks that remain.
 function cleanName(name: string | null): string {
-  return (name ?? '').trim().replace(/\s+/g, ' ');
+  return (name ?? '').trim().replace(/\s+/g, ' ').normalize('NFC');
+}
+
+function isDisplayName(name: string): boolean {
+  return (
+    name.length <= MAX_NAME_LENGTH && DISPLAY_NAME.test(name) && !FOUR_MARKS_IN_A_ROW.test(name)
+  );
 }
 
 function isPlainText(name: string): boolean {
-  return DISPLAY_NAME.test(name) && PLAIN_TEXT_DOTS.test(name);
+  return isDisplayName(name) && PLAIN_TEXT_DOTS.test(name);
 }
 
 export function profileLink({ login, name }: Person, repository: string): string {
@@ -109,7 +122,7 @@ export function profileLink({ login, name }: Person, repository: string): string
     );
   }
   const displayName = cleanName(name);
-  const text = DISPLAY_NAME.test(displayName) ? displayName : login;
+  const text = isDisplayName(displayName) ? displayName : login;
   return `[${text}](https://github.com/${login})`;
 }
 
@@ -117,19 +130,22 @@ function plainName({ name }: UnlinkedPerson, repository: string): string {
   const cleaned = cleanName(name);
   if (!isPlainText(cleaned)) {
     throw new Error(
-      `${repository} has a person with no account, and the page cannot show the name as plain text. The script writes such a name only when it matches DISPLAY_NAME and PLAIN_TEXT_DOTS in scripts/thanks/render.ts. If THANKS.md has a line that the script did not write, run \`pnpm thanks:render\`. If not, correct selectUnlinkedPeople in the same file.`,
+      `${repository} has a person with no account, and the page cannot show the name as plain text. The script writes such a name only when isPlainText in scripts/thanks/render.ts accepts it. If THANKS.md has a line that the script did not write, run \`pnpm thanks:render\`. If not, correct selectUnlinkedPeople in the same file.`,
     );
   }
   return cleaned;
 }
 
-// The entry with more commits gives the spelling. For equal commits, the first spelling by code
+// The entry with the most commits gives the spelling. For equal commits, the first spelling by code
 // units wins, so the result does not depend on the sequence of the rows.
-function mergeAuthors(a: UnlinkedAuthor, b: UnlinkedAuthor): UnlinkedAuthor {
-  const [first] = [a, b].sort(
-    (x, y) => y.contributions - x.contributions || compareCodeUnits(x.name, y.name),
+function mergeAuthors(entries: UnlinkedAuthor[]): UnlinkedAuthor {
+  const [first] = [...entries].sort(
+    (a, b) => b.contributions - a.contributions || compareCodeUnits(a.name, b.name),
   );
-  return { name: first.name, contributions: a.contributions + b.contributions };
+  return {
+    name: first.name,
+    contributions: entries.reduce((sum, { contributions }) => sum + contributions, 0),
+  };
 }
 
 interface UnlinkedSelection {
@@ -150,28 +166,27 @@ export function selectUnlinkedPeople(
       .filter((value) => value !== '')
       .map((value) => value.toLowerCase()),
   );
-  const people = new Map<string, UnlinkedAuthor>();
-  const counts = { automation: 0, sameAsLinked: 0, notPlainText: 0, mergedByName: 0 };
+  const entriesByName = new Map<string, UnlinkedAuthor[]>();
+  const counts = { automation: 0, sameAsLinked: 0, notPlainText: 0 };
+  let entryCount = 0;
   // A name that matches a linked person is on the page already. That test comes before the test of
   // the name, so `notPlainText` counts only the people who are missing from the page.
   for (const { name, contributions } of unlinkedAuthors) {
     const cleaned = cleanName(name);
     const key = cleaned.toLowerCase();
-    const sameName = people.get(key);
     if (key.endsWith('[bot]') || AUTOMATION_LOGINS.has(key) || AUTOMATION_AUTHORS.has(key)) {
       counts.automation += 1;
     } else if (linkedNames.has(key)) {
       counts.sameAsLinked += 1;
     } else if (!isPlainText(cleaned)) {
       counts.notPlainText += 1;
-    } else if (sameName === undefined) {
-      people.set(key, { name: cleaned, contributions });
     } else {
-      counts.mergedByName += 1;
-      people.set(key, mergeAuthors(sameName, { name: cleaned, contributions }));
+      entryCount += 1;
+      entriesByName.set(key, [...(entriesByName.get(key) ?? []), { name: cleaned, contributions }]);
     }
   }
-  return { people: [...people.values()], ...counts };
+  const people = [...entriesByName.values()].map(mergeAuthors);
+  return { people, ...counts, mergedByName: entryCount - people.length };
 }
 
 function listItem(person: Person | UnlinkedPerson, repository: string): string {
