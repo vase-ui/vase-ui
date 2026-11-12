@@ -1,0 +1,474 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/internals/createBaseUIEventDetails.ts",
+    "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
+    "packages/react/src/internals/getStateAttributesProps.ts",
+    "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/reason-parts.ts",
+    "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useRenderElement.tsx",
+    "packages/react/src/internals/useRenderElement.test.tsx",
+    "packages/react/src/internals/useRenderElement.spec.tsx",
+    "packages/react/src/types/**",
+    "packages/react/test/conformanceTests/**",
+    "packages/react/test/createRenderer.ts",
+    "packages/react/test/describeConformance.tsx",
+    "packages/react/test/index.ts",
+    "packages/react/test/pointer.ts",
+    "packages/react/test/pointer.test.tsx",
+    "packages/react/test/wait.ts"
+  ],
+  "sources": [
+    "packages/react/src/internals/createBaseUIEventDetails.ts",
+    "packages/react/src/internals/getStateAttributesProps.ts",
+    "packages/react/src/internals/reason-parts.ts",
+    "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useRenderElement.tsx",
+    "packages/react/src/types/index.ts",
+    "packages/react/test/conformanceTests/className.tsx",
+    "packages/react/test/conformanceTests/propForwarding.tsx",
+    "packages/react/test/conformanceTests/refForwarding.tsx",
+    "packages/react/test/conformanceTests/renderProp.tsx",
+    "packages/react/test/conformanceTests/utils.ts",
+    "packages/react/test/createRenderer.ts",
+    "packages/react/test/describeConformance.tsx",
+    "packages/react/test/index.ts",
+    "packages/react/test/pointer.ts",
+    "packages/react/test/wait.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
+    "packages/react/src/internals/useRenderElement.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/internals/getStateAttributesProps.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "converts the state fields to data attributes"
+        },
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "changes the fields names to lowercase"
+        },
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "changes true values to a data-attribute without a value"
+        },
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "does not include false values"
+        },
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "supports custom mapping"
+        },
+        {
+          "describe": [
+            "getStateAttributesProps"
+          ],
+          "title": "supports nulls returned from custom mapping"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "accepts className as function"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "accepts className as function that returns undefined"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "accepts style as function"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "accepts style as function that returns undefined"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "makes single prop objects preventable"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "makes multi-prop arrays preventable when the event handler is first"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "makes obscure single-prop events preventable"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "makes obscure multi-prop array events preventable when the event handler is first"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "does not resolve props when disabled"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "handles enabled toggles across rerenders"
+        },
+        {
+          "describe": [
+            "useRenderElement"
+          ],
+          "title": "updates merged refs and event handlers when ref shape changes across rerenders"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "accepts render as a function that receives props and state"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "warns when render is passed a function with an uppercase name"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "warns when render is passed a function with an uppercase acronym prefix"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "does not warn when render is passed a lowercase callback"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "does not warn when render is passed a screaming snake case callback"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "does not warn when render is passed a callback with an inferred useCallback name"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "does not warn when render is passed as a React element"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "accepts render as a React element and clones it with merged props"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "forwards ref to render element"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "merges className from render element and component props"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "merges className function with render element"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "merges style from render element and component props"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "merges style function with render element"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "handles lazy elements"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render",
+            "lazy-wrapped render element (Flight shape)"
+          ],
+          "title": "merges props with the same precedence as a plain render element",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render",
+            "lazy-wrapped render element (Flight shape)"
+          ],
+          "title": "attaches the render element ref",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render",
+            "lazy-wrapped render element (Flight shape)"
+          ],
+          "title": "does not unwrap a pending element when disabled",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render",
+            "lazy-wrapped render element (Flight shape)"
+          ],
+          "title": "reports a wrapper that unwraps to %s as an invalid render element",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "throws error for invalid render element in development",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "prop: render"
+          ],
+          "title": "handles render element with existing ref"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "EMPTY_OBJECT mutation safety"
+          ],
+          "title": "does not throw when className is provided with minimal props"
+        },
+        {
+          "describe": [
+            "useRenderElement",
+            "EMPTY_OBJECT mutation safety"
+          ],
+          "title": "does not throw when style is provided with minimal props"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/conformanceTests/className.tsx",
+      "rows": [
+        {
+          "describe": [
+            "prop: className"
+          ],
+          "title": "should apply the className to the root element when passed as a string"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/conformanceTests/propForwarding.tsx",
+      "rows": [
+        {
+          "describe": [
+            "prop forwarding"
+          ],
+          "title": "forwards custom props to the default element"
+        },
+        {
+          "describe": [
+            "prop forwarding"
+          ],
+          "title": "forwards custom props to the customized element defined with a function"
+        },
+        {
+          "describe": [
+            "prop forwarding"
+          ],
+          "title": "forwards custom props to the customized element defined using JSX"
+        },
+        {
+          "describe": [
+            "prop forwarding"
+          ],
+          "title": "forwards the custom `style` attribute defined on the component"
+        },
+        {
+          "describe": [
+            "prop forwarding"
+          ],
+          "title": "forwards the custom `style` attribute defined on the render element"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/conformanceTests/refForwarding.tsx",
+      "rows": [
+        {
+          "describe": [
+            "ref"
+          ],
+          "title": "attaches the ref"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/conformanceTests/renderProp.tsx",
+      "rows": [
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "renders a customized root element with a function"
+        },
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "renders a customized root element with an element"
+        },
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "should pass the ref to the custom component"
+        },
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "should merge the rendering element ref with the custom component ref"
+        },
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "should merge the rendering element className with the custom component className"
+        },
+        {
+          "describe": [
+            "prop: render"
+          ],
+          "title": "should merge the rendering element resolved className with the custom component className"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/describeConformance.tsx",
+      "rows": [
+        {
+          "describe": [
+            "with a non-native button"
+          ],
+          "suite": "testPropForwarding"
+        },
+        {
+          "describe": [
+            "with a non-native button"
+          ],
+          "suite": "testRenderProp"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/pointer.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "firePointer"
+          ],
+          "title": "reports the requested timeStamp to React handlers"
+        },
+        {
+          "describe": [
+            "firePointer"
+          ],
+          "title": "delivers the rest of the init alongside the timeStamp"
+        },
+        {
+          "describe": [
+            "firePointer"
+          ],
+          "title": "rejects a non-positive timeStamp instead of falling back to the real clock"
+        }
+      ]
+    }
+  ],
+  "surface": []
+}
