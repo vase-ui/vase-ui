@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/meter/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "18b2354e062f37bdeb8fb7ad588cdb358c8f13a09778e126e79335582dccde10",
+    "hero/css-modules/index.tsx": "d55d4cae38e4368778bce3b21be449d89a5ff3ffeb3eab24dada75c31b63f548"
+  }
+}
