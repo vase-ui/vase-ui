@@ -12,6 +12,21 @@ export interface Contributor {
   node_id: string;
 }
 
+/**
+ * A person whose commits GitHub links to no account: the name in the commits and the number of
+ * commits. GitHub also gives an e-mail address for this person. The type has no field for it, so
+ * the address cannot reach the output.
+ */
+export interface UnlinkedAuthor {
+  name: string;
+  contributions: number;
+}
+
+export interface ContributorList {
+  contributors: Contributor[];
+  unlinkedAuthors: UnlinkedAuthor[];
+}
+
 function isContributor(row: unknown): row is Contributor {
   const { login, type, contributions, node_id } = (row ?? {}) as Partial<
     Record<keyof Contributor, unknown>
@@ -22,6 +37,15 @@ function isContributor(row: unknown): row is Contributor {
     typeof contributions === 'number' &&
     typeof node_id === 'string'
   );
+}
+
+function isAnonymous(row: unknown): boolean {
+  return (row as { type?: unknown } | null)?.type === 'Anonymous';
+}
+
+function isUnlinkedAuthor(row: unknown): row is UnlinkedAuthor {
+  const { name, contributions } = (row ?? {}) as Partial<Record<keyof UnlinkedAuthor, unknown>>;
+  return typeof name === 'string' && typeof contributions === 'number';
 }
 
 function unexpected(what: string): Error {
@@ -58,18 +82,35 @@ function ghJson(args: string[], input?: string): unknown {
   }
 }
 
-export function readContributors(repository: string): Contributor[] {
-  // `--paginate` joins the pages into one JSON array.
-  const rows = ghJson(['api', `repos/${repository}/contributors?per_page=100`, '--paginate']);
-  if (!Array.isArray(rows) || !rows.every(isContributor)) {
-    throw unexpected(`The contributor list of ${repository}`);
+export function parseContributorRows(rows: unknown, repository: string): ContributorList {
+  const what = `The contributor list of ${repository}`;
+  if (!Array.isArray(rows)) {
+    throw unexpected(what);
   }
-  return rows.map(({ login, type, contributions, node_id }) => ({
-    login,
-    type,
-    contributions,
-    node_id,
-  }));
+  const anonymous = rows.filter(isAnonymous);
+  const linked = rows.filter((row) => !isAnonymous(row));
+  if (!anonymous.every(isUnlinkedAuthor) || !linked.every(isContributor)) {
+    throw unexpected(what);
+  }
+  return {
+    contributors: linked.map(({ login, type, contributions, node_id }) => ({
+      login,
+      type,
+      contributions,
+      node_id,
+    })),
+    unlinkedAuthors: anonymous.map(({ name, contributions }) => ({ name, contributions })),
+  };
+}
+
+export function readContributors(repository: string): ContributorList {
+  // `--paginate` joins the pages into one JSON array. `anon=1` adds the people with no account.
+  const rows = ghJson([
+    'api',
+    `repos/${repository}/contributors?per_page=100&anon=1`,
+    '--paginate',
+  ]);
+  return parseContributorRows(rows, repository);
 }
 
 /** The first row of the commit list is the newest commit of the default branch. */
