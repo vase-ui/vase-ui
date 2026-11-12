@@ -1,0 +1,214 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/use-render/**",
+    "docs/src/app/(docs)/react/utils/use-render/**"
+  ],
+  "sources": [
+    "packages/react/src/use-render/index.ts",
+    "packages/react/src/use-render/useRender.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/use-render/useRender.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/use-render/useRender.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useRender"
+          ],
+          "title": "render props does not overwrite className in a render function when unspecified"
+        },
+        {
+          "describe": [
+            "useRender"
+          ],
+          "title": "refs are handled as expected"
+        },
+        {
+          "describe": [
+            "useRender",
+            "param: defaultTagName"
+          ],
+          "title": "renders div by default if no defaultTagName and no render params are provided"
+        },
+        {
+          "describe": [
+            "useRender",
+            "param: defaultTagName"
+          ],
+          "title": "renders the element with the default tag with no render prop"
+        },
+        {
+          "describe": [
+            "useRender",
+            "param: defaultTagName"
+          ],
+          "title": "is overwritten by the render prop"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "converts state to data attributes automatically"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "handles undefined values in state"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "merges state-based data attributes with existing props"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "props override state-based data attributes"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "handles empty state"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "handles undefined state"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "converts boolean values in state to data attributes"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "converts number values in state to data attributes"
+        },
+        {
+          "describe": [
+            "useRender",
+            "state to data attributes"
+          ],
+          "title": "supports custom stateAttributesMapping for kebab-case conversion"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/use-render/types.md",
+      "parts": [
+        {
+          "name": "useRender",
+          "tag": null,
+          "props": null,
+          "state": {
+            "name": "useRenderState",
+            "fields": [],
+            "code": "type useRenderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": [],
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "params",
+                  "type": "useRender.Parameters<Record<string, unknown>, Element, boolean | undefined>",
+                  "default": null
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = ReactElement | null;"
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "ComponentRenderFn",
+          "tables": [],
+          "code": []
+        }
+      ],
+      "types": [
+        {
+          "name": "useRender.ComponentProps",
+          "code": "type useRenderComponentProps<ElementType extends React.ElementType, TState = {}, RenderFunctionProps = HTMLProps> = React.ComponentPropsWithRef<ElementType> & {\n    render?: ReactElement | ((props: RenderFunctionProps, state: TState) => ReactElement);\n};"
+        },
+        {
+          "name": "useRender.ElementProps",
+          "code": "type useRenderElementProps = (React.PropsWithoutRef<Props> & React.RefAttributes<R | any>) | Props | React.ComponentProps<React.ElementType>;"
+        },
+        {
+          "name": "useRender.Parameters",
+          "code": "type useRenderParameters<TState, RenderedElementType extends Element, Enabled extends boolean | undefined> = {\n    render?: UseRenderRenderProp<TState>;\n    ref?: React.Ref<RenderedElementType>[] | React.Ref<RenderedElementType>;\n    state?: TState;\n    stateAttributesMapping?: StateAttributesMapping<TState>;\n    props?: Record<string, unknown>;\n    enabled?: boolean | undefined;\n    defaultTagName?: keyof React.JSX.IntrinsicElements;\n};"
+        },
+        {
+          "name": "useRender.RenderProp",
+          "code": "type useRenderRenderProp<TState = Record<string, unknown>> = ReactElement | ((props: React.HTMLAttributes<any>, state: TState) => ReactElement);"
+        },
+        {
+          "name": "useRender.ReturnValue",
+          "code": "type useRenderReturnValue = ReactElement | null;"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "HTMLProps",
+          "code": "type HTMLProps<T = any> = React.HTMLAttributes<T> & {\n    ref?: React.Ref<T>;\n};"
+        },
+        {
+          "name": "UseRenderComponentProps",
+          "code": "type UseRenderComponentProps<ElementType extends React.ElementType, State = {}, RenderFunctionProps = HTMLProps> = React.ComponentPropsWithRef<ElementType> & {\n    render?: ReactElement | ((props: RenderFunctionProps, state: State) => ReactElement);\n};"
+        },
+        {
+          "name": "UseRenderElementProps",
+          "code": "type UseRenderElementProps = (React.PropsWithoutRef<Props> & React.RefAttributes<R | any>) | Props | React.ComponentProps<React.ElementType>;"
+        },
+        {
+          "name": "UseRenderParameters",
+          "code": "type UseRenderParameters<State, RenderedElementType extends Element, Enabled extends boolean | undefined> = {\n    render?: UseRenderRenderProp<State>;\n    ref?: React.Ref<RenderedElementType> | React.Ref<RenderedElementType>[];\n    state?: State;\n    stateAttributesMapping?: StateAttributesMapping<State>;\n    props?: Record<string, unknown>;\n    enabled?: boolean | undefined;\n    defaultTagName?: keyof React.JSX.IntrinsicElements;\n};"
+        },
+        {
+          "name": "UseRenderRenderProp",
+          "code": "type UseRenderRenderProp<State = Record<string, unknown>> = ReactElement | ((props: React.HTMLAttributes<any>, state: State) => ReactElement);"
+        },
+        {
+          "name": "UseRenderReturnValue",
+          "code": "type UseRenderReturnValue = ReactElement | null;"
+        },
+        {
+          "name": "UseRenderState",
+          "code": "type UseRenderState = {};"
+        }
+      ],
+      "externalTypes": []
+    }
+  ]
+}
