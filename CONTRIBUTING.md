@@ -38,23 +38,26 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 
 | Command                                          | Function                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script, of the parity scripts and of the documentation scripts. Then it runs ESLint, the Prettier check, `pnpm cost:check` and `pnpm status:check`.                                                                                           |
+| `pnpm lint`                                      | Runs the tests of the lint rules, of the cost script, of the parity scripts, of the documentation scripts and of the thanks script. Then it runs ESLint, the Prettier check, `pnpm cost:check` and `pnpm status:check`.                                                                     |
 | `pnpm test:lint-rules`                           | Runs the tests of the lint rules in `eslint.config.js`.                                                                                                                                                                                                                                     |
 | `pnpm test:cost`                                 | Runs the tests of the cost script, `scripts/cost/render.ts`.                                                                                                                                                                                                                                |
 | `pnpm test:parity`                               | Runs the tests of the parity scripts in `scripts/parity`.                                                                                                                                                                                                                                   |
 | `pnpm test:docs`                                 | Runs the tests of the documentation scripts in `scripts/docs`.                                                                                                                                                                                                                              |
+| `pnpm test:thanks`                               | Runs the tests of the thanks script, `scripts/thanks/render.ts`. It also fails when `THANKS.md` has text that the script does not write.                                                                                                                                                    |
 | `pnpm cost:render`                               | Writes the cost tables of `README.md` from the newest row of `cost/history.json`.                                                                                                                                                                                                           |
 | `pnpm cost:check`                                | Fails when the cost tables of `README.md` differ from the newest row of `cost/history.json`.                                                                                                                                                                                                |
 | `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families`.                                                                                                                                                                                                           |
 | `pnpm status:check`                              | Fails when the status line of `README.md` differs from the family files in `parity/families`.                                                                                                                                                                                               |
+| `pnpm thanks:render`                             | Writes `THANKS.md` from GitHub's contributor lists of Base UI, Floating UI and aria-hidden. It uses your `gh` login.                                                                                                                                                                        |
 | `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
 | `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
+| `pnpm docs:demos --upstream <path> [family]`     | Writes the demo style sheets of a family and the record `docs/demos/<family>/upstream.json` from a local clone of Base UI. With no family name, it does this for each family with a page or a demo folder. With `--check`, it writes nothing and fails when a file is absent or differs.    |
 | `pnpm format`                                    | Formats the files with Prettier.                                                                                                                                                                                                                                                            |
 | `pnpm typecheck`                                 | Runs `tsc` on the root `scripts` folder. Then it writes the barrel and runs vue-tsc on the package.                                                                                                                                                                                         |
 | `pnpm build`                                     | Builds `packages/vue/dist`.                                                                                                                                                                                                                                                                 |
 | `pnpm check:package`                             | Builds the package with two fixture families. It checks that npm packs the license and the notices. Then it checks the result with publint, Are the Types Wrong and a consumer project.                                                                                                     |
-| `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders and the code samples in `docs`.                                                                                                                                                                               |
+| `pnpm docs:typecheck`                            | Runs vue-tsc on the site configuration, the site components, the data loaders, the code samples and the demos in `docs`.                                                                                                                                                                    |
 | `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
 | `pnpm test`                                      | Runs all tests.                                                                                                                                                                                                                                                                             |
@@ -424,7 +427,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Use the ports of upstream's `useTimeout` and `useAnimationFrame`. Do not call `setTimeout` or `requestAnimationFrame` directly.
 - Use the shadow DOM-safe helpers for DOM traversal and event targets: `closest`, `contains`, `getTarget` and `activeElement`.
 - Write development checks as `process.env.NODE_ENV !== 'production'`.
-- When a demo style sheet has `user-select: none`, it also has `-webkit-user-select: none` for Safari.
 
 ### Error messages
 
@@ -626,7 +628,9 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - Each page in the navigation has `order: <whole number>` in its front matter. A group shows its pages in the sequence of `order`, then of title.
 - The title of a page in the navigation is its first-level heading.
 - The build fails when a page in the navigation has no `order` or no first-level heading.
-- A code sample is a Vue file under `docs/examples/<page>`. The page imports the file, renders it and shows its source with `<<<`, as `docs/quick-start.md` does. `pnpm docs:typecheck` then checks the sample against the built package.
+- A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
+- A page that is not a component page has its samples in `docs/examples/<page>`. The page imports each sample and renders it, as `docs/quick-start.md` does.
+- A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation, never with `v-html`. ESLint refuses `v-html` in `docs/**/*.vue`. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
@@ -636,11 +640,37 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The site uses the default theme of VitePress. Do not add the folder `docs/.vitepress/theme`. When that folder exists, VitePress uses it and not the default theme. A page imports its components from `docs/.vitepress/components`.
 - The text of a page follows [Voice](#voice).
 
+### Component pages
+
+A component page is `docs/components/<family>.md`. Use `docs/components/button.md` as the model.
+
+- The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
+- The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
+- A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
+- `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
+- Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
+- `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file. It also fails when a demo folder has a style sheet that Base UI does not have.
+- On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet below it in one `code-group`.
+- A code sample that is not a demo is `docs/components/<family>/<Name>.vue`. The page shows its source and does not render it.
+- Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. Do not write a table by hand. To change a text of the reference, change the JSDoc.
+- Each demo is a test fixture. `packages/vue/test/demos.test.tsx` mounts each demo, checks it with axe and hydrates its server render, in each engine. A new demo needs no new test.
+
+### Thanks page
+
+- `docs/thanks.md` includes the region `thanks` of `THANKS.md`.
+- `pnpm thanks:render` writes `THANKS.md`. Do not edit the file.
+- A display name in `THANKS.md` is data: the owner of an account controls it. The include puts it into the page with no component, and VitePress compiles the page as a Vue template.
+- Two guards make sure that the page has only the text that the script writes. The script writes a display name only when it matches the pattern `DISPLAY_NAME` of `scripts/thanks/render.ts`. For each other name, it writes the account name. `pnpm test:thanks` writes the file again from the date, the commits and the people that it holds. It fails when the two texts differ.
+- After a change of the fixed text in `scripts/thanks/render.ts`, run `pnpm thanks:render` and commit `THANKS.md` in the same pull request. Until then, `pnpm test:thanks` fails, because `THANKS.md` differs from the text that the script writes.
+- Run `pnpm thanks:render` before each release, and commit `THANKS.md`.
+
 ## Text
 
 - Write commit messages, pull requests, code comments and this file in Simplified Technical English (ASD-STE100).
 - Use short sentences, the active voice and one instruction in each sentence.
 - Give a thing the name of what it is. Do not use metaphors in names.
+- Do not name a GitHub account with the at sign in a file or a pull request. GitHub sends a notification to an account that a pull request names in that form. Use a link to the profile, as `THANKS.md` does.
 
 ### Voice
 
@@ -652,7 +682,7 @@ The text that users read has a voice: the README, the site, the documentation an
 - Shade never aims at a named person, at the quality of a project, at users or at disability. React, Base UI and every other library are included.
 - Love goes to the engineers, by name, in the Thanks section.
 - A joke never carries a fact. If the line is removed, the page still says everything.
-- No wit and no shade in an error or warning message, an accessibility note, an API reference, a migration step or a security note. The same is true for all text that a user reads while something is broken.
+- No wit and no shade in an error or warning message, an accessibility note, an API reference, a migration step or a security note. The same is true for a component page and for all text that a user reads while something is broken.
 - No emoji. No exclamation marks.
 
 Welcome:
