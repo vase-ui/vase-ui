@@ -5,6 +5,9 @@
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
+    "packages/react/src/utils/scrollEdges.test.ts",
+    "packages/react/src/utils/scrollEdges.ts",
+    "packages/react/src/utils/styles.tsx",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.test.tsx",
     "packages/react/src/utils/useFormatLocale.ts",
@@ -19,6 +22,8 @@
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/resolveRef.ts",
+    "packages/react/src/utils/scrollEdges.ts",
+    "packages/react/src/utils/styles.tsx",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.ts",
     "packages/react/src/utils/useIsHydrating.ts",
@@ -27,6 +32,41 @@
   ],
   "typeTests": [],
   "cases": [
+    {
+      "file": "packages/react/src/utils/scrollEdges.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "returns 0 when max is non-positive"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "snaps to the start edge within the tolerance"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "snaps to the end edge within the tolerance"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "keeps values away from edges unchanged"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "chooses the closest edge when tolerances overlap"
+        }
+      ]
+    },
     {
       "file": "packages/react/src/utils/useFormatLocale.test.tsx",
       "rows": [

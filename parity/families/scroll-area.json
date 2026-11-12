@@ -1,0 +1,185 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/scroll-area/**",
+    "docs/src/app/(docs)/react/components/scroll-area/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Content`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContentDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Content`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Corner`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Thumb`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumbDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Thumb`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "Each case of the file renders `ScrollArea.Viewport`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The file tests `ScrollArea.Viewport`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "reason": "The file tests `ScrollArea.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "The file tests `ScrollArea.Scrollbar`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "reason": "The file tests `ScrollArea.Thumb`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "reason": "The file tests `ScrollArea.Corner`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Content",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "reason": "Vase UI does not have `ScrollArea.Content`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaContentDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Content`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Viewport",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaViewportCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaViewportDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Scrollbar",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaScrollbarCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Scrollbar`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaScrollbarDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Scrollbar`. `ScrollAreaRoot.vue` already reads the file for the name `data-orientation`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Thumb",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "reason": "Vase UI does not have `ScrollArea.Thumb`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "ScrollAreaThumbDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Thumb`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
+      "entry": "Corner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "reason": "Vase UI does not have `ScrollArea.Corner`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
