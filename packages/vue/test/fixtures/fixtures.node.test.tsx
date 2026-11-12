@@ -1,5 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import AnimatedPanel from './AnimatedPanel.vue';
 import ChildrenPart from './ChildrenPart.vue';
 import GenericPart from './GenericPart.vue';
 import HydrationFixture from './HydrationFixture.vue';
@@ -34,6 +35,38 @@ describe('fixture parts on a server', () => {
     const html = await renderToString(<GenericPart option="a" value="a" />);
 
     expect(html).toBe('<div data-selected><!--[--><!--]--></div>');
+  });
+
+  // A transition effect that ran on a server would throw here, because Node has no
+  // `requestAnimationFrame`.
+  it.each([
+    {
+      name: 'a closed panel that is not kept mounted has no element',
+      props: { open: false },
+      html: '<!---->',
+    },
+    {
+      name: 'a closed panel that is kept mounted is hidden',
+      props: { open: false, keepMounted: true },
+      html: '<!--[--><div hidden><!--[--><!--]--></div><!--]-->',
+    },
+    {
+      name: 'an open panel has no transition attribute',
+      props: { open: true },
+      html: '<!--[--><div data-open><!--[--><!--]--></div><!--]-->',
+    },
+    {
+      name: 'an open panel with animateInitialOpen has the starting attribute',
+      props: { open: true, animateInitialOpen: true },
+      html: '<!--[--><div data-open data-starting-style><!--[--><!--]--></div><!--]-->',
+    },
+    {
+      name: 'an open panel with the idle state has no transition attribute',
+      props: { open: true, enableIdleState: true },
+      html: '<!--[--><div data-open><!--[--><!--]--></div><!--]-->',
+    },
+  ])('renders AnimatedPanel: $name', async ({ props, html }) => {
+    expect(await renderToString(<AnimatedPanel {...props} />)).toBe(html);
   });
 
   it('renders the ids of useVaseUiId', async () => {

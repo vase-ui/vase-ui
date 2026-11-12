@@ -3,16 +3,25 @@
   "upstreamPaths": [
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
+    "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/stateAttributesMapping.ts",
+    "packages/react/src/internals/stateAttributesMapping.test.ts",
+    "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/**",
+    "packages/react/src/internals/useAnimationsFinished.ts",
+    "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useRenderElement.test.tsx",
     "packages/react/src/internals/useRenderElement.spec.tsx",
+    "packages/react/src/internals/useTransitionStatus.ts",
+    "packages/react/src/internals/useTransitionStatus.test.tsx",
     "packages/react/src/types/**",
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
@@ -23,15 +32,21 @@
     "packages/react/test/wait.ts"
   ],
   "sources": [
+    "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
+    "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/index.ts",
     "packages/react/src/internals/use-button/useButton.ts",
+    "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/useRenderElement.tsx",
+    "packages/react/src/internals/useTransitionStatus.ts",
     "packages/react/src/types/index.ts",
     "packages/react/test/conformanceTests/className.tsx",
     "packages/react/test/conformanceTests/propForwarding.tsx",
@@ -87,6 +102,39 @@
             "getStateAttributesProps"
           ],
           "title": "supports nulls returned from custom mapping"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/stateAttributesMapping.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "shared state-attribute mappings",
+            "transitionStatusMapping"
+          ],
+          "title": "emits the transition data attributes"
+        },
+        {
+          "describe": [
+            "shared state-attribute mappings",
+            "transitionStatusMapping"
+          ],
+          "title": "emits nothing outside a transition"
+        },
+        {
+          "describe": [
+            "shared state-attribute mappings",
+            "fieldValidityMapping"
+          ],
+          "title": "emits the validity data attributes"
+        },
+        {
+          "describe": [
+            "shared state-attribute mappings",
+            "fieldValidityMapping"
+          ],
+          "title": "emits nothing while validity is unknown"
         }
       ]
     },
@@ -339,6 +387,133 @@
       ]
     },
     {
+      "file": "packages/react/src/internals/useAnimationsFinished.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "ignores infinite animations when a finite animation completes via %s"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "finishes when the element only has an animation with an infinite %s"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "waits for a replacement animation after an animation is canceled"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "finishes when a canceled animation has no replacement"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "batches opted-in callbacks that finish in the same microtask into a single commit"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "skips a callback whose signal aborts while the batch is flushing"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished"
+          ],
+          "title": "commits each callback separately by default so later callbacks observe earlier updates"
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "serves the other elements of the tree with one root lookup once one has animations",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "ignores animations of pseudo-elements in the root lookup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "looks up each element on its own when they have $name",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "waits for every animation of an element served by the root lookup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "looks up $name individually without scanning the root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "looks up an element checked twice once and counts it once toward the root lookup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "skips the callback of an aborted element that was looked up with others",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnimationsFinished",
+            "elements checked in the same frame"
+          ],
+          "title": "looks up elements in $name through their own root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
       "file": "packages/react/src/internals/useRenderElement.test.tsx",
       "rows": [
         {
@@ -579,6 +754,29 @@
             "EMPTY_OBJECT mutation safety"
           ],
           "title": "does not throw when style is provided with minimal props"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useTransitionStatus.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useTransitionStatus"
+          ],
+          "title": "does not request a frame for an element that mounts already open"
+        },
+        {
+          "describe": [
+            "useTransitionStatus"
+          ],
+          "title": "clears the starting status on the next frame after opening"
+        },
+        {
+          "describe": [
+            "useTransitionStatus"
+          ],
+          "title": "clears a stale ending status when reopened before the exit settles"
         }
       ]
     },
