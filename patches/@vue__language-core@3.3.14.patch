@@ -1,0 +1,13 @@
+diff --git a/lib/codegen/template/element.js b/lib/codegen/template/element.js
+index 770dfd7d42086a7495d503f363356ef7b48220b7..86ae6c805c6b2f78f205db282cd51581985fee97 100644
+--- a/lib/codegen/template/element.js
++++ b/lib/codegen/template/element.js
+@@ -182,7 +182,7 @@ function* generateComponent(options, ctx, node) {
+     yield `const ${functionalVar} = ${options.vueCompilerOptions.checkUnknownProps ? names_1.names.asFunctionalComponent0 : names_1.names.asFunctionalComponent1}(${componentVar}, new ${componentVar}({${utils_1.newLine}`;
+     yield `// @ts-ignore${utils_1.newLine}`;
+     yield propsStr
+-        .replace(/\/\/(.*)$/gm, (_, body) => `/*${body.replaceAll('*/', '*\\/')} */`)
++        .replace(/\/\*[\s\S]*?\*\/|(["'`])(?:\\[\s\S]|(?!\1)[^\\])*\1|\/\/(.*)$/gm, (match, _, body) => body === undefined ? match : `/*${body.replaceAll('*/', '*\\/')} */`)
+         .replace(/\n/g, ' ');
+     yield `}))${utils_1.endOfLine}`;
+     yield `const `;
