@@ -12,22 +12,22 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
 
-async function readAttributes(locator: Locator, names: string[]) {
-  const values = await Promise.all(names.map((name) => locator.getAttribute(name)));
-  return Object.fromEntries(names.map((name, index) => [name, values[index]]));
+async function readAttributes(locator: Locator, attributeNames: string[]) {
+  const values = await Promise.all(attributeNames.map((name) => locator.getAttribute(name)));
+  return Object.fromEntries(attributeNames.map((name, index) => [name, values[index]]));
 }
 
-async function readElement(locator: Locator, names: string[]) {
+async function readElement(locator: Locator, attributeNames: string[]) {
   return {
     tag: await locator.evaluate((element) => element.localName),
     text: await locator.textContent(),
-    attributes: await readAttributes(locator, names),
+    attributes: await readAttributes(locator, attributeNames),
   };
 }
 
 async function expectButtonPage(page: Page) {
-  const names = ['type', 'tabindex', 'disabled', 'aria-disabled', 'data-disabled', 'role'];
-  const read = (testId: string) => readAttributes(page.getByTestId(testId), names);
+  const attributeNames = ['type', 'tabindex', 'disabled', 'aria-disabled', 'data-disabled', 'role'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
 
   expect(await page.getByTestId('counter').textContent()).toBe('Count 0');
   expect(await read('counter')).toEqual({
@@ -65,9 +65,9 @@ async function expectButtonPage(page: Page) {
 }
 
 async function expectSeparatorPage(page: Page) {
-  const names = ['role', 'aria-orientation', 'data-orientation', 'class'];
+  const attributeNames = ['role', 'aria-orientation', 'data-orientation', 'class'];
 
-  expect(await readAttributes(page.getByTestId('separator'), names)).toEqual({
+  expect(await readAttributes(page.getByTestId('separator'), attributeNames)).toEqual({
     role: 'separator',
     'aria-orientation': 'vertical',
     'data-orientation': 'vertical',
@@ -76,7 +76,7 @@ async function expectSeparatorPage(page: Page) {
 }
 
 async function expectCurrencyRoot(page: Page) {
-  const names = [
+  const attributeNames = [
     'role',
     'aria-valuemin',
     'aria-valuemax',
@@ -88,7 +88,7 @@ async function expectCurrencyRoot(page: Page) {
   const labelId = await page.getByTestId('currency-label').getAttribute('id');
 
   expect(labelId).toBeTruthy();
-  expect(await readAttributes(page.getByTestId('currency-root'), names)).toEqual({
+  expect(await readAttributes(page.getByTestId('currency-root'), attributeNames)).toEqual({
     role: 'progressbar',
     'aria-valuemin': '1000',
     'aria-valuemax': '5000',
@@ -124,25 +124,25 @@ async function expectProvidersPage(page: Page) {
 }
 
 async function expectUseRenderPage(page: Page) {
-  const names = ['role', 'data-tone', 'class', 'href'];
+  const attributeNames = ['role', 'data-tone', 'class', 'href'];
 
-  expect(await readElement(page.getByTestId('default-tag'), names)).toEqual({
+  expect(await readElement(page.getByTestId('default-tag'), attributeNames)).toEqual({
     tag: 'p',
     text: 'Default tag',
     attributes: { role: 'note', 'data-tone': 'info', class: 'highlight', href: null },
   });
-  expect(await readElement(page.getByTestId('as-tag'), names)).toEqual({
+  expect(await readElement(page.getByTestId('as-tag'), attributeNames)).toEqual({
     tag: 'section',
     text: 'As tag',
     attributes: { role: 'note', 'data-tone': 'warning', class: null, href: null },
   });
-  expect(await readElement(page.getByTestId('render-slot'), names)).toEqual({
+  expect(await readElement(page.getByTestId('render-slot'), attributeNames)).toEqual({
     tag: 'a',
     text: 'Render slot',
     attributes: { role: 'note', 'data-tone': 'info', class: null, href: '/button' },
   });
   expect(await page.getByTestId('merged').getAttribute('class')).toBe('second first');
-  expect(await page.getByTestId('names').locator('li').allTextContents()).toEqual([]);
+  expect(await page.getByTestId('calls').locator('li').allTextContents()).toEqual([]);
 }
 
 const PAGES = [
@@ -185,6 +185,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     rootDir,
     browser: true,
     dev,
+    // `setup` replaces the date of `nuxt.config.ts` with its own default date.
     nuxtConfig: { compatibilityDate: nuxtConfig.compatibilityDate },
   });
 
@@ -237,10 +238,10 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
   it('runs the handlers of mergeProps from the rightmost set after hydration', async () => {
     const page = await createPage('/use-render');
-    const names = page.getByTestId('names').locator('li');
+    const calls = page.getByTestId('calls').locator('li');
 
-    expect(await names.allTextContents()).toEqual([]);
+    expect(await calls.allTextContents()).toEqual([]);
     await page.getByTestId('merged').click();
-    expect(await names.allTextContents()).toEqual(['second', 'first']);
+    expect(await calls.allTextContents()).toEqual(['second', 'first']);
   });
 });

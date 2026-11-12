@@ -2,9 +2,9 @@
 import { ref } from 'vue';
 import { mergeProps } from '@vase-ui/vue/merge-props';
 
-const names = ref<string[]>([]);
-const first = { class: 'first', onClick: () => names.value.push('first') };
-const second = { class: 'second', onClick: () => names.value.push('second') };
+const calls = ref<string[]>([]);
+const first = { class: 'first', onClick: () => calls.value.push('first') };
+const second = { class: 'second', onClick: () => calls.value.push('second') };
 </script>
 
 <template>
@@ -17,8 +17,8 @@ const second = { class: 'second', onClick: () => names.value.push('second') };
       </template>
     </Notice>
     <button data-testid="merged" type="button" v-bind="mergeProps(first, second)">Merged</button>
-    <ol data-testid="names">
-      <li v-for="name in names" :key="name">{{ name }}</li>
+    <ol data-testid="calls">
+      <li v-for="call in calls" :key="call">{{ call }}</li>
     </ol>
   </main>
 </template>
