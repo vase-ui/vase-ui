@@ -39,7 +39,7 @@ Set the `keepMounted` prop to render the image element at once and let it load i
 
 <<< ./avatar/LazyImage.vue
 
-Put an image component that renders its own `<img>` in the `#render` slot. Bind `props` on it.
+An image component that renders its own `<img>` also needs `keepMounted`. Put the component in the `#render` slot. Bind `props` on it.
 
 ### Stacking
 
