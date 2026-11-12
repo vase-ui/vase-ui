@@ -16,8 +16,8 @@
       "describe": ["<CSPProvider />"],
       "title": "does not render inline style tags when disableStyleElements is true",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
-      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The case renders `ScrollArea.Viewport`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
@@ -32,16 +32,16 @@
       "describe": ["<CSPProvider />"],
       "title": "applies nonce to inline style tags",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
-      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The case renders `ScrollArea.Viewport`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
       "describe": ["<CSPProvider />"],
       "title": "renders inline style tags by default",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/root/ScrollAreaRoot.tsx",
-      "reason": "The case renders `ScrollArea.Root`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
+      "reason": "The case renders `ScrollArea.Viewport`, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [],
