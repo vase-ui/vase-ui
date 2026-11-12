@@ -117,7 +117,7 @@
     }
   },
   {
-    "measuredAt": "2026-11-12T04:24Z",
+    "measuredAt": "2026-11-12T04:23Z",
     "commit": "281c666952fd407c80001e81b8e33dd81d37dcce",
     "prices": {
       "readOn": "2026-11-12",
@@ -301,6 +301,373 @@
       "cache_read_input_tokens": 818880167,
       "total": 860442402,
       "usd": "469.05"
+    }
+  },
+  {
+    "measuredAt": "2026-11-12T14:10Z",
+    "commit": "fd505f106f7ac15f26f48458464744dfe07966ba",
+    "prices": {
+      "readOn": "2026-11-12",
+      "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+      "unit": "USD per million tokens",
+      "models": {
+        "claude-fable-5-2": {
+          "input": "8",
+          "cache_write_5m": "10",
+          "cache_write_1h": "16",
+          "cache_read": "0.20",
+          "output": "40"
+        },
+        "claude-opus-5-5": {
+          "input": "4",
+          "cache_write_5m": "5",
+          "cache_write_1h": "8",
+          "cache_read": "0.20",
+          "output": "20"
+        },
+        "claude-sonnet-5-5": {
+          "input": "2",
+          "cache_write_5m": "2.50",
+          "cache_write_1h": "4",
+          "cache_read": "0.10",
+          "output": "10"
+        }
+      }
+    },
+    "byModel": {
+      "claude-fable-5-2": {
+        "input_tokens": 6288,
+        "output_tokens": 5781360,
+        "cache_creation_input_tokens": 38318178,
+        "cache_creation_5m": 26331915,
+        "cache_creation_1h": 11986263,
+        "cache_read_input_tokens": 646803073,
+        "total": 690908899,
+        "usd": "815.76"
+      },
+      "claude-opus-5-5": {
+        "input_tokens": 534,
+        "output_tokens": 266660,
+        "cache_creation_input_tokens": 1706016,
+        "cache_creation_5m": 1706016,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 28403048,
+        "total": 30376258,
+        "usd": "19.55"
+      },
+      "claude-sonnet-5-5": {
+        "input_tokens": 11104,
+        "output_tokens": 9510330,
+        "cache_creation_input_tokens": 35152704,
+        "cache_creation_5m": 35152704,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 1236697352,
+        "total": 1281371490,
+        "usd": "306.68"
+      }
+    },
+    "byWork": {
+      "coordination": {
+        "input_tokens": 768,
+        "output_tokens": 343624,
+        "cache_creation_input_tokens": 11986263,
+        "cache_creation_5m": 0,
+        "cache_creation_1h": 11986263,
+        "cache_read_input_tokens": 122869566,
+        "total": 135200221,
+        "usd": "230.11"
+      },
+      "other": {
+        "input_tokens": 290,
+        "output_tokens": 246138,
+        "cache_creation_input_tokens": 890838,
+        "cache_creation_5m": 890838,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 21946272,
+        "total": 23083538,
+        "usd": "6.88"
+      },
+      "research and plan": {
+        "input_tokens": 884,
+        "output_tokens": 687608,
+        "cache_creation_input_tokens": 2228253,
+        "cache_creation_5m": 2228253,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 69493391,
+        "total": 72410136,
+        "usd": "37.08"
+      },
+      "spikes": {
+        "input_tokens": 2102,
+        "output_tokens": 2451673,
+        "cache_creation_input_tokens": 13044871,
+        "cache_creation_5m": 13044871,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 300469771,
+        "total": 315968417,
+        "usd": "98.19"
+      },
+      "unit button": {
+        "input_tokens": 452,
+        "output_tokens": 272061,
+        "cache_creation_input_tokens": 1422771,
+        "cache_creation_5m": 1422771,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 37541102,
+        "total": 39236386,
+        "usd": "20.14"
+      },
+      "unit common": {
+        "input_tokens": 724,
+        "output_tokens": 573101,
+        "cache_creation_input_tokens": 2279276,
+        "cache_creation_5m": 2279276,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 62308494,
+        "total": 65161595,
+        "usd": "40.25"
+      },
+      "unit contribution-policy": {
+        "input_tokens": 310,
+        "output_tokens": 175536,
+        "cache_creation_input_tokens": 710342,
+        "cache_creation_5m": 710342,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 15277586,
+        "total": 16163774,
+        "usd": "10.88"
+      },
+      "unit conventions": {
+        "input_tokens": 566,
+        "output_tokens": 572712,
+        "cache_creation_input_tokens": 1912025,
+        "cache_creation_5m": 1912025,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 59894152,
+        "total": 62379455,
+        "usd": "32.88"
+      },
+      "unit conventions-2": {
+        "input_tokens": 626,
+        "output_tokens": 525828,
+        "cache_creation_input_tokens": 1888757,
+        "cache_creation_5m": 1888757,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 66287823,
+        "total": 68703034,
+        "usd": "36.46"
+      },
+      "unit conventions-3": {
+        "input_tokens": 574,
+        "output_tokens": 403793,
+        "cache_creation_input_tokens": 1603929,
+        "cache_creation_5m": 1603929,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 46130606,
+        "total": 48138902,
+        "usd": "25.95"
+      },
+      "unit conventions-4": {
+        "input_tokens": 456,
+        "output_tokens": 310600,
+        "cache_creation_input_tokens": 1121841,
+        "cache_creation_5m": 1121841,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 26284522,
+        "total": 27717419,
+        "usd": "16.99"
+      },
+      "unit conventions-5": {
+        "input_tokens": 214,
+        "output_tokens": 226678,
+        "cache_creation_input_tokens": 772304,
+        "cache_creation_5m": 772304,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 18766666,
+        "total": 19765862,
+        "usd": "12.09"
+      },
+      "unit cost-and-support": {
+        "input_tokens": 194,
+        "output_tokens": 204259,
+        "cache_creation_input_tokens": 597805,
+        "cache_creation_5m": 597805,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 15704777,
+        "total": 16507035,
+        "usd": "10.50"
+      },
+      "unit cost-price": {
+        "input_tokens": 200,
+        "output_tokens": 303095,
+        "cache_creation_input_tokens": 1044929,
+        "cache_creation_5m": 1044929,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 14105016,
+        "total": 15453240,
+        "usd": "18.43"
+      },
+      "unit csp-provider": {
+        "input_tokens": 262,
+        "output_tokens": 135071,
+        "cache_creation_input_tokens": 541178,
+        "cache_creation_5m": 541178,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 21242100,
+        "total": 21918611,
+        "usd": "8.15"
+      },
+      "unit direction-provider": {
+        "input_tokens": 420,
+        "output_tokens": 285271,
+        "cache_creation_input_tokens": 1178417,
+        "cache_creation_5m": 1178417,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 31115663,
+        "total": 32579771,
+        "usd": "16.86"
+      },
+      "unit docs-components": {
+        "input_tokens": 956,
+        "output_tokens": 711890,
+        "cache_creation_input_tokens": 2741626,
+        "cache_creation_5m": 2741626,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 122716606,
+        "total": 126171078,
+        "usd": "48.75"
+      },
+      "unit docs-site": {
+        "input_tokens": 970,
+        "output_tokens": 781296,
+        "cache_creation_input_tokens": 3024116,
+        "cache_creation_5m": 3024116,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 112030046,
+        "total": 115836428,
+        "usd": "45.90"
+      },
+      "unit docs-thanks": {
+        "input_tokens": 480,
+        "output_tokens": 395552,
+        "cache_creation_input_tokens": 1126937,
+        "cache_creation_5m": 1126937,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 41950390,
+        "total": 43473359,
+        "usd": "18.52"
+      },
+      "unit jest-dom-matchers": {
+        "input_tokens": 612,
+        "output_tokens": 336274,
+        "cache_creation_input_tokens": 1244544,
+        "cache_creation_5m": 1244544,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 35744410,
+        "total": 37325840,
+        "usd": "21.01"
+      },
+      "unit merge-props": {
+        "input_tokens": 360,
+        "output_tokens": 357419,
+        "cache_creation_input_tokens": 1079617,
+        "cache_creation_5m": 1079617,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 30212293,
+        "total": 31649689,
+        "usd": "19.75"
+      },
+      "unit parity-scripts": {
+        "input_tokens": 990,
+        "output_tokens": 1186641,
+        "cache_creation_input_tokens": 5604026,
+        "cache_creation_5m": 5604026,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 134415789,
+        "total": 141207446,
+        "usd": "87.48"
+      },
+      "unit release-workflow": {
+        "input_tokens": 700,
+        "output_tokens": 539538,
+        "cache_creation_input_tokens": 1923082,
+        "cache_creation_5m": 1923082,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 50679780,
+        "total": 53143100,
+        "usd": "32.98"
+      },
+      "unit render-pipeline": {
+        "input_tokens": 1202,
+        "output_tokens": 1237136,
+        "cache_creation_input_tokens": 6003703,
+        "cache_creation_5m": 6003703,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 172956490,
+        "total": 180198531,
+        "usd": "83.84"
+      },
+      "unit scaffold": {
+        "input_tokens": 866,
+        "output_tokens": 856090,
+        "cache_creation_input_tokens": 4224237,
+        "cache_creation_5m": 4224237,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 103087713,
+        "total": 108168906,
+        "usd": "68.81"
+      },
+      "unit separator": {
+        "input_tokens": 484,
+        "output_tokens": 347824,
+        "cache_creation_input_tokens": 1450814,
+        "cache_creation_5m": 1450814,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 45005887,
+        "total": 46805009,
+        "usd": "25.59"
+      },
+      "unit test-vue-warnings": {
+        "input_tokens": 554,
+        "output_tokens": 414431,
+        "cache_creation_input_tokens": 1294628,
+        "cache_creation_5m": 1294628,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 49645847,
+        "total": 51355460,
+        "usd": "23.83"
+      },
+      "unit use-button": {
+        "input_tokens": 316,
+        "output_tokens": 350522,
+        "cache_creation_input_tokens": 1073780,
+        "cache_creation_5m": 1073780,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 42484701,
+        "total": 43909319,
+        "usd": "23.69"
+      },
+      "unit use-render": {
+        "input_tokens": 394,
+        "output_tokens": 326689,
+        "cache_creation_input_tokens": 1161989,
+        "cache_creation_5m": 1161989,
+        "cache_creation_1h": 0,
+        "cache_read_input_tokens": 41536014,
+        "total": 43025086,
+        "usd": "19.99"
+      }
+    },
+    "total": {
+      "input_tokens": 17926,
+      "output_tokens": 15558350,
+      "cache_creation_input_tokens": 75176898,
+      "cache_creation_5m": 63190635,
+      "cache_creation_1h": 11986263,
+      "cache_creation_lifetime_not_reported": 169732,
+      "cache_read_input_tokens": 1911903473,
+      "total": 2002656647,
+      "usd": "1141.99"
     }
   }
 ]
