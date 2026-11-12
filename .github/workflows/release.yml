@@ -56,7 +56,9 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
+      # Install only the package that this job stages.
+      # Each other workspace project adds code to a step that can get the OIDC token.
+      - run: pnpm install --frozen-lockfile --filter @vase-ui/vue
       # `publishConfig.tag` has the same value. Without `--tag`, npm logs the wrong tag, `latest`.
       # With `--provenance`, the release fails when npm cannot make the provenance statement.
       - run: npm stage publish --tag next --provenance
