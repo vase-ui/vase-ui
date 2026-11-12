@@ -1,0 +1,105 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/internals/createBaseUIEventDetails.ts",
+    "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
+    "packages/react/src/internals/getStateAttributesProps.ts",
+    "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/reason-parts.ts",
+    "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useRenderElement.tsx",
+    "packages/react/src/internals/useRenderElement.test.tsx",
+    "packages/react/src/internals/useRenderElement.spec.tsx",
+    "packages/react/src/types/**",
+    "packages/react/test/conformanceTests/**",
+    "packages/react/test/createRenderer.ts",
+    "packages/react/test/describeConformance.tsx",
+    "packages/react/test/index.ts",
+    "packages/react/test/pointer.ts",
+    "packages/react/test/pointer.test.tsx",
+    "packages/react/test/wait.ts"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement"],
+      "title": "updates merged refs and event handlers when ref shape changes across rerenders",
+      "kind": "not-applicable",
+      "reason": "A part gives its ref callbacks one time, in `setup`, so their shape cannot change. React makes a new merged ref when the `ref` argument changes. A new test covers the handler half: a listener of the part that changes between two renders."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "warns when render is passed a function with an uppercase name",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "warns when render is passed a function with an uppercase acronym prefix",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "does not warn when render is passed a lowercase callback",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "does not warn when render is passed a screaming snake case callback",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "does not warn when render is passed a callback with an inferred useCallback name",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "does not warn when render is passed as a React element",
+      "kind": "not-applicable",
+      "reason": "The warning is for a React component that is given as the `render` function. In Vue the `as` prop takes a component, and `#render` is a slot."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "handles lazy elements",
+      "kind": "not-applicable",
+      "reason": "The case uses `React.lazy`, which Vue does not have."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": [
+        "useRenderElement",
+        "prop: render",
+        "lazy-wrapped render element (Flight shape)"
+      ],
+      "kind": "not-applicable",
+      "reason": "The cases test the lazy wrapper that the Flight client of React Server Components gives in place of a render element."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.test.tsx",
+      "describe": ["useRenderElement", "prop: render"],
+      "title": "throws error for invalid render element in development",
+      "kind": "not-applicable",
+      "reason": "The case tests `React.isValidElement` and `React.cloneElement`. No part clones a vnode."
+    },
+    {
+      "file": "packages/react/src/internals/useRenderElement.spec.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests that the result type follows `enabled`. The Vue composable has no `enabled` parameter: the template decides with `v-if`."
+    }
+  ],
+  "notApplicableCommits": []
+}

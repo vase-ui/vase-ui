@@ -2,6 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { renderOnServer } from './test/server/renderOnServer.ts';
 
 export default defineConfig({
   plugins: [vue(), vueJsx()],
@@ -16,6 +17,7 @@ export default defineConfig({
       hooks: 'list',
     },
     retry: 0,
+    setupFiles: ['./test/setup.ts'],
     projects: [
       {
         extends: true,
@@ -36,6 +38,7 @@ export default defineConfig({
             provider: playwright({ contextOptions: { timezoneId: 'UTC' } }),
             headless: true,
             screenshotFailures: false,
+            commands: { renderOnServer },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               { browser: 'firefox', name: 'firefox' },

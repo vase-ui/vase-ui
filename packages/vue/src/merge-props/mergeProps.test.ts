@@ -1,6 +1,6 @@
 import { expect, vi, describe, it } from 'vitest';
 import { mergeProps, mergePropsN } from '@vase-ui/vue/merge-props';
-import type { VaseUIEvent } from './types';
+import type { VaseUIEvent } from '../internals/types';
 
 describe('mergeProps', () => {
   it('merges event handlers', () => {

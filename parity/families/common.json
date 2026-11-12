@@ -111,7 +111,6 @@
     {
       "upstream": [
         "packages/utils/src/hydration.ts",
-        "packages/utils/src/useControlled.ts",
         "packages/utils/src/useEnhancedClickHandler.ts",
         "packages/utils/src/useScrollLock.ts"
       ],
@@ -222,16 +221,6 @@
       "describe": ["hydration", "useIsHydrating"],
       "kind": "waits-on",
       "waitsOn": "packages/utils/src/hydration.ts"
-    },
-    {
-      "file": "packages/utils/src/useControlled.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/utils/src/useControlled.ts"
-    },
-    {
-      "file": "packages/utils/src/useControlled.spec.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/utils/src/useControlled.ts"
     }
   ],
   "notApplicableCommits": []

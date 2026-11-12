@@ -1,6 +1,6 @@
 import { normalizeClass, normalizeStyle } from 'vue';
 import type { IntrinsicElementAttributes, NativeElements } from 'vue';
-import type { VaseUIEvent, WithVaseUIEvent } from './types';
+import type { VaseUIEvent, WithVaseUIEvent } from '../internals/types';
 
 type ElementType = keyof IntrinsicElementAttributes;
 type PropsOf<T extends ElementType> = WithVaseUIEvent<NativeElements[T]>;
