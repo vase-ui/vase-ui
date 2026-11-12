@@ -26,7 +26,7 @@ const MESSAGES = {
   domInstanceof:
     'Another realm has other classes. Check `nodeType`, or use the class of `ownerWindow(element)`.',
   tsx: 'A TSX component never compiles to Vapor mode. Write an SFC or a `.ts` composable.',
-  innerHTML: 'A bound `innerHTML` renders data as HTML. Use text interpolation.',
+  html: '`innerHTML`, `outerHTML` and `insertAdjacentHTML` render data as HTML. Use text interpolation.',
   reactEventProp: (reactKey, vueKey) =>
     `Vue makes the event name from the key, so \`${reactKey}\` listens to an event that no browser sends. Use \`${vueKey}\`.`,
 };
@@ -170,14 +170,24 @@ const RESTRICTED_TEMPLATE_SYNTAX = [
   { selector: "Identifier[name='$parent']", message: MESSAGES.$parent },
 ];
 
-const RESTRICTED_INNER_HTML_SYNTAX = [
+const RESTRICTED_HTML_SYNTAX = [
   {
-    // `:innerHTML`, `v-bind:innerHTML` and `.innerHTML`. The parser writes the argument in lower
-    // case in `name`, so the selector reads `rawName`.
-    selector: "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName='innerHTML']",
-    message: MESSAGES.innerHTML,
+    // `:innerHTML`, `v-bind:innerHTML`, `.innerHTML` and `:inner-h-t-m-l.camel`. The `camel`
+    // modifier turns the last one into `innerHTML`. The parser writes the argument in lower case in
+    // `name`, so the selector reads `rawName`.
+    selector:
+      "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName=/^(inner|outer)(-?H|-h)(-?T|-t)(-?M|-m)(-?L|-l)$/]",
+    message: MESSAGES.html,
   },
-  { selector: "Property[key.name='innerHTML']", message: MESSAGES.innerHTML },
+  {
+    selector: [
+      // An object pattern has `Property` nodes too, and it reads the property.
+      'ObjectExpression > Property[key.name=/^(inner|outer)HTML$/]',
+      'AssignmentExpression > MemberExpression.left[property.name=/^(inner|outer)HTML$/]',
+      "CallExpression[callee.property.name='insertAdjacentHTML']",
+    ].join(', '),
+    message: MESSAGES.html,
+  },
 ];
 
 export default defineConfig([
@@ -270,13 +280,14 @@ export default defineConfig([
     rules: { 'no-restricted-syntax': ['error', ...RESTRICTED_REACT_EVENT_PROP_SYNTAX] },
   },
   {
-    // Text from parity/ and from Base UI commits is data. A page must not render it as HTML, with
-    // `v-html` or with `innerHTML` as a prop or as an object key, in the template or in a script.
+    // Text from parity/ and from Base UI commits is data. A page must not render it as HTML.
+    // The rules read the template and the script. They refuse `v-html`, `insertAdjacentHTML`, and
+    // `innerHTML` and `outerHTML` as a prop, an object key or an assignment target.
     files: ['docs/**/*.vue'],
     rules: {
       'vue/no-v-html': 'error',
-      'vue/no-restricted-syntax': ['error', ...RESTRICTED_INNER_HTML_SYNTAX],
-      'no-restricted-syntax': ['error', ...RESTRICTED_INNER_HTML_SYNTAX],
+      'vue/no-restricted-syntax': ['error', ...RESTRICTED_HTML_SYNTAX],
+      'no-restricted-syntax': ['error', ...RESTRICTED_HTML_SYNTAX],
     },
   },
   {

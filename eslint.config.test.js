@@ -276,6 +276,34 @@ const reported = [
     hint: 'text interpolation',
   },
   {
+    name: ':inner-h-t-m-l.camel in a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\nconst html = "";\n</script>\n\n<template>\n  <div :inner-h-t-m-l.camel="html" />\n</template>\n',
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'text interpolation',
+  },
+  {
+    name: ':outerHTML in a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\nconst html = "";\n</script>\n\n<template>\n  <div :outerHTML="html" />\n</template>\n',
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'text interpolation',
+  },
+  {
+    name: 'an innerHTML assignment in script setup of a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\ndeclare const element: HTMLElement;\nconst html = "";\nelement.innerHTML = html;\n</script>\n\n<template>\n  <div />\n</template>\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'text interpolation',
+  },
+  {
+    name: 'insertAdjacentHTML in script setup of a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\ndeclare const element: HTMLElement;\nconst html = "";\nelement.insertAdjacentHTML("beforeend", html);\n</script>\n\n<template>\n  <div />\n</template>\n',
+    ruleId: 'no-restricted-syntax',
+    hint: 'text interpolation',
+  },
+  {
     name: 'a style block in a demo',
     file: 'docs/demos/sample/hero/css-modules/index.vue',
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style>\n.sample {\n  color: red;\n}\n</style>\n',
@@ -374,6 +402,11 @@ const passed = [
     name: 'a scoped style block in a documentation component',
     file: 'docs/.vitepress/components/Sample.vue',
     code: '<script setup lang="ts"></script>\n\n<template>\n  <div class="sample" />\n</template>\n\n<style scoped>\n.sample {\n  color: red;\n}\n</style>\n',
+  },
+  {
+    name: 'a read of innerHTML through destructuring in a documentation component',
+    file: 'docs/.vitepress/components/Sample.vue',
+    code: '<script setup lang="ts">\ndeclare const element: HTMLElement;\nconst { innerHTML } = element;\nconst length = innerHTML.length;\n</script>\n\n<template>\n  <div>{{ length }}</div>\n</template>\n',
   },
 ];
 
