@@ -27,6 +27,7 @@
     "docs:build": "pnpm --filter @vase-ui/docs build",
     "docs:preview": "pnpm --filter @vase-ui/docs preview",
     "docs:typecheck": "pnpm --filter @vase-ui/docs typecheck",
+    "docs:demos": "node scripts/docs/upstreamDemos.ts",
     "parity:extract": "node scripts/parity/extract.ts",
     "parity:check": "node scripts/parity/check.ts",
     "parity:track": "node scripts/parity/track.ts",

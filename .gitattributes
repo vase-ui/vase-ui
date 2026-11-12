@@ -2,3 +2,4 @@
 parity/upstream.json linguist-generated
 parity/families/*.upstream.json linguist-generated
 THANKS.md linguist-generated
+docs/demos/*/upstream.json linguist-generated
