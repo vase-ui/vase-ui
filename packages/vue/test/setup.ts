@@ -1,7 +1,12 @@
-import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
 import { reset } from '../src/common/error';
 import { resetAnimationFrameScheduler } from '../src/common/useAnimationFrame';
+
+// `css.escape`, a dependency of jest-dom, defines the global `CSS`. In Node, that global hides
+// the `ReferenceError` that code gets on a server when it uses `CSS` with no check.
+if (typeof document !== 'undefined') {
+  await import('@testing-library/jest-dom/vitest');
+}
 
 afterEach(() => {
   vi.resetAllMocks();
