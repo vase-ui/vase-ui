@@ -7,6 +7,7 @@
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/use-button/**",
     "packages/react/src/internals/useBaseUiId.ts",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useRenderElement.test.tsx",
@@ -92,6 +93,45 @@
       "upstream": "packages/react/src/internals/useRenderElement.spec.tsx",
       "kind": "not-applicable",
       "reason": "The file tests that the result type follows `enabled`. The Vue composable has no `enabled` parameter: the template decides with `v-if`."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "describe": ["useButton", "param: focusableWhenDisabled"],
+      "title": "force overrides disabled attribute when put in a composite",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "describe": ["useButton", "event handlers"],
+      "title": "key: Space fires keydown then click when in composite root context",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "describe": ["useButton", "event handlers"],
+      "title": "key: Space fires keydown then click on native buttons in composite root context",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "describe": ["useButton", "event handlers"],
+      "title": "`composite=false` keeps keyup activation inside composite root context",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "describe": ["useButton", "server-side rendering"],
+      "kind": "replaced",
+      "test": "packages/vue/src/internals/use-button/useButton.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The cases are in the test file that the Node project runs, with the same titles."
     }
   ],
   "surfaceAdditions": [],
