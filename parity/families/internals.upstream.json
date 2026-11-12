@@ -8,6 +8,7 @@
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/use-button/**",
     "packages/react/src/internals/useBaseUiId.ts",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useRenderElement.test.tsx",
@@ -27,6 +28,8 @@
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/types.ts",
+    "packages/react/src/internals/use-button/index.ts",
+    "packages/react/src/internals/use-button/useButton.ts",
     "packages/react/src/internals/useBaseUiId.ts",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/types/index.ts",
@@ -84,6 +87,254 @@
             "getStateAttributesProps"
           ],
           "title": "supports nulls returned from custom mapping"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/use-button/useButton.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useButton",
+            "non-native button",
+            "keyboard interactions"
+          ],
+          "title": "can be activated with $key key"
+        },
+        {
+          "describe": [
+            "useButton",
+            "non-native button",
+            "keyboard interactions"
+          ],
+          "title": "does not set a type prop"
+        },
+        {
+          "describe": [
+            "useButton",
+            "non-native button",
+            "keyboard interactions"
+          ],
+          "title": "can be activated with Enter when the keyboard event originates inside a shadow root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: focusableWhenDisabled"
+          ],
+          "title": "allows disabled buttons to be focused"
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: focusableWhenDisabled"
+          ],
+          "title": "force overrides disabled attribute when put in a composite"
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: focusableWhenDisabled"
+          ],
+          "title": "prevents interactions except focus and blur"
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: tabIndex"
+          ],
+          "title": "returns tabIndex in getButtonProps when host component is BUTTON"
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: tabIndex"
+          ],
+          "title": "returns tabIndex in getButtonProps when host component is not BUTTON"
+        },
+        {
+          "describe": [
+            "useButton",
+            "param: tabIndex"
+          ],
+          "title": "returns tabIndex in getButtonProps if it is explicitly provided"
+        },
+        {
+          "describe": [
+            "useButton",
+            "arbitrary props"
+          ],
+          "title": "are passed to the host component"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keyup then click on non-composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keydown then click on composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keydown then click on composite links"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "does not click composite links when Space is prevented for text navigation"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "does not click composite gridcells when Space is prevented"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "clicks composite switches when Space is prevented"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keydown then click on native composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "does not fire duplicate clicks for Space on native composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "fires a single click for nested non-native composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space preserves native submit semantics on composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space preserves native reset semantics on composite buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "does not click composite buttons when keydown calls preventBaseUIHandler"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "does not click non-composite buttons when keydown/keyup calls preventBaseUIHandler"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Enter does not click non-native buttons when keydown calls preventDefault"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space does not click non-native buttons when keyup calls preventDefault"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keydown then click when in composite root context"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Space fires keydown then click on native buttons in composite root context"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "`composite=false` keeps keyup activation inside composite root context"
+        },
+        {
+          "describe": [
+            "useButton",
+            "event handlers"
+          ],
+          "title": "key: Enter fires keydown then click on non-native buttons"
+        },
+        {
+          "describe": [
+            "useButton",
+            "server-side rendering"
+          ],
+          "title": "should server-side render",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useButton",
+            "server-side rendering"
+          ],
+          "title": "adds disabled attribute",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useButton",
+            "dev warnings"
+          ],
+          "title": "errors if nativeButton=true but ref is not a button"
+        },
+        {
+          "describe": [
+            "useButton",
+            "dev warnings"
+          ],
+          "title": "errors if nativeButton=false but ref is a button"
         }
       ]
     },
