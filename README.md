@@ -28,25 +28,28 @@ AI agents build and maintain Vase UI. The tables show every token that they have
 
 <!-- cost:start -->
 
-Measured on 2026-11-12 (UTC).
+Measured on 2026-11-12 (UTC). Prices read on 2026-11-12.
 
-| Model             |    Output | Cache writes | Cache reads |  All tokens |
-| ----------------- | --------: | -----------: | ----------: | ----------: |
-| Claude Sonnet 5.5 | 2,964,523 |   13,082,476 | 375,340,773 | 391,390,830 |
-| Claude Fable 5.2  |   795,540 |    4,969,677 |  56,659,262 |  62,425,075 |
-| Claude Opus 5.5   |   120,211 |      520,136 |  14,755,772 |  15,396,287 |
-| Total             | 3,880,274 |   18,572,289 | 446,755,807 | 469,212,192 |
+| Model             |    Output | Cache writes | Cache reads |  All tokens | API price |
+| ----------------- | --------: | -----------: | ----------: | ----------: | --------: |
+| Claude Sonnet 5.5 | 4,620,684 |   19,494,812 | 551,541,299 | 575,661,523 |   $150.11 |
+| Claude Fable 5.2  | 2,485,726 |   14,223,003 | 251,749,691 | 268,460,570 |   $310.26 |
+| Claude Opus 5.5   |   126,696 |      604,242 |  15,589,177 |  16,320,309 |     $8.67 |
+| Total             | 7,233,106 |   34,322,057 | 818,880,167 | 860,442,402 |   $469.05 |
 
-| Work              |  All tokens |
-| ----------------- | ----------: |
-| Experiments       | 273,271,075 |
-| Pull requests     | 108,168,906 |
-| Research and plan |  72,410,136 |
-| Coordination      |  15,362,075 |
+| Work              |  All tokens | API price |
+| ----------------- | ----------: | --------: |
+| Pull requests     | 416,507,231 |   $266.06 |
+| Experiments       | 315,968,417 |    $98.19 |
+| Research and plan |  72,410,136 |    $37.08 |
+| Coordination      |  41,030,661 |    $63.38 |
+| Other             |  14,525,957 |     $4.34 |
 
 <!-- cost:end -->
 
-"All tokens" also counts the uncached input, which has no column. Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/blob/main/cost/history.json). We update the count at each release.
+"All tokens" also counts the uncached input, which has no column. "API price" is what these tokens cost in US dollars at the API's [list prices](https://platform.claude.com/docs/en/about-claude/pricing) on the date that the prices were read. Cache writes are priced by their lifetime, 5 minutes or 1 hour. For a few messages the API reports more cache writes than the sum of the two lifetimes, and we price that rest as 5-minute writes. Each price is rounded to the cent, so the prices in a table do not always add up to the total.
+
+Every measurement is in [cost/history.json](https://github.com/vase-ui/vase-ui/blob/main/cost/history.json). We update the count at each release.
 
 ## Thanks
 
