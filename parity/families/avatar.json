@@ -1,0 +1,37 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/avatar/**",
+    "docs/src/app/(docs)/react/components/avatar/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Image",
+      "prop": "src",
+      "reason": "The part reads `src` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Image",
+      "prop": "srcset",
+      "reason": "The part reads `srcset` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Image",
+      "prop": "sizes",
+      "reason": "The part reads `sizes` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Image",
+      "prop": "crossorigin",
+      "reason": "The part reads `crossorigin` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Image",
+      "prop": "referrerpolicy",
+      "reason": "The part reads `referrerpolicy` to load the image before it renders the element, so it is a declared prop. Base UI reads it from the native attributes of the image, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
