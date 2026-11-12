@@ -1,0 +1,13 @@
+diff --git a/lib/helpers.js b/lib/helpers.js
+index 580b6bd31950f071745b8d8db1944df6b945353e..cb866d9f5b366becee2e50564382fabbb17fc0da 100644
+--- a/lib/helpers.js
++++ b/lib/helpers.js
+@@ -90,7 +90,7 @@ function inferComponentExposed(typeChecker, componentType) {
+         if (sig.parameters.length > 2) {
+             const exposeParam = sig.parameters[2];
+             if (exposeParam) {
+-                const exposeType = typeChecker.getTypeOfSymbol(exposeParam);
++                const exposeType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbol(exposeParam));
+                 const callSignatures = exposeType.getCallSignatures();
+                 for (const callSig of callSignatures) {
+                     const params = callSig.getParameters();

@@ -1,0 +1,9 @@
+{
+  "id": "BUG-6206",
+  "evidence": [
+    "https://github.com/mui/base-ui/issues/6206",
+    "https://github.com/mui/base-ui/issues/5765"
+  ],
+  "behavior": "A native form reset puts each uncontrolled control back to its default value and removes `data-filled`.",
+  "dueWith": "packages/react/src/checkbox/root/CheckboxRoot.tsx"
+}

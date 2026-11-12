@@ -1,0 +1,206 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/merge-props/**"
+  ],
+  "sources": [
+    "packages/react/src/merge-props/index.ts",
+    "packages/react/src/merge-props/mergeProps.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/merge-props/mergeProps.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges event handlers"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges multiple event handlers"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges undefined event handlers"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "makes a lone synthetic event handler preventable"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "makes a first-position synthetic event handler preventable"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "makes a first-position synthetic event handler preventable in mergePropsN"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "makes a lone obscure synthetic event handler preventable"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges styles"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges styles with undefined"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "does not merge styles if both are undefined"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges classNames with rightmost first"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges multiple classNames"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges classNames with undefined"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "does not merge classNames if both are undefined"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "does not prevent internal handler if event.preventBaseUIHandler() is not called"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "prevents internal handler if event.preventBaseUIHandler() is called"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "prevents handlers merged after event.preventBaseUIHandler() is called"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "handles non-standard event handlers called with $name"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "forwards all arguments for a lone non-standard event handler"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "forwards all arguments for merged non-standard event handlers"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "forwards additional arguments for synthetic event handlers"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "merges internal props so that the ones defined first override the ones defined later"
+        },
+        {
+          "describe": [
+            "mergeProps"
+          ],
+          "title": "sets baseUIHandlerPrevented to true after calling preventBaseUIHandler()"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "calls the props getter with the props defined after it"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "calls the props getter with merged props defined after it"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "calls the props getter with an empty object if no props are defined after it"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "does not mutate a reused object returned by the first props getter"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "accepts the result of the props getter"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "does not automatically prevent handlers that are manually called by getter handlers"
+        },
+        {
+          "describe": [
+            "mergeProps",
+            "props getters"
+          ],
+          "title": "allows props getter handlers to check baseUIHandlerPrevented manually"
+        }
+      ]
+    }
+  ],
+  "surface": []
+}

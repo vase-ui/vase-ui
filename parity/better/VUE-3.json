@@ -1,0 +1,6 @@
+{
+  "id": "VUE-3",
+  "evidence": ["https://github.com/mui/base-ui/issues/5821"],
+  "behavior": "The server HTML of a panel with `hiddenUntilFound` has `hidden=\"until-found\"`.",
+  "dueWith": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "BUG-5574",
+  "evidence": ["https://github.com/mui/base-ui/issues/5574"],
+  "behavior": "A pick with the mouse during an IME composition leaves no stale text in the input.",
+  "dueWith": "packages/react/src/combobox/item/ComboboxItem.tsx"
+}

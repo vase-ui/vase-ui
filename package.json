@@ -5,7 +5,7 @@
   "packageManager": "pnpm@12.18.0",
   "scripts": {
     "build": "pnpm --filter @vase-ui/vue build",
-    "typecheck": "pnpm --filter @vase-ui/vue typecheck",
+    "typecheck": "tsc --project tsconfig.json && pnpm --filter @vase-ui/vue typecheck",
     "check:package": "pnpm --filter @vase-ui/vue check:package",
     "test": "pnpm --filter @vase-ui/vue test",
     "test:node": "pnpm --filter @vase-ui/vue test:node",
@@ -15,20 +15,28 @@
     "test:webkit": "pnpm --filter @vase-ui/vue test:webkit",
     "test:lint-rules": "node --test eslint.config.test.js",
     "test:cost": "node --test scripts/cost/render.test.ts",
+    "test:parity": "node --test \"scripts/parity/*.test.ts\"",
     "cost:render": "node scripts/cost/render.ts",
     "cost:check": "node scripts/cost/render.ts --check",
-    "lint": "pnpm test:lint-rules && pnpm test:cost && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check",
+    "parity:extract": "node scripts/parity/extract.ts",
+    "parity:check": "node scripts/parity/check.ts",
+    "parity:track": "node scripts/parity/track.ts",
+    "lint": "pnpm test:lint-rules && pnpm test:cost && pnpm test:parity && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check",
     "format": "prettier --write ."
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
     "eslint": "10.14.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-vue": "10.12.1",
     "globals": "17.14.0",
+    "marked": "18.2.0",
     "prettier": "3.9.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.2",
+    "vue": "3.5.45",
+    "vue-component-meta": "3.3.14",
     "vue-eslint-parser": "10.4.2"
   }
 }

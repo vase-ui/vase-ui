@@ -1,0 +1,6 @@
+{
+  "id": "BUG-4854",
+  "evidence": ["https://github.com/mui/base-ui/issues/4854"],
+  "behavior": "A long press with a stylus opens the Context Menu.",
+  "dueWith": "packages/react/src/context-menu/trigger/ContextMenuTrigger.tsx"
+}
