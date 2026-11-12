@@ -418,11 +418,12 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - If the next line does not read the DOM, write the state and nothing else. Vue queues its flush as a microtask. A microtask runs before the next paint.
 - If the next line reads the DOM or moves focus, write the state and `await nextTick()`. Then run the next line. Each replacement of this form must have a test of its own.
 - In an event handler, call `preventDefault` and `stopPropagation` before the first `await`. A handler returns at its first `await`. The browser then completes the dispatch of the event.
-- If upstream calls `flushSync` for each callback of a queue, run the callbacks in sequence. Each callback runs after the Vue flush of the callback before it, so it reads the state that the earlier callback changed.
+- If upstream gives each callback a `flushSync` call of its own, run the callbacks in sequence. Each callback runs after the Vue flush of the callback before it, so it reads the state that the earlier callback changed.
 - `useAnimationsFinished` uses this form for each completion that is not batched. Only microtasks wait, so the browser does not paint before the completion runs.
 - An error of a completion goes to `reportError`. The later completions still run.
-- An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`, with no `immediate`. `run` then runs at mount and after each DOM update that follows a change of a source.
-- Do not use `watchPostEffect` for an effect. In Vue 3.5.0, a server render runs it one time. The `watch` with a callback and no `immediate` does not run on a server.
+- An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes a `watch` with a callback and no `immediate`. A server render does not run such a `watch`, except one with `flush: 'sync'`.
+- `useTransitionStatus` and `useOpenChangeComplete` use `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`. `run` then runs at mount and after each DOM update that follows a change of a source.
+- Do not use `watchPostEffect` for an effect. In Vue 3.5.0, a server render runs it one time.
 - The transition status runs on a `flush: 'sync'` watcher. It replaces a state write during render.
 - `useTransitionStatus` has a fifth parameter, `element`, that upstream does not have. It is the element that gets `data-starting-style`, or a ref or a getter for it.
 - After the DOM update that applies `data-starting-style`, the composable reads the layout of that element one time, with `getBoundingClientRect()`. It then removes the attribute in the next animation frame, as upstream.
@@ -433,7 +434,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
-- A part gives a Boolean attribute, such as `hidden`, the value `true` or `undefined`, never `false`. On an element that is not HTML, such as an `<svg>`, Vue writes `false` as `hidden="false"`.
+- Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - The popup tree is the only link between a teleported child popup and its parent.
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
@@ -580,7 +581,7 @@ The hydration helpers:
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
 - When a test expects a `Vase UI:` message, use a console spy that has `mockImplementation`. A spy with no implementation passes the call to the console, and the test fails.
 - `test/setup.ts` sets `globalThis.VASE_UI_ANIMATIONS_DISABLED` to `true` when it loads and after each test. A test that needs a real animation sets it to `false`.
-- A test that counts the transitions of an element reads no style and no layout of that element. A read starts the transition that the part must start, and the test then passes with a broken part.
+- A test that counts the transitions of an element reads no style and no layout. A read starts the transition that the part must start, and the test then passes with a broken part.
 - Put the cases of such a test that use a real pointer event in a file of their own. `test/fixtures/AnimatedPanel.click.test.tsx` is an example. A real pointer event comes from `userEvent` of `vitest/browser`.
 - A real pointer event makes Chromium compute style before the next frame callback. A later case of the same file then passes with a broken part.
 - Assert the start state before the action when the end state can be true already.
