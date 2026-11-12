@@ -50,6 +50,9 @@
     "test:webkit": "vitest run --project webkit",
     "prepack": "pnpm build && cp ../../LICENSE ../../README.md ."
   },
+  "dependencies": {
+    "@floating-ui/utils": "^0.2.12"
+  },
   "peerDependencies": {
     "vue": "^3.5.0 || ^3.6.0-0"
   },
