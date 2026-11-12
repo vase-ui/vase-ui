@@ -337,3 +337,7 @@ for (const { name, file, code } of passed) {
     assert.deepEqual(await lint(file, code), []);
   });
 }
+
+test('does not lint a file that has a test name and is not a script', async () => {
+  assert.equal(await eslint.calculateConfigForFile('packages/vue/tsconfig.test.json'), undefined);
+});
