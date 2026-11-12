@@ -1225,6 +1225,35 @@ describe('<Avatar.Image />', () => {
     expect(screen.queryByText('JD')).toBe(null);
   });
 
+  it('does not apply data-ending-style or report a status when a loaded image changes to a cached source', async () => {
+    const onLoadingStatusChange = vi.fn();
+
+    function Test({ src }: { src: string }) {
+      return (
+        <Avatar.Root>
+          <Avatar.Image
+            alt=""
+            data-testid="image"
+            src={src}
+            onLoadingStatusChange={onLoadingStatusChange}
+          />
+        </Avatar.Root>
+      );
+    }
+
+    const { rerender } = await render(<Test src="avatar-1.png" />);
+
+    expect(screen.getByTestId('image')).toHaveAttribute('src', 'avatar-1.png');
+    expect(onLoadingStatusChange.mock.calls.map(([status]) => status)).toEqual(['loaded']);
+    onLoadingStatusChange.mockClear();
+
+    await rerender(<Test src="avatar-2.png" />);
+
+    expect(screen.getByTestId('image')).toHaveAttribute('src', 'avatar-2.png');
+    expect(screen.getByTestId('image')).not.toHaveAttribute('data-ending-style');
+    expect(onLoadingStatusChange).not.toHaveBeenCalled();
+  });
+
   describe('hydration', () => {
     beforeEach(async () => {
       // The real `Image` keeps the decoded image of the data URI in the cache of the browser.

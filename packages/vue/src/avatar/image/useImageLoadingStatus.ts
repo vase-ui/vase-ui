@@ -56,7 +56,6 @@ export function useImageLoadingStatus(
       }
     };
 
-    setStatus('loading');
     image.onload = updateStatus('loaded');
     image.onerror = updateStatus('error');
     if (referrerPolicy) {
@@ -73,8 +72,12 @@ export function useImageLoadingStatus(
       image.src = source;
     }
 
-    // Fast path for cached/decoded images
-    if (image.complete) {
+    // A cached or decoded image is complete at once. Each run writes the status one time. React
+    // batches the writes of a layout effect. Here each write reaches `useTransitionStatus`, so a
+    // `'loading'` write before a `'loaded'` write would start an exit on a visible image.
+    if (!image.complete) {
+      setStatus('loading');
+    } else {
       setStatus(image.naturalWidth > 0 ? 'loaded' : 'error');
     }
   }
