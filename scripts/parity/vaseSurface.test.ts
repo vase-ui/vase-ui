@@ -53,7 +53,7 @@ test('a function has the JSDoc of its export, its parameters and its return valu
       ' * Creates a handle for a sample.',
       ' * @param name The name of the sample.',
       ' * @param duration How long the sample stays open.',
-      ' * @return The new handle.',
+      ' * @returns The new handle.',
       ' */',
       'export function createHandle(name: string, duration: number = 300, label?: string): Handle {',
     ].join('\n'),
@@ -79,9 +79,9 @@ test('a function with overloads has the parameters of its longest signature, and
   const overloaded = withParts(
     CREATE_HANDLE,
     [
+      'export function createHandle(name: string): Handle;',
       'export function createHandle(name: string, size: number, label: string): Handle;',
       'export function createHandle(name: string, size: number): Handle;',
-      'export function createHandle(name: string): Handle;',
       'export function createHandle(..._arguments: unknown[]): Handle {',
     ].join('\n'),
     readCreateHandle,

@@ -195,8 +195,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
       .replace(/import\(.*?\)\./g, '');
   const documentationOf = (symbol: ts.Symbol): string =>
     ts.displayPartsToString(symbol.getDocumentationComment(typeChecker()));
-  const tagText = (symbol: ts.Symbol, ...names: string[]): string | undefined => {
-    const tag = symbol.getJsDocTags(typeChecker()).find(({ name }) => names.includes(name));
+  const tagText = (symbol: ts.Symbol, tagName: string): string | undefined => {
+    const tag = symbol.getJsDocTags(typeChecker()).find(({ name }) => name === tagName);
     return tag?.text && ts.displayPartsToString(tag.text);
   };
   const directExport = (entryFile: string, name: string): ts.Symbol | undefined => {
@@ -396,7 +396,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
         }),
         returns: {
           type: returnType,
-          description: tagText(resolved, 'returns', 'return') ?? '',
+          description: tagText(resolved, 'returns') ?? '',
         },
       };
     },

@@ -229,6 +229,7 @@ test('the types are the types of the types.md that have one property or more, wi
       { name: 'SampleRootState', code: '' },
       { name: 'Ghost', code: '' },
       { name: 'SampleRootChangeEventReason', code: '' },
+      { name: 'Ghost.Handle', code: '' },
       { name: 'Sample.Handle', code: '' },
     ],
   };
