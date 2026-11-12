@@ -78,6 +78,7 @@ const upstream: UpstreamFile = {
   commit: SECOND,
   describe: 'v1.0.0-1-gbbbbbbbb',
   release: '1.0.0',
+  components: ['sample'],
   commits: [
     {
       sha: FIRST,
@@ -95,6 +96,7 @@ function makeFamily(): FamilyFile {
     matchedCommit: SECOND,
     exceptions: [],
     surfaceAdditions: [],
+    returnTypeDifferences: [],
     notApplicableCommits: [],
   };
 }
@@ -247,6 +249,16 @@ test('a "surfaceAdditions" row of a family with no surface is a stale row', () =
   ];
   assert.deepEqual(run(parity).problems, [
     'sample: stale row surfaceAdditions[0] (Ghost, prop ghost): the extract has no part `Ghost`. Remove the row.',
+  ]);
+});
+
+test('a "returnTypeDifferences" row of a family with no surface is a stale row', () => {
+  const parity = makeParity();
+  parity.families[0].family!.returnTypeDifferences = [
+    { entry: 'ghost', returns: 'string', reason: 'A reason.' },
+  ];
+  assert.deepEqual(run(parity).problems, [
+    'sample: stale row returnTypeDifferences[0] (ghost): the extract has no return value for `ghost`. Remove the row.',
   ]);
 });
 

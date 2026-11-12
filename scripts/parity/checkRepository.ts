@@ -167,6 +167,7 @@ export function checkRepository(input: CheckInput): CheckResult {
     if (
       extract.surface.length > 0 ||
       family.surfaceAdditions.length > 0 ||
+      family.returnTypeDifferences.length > 0 ||
       family.exceptions.some(({ entry }) => entry !== undefined)
     ) {
       const surface = checkSurface({ name, family, extract, files, root, project: input.project });

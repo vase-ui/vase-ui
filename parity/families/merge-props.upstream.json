@@ -1,7 +1,8 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
-    "packages/react/src/merge-props/**"
+    "packages/react/src/merge-props/**",
+    "docs/src/app/(docs)/react/utils/merge-props/**"
   ],
   "sources": [
     "packages/react/src/merge-props/index.ts",
@@ -202,5 +203,112 @@
       ]
     }
   ],
-  "surface": []
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/merge-props/types.md",
+      "parts": [],
+      "functions": [
+        {
+          "name": "makeEventPreventable",
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "event",
+                  "type": "BaseUIEvent<React.SyntheticEvent>",
+                  "default": null
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = BaseUIEvent<React.SyntheticEvent>;"
+          ]
+        },
+        {
+          "name": "mergeClassNames",
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "ourClassName",
+                  "type": "string | undefined",
+                  "default": null
+                },
+                {
+                  "name": "theirClassName",
+                  "type": "string | undefined",
+                  "default": null
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = string | undefined;"
+          ]
+        },
+        {
+          "name": "mergeProps",
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "a",
+                  "type": "InputProps<ElementType>",
+                  "default": null
+                },
+                {
+                  "name": "b",
+                  "type": "InputProps<ElementType>",
+                  "default": null
+                },
+                {
+                  "name": "c?",
+                  "type": "InputProps<ElementType>",
+                  "default": null
+                },
+                {
+                  "name": "d?",
+                  "type": "InputProps<ElementType>",
+                  "default": null
+                },
+                {
+                  "name": "e?",
+                  "type": "InputProps<ElementType>",
+                  "default": null
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = WithBaseUIEvent<React.ComponentPropsWithRef<ElementType>>;"
+          ]
+        },
+        {
+          "name": "mergePropsN",
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "props",
+                  "type": "InputProps<ElementType>[]",
+                  "default": null
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = WithBaseUIEvent<React.ComponentPropsWithRef<ElementType>>;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [],
+      "externalTypes": []
+    }
+  ]
 }

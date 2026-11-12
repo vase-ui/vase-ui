@@ -55,6 +55,8 @@ export interface VaseProject {
   readUnionValues: (entryFile: string, typeName: string) => string[] | undefined;
   /** The constants of an exported namespace, or `undefined` when the entry file has no such namespace. */
   readConstants: (entryFile: string, namespaceName: string) => ConstantSurface[] | undefined;
+  /** The return type of each call signature of the export, joined with ` | `. `undefined` when the export has no call signature. */
+  readReturnType: (match: ExportMatch) => string | undefined;
   /** Gives vue-component-meta and the SFC compiler another text for a file. */
   updateFile: (path: string, text: string) => void;
 }
@@ -315,6 +317,17 @@ export function createVaseProject(tsconfig: string): VaseProject {
             type: typeTag ? ts.displayPartsToString(typeTag).replace(/^\{(.*)\}$/s, '$1') : null,
           };
         });
+    },
+
+    readReturnType({ symbol }) {
+      const signatures = typeChecker().getTypeOfSymbol(resolve(symbol)).getCallSignatures();
+      if (signatures.length === 0) {
+        return undefined;
+      }
+      const texts = signatures.map((signature) =>
+        typeText(typeChecker().getReturnTypeOfSignature(signature)),
+      );
+      return [...new Set(texts)].join(' | ');
     },
 
     updateFile(path, text) {

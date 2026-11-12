@@ -167,5 +167,24 @@ function surfaceRows({ surface }: Family) {
         </tr>
       </tbody>
     </table>
+    <p>Return types that differ from Base UI: {{ family.returnTypeDifferences.length }}.</p>
+    <table v-if="family.returnTypeDifferences.length > 0">
+      <thead>
+        <tr>
+          <th scope="col">Entry</th>
+          <th scope="col">Vase UI returns</th>
+          <th scope="col">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="difference in family.returnTypeDifferences" :key="difference.entry">
+          <td>{{ difference.entry }}</td>
+          <td>
+            <code>{{ difference.returns }}</code>
+          </td>
+          <td><TextWithCode :text="difference.reason" /></td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 </template>

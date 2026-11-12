@@ -31,26 +31,35 @@ const extract: FamilyExtract = {
   surface: [surface],
 };
 
+// Base UI documents `Sample.Handle`, and the fixture declares `Handle`.
+const HANDLE_ROW = {
+  entry: 'createHandle',
+  returns: 'Handle',
+  reason: 'The type is the same. Base UI writes its namespace.',
+};
+
 function makeFamily(
   exceptions: ExceptionRow[] = [],
   surfaceAdditions: FamilyFile['surfaceAdditions'] = [
     { entry: 'Popup', prop: 'disabled', reason: 'The part reads it from the native attributes.' },
   ],
+  returnTypeDifferences: FamilyFile['returnTypeDifferences'] = [HANDLE_ROW],
 ): FamilyFile {
   return {
     upstreamPaths: ['docs/**'],
     matchedCommit: COMMIT,
     exceptions,
     surfaceAdditions,
+    returnTypeDifferences,
     notApplicableCommits: [],
   };
 }
 
-function check(family: FamilyFile = makeFamily()) {
+function check(family: FamilyFile = makeFamily(), sampleExtract: FamilyExtract = extract) {
   return checkSurface({
     name: 'sample',
     family,
-    extract,
+    extract: sampleExtract,
     files,
     root: FIXTURES,
     project: () => project,
@@ -267,6 +276,34 @@ const seeds: { name: string; file: string; edits: [string, string][]; message: s
     ],
     message: '`onClick` is a native listener, so the part must not have the prop `onClick`',
   },
+  {
+    name: 'a function entry whose export is not a function',
+    file: PARTS,
+    edits: [
+      [
+        'export function createHandle(): Handle {\n  return { open() {}, close() {} };\n}\n',
+        'export const createHandle: Handle = { open() {}, close() {} };\n',
+      ],
+    ],
+    message:
+      'the export `Sample.createHandle` is not a function, but Base UI documents the return value `Sample.Handle`',
+  },
+  {
+    name: 'overloads with two return types, one of them two times',
+    file: PARTS,
+    edits: [
+      [
+        'export function createHandle(): Handle {\n  return { open() {}, close() {} };\n}\n',
+        [
+          'export function createHandle(name: string): Handle & { name: string };',
+          'export function createHandle(id: number): Handle & { name: string };',
+          'export function createHandle(): Handle;',
+          'export function createHandle(): Handle {\n  return { open() {}, close() {} };\n}\n',
+        ].join('\n'),
+      ],
+    ],
+    message: 'the return type is `Handle & { name: string; } | Handle`',
+  },
 ];
 
 for (const { name, file, edits, message } of seeds) {
@@ -349,6 +386,78 @@ for (const { name, row, place, message } of staleAdditions) {
     ]);
   });
 }
+
+test('a returnTypeDifferences row accepts another return type, and the check needs it', () => {
+  assert.deepEqual(check(makeFamily([], undefined, [])).problems, [
+    'sample: surface difference sample/createHandle: the return type is `Handle`, but Base UI documents `Sample.Handle`. Add this row to "returnTypeDifferences" with a reason, or change the return type: {"entry":"createHandle","returns":"Handle","reason":""}',
+  ]);
+  assert.deepEqual(check().problems, []);
+});
+
+test('a returnTypeDifferences row with another "returns" gives one problem that says to correct it', () => {
+  const row = { ...HANDLE_ROW, returns: 'Sample.Handle' };
+  assert.deepEqual(check(makeFamily([], undefined, [row])).problems, [
+    'sample: surface difference sample/createHandle: the return type is `Handle`, but Base UI documents `Sample.Handle`. The "returnTypeDifferences" row has "returns": "Sample.Handle". Correct the row, or change the return type.',
+  ]);
+});
+
+test('a returnTypeDifferences row is stale when Vase UI returns the documented type', () => {
+  const equal: FamilyExtract = {
+    ...extract,
+    surface: [
+      {
+        ...surface,
+        functions: surface.functions.map((entry) =>
+          entry.name === 'createHandle'
+            ? { ...entry, code: ['type ReturnValue = Handle;'] }
+            : entry,
+        ),
+      },
+    ],
+  };
+  assert.deepEqual(check(makeFamily(), equal).problems, [
+    'sample: stale row returnTypeDifferences[0] (createHandle): Vase UI returns the type that Base UI documents for `createHandle`. Remove the row.',
+  ]);
+  assert.deepEqual(check(makeFamily([], undefined, []), equal).problems, []);
+});
+
+test('a returnTypeDifferences row for an entry with no documented return value is stale', () => {
+  const family = makeFamily([], undefined, [HANDLE_ROW, { ...HANDLE_ROW, entry: 'Root' }]);
+  assert.deepEqual(check(family).problems, [
+    'sample: stale row returnTypeDifferences[1] (Root): the extract has no return value for `Root`. Remove the row.',
+  ]);
+});
+
+test('an entry row makes a returnTypeDifferences row stale, unless the row states the Vase UI type', () => {
+  const stale = (index: number, entry: string) =>
+    `sample: stale row returnTypeDifferences[${index}] (${entry}): an exception row covers the entry \`${entry}\`. Remove the row.`;
+  const wrong = { ...HANDLE_ROW, returns: 'Bogus<Never>' };
+  assert.deepEqual(check(makeFamily([entryRow('createHandle')], undefined, [wrong])).problems, [
+    stale(0, 'createHandle'),
+  ]);
+
+  const ghostRow = { ...HANDLE_ROW, entry: 'useGhost' };
+  const ghost: FamilyExtract = {
+    ...extract,
+    surface: [
+      {
+        ...surface,
+        functions: [
+          ...surface.functions,
+          { name: 'useGhost', tables: [], code: ['type ReturnValue = string;'] },
+        ],
+      },
+    ],
+  };
+  assert.deepEqual(
+    check(makeFamily([entryRow('useGhost')], undefined, [HANDLE_ROW, ghostRow]), ghost).problems,
+    [stale(1, 'useGhost')],
+  );
+
+  assert.deepEqual(check(makeFamily([entryRow('createHandle')])).problems, [
+    `sample: stale row exceptions[0] (${TYPES_MD}, entry "createHandle"): it covers no difference. Remove the row.`,
+  ]);
+});
 
 test('the description of an event is the text of its JSDoc', () => {
   const [root] = project.findExports(join(SAMPLE, 'index.ts'), 'Root');

@@ -37,6 +37,7 @@ function makeFamily(): Json {
       },
     ],
     surfaceAdditions: [{ entry: 'Root', prop: 'disabled', reason: 'A reason.' }],
+    returnTypeDifferences: [{ entry: 'useRoot', returns: 'Ref<string>', reason: 'A reason.' }],
     notApplicableCommits: [{ sha: COMMIT, reason: 'A reason.' }],
   };
 }
@@ -160,6 +161,14 @@ const wrongFamilies: { name: string; change: (family: Json) => void; message: Re
     message: /exceptions\[2\]\.waitsOn: must be a path that starts with packages\/react\/src\//,
   },
   {
+    name: 'a waitsOn path with "/" at its end',
+    change: (family) => {
+      family.exceptions[2].waitsOn = 'packages/react/src/select/';
+    },
+    message:
+      /exceptions\[2\]\.waitsOn: must be a path that starts with .* and has no "\/" at its end\./,
+  },
+  {
     name: 'an engine that is not known',
     change: (family) => {
       family.exceptions[1].engine = 'blink';
@@ -194,6 +203,28 @@ const wrongFamilies: { name: string; change: (family: Json) => void; message: Re
       family.exceptions.push({ ...family.exceptions[0], reason: 'Another reason.' });
     },
     message: /exceptions\[3\]: names the same thing as exceptions\[0\]\. Keep one row\./,
+  },
+  {
+    name: 'a missing returnTypeDifferences key',
+    change: (family) => {
+      delete family.returnTypeDifferences;
+    },
+    message: /^parity\/families\/sample\.json: needs the key "returnTypeDifferences"\.$/,
+  },
+  {
+    name: 'a returnTypeDifferences row with no reason',
+    change: (family) => {
+      delete family.returnTypeDifferences[0].reason;
+    },
+    message: /returnTypeDifferences\[0\]: needs the key "reason"\./,
+  },
+  {
+    name: 'two returnTypeDifferences rows with one entry',
+    change: (family) => {
+      family.returnTypeDifferences.push({ ...family.returnTypeDifferences[0], returns: 'string' });
+    },
+    message:
+      /returnTypeDifferences\[1\]: names the same thing as returnTypeDifferences\[0\]\. Keep one row\./,
   },
   {
     name: 'a matchedCommit that is not 40 hexadecimal digits',
@@ -282,6 +313,13 @@ const wrongBetter: { name: string; change: (row: Json) => void; file?: string; m
       message: /dueWith: must be a path that starts with/,
     },
     {
+      name: 'a dueWith path with "/" at its end',
+      change: (row) => {
+        row.dueWith = 'packages/react/src/select/';
+      },
+      message: /dueWith: must be a path that starts with .* and has no "\/" at its end\./,
+    },
+    {
       name: 'an unknown key',
       change: (row) => {
         row.test = 'x';
@@ -314,6 +352,7 @@ test('validateUpstreamFile needs the commit to be the sha of the last row', () =
     commit: 'b'.repeat(40),
     describe: 'v1.0.0-1-gbbbbbbbb',
     release: '1.0.0',
+    components: ['accordion'],
     commits: [commit(COMMIT)],
   };
   assert.deepEqual(validateUpstreamFile('parity/upstream.json', file), [

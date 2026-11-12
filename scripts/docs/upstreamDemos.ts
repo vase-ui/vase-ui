@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { FamilyFile } from '../parity/parityFiles.ts';
+import { DOCS_FOLDER_PREFIX } from '../parity/paths.ts';
 import {
   extractCommand,
   familyFile,
@@ -12,7 +13,7 @@ import {
 import type { FamilyFiles } from '../parity/repository.ts';
 import { listFiles, readFileAt, resolveCommit } from '../parity/upstreamClone.ts';
 import { listFamilyPages } from './familyPages.ts';
-import { DOCS_FOLDER_PREFIX, docsFolderGlobs } from './upstreamDocs.ts';
+import { docsFolderGlobs } from './upstreamDocs.ts';
 
 /** A demo of Base UI has one folder for each variant. The Tailwind variants are not ported. */
 const TAILWIND_FOLDER = 'tailwind';

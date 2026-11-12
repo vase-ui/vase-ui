@@ -39,6 +39,7 @@ const upstream: UpstreamFile = {
   commit: ROOT_FILE,
   describe: 'v1.0.0-8-g2222222',
   release: '1.0.0',
+  components: ['alpha', 'dialog', 'select'],
   commits: [
     commit(FIRST, '2026-01-01T10:00:00+00:00', 'packages/react/src/alpha/Alpha.tsx'),
     commit(SECOND, '2026-01-02T10:00:00+00:00', 'packages/react/src/alpha/index.ts'),
@@ -81,6 +82,7 @@ const alpha: FamilyFile = {
   matchedCommit: SECOND,
   exceptions: [],
   surfaceAdditions: [],
+  returnTypeDifferences: [],
   notApplicableCommits: [],
 };
 
@@ -89,6 +91,7 @@ const beta: FamilyFile = {
   matchedCommit: FOURTH,
   exceptions: [],
   surfaceAdditions: [],
+  returnTypeDifferences: [],
   notApplicableCommits: [{ sha: THIRD, reason: REACT_ONLY }],
 };
 
@@ -202,6 +205,39 @@ test('a commit that no rule names is out-of-scope with no reason', () => {
   });
 });
 
+test('a root file, a settings file and an overview page have one reason, and a ported page and source file are not started', () => {
+  const oneReason = [
+    'LICENSE',
+    '.gitignore',
+    'package.json',
+    'renovate.json',
+    '.vscode/settings.json',
+    'docs/src/app/(docs)/react/overview/quick-start/page.mdx',
+  ];
+  const notStarted = [
+    'docs/src/app/(docs)/react/components/dialog/page.mdx',
+    'packages/react/src/dialog/Dialog.tsx',
+  ];
+  const paths = [...oneReason, ...notStarted];
+  const shaOf = (path: string): string => String(paths.indexOf(path)).repeat(40);
+  const commits = paths.map((path) => commit(shaOf(path), '2026-02-01T10:00:00+00:00', path));
+  const report = buildParityReport(
+    makeInput({
+      upstream: { ...upstream, commit: shaOf(paths[paths.length - 1]), commits },
+      families: [],
+      scope: readScope(REPOSITORY_ROOT),
+    }),
+  );
+  for (const path of oneReason) {
+    const { other } = changeOf(report, shaOf(path));
+    assert.ok(other?.state === 'out-of-scope', path);
+    assert.equal(other.reasons.length, 1, path);
+  }
+  for (const path of notStarted) {
+    assert.deepEqual(changeOf(report, shaOf(path)).other, { state: 'not-started' }, path);
+  }
+});
+
 test('a commit that touches a family has no other state', () => {
   assert.equal(changeOf(buildParityReport(makeInput()), FIRST).other, undefined);
 });
@@ -221,10 +257,14 @@ test('a date is the UTC day of the commit', () => {
   assert.equal(report.upstream.date, '2026-01-09');
 });
 
-test('the status counts the complete components', () => {
+test('the status counts the complete components and names the components that no family names', () => {
   const { status } = buildParityReport(makeInput());
-  const counts = { done: 1, total: status.total };
-  assert.deepEqual(status, { ...counts, line: renderStatusLine(counts) });
+  const counts = { done: 1, total: 3 };
+  assert.deepEqual(status, {
+    ...counts,
+    notStarted: ['dialog', 'select'],
+    line: renderStatusLine(counts),
+  });
 });
 
 test('an exception row keeps its kind, its reason and the label of the thing', () => {
@@ -251,6 +291,16 @@ test('an exception row keeps its kind, its reason and the label of the thing', (
       waitsOn: undefined,
     },
   ]);
+});
+
+test('a return type difference keeps its entry, its type and its reason', () => {
+  const row = { entry: 'useAlpha', returns: 'ComputedRef<number>', reason: 'A reason.' };
+  const report = buildParityReport(
+    makeInput({
+      families: [familyFiles('alpha', { ...alpha, returnTypeDifferences: [row] })],
+    }),
+  );
+  assert.deepEqual(report.families[0].returnTypeDifferences, [row]);
 });
 
 function betterRow(id: string): BetterRow {

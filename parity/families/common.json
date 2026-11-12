@@ -264,5 +264,6 @@
     }
   ],
   "surfaceAdditions": [],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

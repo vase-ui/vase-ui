@@ -1,5 +1,4 @@
-/** The folder of Base UI that holds one docs folder for each component and each utility. */
-export const DOCS_FOLDER_PREFIX = 'docs/src/app/(docs)/react/';
+import { DOCS_FOLDER_PREFIX } from '../parity/paths.ts';
 
 /** The two globs that can name the docs folder of a family in its family file, as text for a message. */
 export function docsFolderGlobs(family: string): string {

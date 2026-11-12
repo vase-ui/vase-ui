@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { readTypesMd } from './typesMd.ts';
+import { documentedReturnType, readTypesMd } from './typesMd.ts';
 import type { PropRow } from './typesMd.ts';
 
 const FILE = 'docs/src/app/(docs)/react/components/sample/types.md';
@@ -189,3 +189,14 @@ for (const { name, markdown, message } of refusals) {
     assert.throws(() => readTypesMd('docs/sample/types.md', markdown), { message });
   });
 }
+
+test('documentedReturnType gives the type of the ReturnValue alias on one line', () => {
+  assert.equal(
+    documentedReturnType(['type ReturnValue = string | undefined;']),
+    'string | undefined',
+  );
+  assert.equal(
+    documentedReturnType(['type ReturnValue = {\n    a: string;\n    b: number;\n};']),
+    '{ a: string; b: number; }',
+  );
+});

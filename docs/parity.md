@@ -26,6 +26,8 @@ Each source file, test and API row of Base UI needs a counterpart in Vase UI, or
 - `engine`: the case does not run in one browser engine because of the browser. The row names the engine and links to a browser bug or an upstream issue.
 - `waits-on`: the thing waits for an upstream file or folder that Vase UI does not have yet. The row names that path. A row that names a source file waits for the file itself.
 
+A function that returns a different type from the type that Base UI documents has a row with the Vase UI type and the reason.
+
 <ParityFamilies />
 
 ## Base UI changes

@@ -15,6 +15,7 @@ function makeFamily(upstreamPaths: string[], exceptions: ExceptionRow[] = []): F
     matchedCommit: 'a'.repeat(40),
     exceptions,
     surfaceAdditions: [],
+    returnTypeDifferences: [],
     notApplicableCommits: [],
   };
 }
@@ -98,13 +99,31 @@ for (const { name, row, complete } of [
   });
 }
 
-test('the count holds the complete components and no other family', () => {
+test('the count holds the complete components, and the list gives the total and the names with no family', () => {
   const waiting = makeRow('packages/react/src/dialog/Dialog.tsx');
-  const { done } = countComponents([
-    makeFiles('button', makeFamily(BUTTON_PATHS)),
-    makeFiles('dialog', makeFamily(['docs/src/app/(docs)/react/components/dialog/**'], [waiting])),
-    makeFiles('merge-props', makeFamily(['packages/react/src/merge-props/**'])),
-    makeFiles('broken'),
+  assert.deepEqual(
+    countComponents(
+      [
+        makeFiles('button', makeFamily(BUTTON_PATHS)),
+        makeFiles(
+          'dialog',
+          makeFamily(['docs/src/app/(docs)/react/components/dialog/**'], [waiting]),
+        ),
+        makeFiles('merge-props', makeFamily(['packages/react/src/merge-props/**'])),
+        makeFiles('broken'),
+      ],
+      ['accordion', 'button', 'dialog', 'tabs'],
+    ),
+    { done: 1, total: 4, notStarted: ['accordion', 'tabs'] },
+  );
+});
+
+test('a family is the component of the folder in its docs path, and not the component of its name', () => {
+  const family = makeFiles(
+    'toggle-button',
+    makeFamily(['docs/src/app/(docs)/react/components/toggle/**']),
+  );
+  assert.deepEqual(countComponents([family], ['toggle', 'toggle-button']).notStarted, [
+    'toggle-button',
   ]);
-  assert.equal(done, 1);
 });

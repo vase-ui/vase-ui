@@ -45,11 +45,19 @@ export interface SurfaceAddition {
   reason: string;
 }
 
+/** A function whose return type is not the type that Base UI documents. `returns` is the Vase UI type, as the check prints it. */
+export interface ReturnTypeDifference {
+  entry: string;
+  returns: string;
+  reason: string;
+}
+
 export interface FamilyFile {
   upstreamPaths: string[];
   matchedCommit: string;
   exceptions: ExceptionRow[];
   surfaceAdditions: SurfaceAddition[];
+  returnTypeDifferences: ReturnTypeDifference[];
   notApplicableCommits: { sha: string; reason: string }[];
 }
 
@@ -64,6 +72,8 @@ export interface UpstreamFile {
   commit: string;
   describe: string;
   release: string;
+  /** The names of the folders of Base UI that hold the docs of one component each. */
+  components: string[];
   commits: UpstreamCommit[];
 }
 
@@ -193,9 +203,10 @@ export function memberOf(row: SurfaceAddition): { kind: MemberKind; name: string
 }
 
 const sha = pattern(/^[0-9a-f]{40}$/, '40 hexadecimal digits');
+// `counterparts` finds a folder by a path with no "/" at its end. A row with a "/" there is never due and never stale.
 const upstreamRootPath = pattern(
-  new RegExp(`^(?:${UPSTREAM_ROOTS.join('|')})`),
-  `a path that starts with ${UPSTREAM_ROOTS.join(', ')}`,
+  new RegExp(`^(?:${UPSTREAM_ROOTS.join('|')}).*[^/]$`),
+  `a path that starts with ${UPSTREAM_ROOTS.join(', ')} and has no "/" at its end`,
 );
 const link = pattern(/^https:\/\/\S+$/, 'a link that starts with https://');
 const strings = array(string);
@@ -305,12 +316,19 @@ const surfaceAddition = withRule<SurfaceAddition>(
   },
 );
 
+const returnTypeDifference = object({
+  entry: nonEmptyString,
+  returns: nonEmptyString,
+  reason: nonEmptyString,
+});
+
 const familyFile = withRule<FamilyFile>(
   object({
     upstreamPaths: array(nonEmptyString, { nonEmpty: true }),
     matchedCommit: sha,
     exceptions: array(exceptionRow),
     surfaceAdditions: array(surfaceAddition),
+    returnTypeDifferences: array(returnTypeDifference),
     notApplicableCommits: array(object({ sha, reason: nonEmptyString })),
   }),
   (family, _place, report) => {
@@ -321,6 +339,12 @@ const familyFile = withRule<FamilyFile>(
       'surfaceAdditions',
       report,
     );
+    checkDuplicates(
+      family.returnTypeDifferences,
+      (row) => row.entry,
+      'returnTypeDifferences',
+      report,
+    );
   },
 );
 
@@ -329,6 +353,9 @@ const upstreamFile = withRule<UpstreamFile>(
     commit: sha,
     describe: nonEmptyString,
     release: nonEmptyString,
+    components: array(pattern(FAMILY_NAME, `a name that matches ${FAMILY_NAME}`), {
+      nonEmpty: true,
+    }),
     commits: array(object({ sha, date: nonEmptyString, subject: string, paths: strings }), {
       nonEmpty: true,
     }),
@@ -337,6 +364,7 @@ const upstreamFile = withRule<UpstreamFile>(
     if (upstream.commit !== upstream.commits.at(-1)?.sha) {
       report('commit', 'must be the "sha" of the last row of "commits".');
     }
+    checkDuplicates(upstream.components, (name) => name, 'components', report);
     checkDuplicates(upstream.commits, (commit) => commit.sha, 'commits', report);
   },
 );
