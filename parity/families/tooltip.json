@@ -131,13 +131,13 @@
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "Each case of the file renders or reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the cursor anchor, the hover of the popup, `Tooltip.Provider` or the shared suite `popupConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+      "reason": "Each case of the file renders or reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the rule for nested triggers, the cursor anchor, the hover of the popup, `Tooltip.Provider` or the shared suite `popupConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "Each case of the file reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the cursor anchor or the shared suite `detachedTriggersConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+      "reason": "Two cases hydrate a detached trigger. They read only the handle, the trigger and the `openChange` event, and they have no counterpart yet. Each other case renders or reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the cursor anchor or the shared suite `detachedTriggersConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/tooltip/trigger/TooltipTrigger.test.tsx",

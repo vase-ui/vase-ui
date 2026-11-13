@@ -89,8 +89,8 @@ export class TooltipStore<Payload> extends BasePopupStore<
 
   /**
    * Closes the tooltip because another tooltip of its delay group opened. A tooltip in its exit
-   * transition records the reason, so `Tooltip.Root` skips the rest of that transition. The delay
-   * group keeps this function and calls it later, so it is an arrow function.
+   * transition records the reason, so `Tooltip.Root` can skip the rest of that transition. The
+   * delay group keeps this function and calls it later, so it is an arrow function.
    */
   closeForSibling = () => {
     const state = toRaw(this.state);
