@@ -154,6 +154,29 @@ describe('<Accordion.Trigger />', () => {
     expect(trigger).not.toHaveAttribute('data-open');
   });
 
+  describe('prop: disabled', () => {
+    it('is a disabled button that stays closed when only the trigger is disabled', async () => {
+      const { user } = await render(
+        <Accordion.Root>
+          <Accordion.Item>
+            <Accordion.Header>
+              <Accordion.Trigger disabled>Trigger</Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Panel>Panel</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      expect(trigger).toBeDisabled();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+      await user.click(trigger);
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
   describe('prop: id', () => {
     // The item makes the generated id. The probe reads it, so that no case writes a generated id.
     let itemContext!: AccordionItemContext;

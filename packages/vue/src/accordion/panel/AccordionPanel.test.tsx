@@ -240,4 +240,29 @@ describe('<Accordion.Panel />', () => {
       expect(panel.getAnimations().length).toBe(0);
     });
   });
+
+  describe('prop: id', () => {
+    it('VUE-18: a panel with an empty id has the generated id, and its trigger names that id in aria-controls', async () => {
+      await render(
+        <Accordion.Root defaultValue={['a']}>
+          <Accordion.Item value="a">
+            <Accordion.Header>
+              <Accordion.Trigger>Trigger</Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Panel id="" data-testid="panel">
+              {PANEL_CONTENT}
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion.Root>,
+      );
+
+      const panel = screen.getByTestId('panel');
+
+      expect(panel.id).not.toBe('');
+      expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
+        'aria-controls',
+        panel.id,
+      );
+    });
+  });
 });
