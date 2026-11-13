@@ -1,6 +1,6 @@
 import { expectType } from '#test-utils';
-import { Popover } from '@vase-ui/vue/popover';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import * as Popover from '../index.parts';
 
 const numberPayloadHandle = Popover.createHandle<number>();
 

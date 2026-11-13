@@ -36,6 +36,11 @@
       "reason": "Vase UI does not have `Popover.Description`."
     },
     {
+      "upstream": "packages/react/src/popover/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Popover. It exports the parts. Vase UI does not have all of them."
+    },
+    {
       "upstream": "packages/react/src/popover/popup/PopoverPopup.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Popover.Popup`. The part needs `Popover.Portal` and `Popover.Positioner`, and it needs the focus manager of the popup."
@@ -186,7 +191,7 @@
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case of the file renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "reason": "Each other case of the file renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
@@ -205,9 +210,26 @@
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "style hooks"],
+      "title": "should have the data-popup-open but not the data-pressed attribute when open by hover",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
+      "describe": ["<Popover.Trigger />", "style hooks"],
+      "title": "should not have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true` and `delay=0`",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
+      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
+      "describe": ["<Popover.Trigger />", "style hooks"],
+      "title": "should have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true`",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
+      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
@@ -233,161 +255,160 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Portal",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/portal/PopoverPortal.tsx",
-      "reason": "Vase UI does not have `Popover.Portal`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Portal`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Backdrop",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/backdrop/PopoverBackdrop.tsx",
-      "reason": "Vase UI does not have `Popover.Backdrop`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Backdrop`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Positioner",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "reason": "Vase UI does not have `Popover.Positioner`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Positioner`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Popup",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Vase UI does not have `Popover.Popup`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Popup`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Arrow",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/arrow/PopoverArrow.tsx",
-      "reason": "Vase UI does not have `Popover.Arrow`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Arrow`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Title",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/title/PopoverTitle.tsx",
-      "reason": "Vase UI does not have `Popover.Title`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Title`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Description",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/description/PopoverDescription.tsx",
-      "reason": "Vase UI does not have `Popover.Description`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Description`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Close",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/close/PopoverClose.tsx",
-      "reason": "Vase UI does not have `Popover.Close`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Close`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "Viewport",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "Vase UI does not have `Popover.Viewport`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Viewport`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
+      "entry": "createHandle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.createHandle`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
+      "entry": "Handle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports `Popover.Handle`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverArrowDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/arrow/PopoverArrow.tsx",
-      "reason": "Vase UI does not have `Popover.Arrow`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Arrow`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverBackdropDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/backdrop/PopoverBackdrop.tsx",
-      "reason": "Vase UI does not have `Popover.Backdrop`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Backdrop`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverPopupCssVariables",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Vase UI does not have `Popover.Popup`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Popup`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverPopupDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Vase UI does not have `Popover.Popup`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Popup`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverPositionerCssVariables",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "reason": "Vase UI does not have `Popover.Positioner`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Positioner`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverPositionerDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "reason": "Vase UI does not have `Popover.Positioner`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Positioner`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
+      "entry": "PopoverTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Trigger`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverViewportCssVariables",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "Vase UI does not have `Popover.Viewport`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Viewport`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
       "entry": "PopoverViewportDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "Vase UI does not have `Popover.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Trigger",
-      "prop": "openOnHover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/utils/constants.ts",
-      "reason": "Vase UI does not have the hover open of `Popover.Trigger`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Trigger",
-      "prop": "delay",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/utils/constants.ts",
-      "reason": "Vase UI does not have the hover open of `Popover.Trigger`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Trigger",
-      "prop": "closeDelay",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/utils/constants.ts",
-      "reason": "Vase UI does not have the hover open of `Popover.Trigger`."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The entry point of Popover exports the attribute names of `Popover.Viewport`. Vase UI does not have that entry point."
     }
   ],
-  "surfaceAdditions": [
-    {
-      "entry": "Trigger",
-      "prop": "disabled",
-      "reason": "The part reads `disabled` for its state, for `useButton` and for the data that it gives to the store, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
-    }
-  ],
-  "returnTypeDifferences": [
-    {
-      "entry": "createHandle",
-      "returns": "PopoverHandle<Payload>",
-      "reason": "`Popover.Handle` is the class `PopoverHandle`, and the check prints the name of the class."
-    }
-  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

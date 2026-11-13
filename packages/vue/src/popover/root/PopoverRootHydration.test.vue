@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Popover } from '../index';
+import * as Popover from '../index.parts';
 
 const props = withDefaults(
   defineProps<{

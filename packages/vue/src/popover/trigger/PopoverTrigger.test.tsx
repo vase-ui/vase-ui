@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { Popover } from '@vase-ui/vue/popover';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
 } from '#test-utils';
+import * as Popover from '../index.parts';
 
 async function press(element: HTMLElement) {
   await fireEvent.pointerDown(element, { pointerType: 'mouse' });
@@ -133,6 +134,24 @@ describe('<Popover.Trigger />', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(button).toHaveAttribute('data-orientation', 'horizontal');
     expect(button).toHaveAttribute('tabindex', '0');
+  });
+
+  describe('style hooks', () => {
+    it('should have the data-popup-open and data-pressed attributes when open by clicking', async () => {
+      await render(
+        <Popover.Root>
+          <Popover.Trigger />
+        </Popover.Root>,
+      );
+
+      const trigger = screen.getByRole('button');
+
+      trigger.click();
+      await flushMicrotasks();
+
+      expect(trigger).toHaveAttribute('data-popup-open');
+      expect(trigger).toHaveAttribute('data-pressed');
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

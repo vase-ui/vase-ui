@@ -1,7 +1,6 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import type { PropType } from 'vue';
-import { Popover } from '@vase-ui/vue/popover';
 import {
   createRenderer,
   fireEvent,
@@ -11,6 +10,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import * as Popover from '../index.parts';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
 import PopoverRootHydration from './PopoverRootHydration.test.vue';
