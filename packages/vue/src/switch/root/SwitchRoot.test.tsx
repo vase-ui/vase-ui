@@ -831,6 +831,54 @@ describe('<Switch.Root />', () => {
         expect(submitSpy.mock.results.at(-1)?.value).toBe('no');
       },
     );
+
+    it('triggers native HTML validation on submit', async () => {
+      const { user } = await render(
+        <Form>
+          <Field.Root name="test">
+            <Switch.Root name="switch" required />
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      const submit = screen.getByText('Submit');
+
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await user.click(submit);
+
+      const error = screen.getByTestId('error');
+      expect(error).toHaveTextContent('required');
+    });
+
+    it('clears external errors on change', async () => {
+      await render(
+        <Form
+          errors={{
+            test: 'test',
+          }}
+        >
+          <Field.Root name="test" data-testid="field">
+            <Switch.Root data-testid="switch" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      const switchElement = screen.getByTestId('switch');
+
+      expect(switchElement).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByTestId('error')).toHaveTextContent('test');
+
+      await fireEvent.click(switchElement);
+
+      expect(switchElement).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
   });
 
   describe('Field', () => {
@@ -1031,6 +1079,33 @@ describe('<Switch.Root />', () => {
       });
     });
 
+    it('prop: validationMode=onSubmit', async () => {
+      await render(
+        <Form>
+          <Field.Root>
+            <Switch.Root required />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const button = screen.getByRole('switch');
+      expect(button).not.toHaveAttribute('aria-invalid');
+
+      await fireEvent.click(screen.getByText('submit'));
+      expect(button).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByTestId('error')).not.toBe(null);
+
+      await fireEvent.click(button);
+      expect(button).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await fireEvent.click(button);
+      expect(button).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByTestId('error')).not.toBe(null);
+    });
+
     it('prop: validationMode=onChange', async () => {
       await render(
         <Field.Root
@@ -1109,6 +1184,30 @@ describe('<Switch.Root />', () => {
 
       expect(validateSpy.mock.calls.length).toBe(initialCallCount + 1);
       expect(validateSpy.mock.lastCall?.[0]).toBe(true);
+      expect(button).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('prop: validationMode=onBlur', async () => {
+      await render(
+        <Field.Root
+          validationMode="onBlur"
+          validate={(value) => {
+            const checked = value as boolean;
+            return checked ? 'error' : null;
+          }}
+        >
+          <Switch.Root data-testid="button" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const button = screen.getByTestId('button');
+
+      expect(button).not.toHaveAttribute('aria-invalid');
+
+      await fireEvent.click(button);
+      await fireEvent.focusOut(button);
+
       expect(button).toHaveAttribute('aria-invalid', 'true');
     });
   });

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-21",
+  "evidence": [
+    "https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-reset",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/control/FieldControl.tsx#L123-L143"
+  ],
+  "behavior": "A native form reset removes the error of the field. `Field.Control` cancels the pending validation, removes the message that the field put on the input, clears the validity of the field and clears the error of the form for the field. Base UI keeps the error that the field showed before the reset, because a reset sends no `input` event.",
+  "dueWith": "packages/react/src/field/control/FieldControl.tsx"
+}

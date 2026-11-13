@@ -18,10 +18,12 @@ import {
   within,
 } from '#test-utils';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
+import FieldPartOrder from '../root/FieldPartOrder.test.vue';
 import FieldControlHydration from './FieldControlHydration.test.vue';
 import FieldControlReplace from './FieldControlReplace.test.vue';
 
 const HYDRATION_FIXTURE = 'src/field/control/FieldControlHydration.test.vue';
+const ORDER_FIXTURE = 'src/field/root/FieldPartOrder.test.vue';
 
 describe('<Field.Control />', () => {
   const { render } = createRenderer();
@@ -210,6 +212,119 @@ describe('<Field.Control />', () => {
     expect(validate.mock.lastCall?.[0]).toBe('external');
   });
 
+  it('validates the final controlled value when it is normalized on blur', async () => {
+    const validate = vi.fn((value) => (String(value).includes('@') ? null : 'Invalid email'));
+
+    const App = defineComponent(() => {
+      const value = shallowRef('');
+      return () => (
+        <Field.Root validationMode="onBlur" validate={validate}>
+          <Field.Control
+            value={value.value}
+            onValueChange={(nextValue) => {
+              value.value = nextValue;
+            }}
+            onFocusout={() => {
+              value.value = value.value.trim();
+            }}
+          />
+          <Field.Error />
+        </Field.Root>
+      );
+    });
+
+    await render(<App />);
+
+    const control = screen.getByRole('textbox');
+    await fireEvent.input(control, { target: { value: 'foo ' } });
+    await fireEvent.focusOut(control);
+
+    await flushMicrotasks();
+
+    expect(validate.mock.lastCall?.[0]).toBe('foo');
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
+  });
+
+  it('keeps the final async validation when a controlled value is normalized on blur', async () => {
+    const resolvers: Record<string, (value: string | null) => void> = {};
+    const validate = vi.fn(
+      (value) =>
+        new Promise<string | null>((resolve) => {
+          resolvers[String(value)] = resolve;
+        }),
+    );
+
+    const App = defineComponent(() => {
+      const value = shallowRef('');
+      return () => (
+        <Field.Root validationMode="onBlur" validate={validate}>
+          <Field.Control
+            value={value.value}
+            onValueChange={(nextValue) => {
+              value.value = nextValue;
+            }}
+            onFocusout={() => {
+              value.value = value.value.trim();
+            }}
+          />
+          <Field.Error />
+        </Field.Root>
+      );
+    });
+
+    await render(<App />);
+
+    const control = screen.getByRole('textbox');
+    await fireEvent.input(control, { target: { value: 'foo ' } });
+    await fireEvent.focusOut(control);
+
+    await flushMicrotasks();
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(validate.mock.lastCall?.[0]).toBe('foo');
+
+    resolvers.foo('Invalid email');
+    await flushMicrotasks();
+
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
+
+    resolvers['foo ']('Stale error');
+    await flushMicrotasks();
+
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
+  });
+
+  it('does not validate when a controlled value is reset to the initial value on blur', async () => {
+    const App = defineComponent(() => {
+      const value = shallowRef('');
+      return () => (
+        <Field.Root validationMode="onBlur">
+          <Field.Control
+            required
+            value={value.value}
+            onValueChange={(nextValue) => {
+              value.value = nextValue;
+            }}
+            onFocusout={() => {
+              value.value = '';
+            }}
+          />
+          <Field.Error match="valueMissing">Required</Field.Error>
+        </Field.Root>
+      );
+    });
+
+    await render(<App />);
+
+    const control = screen.getByRole('textbox');
+    await fireEvent.input(control, { target: { value: 'foo' } });
+    await fireEvent.focusOut(control);
+
+    await flushMicrotasks();
+
+    expect(screen.queryByText('Required')).toBe(null);
+  });
+
   it('sets filled state on mount when the control is prefilled', async () => {
     await render(
       <Field.Root data-testid="root">
@@ -357,6 +472,31 @@ describe('<Field.Control />', () => {
     expect(validate).not.toHaveBeenCalled();
   });
 
+  it('does not clear errors or validate when change is prevented', async () => {
+    const validate = vi.fn();
+    const handleValueChange = vi.fn();
+
+    await render(
+      <Form errors={{ message: 'Server error' }}>
+        <Field.Root name="message" validationMode="onChange" validate={validate}>
+          <Field.Control onValueChange={handleValueChange} />
+          <Field.Error />
+        </Field.Root>
+      </Form>,
+    );
+
+    const control = screen.getByRole<HTMLInputElement>('textbox');
+    control.addEventListener('input', (event) => event.preventDefault(), {
+      capture: true,
+      once: true,
+    });
+    await fireEvent.input(control, { cancelable: true, target: { value: 'a' } });
+
+    expect(handleValueChange).toHaveBeenCalledTimes(1);
+    expect(validate).not.toHaveBeenCalled();
+    expect(screen.getByText('Server error')).toBeInTheDocument();
+  });
+
   it.skipIf(isJSDOM)('validates once when Enter implicitly submits a form', async () => {
     // Real browser input is needed: implicit form submission on Enter is browser behavior.
     const validate = vi.fn(() => null);
@@ -484,6 +624,22 @@ describe('<Field.Control />', () => {
     await fireEvent.keyDown(control, { key: 'Enter' });
 
     expect(validate).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a required error when a prefilled value is cleared', async () => {
+    await render(
+      <Field.Root validationMode="onChange">
+        <Field.Control data-testid="control" defaultValue="value" required />
+        <Field.Error match="valueMissing">Required</Field.Error>
+      </Field.Root>,
+    );
+
+    const control = screen.getByTestId('control');
+
+    await fireEvent.input(control, { target: { value: '' } });
+
+    expect(control).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('Required')).toBeInTheDocument();
   });
 
   describe('[data-focused]', () => {
@@ -864,6 +1020,120 @@ describe('<Field.Control />', () => {
       expect(root).not.toHaveAttribute('data-dirty');
     });
 
+    it('VUE-21: clears the error of the field after a native reset', async () => {
+      await render(
+        <form data-testid="form">
+          <Field.Root
+            data-testid="root"
+            validationMode="onChange"
+            validate={(value) => (value === 'bad' ? 'custom error' : null)}
+          >
+            <Field.Control data-testid="control" defaultValue="good" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </form>,
+      );
+
+      const root = screen.getByTestId('root');
+      const control = screen.getByTestId<HTMLInputElement>('control');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+      expect(root).toHaveAttribute('data-invalid', '');
+      expect(screen.getByTestId('error')).toHaveTextContent('custom error');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settle();
+
+      expect(control).toHaveValue('good');
+      expect(root).not.toHaveAttribute('data-invalid');
+      expect(root).not.toHaveAttribute('data-valid');
+      expect(control).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
+
+    it('VUE-21: removes the message that the field put on the input after a native reset', async () => {
+      await render(
+        <form data-testid="form">
+          <Field.Root
+            validationMode="onChange"
+            validate={(value) => (value === 'bad' ? 'custom error' : null)}
+          >
+            <Field.Control data-testid="control" defaultValue="good" />
+          </Field.Root>
+        </form>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+      expect(control.validationMessage).toBe('custom error');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settle();
+
+      expect(control.validity.customError).toBe(false);
+      expect(screen.getByTestId<HTMLFormElement>('form').checkValidity()).toBe(true);
+    });
+
+    it('VUE-21: clears the error of a form after a native reset', async () => {
+      await render(
+        <Form data-testid="form" errors={{ name: 'Server error' }}>
+          <Field.Root name="name">
+            <Field.Control data-testid="control" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Server error');
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settle();
+
+      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
+
+    it.each([
+      { name: 'a validator in flight', validationDebounceTime: 0, wait: 0 },
+      { name: 'a debounce that waits', validationDebounceTime: 100, wait: 100 },
+    ])('VUE-21: drops the validation of $name at a native reset', async (row) => {
+      let resolveValidate: ((value: string | null) => void) | undefined;
+      const validate = vi.fn(
+        () =>
+          new Promise<string | null>((resolve) => {
+            resolveValidate = resolve;
+          }),
+      );
+
+      await render(
+        <form data-testid="form">
+          <Field.Root
+            data-testid="root"
+            validationMode="onChange"
+            validationDebounceTime={row.validationDebounceTime}
+            validate={validate}
+          >
+            <Field.Control />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </form>,
+      );
+
+      await fireEvent.input(screen.getByRole('textbox'), { target: { value: 'taken' } });
+      expect(validate).toHaveBeenCalledTimes(row.validationDebounceTime === 0 ? 1 : 0);
+
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settle();
+      vi.advanceTimersByTime(row.wait);
+      resolveValidate?.('late error');
+      await flushMicrotasks();
+
+      expect(validate).toHaveBeenCalledTimes(row.validationDebounceTime === 0 ? 1 : 0);
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
+
     it('BUG-6206: follows a native reset of a form in a shadow root', async () => {
       const host = document.createElement('div');
       document.body.append(host);
@@ -972,6 +1242,45 @@ describe('<Field.Control />', () => {
   });
 
   describe('hydration', () => {
+    it.each([
+      {
+        name: 'the label and the messages first',
+        parts: ['label', 'description', 'error', 'control'],
+      },
+      {
+        name: 'the label first, the messages last',
+        parts: ['label', 'control', 'description', 'error'],
+      },
+      { name: 'the control first', parts: ['control', 'label', 'description', 'error'] },
+      {
+        name: 'the messages first, the label last',
+        parts: ['description', 'error', 'control', 'label'],
+      },
+    ])('VUE-17: hydrates with the ids of the server: $name', async ({ parts }) => {
+      const props = { parts };
+      const serverHtml = await renderOnServer(ORDER_FIXTURE, props);
+
+      // A `<template>` element parses the HTML with no side effect.
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      const serverControl = template.content.querySelector('[data-testid="control"]');
+      const serverId = (testId: string) =>
+        template.content.querySelector(`[data-testid="${testId}"]`)?.id;
+      expect(serverControl?.getAttribute('aria-labelledby')).toBe(serverId('label'));
+      expect(serverControl?.getAttribute('aria-describedby')).toBe(
+        `${serverId('description')} ${serverId('error')}`,
+      );
+
+      const { container } = await hydrate(FieldPartOrder, { serverHtml, props });
+
+      const control = within(container).getByTestId('control');
+      expect(control).toHaveAttribute('aria-labelledby', serverId('label'));
+      expect(control).toHaveAttribute(
+        'aria-describedby',
+        `${serverId('description')} ${serverId('error')}`,
+      );
+    });
+
     it.each([
       { name: 'a default value', props: { defaultValue: 'foo' }, value: 'foo' },
       { name: 'a controlled value', props: { value: 'foo' }, value: 'foo' },
