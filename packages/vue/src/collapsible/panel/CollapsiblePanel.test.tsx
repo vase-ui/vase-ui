@@ -817,8 +817,8 @@ describe('<Collapsible.Panel />', () => {
 
       expect(panel.getAnimations().length).toBe(0);
 
-      // The animation lasts 100 milliseconds, and the click can resolve after it. The listener
-      // exists before the click, so the test reads the state when the animation starts.
+      // The state exists only while the animation runs. The listener exists before the click, so
+      // the test reads the state when the animation starts.
       const closing = nextEvent(panel, 'animationstart').then(() => ({
         closed: panel.hasAttribute('data-closed'),
         animations: panel.getAnimations().length,
@@ -878,8 +878,8 @@ describe('<Collapsible.Panel />', () => {
       });
 
       // The size must be in pixels when the animation starts, when the ending style comes and when
-      // the animation ends. Each moment lasts a few milliseconds, and the click can resolve after
-      // it. The listeners exist before the click, and the test asserts on what they recorded.
+      // the animation ends. A listener records the size at each moment, so the test does not
+      // depend on the time at which the click resolves.
       const heights: Record<string, string> = {};
       const recordHeight = (moment: string) => {
         heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
@@ -1458,8 +1458,8 @@ describe('<Collapsible.Panel />', () => {
 
       expect(getComputedStyle(panel).transitionDuration).toBe('0s');
 
-      // The transition lasts 123 milliseconds, and the click can resolve after it. The listener
-      // exists before the click, so the test reads the state when the transition runs.
+      // The state exists only while the transition runs. The listener exists before the click, so
+      // the test reads the state when the transition runs.
       const closing = nextEvent(panel, 'transitionrun').then(() => ({
         endingStyle: panel.hasAttribute('data-ending-style'),
         transitionDuration: panel.style.transitionDuration,
