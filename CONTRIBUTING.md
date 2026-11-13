@@ -353,6 +353,12 @@ Rules:
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
 - A trigger part of a popup family, such as `Popover.Trigger`, is a generic SFC, so that vue-tsc checks `payload` against `handle`. Give another part to its `as` prop or its `#render` slot: `<Popover.Trigger :as="Toolbar.Button">`. Do not give the trigger to the `as` prop of another part.
+- Base UI takes a `React.ReactNode` as the label of an item. A label comes from an `items` record, from an `items` list, or from an object value that has a `label`. Vase UI takes an `ItemLabel`, which `src/internals/resolveValueLabel.ts` exports.
+- An `ItemLabel` is a string, a number, `null`, `undefined`, or a function that returns the content of the label. It is not a vnode. A vnode must be unique in the tree, and a label shows in the value part and in its item at the same time. See [Vnodes Must Be Unique](https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique).
+- On a page that Vue hydrated, a component in a vnode that mounts a second time renders nothing.
+- `resolveSelectedLabel` and `resolveMultipleLabels` give a function label as it is. A part renders it with `<component :is="label" />`, and it renders each other label as text.
+- Do not call a label function in `setup` or in a `computed`. The result is a vnode, and the next render uses it again.
+- The text of an item with a function label is the result of `itemToStringLabel`, or the text of its value. `stringifyAsLabel` gives it.
 
 ### State and `v-model`
 
@@ -752,6 +758,9 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
 - Chromium sends `focusout` when Vue removes the focused trigger, after the scope of the part stopped. A handler that starts a timer thus starts none after the scope stopped.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
+- `useClientPoint` writes a virtual element at the pointer to `anchorOverride` for each move, and `null` when the part unmounts. A positioner reads it through `store.select('anchor')`.
+- While it is enabled, `useClientPoint` adds one `mousemove` listener to the window of the positioner element. A mouse-like pointer keeps the listener while the store has that element, so the popup follows the pointer while it closes. A touch pointer keeps it only while the popup is open. The listener removes itself when the pointer moves over the positioner element. A `mouseenter` or `mousemove` event of the trigger adds it again while the popup is open. A popup that a non-mouse event opened, such as a focus or a key press, gets no listener and keeps the anchor of its trigger. While it is not enabled, `useClientPoint` has no listener. It writes the anchor element of the store to `anchorOverride`.
+- `store` of `useClientPoint` is a store, a ref or a getter. When the store changes, the composable removes its window listener. It writes `null` to `anchorOverride` of the old store. It then applies the rules above to the new store.
 
 ### Popup dismissal
 
