@@ -7,6 +7,8 @@ import type {
   AccordionItemProps,
   AccordionItemState,
 } from './item/AccordionItem.vue';
+import AccordionPanel from './panel/AccordionPanel.vue';
+import type { AccordionPanelProps, AccordionPanelState } from './panel/AccordionPanel.vue';
 import AccordionRoot from './root/AccordionRoot.vue';
 import type {
   AccordionRootChangeEventDetails,
@@ -61,4 +63,14 @@ export const Trigger: typeof AccordionTrigger = AccordionTrigger;
 export namespace Trigger {
   export type State = AccordionTriggerState;
   export type Props = AccordionTriggerProps;
+}
+
+/**
+ * A collapsible panel with the accordion item contents.
+ * Renders a `<div>` element.
+ */
+export const Panel: typeof AccordionPanel = AccordionPanel;
+export namespace Panel {
+  export type State = AccordionPanelState;
+  export type Props = AccordionPanelProps;
 }
