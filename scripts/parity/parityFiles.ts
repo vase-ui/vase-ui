@@ -19,7 +19,9 @@ import type { Check, Report } from './validate.ts';
 
 export type ExceptionKind = 'replaced' | 'not-applicable' | 'engine' | 'waits-on';
 export type Engine = 'chromium' | 'firefox' | 'webkit';
-export type MemberKind = 'prop' | 'emit' | 'slot' | 'exposed';
+export type ComponentMemberKind = 'prop' | 'emit' | 'slot' | 'exposed';
+/** What a `surfaceAdditions` row names: a member of a component, or a change reason of its type. */
+export type MemberKind = ComponentMemberKind | 'changeEventReason';
 
 export interface ExceptionRow {
   upstream: string;
@@ -42,6 +44,8 @@ export interface SurfaceAddition {
   emit?: string;
   slot?: string;
   exposed?: string;
+  /** A change reason that the `ChangeEventReason` type of the part has and Base UI lacks. */
+  changeEventReason?: string;
   reason: string;
 }
 
@@ -105,7 +109,8 @@ export type Target =
 
 const KINDS: ExceptionKind[] = ['replaced', 'not-applicable', 'engine', 'waits-on'];
 const ENGINES: Engine[] = ['chromium', 'firefox', 'webkit'];
-export const MEMBER_KINDS: MemberKind[] = ['prop', 'emit', 'slot', 'exposed'];
+export const COMPONENT_MEMBER_KINDS: ComponentMemberKind[] = ['prop', 'emit', 'slot', 'exposed'];
+export const MEMBER_KINDS: MemberKind[] = [...COMPONENT_MEMBER_KINDS, 'changeEventReason'];
 
 export const FAMILY_NAME = /^[a-z][a-z0-9-]*$/;
 
@@ -307,13 +312,17 @@ const surfaceAddition = withRule<SurfaceAddition>(
       emit: nonEmptyString,
       slot: nonEmptyString,
       exposed: nonEmptyString,
+      changeEventReason: nonEmptyString,
       reason: nonEmptyString,
     },
     MEMBER_KINDS,
   ),
   (row, place, report) => {
     if (memberKeysOf(row).length !== 1) {
-      report(place, 'names one member. Give exactly one of "prop", "emit", "slot" and "exposed".');
+      report(
+        place,
+        'names one member. Give exactly one of "prop", "emit", "slot", "exposed" and "changeEventReason".',
+      );
     }
   },
 );
