@@ -1,10 +1,169 @@
 import { describe, expect, test } from 'vitest';
 import { defineComponent, onMounted, shallowRef, watch } from 'vue';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import type { MaybeRefOrGetter, PropType } from 'vue';
+import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
+import type { FloatingPortalContainer } from './useFloatingPortalNode';
+
+const App = defineComponent({
+  props: {
+    container: {
+      type: [Object, Function] as PropType<MaybeRefOrGetter<FloatingPortalContainer>>,
+      default: undefined,
+    },
+  },
+  setup(props) {
+    const open = shallowRef(false);
+
+    return () => (
+      <>
+        <button
+          data-testid="reference"
+          onClick={() => {
+            open.value = !open.value;
+          }}
+        />
+        <FloatingPortal container={props.container}>
+          {open.value && <div data-testid="floating" />}
+        </FloatingPortal>
+      </>
+    );
+  },
+});
 
 describe('FloatingPortal', () => {
   const { render } = createRenderer();
+
+  test('allows custom containers', async () => {
+    const customRoot = document.createElement('div');
+    customRoot.id = 'custom-root';
+    document.body.appendChild(customRoot);
+    await render(<App container={customRoot} />);
+    await fireEvent.click(screen.getByTestId('reference'));
+
+    await flushMicrotasks();
+
+    const parent = screen.getByTestId('floating').parentElement;
+    expect(parent?.hasAttribute('data-vase-ui-portal')).toBe(true);
+    expect(parent?.parentElement).toBe(customRoot);
+    customRoot.remove();
+  });
+
+  test('allows refs as containers', async () => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    const ref = shallowRef(el);
+    await render(<App container={ref} />);
+    await fireEvent.click(screen.getByTestId('reference'));
+    await flushMicrotasks();
+    const parent = screen.getByTestId('floating').parentElement;
+    expect(parent?.hasAttribute('data-vase-ui-portal')).toBe(true);
+    expect(parent?.parentElement).toBe(el);
+    document.body.removeChild(el);
+  });
+
+  test('allows containers to be initially null', async () => {
+    const RootApp = defineComponent({
+      setup() {
+        const container = shallowRef<HTMLElement | null>(null);
+        const renderContainer = shallowRef(false);
+
+        onMounted(() => {
+          renderContainer.value = true;
+        });
+
+        return () => (
+          <>
+            {renderContainer.value && (
+              <div
+                ref={(element) => {
+                  container.value = element as HTMLElement | null;
+                }}
+                data-testid="root"
+              />
+            )}
+            <App container={container.value} />
+          </>
+        );
+      },
+    });
+
+    await render(<RootApp />);
+
+    await fireEvent.click(screen.getByTestId('reference'));
+    await flushMicrotasks();
+
+    const subRoot = screen.getByTestId('floating').parentElement;
+    const root = screen.getByTestId('root');
+    expect(root).toBe(subRoot?.parentElement);
+  });
+
+  test('reattaches the portal when the container changes', async () => {
+    const customRoot = document.createElement('div');
+    document.body.appendChild(customRoot);
+
+    try {
+      const RootSwitcher = defineComponent({
+        setup() {
+          const container = shallowRef<FloatingPortalContainer>(undefined);
+
+          return () => (
+            <>
+              <App container={container.value} />
+              <button
+                onClick={() => {
+                  container.value = undefined;
+                }}
+                data-testid="use-undefined"
+              />
+              <button
+                onClick={() => {
+                  container.value = customRoot;
+                }}
+                data-testid="use-element"
+              />
+            </>
+          );
+        },
+      });
+
+      await render(<RootSwitcher />);
+
+      await fireEvent.click(screen.getByTestId('reference'));
+
+      expect((await screen.findByTestId('floating')).parentElement?.parentElement).toBe(
+        document.body,
+      );
+
+      await fireEvent.click(screen.getByTestId('use-element'));
+
+      expect((await screen.findByTestId('floating')).parentElement?.parentElement).toBe(customRoot);
+
+      await fireEvent.click(screen.getByTestId('use-undefined'));
+
+      const floatingInBodyAgain = await screen.findByTestId('floating');
+      expect(floatingInBodyAgain.parentElement?.parentElement).toBe(document.body);
+      expect(customRoot.contains(floatingInBodyAgain)).toBe(false);
+    } finally {
+      customRoot.remove();
+    }
+  });
+
+  test('forwards HTML props to the portal element', async () => {
+    await render(
+      <FloatingPortal data-testid="portal-element" class="closed">
+        <div />
+      </FloatingPortal>,
+    );
+
+    await flushMicrotasks();
+
+    const portal = document.querySelector('[data-testid="portal-element"]') as HTMLElement | null;
+    expect(portal).not.toBeNull();
+    expect(portal).toHaveClass('closed');
+    expect(portal).toHaveAttribute('data-vase-ui-portal');
+  });
 
   test('FloatingPortalLite forwards HTML props to the portal element', async () => {
     await render(
@@ -20,231 +179,234 @@ describe('FloatingPortal', () => {
   });
 });
 
-describe.each([{ name: 'FloatingPortalLite', Portal: FloatingPortalLite }])(
-  '$name container resolution',
-  ({ Portal }) => {
-    const { render: renderPortal } = createRenderer();
+describe.each([
+  { name: 'FloatingPortal', Portal: FloatingPortal },
+  { name: 'FloatingPortalLite', Portal: FloatingPortalLite },
+])('$name container resolution', ({ Portal }) => {
+  const { render: renderPortal } = createRenderer();
 
-    test.each([
-      { ancestor: true, strict: false },
-      { ancestor: false, strict: false },
-    ])(
-      'mounts directly inside a ref attached later in the commit (ancestor=$ancestor, strict=$strict)',
-      async ({ ancestor }) => {
-        const parents = new Set<ParentNode | null>();
-        function addParents(records: MutationRecord[]) {
-          for (const { addedNodes, target } of records) {
-            for (const node of addedNodes) {
-              if ((node as Element).hasAttribute?.('data-vase-ui-portal')) {
-                parents.add(target as ParentNode);
-              }
+  test.each([
+    { ancestor: true, strict: false },
+    { ancestor: false, strict: false },
+  ])(
+    'mounts directly inside a ref attached later in the commit (ancestor=$ancestor, strict=$strict)',
+    async ({ ancestor }) => {
+      const parents = new Set<ParentNode | null>();
+      function addParents(records: MutationRecord[]) {
+        for (const { addedNodes, target } of records) {
+          for (const node of addedNodes) {
+            if ((node as Element).hasAttribute?.('data-vase-ui-portal')) {
+              parents.add(target as ParentNode);
             }
           }
         }
-        const observer = new MutationObserver(addParents);
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        const Test = defineComponent({
-          setup() {
-            const container = shallowRef<HTMLDivElement | null>(null);
-            return () => {
-              const content = (
-                <Portal container={container}>
-                  <div data-testid="content" />
-                </Portal>
-              );
-              return ancestor ? (
-                <div ref={container} data-testid="container">
-                  {content}
-                </div>
-              ) : (
-                <>
-                  {content}
-                  <div ref={container} data-testid="container" />
-                </>
-              );
-            };
-          },
-        });
-
-        await renderPortal(<Test />);
-        addParents(observer.takeRecords());
-        observer.disconnect();
-
-        const container = screen.getByTestId('container');
-        expect(container).toContainElement(screen.getByTestId('content'));
-        // The portal must never mount in the fallback container, even temporarily.
-        expect(parents).toEqual(new Set([container]));
-      },
-    );
-
-    test('mounts inside an ancestor ref before the next paint', async () => {
-      const visible = shallowRef(false);
-      const Content = defineComponent({
-        setup() {
-          const container = shallowRef<HTMLDivElement | null>(null);
-          return () => (
-            <div ref={container} data-testid="container">
-              <Portal container={container}>
-                <div data-testid="content" />
-              </Portal>
-            </div>
-          );
-        },
-      });
-
-      const Test = defineComponent({ setup: () => () => (visible.value ? <Content /> : null) });
-
-      await renderPortal(<Test />);
-      expect(screen.queryByTestId('container')).toBe(null);
-
-      // Both callbacks run in one frame with a microtask checkpoint between them, so the second
-      // one sees the DOM that the browser paints after the update.
-      const mountedBeforePaint = await new Promise<boolean>((resolve) => {
-        requestAnimationFrame(() => {
-          visible.value = true;
-        });
-        requestAnimationFrame(() => {
-          resolve(screen.getByTestId('container').contains(screen.queryByTestId('content')));
-        });
-      });
-
-      expect(mountedBeforePaint).toBe(true);
-    });
-
-    test('mounts deeply nested portals inside their ancestor refs', async () => {
-      const Nested = defineComponent({
-        props: { remaining: { type: Number, required: true } },
-        setup(props) {
-          const container = shallowRef<HTMLDivElement | null>(null);
-          return () => (
-            <div ref={container} data-testid="nested-container">
-              <Portal container={container} data-testid="nested-portal">
-                {props.remaining > 1 ? (
-                  <Nested remaining={props.remaining - 1} />
-                ) : (
-                  <div data-testid="leaf" />
-                )}
-              </Portal>
-            </div>
-          );
-        },
-      });
-
-      await renderPortal(<Nested remaining={18} />);
-
-      expect(screen.getByTestId('leaf')).toBeInTheDocument();
-      expect(screen.getAllByTestId('nested-portal').map((node) => node.parentElement)).toEqual(
-        screen.getAllByTestId('nested-container'),
-      );
-    });
-
-    test('batches sibling portals without adding commits for each container ref', async () => {
-      let commitCount = 0;
-      const observer = new MutationObserver(() => {
-        commitCount += 1;
-      });
+      }
+      const observer = new MutationObserver(addParents);
       observer.observe(document.body, { childList: true, subtree: true });
 
-      const Item = defineComponent({
+      const Test = defineComponent({
         setup() {
           const container = shallowRef<HTMLDivElement | null>(null);
-          return () => (
-            <div ref={container} data-testid="container">
+          return () => {
+            const content = (
               <Portal container={container}>
                 <div data-testid="content" />
               </Portal>
-            </div>
-          );
+            );
+            return ancestor ? (
+              <div ref={container} data-testid="container">
+                {content}
+              </div>
+            ) : (
+              <>
+                {content}
+                <div ref={container} data-testid="container" />
+              </>
+            );
+          };
         },
       });
 
-      const Test = defineComponent({
-        props: { count: { type: Number, required: true } },
-        setup(props) {
-          return () => Array.from({ length: props.count }, (_, index) => <Item key={index} />);
-        },
-      });
-
-      const { unmount } = await renderPortal(<Test count={1} />);
-      expect(screen.getByTestId('container')).toContainElement(screen.getByTestId('content'));
-      const singlePortalCommitCount = commitCount;
-      expect(singlePortalCommitCount).toBeGreaterThan(0);
-      unmount();
-      await flushMicrotasks();
-      commitCount = 0;
-
-      await renderPortal(<Test count={20} />);
-
-      expect(screen.getAllByTestId('content')).toHaveLength(20);
-      expect(
-        screen.getAllByTestId('content').map((node) => node.parentElement?.parentElement),
-      ).toEqual(screen.getAllByTestId('container'));
-      expect(commitCount).toBe(singlePortalCommitCount);
+      await renderPortal(<Test />);
+      addParents(observer.takeRecords());
       observer.disconnect();
+
+      const container = screen.getByTestId('container');
+      expect(container).toContainElement(screen.getByTestId('content'));
+      // The portal must never mount in the fallback container, even temporarily.
+      expect(parents).toEqual(new Set([container]));
+    },
+  );
+
+  test('mounts inside an ancestor ref before the next paint', async () => {
+    const visible = shallowRef(false);
+    const Content = defineComponent({
+      setup() {
+        const container = shallowRef<HTMLDivElement | null>(null);
+        return () => (
+          <div ref={container} data-testid="container">
+            <Portal container={container}>
+              <div data-testid="content" />
+            </Portal>
+          </div>
+        );
+      },
     });
 
-    // The row `nested: true` needs `FloatingPortal` as the parent of the portal.
-    test.each([{ nested: false }])(
-      'uses the fallback container when a ref stays empty (nested=$nested)',
-      async () => {
+    const Test = defineComponent({ setup: () => () => (visible.value ? <Content /> : null) });
+
+    await renderPortal(<Test />);
+    expect(screen.queryByTestId('container')).toBe(null);
+
+    // Both callbacks run in one frame with a microtask checkpoint between them, so the second
+    // one sees the DOM that the browser paints after the update.
+    const mountedBeforePaint = await new Promise<boolean>((resolve) => {
+      requestAnimationFrame(() => {
+        visible.value = true;
+      });
+      requestAnimationFrame(() => {
+        resolve(screen.getByTestId('container').contains(screen.queryByTestId('content')));
+      });
+    });
+
+    expect(mountedBeforePaint).toBe(true);
+  });
+
+  test('mounts deeply nested portals inside their ancestor refs', async () => {
+    const Nested = defineComponent({
+      props: { remaining: { type: Number, required: true } },
+      setup(props) {
         const container = shallowRef<HTMLDivElement | null>(null);
-
-        await renderPortal(
-          <Portal container={container} data-testid="portal">
-            <div data-testid="content" />
-          </Portal>,
+        return () => (
+          <div ref={container} data-testid="nested-container">
+            <Portal container={container} data-testid="nested-portal">
+              {props.remaining > 1 ? (
+                <Nested remaining={props.remaining - 1} />
+              ) : (
+                <div data-testid="leaf" />
+              )}
+            </Portal>
+          </div>
         );
-
-        expect(screen.getByTestId('portal').parentElement).toBe(document.body);
-        expect(document.body).toContainElement(screen.getByTestId('content'));
       },
+    });
+
+    await renderPortal(<Nested remaining={18} />);
+
+    expect(screen.getByTestId('leaf')).toBeInTheDocument();
+    expect(screen.getAllByTestId('nested-portal').map((node) => node.parentElement)).toEqual(
+      screen.getAllByTestId('nested-container'),
     );
+  });
 
-    test.each([{ clear: false }, { clear: true }])(
-      'cancels a queued container check when the container prop changes (clear=$clear)',
-      async ({ clear }) => {
-        const firstContainer = shallowRef<HTMLDivElement | null>(null);
-        const secondContainer = shallowRef<HTMLDivElement | null>(null);
+  test('batches sibling portals without adding commits for each container ref', async () => {
+    let commitCount = 0;
+    const observer = new MutationObserver(() => {
+      commitCount += 1;
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
-        const Test = defineComponent({
-          setup() {
-            const step = shallowRef(0);
+    const Item = defineComponent({
+      setup() {
+        const container = shallowRef<HTMLDivElement | null>(null);
+        return () => (
+          <div ref={container} data-testid="container">
+            <Portal container={container}>
+              <div data-testid="content" />
+            </Portal>
+          </div>
+        );
+      },
+    });
 
-            function advance() {
-              if (step.value < 2) {
-                step.value += 1;
-              }
+    const Test = defineComponent({
+      props: { count: { type: Number, required: true } },
+      setup(props) {
+        return () => Array.from({ length: props.count }, (_, index) => <Item key={index} />);
+      },
+    });
+
+    const { unmount } = await renderPortal(<Test count={1} />);
+    expect(screen.getByTestId('container')).toContainElement(screen.getByTestId('content'));
+    const singlePortalCommitCount = commitCount;
+    expect(singlePortalCommitCount).toBeGreaterThan(0);
+    unmount();
+    await flushMicrotasks();
+    commitCount = 0;
+
+    await renderPortal(<Test count={20} />);
+
+    expect(screen.getAllByTestId('content')).toHaveLength(20);
+    expect(
+      screen.getAllByTestId('content').map((node) => node.parentElement?.parentElement),
+    ).toEqual(screen.getAllByTestId('container'));
+    expect(commitCount).toBe(singlePortalCommitCount);
+    observer.disconnect();
+  });
+
+  test.each([{ nested: false }, { nested: true }])(
+    'uses the fallback container when a ref stays empty (nested=$nested)',
+    async ({ nested }) => {
+      const container = shallowRef<HTMLDivElement | null>(null);
+      const content = (
+        <Portal container={container} data-testid="portal">
+          <div data-testid="content" />
+        </Portal>
+      );
+
+      await renderPortal(
+        nested ? <FloatingPortal data-testid="parent">{content}</FloatingPortal> : content,
+      );
+
+      const fallback = nested ? screen.getByTestId('parent') : document.body;
+      expect(screen.getByTestId('portal').parentElement).toBe(fallback);
+      expect(fallback).toContainElement(screen.getByTestId('content'));
+    },
+  );
+
+  test.each([{ clear: false }, { clear: true }])(
+    'cancels a queued container check when the container prop changes (clear=$clear)',
+    async ({ clear }) => {
+      const firstContainer = shallowRef<HTMLDivElement | null>(null);
+      const secondContainer = shallowRef<HTMLDivElement | null>(null);
+
+      const Test = defineComponent({
+        setup() {
+          const step = shallowRef(0);
+
+          function advance() {
+            if (step.value < 2) {
+              step.value += 1;
             }
-            onMounted(advance);
-            watch(step, advance, { flush: 'post' });
+          }
+          onMounted(advance);
+          watch(step, advance, { flush: 'post' });
 
-            return () => {
-              const nextContainer = clear ? null : secondContainer.value;
-              return (
-                <>
-                  <Portal
-                    container={step.value < 2 ? firstContainer : nextContainer}
-                    data-testid="portal"
-                  >
-                    <div data-testid="content" />
-                  </Portal>
-                  <div ref={firstContainer} data-testid="first" />
-                  <div ref={secondContainer} data-testid="second" />
-                </>
-              );
-            };
-          },
-        });
+          return () => {
+            const nextContainer = clear ? null : secondContainer.value;
+            return (
+              <>
+                <Portal
+                  container={step.value < 2 ? firstContainer : nextContainer}
+                  data-testid="portal"
+                >
+                  <div data-testid="content" />
+                </Portal>
+                <div ref={firstContainer} data-testid="first" />
+                <div ref={secondContainer} data-testid="second" />
+              </>
+            );
+          };
+        },
+      });
 
-        await renderPortal(<Test />);
+      await renderPortal(<Test />);
 
-        // Vue 3.5.12 leaves an empty text node in the old target of a `Teleport`.
-        expect(screen.getByTestId('first').innerHTML).toBe('');
-        expect(screen.queryByTestId('portal')?.parentElement ?? null).toBe(
-          clear ? null : screen.getByTestId('second'),
-        );
-      },
-    );
-  },
-);
+      // Vue 3.5.12 leaves an empty text node in the old target of a `Teleport`.
+      expect(screen.getByTestId('first').innerHTML).toBe('');
+      expect(screen.queryByTestId('portal')?.parentElement ?? null).toBe(
+        clear ? null : screen.getByTestId('second'),
+      );
+    },
+  );
+});
