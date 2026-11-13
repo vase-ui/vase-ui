@@ -45,4 +45,12 @@ describe('usePopupPositioner', () => {
       `<div data-closed data-side="bottom" data-align="center" role="presentation" hidden style="${BEFORE_POSITION}pointer-events:none;"><!--[--><!--]--></div>`,
     );
   });
+
+  it('renders the positioner of a popup that is closed and still mounted as not hidden, and as inert', async () => {
+    const { html } = await renderPositioner({ open: false, mounted: true }, false);
+
+    expect(html).toBe(
+      `<div data-closed data-side="bottom" data-align="center" role="presentation" style="${BEFORE_POSITION}pointer-events:none;"><!--[--><!--]--></div>`,
+    );
+  });
 });

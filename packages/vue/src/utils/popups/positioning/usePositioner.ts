@@ -57,7 +57,12 @@ export function usePositioner<State extends Record<string, any>>(
       }
 
       return [
-        { role: 'presentation', hidden: toValue(options.hidden), style },
+        {
+          role: 'presentation',
+          // Vue writes `false` as the attribute `hidden="false"` on an element that is not HTML.
+          hidden: toValue(options.hidden) ? true : undefined,
+          style,
+        },
         toValue(options.transitionStatus) === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
         attrs,
       ];

@@ -245,6 +245,18 @@ describe('usePopupPositioner', () => {
     expect(popup.style.pointerEvents).toBe('');
   });
 
+  it('has no hidden attribute on a positioner that is not an HTML element, while the popup is mounted', async () => {
+    await render(
+      <PopupRootPart open>
+        <PopupPositionerPart as="svg" data-testid="popup" />
+      </PopupRootPart>,
+    );
+    const popup = screen.getByTestId('popup');
+
+    expect(popup).toBeInstanceOf(SVGElement);
+    expect(popup).not.toHaveAttribute('hidden');
+  });
+
   it('disables the transition of the positioner while the popup starts', async () => {
     const { store, popup } = await renderPopup();
     await waitForPlace(popup, BELOW);
