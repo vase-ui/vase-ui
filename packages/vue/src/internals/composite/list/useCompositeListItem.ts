@@ -17,14 +17,16 @@ export function useCompositeListItem<Metadata>(
   // counts the `setup` calls of such items. Each sort sets it to the length of `elementsRef`.
   // When a server and a browser run `setup` in the same order, the server HTML and the first client
   // render have the same index.
-  // The first index can be wrong until the sort that follows the mount, in four cases.
-  // (1) The list also has an item with an explicit index. The counter does not know the slot that
+  // The first index can be wrong until the sort that follows the mount, in five cases.
+  // (1) The list has an item with an explicit index. The counter does not know the slot that
   //     the explicit index takes.
-  // (2) The item is in an async component that is not loaded yet. Its `setup` runs after the
-  //     `setup` of the items that follow it.
-  // (3) The item is in a `Teleport`. Its element is in the target, but its `setup` runs in the
-  //     order of the template.
-  // (4) The item mounts in a mounted list. The counter continues from the value that the last sort
+  // (2) The list has an item in an async component that is not loaded yet. The `setup` of that
+  //     item runs after the `setup` of the items that follow it.
+  // (3) The list has an item in a `Teleport`. The element of that item is in the target, but its
+  //     `setup` runs in the order of the template.
+  // (4) An item whose `setup` ran before registers no element of its own. It renders no element,
+  //     or it shares its element with another item of the list. The counter still counts it.
+  // (5) The item mounts in a mounted list. The counter continues from the value that the last sort
   //     set. The first index is then wrong if the item comes before an item that was in the list at
   //     that sort. It is also wrong if an item left the list since that sort.
   const guess = context && toValue(params.index) == null ? context.takeIndexGuess() : -1;
