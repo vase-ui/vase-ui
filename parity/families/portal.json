@@ -1,0 +1,59 @@
+{
+  "upstreamPaths": ["packages/react/src/utils/popups/portal/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the portal with focus guards ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["FloatingPortal"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
+      "reason": "The cases render `FloatingPortal`. The pull request that adds `FloatingPortal.tsx` ports them."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["FloatingPortal"],
+      "title": "uses the rendered portal ID for the aria-owns relationship",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+      "reason": "The case renders `FloatingFocusManager`, which Vase UI does not have. The pull request that adds `FloatingFocusManager.tsx` ports the case."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["$name container resolution"],
+      "title": "$name without canceling a view transition",
+      "kind": "not-applicable",
+      "reason": "The cases use `React.ViewTransition` to test that the retry of the container check does not cancel a view transition. Vue has no such retry."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["$name container resolution"],
+      "title": "does not cancel a view transition that reveals a hidden pending portal",
+      "kind": "not-applicable",
+      "reason": "The case uses `React.ViewTransition` and `React.Activity` to test that the retry of the container check does not cancel a view transition. Vue has no such retry."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["$name container resolution"],
+      "title": "keeps content connected when an indicator exit removes the container in the same checkpoint",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "The case renders `Checkbox.Root` and `Checkbox.Indicator`, which Vase UI does not have. The pull request that adds `CheckboxIndicator.tsx` ports the case."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "describe": ["$name container resolution"],
+      "title": "mounts children once in a connected container when a later update replaces its ref",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/portal/FloatingPortalLite.test.tsx",
+      "reason": "The Vue portal gets its container in the flush after the mount. When updates in that flush replace the container, the children mount in the first container. That container is out of the document when their `onMounted` hooks run. Vue then moves the children to the new container. The case \"mounts the children once, and moves them when updates in the flush of the mount replace the container\" tests this."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
