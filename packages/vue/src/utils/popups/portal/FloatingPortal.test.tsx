@@ -239,7 +239,8 @@ describe.each([{ name: 'FloatingPortalLite', Portal: FloatingPortalLite }])(
 
         await renderPortal(<Test />);
 
-        expect(screen.getByTestId('first')).toBeEmptyDOMElement();
+        // Vue 3.5.12 leaves an empty text node in the old target of a `Teleport`.
+        expect(screen.getByTestId('first').innerHTML).toBe('');
         expect(screen.queryByTestId('portal')?.parentElement ?? null).toBe(
           clear ? null : screen.getByTestId('second'),
         );
