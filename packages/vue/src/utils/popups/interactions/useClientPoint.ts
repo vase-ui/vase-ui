@@ -106,9 +106,7 @@ export interface UseClientPointProps {
  * Positions the floating element relative to a client point (in the viewport),
  * such as the mouse position. By default, it follows the mouse cursor.
  * A root part calls it in `setup` and gives the object to `usePopupInteractionProps` as the props
- * of its triggers. Each listener returns while the composable is not enabled. When the store
- * changes, the composable writes `null` to `anchorOverride` of the old store and follows the cursor
- * in the new store.
+ * of its triggers. Each listener returns while the composable is not enabled.
  * @see https://floating-ui.com/docs/useClientPoint
  */
 export function useClientPoint(
@@ -125,8 +123,8 @@ export function useClientPoint(
   let disabledWhileOpen = false;
   let stopListening: (() => void) | null = null;
   let deactivated = false;
-  // The store of the last run of `syncWindowListener`. Vue runs the cleanup of a part in the render
-  // of its parent, so the cleanup cannot read `store`, which can be a ref or a getter.
+  // Vue runs the cleanup of a part in the render of its parent. The cleanup thus reads no reactive
+  // state, and it clears the store of the last run.
   let anchoredStore: PopupInteractionStore | undefined;
 
   const pointerType = shallowRef<string | undefined>();
