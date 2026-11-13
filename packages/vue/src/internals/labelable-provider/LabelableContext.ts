@@ -3,7 +3,13 @@ import type { ComputedRef, InjectionKey } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { NOOP } from '../noop';
 
-export type MessageIdsSetter = (next: string[] | ((current: string[]) => string[])) => void;
+/**
+ * Registers the `id` of a part with the provider, or removes the registration of the source when
+ * `getId` is `undefined`. The provider calls the getter each time it needs the `id`, so the part
+ * registers one time. The getter returns `undefined` for a part that has no `id` now, such as a
+ * part that `KeepAlive` has deactivated.
+ */
+export type RegisterId = (source: symbol, getId: (() => string | undefined) | undefined) => void;
 
 export interface LabelableContext {
   /**
@@ -15,20 +21,20 @@ export interface LabelableContext {
   registerControlId: (source: symbol, id: string | null | undefined) => void;
   resetControlId: () => void;
   /**
-   * The `id` of the last label that is registered.
-   * It is `undefined` when no label is registered.
+   * The `id` of the last label that has one.
+   * It is `undefined` when no label has an `id`.
    */
   labelId: ComputedRef<string | undefined>;
-  registerLabelId: (source: symbol, id: string | undefined) => void;
+  registerLabelId: RegisterId;
   /**
    * The `id` that the provider made for a label that has no `id` of its own.
    */
   defaultLabelId: ComputedRef<string | undefined>;
   /**
-   * The `id`s of the elements that give an accessible description.
+   * The `id`s of the elements that give an accessible description, in the order of the parts.
    */
   messageIds: ComputedRef<string[]>;
-  setMessageIds: MessageIdsSetter;
+  registerMessageId: RegisterId;
   getDescriptionProps: (externalProps: Record<string, any>) => Record<string, any>;
 }
 
@@ -47,7 +53,7 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   registerLabelId: NOOP,
   defaultLabelId: computed(() => undefined),
   messageIds: computed(() => EMPTY_ARRAY),
-  setMessageIds: NOOP,
+  registerMessageId: NOOP,
   getDescriptionProps: (externalProps) => externalProps,
 };
 

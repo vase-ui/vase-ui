@@ -5,7 +5,8 @@ import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 defineProps<{
   labelBeforeControl: boolean;
   labelId?: string | undefined;
-  registerLabelId?: ((source: symbol, labelId: string | undefined) => void) | undefined;
+  registerLabelId?:
+    ((source: symbol, getLabelId: (() => string | undefined) | undefined) => void) | undefined;
 }>();
 </script>
 

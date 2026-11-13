@@ -1,39 +1,34 @@
-import { onActivated, onDeactivated, onScopeDispose, watch } from 'vue';
+import { onActivated, onDeactivated, onScopeDispose, shallowRef } from 'vue';
 
 /**
- * Keeps the id of a part registered while the part is active.
- * `register` gets the id, or `undefined` to remove it.
+ * Registers the id of a part for as long as the part exists.
+ * `register` gets a getter for the id, or `undefined` to remove the registration. The getter
+ * returns `undefined` while `KeepAlive` has the part deactivated, because `KeepAlive` removes the
+ * DOM of that part from the document.
  *
  * The call in `setup` puts the id in the server HTML of each part that renders after this part.
- * Do not replace it with a `watch` that has `immediate` and `onCleanup`. A server render stops that
- * watcher after its first run, and the stop runs the cleanup.
+ * It also gives the part its place in the order of the registrations, and the part keeps that place
+ * in a deactivation. `KeepAlive` runs the `onActivated` hooks of one branch from its last part to
+ * its first part, so a registration in `onActivated` would reverse the order of the parts.
+ *
+ * Do not replace the call with a `watch` that has `immediate` and `onCleanup`. A server render
+ * stops that watcher after its first run, and the stop runs the cleanup.
  */
 export function useRegisteredId(
   getId: () => string | undefined,
-  register: (id: string | undefined) => void,
+  register: (getId: (() => string | undefined) | undefined) => void,
 ): void {
-  // `KeepAlive` removes the DOM of a deactivated part from the document, so the provider must not
-  // keep the id of that part.
-  let isDeactivated = false;
-  const sync = () => register(isDeactivated ? undefined : getId());
-
-  sync();
-  watch(getId, sync);
+  const isDeactivated = shallowRef(false);
 
   onDeactivated(() => {
-    isDeactivated = true;
-    sync();
+    isDeactivated.value = true;
   });
 
   onActivated(() => {
-    // `onActivated` also runs at the first mount inside `KeepAlive`, where `setup` registered the id.
-    if (!isDeactivated) {
-      return;
-    }
-
-    isDeactivated = false;
-    sync();
+    isDeactivated.value = false;
   });
+
+  register(() => (isDeactivated.value ? undefined : getId()));
 
   onScopeDispose(() => register(undefined));
 }

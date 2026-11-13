@@ -1,7 +1,7 @@
-import { computed, provide, shallowRef } from 'vue';
+import { computed, provide, shallowReactive, shallowRef, watch } from 'vue';
 import { useVaseUiId } from '../useBaseUiId';
 import { LabelableContext, useLabelableContext } from './LabelableContext';
-import type { MessageIdsSetter } from './LabelableContext';
+import { createIdRegistry } from './createIdRegistry';
 import { createLabelIdRegistry } from './createLabelIdRegistry';
 
 /**
@@ -18,9 +18,9 @@ export function provideLabelableContext(): LabelableContext {
   const defaultLabelId = useVaseUiId();
 
   const controlIdState = shallowRef<string | null>(defaultControlId.value);
-  const messageIdsState = shallowRef<string[]>([]);
-  const controlRegistrations = new Map<symbol, string | null>();
+  const controlRegistrations = shallowReactive(new Map<symbol, string | null>());
   const { labelId, registerLabelId } = createLabelIdRegistry();
+  const { ids: messageIds, registerId: registerMessageId } = createIdRegistry();
 
   function registerControlId(source: symbol, nextId: string | null | undefined) {
     if (nextId === undefined) {
@@ -28,19 +28,26 @@ export function provideLabelableContext(): LabelableContext {
     } else {
       controlRegistrations.set(source, nextId);
     }
-
-    const ids = Array.from(controlRegistrations.values());
-    // With no registration, the id stays. `KeepAlive` removes the registration of a deactivated
-    // control, and the id of that control stays selected until `KeepAlive` activates it again. A
-    // control with no id resets the id through `resetControlId`.
-    if (ids.length === 0) {
-      return;
-    }
-    // A selected id that a control still registers stays, so other controls do not change it.
-    if (!ids.includes(controlIdState.value)) {
-      controlIdState.value = ids[0];
-    }
   }
+
+  // The selection runs one time for each flush, against all registrations, as the state updater of
+  // Base UI does. A selection at each registration would depend on the order of the registrations,
+  // and `KeepAlive` runs the `onActivated` hooks of one branch from its last part to its first part.
+  watch(
+    () => Array.from(controlRegistrations.values()),
+    (ids) => {
+      // With no registration, the id stays. `KeepAlive` removes the registration of a deactivated
+      // control, and the id of that control stays selected until `KeepAlive` activates it again.
+      // A control with no id resets the id through `resetControlId`.
+      if (ids.length === 0) {
+        return;
+      }
+      // A selected id that a control still registers stays, so other controls do not change it.
+      if (!ids.includes(controlIdState.value)) {
+        controlIdState.value = ids[0];
+      }
+    },
+  );
 
   function resetControlId() {
     if (controlRegistrations.size === 0) {
@@ -48,15 +55,11 @@ export function provideLabelableContext(): LabelableContext {
     }
   }
 
-  const setMessageIds: MessageIdsSetter = (next) => {
-    messageIdsState.value = typeof next === 'function' ? next(messageIdsState.value) : next;
-  };
-
   function getDescriptionProps(externalProps: Record<string, any>) {
     const ids: string[] = externalProps['aria-describedby']
       ? externalProps['aria-describedby'].split(' ')
       : [];
-    ids.push(...parent.messageIds.value, ...messageIdsState.value);
+    ids.push(...parent.messageIds.value, ...messageIds.value);
 
     return {
       ...externalProps,
@@ -71,8 +74,8 @@ export function provideLabelableContext(): LabelableContext {
     labelId,
     registerLabelId,
     defaultLabelId,
-    messageIds: computed(() => messageIdsState.value),
-    setMessageIds,
+    messageIds,
+    registerMessageId,
     getDescriptionProps,
   };
 

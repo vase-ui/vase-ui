@@ -66,8 +66,9 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
     registerControlId(source, nextId);
   }
 
-  // The registration waits for the mount. A server render never runs `onMounted`, and the first
-  // render of a hydration must equal the server HTML.
+  // The registration waits for the mount. The `setup` of a control that replaces another control can
+  // run before Vue removes or deactivates the old control, and the old registration is still there
+  // then.
   onMounted(() => {
     isMounted = true;
     register();

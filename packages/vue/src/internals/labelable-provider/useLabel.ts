@@ -5,6 +5,7 @@ import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
 import { useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
+import type { RegisterId } from './LabelableContext';
 import { useRegisteredId } from './useRegisteredId';
 
 /**
@@ -24,12 +25,14 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
   const id = computed(() => toValue(params.id) ?? defaultLabelId.value ?? ownId.value);
 
   const source = Symbol();
-  function register(nextId: string | undefined) {
-    registerContextLabelId(source, nextId);
-    params.registerLabelId?.(source, nextId);
-  }
 
-  useRegisteredId(() => id.value, register);
+  useRegisteredId(
+    () => id.value,
+    (getId) => {
+      registerContextLabelId(source, getId);
+      params.registerLabelId?.(source, getId);
+    },
+  );
 
   const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
 
@@ -107,9 +110,10 @@ export interface UseLabelParameters {
   /**
    * Registers the label with the root that owns it, as the labelable context does.
    * A root that has labels of its own makes the function with `createLabelIdRegistry()`.
-   * The id is `undefined` when the label goes away or `KeepAlive` deactivates it.
+   * The function gets a getter for the id of the label, and `undefined` when the label goes away.
+   * The getter returns `undefined` while `KeepAlive` has the label deactivated.
    */
-  registerLabelId?: ((source: symbol, labelId: string | undefined) => void) | undefined;
+  registerLabelId?: RegisterId | undefined;
   /**
    * A focus handler for a label that is not native.
    * If it is omitted, the click focuses the control that has the resolved id.

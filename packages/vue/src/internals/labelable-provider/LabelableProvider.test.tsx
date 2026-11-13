@@ -126,13 +126,19 @@ describe('labelable provider', () => {
       });
 
       it('keeps the selected id when a control with no id is mounted beside it', async () => {
-        await render(
-          <LabelableScope>
-            <LabelableControl id="a" />
-            <LabelableControl />
-            <LabelableLabel data-testid="label">Label</LabelableLabel>
-          </LabelableScope>,
+        const AddedControl = defineComponent(
+          (props: { added: boolean }) => () => (
+            <LabelableScope>
+              <LabelableControl id="a" />
+              {props.added && <LabelableControl />}
+              <LabelableLabel data-testid="label">Label</LabelableLabel>
+            </LabelableScope>
+          ),
+          { props: ['added'] },
         );
+        const { rerender } = await render(<AddedControl added={false} />);
+
+        await rerender(<AddedControl added />);
 
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
       });
@@ -493,6 +499,122 @@ describe('labelable provider', () => {
       await rerender(<Shown shown />);
 
       expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'error-b');
+    });
+
+    // `KeepAlive` runs the `onActivated` hooks of one branch from its last part to its first part.
+    // The parts must keep their order when the branch comes back.
+    it('keeps the order of the message ids of a field that `KeepAlive` hides and shows again', async () => {
+      const Field = defineComponent(() => () => (
+        <LabelableScope>
+          <LabelableControl data-testid="control" />
+          <LabelableMessage id="description" />
+          <LabelableMessage id="error" />
+        </LabelableScope>
+      ));
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <KeepAlive>{props.shown ? <Field /> : null}</KeepAlive>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('control')).toHaveAttribute(
+        'aria-describedby',
+        'description error',
+      );
+
+      await rerender(<Shown shown={false} />);
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute(
+        'aria-describedby',
+        'description error',
+      );
+    });
+
+    it('keeps the order of the message ids of two messages that `KeepAlive` hides and shows again', async () => {
+      const Messages = defineComponent(() => () => (
+        <>
+          <LabelableMessage id="description" />
+          <LabelableMessage id="error" />
+        </>
+      ));
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <LabelableControl data-testid="control" />
+            <KeepAlive>{props.shown ? <Messages /> : null}</KeepAlive>
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('control')).toHaveAttribute(
+        'aria-describedby',
+        'description error',
+      );
+
+      await rerender(<Shown shown={false} />);
+      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-describedby');
+
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute(
+        'aria-describedby',
+        'description error',
+      );
+    });
+
+    it('keeps the control selected when `KeepAlive` hides two controls and shows them again', async () => {
+      const Parts = defineComponent(() => () => (
+        <>
+          <LabelableLabel data-testid="label">Label</LabelableLabel>
+          <LabelableControl id="a" />
+          <LabelableControl id="b" />
+        </>
+      ));
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <KeepAlive>{props.shown ? <Parts /> : null}</KeepAlive>
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await rerender(<Shown shown={false} />);
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+    });
+
+    it('names the control with the last of two labels that `KeepAlive` hides and shows again', async () => {
+      const Labels = defineComponent(() => () => (
+        <>
+          <LabelableLabel id="first-label" />
+          <LabelableLabel id="second-label" />
+        </>
+      ));
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <KeepAlive>{props.shown ? <Labels /> : null}</KeepAlive>
+            <LabelableControl data-testid="control" />
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'second-label');
+
+      await rerender(<Shown shown={false} />);
+      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-labelledby');
+
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'second-label');
     });
   });
 

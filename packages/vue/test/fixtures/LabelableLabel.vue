@@ -8,7 +8,8 @@ const props = withDefaults(
   defineProps<{
     id?: string | undefined;
     native?: boolean | undefined;
-    registerLabelId?: ((source: symbol, labelId: string | undefined) => void) | undefined;
+    registerLabelId?:
+      ((source: symbol, getLabelId: (() => string | undefined) | undefined) => void) | undefined;
   }>(),
   { native: true },
 );
@@ -17,7 +18,7 @@ const attrs = useAttrs();
 const labelProps = useLabel({
   id: () => props.id,
   native: () => props.native,
-  registerLabelId: (source, labelId) => props.registerLabelId?.(source, labelId),
+  registerLabelId: (source, getLabelId) => props.registerLabelId?.(source, getLabelId),
 });
 
 function elementProps() {
