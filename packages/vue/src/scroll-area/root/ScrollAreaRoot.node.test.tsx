@@ -84,4 +84,23 @@ describe('<ScrollArea.Root /> on a server', () => {
       `<div data-orientation="vertical" data-id="${dataId}" aria-hidden="true" style="position:absolute;touch-action:none;-webkit-user-select:none;user-select:none;top:0;bottom:var(--scroll-area-corner-height);inset-inline-end:0;--scroll-area-thumb-height:0px;">`,
     );
   });
+
+  it('renders a thumb that is hidden until the first measurement', async () => {
+    const html = await renderToString(
+      <ScrollArea.Root>
+        <ScrollArea.Scrollbar keepMounted>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+        <ScrollArea.Scrollbar orientation="horizontal" keepMounted>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>,
+    );
+
+    // The start tag of a scrollbar has a `data-id` between these two attributes.
+    expect(html.match(/<div data-orientation="[^"]*" style="[^"]*">/g)).toEqual([
+      '<div data-orientation="vertical" style="visibility:hidden;height:var(--scroll-area-thumb-height);">',
+      '<div data-orientation="horizontal" style="visibility:hidden;width:var(--scroll-area-thumb-width);">',
+    ]);
+  });
 });

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { CDPSession } from '@vitest/browser-playwright';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
   createRenderer,
@@ -129,6 +130,71 @@ describe('<ScrollArea.Viewport />', () => {
 
         expect(targetRef!.deref()).toBeUndefined();
         expect(viewport.firstElementChild!.getAnimations()[0].playState).toBe('paused');
+      },
+    );
+
+    it.each([
+      ['no infinite animation', undefined],
+      ['infinite iterations', { iterations: Infinity }],
+      ['infinite duration', { duration: Infinity, iterations: 1 }],
+    ] as const)(
+      'recomputes overflow after a subtree animation finishes with %s',
+      async (_description, infiniteTiming) => {
+        vi.spyOn(ResizeObserver.prototype, 'observe').mockImplementation(() => {});
+        let scrollWidth = 100;
+        let resolveAnimation: () => void = () => {};
+        const finished = new Promise<void>((resolve) => {
+          resolveAnimation = resolve;
+        });
+        const getAnimations = vi.fn(
+          () =>
+            [
+              { finished },
+              ...(infiniteTiming
+                ? [
+                    {
+                      finished: new Promise<void>(() => {}),
+                      effect: { getTiming: () => infiniteTiming },
+                    },
+                  ]
+                : []),
+            ] as unknown as Animation[],
+        );
+
+        // Vue drops a ref on a vnode that the body of the test makes. The ref is therefore in a
+        // render function.
+        await render(() => (
+          <ScrollArea.Root data-testid="root">
+            <ScrollArea.Viewport
+              ref={(component) => {
+                const node = (component as { element: HTMLElement | null } | null)?.element;
+                if (node) {
+                  Object.defineProperties(node, {
+                    clientHeight: { configurable: true, value: 100 },
+                    clientWidth: { configurable: true, value: 100 },
+                    scrollHeight: { configurable: true, value: 100 },
+                    scrollWidth: { configurable: true, get: () => scrollWidth },
+                    getAnimations: { configurable: true, value: getAnimations },
+                  });
+                }
+              }}
+            />
+            <ScrollArea.Scrollbar orientation="horizontal" keepMounted>
+              <ScrollArea.Thumb />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        ));
+
+        const root = screen.getByTestId('root');
+        await waitFor(() => expect(getAnimations).toHaveBeenCalled());
+        expect(root).not.toHaveAttribute('data-has-overflow-x');
+
+        scrollWidth = 1000;
+        resolveAnimation();
+        await finished;
+        await flushMicrotasks();
+
+        await waitFor(() => expect(root).toHaveAttribute('data-has-overflow-x'));
       },
     );
 
@@ -453,6 +519,175 @@ describe('<ScrollArea.Viewport />', () => {
     });
   });
 
+  // Only Safari reports an out-of-range `scrollTop`/`scrollLeft` while rubber-banding, and the
+  // browser clamps the property on assignment, so the getter is mocked to emulate it against
+  // real layout.
+  describe.skipIf(isJSDOM)('overscroll feedback', () => {
+    const VIEWPORT_SIZE = 200;
+    const CONTENT_SIZE = 1000;
+    const MAX_SCROLL = CONTENT_SIZE - VIEWPORT_SIZE;
+
+    async function renderScrollArea(
+      orientation: 'vertical' | 'horizontal',
+      textDirection: 'ltr' | 'rtl' = 'ltr',
+    ) {
+      await render(
+        <DirectionProvider direction={textDirection}>
+          <ScrollArea.Root
+            style={{
+              width: `${VIEWPORT_SIZE}px`,
+              height: `${VIEWPORT_SIZE}px`,
+              direction: textDirection,
+            }}
+          >
+            <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+              <div
+                style={{
+                  width: orientation === 'horizontal' ? `${CONTENT_SIZE}px` : '100%',
+                  height: orientation === 'vertical' ? `${CONTENT_SIZE}px` : '100%',
+                }}
+              />
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar orientation={orientation} data-testid="scrollbar" keepMounted>
+              <ScrollArea.Thumb data-testid="thumb" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </DirectionProvider>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const scrollbar = screen.getByTestId('scrollbar');
+      const thumb = screen.getByTestId('thumb');
+      const axis = orientation === 'vertical' ? 'height' : 'width';
+      await waitFor(() => expect(thumb.getBoundingClientRect()[axis]).toBeGreaterThan(0));
+
+      return { viewport, scrollbar, thumb };
+    }
+
+    async function overscroll(
+      viewport: HTMLDivElement,
+      prop: 'scrollTop' | 'scrollLeft',
+      value: number,
+    ) {
+      Object.defineProperty(viewport, prop, { configurable: true, get: () => value });
+      await fireEvent.scroll(viewport);
+    }
+
+    it('shrinks and pins the thumb to the start edge while overscrolling past the top', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('vertical');
+
+      const restingHeight = thumb.getBoundingClientRect().height;
+
+      await overscroll(viewport, 'scrollTop', -50);
+
+      // Shrinks, but damped by the content length rather than subtracting the raw pixels
+      // (a 1:1 subtraction of 50px would collapse this thumb to its minimum size).
+      await waitFor(() => expect(thumb.getBoundingClientRect().height).toBeLessThan(restingHeight));
+      expect(thumb.getBoundingClientRect().height).toBeGreaterThan(restingHeight * 0.9);
+      // Pinned to the top edge of the track.
+      expect(thumb.getBoundingClientRect().top).toBeCloseTo(
+        scrollbar.getBoundingClientRect().top,
+        0,
+      );
+    });
+
+    it('shrinks and pins the thumb to the end edge while overscrolling past the bottom', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('vertical');
+
+      const restingHeight = thumb.getBoundingClientRect().height;
+
+      await overscroll(viewport, 'scrollTop', MAX_SCROLL + 50);
+
+      await waitFor(() => expect(thumb.getBoundingClientRect().height).toBeLessThan(restingHeight));
+      expect(thumb.getBoundingClientRect().height).toBeGreaterThan(restingHeight * 0.9);
+      // Pinned to the bottom edge of the track.
+      expect(thumb.getBoundingClientRect().bottom).toBeCloseTo(
+        scrollbar.getBoundingClientRect().bottom,
+        0,
+      );
+    });
+
+    it('restores the resting thumb size once the viewport settles back into range', async () => {
+      const { viewport, thumb } = await renderScrollArea('vertical');
+
+      const restingHeight = thumb.getBoundingClientRect().height;
+
+      await overscroll(viewport, 'scrollTop', -50);
+      await waitFor(() => expect(thumb.getBoundingClientRect().height).toBeLessThan(restingHeight));
+
+      await overscroll(viewport, 'scrollTop', 100);
+      await waitFor(() =>
+        expect(thumb.getBoundingClientRect().height).toBeCloseTo(restingHeight, 0),
+      );
+    });
+
+    it('shrinks and pins the horizontal thumb to the inline start while overscrolling (LTR)', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('horizontal');
+
+      const restingWidth = thumb.getBoundingClientRect().width;
+
+      await overscroll(viewport, 'scrollLeft', -50);
+
+      await waitFor(() => expect(thumb.getBoundingClientRect().width).toBeLessThan(restingWidth));
+      expect(thumb.getBoundingClientRect().width).toBeGreaterThan(restingWidth * 0.9);
+      // Inline start is the left edge in LTR.
+      expect(thumb.getBoundingClientRect().left).toBeCloseTo(
+        scrollbar.getBoundingClientRect().left,
+        0,
+      );
+    });
+
+    it('shrinks and pins the horizontal thumb to the inline end while overscrolling (LTR)', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('horizontal');
+
+      const restingWidth = thumb.getBoundingClientRect().width;
+
+      await overscroll(viewport, 'scrollLeft', MAX_SCROLL + 50);
+
+      await waitFor(() => expect(thumb.getBoundingClientRect().width).toBeLessThan(restingWidth));
+      expect(thumb.getBoundingClientRect().width).toBeGreaterThan(restingWidth * 0.9);
+      // Inline end is the right edge in LTR.
+      expect(thumb.getBoundingClientRect().right).toBeCloseTo(
+        scrollbar.getBoundingClientRect().right,
+        0,
+      );
+    });
+
+    it('shrinks and pins the horizontal thumb to the inline start while overscrolling (RTL)', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('horizontal', 'rtl');
+
+      const restingWidth = thumb.getBoundingClientRect().width;
+
+      // RTL scrolls from 0 toward `-MAX_SCROLL`; overscrolling the inline start goes positive.
+      await overscroll(viewport, 'scrollLeft', 50);
+
+      await waitFor(() => expect(thumb.getBoundingClientRect().width).toBeLessThan(restingWidth));
+      expect(thumb.getBoundingClientRect().width).toBeGreaterThan(restingWidth * 0.9);
+      // Inline start is the right edge in RTL.
+      expect(thumb.getBoundingClientRect().right).toBeCloseTo(
+        scrollbar.getBoundingClientRect().right,
+        0,
+      );
+    });
+
+    it('shrinks and pins the horizontal thumb to the inline end while overscrolling (RTL)', async () => {
+      const { viewport, scrollbar, thumb } = await renderScrollArea('horizontal', 'rtl');
+
+      const restingWidth = thumb.getBoundingClientRect().width;
+
+      // RTL overscroll past the inline end goes beyond `-MAX_SCROLL`.
+      await overscroll(viewport, 'scrollLeft', -(MAX_SCROLL + 50));
+
+      await waitFor(() => expect(thumb.getBoundingClientRect().width).toBeLessThan(restingWidth));
+      expect(thumb.getBoundingClientRect().width).toBeGreaterThan(restingWidth * 0.9);
+      // Inline end is the left edge in RTL.
+      expect(thumb.getBoundingClientRect().left).toBeCloseTo(
+        scrollbar.getBoundingClientRect().left,
+        0,
+      );
+    });
+  });
+
   describe('ResizeObserver', () => {
     it('recomputes the overflow attributes when the viewport changes size', async () => {
       const { setProps } = await render(
@@ -576,6 +811,51 @@ describe('<ScrollArea.Viewport />', () => {
       await fireEvent.scroll(viewport, { target: { scrollLeft: 1 } });
 
       expect(viewport).not.toHaveAttribute('data-scrolling');
+    });
+
+    it('reads the hover state again on activation', async () => {
+      const visible = shallowRef(true);
+      // `pointer-events: none` isolates this from the browser's real pointer.
+      const App = defineComponent(() => () => (
+        <KeepAlive>
+          {visible.value ? (
+            <ScrollArea.Root style={{ width: '200px', height: '200px', pointerEvents: 'none' }}>
+              <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+                <div style={{ width: '1000px', height: '1000px' }} />
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted />
+            </ScrollArea.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+
+      await renderWithFakeTimers(<App />);
+      const scrollbar = screen.getByTestId('scrollbar');
+
+      expect(scrollbar).not.toHaveAttribute('data-hovering');
+
+      visible.value = false;
+      await nextTick();
+
+      // A pointer that is over a viewport that comes back sends no enter event.
+      const originalMatches = Element.prototype.matches;
+      const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function matches(
+        this: Element,
+        selector: string,
+      ) {
+        if (selector === ':hover' && (this as HTMLElement).dataset.testid === 'viewport') {
+          return true;
+        }
+        return originalMatches.call(this, selector);
+      });
+      onTestFinished(() => {
+        matchesSpy.mockRestore();
+      });
+
+      visible.value = true;
+      await nextTick();
+
+      expect(scrollbar).toHaveAttribute('data-hovering');
     });
   });
 
