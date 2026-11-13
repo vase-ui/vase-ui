@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, onMounted, shallowRef, Teleport, watch } from 'vue';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { defineComponent, h, KeepAlive, onMounted, shallowRef, Teleport, watch } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
@@ -28,6 +28,24 @@ type RadioGroupInstance = { inputElement: HTMLInputElement | null };
 
 function getInputs() {
   return Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]'));
+}
+
+function renderRadios() {
+  return (
+    <>
+      <Radio.Root value="a" data-testid="a" />
+      <Radio.Root value="b" data-testid="b" />
+      <Radio.Root value="c" data-testid="c" />
+    </>
+  );
+}
+
+// The group follows a reset in a timeout of 0 ms, after the listeners of the event and the updates
+// that they start. The case that calls this function uses fake timers.
+async function settleReset() {
+  await flushMicrotasks();
+  vi.advanceTimersByTime(0);
+  await flushMicrotasks();
 }
 
 function readTabindexes(root: ParentNode) {
@@ -2615,6 +2633,522 @@ describe('<RadioGroup />', () => {
       expect(handleChange.mock.calls[0][0]).toBe('b');
       expect(getInputs().map((input) => input.checked)).toEqual([false, true, false]);
       expect(getFormData()).toEqual(['b']);
+    });
+
+    describe('BUG-6206: a native reset', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      // Each radio shows its state on its element and on its input.
+      function expectChecked(checked: boolean[]) {
+        expect(getInputs().map((input) => input.checked)).toEqual(checked);
+        expect(
+          ['a', 'b', 'c'].map((testId) => screen.getByTestId(testId).getAttribute('aria-checked')),
+        ).toEqual(checked.map(String));
+      }
+
+      it.each([
+        { name: 'a value', defaultValue: 'a', data: ['a'], checked: [true, false, false] },
+        { name: 'no value', defaultValue: undefined, data: [], checked: [false, false, false] },
+      ])(
+        'puts an uncontrolled group back to its default, $name',
+        async ({ defaultValue, data, checked }) => {
+          const handleChange = vi.fn();
+          await render(
+            <form data-testid="form">
+              <RadioGroup name="fruit" defaultValue={defaultValue} onValueChange={handleChange}>
+                {renderRadios()}
+              </RadioGroup>
+              <button type="reset">Reset</button>
+            </form>,
+          );
+          await fireEvent.click(screen.getByTestId('c'));
+          expect(getFormData()).toEqual(['c']);
+
+          await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+          await settleReset();
+
+          expectChecked(checked);
+          expect(getFormData()).toEqual(data);
+          expect(handleChange).toHaveBeenCalledTimes(2);
+          expect(handleChange.mock.lastCall?.[0]).toBe(defaultValue);
+          expect(handleChange.mock.lastCall?.[1].event.type).toBe('reset');
+
+          // A reset with nothing to change.
+          await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+          await settleReset();
+
+          expect(handleChange).toHaveBeenCalledTimes(2);
+          expectChecked(checked);
+        },
+      );
+
+      it.each([
+        {
+          name: 'a group whose listener cancels',
+          renderForm: () => () => (
+            <form data-testid="form">
+              <RadioGroup
+                name="fruit"
+                onValueChange={(_value: string, details: RadioGroup.ChangeEventDetails) => {
+                  if (details.event.type === 'reset') {
+                    details.cancel();
+                  }
+                }}
+              >
+                {renderRadios()}
+              </RadioGroup>
+            </form>
+          ),
+        },
+        {
+          name: 'a group whose form cancels the reset',
+          renderForm: () => () => (
+            <form data-testid="form" onReset={(event: Event) => event.preventDefault()}>
+              <RadioGroup name="fruit">{renderRadios()}</RadioGroup>
+            </form>
+          ),
+        },
+        {
+          name: 'a group that the window cancels',
+          renderForm: () => {
+            // The window gets the event after the root node of the group.
+            const cancelReset = (event: Event) => event.preventDefault();
+            window.addEventListener('reset', cancelReset);
+            onTestFinished(() => window.removeEventListener('reset', cancelReset));
+            return () => (
+              <form data-testid="form">
+                <RadioGroup name="fruit">{renderRadios()}</RadioGroup>
+              </form>
+            );
+          },
+        },
+        {
+          name: 'a group of another form',
+          renderForm: () => () => (
+            <div>
+              <form data-testid="form" />
+              <form id="other" />
+              <RadioGroup name="fruit" form="other">
+                {renderRadios()}
+              </RadioGroup>
+            </div>
+          ),
+        },
+      ])('does not change $name', async ({ renderForm }) => {
+        await render(h(defineComponent(renderForm)));
+        await fireEvent.click(screen.getByTestId('c'));
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expectChecked([false, false, true]);
+      });
+
+      it('does not change a controlled group, and emits nothing', async () => {
+        const handleChange = vi.fn();
+        const handleUpdate = vi.fn();
+        const App = defineComponent(() => {
+          const value = shallowRef('a');
+          return () => (
+            <form data-testid="form">
+              <RadioGroup
+                name="fruit"
+                value={value.value}
+                onValueChange={handleChange}
+                {...{
+                  'onUpdate:value': (next: string) => {
+                    handleUpdate(next);
+                    value.value = next;
+                  },
+                }}
+              >
+                {renderRadios()}
+              </RadioGroup>
+            </form>
+          );
+        });
+        await render(<App />);
+        await fireEvent.click(screen.getByTestId('c'));
+        handleChange.mockClear();
+        handleUpdate.mockClear();
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expectChecked([false, false, true]);
+        expect(handleChange).not.toHaveBeenCalled();
+        expect(handleUpdate).not.toHaveBeenCalled();
+      });
+
+      it('emits one `valueChange` for one reset, also when a listener cancels it', async () => {
+        const handleChange = vi.fn(
+          (_value: string | undefined, details: RadioGroup.ChangeEventDetails) => {
+            if (details.event.type === 'reset') {
+              details.cancel();
+            }
+          },
+        );
+        await render(
+          <form data-testid="form">
+            <RadioGroup name="fruit" onValueChange={handleChange}>
+              {renderRadios()}
+            </RadioGroup>
+          </form>,
+        );
+        await fireEvent.click(screen.getByTestId('c'));
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(
+          handleChange.mock.calls.map(([value, details]) => [value, details.event.type]),
+        ).toEqual([
+          ['c', 'click'],
+          [undefined, 'reset'],
+        ]);
+      });
+
+      it('resets a group outside the form that its `form` prop names', async () => {
+        await render(
+          <div>
+            <form data-testid="form" id="external" />
+            <RadioGroup name="fruit" form="external" defaultValue="a">
+              {renderRadios()}
+            </RadioGroup>
+          </div>,
+        );
+        await fireEvent.click(screen.getByTestId('c'));
+        expect(getFormData()).toEqual(['c']);
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expectChecked([true, false, false]);
+        expect(getFormData()).toEqual(['a']);
+      });
+
+      it('removes `data-filled` and `data-dirty` of the field when the group goes back to no value', async () => {
+        await render(
+          <form data-testid="form">
+            <Field.Root name="fruit" data-testid="root">
+              <RadioGroup>{renderRadios()}</RadioGroup>
+            </Field.Root>
+          </form>,
+        );
+        await fireEvent.click(screen.getByTestId('c'));
+
+        expect(screen.getByTestId('root')).toHaveAttribute('data-filled');
+        expect(screen.getByTestId('root')).toHaveAttribute('data-dirty');
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-filled');
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
+      });
+    });
+  });
+
+  describe('VUE-21: a native reset clears the error of the field', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function submitForm() {
+      return fireEvent.submit(screen.getByTestId('form'));
+    }
+
+    async function resetForm() {
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settleReset();
+    }
+
+    // The field is neutral, as after a reset of `Field.Control`.
+    function expectNeutralField() {
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-valid');
+      expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid');
+    }
+
+    // The inputs keep no message of the field. A required group with no value keeps the message of
+    // its native constraint.
+    function expectInputConstraint(valueMissing: boolean) {
+      for (const input of getInputs()) {
+        expect(input.validity.customError).toBe(false);
+        expect(input.validity.valueMissing).toBe(valueMissing);
+        expect(Boolean(input.validationMessage)).toBe(valueMissing);
+      }
+    }
+
+    it.each([
+      {
+        name: 'a group at its default',
+        valueMissing: false,
+        renderForm: () => () => (
+          <Form data-testid="form">
+            <Field.Root
+              data-testid="root"
+              name="fruit"
+              validate={(value) => (value ? null : 'Pick one')}
+            >
+              <RadioGroup>{renderRadios()}</RadioGroup>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        ),
+        makeInvalid: submitForm,
+      },
+      {
+        name: 'a required group at its default',
+        valueMissing: true,
+        renderForm: () => () => (
+          <Form data-testid="form">
+            <Field.Root data-testid="root" name="fruit">
+              <RadioGroup required>{renderRadios()}</RadioGroup>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        ),
+        makeInvalid: submitForm,
+      },
+      {
+        name: 'the form for a group at its default',
+        valueMissing: false,
+        renderForm: () => () => (
+          <Form data-testid="form" errors={{ fruit: 'Server error' }}>
+            <Field.Root data-testid="root" name="fruit">
+              <RadioGroup>{renderRadios()}</RadioGroup>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        ),
+        makeInvalid: undefined,
+      },
+      {
+        name: 'a controlled group',
+        valueMissing: false,
+        renderForm: () => {
+          const value = shallowRef<string | null>(null);
+          return () => (
+            <Form data-testid="form">
+              <Field.Root
+                data-testid="root"
+                name="fruit"
+                validate={(next) => (next ? null : 'Pick one')}
+              >
+                <RadioGroup
+                  value={value.value}
+                  {...{ 'onUpdate:value': (next: string | null) => (value.value = next) }}
+                >
+                  {renderRadios()}
+                </RadioGroup>
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          );
+        },
+        makeInvalid: submitForm,
+      },
+    ])('VUE-21: clears the error of $name', async ({ renderForm, makeInvalid, valueMissing }) => {
+      await render(h(defineComponent(renderForm)));
+      await makeInvalid?.();
+      expect(screen.getByTestId('error')).toBeInTheDocument();
+
+      await resetForm();
+
+      expect(getInputs().map((input) => input.checked)).toEqual([false, false, false]);
+      expectNeutralField();
+      expectInputConstraint(valueMissing);
+    });
+
+    it('VUE-21: clears the error of a group whose listener cancels the reset, and validates the next click', async () => {
+      const validate = vi.fn((value: unknown) => (value === 'b' ? 'Not b' : null));
+      await render(
+        <Form data-testid="form">
+          <Field.Root data-testid="root" name="fruit" validate={validate}>
+            <RadioGroup
+              onValueChange={(_value: string, details: RadioGroup.ChangeEventDetails) => {
+                if (details.event.type === 'reset') {
+                  details.cancel();
+                }
+              }}
+            >
+              {renderRadios()}
+            </RadioGroup>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      await fireEvent.click(screen.getByTestId('b'));
+      await submitForm();
+      expect(screen.getByTestId('error')).toHaveTextContent('Not b');
+
+      await resetForm();
+
+      expect(screen.getByTestId('b')).toHaveAttribute('aria-checked', 'true');
+      expect(validate).toHaveBeenCalledTimes(1);
+      expectNeutralField();
+      expectInputConstraint(false);
+
+      await fireEvent.click(screen.getByTestId('c'));
+
+      expect(validate).toHaveBeenCalledTimes(2);
+      expect(validate.mock.lastCall?.[0]).toBe('c');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+    });
+
+    it('VUE-21: clears the error when the reset empties the group, does not validate it, and validates the next click', async () => {
+      const validate = vi.fn((value: unknown) => (value ? 'Pick none' : null));
+      const handleValidity = vi.fn();
+      await render(
+        <Form data-testid="form">
+          <Field.Root data-testid="root" name="fruit" validate={validate} validationMode="onChange">
+            <RadioGroup>{renderRadios()}</RadioGroup>
+            <Field.Error data-testid="error" />
+            <Field.Validity v-slots={{ default: handleValidity }} />
+          </Field.Root>
+        </Form>,
+      );
+      await fireEvent.click(screen.getByTestId('b'));
+      expect(screen.getByTestId('error')).toHaveTextContent('Pick none');
+      expect(handleValidity.mock.lastCall?.[0].value).toBe('b');
+
+      await resetForm();
+
+      expect(getInputs().map((input) => input.checked)).toEqual([false, false, false]);
+      expect(validate).toHaveBeenCalledTimes(1);
+      // The field holds `null` for a group with no value, as before the first change.
+      expect(handleValidity.mock.lastCall?.[0].value).toBe(null);
+      expectNeutralField();
+      expectInputConstraint(false);
+
+      await fireEvent.click(screen.getByTestId('c'));
+
+      expect(validate).toHaveBeenCalledTimes(2);
+      expect(validate.mock.lastCall?.[0]).toBe('c');
+      expect(screen.getByTestId('error')).toHaveTextContent('Pick none');
+    });
+
+    it('VUE-21: shows no error when the reset empties a required group that was valid', async () => {
+      const validate = vi.fn();
+      const { container } = await render(
+        <Form data-testid="form">
+          <Field.Root data-testid="root" name="fruit" validate={validate}>
+            <RadioGroup required>{renderRadios()}</RadioGroup>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      // Firefox loads the page again for a valid submit that no listener prevents.
+      container.addEventListener('submit', (event) => event.preventDefault());
+      await fireEvent.click(screen.getByTestId('b'));
+      await submitForm();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+      expect(validate).toHaveBeenCalledTimes(1);
+
+      await resetForm();
+
+      expect(getInputs().map((input) => input.checked)).toEqual([false, false, false]);
+      expect(validate).toHaveBeenCalledTimes(1);
+      expectNeutralField();
+      expectInputConstraint(true);
+    });
+
+    it('VUE-21: removes the validity mark that a change gave to a field with an error of the form', async () => {
+      await render(
+        <Form data-testid="form" errors={{ fruit: 'Server error' }}>
+          <Field.Root data-testid="root" name="fruit">
+            <RadioGroup>{renderRadios()}</RadioGroup>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      await fireEvent.click(screen.getByTestId('b'));
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+
+      await resetForm();
+
+      expect(getInputs().map((input) => input.checked)).toEqual([false, false, false]);
+      expectNeutralField();
+    });
+
+    it('VUE-21: gives the field the value `null` when the reset leaves a group with no value', async () => {
+      const handleValidity = vi.fn();
+      await render(
+        <Form data-testid="form" errors={{ fruit: 'Server error' }}>
+          <Field.Root data-testid="root" name="fruit">
+            <RadioGroup>{renderRadios()}</RadioGroup>
+            <Field.Validity v-slots={{ default: handleValidity }} />
+          </Field.Root>
+        </Form>,
+      );
+
+      await resetForm();
+
+      expect(handleValidity.mock.lastCall?.[0].value).toBe(null);
+    });
+
+    it('VUE-21: clears the error of a group whose radios are all disabled', async () => {
+      await render(
+        <Form data-testid="form" errors={{ fruit: 'Server error' }}>
+          <Field.Root data-testid="root" name="fruit">
+            <RadioGroup>
+              <Radio.Root value="a" disabled />
+              <Radio.Root value="b" disabled />
+            </RadioGroup>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      expect(screen.getByTestId('error')).toBeInTheDocument();
+
+      await resetForm();
+
+      expectNeutralField();
+    });
+
+    it('VUE-21: clears the error of a controlled group when a listener of the form changes its value', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef('a');
+        return () => (
+          <Form data-testid="form" onReset={() => (value.value = 'a')}>
+            <Field.Root
+              data-testid="root"
+              name="fruit"
+              validate={(next) => (next === 'a' ? null : 'Pick a')}
+            >
+              <RadioGroup
+                value={value.value}
+                {...{ 'onUpdate:value': (next: string) => (value.value = next) }}
+              >
+                {renderRadios()}
+              </RadioGroup>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        );
+      });
+      await render(<App />);
+      await fireEvent.click(screen.getByTestId('c'));
+      await submitForm();
+      expect(screen.getByTestId('error')).toHaveTextContent('Pick a');
+
+      await resetForm();
+
+      expect(getInputs().map((input) => input.checked)).toEqual([true, false, false]);
+      expectNeutralField();
     });
   });
 
