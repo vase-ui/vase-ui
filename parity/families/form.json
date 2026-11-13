@@ -1,5 +1,9 @@
 {
-  "upstreamPaths": ["packages/react/src/form/**", "docs/src/app/(docs)/react/components/form/**"],
+  "upstreamPaths": [
+    "packages/react/src/form/**",
+    "packages/react/src/internals/form-context/**",
+    "docs/src/app/(docs)/react/components/form/**"
+  ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
@@ -285,6 +289,11 @@
       "entry": "Form",
       "prop": "onFormSubmit",
       "reason": "The part must know that a `formSubmit` listener exists before it prevents the native submit. Vue gives a listener to a declared prop with that name, and the emit `formSubmit` still calls it. The row `onFormSubmit` of `types.md` maps to the emit."
+    },
+    {
+      "entry": "Form",
+      "prop": "onFormSubmitOnce",
+      "reason": "A template gives this key to a listener that it binds with `@form-submit.once`. The part reads it for the same reason as `onFormSubmit`. The emit `formSubmit` still calls the listener one time."
     }
   ],
   "returnTypeDifferences": [],

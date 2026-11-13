@@ -234,11 +234,11 @@ describe('<Form />', () => {
       expect(onFormSubmit).toHaveBeenCalledTimes(1);
     });
 
-    it('does not see a formSubmit listener with .once: it is not called and the default is not prevented', async () => {
+    it('calls a formSubmit listener with .once one time over two submits, and prevents the default on both', async () => {
       const onceListener = vi.fn();
       const { container } = await render(
-        // The key that the template compiler writes for `@form-submit.once`.
-        <Form data-testid="form" {...{ onFormSubmitOnce: onceListener }}>
+        // A template gives the key `onFormSubmitOnce` for `@form-submit.once`.
+        <Form data-testid="form" onFormSubmitOnce={onceListener}>
           <TestField id="field" name="field" value="x" />
         </Form>,
       );
@@ -246,16 +246,23 @@ describe('<Form />', () => {
 
       await fireEvent.submit(screen.getByTestId('form'));
 
-      expect(onceListener).not.toHaveBeenCalled();
-      expect(submit.wasPrevented).toBe(false);
+      expect(submit.wasPrevented).toBe(true);
+      expect(onceListener).toHaveBeenCalledTimes(1);
+
+      await fireEvent.submit(screen.getByTestId('form'));
+
+      expect(submit.wasPrevented).toBe(true);
+      expect(onceListener).toHaveBeenCalledTimes(1);
     });
 
-    it('does not prevent the default when the formSubmit listener is null', async () => {
+    it('does not prevent the default when the formSubmit listeners are null', async () => {
       const { container } = await render(
         <Form
           data-testid="form"
           // @ts-expect-error The type has no null, but a consumer in JavaScript can give it.
           onFormSubmit={null}
+          // @ts-expect-error The type has no null, but a consumer in JavaScript can give it.
+          onFormSubmitOnce={null}
         >
           <TestField id="field" name="field" value="x" />
         </Form>,

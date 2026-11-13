@@ -348,7 +348,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
 - A part can need to know if a listener exists. `Form` prevents the native submit only when a `formSubmit` listener exists. Such a part declares the emit and also a prop with the `on` name: `onFormSubmit`.
 - Vue gives the listener to the prop, and the emit still calls it. Type the prop as a function or an array of functions, because Vue gives the prop an array for two listeners.
-- A listener with `.once` has the key `onFormSubmitOnce`. The prop does not see it. With no other listener, `Form` does not call it and does not prevent the native submit.
+- A listener with `.once` has the key `onFormSubmitOnce`. Declare that prop too, and read both props. The emit calls the `.once` listener one time.
 - A callback whose result the component uses stays a function prop: `validate`, `format`, `getAriaValueText`, `filter`, `itemToStringValue`, `isItemEqualToValue`, `initialFocus`, `finalFocus`.
 
 ### Actions, handles, slots, composables and ids

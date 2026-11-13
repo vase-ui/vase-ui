@@ -49,6 +49,11 @@ export interface FormProps<FormValues extends Record<string, any> = Record<strin
    * Bind a listener with `@form-submit`.
    */
   onFormSubmit?: FormSubmitListener<FormValues> | FormSubmitListener<FormValues>[] | undefined;
+  /**
+   * The listener of the `formSubmit` emit with the `.once` modifier. The part reads it to know that
+   * a listener exists. Bind a listener with `@form-submit.once`.
+   */
+  onFormSubmitOnce?: FormSubmitListener<FormValues> | FormSubmitListener<FormValues>[] | undefined;
 }
 </script>
 
@@ -77,8 +82,6 @@ const emit = defineEmits<{
   /**
    * Event handler called when the form is submitted.
    * `preventDefault()` is called on the native submit event when used.
-   * The form does not see a listener with `.once`. With no other listener, it does not call
-   * that listener and does not prevent the native submit.
    */
   formSubmit: [formValues: FormValues, eventDetails: FormSubmitEventDetails];
 }>();
@@ -200,7 +203,7 @@ function handleSubmit(event: SubmitEvent) {
   submitted = true;
   emit('submit', event);
 
-  if (props.onFormSubmit) {
+  if (props.onFormSubmit || props.onFormSubmitOnce) {
     event.preventDefault();
 
     const formValues = {} as FormValues;

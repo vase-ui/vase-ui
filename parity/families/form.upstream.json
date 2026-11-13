@@ -2,11 +2,14 @@
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
     "packages/react/src/form/**",
+    "packages/react/src/internals/form-context/**",
     "docs/src/app/(docs)/react/components/form/**"
   ],
   "sources": [
     "packages/react/src/form/Form.tsx",
-    "packages/react/src/form/index.ts"
+    "packages/react/src/form/index.ts",
+    "packages/react/src/internals/form-context/FormContext.ts",
+    "packages/react/src/internals/form-context/index.ts"
   ],
   "typeTests": [
     "packages/react/src/form/Form.spec.tsx"
