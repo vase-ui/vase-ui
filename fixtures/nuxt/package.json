@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "nuxt prepare && pnpm --filter @vase-ui/vue exec vue-tsc --noEmit --project ../../fixtures/nuxt/.nuxt/tsconfig.app.json"
   },
   "dependencies": {
     "@vase-ui/vue": "workspace:*",

@@ -43,6 +43,7 @@ export function useCompositeRoot<Metadata>(
 
   let rootElement: HTMLElement | null = null;
   let hasSetDefaultIndex = false;
+  let hasGivenInitialTabStop = false;
   let highlightedElement: HTMLElement | null = null;
 
   const [highlightedIndex, setHighlightedIndex] = useControlled({
@@ -162,11 +163,15 @@ export function useCompositeRoot<Metadata>(
   }
 
   onMounted(run);
+  // The check reads `elementsRef`, so the list of elements is a source. Under `KeepAlive`, the
+  // items register again in `onActivated`, and the list sorts in a later post-flush job. A check
+  // that runs before that sort reads an empty list, so it must run again after the sort.
   watch(
     [
       () => toValue(params.disabledIndices),
       () => toValue(params.highlightedIndex),
       highlightedIndex,
+      elementsRef,
     ],
     run,
     { flush: 'post' },
@@ -286,11 +291,50 @@ export function useCompositeRoot<Metadata>(
     target.setSelectionRange(0, target.value.length);
   }
 
+  // This function gives the tab stop of the server HTML and of the first client render. An item
+  // keeps that tab stop until the item is mounted. The function gives `true` to at most one
+  // caller, in the order of the `setup` calls.
+  // A server writes the HTML of an item right after the `setup` of that item. It does not know the
+  // items that come later, so it cannot find the first enabled item of the document.
+  // The order of `setup` is the order of the document, with the exceptions that the comment in
+  // `useCompositeListItem` lists. Two exceptions are usual.
+  // - An item below a component with an async `setup`. A server runs the `setup` of that item
+  //   after the items that follow it. The tab stop can then be on a later enabled item until the
+  //   first sort after the mount.
+  // - An item in an async component that a module makes one time, such as a lazy component of
+  //   Nuxt. After its first render, a server has loaded the component and runs its `setup` in the
+  //   order of the document. A browser has not loaded it when the page hydrates, so it runs that
+  //   `setup` after the later items. The server and the browser then give the tab stop to
+  //   different items. The item gives `data-allow-mismatch` while it hydrates, so Vue reports no
+  //   mismatch. After the mount, Vue writes the `tabindex` again and the DOM follows the
+  //   highlighted index.
+  // An item that is mounted after its root keeps the `tabindex` of the server HTML until its own
+  // mount. If the server HTML has the tab stop on that item, the list has two tab stops from the
+  // mount of the root until the mount of that item.
+  // The server HTML has no tab stop in three cases.
+  // - `hasActiveItem` is `true` and no item is active.
+  // - Each item is disabled.
+  // - The root is controlled, the highlighted index is above 0, and no enabled item has that index
+  //   or a higher index.
+  function takeInitialTabStop(index: number, active: boolean, disabled: boolean) {
+    if (hasGivenInitialTabStop) {
+      return false;
+    }
+
+    const isTabStop = toValue(params.hasActiveItem)
+      ? active
+      : !disabled && index >= highlightedIndex.value;
+    hasGivenInitialTabStop = isTabStop;
+
+    return isTabStop;
+  }
+
   provide(CompositeRootContext, {
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
+    takeInitialTabStop,
   });
 
   return {
@@ -412,6 +456,13 @@ export interface UseCompositeRootParameters<Metadata> {
    * changes.
    */
   onMapChange?: ((newMap: Map<Element, CompositeMetadata<Metadata>>) => void) | undefined;
+  /**
+   * Tells the root that an item is active. The tab stop of the server HTML is then the first active
+   * item. If no item is active, the server HTML has no tab stop. Set it only when the root knows
+   * that an item is active. Base UI does not have this parameter. Its server HTML has
+   * `tabindex="-1"` on each item.
+   */
+  hasActiveItem?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
 export interface UseCompositeRootReturnValue {

@@ -6,7 +6,7 @@ import type { HTMLProps } from '@vase-ui/vue/types';
 
 const locked = ref(true);
 
-function getButtonProps(props: HTMLProps): Record<string, unknown> {
+function getButtonProps(props: HTMLProps) {
   return mergeProps<'div'>(props, {
     onKeydown(event) {
       if (locked.value) {
