@@ -759,7 +759,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A trigger part calls `useClick` in `setup`. `store` is a store, a ref or a getter, because the store of a trigger with a handle changes.
 - The result is one plain object with `reference`.
 - Each option is a value, a ref or a getter. A getter of `stickIfOpen` is read at each press, as the function of Base UI.
-- The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part.
+- The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 
