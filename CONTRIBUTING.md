@@ -440,8 +440,8 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - A style element of the library must be in the server HTML, so that its rule applies before the page hydrates. The internal SFC `utils/StyleDisableScrollbar.vue` renders that element in the element of the part, only while the part hydrates.
 - The SFC writes `<component :is="'style'">`, because the Vue compiler removes a `<style>` tag from a template. It binds the nonce of `CSPProvider` with `:nonce.attr`. Without `.attr`, a client render sets the DOM property, and the element has no `nonce` attribute.
 - After the mount, `useStyleDisableScrollbar(element)` keeps one shared style element for each document or shadow root. The last part that uses the element removes it. With `disableStyleElements` of `CSPProvider`, no such element exists, and the consumer writes the rule of the class `vase-ui-disable-scrollbar` in a style sheet.
-- A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set.
-- The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`.
+- A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
+- The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does.
 
 The hydration state:
 
@@ -498,7 +498,7 @@ The state of a field:
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
 - A popup store is `shallowReactive` state, selector functions and a plain `context`. Each root makes one. See [Popup store](#popup-store).
 - `useId` gives the ids.
-- `Teleport` puts a popup into a container node that the portal makes in `onMounted`. It has no `defer`, because the node exists before the `Teleport` renders.
+- `Teleport` puts the portal element, with the popup in it, into the container. It has no `defer`, because the portal renders the `Teleport` after the mount, when the container exists. See [Popup portal](#popup-portal).
 - Each context has a plain `Symbol()` key for `provide` and `inject`. Each copy of the library then has its own contexts.
 - Only three registries are shared between copies, on `Symbol.for` keys: the scroll-lock count, the modal marks and the Escape stack.
 - Each shared registry is a plain object with a `version` field. Fields are only added.
@@ -586,6 +586,21 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 The focus helpers of a popup are in `src/utils/popups/focus`.
 
 - `tabbable()` keeps the order of the document for an element with a positive `tabindex`, as Base UI does. A browser visits that element first.
+
+### Popup portal
+
+The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()` makes the portal element and finds its container. `FloatingPortalLite` is the portal of a popup that takes no focus.
+
+- One `Teleport` to the container holds the portal element, and the popup is in that element. Base UI makes two `createPortal` calls for this.
+- The part renders its `Teleport` after the mount, so the server HTML has one comment in its place. This is true for each `container` value, and the hydration reports nothing.
+- Do not render the `Teleport` on a server. With an element of the page as the target, the server HTML has no popup, and Vue reports a hydration mismatch.
+- `container` is an element, a shadow root, a component, or a ref or a getter for one of them. With no `container`, the portal element goes into the portal element that `PortalContext` gives, or else into `<body>`.
+- `null` renders no `Teleport` until the container is not `null`, because a `Teleport` with a `null` target fails. A ref or a getter that gives `null` gives the fallback. An empty ref object of Base UI does the same.
+- The portal reads its container in a `watch` with `flush: 'post'`, so it follows a ref or a getter. It moves the portal element and does not mount the children again.
+- Base UI retries the check of a ref that is empty at first. The Vue portal does not, because Vue sets the ref of an ancestor or a later sibling before it runs that `watch`.
+- Updates in the flush of the mount can replace the container. The children then mount in the first container, and Vue moves them to the new container. Base UI mounts them one time, in the new container.
+- `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
+- `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 
 ### Composite
 

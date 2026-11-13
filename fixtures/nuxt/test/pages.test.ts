@@ -334,6 +334,26 @@ async function expectMediaQueryPage(page: Page) {
   expect(await page.getByTestId('wide').textContent()).toBe('true');
 }
 
+// The portal renders after the mount, so the server HTML has no portal element.
+async function expectPortalPageOnServer(page: Page) {
+  expect(await page.getByTestId('trigger').count()).toBe(1);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+}
+
+// After the mount, each portal element is in its container. A `null` container has none.
+async function expectHydratedPortalPage(page: Page) {
+  const readParent = (testId: string) =>
+    page
+      .getByTestId(testId)
+      .evaluate((element) => element.parentElement?.id || element.parentElement?.localName);
+
+  expect(await readParent('in-body')).toBe('body');
+  expect(await readParent('in-page')).toBe('page');
+  expect(await readParent('in-teleports')).toBe('teleports');
+  expect(await page.getByTestId('no-container').count()).toBe(0);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -370,6 +390,11 @@ const PAGES: PageCase[] = [
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
+  {
+    path: '/portal',
+    expectPage: expectPortalPageOnServer,
+    expectHydratedPage: expectHydratedPortalPage,
+  },
 ];
 
 const MODES = [

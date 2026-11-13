@@ -2,8 +2,9 @@
   "id": "VUE-5",
   "evidence": [
     "https://vuejs.org/guide/built-ins/keep-alive.html",
+    "https://vuejs.org/guide/built-ins/teleport.html",
     "https://github.com/mui/base-ui/pull/5952"
   ],
-  "behavior": "When `KeepAlive` deactivates a popup, the popup keeps its open state. It releases the scroll lock, the modal marks, the document listeners and the timers. When `KeepAlive` activates the popup again, the popup takes them back.",
+  "behavior": "When `KeepAlive` deactivates a popup, the popup keeps its open state. It releases the scroll lock, the modal marks, the document listeners and the timers. The portal element of the popup leaves the document. When `KeepAlive` activates the popup again, the popup takes them back, and the same portal element returns.",
   "dueWith": "packages/react/src/utils/popups/portal/FloatingPortal.tsx"
 }
