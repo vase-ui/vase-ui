@@ -166,7 +166,7 @@ export type NumberFieldRootCommitEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { formatNumber } from '../../common/formatNumber';
 import { useIsHydrated } from '../../common/hydration';
@@ -288,10 +288,6 @@ let ownHiddenInput: HTMLInputElement | null = null;
 
 function setHiddenInputElement(next: unknown) {
   const input = next as HTMLInputElement | null;
-  // Vue calls a function ref again on each patch, with the same element.
-  if (input === ownHiddenInput) {
-    return;
-  }
   if (input !== null || validation.inputRef.value === ownHiddenInput) {
     validation.inputRef.value = input;
   }
@@ -631,6 +627,17 @@ const hiddenInputText = computed(() =>
   numberValue.value === null ? '' : String(numberValue.value),
 );
 
+// The value that the hidden input had after the last event that the root handled. A write of Vue
+// or of the root sets it too.
+let handledValue: string | undefined;
+
+function syncHandledValue() {
+  handledValue = hiddenInputElement.value?.value;
+}
+
+onMounted(syncHandledValue);
+watch(hiddenInputText, syncHandledValue, { flush: 'post' });
+
 // Vue writes the value to the input only when the root renders. The root does not render when a
 // listener cancels a change or the parent keeps the old value.
 function writeValueToHiddenInput() {
@@ -638,20 +645,21 @@ function writeValueToHiddenInput() {
   if (input && input.value !== hiddenInputText.value) {
     input.value = hiddenInputText.value;
   }
+  syncHandledValue();
 }
 
-// An autofill sends `input` and then `change` for one value, and a program can send only `change`.
-// The value is new when the field does not have it yet.
+// An autofill sends `input` and then `change` for one value, and a program can send only `change`,
+// or both events in one task. The value is new when the input did not have it after the last event
+// that the root handled or the last write.
 function onHiddenInputChange(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
+  if (input.value === handledValue) {
+    return;
+  }
+  handledValue = input.value;
 
   // A listener that prevented the event stops the change.
-  if (
-    input.value !== hiddenInputText.value &&
-    !event.defaultPrevented &&
-    !isDisabled.value &&
-    !props.readOnly
-  ) {
+  if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
     // Handle browser autofill.
     const nextValue = input.valueAsNumber;
     const parsedValue = Number.isNaN(nextValue) ? null : nextValue;

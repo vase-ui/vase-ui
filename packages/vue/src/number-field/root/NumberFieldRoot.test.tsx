@@ -16,8 +16,10 @@ import {
 } from '#test-utils';
 import { defineNumberFieldContextProbe } from '../../../test/fixtures/numberFieldContextProbe';
 import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
+import NumberFieldRootReplace from './NumberFieldRootReplace.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
+type NumberFieldRootInstance = InstanceType<typeof NumberField.Root>;
 
 function getHiddenInput() {
   const hiddenInput = document.querySelector<HTMLInputElement>('input[aria-hidden][type=number]');
@@ -36,6 +38,15 @@ async function autofill(value: string) {
   const input = getHiddenInput();
   await fireEvent.input(input, { target: { value } });
   await fireEvent.change(input);
+}
+
+// The way a browser extension or a test tool fills a field: both events come in one task, with no
+// microtask between them.
+function fillInOneTask(value: string) {
+  const input = getHiddenInput();
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // The part follows a reset in a timeout of 0 ms, after the listeners of the event.
@@ -122,6 +133,19 @@ describe('<NumberField />', () => {
       expect(getHiddenInput().getAttribute('value')).toBe(text);
     });
 
+    it('is the `inputElement` that the root exposes', async () => {
+      let root = null as NumberFieldRootInstance | null;
+      await render(() => (
+        <NumberField.Root
+          ref={(instance) => {
+            root = instance as NumberFieldRootInstance | null;
+          }}
+        />
+      ));
+
+      expect(root!.inputElement).toBe(getHiddenInput());
+    });
+
     it('follows a controlled value', async () => {
       const { setProps } = await render(<NumberField.Root value={1} />);
 
@@ -203,6 +227,93 @@ describe('<NumberField />', () => {
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(handleChange.mock.calls[0][0]).toBe(42);
       expect(handleChange.mock.calls[0][1].event.type).toBe('change');
+    });
+
+    it.each([
+      {
+        name: 'a controlled field',
+        renderField: (handleChange: (value: number | null) => void) => {
+          const value = shallowRef<number | null>(null);
+          return () => (
+            <NumberField.Root
+              value={value.value}
+              onValueChange={handleChange}
+              {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+            />
+          );
+        },
+        filled: '42',
+        changes: [42],
+        text: '42',
+      },
+      {
+        name: 'a fill above `max`',
+        renderField: (handleChange: (value: number | null) => void) => () => (
+          <NumberField.Root max={10} onValueChange={handleChange} />
+        ),
+        filled: '70',
+        changes: [10],
+        text: '10',
+      },
+      {
+        name: 'a change that a listener cancels',
+        renderField: (handleChange: (value: number | null) => void) => () => (
+          <NumberField.Root
+            onValueChange={(value: number | null, details: NumberField.Root.ChangeEventDetails) => {
+              handleChange(value);
+              details.cancel();
+            }}
+          />
+        ),
+        filled: '7',
+        changes: [7],
+        text: '',
+      },
+    ])(
+      'emits one `valueChange` for `input` and `change` in one task: $name',
+      async ({ renderField, filled, changes, text }) => {
+        const handleChange = vi.fn();
+        await render(h(defineComponent(() => renderField(handleChange))));
+
+        fillInOneTask(filled);
+        await flushMicrotasks();
+
+        expect(handleChange.mock.calls.map(([value]) => value)).toEqual(changes);
+        expect(getHiddenInput().value).toBe(text);
+      },
+    );
+
+    it('handles a `change` event that has the value of the last handled event, after the parent cleared the value', async () => {
+      const handleChange = vi.fn();
+      const value = shallowRef<number | null>(null);
+      await render(() => (
+        <NumberField.Root
+          value={value.value}
+          onValueChange={handleChange}
+          {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
+        />
+      ));
+      await autofill('42');
+      value.value = null;
+      await flushMicrotasks();
+      expect(getHiddenInput().value).toBe('');
+
+      await fireEvent.change(getHiddenInput(), { target: { value: '42' } });
+
+      expect(handleChange.mock.calls.map(([next]) => next)).toEqual([42, 42]);
+    });
+
+    it('ignores a `change` event that has the value of the mount', async () => {
+      const validate = vi.fn((_value: unknown) => null);
+      await render(
+        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+          <NumberField.Root defaultValue={5} />
+        </Field.Root>,
+      );
+
+      await fireEvent.change(getHiddenInput());
+
+      expect(validate).not.toHaveBeenCalled();
     });
 
     it('empties the value when the hidden input gets no value', async () => {
@@ -514,6 +625,23 @@ describe('<NumberField />', () => {
         },
       );
 
+      it('handles a `change` event that has the value that the reset replaced', async () => {
+        const handleChange = vi.fn();
+        await render(
+          <form data-testid="form">
+            <NumberField.Root defaultValue={5} onValueChange={handleChange} />
+          </form>,
+        );
+        await autofill('9');
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+        expect(getHiddenInput().value).toBe('5');
+
+        await fireEvent.change(getHiddenInput(), { target: { value: '9' } });
+
+        expect(handleChange.mock.calls.map(([value]) => value)).toEqual([9, 5, 9]);
+      });
+
       it.each([
         {
           name: 'a controlled field',
@@ -609,6 +737,7 @@ describe('<NumberField />', () => {
       });
 
       it('puts the text of the input back to the formatted default', async () => {
+        const formattedDefault = new Intl.NumberFormat().format(1234.5);
         const { Probe, getContext } = defineNumberFieldContextProbe();
         await render(
           <form data-testid="form">
@@ -617,7 +746,7 @@ describe('<NumberField />', () => {
             </NumberField.Root>
           </form>,
         );
-        expect(getText().value).toBe('1,234.5');
+        expect(getText().value).toBe(formattedDefault);
         // The user types text that is not a number.
         getContext().allowInputSyncRef.value = false;
         getContext().setInputValue('12x');
@@ -627,7 +756,7 @@ describe('<NumberField />', () => {
         screen.getByTestId<HTMLFormElement>('form').reset();
         await settleReset();
 
-        expect(getText().value).toBe('1,234.5');
+        expect(getText().value).toBe(formattedDefault);
       });
 
       it('leaves no commit pending for the change of a reset', async () => {
@@ -729,6 +858,20 @@ describe('<NumberField />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
 
       field!.validate();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Enter a number');
+    });
+
+    it('uses a root that mounts before the old root unmounts as the input of the field', async () => {
+      const swapped = shallowRef(false);
+      const fixture = shallowRef<{ validate: () => void } | null>(null);
+      await render(() => <NumberFieldRootReplace ref={fixture} swapped={swapped.value} />);
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      swapped.value = true;
+      await flushMicrotasks();
+      fixture.value!.validate();
       await flushMicrotasks();
 
       expect(screen.getByTestId('error')).toHaveTextContent('Enter a number');
@@ -935,16 +1078,21 @@ describe('<NumberField />', () => {
 
     it('formats the text in the locale of the runtime after the mount', async () => {
       // A formatter is cached by its locale and its options, so no earlier case formats with these.
-      const props = { defaultValue: 1234.5, format: { minimumFractionDigits: 2 } };
+      const format = { minimumFractionDigits: 2 };
+      const props = { defaultValue: 1234.5, format };
       const serverHtml = await renderOnServer(file, props);
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
-      expect(template.content.querySelector('[data-testid="text"]')?.textContent).toBe('1,234.50');
+      expect(template.content.querySelector('[data-testid="text"]')?.textContent).toBe(
+        new Intl.NumberFormat('en-US', format).format(1234.5),
+      );
       mockRuntimeLocale('de-DE');
 
       const { container } = await hydrate(NumberFieldRootHydration, { serverHtml, props });
 
-      expect(container.querySelector('[data-testid="text"]')).toHaveTextContent('1.234,50');
+      expect(container.querySelector('[data-testid="text"]')?.textContent).toBe(
+        new Intl.NumberFormat('de-DE', format).format(1234.5),
+      );
     });
   });
 

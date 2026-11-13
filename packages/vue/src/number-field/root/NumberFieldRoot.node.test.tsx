@@ -94,17 +94,25 @@ describe('<NumberField.Root />', () => {
       expect(/ required[ >]/.test(input)).toBe(true);
     });
 
+    // A server cannot know the locale of the visitor, so the text has `en-US` when the root has no
+    // `locale` prop.
+    const percent = { style: 'percent' } as const;
+
     it.each([
-      { name: 'the default locale', props: { defaultValue: 1234.5 }, text: '1,234.5' },
+      {
+        name: 'the default locale',
+        props: { defaultValue: 1234.5 },
+        text: new Intl.NumberFormat('en-US').format(1234.5),
+      },
       {
         name: 'the `locale` prop',
         props: { defaultValue: 1234.5, locale: 'de-DE' },
-        text: '1.234,5',
+        text: new Intl.NumberFormat('de-DE').format(1234.5),
       },
       {
         name: 'the `format` prop',
-        props: { defaultValue: 0.5, format: { style: 'percent' as const } },
-        text: '50%',
+        props: { defaultValue: 0.5, format: percent },
+        text: new Intl.NumberFormat('en-US', percent).format(0.5),
       },
     ])('formats the text of the input with $name', async ({ props, text }) => {
       const html = await renderToString(<NumberFieldRootHydration {...props} />);
