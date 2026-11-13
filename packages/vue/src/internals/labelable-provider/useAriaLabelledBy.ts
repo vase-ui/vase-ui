@@ -1,5 +1,6 @@
 import { computed, onActivated, onDeactivated, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { ownerWindow } from '../../common/owner';
 import { useVaseUiId } from '../useBaseUiId';
 
 /**
@@ -10,9 +11,7 @@ import { useVaseUiId } from '../useBaseUiId';
  * of the native `<label>` that names `labelSourceRef`. A server has no DOM, so the server HTML
  * never has the id of a native `<label>`. The control gets it in the first flush after the mount.
  * The result follows a label that comes or goes, a change of its `for` and a change of its `id`. It
- * also follows a change of the `id` of the control. In WebKit, it follows that change only after a
- * node is added or removed or a `for` changes, because WebKit keeps the `labels` of the control as
- * they were before the change.
+ * also follows a change of the `id` of the control.
  * @param labelId The id of the label of the provider. Pass the result of `useControlLabelId()`.
  * @param labelSourceRef The labelable element, such as the hidden input of the control. Pass a ref
  * that a ref callback writes, or a getter of one. The lookup starts when the value changes from
@@ -153,7 +152,7 @@ function findAssociatedLabel(labelSource?: LabelSource | null) {
     return undefined;
   }
 
-  // The read of `labels` is slow, so check the parent and the next sibling first.
+  // The parent and the next sibling are the usual label. They cost less than the search below.
   const parent = labelSource.parentElement;
   if (parent && parent.tagName === 'LABEL') {
     return parent as HTMLLabelElement;
@@ -167,10 +166,32 @@ function findAssociatedLabel(labelSource?: LabelSource | null) {
     }
   }
 
-  // WebKit keeps this list as it was before a change of the `id` of the control, until a node is
-  // added or removed or a `for` changes.
-  const labels = labelSource.labels;
-  return labels && labels[0];
+  // `labels` is not in use: WebKit keeps that list as it was before a change of the `id` of the
+  // control. The `control` of a label is correct after that change.
+  let label: HTMLLabelElement | undefined;
+
+  if (controlId) {
+    const root = labelSource.getRootNode() as Document | ShadowRoot | Element;
+    const labelWithFor = root.querySelector<HTMLLabelElement>(
+      `label[for="${ownerWindow(labelSource).CSS.escape(controlId)}"]`,
+    );
+    if (labelWithFor?.control === labelSource) {
+      label = labelWithFor;
+    }
+  }
+
+  // The result is the first label in tree order, as `labels[0]` is.
+  for (let node = parent; node; node = node.parentElement) {
+    if (
+      node.tagName === 'LABEL' &&
+      (node as HTMLLabelElement).control === labelSource &&
+      (!label || node.compareDocumentPosition(label) & node.DOCUMENT_POSITION_FOLLOWING)
+    ) {
+      label = node as HTMLLabelElement;
+    }
+  }
+
+  return label;
 }
 
-type LabelSource = HTMLElement & { labels?: NodeListOf<HTMLLabelElement> | null | undefined };
+type LabelSource = HTMLElement;

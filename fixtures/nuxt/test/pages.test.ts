@@ -485,6 +485,21 @@ async function expectHydratedTabsPage(page: Page) {
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
 }
 
+async function expectInputPage(page: Page) {
+  const input = await readAttributes(page.getByTestId('input'), [
+    'id',
+    'name',
+    'value',
+    'data-filled',
+  ]);
+
+  expect(input.id).toBeTruthy();
+  expect(input).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
+  expect(
+    await readAttributes(page.getByTestId('invalid-input'), ['data-invalid', 'aria-invalid']),
+  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -526,6 +541,74 @@ async function expectMediaQueryPage(page: Page) {
   expect(await page.getByTestId('wide').textContent()).toBe('true');
 }
 
+async function readSwitchPage(page: Page) {
+  const read = (testId: string) =>
+    readAttributes(page.getByTestId(testId), [
+      'role',
+      'aria-checked',
+      'data-checked',
+      'aria-label',
+    ]);
+
+  return {
+    notifications: await read('notifications'),
+    thumb: await page.getByTestId('thumb').getAttribute('data-unchecked'),
+    wifi: await read('wifi'),
+    // The entries that a submit of the server HTML sends.
+    formData: await page
+      .getByTestId('form')
+      .evaluate((form) =>
+        Array.from(
+          new FormData(form as HTMLFormElement),
+          ([name, value]) => `${name}=${String(value)}`,
+        ),
+      ),
+  };
+}
+
+async function expectSwitchPage(page: Page) {
+  expect(await readSwitchPage(page)).toEqual({
+    notifications: {
+      role: 'switch',
+      'aria-checked': 'false',
+      'data-checked': null,
+      'aria-label': null,
+    },
+    thumb: '',
+    wifi: { role: 'switch', 'aria-checked': 'true', 'data-checked': '', 'aria-label': 'Wi-Fi' },
+    formData: ['notifications=no', 'wifi=on'],
+  });
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedSwitchPage(page: Page) {
+  expect((await readSwitchPage(page)).formData).toEqual(['notifications=no', 'wifi=on']);
+  const labelId = await page.getByTestId('label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(labelId);
+}
+
+// The portal renders after the mount, so the server HTML has no portal element.
+async function expectPortalPageOnServer(page: Page) {
+  expect(await page.getByTestId('trigger').count()).toBe(1);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+}
+
+// After the mount, each portal element is in its container. A `null` container has none.
+async function expectHydratedPortalPage(page: Page) {
+  const readParent = (testId: string) =>
+    page
+      .getByTestId(testId)
+      .evaluate((element) => element.parentElement?.id || element.parentElement?.localName);
+
+  expect(await readParent('in-body')).toBe('body');
+  expect(await readParent('in-page')).toBe('page');
+  expect(await readParent('in-teleports')).toBe('teleports');
+  expect(await page.getByTestId('no-container').count()).toBe(0);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -556,15 +639,26 @@ const PAGES: PageCase[] = [
   },
   { path: '/toggle-group', expectPage: expectToggleGroupPage },
   {
+    path: '/switch',
+    expectPage: expectSwitchPage,
+    expectHydratedPage: expectHydratedSwitchPage,
+  },
+  {
     path: '/scroll-area',
     expectPage: expectScrollAreaPage,
     expectHydratedPage: expectHydratedScrollAreaPage,
   },
   { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
+  { path: '/input', expectPage: expectInputPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
+  {
+    path: '/portal',
+    expectPage: expectPortalPageOnServer,
+    expectHydratedPage: expectHydratedPortalPage,
+  },
 ];
 
 const MODES = [
@@ -627,6 +721,20 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       await expectHydratedPage(page);
     },
   );
+
+  it('changes a switch on a click on its label and on the switch after hydration', async () => {
+    const page = await createPage('/switch');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('label').click();
+    await page.getByTestId('wifi').click();
+
+    expect(await page.getByTestId('notifications').getAttribute('aria-checked')).toBe('true');
+    expect(await page.getByTestId('wifi').getAttribute('aria-checked')).toBe('false');
+    expect(await page.getByTestId('wifi-value').textContent()).toBe('false');
+    expect((await readSwitchPage(page)).formData).toEqual(['notifications=on']);
+    expect(messages).toEqual([]);
+  });
 
   it('counts the clicks on a button after hydration', async () => {
     const page = await createPage('/button');

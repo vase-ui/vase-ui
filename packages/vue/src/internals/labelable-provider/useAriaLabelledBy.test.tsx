@@ -13,27 +13,6 @@ import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import UseAriaLabelledByHydration from './UseAriaLabelledByHydration.test.vue';
 
-// WebKit keeps the `labels` of an element as they were before a change of its `id`, until a node is
-// added or removed or a `for` changes. The probe reads `labels` as `useAriaLabelledBy` does.
-const labelsFollowIdChange = (() => {
-  const container = document.createElement('div');
-  const labelOfA = document.createElement('label');
-  labelOfA.htmlFor = 'a';
-  const labelOfB = document.createElement('label');
-  labelOfB.htmlFor = 'b';
-  const input = document.createElement('input');
-  input.id = 'a';
-  container.append(labelOfA, labelOfB, input);
-  document.body.append(container);
-
-  const labelBefore = input.labels?.[0];
-  input.id = 'b';
-  const labelAfter = input.labels?.[0];
-
-  container.remove();
-  return labelBefore === labelOfA && labelAfter === labelOfB;
-})();
-
 interface LabelState {
   for?: string | undefined;
   id?: string | undefined;
@@ -150,22 +129,20 @@ describe('useAriaLabelledBy', () => {
 
   async function renderControlWithTwoLabels() {
     const id = shallowRef('a');
-    const showNode = shallowRef(false);
     const Test = defineComponent(() => () => (
       <>
         <label for="a">Name A</label>
         <label for="b">Name B</label>
         <HiddenInputControl id={id.value} data-testid="control" />
-        {showNode.value && <span />}
       </>
     ));
     await render(<Test />);
     const control = screen.getByTestId('control');
     expect(control).toHaveAttribute('aria-labelledby', 'a-label');
-    return { control, id, showNode };
+    return { control, id };
   }
 
-  it.runIf(labelsFollowIdChange)('follows a change of the id of the control', async () => {
+  it('VUE-16: follows a change of the id of the control', async () => {
     const { control, id } = await renderControlWithTwoLabels();
 
     id.value = 'b';
@@ -174,19 +151,85 @@ describe('useAriaLabelledBy', () => {
     expect(control).toHaveAttribute('aria-labelledby', 'b-label');
   });
 
-  it.runIf(!labelsFollowIdChange)(
-    'follows a change of the id of the control after a node is added, because the browser keeps the old labels until then',
-    async () => {
-      const { control, id, showNode } = await renderControlWithTwoLabels();
+  describe('the native label of the control', () => {
+    const ODD_ID = 'a"] b\\c:d';
 
-      id.value = 'b';
-      await flushMicrotasks();
-      showNode.value = true;
-      await flushMicrotasks();
+    it.each([
+      {
+        name: 'a label that is not its parent',
+        scene: () => (
+          <label id="outer">
+            <div>
+              <HiddenInputControl data-testid="control" />
+            </div>
+          </label>
+        ),
+        labelledBy: 'outer',
+      },
+      {
+        name: 'the first label in tree order',
+        scene: () => (
+          <>
+            <label id="with-for" for="a">
+              Name
+            </label>
+            <label id="outer">
+              <div>
+                <HiddenInputControl id="a" data-testid="control" />
+              </div>
+            </label>
+          </>
+        ),
+        labelledBy: 'with-for',
+      },
+      {
+        name: 'a label around it before one with for',
+        scene: () => (
+          <>
+            <label id="outer">
+              <div>
+                <HiddenInputControl id="a" data-testid="control" />
+              </div>
+            </label>
+            <label id="with-for" for="a">
+              Name
+            </label>
+          </>
+        ),
+        labelledBy: 'outer',
+      },
+      {
+        name: 'no label of an earlier element',
+        scene: () => (
+          <>
+            <label id="with-for" for="a">
+              Name
+            </label>
+            <input id="a" />
+            <HiddenInputControl id="a" data-testid="control" />
+          </>
+        ),
+        labelledBy: null,
+      },
+      {
+        name: 'a label for an id with odd characters',
+        scene: () => (
+          <>
+            <label id="with-for" for={ODD_ID}>
+              Name
+            </label>
+            <div />
+            <HiddenInputControl id={ODD_ID} data-testid="control" />
+          </>
+        ),
+        labelledBy: 'with-for',
+      },
+    ])('names the control with $name', async ({ scene, labelledBy }) => {
+      await render(scene());
 
-      expect(control).toHaveAttribute('aria-labelledby', 'b-label');
-    },
-  );
+      expect(screen.getByTestId('control').getAttribute('aria-labelledby')).toBe(labelledBy);
+    });
+  });
 
   it('removes `aria-labelledby` when an `aria-label` is added, and gives it back when the `aria-label` is removed', async () => {
     const ariaLabel = shallowRef<string | undefined>();

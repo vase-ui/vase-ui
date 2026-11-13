@@ -1,0 +1,9 @@
+{
+  "id": "VUE-20",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L109-L163",
+    "https://vuejs.org/api/reactivity-utilities.html#tovalue"
+  ],
+  "behavior": "A portal follows a `container` that is a ref or a getter. When it gives another element, the portal moves its portal element there and does not mount the popup again. When it gives `null`, the portal uses its fallback container. Base UI reads a ref object one time.",
+  "dueWith": "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx"
+}

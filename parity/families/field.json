@@ -183,7 +183,7 @@
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Field.Item`, `CheckboxGroup`, `Checkbox`, `Switch`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Field.Item`, `CheckboxGroup`, `Checkbox`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",

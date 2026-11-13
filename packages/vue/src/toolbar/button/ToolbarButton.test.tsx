@@ -2,6 +2,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { computed, defineComponent, provide, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import { Switch } from '@vase-ui/vue/switch';
 import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
@@ -29,6 +30,12 @@ const TestContexts = defineComponent((_, { slots }) => {
   provide(CompositeRootContext, testCompositeContext);
   return () => slots.default?.();
 });
+
+const NATIVE_BUTTON_MESSAGE =
+  'Vase UI: A component that acts as a button expected a native <button> because ' +
+  'the `nativeButton` prop is true. Rendering a non-<button> removes native button semantics, ' +
+  'which can impact forms and accessibility. Use a real <button> with the `as` prop or the `#render` slot, or ' +
+  'set `nativeButton` to `false`.';
 
 describe('<Toolbar.Button />', () => {
   const { render } = createRenderer();
@@ -199,6 +206,111 @@ describe('<Toolbar.Button />', () => {
   });
 
   describe('rendering other Base UI components', () => {
+    describe('Switch', () => {
+      it('renders a switch', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await render(
+          <Toolbar.Root>
+            <Toolbar.Button data-testid="button" as={Switch.Root} />
+          </Toolbar.Root>,
+        );
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
+        expect(screen.getByTestId('button')).toBe(screen.getByRole('switch'));
+      });
+
+      it('handles interactions', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const handleCheckedChange = vi.fn();
+        const handleClick = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Toolbar.Button
+              onClick={handleClick}
+              v-slots={{
+                render: ({ props }: { props: Record<string, unknown> }) => (
+                  <Switch.Root
+                    {...props}
+                    defaultChecked={false}
+                    onCheckedChange={handleCheckedChange}
+                  />
+                ),
+              }}
+            />
+          </Toolbar.Root>,
+        );
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
+
+        const switchElement = screen.getByRole('switch');
+        expect(switchElement).toHaveAttribute('data-unchecked');
+
+        await user.keyboard('[Tab]');
+        expect(switchElement).toHaveAttribute('tabindex', '0');
+
+        await user.click(switchElement);
+        expect(handleCheckedChange).toHaveBeenCalledTimes(1);
+        expect(handleClick).toHaveBeenCalledTimes(1);
+        expect(switchElement).toHaveAttribute('data-checked');
+
+        await user.keyboard('[Enter]');
+        expect(handleCheckedChange).toHaveBeenCalledTimes(2);
+        expect(handleClick).toHaveBeenCalledTimes(2);
+        expect(switchElement).toHaveAttribute('data-unchecked');
+
+        await user.keyboard('[Space]');
+        expect(handleCheckedChange).toHaveBeenCalledTimes(3);
+        expect(handleClick).toHaveBeenCalledTimes(3);
+        expect(switchElement).toHaveAttribute('data-checked');
+      });
+
+      it('disabled state', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const handleCheckedChange = vi.fn();
+        const handleClick = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Toolbar.Button
+              disabled
+              onClick={handleClick}
+              v-slots={{
+                render: ({ props }: { props: Record<string, unknown> }) => (
+                  <Switch.Root {...props} onCheckedChange={handleCheckedChange} />
+                ),
+              }}
+            />
+          </Toolbar.Root>,
+        );
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NATIVE_BUTTON_MESSAGE));
+
+        const switchElement = screen.getByRole('switch');
+
+        expect(switchElement).not.toHaveAttribute('disabled');
+        expect(switchElement).toHaveAttribute('data-disabled');
+        expect(switchElement).toHaveAttribute('aria-disabled', 'true');
+
+        await user.keyboard('[Tab]');
+        expect(switchElement).toHaveAttribute('tabindex', '0');
+
+        await user.keyboard('[Enter]');
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
+        expect(handleClick).toHaveBeenCalledTimes(0);
+
+        await user.keyboard('[Space]');
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
+        expect(handleClick).toHaveBeenCalledTimes(0);
+
+        await user.click(switchElement);
+        expect(handleCheckedChange).toHaveBeenCalledTimes(0);
+        expect(handleClick).toHaveBeenCalledTimes(0);
+      });
+    });
+
     describe('Toggle and ToggleGroup', () => {
       it('renders toggle and toggle group', async () => {
         await render(
