@@ -290,7 +290,7 @@ Rules:
 ### `useRenderElement` and `useRender`
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
-- `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes, so a change of a prop calls none.
+- `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
 - A part that chooses a holder from a prop reads the prop in the callback. A `watch` of the prop moves the element to the other holder. `ScrollAreaScrollbar.vue` is the model.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
 - A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
