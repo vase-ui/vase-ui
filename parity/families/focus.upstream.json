@@ -1,0 +1,978 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/focus/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+    "packages/react/src/utils/popups/focus/FocusGuard.tsx",
+    "packages/react/src/utils/popups/focus/enqueueFocus.ts",
+    "packages/react/src/utils/popups/focus/markOthers.ts",
+    "packages/react/src/utils/popups/focus/tabbable.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "default behavior focuses first tabbable element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "default behavior focuses the checked radio in a named group",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "ref",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "respects autoFocus",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "focuses without a frame delay when a screen reader press opens it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: initialFocus"
+          ],
+          "title": "keeps the frame delay for a real mouse press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "ref",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "always returns to the reference for nested elements",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "return to the first focusable descendent of the reference, if the reference is not focusable",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "preserves tabbable context next to reference element if removed (modal)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "preserves tabbable context next to reference element if removed (non-modal)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "does not return focus to reference on outside press when preventScroll is not supported",
+          "conditions": [
+            "skipIf(!isJSDOM)",
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "returns focus to reference on outside press when preventScroll is supported",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "passes focusVisible when returning focus after keyboard close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "omits focusVisible when returning focus after pointer close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "does not return focus while open when the reference changes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: returnFocus"
+          ],
+          "title": "does not insert fallback element when return element is falsy",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "iframe focus navigation"
+          ],
+          "title": "tabs from the popover to the next element in the iframe",
+          "conditions": [
+            "skipIf(!isJSDOM)",
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "iframe focus navigation"
+          ],
+          "title": "shift+tab from the popover to the previous element in the iframe",
+          "conditions": [
+            "skipIf(!isJSDOM)",
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "wraps focus within the same frame as the Tab",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "closeOnFocusOut: false keeps a non-modal element open when focus leaves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "clicking a nested click trigger does not suppress the next focus-out close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "false - comboboxes do not hide all other nodes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "fallback to floating element when it has no tabbable content",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "mixed modality and nesting",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "true - applies aria-hidden to outside nodes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "true - keeps supplied inside elements outside the floating node exposed to assistive tech",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "false - does not apply inert to outside nodes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: modal"
+          ],
+          "title": "false - keeps marker on top-level outside ancestor when reference has siblings",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "true -> false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "supports keepMounted behavior",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "treats a returnFocus resolver returning true as explicit",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "uses the latest explicitReturnFocus value without moving focus while open",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "resets close modality between keep-mounted open sessions",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "classifies a click with an empty pointerType: $name",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "preserves keyboard close modality when reopening before focus restoration",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "prop: disabled"
+          ],
+          "title": "clears outside pointer state between keep-mounted open sessions",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "non-modal + FloatingPortal"
+          ],
+          "title": "focuses inside element, tabbing out focuses last document element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "non-modal + FloatingPortal"
+          ],
+          "title": "does not mark reference siblings due to outside focus guards",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "non-modal + FloatingPortal"
+          ],
+          "title": "renders the aria-owns owner without changing regular reference semantics",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "non-modal + FloatingPortal"
+          ],
+          "title": "supports setting the aria-owns owner role explicitly",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "non-modal + FloatingPortal"
+          ],
+          "title": "shift+tab",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "Navigation"
+          ],
+          "title": "does not focus reference when hovering it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "Navigation"
+          ],
+          "title": "returns focus to reference when floating element was opened by hover but is closed by esc key",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "Navigation"
+          ],
+          "title": "returns focus to reference when floating element was opened by hover but is closed by an explicit close button",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "Navigation"
+          ],
+          "title": "does not re-open after closing via escape key",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage",
+            "Navigation"
+          ],
+          "title": "closes when unhovering floating element even when focus is inside it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: closeOnFocusOut"
+          ],
+          "title": "focus leaving the reference $name"
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: restoreFocus"
+          ],
+          "title": "true: restores focus to nearest tabbable element if currently focused element is removed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: restoreFocus"
+          ],
+          "title": "false: does not restore focus to nearest tabbable element if currently focused element is removed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: restoreFocus"
+          ],
+          "title": "popup: keeps focus that moved elsewhere before the deferred re-focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: restoreFocus"
+          ],
+          "title": "popup: re-focuses the popup when focus is still lost on the next frame",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "prop: restoreFocus"
+          ],
+          "title": "restores focus to the nearest tabbable element when the focused element becomes hidden"
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "trapped combobox prevents focus moving outside floating element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "untrapped combobox creates non-modal focus management",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "returns focus to last connected element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "focus is placed on element with floating props when floating element is a wrapper",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "floating element closes upon tabbing out of modal combobox",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "untrapped typeable combobox closes on second tab sequence (click -> tab -> click -> tab)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "focus does not return to reference when floating element is triggered by hover",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "uses aria-hidden instead of inert on outside nodes if opened with hover and modal=true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "floating element with no focusable elements and no listbox role gets tabIndex=0 when initialFocus is -1",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "floating element with managed tabIndex is downgraded once content becomes tabbable",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "floating element with listbox role ignores tabIndex setting",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "handles manual tabindex on dialog floating element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingFocusManager",
+            "JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios"
+          ],
+          "title": "standard tabbing back and forth of a non-modal floating element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/focus/markOthers.test.ts",
+      "rows": [
+        {
+          "describe": [],
+          "title": "single call"
+        },
+        {
+          "describe": [],
+          "title": "multiple calls"
+        },
+        {
+          "describe": [],
+          "title": "out of order cleanup"
+        },
+        {
+          "describe": [],
+          "title": "multiple cleanups with differing controlAttribute"
+        },
+        {
+          "describe": [],
+          "title": "keeps aria-hidden until the last aria-hidden lock releases, alongside marker-only locks"
+        },
+        {
+          "describe": [],
+          "title": "preserves externally owned aria-hidden during overlapping aria-hidden locks"
+        },
+        {
+          "describe": [],
+          "title": "does not let mark-only overlap disturb control cleanup bookkeeping"
+        },
+        {
+          "describe": [],
+          "title": "re-reads externally owned aria-hidden once every lock has released"
+        },
+        {
+          "describe": [],
+          "title": "re-reads externally owned aria-hidden while an unrelated lock stays held"
+        },
+        {
+          "describe": [],
+          "title": "leaves live regions, their ancestors, and scripts exposed"
+        },
+        {
+          "describe": [],
+          "title": "does not recurse infinitely with target inside anchor in shadow root"
+        },
+        {
+          "describe": [],
+          "title": "uses shadow root host as avoid element when parent chain includes anchor"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/focus/tabbable.test.ts",
+      "rows": [
+        {
+          "describe": [],
+          "title": "includes basic tabbable controls and excludes hidden inputs"
+        },
+        {
+          "describe": [],
+          "title": "includes embedded focusable elements in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "excludes disabled controls from the tab order"
+        },
+        {
+          "describe": [],
+          "title": "includes slotted light DOM elements in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "excludes unslotted light DOM elements from a shadow host tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps the summary tabbable but excludes closed details content"
+        },
+        {
+          "describe": [],
+          "title": "keeps only the first summary tabbable and includes details without a summary"
+        },
+        {
+          "describe": [],
+          "title": "keeps aria-disabled elements in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "excludes elements hidden with CSS visibility from the tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps descendants of display: contents ancestors in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps visible descendants of display: contents ancestors in the tab order in Chromium",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "excludes descendants of hidden display: contents ancestors from the tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps descendants that override ancestor visibility in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "excludes display: contents candidates when checkVisibility reports them hidden"
+        },
+        {
+          "describe": [],
+          "title": "excludes display: contents candidates when checkVisibility is unavailable"
+        },
+        {
+          "describe": [],
+          "title": "excludes descendants of display: none ancestors from the tab order"
+        },
+        {
+          "describe": [],
+          "title": "excludes descendants of block content-visibility:hidden ancestors from the tab order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "keeps descendants of display: contents content-visibility:hidden ancestors in the tab order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "keeps descendants of inline content-visibility:hidden ancestors in the tab order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "keeps content-visibility:hidden candidates in the tab order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "keeps zero-size elements in the tab order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [],
+          "title": "keeps visuallyHidden elements in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps visuallyHiddenInput elements in the tab order"
+        },
+        {
+          "describe": [],
+          "title": "keeps only the checked radio in a named group"
+        },
+        {
+          "describe": [],
+          "title": "keeps only the first radio when a named group has no checked item"
+        },
+        {
+          "describe": [],
+          "title": "treats slotted elements inside inert shadow content as untabbable"
+        },
+        {
+          "describe": [],
+          "title": "finds adjacent controls around a non-tabbable anchor in a %s tree"
+        },
+        {
+          "describe": [],
+          "title": "finds adjacent controls around a disabled anchor"
+        },
+        {
+          "describe": [],
+          "title": "does not choose a destination when the anchor is absent from the composed tree"
+        },
+        {
+          "describe": [],
+          "title": "does not let a disabled radio anchor suppress its peer when checked=%s and direction=%s"
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}
