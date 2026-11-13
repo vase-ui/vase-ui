@@ -5,7 +5,7 @@ import type { VaseUIEvent, WithVaseUIEvent } from '../internals/types';
 type ElementType = keyof IntrinsicElementAttributes;
 type PropsOf<T extends ElementType> = WithVaseUIEvent<NativeElements[T]>;
 type InputProps<T extends ElementType> =
-  PropsOf<T> | ((otherProps: PropsOf<T>) => PropsOf<T>) | undefined;
+  PropsOf<T> | ((otherProps: NativeElements[T]) => PropsOf<T>) | undefined;
 type Handler = (...args: any[]) => unknown;
 type HandlerValue = Handler | Handler[] | null | false | undefined;
 
@@ -35,6 +35,8 @@ const EMPTY_PROPS = {};
  * must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
+ * @template T Tag of the element that gets the merged props. The default is `div`: each HTML
+ * element has the attributes of `div`.
  * @param a Props object to merge.
  * @param b Props object to merge. Its props replace the conflicting props of `a`.
  * @param c Props object to merge. Its props replace the conflicting props of `a` and `b`.
@@ -43,25 +45,28 @@ const EMPTY_PROPS = {};
  * @returns The merged props.
  * @public
  */
-export function mergeProps<T extends ElementType>(
+export function mergeProps<T extends ElementType = 'div'>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
   d: InputProps<T>,
   e: InputProps<T>,
-): PropsOf<T>;
-export function mergeProps<T extends ElementType>(
+): NativeElements[T];
+export function mergeProps<T extends ElementType = 'div'>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
   d: InputProps<T>,
-): PropsOf<T>;
-export function mergeProps<T extends ElementType>(
+): NativeElements[T];
+export function mergeProps<T extends ElementType = 'div'>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
-): PropsOf<T>;
-export function mergeProps<T extends ElementType>(a: InputProps<T>, b: InputProps<T>): PropsOf<T>;
+): NativeElements[T];
+export function mergeProps<T extends ElementType = 'div'>(
+  a: InputProps<T>,
+  b: InputProps<T>,
+): NativeElements[T];
 export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
   if (!c && !d && !e && !a) {
     return createInitialMergedProps(b);
@@ -98,12 +103,14 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  * @see mergeProps
  * @public
  */
-export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): PropsOf<T> {
+export function mergePropsN<T extends ElementType = 'div'>(
+  props: InputProps<T>[],
+): NativeElements[T] {
   if (props.length === 0) {
-    return EMPTY_PROPS as PropsOf<T>;
+    return EMPTY_PROPS as NativeElements[T];
   }
   if (props.length === 1) {
-    return createInitialMergedProps(props[0]) as PropsOf<T>;
+    return createInitialMergedProps(props[0]) as NativeElements[T];
   }
 
   // `merged` is a copy, because the merge below changes it.
@@ -113,13 +120,13 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Prop
     merged = mergeInto(merged, props[i]);
   }
 
-  return merged as PropsOf<T>;
+  return merged as NativeElements[T];
 }
 
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
     // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS as PropsOf<T>) };
+    return { ...inputProps(EMPTY_PROPS as NativeElements[T]) };
   }
 
   return copyInitialProps(inputProps);
@@ -127,7 +134,7 @@ function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<
 
 function mergeInto<T extends ElementType>(merged: Record<string, any>, inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
-    return inputProps(merged as PropsOf<T>);
+    return inputProps(merged as NativeElements[T]);
   }
   return mutablyMergeInto(merged, inputProps);
 }
@@ -195,7 +202,7 @@ function isEventHandler(key: string, value: unknown) {
 
 function isPropsGetter<T extends ElementType>(
   inputProps: InputProps<T>,
-): inputProps is (props: PropsOf<T>) => PropsOf<T> {
+): inputProps is (props: NativeElements[T]) => PropsOf<T> {
   return typeof inputProps === 'function';
 }
 

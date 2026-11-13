@@ -61,10 +61,12 @@ describe('<Collapsible.Panel /> opened by a click', () => {
 
       for (let cycle = 0; cycle < 6; cycle += 1) {
         phase = 'enter';
-        const started = nextEvent(container, 'transitionrun');
-        await userEvent.click(trigger);
-        await started;
-        await nextEvent(container, 'transitionend');
+        // The click command can resolve after the transition has ended. The wait for the end event
+        // starts in the task of the start event, so the end event cannot come before the wait.
+        const entered = nextEvent(container, 'transitionrun').then(() =>
+          nextEvent(container, 'transitionend'),
+        );
+        await Promise.all([userEvent.click(trigger), entered]);
         await waitFor(() => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });

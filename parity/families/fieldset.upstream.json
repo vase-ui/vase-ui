@@ -215,5 +215,14 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/fieldset/page.mdx",
+      "referenceTags": [
+        "TypesFieldset.Root",
+        "TypesFieldset.Legend"
+      ]
+    }
   ]
 }

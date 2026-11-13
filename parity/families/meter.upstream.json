@@ -479,5 +479,17 @@
       "additionalTypes": [],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/meter/page.mdx",
+      "referenceTags": [
+        "TypesMeter.Root",
+        "TypesMeter.Track",
+        "TypesMeter.Indicator",
+        "TypesMeter.Value",
+        "TypesMeter.Label"
+      ]
+    }
   ]
 }

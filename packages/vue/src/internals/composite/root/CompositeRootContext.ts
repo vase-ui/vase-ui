@@ -12,6 +12,12 @@ export interface CompositeRootContext {
    * with this function.
    */
   relayKeyboardEvent: (event: KeyboardEvent) => void;
+  /**
+   * Tells an item if it holds the tab stop until the item is mounted. An item calls it one time,
+   * in `setup`. Base UI does not have this function. Its server HTML has `tabindex="-1"` on each
+   * item. The root gives `true` to at most one caller.
+   */
+  takeInitialTabStop: (index: number, active: boolean, disabled: boolean) => boolean;
 }
 
 export const CompositeRootContext: InjectionKey<CompositeRootContext> = Symbol();

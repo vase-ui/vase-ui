@@ -111,6 +111,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm build
+      - run: pnpm --filter @vase-ui/nuxt-fixture typecheck
       - run: pnpm test:nuxt
 
   # A prerelease of a dependency must not block a merge, so `required` does not need this job.

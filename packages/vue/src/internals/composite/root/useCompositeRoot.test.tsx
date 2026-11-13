@@ -152,6 +152,45 @@ describe('useCompositeRoot', () => {
       await pressKey(items[2], 'ArrowLeft');
       expect(root).toHaveAttribute('data-highlighted-index', '1');
     });
+
+    it('moves the highlight off an index that becomes disabled while the root is inactive', async () => {
+      const Other = defineComponent(() => () => <span data-testid="other" />);
+
+      const App = defineComponent(
+        (props: { visible: boolean; disabledIndices: number[] }) => () => (
+          <KeepAlive>
+            {props.visible ? (
+              <CompositeRoot data-testid="root" disabledIndices={props.disabledIndices}>
+                <CompositeListItemPart data-testid="1" />
+                <CompositeListItemPart data-testid="2" />
+                <CompositeListItemPart data-testid="3" />
+              </CompositeRoot>
+            ) : (
+              <Other />
+            )}
+          </KeepAlive>
+        ),
+        { props: ['visible', 'disabledIndices'] },
+      );
+
+      const { setProps } = await render(<App visible disabledIndices={[]} />);
+
+      const root = screen.getByTestId('root');
+      const items = ['1', '2', '3'].map((testId) => screen.getByTestId(testId));
+
+      await pressKey(items[0], 'ArrowRight');
+      await pressKey(items[1], 'ArrowRight');
+      expect(root).toHaveAttribute('data-highlighted-index', '2');
+
+      await setProps({ visible: false });
+      await flushMicrotasks();
+      expect(root).not.toBeInTheDocument();
+
+      await setProps({ visible: true, disabledIndices: [2] });
+      await flushMicrotasks();
+
+      expect(root).toHaveAttribute('data-highlighted-index', '0');
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.0, a `setup` that throws leaves the current

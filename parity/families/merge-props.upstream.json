@@ -310,5 +310,14 @@
       "additionalTypes": [],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/merge-props/page.mdx",
+      "referenceTags": [
+        "TypesMergeProps",
+        "TypesMergePropsN"
+      ]
+    }
   ]
 }

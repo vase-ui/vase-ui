@@ -14,13 +14,13 @@
     },
     {
       "entry": "mergeProps",
-      "returns": "WithVaseUIEvent<NativeElements[T]>",
-      "reason": "The type is the Vue form of the Base UI type: the attributes of the element `T`. Each listener gets a `VaseUIEvent`."
+      "returns": "NativeElements[T]",
+      "reason": "The type is the attributes of the element `T`, as Vue declares them. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
     },
     {
       "entry": "mergePropsN",
-      "returns": "WithVaseUIEvent<NativeElements[T]>",
-      "reason": "The type is the Vue form of the Base UI type: the attributes of the element `T`. Each listener gets a `VaseUIEvent`."
+      "returns": "NativeElements[T]",
+      "reason": "The type is the attributes of the element `T`, as Vue declares them. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
     }
   ],
   "notApplicableCommits": []

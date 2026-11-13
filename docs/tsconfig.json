@@ -21,7 +21,8 @@
     "*.data.ts",
     "components/**/*.vue",
     "demos/**/*.vue",
-    "examples/**/*.vue"
+    "examples/**/*.vue",
+    "utils/**/*.vue"
   ],
   "exclude": [".vitepress/cache", ".vitepress/dist"]
 }

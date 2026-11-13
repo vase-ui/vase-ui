@@ -1,5 +1,6 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { docsFolderOf } from '../parity/checkSurface.ts';
+import type { FamilyExtract } from '../parity/parityFiles.ts';
 import { VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
@@ -9,9 +10,15 @@ import {
   REPOSITORY_ROOT,
 } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
-import type { SurfaceFile } from '../parity/typesMd.ts';
+import type { SurfaceFile, SurfacePart } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
-import type { ComponentSurface, MemberSurface, VaseProject } from '../parity/vaseSurface.ts';
+import type {
+  ComponentSurface,
+  FunctionSurface,
+  MemberSurface,
+  PropertySurface,
+  VaseProject,
+} from '../parity/vaseSurface.ts';
 import { docsFolderGlobs } from './upstreamDocs.ts';
 
 export interface ApiProp {
@@ -56,8 +63,21 @@ export interface ApiPart {
   cssVariables: ApiConstant[];
 }
 
+export interface ApiFunction extends FunctionSurface {
+  /** `mergeProps`, or `Dialog.createHandle` for a member of a namespace. */
+  name: string;
+}
+
+export interface ApiType {
+  /** `useRender.Parameters`. */
+  name: string;
+  properties: PropertySurface[];
+}
+
 export interface ApiReference {
   parts: ApiPart[];
+  functions: ApiFunction[];
+  types: ApiType[];
 }
 
 // Base UI puts `className`, `style` and `render` last. These are their Vue names.
@@ -82,7 +102,7 @@ function constantsOf(project: VaseProject, entryFile: string, namespace: string)
 }
 
 /**
- * The parts of a `types.md`, in its sequence. A part with no export in the entry file is left out,
+ * The parts of `file`, in their sequence. A part with no export in the entry file is left out,
  * and so is an export that is not a component from a `.vue` file. `pnpm parity:check` reports both.
  */
 export function buildApiParts(
@@ -114,6 +134,56 @@ export function buildApiParts(
   });
 }
 
+/**
+ * The functions of a `types.md`: the names of its parts, then of its functions, in their sequence.
+ * A name with no export in the entry file is left out. So is an export that is a component or has
+ * no call signature.
+ */
+export function buildApiFunctions(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiFunction[] {
+  return [...file.parts, ...file.functions].flatMap(({ name: title }) => {
+    const [match] = project.findExports(entryFile, title);
+    const surface = match && !project.readComponent(match) && project.readFunction(match);
+    return match && surface ? [{ name: match.path, ...surface }] : [];
+  });
+}
+
+/**
+ * The types of a `types.md` that have one property or more, in its sequence. A name with no export
+ * in the entry file is left out.
+ */
+export function buildApiTypes(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiType[] {
+  return file.types.flatMap(({ name }) => {
+    const match = project
+      .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
+      .find(({ path }) => path === name);
+    const properties = match && project.readProperties(match);
+    return properties && properties.length > 0 ? [{ name, properties }] : [];
+  });
+}
+
+/**
+ * Puts the parts of a `types.md` in the sequence of the `<Types…>` tags of the Base UI page in the
+ * same folder. The tag `TypesProgress.Root` names the part `Root`. A part that no tag names comes
+ * last, in the sequence of the `types.md`.
+ */
+function sortPartsByPage(file: SurfaceFile, pages: FamilyExtract['pages']): SurfaceFile {
+  const page = pages.find((row) => dirname(row.file) === dirname(file.file));
+  const titles = (page?.referenceTags ?? []).flatMap((tag) => tag.split('.').slice(1));
+  const place = ({ name }: SurfacePart): number => {
+    const index = titles.indexOf(name);
+    return index === -1 ? titles.length : index;
+  };
+  return { ...file, parts: [...file.parts].sort((a, b) => place(a) - place(b)) };
+}
+
 /** Returns a function from a family name to the API reference of the family. The first call makes the project. */
 export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: string) => ApiReference {
   let project: VaseProject | undefined;
@@ -135,21 +205,24 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         `There is no family file ${familyFile(family)}, but the site has a page for ${family}. Add the family file.`,
       );
     }
-    const typesFiles = files.extract?.surface ?? [];
+    const pages = files.extract?.pages ?? [];
+    const typesFiles = (files.extract?.surface ?? []).map((file) => sortPartsByPage(file, pages));
     if (typesFiles.length === 0) {
       throw new Error(
         `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
       );
     }
     const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
+    const build = <T>(
+      read: (project: VaseProject, entryFile: string, file: SurfaceFile) => T[],
+    ): T[] =>
+      typesFiles.flatMap((file) =>
+        read(vaseProject, join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'), file),
+      );
     return {
-      parts: typesFiles.flatMap((file) =>
-        buildApiParts(
-          vaseProject,
-          join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'),
-          file,
-        ),
-      ),
+      parts: build(buildApiParts),
+      functions: build(buildApiFunctions),
+      types: build(buildApiTypes),
     };
   };
 }
