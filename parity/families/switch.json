@@ -33,40 +33,8 @@
       "describe": ["<Switch.Root />", "Form"],
       "title": "preserves Field validation props through canceled changes, submit, and reset",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Description` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The last lines of the case say that a native reset does not change the switch. Vase UI resets an uncontrolled switch to `defaultChecked` (`BUG-6206`), and the block \"BUG-6206: a native reset\" of the same test file tests that."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Form"],
-      "title": "triggers native HTML validation on submit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Form"],
-      "title": "clears external errors on change",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Field"],
-      "title": "prop: validationMode=onSubmit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Field"],
-      "title": "prop: validationMode=onBlur",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/field/description/FieldDescription.tsx",
+      "reason": "The case renders `Field.Description`, which Vase UI does not have. The last lines of the case say that a native reset does not change the switch. Vase UI resets an uncontrolled switch to `defaultChecked` (`BUG-6206`), and the block \"BUG-6206: a native reset\" of the same test file tests that."
     },
     {
       "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",

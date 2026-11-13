@@ -122,6 +122,23 @@ export function useFieldValidation(
     return (element && toValue(registeredInputs.get(element)?.controlRef)) || null;
   }
 
+  function setCustomValidity(element: HTMLInputElement, message: string) {
+    // Never reinstall a native constraint message as custom validity.
+    const displaced = element.validity.customError ? element.validationMessage : '';
+    const ownedMessage = message.replace(/\r\n?/g, '\n');
+    element.setCustomValidity(ownedMessage);
+    customValidity = [element, ownedMessage, displaced];
+  }
+
+  function clearCustomValidity() {
+    const record = customValidity;
+    customValidity = null;
+    // Replacement transfers ownership; barred controls hide `validationMessage`.
+    if (record && (!record[0].willValidate || record[0].validationMessage === record[1])) {
+      record[0].setCustomValidity(record[2]);
+    }
+  }
+
   async function commit(value: unknown, revalidate = false) {
     validationCommitId += 1;
     const commitId = validationCommitId;
@@ -139,23 +156,6 @@ export function useFieldValidation(
         errors,
         initialValue: validityData.value.initialValue,
       };
-    }
-
-    function setCustomValidity(element: HTMLInputElement, message: string) {
-      // Never reinstall a native constraint message as custom validity.
-      const displaced = element.validity.customError ? element.validationMessage : '';
-      const ownedMessage = message.replace(/\r\n?/g, '\n');
-      element.setCustomValidity(ownedMessage);
-      customValidity = [element, ownedMessage, displaced];
-    }
-
-    function clearCustomValidity() {
-      const record = customValidity;
-      customValidity = null;
-      // Replacement transfers ownership; barred controls hide `validationMessage`.
-      if (record && (!record[0].willValidate || record[0].validationMessage === record[1])) {
-        record[0].setCustomValidity(record[2]);
-      }
     }
 
     function publish(validityState: FieldValidityData['state'], errorMessages: string[]) {
@@ -336,6 +336,14 @@ export function useFieldValidation(
     }
   }
 
+  // A cancel in `change` keeps the message on the input, because the field still shows its error.
+  // A reset removes the error of the field, so it removes the message too.
+  function reset() {
+    timeout.clear();
+    validationCommitId += 1;
+    clearCustomValidity();
+  }
+
   // The control calls it in each render, so it reads the current state and not `renderedValid`.
   function getValidationProps(disabled: boolean, externalProps: Record<string, any> = {}) {
     return mergeProps<any>(
@@ -354,6 +362,7 @@ export function useFieldValidation(
     getInputControl,
     commit,
     change,
+    reset,
   };
 }
 
