@@ -1,0 +1,1095 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/accordion/**",
+    "docs/src/app/(docs)/react/components/accordion/**"
+  ],
+  "sources": [
+    "packages/react/src/accordion/header/AccordionHeader.tsx",
+    "packages/react/src/accordion/header/AccordionHeaderDataAttributes.ts",
+    "packages/react/src/accordion/index.parts.ts",
+    "packages/react/src/accordion/index.ts",
+    "packages/react/src/accordion/item/AccordionItem.tsx",
+    "packages/react/src/accordion/item/AccordionItemContext.ts",
+    "packages/react/src/accordion/item/AccordionItemDataAttributes.ts",
+    "packages/react/src/accordion/item/stateAttributesMapping.ts",
+    "packages/react/src/accordion/panel/AccordionPanel.tsx",
+    "packages/react/src/accordion/panel/AccordionPanelCssVars.ts",
+    "packages/react/src/accordion/panel/AccordionPanelDataAttributes.ts",
+    "packages/react/src/accordion/root/AccordionRoot.tsx",
+    "packages/react/src/accordion/root/AccordionRootContext.ts",
+    "packages/react/src/accordion/root/AccordionRootDataAttributes.ts",
+    "packages/react/src/accordion/trigger/AccordionTrigger.tsx",
+    "packages/react/src/accordion/trigger/AccordionTriggerDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/accordion/root/AccordionRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/accordion/header/AccordionHeader.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Accordion.Header />"
+          ],
+          "title": "throws when rendered outside an Accordion.Item"
+        },
+        {
+          "describe": [
+            "<Accordion.Header />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/accordion/item/AccordionItem.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Accordion.Item />"
+          ],
+          "title": "throws when rendered outside an Accordion.Root"
+        },
+        {
+          "describe": [
+            "<Accordion.Item />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Accordion.Item />",
+            "state"
+          ],
+          "title": "does not report hidden=true after the item has started opening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/accordion/panel/AccordionPanel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Accordion.Panel />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />"
+          ],
+          "title": "warns when a panel enables hiddenUntilFound and disables keepMounted"
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />",
+            "server-side rendering"
+          ],
+          "title": "suppresses the initial keyframe animation from inline styles when rendered open"
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />"
+          ],
+          "title": "passes root keepMounted to closed panels"
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />"
+          ],
+          "title": "passes root hiddenUntilFound to closed panels and allows panel overrides"
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />",
+            "CSS transitions"
+          ],
+          "title": "keeps the closing panel visible until its exit transition completes when switching items",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Panel />",
+            "React.Activity"
+          ],
+          "title": "does not replay open keyframe animations from inline styles when revealing a panel opened by the user",
+          "conditions": [
+            "skipIf(isJSDOM || reactMajor < 19)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Accordion.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />"
+          ],
+          "title": "warns when hiddenUntilFound overrides keepMounted={false}"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "renders correct ARIA attributes"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "references manual panel id in trigger aria-controls"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "references manual trigger id in panel aria-labelledby"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "updates panel labeling when a manual trigger id is added or changed"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "restores panel labeling when a manual trigger id is removed"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "unregisters generated part ids when the trigger or panel unmounts"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "ARIA attributes"
+          ],
+          "title": "preserves generated part associations during hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "uncontrolled"
+          ],
+          "title": "open state",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "uncontrolled",
+            "prop: defaultValue"
+          ],
+          "title": "custom item value"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "controlled"
+          ],
+          "title": "open state",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "controlled",
+            "prop: value"
+          ],
+          "title": "custom item value"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: disabled"
+          ],
+          "title": "can disable the whole accordion"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: disabled"
+          ],
+          "title": "can disable one accordion item"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not toggle or fire callbacks when the %s is disabled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />"
+          ],
+          "title": "allows onMouseUp to call preventBaseUIHandler on the trigger"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "keyboard interactions"
+          ],
+          "title": "key: $key toggles the Accordion open state with $triggerKind triggers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "keyboard activation timing"
+          ],
+          "title": "opens and closes on Space keyup when rendering $triggerKind triggers"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onOpenChange cancel() prevents opening while uncontrolled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onValueChange cancel() prevents opening while uncontrolled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onValueChange cancel() prevents closing while uncontrolled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onOpenChange cancel() prevents onValueChange while controlled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onValueChange cancel() prevents opening while controlled"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onValueChange cancel() prevents opening while multiple"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onValueChange cancel() prevents closing while multiple"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "keeps an array item value intact while multiple"
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: multiple"
+          ],
+          "title": "multiple items can be open when `multiple = true`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: multiple"
+          ],
+          "title": "when false only one item can be open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "default item value",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "custom item value",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Accordion.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "`multiple` is false",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "renders the disabled attribute when disabled"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "adds data-disabled when only the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "removes a disabled non-native trigger from the tab order"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "keeps a non-native trigger tabbable"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "does not render the root value as data-value"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "renders data-index on every trigger including the first"
+        },
+        {
+          "describe": [
+            "<Accordion.Trigger />"
+          ],
+          "title": "keeps data-panel-open instead of data-open"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "Value[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "Value[]",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: Value[], eventDetails: Accordion.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "hiddenUntilFound",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "multiple",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'vertical'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Accordion.Root.State<Value>) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Accordion.Root.State<Value>) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Accordion.Root.State<Value>) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AccordionRootState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "TValue[]"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AccordionRootState<TValue = any> = {\n    value: TValue[];\n    disabled: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "AccordionRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "none"
+            ],
+            "code": "type AccordionRootChangeEventReason = 'trigger-press' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "AccordionRootChangeEventDetails",
+            "code": "type AccordionRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Accordion.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Accordion.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Accordion.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AccordionTriggerState",
+            "fields": [
+              {
+                "name": "hidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "index",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AccordionTriggerState = {\n    hidden: boolean;\n    index: number;\n    open: boolean;\n    value: any[];\n    disabled: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-panel-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": "number"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "div",
+          "props": [
+            {
+              "name": "value",
+              "required": false,
+              "type": "any",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Accordion.Item.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Accordion.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Accordion.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Accordion.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AccordionItemState",
+            "fields": [
+              {
+                "name": "hidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "index",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AccordionItemState = {\n    hidden: boolean;\n    index: number;\n    open: boolean;\n    value: any[];\n    disabled: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "AccordionItemChangeEventReason",
+            "values": [
+              "trigger-press",
+              "none"
+            ],
+            "code": "type AccordionItemChangeEventReason = 'trigger-press' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "AccordionItemChangeEventDetails",
+            "code": "type AccordionItemChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": "number"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Header",
+          "tag": "h3",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Accordion.Header.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Accordion.Header.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Accordion.Header.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AccordionHeaderState",
+            "fields": [
+              {
+                "name": "hidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "index",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AccordionHeaderState = {\n    hidden: boolean;\n    index: number;\n    open: boolean;\n    value: any[];\n    disabled: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": "number"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Panel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "hiddenUntilFound",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Accordion.Panel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Accordion.Panel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Accordion.Panel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AccordionPanelState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "hidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "index",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any[]"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AccordionPanelState = {\n    transitionStatus: TransitionStatus;\n    hidden: boolean;\n    index: number;\n    open: boolean;\n    value: any[];\n    disabled: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": "number"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--accordion-panel-height",
+              "type": "number"
+            },
+            {
+              "name": "--accordion-panel-width",
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.Value",
+          "code": "type AccordionRootValue<TValue = any> = TValue[];"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "AccordionHeaderDataAttributes",
+          "code": "declare namespace AccordionHeaderDataAttributes {\n    const index: 'data-index';\n    const disabled: 'data-disabled';\n    const open: 'data-open';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "open",
+              "value": "data-open"
+            }
+          ]
+        },
+        {
+          "name": "AccordionItemDataAttributes",
+          "code": "declare namespace AccordionItemDataAttributes {\n    const index: 'data-index';\n    const disabled: 'data-disabled';\n    const open: 'data-open';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "open",
+              "value": "data-open"
+            }
+          ]
+        },
+        {
+          "name": "AccordionPanelCssVariables",
+          "code": "declare namespace AccordionPanelCssVariables {\n    const accordionPanelHeight: '--accordion-panel-height';\n    const accordionPanelWidth: '--accordion-panel-width';\n}",
+          "constants": [
+            {
+              "name": "accordionPanelHeight",
+              "value": "--accordion-panel-height"
+            },
+            {
+              "name": "accordionPanelWidth",
+              "value": "--accordion-panel-width"
+            }
+          ]
+        },
+        {
+          "name": "AccordionPanelDataAttributes",
+          "code": "declare namespace AccordionPanelDataAttributes {\n    const index: 'data-index';\n    const open: 'data-open';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "AccordionRootDataAttributes",
+          "code": "declare namespace AccordionRootDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "AccordionTriggerDataAttributes",
+          "code": "declare namespace AccordionTriggerDataAttributes {\n    const index: 'data-index';\n    const panelOpen: 'data-panel-open';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "panelOpen",
+              "value": "data-panel-open"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "AccordionValue",
+          "code": "type AccordionValue<Value = any> = Value[];"
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/accordion/page.mdx",
+      "referenceTags": [
+        "TypesAccordion.Root",
+        "TypesAccordion.Item",
+        "TypesAccordion.Header",
+        "TypesAccordion.Trigger",
+        "TypesAccordion.Panel"
+      ]
+    }
+  ]
+}
