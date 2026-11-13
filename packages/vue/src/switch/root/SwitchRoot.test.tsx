@@ -254,16 +254,27 @@ describe('<Switch.Root />', () => {
       expect(labelB.id).not.toBe(labelA.id);
     });
 
-    it('prefers `aria-label` over a native label around the switch', async () => {
+    it('prefers `aria-label` over an associated label', async () => {
       await render(
-        <label>
-          <Switch.Root aria-label="Wi-Fi" />
-          Wi-Fi
-        </label>,
+        <>
+          <label>
+            <Switch.Root aria-label="Wi-Fi" />
+            Wi-Fi
+          </label>
+          <Field.Root>
+            <Field.Label>
+              <Switch.Root aria-label="Bluetooth" />
+              Bluetooth
+            </Field.Label>
+          </Field.Root>
+        </>,
       );
-      const nativeLabelled = screen.getByRole('switch');
+
+      const [nativeLabelled, fieldLabelled] = screen.getAllByRole('switch');
       expect(nativeLabelled).not.toHaveAttribute('aria-labelledby');
       expect(nativeLabelled).toHaveAccessibleName('Wi-Fi');
+      expect(fieldLabelled).not.toHaveAttribute('aria-labelledby');
+      expect(fieldLabelled).toHaveAccessibleName('Bluetooth');
     });
   });
 
@@ -595,6 +606,72 @@ describe('<Switch.Root />', () => {
   });
 
   describe('Form', () => {
+    it.skipIf(isJSDOM)(
+      'preserves Field validation props through canceled changes, submit, and a native reset',
+      async () => {
+        let cancelChanges = true;
+        const submitSpy = vi.fn((event: Event) => {
+          event.preventDefault();
+        });
+        const { user } = await render(
+          <Form onSubmit={submitSpy}>
+            <Field.Root name="notifications">
+              <Switch.Root
+                required
+                aria-describedby="external-description"
+                onCheckedChange={(_, details) => {
+                  if (cancelChanges) {
+                    details.cancel();
+                  }
+                }}
+              />
+              <Field.Description data-testid="description">Choose a setting</Field.Description>
+              <Field.Error match="valueMissing" data-testid="error">
+                required
+              </Field.Error>
+            </Field.Root>
+            <button type="submit">Submit</button>
+            <button type="reset">Reset</button>
+          </Form>,
+        );
+
+        const switchElement = screen.getByRole('switch');
+        const description = screen.getByTestId('description');
+        expect(switchElement).toHaveAttribute(
+          'aria-describedby',
+          `external-description ${description.id}`,
+        );
+
+        await user.click(switchElement);
+        expect(switchElement).toHaveAttribute('aria-checked', 'false');
+
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(switchElement).toHaveAttribute('aria-invalid', 'true');
+        expect(screen.getByTestId('error')).toHaveTextContent('required');
+
+        cancelChanges = false;
+        await user.click(switchElement);
+        expect(switchElement).toHaveAttribute('aria-checked', 'true');
+        expect(switchElement).not.toHaveAttribute('aria-invalid');
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+        expect(submitSpy).toHaveBeenCalledTimes(1);
+
+        // The switch follows the reset in a timeout of 0 ms. The form was submitted and the field
+        // is dirty, so the field validates the new state and a required switch that is off is
+        // invalid again. The description and the attribute of the consumer stay.
+        await user.click(screen.getByRole('button', { name: 'Reset' }));
+        await waitFor(() => {
+          expect(switchElement).toHaveAttribute('aria-checked', 'false');
+        });
+        expect(switchElement).toHaveAttribute('aria-invalid', 'true');
+        expect(switchElement).toHaveAttribute(
+          'aria-describedby',
+          `external-description ${description.id} ${screen.getByTestId('error').id}`,
+        );
+      },
+    );
+
     it.skipIf(isJSDOM)(
       'should include the switch value in form submission, matching native checkbox behavior',
       async () => {
@@ -1209,6 +1286,116 @@ describe('<Switch.Root />', () => {
       await fireEvent.focusOut(button);
 
       expect(button).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    describe('Field.Label', () => {
+      describe('implicit', () => {
+        it('sets `for` on the label', async () => {
+          await render(
+            <Field.Root>
+              <Field.Label data-testid="label">
+                <Switch.Root />
+                OK
+              </Field.Label>
+            </Field.Root>,
+          );
+
+          const label = screen.getByTestId('label');
+          expect(label.getAttribute('for')).not.toBe(null);
+
+          const input = document.querySelector('input[type="checkbox"]');
+          expect(label.getAttribute('for')).toBe(input?.getAttribute('id'));
+
+          const switchEl = screen.getByRole('switch');
+          expect(switchEl.getAttribute('aria-labelledby')).toBe(label.getAttribute('id'));
+          expect(switchEl).toHaveAttribute('aria-checked', 'false');
+
+          await fireEvent.click(label);
+          expect(switchEl).toHaveAttribute('aria-checked', 'true');
+        });
+      });
+
+      describe('explicit association', () => {
+        it('when the label is sibling to the switch', async () => {
+          await render(
+            <Field.Root>
+              <Field.Label data-testid="label">Label</Field.Label>
+              <Switch.Root />
+            </Field.Root>,
+          );
+
+          const label = screen.getByTestId('label');
+          const switchEl = screen.getByRole('switch');
+          const input = document.querySelector('input[type="checkbox"]');
+
+          expect(label.getAttribute('for')).not.toBe(null);
+
+          expect(label.getAttribute('for')).toBe(input?.getAttribute('id'));
+          expect(switchEl.getAttribute('aria-labelledby')).toBe(label.getAttribute('id'));
+
+          expect(switchEl).toHaveAttribute('aria-checked', 'false');
+
+          await fireEvent.click(label);
+          expect(switchEl).toHaveAttribute('aria-checked', 'true');
+        });
+
+        it('when rendering a non-native button', async () => {
+          await render(
+            <Field.Root>
+              <Field.Label data-testid="label">OK</Field.Label>
+              <Switch.Root as="span" nativeButton={false} />
+            </Field.Root>,
+          );
+
+          const label = screen.getByTestId('label');
+          expect(label.getAttribute('for')).not.toBe(null);
+          const input = document.querySelector('input[type="checkbox"]');
+          expect(input?.getAttribute('id')).toBe(label.getAttribute('for'));
+          const switchEl = screen.getByRole('switch');
+          expect(switchEl.getAttribute('aria-labelledby')).toBe(label.getAttribute('id'));
+        });
+
+        it('when rendering a non-native label', async () => {
+          await render(
+            <Field.Root>
+              <Field.Label data-testid="label" as="span" nativeLabel={false}>
+                <Switch.Root data-testid="button" />
+              </Field.Label>
+            </Field.Root>,
+          );
+
+          const label = screen.getByTestId('label');
+          const switchEl = screen.getByRole('switch');
+
+          expect(label.getAttribute('for')).toBe(null);
+          expect(label.getAttribute('id')).not.toBe(null);
+
+          expect(switchEl.getAttribute('aria-labelledby')).toBe(label.getAttribute('id'));
+          expect(switchEl).toHaveAttribute('aria-checked', 'false');
+
+          // non-native labels cannot toggle a non-native-button switch
+          await fireEvent.click(label);
+          expect(switchEl).not.toHaveAttribute('aria-checked', 'true');
+        });
+      });
+    });
+
+    it('Field.Description', async () => {
+      await render(
+        <Field.Root>
+          <Switch.Root data-testid="button" aria-describedby="external-description" />
+          <Field.Description data-testid="description" />
+        </Field.Root>,
+      );
+
+      const internalInput = screen.queryByRole<HTMLInputElement>('checkbox', { hidden: true });
+      const description = screen.getByTestId('description');
+
+      expect(internalInput).toHaveAttribute('aria-describedby', description.id);
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-describedby',
+        `external-description ${description.id}`,
+      );
     });
   });
 
