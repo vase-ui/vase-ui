@@ -10,10 +10,14 @@
     "packages/react/src/internals/form-context/**",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/handleHiddenInputInvalid.ts",
     "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+    "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+    "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/stateAttributesMapping.test.ts",
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
@@ -28,6 +32,8 @@
     "packages/react/src/internals/useRenderElement.spec.tsx",
     "packages/react/src/internals/useTransitionStatus.ts",
     "packages/react/src/internals/useTransitionStatus.test.tsx",
+    "packages/react/src/internals/useValueChanged.ts",
+    "packages/react/src/internals/useValueChanged.test.tsx",
     "packages/react/src/types/**",
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
@@ -147,9 +153,14 @@
       "reason": "The file is a React component that renders the element of an item part and gives it the tab stop. A Vue part renders its own element and calls `useCompositeItem` of `item/useCompositeItem.ts` in `setup`, which holds the work of this file."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts",
-      "kind": "waits-on",
-      "reason": "The file finds the native `<label>` of a control that is not a labelable element. The pull request that adds the helpers of a field control ports it. No code on `main` uses it."
+      "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+      "kind": "not-applicable",
+      "reason": "The file reads the `aria-label` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and `#render` is a slot, which is a function. A control reads its `aria-label` prop."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The cases test `resolveRenderedAriaLabel`, which reads a React element that is given as `render`."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
