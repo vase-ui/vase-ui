@@ -135,8 +135,9 @@ export interface UseDismissProps {
  * Closes the floating element when a dismissal is requested — by default, when
  * the user presses the `escape` key or outside of the floating element.
  *
- * Call it in the `setup` of the root of the popup. The parts below that root then count as
- * inside the popup, also when `Teleport` moved them.
+ * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
+ * the popup, also when `Teleport` moved it. Other content that `Teleport` moved out of the popup
+ * is outside it.
  * @see https://floating-ui.com/docs/useDismiss
  */
 export function useDismiss(
