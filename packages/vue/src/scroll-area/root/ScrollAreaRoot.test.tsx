@@ -150,16 +150,16 @@ describe('<ScrollArea.Root />', () => {
       const root = screen.getByTestId('root');
       const viewport = screen.getByTestId('viewport');
       // The count can hold a timer of Vue: the first app of a page starts one in a development
-      // build. So the test compares counts. The scroll adds the scroll timer of the root and the
-      // scroll end timer of the viewport. The deactivation must remove both of them, and the
-      // animation wait timer of the viewport.
+      // build. So the test compares counts. The scroll adds the two scroll timers of the root, one
+      // for each axis, and the scroll end timer of the viewport. The deactivation must remove
+      // these three timers and the animation wait timer of the viewport.
       const timersAfterMount = vi.getTimerCount();
 
       await fireEvent.pointerEnter(viewport);
-      await fireEvent.scroll(viewport, { target: { scrollTop: 100 } });
+      await fireEvent.scroll(viewport, { target: { scrollTop: 100, scrollLeft: 100 } });
 
       expect(root).toHaveAttribute('data-scrolling', '');
-      expect(vi.getTimerCount()).toBe(timersAfterMount + 2);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 3);
 
       visible.value = false;
       await nextTick();
