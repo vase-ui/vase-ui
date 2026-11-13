@@ -249,6 +249,23 @@ describe('<Form />', () => {
       expect(onceListener).not.toHaveBeenCalled();
       expect(submit.wasPrevented).toBe(false);
     });
+
+    it('does not prevent the default when the formSubmit listener is null', async () => {
+      const { container } = await render(
+        <Form
+          data-testid="form"
+          // @ts-expect-error The type has no null, but a consumer in JavaScript can give it.
+          onFormSubmit={null}
+        >
+          <TestField id="field" name="field" value="x" />
+        </Form>,
+      );
+      const submit = observeSubmit(container);
+
+      await fireEvent.submit(screen.getByTestId('form'));
+
+      expect(submit.wasPrevented).toBe(false);
+    });
   });
 
   describe('focus of the first invalid control', () => {
@@ -442,7 +459,7 @@ describe('<Form />', () => {
       expect(screen.getByTestId('second')).not.toHaveFocus();
     });
 
-    it('VUE-11: follows a key that the consumer adds in place to a reactive errors object, also after a clearErrors', async () => {
+    it('VUE-13: follows a key that the consumer adds in place to a reactive errors object, also after a clearErrors', async () => {
       const { Probe, getContext } = defineFormContextProbe();
       const errors = ref<Errors>({});
       await render(() => (

@@ -200,7 +200,7 @@ function handleSubmit(event: SubmitEvent) {
   submitted = true;
   emit('submit', event);
 
-  if (props.onFormSubmit !== undefined) {
+  if (props.onFormSubmit) {
     event.preventDefault();
 
     const formValues = {} as FormValues;
