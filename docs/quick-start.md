@@ -28,7 +28,7 @@ yarn add @vase-ui/vue@next
 
 :::
 
-`vue` is a peer dependency, and the lowest version that the package accepts is 3.5.0.
+`vue` is a peer dependency, and the lowest version that the package accepts is 3.5.12.
 
 The package is published with the `next` tag, so each command above names that tag.
 
