@@ -11,6 +11,7 @@ import {
   watch,
 } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
+import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -414,4 +415,34 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
     runWhileActive,
     { flush: 'post' },
   );
+}
+
+/**
+ * Clears the open method of a popup that keeps one, when the popup closes and when the root
+ * unmounts. Call it in `setup` of the root.
+ *
+ * @param store The store of the popup.
+ * @param open Whether the popup is open, as `usePopupRoot` returns it.
+ */
+export function usePopupRootSync<
+  State extends PopupStoreState<unknown> & { openMethod: InteractionType | null },
+>(
+  store: ReactiveStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>,
+  open: MaybeRefOrGetter<boolean>,
+) {
+  function clearOpenMethod() {
+    if (toRaw(store.state).openMethod !== null) {
+      store.set('openMethod', null as State['openMethod']);
+    }
+  }
+
+  watch(
+    () => toValue(open),
+    (isOpen) => {
+      if (!isOpen) {
+        clearOpenMethod();
+      }
+    },
+  );
+  onScopeDispose(clearOpenMethod);
 }
