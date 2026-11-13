@@ -1,0 +1,274 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/tooltip/**",
+    "docs/src/app/(docs)/react/components/tooltip/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/tooltip/arrow/TooltipArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/arrow/TooltipArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/popup/TooltipPopup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/popup/TooltipPopupDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/portal/TooltipPortal.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/portal/TooltipPortalContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositionerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Provider`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/provider/TooltipProviderContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Provider`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/viewport/TooltipViewportCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/viewport/TooltipViewportDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositioner.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "reason": "The type test reads the props of `Tooltip.Positioner`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/arrow/TooltipArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/arrow/TooltipArrow.tsx",
+      "reason": "The file tests `Tooltip.Arrow`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/popup/TooltipPopup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/popup/TooltipPopup.tsx",
+      "reason": "The file tests `Tooltip.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/portal/TooltipPortal.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/portal/TooltipPortal.tsx",
+      "reason": "The file tests `Tooltip.Portal`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/positioner/TooltipPositioner.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "reason": "The file tests `Tooltip.Positioner`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/provider/TooltipProvider.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
+      "reason": "The file tests `Tooltip.Provider`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "The file tests `Tooltip.Viewport`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "Each case of the file reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the cursor anchor, the hover of the popup, `Tooltip.Provider` or the shared suite `popupConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "Each case of the file reads the popup of the tooltip, which Vase UI does not have. Some cases also need the focus of the trigger, the cursor anchor or the shared suite `detachedTriggersConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/tooltip/trigger/TooltipTrigger.test.tsx",
+      "describe": ["<Tooltip.Trigger />"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "The other cases of the block read the popup of the tooltip, which Vase UI does not have. Two of them also need the focus of the trigger. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Arrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/arrow/TooltipArrow.tsx",
+      "reason": "Vase UI does not have `Tooltip.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/popup/TooltipPopup.tsx",
+      "reason": "Vase UI does not have `Tooltip.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/portal/TooltipPortal.tsx",
+      "reason": "Vase UI does not have `Tooltip.Portal`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Positioner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Provider",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
+      "reason": "Vase UI does not have `Tooltip.Provider`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Viewport",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/arrow/TooltipArrow.tsx",
+      "reason": "Vase UI does not have `Tooltip.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipPopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/popup/TooltipPopup.tsx",
+      "reason": "Vase UI does not have `Tooltip.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipPositionerCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipPositionerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+      "reason": "Vase UI does not have `Tooltip.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipViewportCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "TooltipViewportDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "Vase UI does not have `Tooltip.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Root",
+      "prop": "trackCursorAxis",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "The prop needs the cursor anchor of the popup interactions, which Vase UI does not have. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Root",
+      "prop": "disableHoverablePopup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+      "reason": "The prop needs the hover interaction of a popup, which Vase UI does not have. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Trigger",
+      "prop": "delay",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `600`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the delay of `Tooltip.Provider`. With no provider, the part uses 600 for an absent prop, which is the default that Base UI documents."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "entry": "Trigger",
+      "prop": "closeDelay",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `0`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the close delay of `Tooltip.Provider`. With no provider, the part uses 0 for an absent prop, which is the default that Base UI documents."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "id",
+      "reason": "The part reads `id` to register the trigger in the store of the tooltip, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "TooltipHandle<Payload>",
+      "reason": "`Tooltip.Handle` is the class `TooltipHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
+  "notApplicableCommits": []
+}
