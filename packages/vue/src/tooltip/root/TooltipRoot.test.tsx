@@ -137,7 +137,7 @@ describe('<Tooltip.Root />', () => {
   });
 
   describe('prop: disabled', () => {
-    it('closes an open tooltip with the reason `disabled` at the mount and on a change', async () => {
+    it('closes an open tooltip with the reason `disabled` at the mount, and marks its trigger while it is disabled', async () => {
       const disabled = shallowRef(true);
       const onOpenChange = vi.fn();
       const App = defineComponent({
@@ -273,7 +273,7 @@ describe('<Tooltip.Root />', () => {
   });
 
   describe('active trigger', () => {
-    it('closes with the reason `none` when the active trigger unmounts, and clears the payload', async () => {
+    it('closes with the reason `none` when the active trigger unmounts', async () => {
       const showFirst = shallowRef(true);
       const onOpenChange = vi.fn();
       const App = defineComponent({
