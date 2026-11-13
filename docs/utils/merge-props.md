@@ -57,10 +57,6 @@ In this demo, a click does not change the Toggle while `locked` is `true`:
 
 :::
 
-In this sample, the keyboard handlers of Button do not run while `locked` is `true`:
-
-<<< ./merge-props/PreventVaseUIHandler.vue
-
 ## Passing a function instead of an object
 
 Each argument can be a props object or a function. The function gets the props that are merged up to that point, from left to right. It returns a props object. Use it when you compute the next props from the props that are already merged.
@@ -77,7 +73,11 @@ The return value of the function replaces the props that are merged up to that p
 
 This function accepts up to 5 arguments. Each one is a props object or a function that returns a props object. To merge more than 5 sets of props, use `mergePropsN`.
 
-The type argument is the tag of the element that gets the result: `mergeProps<'button'>`. With no type argument, the tag is `div`. The sets and the result then have only the attributes that each HTML element has.
+The type argument is optional. It is the tag of the element that gets the result: `mergeProps<'a'>`. The sets and the result then have the attributes of that element, and an attribute of another element is a type error.
+
+With no type argument, a set accepts the attributes of each element, such as `href`. An attribute that no element has is a type error. One case is not an error: a function set that returns an object literal in which each key is unknown, such as `() => ({ hreff: '/x' })`. The type of the result then has only the attributes that each HTML element has, and you can bind the result on each element. To read `href` from the result, give the type argument.
+
+A set also accepts `data-*` attributes, with a type argument and with none.
 
 <ApiReference name="mergeProps" />
 

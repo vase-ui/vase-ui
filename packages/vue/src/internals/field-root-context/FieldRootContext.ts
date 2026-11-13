@@ -101,9 +101,11 @@ export interface FieldRootContext {
   state: ComputedRef<FieldRootState>;
   /**
    * Registers a control by source, or removes the registration when `getRegistration` is
-   * `undefined`. The field calls the getter each time it needs the control, so a control registers
-   * one time and keeps its place. The getter returns `undefined` for a control that the field must
-   * not use now, such as a control that `KeepAlive` has deactivated.
+   * `undefined`. The field calls the getter each time it needs the control. The getter returns
+   * `undefined` for a control that the field must not use now, such as a control that `KeepAlive`
+   * has deactivated. A control calls the function again with the same source when its `id`, its
+   * `name`, its value or `enabled` changes. The field uses the control of the last call whose
+   * getter returns a registration.
    */
   registerFieldControl: (
     source: symbol,

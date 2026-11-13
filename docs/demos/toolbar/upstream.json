@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/toolbar/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "4abdd39aa5810eced93a475072c3fada4b24f09077ddfc1988efcb44331f1b45",
+    "hero/css-modules/index.tsx": "e55933611d0541eb70792866995e9efa52b94c1e3ca5f17929b5593d78cabc7f"
+  },
+  "entryPoints": {
+    "hero": ["select", "toggle", "toggle-group"]
+  }
+}
