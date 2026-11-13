@@ -134,16 +134,19 @@ describe('useFieldControlRegistration', () => {
   });
 
   describe('validate', () => {
-    const ControlWithGetValue = defineComponent(() => {
-      const element = shallowRef<HTMLElement | null>(null);
-      useRegisterFieldControl(
-        element,
-        () => 'control',
-        () => undefined,
-        () => 'from getValue',
-      );
-      return () => <input ref={element} />;
-    });
+    const ControlWithGetValue = defineComponent(
+      (props: { value?: string }) => {
+        const element = shallowRef<HTMLElement | null>(null);
+        useRegisterFieldControl(
+          element,
+          () => 'control',
+          () => props.value,
+          () => 'from getValue',
+        );
+        return () => <input ref={element} />;
+      },
+      { props: ['value'] },
+    );
 
     it('commits the value of the control', async () => {
       const onValidationCommit = vi.fn();
@@ -187,6 +190,24 @@ describe('useFieldControlRegistration', () => {
       field.value!.validate();
 
       expect(onValidationCommit).toHaveBeenCalledWith('from getValue');
+    });
+
+    it('uses the result of `getValue` for the form, and the value for `validate` and for the initial value, when the control has a value and `getValue`', async () => {
+      const onSubmit = createSubmitSpy();
+      const onValidationCommit = vi.fn();
+      const field = shallowRef<FieldScopeInstance | null>(null);
+      await render(
+        <FormScope data-testid="form" onSubmit={onSubmit}>
+          <FieldScope ref={field} name="a" onValidationCommit={onValidationCommit}>
+            <ControlWithGetValue value="raw" />
+          </FieldScope>
+        </FormScope>,
+      );
+      expect(field.value!.validityData.initialValue).toBe('raw');
+
+      expect(submit(onSubmit)).toEqual([{ name: 'a', value: 'from getValue', valid: true }]);
+      expect(onValidationCommit).toHaveBeenCalledTimes(1);
+      expect(onValidationCommit).toHaveBeenCalledWith('raw');
     });
 
     it('commits the value of the validity data when the field has no control', async () => {
