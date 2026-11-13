@@ -21,8 +21,8 @@ function runBounded<Result>(callback: () => Result) {
   return runInNewContext('callback()', { callback }, { timeout: 250 }) as Result;
 }
 
-// The state of a key press in a grid of 3 items, with the highlight on the first item.
-function pressKey(
+// A grid of 3 items, with the highlight on the first item.
+function keyPressState(
   key: string,
   state: Partial<CompositeGridNavigationState> = {},
 ): CompositeGridNavigationState {
@@ -94,7 +94,9 @@ describe('VUE-8: a number of columns that is not a whole number of 1 or more', (
 
     expect(
       runBounded(() =>
-        navigate(pressKey('ArrowDown', { minIndex: 1, loopFocus: true, disabledIndices: [0] })),
+        navigate(
+          keyPressState('ArrowDown', { minIndex: 1, loopFocus: true, disabledIndices: [0] }),
+        ),
       ),
     ).toBe(1);
   });
@@ -121,6 +123,6 @@ describe('VUE-8: an item width or an item height that is not a finite number', (
       ],
     });
 
-    expect(runBounded(() => navigate(pressKey(key)))).toBe(nextIndex);
+    expect(runBounded(() => navigate(keyPressState(key)))).toBe(nextIndex);
   });
 });
