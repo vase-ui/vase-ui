@@ -198,6 +198,9 @@ importers:
       '@eslint/js':
         specifier: 10.0.1
         version: 10.0.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))
+      '@tsconfig/strictest':
+        specifier: 2.0.9
+        version: 2.0.9
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -237,6 +240,9 @@ importers:
 
   docs:
     devDependencies:
+      '@tsconfig/strictest':
+        specifier: 2.0.9
+        version: 2.0.9
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -302,6 +308,9 @@ importers:
       '@testing-library/user-event':
         specifier: 14.6.8
         version: 14.6.8(@testing-library/dom@10.4.2)
+      '@tsconfig/strictest':
+        specifier: 2.0.9
+        version: 2.0.9
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -1553,6 +1562,9 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@tsconfig/strictest@2.0.9':
+    resolution: {integrity: sha512-CbwIySRXoGapLZYXqQHF15cg0wQImJa25Ynmubb7816vnHqTdQrmQlSbZxkJrrBusHLbF1kFbNVn8XtxmQ3EpQ==}
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -5941,6 +5953,8 @@ snapshots:
   '@testing-library/user-event@14.6.8(@testing-library/dom@10.4.2)':
     dependencies:
       '@testing-library/dom': 10.4.2
+
+  '@tsconfig/strictest@2.0.9': {}
 
   '@tybys/wasm-util@0.10.4':
     dependencies:

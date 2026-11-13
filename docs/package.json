@@ -9,6 +9,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "devDependencies": {
+    "@tsconfig/strictest": "2.0.9",
     "@types/node": "26.6.6",
     "@vase-ui/vue": "workspace:*",
     "typescript": "6.0.3",

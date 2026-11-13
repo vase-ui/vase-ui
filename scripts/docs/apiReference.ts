@@ -212,7 +212,9 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
       );
     }
-    const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
+    const vaseProject = (project ??= createVaseProject(
+      join(root, 'packages/vue/tsconfig.build.json'),
+    ));
     const build = <T>(
       read: (project: VaseProject, entryFile: string, file: SurfaceFile) => T[],
     ): T[] =>
