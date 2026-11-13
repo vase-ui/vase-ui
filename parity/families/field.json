@@ -215,7 +215,7 @@
       "title": "keeps a message set outside the field on another input of the same field",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `Field.Validity`, `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
+      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
