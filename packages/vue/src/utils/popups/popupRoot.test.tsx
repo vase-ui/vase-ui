@@ -9,6 +9,7 @@ import {
   hydrate,
   randomStringValue,
   renderOnServer,
+  takeReportedMessages,
   waitFor,
 } from '#test-utils';
 import { createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
@@ -16,7 +17,9 @@ import type { PopupFixtureStore } from '../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
-import { useImplicitActiveTrigger } from './popupRoot';
+import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
+import type { ValuePopupFixtureDetails } from '../../../test/fixtures/ValuePopupFixture';
+import { useImplicitActiveTrigger, useSingleAnchorPopupRoot } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -585,11 +588,11 @@ interface RootInstance {
 
 // A ref on a part gives its exposed members. Vue sets the ref to `null` when the root unmounts, so
 // the helper keeps the last root.
-function createRootRef() {
-  let root: RootInstance | undefined;
+function createRootRef<Instance = RootInstance>() {
+  let root: Instance | undefined;
   return {
     ref(instance: unknown) {
-      root = (instance as RootInstance | null) ?? root;
+      root = (instance as Instance | null) ?? root;
     },
     get current() {
       return root!;
@@ -1595,5 +1598,343 @@ describe('usePopupRoot', () => {
       const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
       expect(popups).toEqual(controls ? [controls, controls] : []);
     });
+  });
+});
+
+interface SingleAnchorRootInstance {
+  close(): void;
+  unmount(): void;
+  store: ValuePopupFixtureStore;
+  open: boolean;
+  mounted: boolean;
+  transitionStatus: TransitionStatus;
+}
+
+// A root with one anchor: a button, and a popup while the root is mounted. With `animatedClass`,
+// the popup holds an element that has the animations of the close, and the root gives that element
+// to the composable as `popupRef`.
+const SingleAnchorRoot = defineComponent({
+  name: 'SingleAnchorRoot',
+  props: {
+    open: { type: Boolean as PropType<boolean | undefined>, default: undefined },
+    defaultOpen: { type: Boolean, default: false },
+    animatedClass: { type: String as PropType<string | undefined>, default: undefined },
+  },
+  emits: {
+    openChange: (_open: boolean, _details: ValuePopupFixtureDetails) => true,
+    'update:open': (_open: boolean) => true,
+    openChangeComplete: (_open: boolean) => true,
+  },
+  setup(props, { emit, expose }) {
+    const animatedElement = shallowRef<HTMLElement | null>(null);
+    const { store, open, mounted, transitionStatus, actions } = useSingleAnchorPopupRoot(
+      props,
+      (initialState, defaultPopupId) => new ValuePopupFixtureStore(initialState, defaultPopupId),
+      {
+        name: 'SingleAnchorRoot',
+        popupRef: props.animatedClass === undefined ? undefined : animatedElement,
+        onOpenChange(nextOpen, details) {
+          emit('openChange', nextOpen, details);
+          if (!details.isCanceled) {
+            emit('update:open', nextOpen);
+          }
+        },
+        onOpenChangeComplete(nextOpen) {
+          emit('openChangeComplete', nextOpen);
+        },
+      },
+    );
+
+    expose({ ...actions, store, open, mounted, transitionStatus });
+
+    return () => (
+      <>
+        <button
+          type="button"
+          ref={(element) => store.set('triggerElement', element as HTMLButtonElement | null)}
+          onClick={(event) =>
+            store.setOpen(!open.value, createChangeEventDetails(REASONS.triggerPress, event))
+          }
+        >
+          trigger
+        </button>
+        {mounted.value ? (
+          <div
+            role="dialog"
+            ref={(element) => {
+              store.context.popupRef.value = element as HTMLElement | null;
+            }}
+          >
+            popup
+            {props.animatedClass === undefined ? null : (
+              <div
+                ref={(element) => {
+                  animatedElement.value = element as HTMLElement | null;
+                }}
+                class={props.animatedClass}
+                data-starting-style={transitionStatus.value === 'starting' ? '' : undefined}
+                data-ending-style={transitionStatus.value === 'ending' ? '' : undefined}
+              />
+            )}
+          </div>
+        ) : null}
+      </>
+    );
+  },
+});
+
+describe('useSingleAnchorPopupRoot', () => {
+  const { render } = createRenderer();
+
+  it('emits the open change with its reason, and then the completion', async () => {
+    const events: unknown[] = [];
+    const { getByText, queryByRole } = await render(
+      <SingleAnchorRoot
+        onOpenChange={(open, details) => events.push(['openChange', open, details.reason])}
+        {...{ 'onUpdate:open': (open: boolean) => events.push(['update:open', open]) }}
+        onOpenChangeComplete={(open) => events.push(['openChangeComplete', open])}
+      />,
+    );
+
+    await fireEvent.click(getByText('trigger'));
+    expect(queryByRole('dialog')).not.toBe(null);
+    await fireEvent.click(getByText('trigger'));
+    await waitFor(() => {
+      expect(events).toContainEqual(['openChangeComplete', false]);
+    });
+
+    expect(events).toEqual([
+      ['openChange', true, 'trigger-press'],
+      ['update:open', true],
+      ['openChange', false, 'trigger-press'],
+      ['update:open', false],
+      ['openChangeComplete', false],
+    ]);
+    expect(queryByRole('dialog')).toBe(null);
+  });
+
+  it('keeps the popup closed when the listener cancels the change', async () => {
+    const updates: boolean[] = [];
+    let cancel = true;
+    const { getByText, queryByRole } = await render(
+      <SingleAnchorRoot
+        onOpenChange={(_open, details) => {
+          if (cancel) {
+            details.cancel();
+          }
+        }}
+        {...{ 'onUpdate:open': (open: boolean) => updates.push(open) }}
+      />,
+    );
+
+    await fireEvent.click(getByText('trigger'));
+
+    expect(updates).toEqual([]);
+    expect(queryByRole('dialog')).toBe(null);
+
+    cancel = false;
+    await fireEvent.click(getByText('trigger'));
+
+    expect(updates).toEqual([true]);
+    expect(queryByRole('dialog')).not.toBe(null);
+  });
+
+  it('follows the open prop, and resets the last request when the prop closes the popup', async () => {
+    const open = shallowRef(false);
+    const changes: boolean[] = [];
+    const root = createRootRef<SingleAnchorRootInstance>();
+    const { getByText, queryByRole } = await render(() => (
+      <SingleAnchorRoot
+        ref={root.ref}
+        open={open.value}
+        onOpenChange={(next) => changes.push(next)}
+        {...{ 'onUpdate:open': (value: boolean) => (open.value = value) }}
+      />
+    ));
+
+    await fireEvent.click(getByText('trigger'));
+    expect(queryByRole('dialog')).not.toBe(null);
+    // A controlled root holds the last request in `state.open`.
+    expect(root.current.store.state.open).toBe(true);
+
+    open.value = false;
+    await waitFor(() => {
+      expect(queryByRole('dialog')).toBe(null);
+    });
+
+    expect(root.current.store.state.open).toBe(false);
+    // The popup is closed, so a close request has nothing to close.
+    root.current.close();
+    expect(changes).toEqual([true]);
+  });
+
+  it('writes mounted and transitionStatus to the store in the write that changes the open state', async () => {
+    const root = createRootRef<SingleAnchorRootInstance>();
+    await render(() => <SingleAnchorRoot ref={root.ref} />);
+    const { store } = root.current;
+    expect([root.current.open, root.current.mounted]).toEqual([false, false]);
+    expect(store.state.mounted).toBe(false);
+
+    store.setOpen(true, createChangeEventDetails(REASONS.imperativeAction));
+    expect([store.state.mounted, store.state.transitionStatus]).toEqual([true, 'starting']);
+    expect([root.current.open, root.current.mounted, root.current.transitionStatus]).toEqual([
+      true,
+      true,
+      'starting',
+    ]);
+
+    store.setOpen(false, createChangeEventDetails(REASONS.imperativeAction));
+    expect([store.state.mounted, store.state.transitionStatus]).toEqual([true, 'ending']);
+    expect(root.current.transitionStatus).toBe('ending');
+  });
+
+  it('closes with the reason imperative-action from its close action', async () => {
+    const reasons: string[] = [];
+    const root = createRootRef<SingleAnchorRootInstance>();
+    const { queryByRole } = await render(() => (
+      <SingleAnchorRoot
+        ref={root.ref}
+        defaultOpen
+        onOpenChange={(_open, details) => reasons.push(details.reason)}
+      />
+    ));
+    expect(queryByRole('dialog')).not.toBe(null);
+
+    root.current.close();
+
+    await waitFor(() => {
+      expect(queryByRole('dialog')).toBe(null);
+    });
+    expect(reasons).toEqual(['imperative-action']);
+  });
+
+  it('keeps the popup mounted after a close that opted out, until unmount is called', async () => {
+    const completions: boolean[] = [];
+    const root = createRootRef<SingleAnchorRootInstance>();
+    const { queryByRole } = await render(() => (
+      <SingleAnchorRoot
+        ref={root.ref}
+        defaultOpen
+        onOpenChange={(open, details) => {
+          if (!open) {
+            details.preventUnmountOnClose();
+          }
+        }}
+        onOpenChangeComplete={(open) => completions.push(open)}
+      />
+    ));
+
+    root.current.close();
+    await flushMicrotasks();
+    await flushMicrotasks();
+
+    expect(queryByRole('dialog')).not.toBe(null);
+    expect(completions).toEqual([]);
+
+    root.current.unmount();
+    await flushMicrotasks();
+
+    expect(queryByRole('dialog')).toBe(null);
+    expect(completions).toEqual([false]);
+  });
+
+  it('waits for the animations of the popupRef option', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const className = randomStringValue();
+    // The popup element has no animation. Only the element of the option has one. The list holds
+    // the number of running animations of that element at each completion.
+    const animationsAtCompletion: number[] = [];
+    let animated: HTMLElement | null = null;
+    const { getByText, queryByRole, container } = await render(() => (
+      <>
+        <style>{`.${className} { transition: opacity 50ms; opacity: 1 } .${className}[data-ending-style] { opacity: 0 }`}</style>
+        <SingleAnchorRoot
+          defaultOpen
+          animatedClass={className}
+          onOpenChangeComplete={() => animationsAtCompletion.push(animated!.getAnimations().length)}
+        />
+      </>
+    ));
+    animated = container.querySelector<HTMLElement>(`.${className}`);
+    // A transition starts from the style that the element had before the change. Read it now, so
+    // the close finds that style.
+    expect(getComputedStyle(animated!).opacity).toBe('1');
+
+    await fireEvent.click(getByText('trigger'));
+    await waitFor(() => {
+      expect(animationsAtCompletion).toHaveLength(1);
+    });
+
+    expect(animationsAtCompletion).toEqual([0]);
+    expect(queryByRole('dialog')).toBe(null);
+  });
+
+  it('marks a root inside a popup tree as nested', async () => {
+    const Node = defineComponent((_props, { slots }) => {
+      provideFloatingNode('parent');
+      return () => slots.default?.();
+    });
+    const outside = createRootRef<SingleAnchorRootInstance>();
+    const inside = createRootRef<SingleAnchorRootInstance>();
+
+    await render(() => (
+      <>
+        <SingleAnchorRoot ref={outside.ref} />
+        <Node>
+          <SingleAnchorRoot ref={inside.ref} />
+        </Node>
+      </>
+    ));
+
+    expect(outside.current.store.context.nested).toBe(false);
+    expect(inside.current.store.context.nested).toBe(true);
+  });
+
+  it('keeps its open state while KeepAlive holds it', async () => {
+    const show = shallowRef(true);
+    const events: unknown[] = [];
+    const root = createRootRef<SingleAnchorRootInstance>();
+    const Branch = defineComponent({
+      name: 'Branch',
+      setup: () => () => (
+        <SingleAnchorRoot
+          ref={root.ref}
+          defaultOpen
+          onOpenChange={(open, details) => events.push(['openChange', open, details.reason])}
+          onOpenChangeComplete={(open) => events.push(['openChangeComplete', open])}
+        />
+      ),
+    });
+    const { queryByRole } = await render(() => (
+      <KeepAlive>{show.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+    ));
+    const popup = queryByRole('dialog');
+    expect(popup).not.toBe(null);
+
+    show.value = false;
+    await flushMicrotasks();
+
+    expect(queryByRole('dialog')).toBe(null);
+    expect(root.current.store.select('open')).toBe(true);
+
+    show.value = true;
+    await flushMicrotasks();
+
+    expect(queryByRole('dialog')).toBe(popup);
+    expect(root.current.store.select('open')).toBe(true);
+    expect(events).toEqual([]);
+  });
+
+  it('warns when open changes between controlled and uncontrolled', async () => {
+    const { setProps } = await render(<SingleAnchorRoot />);
+    expect(takeReportedMessages()).toEqual([]);
+
+    await setProps({ open: true });
+
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining(
+        'Vase UI: A component is changing the uncontrolled open state of SingleAnchorRoot to be controlled.',
+      ),
+    ]);
   });
 });
