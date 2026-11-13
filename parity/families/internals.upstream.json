@@ -11,10 +11,16 @@
     "packages/react/src/internals/form-context/**",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
+    "packages/react/src/internals/handleHiddenInputInvalid.ts",
     "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
+    "packages/react/src/internals/PrehydrationScript.tsx",
+    "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+    "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+    "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/stateAttributesMapping.test.ts",
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
@@ -29,6 +35,8 @@
     "packages/react/src/internals/useRenderElement.spec.tsx",
     "packages/react/src/internals/useTransitionStatus.ts",
     "packages/react/src/internals/useTransitionStatus.test.tsx",
+    "packages/react/src/internals/useValueChanged.ts",
+    "packages/react/src/internals/useValueChanged.test.tsx",
     "packages/react/src/types/**",
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
@@ -40,6 +48,7 @@
     "packages/react/test/wait.ts"
   ],
   "sources": [
+    "packages/react/src/internals/PrehydrationScript.tsx",
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/constants.ts",
@@ -67,6 +76,7 @@
     "packages/react/src/internals/form-context/FormContext.ts",
     "packages/react/src/internals/form-context/index.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
+    "packages/react/src/internals/handleHiddenInputInvalid.ts",
     "packages/react/src/internals/labelable-provider/LabelableContext.ts",
     "packages/react/src/internals/labelable-provider/LabelableProvider.tsx",
     "packages/react/src/internals/labelable-provider/index.ts",
@@ -74,8 +84,11 @@
     "packages/react/src/internals/labelable-provider/useLabel.ts",
     "packages/react/src/internals/labelable-provider/useLabelableId.ts",
     "packages/react/src/internals/noop.ts",
+    "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+    "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/index.ts",
@@ -85,6 +98,7 @@
     "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useTransitionStatus.ts",
+    "packages/react/src/internals/useValueChanged.ts",
     "packages/react/src/types/index.ts",
     "packages/react/test/conformanceTests/className.tsx",
     "packages/react/test/conformanceTests/propForwarding.tsx",
@@ -792,6 +806,56 @@
       ]
     },
     {
+      "file": "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "returns undefined when nothing is given"
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "uses the aria-label prop"
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "prefers a render element's own aria-label"
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "treats an undefined aria-label on a render element as no aria-label"
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "reads a server-created render element's aria-label",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "ignores a render element that does not set an aria-label"
+        },
+        {
+          "describe": [
+            "resolveRenderedAriaLabel"
+          ],
+          "title": "cannot see an aria-label applied by a render function"
+        }
+      ]
+    },
+    {
       "file": "packages/react/src/internals/stateAttributesMapping.test.ts",
       "rows": [
         {
@@ -1463,6 +1527,17 @@
             "useTransitionStatus"
           ],
           "title": "clears a stale ending status when reopened before the exit settles"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useValueChanged.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useValueChanged"
+          ],
+          "title": "retains -0 as the previous value without treating it as a change from 0 (strict: %s)"
         }
       ]
     },
