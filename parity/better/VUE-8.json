@@ -1,0 +1,8 @@
+{
+  "id": "VUE-8",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/listIndex.ts#L440-L470"
+  ],
+  "behavior": "Grid navigation gives an item that is wider than the grid the width of the grid, in each build. A development build also reports the item. No build stays in a loop that does not end.",
+  "dueWith": "packages/react/src/internals/composite/listIndex.ts"
+}

@@ -3,6 +3,7 @@ import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../../../common/hydration';
 import { isElementDisabled } from '../../../common/isElementDisabled';
 import type { HTMLProps } from '../../types';
+import { HYDRATING_COMPOSITE_ITEM } from '../constants';
 import { useCompositeListItem } from '../list/useCompositeListItem';
 import type { UseCompositeListItemParameters } from '../list/useCompositeListItem';
 import { useCompositeRootContext } from '../root/CompositeRootContext';
@@ -15,8 +16,14 @@ import { useCompositeRootContext } from '../root/CompositeRootContext';
 export function useCompositeItem<Metadata>(
   params: UseCompositeItemParameters<Metadata> = {},
 ): UseCompositeItemReturnValue {
-  const { highlightItemOnHover, highlightedIndex, onHighlightedIndexChange, takeInitialTabStop } =
-    useCompositeRootContext();
+  const {
+    hasUnmountedTabStop,
+    highlightItemOnHover,
+    highlightedIndex,
+    id,
+    onHighlightedIndexChange,
+    takeInitialTabStop,
+  } = useCompositeRootContext();
   const { ref, index } = useCompositeListItem({ metadata: params.metadata });
   const isHydrating = useIsHydrating();
 
@@ -28,9 +35,12 @@ export function useCompositeItem<Metadata>(
 
   // Until the item is mounted, it keeps the tab stop that `takeInitialTabStop` gave. This is also
   // true for an item that renders after its root is mounted, such as an item below a `<Suspense>`.
-  // After the mount, the tab stop is the item at the highlighted index, as in Base UI.
+  // After the mount, the tab stop is the item at the highlighted index, as in Base UI. The
+  // exception: while an item that is not mounted holds the tab stop, a mounted item does not take it.
   const isTabStop = computed(() =>
-    isHydrating.value ? initialTabStop : highlightedIndex.value === index.value,
+    isHydrating.value
+      ? initialTabStop
+      : !hasUnmountedTabStop.value && highlightedIndex.value === index.value,
   );
 
   // Only a listener reads the element, so it is a plain variable.
@@ -64,6 +74,8 @@ export function useCompositeItem<Metadata>(
       // gives after the mount, so Vue then writes the attribute again.
       tabindex: isHydrating.value ? String(tabindex) : tabindex,
       'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
+      // The root finds the items that hydrate by this attribute.
+      [HYDRATING_COMPOSITE_ITEM]: isHydrating.value ? id : undefined,
       onFocusin,
       onMousemove,
     };
@@ -96,7 +108,8 @@ export interface UseCompositeItemParameters<Metadata> extends Pick<
 export interface UseCompositeItemReturnValue {
   /**
    * The `tabindex` and the listeners of the item: `onFocusin` and `onMousemove`.
-   * While the item hydrates, the object also has `data-allow-mismatch`.
+   * While the item hydrates, the object also has `data-allow-mismatch` and
+   * `data-vase-ui-hydrating-composite-item`, which holds the id of the root.
    * The part puts this object first in the `props` of `useRenderElement`.
    */
   compositeProps: ComputedRef<Omit<HTMLProps, 'ref'>>;

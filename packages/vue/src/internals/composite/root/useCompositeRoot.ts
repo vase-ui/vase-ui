@@ -1,4 +1,13 @@
-import { computed, onMounted, provide, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  toValue,
+  useId,
+  watch,
+} from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { isElementDisabled } from '../../../common/isElementDisabled';
@@ -24,10 +33,11 @@ import {
   scrollIntoViewIfNeeded,
 } from '../composite';
 import type { ModifierKey } from '../composite';
-import { ACTIVE_COMPOSITE_ITEM } from '../constants';
+import { ACTIVE_COMPOSITE_ITEM, HYDRATING_COMPOSITE_ITEM } from '../constants';
 import { useCompositeList } from '../list/useCompositeList';
 import type { CompositeMetadata } from '../list/useCompositeList';
 import { CompositeRootContext } from './CompositeRootContext';
+import type { CompositeGridNavigator } from './gridNavigation';
 
 /**
  * Gives a root part the highlighted index and the keyboard navigation of a composite.
@@ -45,6 +55,11 @@ export function useCompositeRoot<Metadata>(
   let hasSetDefaultIndex = false;
   let hasGivenInitialTabStop = false;
   let highlightedElement: HTMLElement | null = null;
+  let tabStopObserver: MutationObserver | null = null;
+  let canHaveUnmountedTabStop = true;
+
+  const id = useId();
+  const hasUnmountedTabStop = shallowRef(false);
 
   const [highlightedIndex, setHighlightedIndex] = useControlled({
     controlled: () => toValue(params.highlightedIndex),
@@ -177,6 +192,13 @@ export function useCompositeRoot<Metadata>(
     { flush: 'post' },
   );
 
+  function wrappedOnLoop(event: KeyboardEvent, prevIndex: number, nextIndex: number) {
+    if (!params.onLoop) {
+      return nextIndex;
+    }
+    return params.onLoop(event, prevIndex, nextIndex, elementsRef);
+  }
+
   function onKeydown(event: KeyboardEvent) {
     const enableHomeAndEndKeys = toValue(params.enableHomeAndEndKeys) ?? false;
     const isHomeOrEnd = event.key === HOME || event.key === END;
@@ -228,6 +250,22 @@ export function useCompositeRoot<Metadata>(
     const minIndex = getMinListIndex(elementsRef, disabledIndices);
     const maxIndex = getMaxListIndex(elementsRef, disabledIndices);
 
+    const grid = params.grid;
+    if (grid != null) {
+      nextIndex = grid({
+        disabledIndices,
+        elementsRef,
+        event,
+        highlightedIndex: prevIndex,
+        loopFocus,
+        maxIndex,
+        minIndex,
+        onLoop: wrappedOnLoop,
+        orientation,
+        rtl: isRtl,
+      });
+    }
+
     const isForwardKey =
       (orientation !== 'vertical' && event.key === horizontalForwardKey) ||
       (orientation !== 'horizontal' && event.key === ARROW_DOWN);
@@ -268,7 +306,7 @@ export function useCompositeRoot<Metadata>(
         event.stopPropagation();
       }
 
-      if (isHomeOrEnd || isForwardKey || isBackwardKey) {
+      if (grid != null || isHomeOrEnd || isForwardKey || isBackwardKey) {
         event.preventDefault();
       }
       onHighlightedIndexChange(nextIndex, true);
@@ -309,8 +347,8 @@ export function useCompositeRoot<Metadata>(
   //   mismatch. After the mount, Vue writes the `tabindex` again and the DOM follows the
   //   highlighted index.
   // An item that is mounted after its root keeps the `tabindex` of the server HTML until its own
-  // mount. If the server HTML has the tab stop on that item, the list has two tab stops from the
-  // mount of the root until the mount of that item.
+  // mount. While the server HTML has the tab stop on such an item, the mounted items do not take the
+  // tab stop. The list then has one tab stop.
   // The server HTML has no tab stop in three cases.
   // - `hasActiveItem` is `true` and no item is active.
   // - Each item is disabled.
@@ -329,12 +367,61 @@ export function useCompositeRoot<Metadata>(
     return isTabStop;
   }
 
+  // The server HTML can give the tab stop to an item that is mounted after its root. That item can
+  // have no `setup` yet, so only the DOM tells the root. Each item that hydrates has an attribute
+  // with the id of its root. Thus an item of a nested composite and an element of the consumer do
+  // not count. An item whose element is outside the element of the root, in a `Teleport`, is not
+  // found.
+  // The first check runs in a post-flush job. That job runs after the renders that the mounted
+  // hooks queue, so each mounted item has already removed its attribute. A check in `onMounted`
+  // would be too early.
+  function updateUnmountedTabStop() {
+    if (!rootElement || !canHaveUnmountedTabStop) {
+      return;
+    }
+
+    const hasTabStop = Array.from(
+      rootElement.querySelectorAll(`[${HYDRATING_COMPOSITE_ITEM}]`),
+    ).some(
+      (element) =>
+        element.getAttribute(HYDRATING_COMPOSITE_ITEM) === id &&
+        element.getAttribute('tabindex') === '0',
+    );
+    hasUnmountedTabStop.value = hasTabStop;
+
+    if (hasTabStop) {
+      if (!tabStopObserver && typeof MutationObserver === 'function') {
+        tabStopObserver = new MutationObserver(updateUnmountedTabStop);
+        tabStopObserver.observe(rootElement, {
+          attributes: true,
+          attributeFilter: [HYDRATING_COMPOSITE_ITEM],
+          childList: true,
+          subtree: true,
+        });
+      }
+    } else {
+      // Only a server can write the attribute with a tab stop, so no element can come later.
+      tabStopObserver?.disconnect();
+      tabStopObserver = null;
+      canHaveUnmountedTabStop = false;
+    }
+  }
+
+  watch(elementsRef, updateUnmountedTabStop, { flush: 'post' });
+
+  onScopeDispose(() => {
+    tabStopObserver?.disconnect();
+    tabStopObserver = null;
+  });
+
   provide(CompositeRootContext, {
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
     takeInitialTabStop,
+    id,
+    hasUnmountedTabStop: computed(() => hasUnmountedTabStop.value),
   });
 
   return {
@@ -343,9 +430,6 @@ export function useCompositeRoot<Metadata>(
       rootElement = element;
     },
     highlightedIndex,
-    onHighlightedIndexChange,
-    elementsRef,
-    relayKeyboardEvent: onKeydown,
   };
 }
 
@@ -395,6 +479,12 @@ export interface UseCompositeRootParameters<Metadata> {
    * @default 'both'
    */
   orientation?: MaybeRefOrGetter<'horizontal' | 'vertical' | 'both' | undefined> | undefined;
+  /**
+   * The grid navigator that `gridNavigation` makes. With a grid, the arrow keys move the highlight
+   * by cell. A root that gets no `grid` does not load the code of the grid. This is a plain
+   * function, and the root reads it when a key comes.
+   */
+  grid?: CompositeGridNavigator | undefined;
   /**
    * Whether the highlight goes from the last item to the first item, and from the first item to
    * the last item.
@@ -480,19 +570,4 @@ export interface UseCompositeRootReturnValue {
    * The highlighted index.
    */
   highlightedIndex: ComputedRef<number>;
-  /**
-   * Moves the highlight to `index`. When `shouldScrollIntoView` is `true`, the root scrolls the
-   * item into view if it needs to.
-   */
-  onHighlightedIndexChange: (index: number, shouldScrollIntoView?: boolean) => void;
-  /**
-   * The elements of the items, ordered by their index. The list gives the ref a new array on each
-   * sort.
-   */
-  elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
-  /**
-   * The `keydown` handler of the root. A part can call it with a keyboard event that does not come
-   * from the children of the root.
-   */
-  relayKeyboardEvent: (event: KeyboardEvent) => void;
 }

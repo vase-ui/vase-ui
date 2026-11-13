@@ -7,11 +7,14 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
+import CompositeItem from '../../../../test/fixtures/CompositeItemPart.vue';
 import CompositeListItemPart from '../../../../test/fixtures/CompositeListItemPart.vue';
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
 import { DirectionProvider } from '../../../direction-provider';
 import type { TextDirection } from '../../../direction-provider';
 import { useCompositeRootContext } from './CompositeRootContext';
+import { gridNavigation } from './gridNavigation';
+import { useCompositeRoot } from './useCompositeRoot';
 
 async function pressKey(item: HTMLElement, key: string) {
   await fireEvent.keyDown(item, { key });
@@ -106,6 +109,42 @@ describe('useCompositeRoot', () => {
     await flushMicrotasks();
 
     expect(root).toHaveAttribute('data-highlighted-index', '1');
+  });
+
+  it('reads a grid configuration that changes after the mount', async () => {
+    const cols = shallowRef(2);
+
+    const App = defineComponent(() => {
+      const { props: compositeProps, rootRef } = useCompositeRoot({
+        grid: gridNavigation(() => ({ cols: cols.value })),
+      });
+
+      return () => (
+        <div {...compositeProps} ref={(node: unknown) => rootRef(node as HTMLElement | null)}>
+          <CompositeItem data-testid="1" />
+          <CompositeItem data-testid="2" />
+          <CompositeItem data-testid="3" />
+          <CompositeItem data-testid="4" />
+        </div>
+      );
+    });
+
+    await render(<App />);
+
+    const item1 = screen.getByTestId('1');
+    item1.focus();
+    await flushMicrotasks();
+
+    await pressKey(item1, 'ArrowDown');
+    expect(screen.getByTestId('3')).toHaveFocus();
+
+    cols.value = 4;
+    item1.focus();
+    await flushMicrotasks();
+
+    // The grid has one row. It does not move the highlight, and the list step moves it.
+    await pressKey(item1, 'ArrowDown');
+    expect(screen.getByTestId('2')).toHaveFocus();
   });
 
   describe('KeepAlive', () => {

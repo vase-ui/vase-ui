@@ -2,7 +2,6 @@ import { afterEach, describe, it, expect } from 'vitest';
 import { shallowRef } from 'vue';
 import type { ListStepOptions } from './listIndex';
 import {
-  createGridCellMap,
   getMaxListIndex,
   getMinListIndex,
   getNextListIndex,
@@ -142,13 +141,5 @@ describe('getNextListIndex', () => {
     expect(
       nextIndex(items(4), 0, { ...step, decrement: false, disabledIndices: [1, 2] }).index,
     ).toBe(3);
-  });
-});
-
-describe('createGridCellMap', () => {
-  it('throws when an item is wider than the grid', () => {
-    expect(() => createGridCellMap([{ width: 3, height: 1 }], 2, false)).toThrowError(
-      /^Vase UI: The grid item at index 0 has a width of 3 columns, and the grid has 2 columns\./,
-    );
   });
 });

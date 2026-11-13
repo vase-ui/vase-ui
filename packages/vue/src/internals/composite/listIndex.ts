@@ -2,6 +2,7 @@ import { floor } from '@floating-ui/utils';
 import type { Dimensions } from '@floating-ui/utils';
 import { getComputedStyle } from '@floating-ui/utils/dom';
 import type { Ref } from 'vue';
+import { error } from '../../common/error';
 import { closest } from '../../common/shadowDom';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { stopEvent } from '../../utils/popups/event';
@@ -428,17 +429,23 @@ export function getGridNavigatedIndex(
   return nextIndex;
 }
 
-/** Gives the index of the item that fills each cell. */
+/**
+ * Gives the index of the item that fills each cell. An item takes at most one whole row, so an
+ * item that is wider than the grid gets the width of the grid.
+ */
 export function createGridCellMap(sizes: Dimensions[], cols: number, dense: boolean) {
   const cellMap: (number | undefined)[] = [];
   let startIndex = 0;
-  sizes.forEach(({ width, height }, index) => {
-    if (width > cols) {
-      if (process.env.NODE_ENV !== 'production') {
-        throw new Error(
-          `Vase UI: The grid item at index ${index} has a width of ${width} columns, and the grid has ${cols} columns. Grid navigation cannot place an item that is wider than the grid. Give the item a width of at most ${cols}, or give the grid more columns.`,
-        );
-      }
+  sizes.forEach((size, index) => {
+    // An item that is wider than the grid fits in no row. The search for a free place would never end.
+    const width = Math.min(size.width, cols);
+    const { height } = size;
+    if (process.env.NODE_ENV !== 'production' && size.width > cols) {
+      error(
+        `The grid item at index ${index} has a width of ${size.width} columns, and the grid has ${cols} columns.`,
+        `Grid navigation cannot place an item that is wider than the grid, so it gives the item a width of ${cols} columns.`,
+        `Give the item a width of at most ${cols}, or give the grid more columns.`,
+      );
     }
     let itemPlaced = false;
     if (dense) {
@@ -491,7 +498,7 @@ export function getGridCellIndexOfCorner(
       if (!sizeItem) {
         return firstCellIndex;
       }
-      return firstCellIndex + sizeItem.width - 1;
+      return firstCellIndex + Math.min(sizeItem.width, cols) - 1;
     case 'bl':
       if (!sizeItem) {
         return firstCellIndex;
