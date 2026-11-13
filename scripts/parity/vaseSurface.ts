@@ -268,13 +268,22 @@ export function createVaseProject(tsconfig: string): VaseProject {
       const source = readSource(file);
       const meta = checker.getComponentMeta(file);
       const documented = new Map(meta.props.map((prop) => [prop.name, prop]));
+      // vue-component-meta leaves out a prop that has the name of the listener of an emit, such as
+      // `onFormSubmit` for the emit `formSubmit`. The SFC compiler lists it.
+      const listenerProps = new Set(
+        meta.events.map(({ name }) => `on${name.charAt(0).toUpperCase()}${name.slice(1)}`),
+      );
       const props = new Map<string, PropSurface>();
       for (const name of readPropNames(source, file)) {
         const prop = documented.get(name);
         if (!prop) {
-          throw new Error(
-            `${file}: the SFC compiler reads the prop "${name}", but vue-component-meta does not list it.`,
-          );
+          if (!listenerProps.has(name)) {
+            throw new Error(
+              `${file}: the SFC compiler reads the prop "${name}", but vue-component-meta does not list it.`,
+            );
+          }
+          props.set(name, { required: false, default: null, description: '', type: '' });
+          continue;
         }
         props.set(name, {
           required: prop.required,

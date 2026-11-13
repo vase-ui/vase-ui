@@ -1,0 +1,28 @@
+import type { FormHTMLAttributes } from 'vue';
+import { expectType } from '#test-utils';
+import { Form } from '@vase-ui/vue/form';
+import type { HTMLProps } from '@vase-ui/vue/types';
+
+interface Values {
+  name: string;
+  age: number;
+}
+
+<Form<Values>
+  onFormSubmit={(values) => {
+    expectType<string, typeof values.name>(values.name);
+    expectType<number, typeof values.age>(values.age);
+    // @ts-expect-error The inferred form values contain name and age, not email.
+    values.email.startsWith('a');
+  }}
+/>;
+
+// `Form` exposes the native `<form>` props in its `#render` slot.
+<Form
+  v-slots={{
+    render: ({ props }: { props: FormHTMLAttributes & Pick<HTMLProps, 'ref'> }) => {
+      expectType<FormHTMLAttributes['novalidate'], typeof props.novalidate>(props.novalidate);
+      return <form {...props} />;
+    },
+  }}
+/>;
