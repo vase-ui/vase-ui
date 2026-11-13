@@ -35,6 +35,7 @@
     "packages/react/src/internals/useRenderElement.spec.tsx",
     "packages/react/src/internals/useTransitionStatus.ts",
     "packages/react/src/internals/useTransitionStatus.test.tsx",
+    "packages/react/src/internals/useUnmountAfterClose.ts",
     "packages/react/src/internals/useValueChanged.ts",
     "packages/react/src/internals/useValueChanged.test.tsx",
     "packages/react/src/types/**",
