@@ -52,20 +52,16 @@ function assertNumberFieldCommit(details: NumberFieldCommitDetails) {
   }
 }
 
-const handleNumberFieldChange = (value: number | null, details: NumberFieldChangeDetails) => {
-  expectType<number | null, typeof value>(value);
-  assertNumberFieldChange(details);
-};
-
-const handleNumberFieldCommit = (value: number | null, details: NumberFieldCommitDetails) => {
-  expectType<number | null, typeof value>(value);
-  assertNumberFieldCommit(details);
-};
-
 const numberFieldEventNarrowing = (
   <NumberField.Root
     defaultValue={0}
-    onValueChange={handleNumberFieldChange}
-    onValueCommitted={handleNumberFieldCommit}
+    onValueChange={(value, details) => {
+      expectType<number | null, typeof value>(value);
+      assertNumberFieldChange(details);
+    }}
+    onValueCommitted={(value, details) => {
+      expectType<number | null, typeof value>(value);
+      assertNumberFieldCommit(details);
+    }}
   />
 );

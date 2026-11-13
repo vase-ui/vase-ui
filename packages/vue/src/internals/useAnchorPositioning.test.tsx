@@ -1,11 +1,12 @@
 import { expect, vi, describe, beforeEach, it, onTestFinished } from 'vitest';
-import { createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
-import type { ShallowRef } from 'vue';
-import type { VirtualElement } from '@floating-ui/vue';
+import { createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef, watch } from 'vue';
+import type { PropType, ShallowRef } from 'vue';
+import type { MiddlewareReturn, VirtualElement } from '@floating-ui/vue';
 import {
   createRenderer,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -21,10 +22,11 @@ import UseAnchorPositioningHydration from './UseAnchorPositioningHydration.test.
 
 // `passSpy` gets one call for each position pass. `stopSpy` gets one call for each cleanup of
 // `autoUpdate`.
-const { autoUpdateSpy, stopSpy, passSpy } = vi.hoisted(() => ({
+const { autoUpdateSpy, stopSpy, passSpy, shiftSpy } = vi.hoisted(() => ({
   autoUpdateSpy: vi.fn(),
   stopSpy: vi.fn(),
   passSpy: vi.fn(),
+  shiftSpy: vi.fn(),
 }));
 
 vi.mock('@floating-ui/vue', async () => {
@@ -32,6 +34,10 @@ vi.mock('@floating-ui/vue', async () => {
 
   return {
     ...actual,
+    shift: ((...args: Parameters<typeof actual.shift>) => {
+      shiftSpy(...args);
+      return actual.shift(...args);
+    }) satisfies typeof actual.shift,
     autoUpdate: ((...args: Parameters<typeof actual.autoUpdate>) => {
       autoUpdateSpy(...args);
       const stop = actual.autoUpdate(...args);
@@ -118,17 +124,452 @@ async function settle() {
   await flushMicrotasks();
 }
 
+type ShiftOptions =
+  { crossAxis?: boolean | undefined; rootBoundary?: 'layoutViewport' | undefined } | undefined;
+
+const TestUseAnchorPositioning = defineComponent({
+  props: { shift: { type: Object as PropType<ShiftOptions>, default: undefined } },
+  setup(props) {
+    const anchorElement = shallowRef<HTMLDivElement | null>(null);
+    const positionerElement = shallowRef<HTMLDivElement | null>(null);
+
+    useAnchorPositioning({
+      anchor: anchorElement,
+      mounted: true,
+      positionMethod: 'absolute',
+      side: 'bottom',
+      align: 'center',
+      sideOffset: 0,
+      alignOffset: 0,
+      collisionBoundary: 'clipping-ancestors',
+      collisionPadding: 5,
+      sticky: false,
+      arrowPadding: 5,
+      disableAnchorTracking: false,
+      keepMounted: false,
+      collisionAvoidance: { fallbackAxisSide: 'none' },
+      shift: () => props.shift,
+      positionerElement,
+    });
+
+    return () => (
+      <>
+        <div ref={anchorElement}>anchor</div>
+        <div ref={positionerElement}>floating</div>
+      </>
+    );
+  },
+});
+
+const TestLazyFlip = defineComponent({
+  props: {
+    side: { type: String as PropType<'right' | 'bottom'>, default: 'right' },
+    align: { type: String as PropType<'start' | 'center'>, default: 'start' },
+    lazyFlip: { type: [Boolean, String] as PropType<boolean | 'placement'>, default: true },
+  },
+  setup(props) {
+    const anchorElement = shallowRef<HTMLDivElement | null>(null);
+    const positionerElement = shallowRef<HTMLDivElement | null>(null);
+    const shrunk = shallowRef(false);
+
+    const positioning = useAnchorPositioning({
+      anchor: anchorElement,
+      mounted: true,
+      positionMethod: 'fixed',
+      side: () => props.side,
+      align: () => props.align,
+      sideOffset: 0,
+      alignOffset: 0,
+      collisionBoundary: 'clipping-ancestors',
+      collisionPadding: 5,
+      sticky: false,
+      arrowPadding: 5,
+      disableAnchorTracking: false,
+      keepMounted: false,
+      collisionAvoidance: { fallbackAxisSide: 'none' },
+      lazyFlip: () => props.lazyFlip,
+      positionerElement,
+    });
+
+    return () => (
+      <>
+        <div
+          ref={anchorElement}
+          data-testid="anchor"
+          style={{
+            position: 'fixed',
+            right: '200px',
+            bottom: '30px',
+            width: '20px',
+            height: '20px',
+          }}
+        >
+          anchor
+        </div>
+        <div
+          ref={positionerElement}
+          data-testid="floating"
+          data-side={positioning.side.value}
+          data-align={positioning.align.value}
+          style={{
+            ...positioning.positionerStyles.value,
+            width: '100px',
+            height: shrunk.value ? '10px' : '100px',
+          }}
+        >
+          floating
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            shrunk.value = true;
+          }}
+        >
+          Shrink
+        </button>
+      </>
+    );
+  },
+});
+
+const TestLateArrow = defineComponent({
+  props: {
+    switchAnchor: { type: Boolean, default: false },
+    anchorLeft: { type: Number, default: undefined },
+  },
+  setup(props) {
+    const offscreenAnchor = shallowRef<HTMLDivElement | null>(null);
+    const anchor = shallowRef<HTMLDivElement | null>(null);
+    const positionerElement = shallowRef<HTMLDivElement | null>(null);
+    const arrowMounted = shallowRef(false);
+
+    const positioning = useAnchorPositioning({
+      anchor: () =>
+        props.switchAnchor && !arrowMounted.value ? offscreenAnchor.value : anchor.value,
+      mounted: true,
+      positionMethod: 'fixed',
+      side: 'top',
+      align: 'center',
+      sideOffset: 0,
+      alignOffset: 0,
+      collisionBoundary: 'clipping-ancestors',
+      collisionPadding: 5,
+      sticky: false,
+      arrowPadding: 5,
+      // No observer starts a new position pass, so only a change of the arrow or of the anchor does.
+      disableAnchorTracking: true,
+      keepMounted: false,
+      collisionAvoidance: { fallbackAxisSide: 'none' },
+      positionerElement,
+    });
+
+    return () => (
+      <>
+        <div
+          ref={offscreenAnchor}
+          style={{
+            position: 'fixed',
+            left: '100px',
+            top: '-1000px',
+            width: '40px',
+            height: '20px',
+          }}
+        />
+        <div
+          ref={anchor}
+          data-testid="anchor"
+          style={{
+            position: 'fixed',
+            left: `${props.anchorLeft ?? 100}px`,
+            top: '100px',
+            width: '40px',
+            height: '20px',
+          }}
+        >
+          anchor
+        </div>
+        <div
+          ref={positionerElement}
+          data-testid="floating"
+          data-positioned={positioning.isPositioned.value || undefined}
+          style={{ ...positioning.positionerStyles.value, width: '200px', height: '50px' }}
+        >
+          {arrowMounted.value && (
+            <div
+              ref={(element) => positioning.arrowRef(element as Element | null)}
+              data-testid="arrow"
+              style={{ ...positioning.arrowStyles.value, width: '10px', height: '5px' }}
+            />
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            arrowMounted.value = !arrowMounted.value;
+          }}
+        >
+          Toggle arrow
+        </button>
+      </>
+    );
+  },
+});
+
+const TestCappedGrowth = defineComponent({
+  setup() {
+    const anchorElement = shallowRef<HTMLDivElement | null>(null);
+    const positionerElement = shallowRef<HTMLDivElement | null>(null);
+    const grown = shallowRef(false);
+
+    const positioning = useAnchorPositioning({
+      anchor: anchorElement,
+      mounted: true,
+      positionMethod: 'fixed',
+      side: 'bottom',
+      align: 'center',
+      sideOffset: 0,
+      alignOffset: 0,
+      collisionBoundary: 'clipping-ancestors',
+      collisionPadding: 5,
+      sticky: false,
+      arrowPadding: 5,
+      // The test calls `update()` itself, because a flip that a `ResizeObserver` starts can log a
+      // loop error that depends on timing.
+      disableAnchorTracking: true,
+      keepMounted: false,
+      collisionAvoidance: { fallbackAxisSide: 'none' },
+      positionerElement,
+    });
+
+    watch(
+      grown,
+      () => {
+        if (grown.value) {
+          positioning.update();
+        }
+      },
+      { flush: 'post' },
+    );
+
+    return () => (
+      <>
+        <div
+          ref={anchorElement}
+          style={{ position: 'fixed', top: '60vh', left: '100px', width: '20px', height: '20px' }}
+        >
+          anchor
+        </div>
+        <div
+          ref={positionerElement}
+          data-testid="floating"
+          data-side={positioning.side.value}
+          style={{
+            ...positioning.positionerStyles.value,
+            width: '100px',
+            maxHeight: 'var(--available-height)',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{ height: grown.value ? '200vh' : '20px' }} />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            grown.value = true;
+          }}
+        >
+          Grow
+        </button>
+      </>
+    );
+  },
+});
+
 describe('useAnchorPositioning', () => {
   const { render } = createRenderer();
 
   // A pass that starts a render that starts a pass never ends, and the test then does not end.
   beforeEach(() => {
+    shiftSpy.mockClear();
     passSpy.mockImplementation(() => {
       if (passSpy.mock.calls.length > 50) {
         throw new Error('One test started more than 50 position passes.');
       }
     });
   });
+
+  it('uses the visual viewport for shift by default', async () => {
+    await render(<TestUseAnchorPositioning />);
+
+    expect(shiftSpy).toHaveBeenCalled();
+    expect(shiftSpy.mock.calls[0]?.[0].rootBoundary).toBe(undefined);
+  });
+
+  it.each([
+    { shift: { rootBoundary: 'layoutViewport' } as const, crossAxis: false },
+    { shift: { crossAxis: true, rootBoundary: 'layoutViewport' } as const, crossAxis: true },
+  ])('uses the configured shift options', async ({ shift, crossAxis }) => {
+    await render(<TestUseAnchorPositioning shift={shift} />);
+
+    expect(shiftSpy.mock.calls[0]?.[0].rootBoundary).toBe('layoutViewport');
+    expect(shiftSpy.mock.calls[0]?.[0].crossAxis).toBe(crossAxis);
+  });
+
+  it.skipIf(isJSDOM)('locks a flipped alignment after the popup shrinks', async () => {
+    // Only `'placement'` locks the alignment. `true` locks the side only, so that a Combobox can
+    // still change its alignment.
+    const { user } = await render(<TestLazyFlip lazyFlip="placement" />);
+    const floating = screen.getByTestId('floating');
+
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-align', 'end');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Shrink' }));
+
+    await waitFor(() => {
+      const anchorBottom = screen.getByTestId('anchor').getBoundingClientRect().bottom;
+      const floatingBottom = floating.getBoundingClientRect().bottom;
+      expect(Math.abs(anchorBottom - floatingBottom)).toBeLessThan(1);
+    });
+
+    expect(floating).toHaveAttribute('data-align', 'end');
+  });
+
+  it.skipIf(isJSDOM)('leaves the alignment free when lazy flipping is side-only', async () => {
+    const { user } = await render(<TestLazyFlip lazyFlip />);
+    const floating = screen.getByTestId('floating');
+
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-align', 'end');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Shrink' }));
+
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-align', 'start');
+    });
+  });
+
+  it.skipIf(isJSDOM)('locks a flipped side after the popup shrinks', async () => {
+    const { user } = await render(<TestLazyFlip side="bottom" align="center" />);
+    const floating = screen.getByTestId('floating');
+
+    // The anchor is at the bottom edge of the viewport, so the popup flips above it.
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-side', 'top');
+    });
+
+    // The popup now fits below the anchor again, but the side is locked.
+    await user.click(screen.getByRole('button', { name: 'Shrink' }));
+
+    await waitFor(() => {
+      const anchorTop = screen.getByTestId('anchor').getBoundingClientRect().top;
+      const floatingBottom = floating.getBoundingClientRect().bottom;
+      expect(Math.abs(anchorTop - floatingBottom)).toBeLessThan(1);
+    });
+
+    expect(floating).toHaveAttribute('data-side', 'top');
+  });
+
+  it.skipIf(isJSDOM)('flips back to the preferred side without lazy flipping', async () => {
+    const { user } = await render(<TestLazyFlip side="bottom" align="center" lazyFlip={false} />);
+    const floating = screen.getByTestId('floating');
+
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-side', 'top');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Shrink' }));
+
+    await waitFor(() => {
+      expect(floating).toHaveAttribute('data-side', 'bottom');
+    });
+  });
+
+  it.skipIf(isJSDOM)('centers an arrow that mounts after the popup is positioned', async () => {
+    const { user } = await render(<TestLateArrow />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('floating')).toHaveAttribute('data-positioned');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Toggle arrow' }));
+
+    const anchorRect = screen.getByTestId('anchor').getBoundingClientRect();
+    const anchorCenter = anchorRect.left + anchorRect.width / 2;
+
+    await waitFor(() => {
+      const arrowRect = screen.getByTestId('arrow').getBoundingClientRect();
+      expect(arrowRect.left + arrowRect.width / 2).toBeCloseTo(anchorCenter, 0);
+    });
+  });
+
+  it.skipIf(isJSDOM)(
+    'positions against the new anchor when the arrow mounts as the anchor changes',
+    async () => {
+      const { user } = await render(<TestLateArrow switchAnchor />);
+      const floating = screen.getByTestId('floating');
+
+      await waitFor(() => {
+        expect(floating).toHaveAttribute('data-positioned');
+      });
+      expect(floating.getBoundingClientRect().bottom).toBeLessThan(0);
+
+      await user.click(screen.getByRole('button', { name: 'Toggle arrow' }));
+
+      const anchorTop = screen.getByTestId('anchor').getBoundingClientRect().top;
+      await waitFor(() => {
+        expect(floating.getBoundingClientRect().bottom).toBeCloseTo(anchorTop, 0);
+      });
+    },
+  );
+
+  it.skipIf(isJSDOM)(
+    'repositions when the arrow unmounts after the popup is positioned',
+    async () => {
+      // The right edge of the anchor is at 5px. While the arrow is mounted, the shift limit of the
+      // arrow holds the popup at -5px. Without the arrow, the collision padding moves the popup
+      // to 5px.
+      const { user } = await render(<TestLateArrow anchorLeft={-35} />);
+      const floating = screen.getByTestId('floating');
+      const toggle = screen.getByRole('button', { name: 'Toggle arrow' });
+
+      await waitFor(() => {
+        expect(floating).toHaveAttribute('data-positioned');
+      });
+
+      await user.click(toggle);
+      await waitFor(() => {
+        expect(floating.getBoundingClientRect().left).toBeCloseTo(-5, 0);
+      });
+
+      await user.click(toggle);
+      expect(screen.queryByTestId('arrow')).toBe(null);
+      await waitFor(() => {
+        expect(floating.getBoundingClientRect().left).toBeCloseTo(5, 0);
+      });
+    },
+  );
+
+  it.skipIf(isJSDOM)(
+    'flips a capped popup to the larger side when it grows while open',
+    async () => {
+      const { user } = await render(<TestCappedGrowth />);
+      const floating = screen.getByTestId('floating');
+
+      await waitFor(() => {
+        expect(floating).toHaveAttribute('data-side', 'bottom');
+      });
+
+      // The content fits on neither side, and there is more space above the anchor.
+      await user.click(screen.getByRole('button', { name: 'Grow' }));
+
+      await waitFor(() => {
+        expect(floating).toHaveAttribute('data-side', 'top');
+      });
+    },
+  );
 
   // Renders the fixture positioner against a trigger. A write of `props` renders it again.
   async function renderPopup(initialProps: Record<string, unknown> = {}) {
@@ -396,7 +837,7 @@ describe('useAnchorPositioning', () => {
       { name: 'an element', boundary: (part: Part | null) => part?.element },
       { name: 'a component', boundary: (part: Part | null) => part },
       {
-        name: 'a component that has width and height props',
+        name: 'a component with width and height props',
         Box: BoxWithRectangleProps,
         boundary: (part: Part | null) => part,
       },
@@ -548,14 +989,6 @@ describe('useAnchorPositioning', () => {
       return popup;
     }
 
-    it('puts the arrow at the center of the anchor', async () => {
-      await renderWithArrow();
-
-      expect(screen.getByTestId('arrow').getBoundingClientRect().left).toBe(
-        ANCHOR.left + ANCHOR.width / 2 - ARROW.width / 2,
-      );
-    });
-
     it('computes one position when the arrow mounts after the first position', async () => {
       const showArrow = shallowRef(false);
       await renderWithArrow(showArrow);
@@ -566,6 +999,76 @@ describe('useAnchorPositioning', () => {
 
       expect(screen.getByTestId('arrow')).toBeInTheDocument();
       expect(passSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('centers an arrow that mounts just before the first position ends', async () => {
+      const trigger = createAnchor();
+      const showArrow = shallowRef(false);
+      // The last middleware holds the first position pass at a gate, after the arrow middleware
+      // used the fake arrow.
+      let openGate!: (data: MiddlewareReturn) => void;
+      const gate = new Promise<MiddlewareReturn>((resolve) => {
+        openGate = resolve;
+      });
+      let reachGate!: () => void;
+      const reached = new Promise<void>((resolve) => {
+        reachGate = resolve;
+      });
+      const Test = defineComponent(() => {
+        const positionerElement = shallowRef<HTMLDivElement | null>(null);
+        const positioning = useAnchorPositioning({
+          mounted: true,
+          positionMethod: 'fixed',
+          disableAnchorTracking: true,
+          collisionAvoidance: { fallbackAxisSide: 'none' },
+          positionerElement,
+          defaultAnchor: trigger,
+          adaptiveOrigin: {
+            name: 'gate',
+            fn() {
+              reachGate();
+              return gate;
+            },
+          },
+        });
+        return () => (
+          <div
+            ref={positionerElement}
+            style={{ ...positioning.positionerStyles.value, ...popupStyle }}
+          >
+            {showArrow.value && (
+              <div
+                ref={(element) => positioning.arrowRef(element as Element | null)}
+                data-testid="arrow"
+                style={{
+                  ...positioning.arrowStyles.value,
+                  width: `${ARROW.width}px`,
+                  height: `${ARROW.height}px`,
+                }}
+              />
+            )}
+          </div>
+        );
+      });
+      await render(<Test />);
+      await reached;
+      // No flush is pending when the gate opens.
+      await flushMicrotasks();
+
+      // The pass continues in a microtask after the gate opens, and it writes the position in a
+      // later microtask. The flush that mounts the arrow runs between the two. The microtask of
+      // `arrowRef` then runs after the write of the position and before the next flush. It must
+      // find `isPositioned` set. Without that, the arrow keeps the position of the first pass,
+      // which used a fake arrow.
+      openGate({});
+      showArrow.value = true;
+
+      await waitFor(() => {
+        expect(screen.getByTestId('arrow').getBoundingClientRect().left).toBe(
+          ANCHOR.left + ANCHOR.width / 2 - ARROW.width / 2,
+        );
+      });
+      expect(passSpy).toHaveBeenCalledTimes(2);
     });
 
     it('computes no position when a render gives the same arrow element', async () => {

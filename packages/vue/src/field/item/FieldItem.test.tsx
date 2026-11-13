@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Field } from '@vase-ui/vue/field';
+import { Radio } from '@vase-ui/vue/radio';
+import { RadioGroup } from '@vase-ui/vue/radio-group';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
@@ -30,6 +32,27 @@ describe('<Field.Item />', () => {
 
       expect(screen.getByTestId('item')).toHaveAttribute('data-disabled');
       expect(renderItem.mock.lastCall?.[0].disabled).toBe(true);
+    });
+
+    it('disables a wrapped radio', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Field.Root name="apple">
+          <RadioGroup defaultValue="" onValueChange={onValueChange}>
+            <Field.Item disabled>
+              <Radio.Root value="fuji-apple" />
+            </Field.Item>
+            <Field.Item>
+              <Radio.Root value="gala-apple" />
+            </Field.Item>
+          </RadioGroup>
+        </Field.Root>,
+      );
+      const [radio1, radio2] = screen.getAllByRole('radio');
+      await user.click(radio1);
+      expect(onValueChange.mock.calls.length).toBe(0);
+      await user.click(radio2);
+      expect(onValueChange.mock.calls.length).toBe(1);
     });
 
     it('is disabled by a disabled root, whatever its own prop says', async () => {

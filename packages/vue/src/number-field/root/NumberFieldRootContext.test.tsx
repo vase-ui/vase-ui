@@ -43,17 +43,25 @@ describe('the context of the root of Number Field', () => {
   }
 
   describe('the text of the input', () => {
+    const percent = { style: 'percent' } as const;
+    const currency = { style: 'currency', currency: 'USD' } as const;
+
+    // The text has the locale of the runtime when the root has no `locale` prop.
     it.each([
-      { name: 'the default locale', props: { defaultValue: 1234.5 }, text: '1,234.5' },
+      {
+        name: 'the default locale',
+        props: { defaultValue: 1234.5 },
+        text: new Intl.NumberFormat().format(1234.5),
+      },
       {
         name: 'the `locale` prop',
         props: { defaultValue: 1234.5, locale: 'de-DE' },
-        text: '1.234,5',
+        text: new Intl.NumberFormat('de-DE').format(1234.5),
       },
       {
         name: 'the `format` prop',
-        props: { defaultValue: 0.5, format: { style: 'percent' } },
-        text: '50%',
+        props: { defaultValue: 0.5, format: percent },
+        text: new Intl.NumberFormat(undefined, percent).format(0.5),
       },
       { name: 'no value', props: {}, text: '' },
     ])('is formatted with $name', async ({ props, text }) => {
@@ -63,13 +71,21 @@ describe('the context of the root of Number Field', () => {
     });
 
     it.each([
-      { name: 'a new `locale`', props: { locale: 'de-DE' }, text: '1.234,5' },
+      {
+        name: 'a new `locale`',
+        props: { locale: 'de-DE' },
+        text: new Intl.NumberFormat('de-DE').format(1234.5),
+      },
       {
         name: 'a new `format`',
-        props: { format: { style: 'currency', currency: 'USD' } },
-        text: '$1,234.50',
+        props: { format: currency },
+        text: new Intl.NumberFormat(undefined, currency).format(1234.5),
       },
-      { name: 'a new controlled value', props: { value: 2000 }, text: '2,000' },
+      {
+        name: 'a new controlled value',
+        props: { value: 2000 },
+        text: new Intl.NumberFormat().format(2000),
+      },
     ])('is formatted again for $name', async ({ props, text }) => {
       const { setProps } = await renderRoot({ value: 1234.5 });
 
@@ -88,7 +104,7 @@ describe('the context of the root of Number Field', () => {
 
       getContext().allowInputSyncRef.value = true;
       await setProps({ locale: 'en-US' });
-      expect(getText().value).toBe('1');
+      expect(getText().value).toBe(new Intl.NumberFormat('en-US').format(1));
     });
   });
 
@@ -103,7 +119,7 @@ describe('the context of the root of Number Field', () => {
     getContext().setValue(1, createChangeEventDetails(REASONS.inputBlur));
     await flushMicrotasks();
 
-    expect(getText().value).toBe('1');
+    expect(getText().value).toBe(new Intl.NumberFormat().format(1));
   });
 
   it('reports a change that a listener cancels as not applied', async () => {
@@ -117,7 +133,7 @@ describe('the context of the root of Number Field', () => {
     await flushMicrotasks();
 
     expect(changed).toBe(false);
-    expect(getText().value).toBe('1');
+    expect(getText().value).toBe(new Intl.NumberFormat().format(1));
   });
 
   describe('incrementValue', () => {
@@ -145,7 +161,7 @@ describe('the context of the root of Number Field', () => {
       await flushMicrotasks();
 
       expect(handleChange.mock.lastCall?.[0]).toBe(expected);
-      expect(getText().value).toBe(String(expected));
+      expect(getText().value).toBe(new Intl.NumberFormat().format(expected));
     });
 
     it('steps from the number that the part gives', async () => {

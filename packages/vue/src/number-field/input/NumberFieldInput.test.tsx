@@ -2353,22 +2353,22 @@ describe('<NumberField.Input />', () => {
 
     it('formats the text in the locale of the runtime after the mount', async () => {
       // A formatter is cached by its locale and its options, so no earlier case formats with these.
-      const props = {
-        parts: ['input'],
-        defaultValue: 1234.5,
-        format: { minimumFractionDigits: 3 },
-      };
+      const format = { minimumFractionDigits: 3 };
+      const props = { parts: ['input'], defaultValue: 1234.5, format };
       const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
+      // A server cannot know the locale of the visitor, so its text has `en-US`.
       expect(template.content.querySelector('[data-testid="input"]')?.getAttribute('value')).toBe(
-        '1,234.500',
+        new Intl.NumberFormat('en-US', format).format(1234.5),
       );
       mockRuntimeLocale('de-DE');
 
       const { container } = await hydrate(NumberFieldInputHydration, { serverHtml, props });
 
-      expect(within(container).getByTestId('input')).toHaveValue('1.234,500');
+      expect(within(container).getByTestId('input')).toHaveValue(
+        new Intl.NumberFormat('de-DE', format).format(1234.5),
+      );
     });
   });
 

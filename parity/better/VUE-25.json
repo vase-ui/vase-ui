@@ -1,0 +1,8 @@
+{
+  "id": "VUE-25",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/hoverIntent.ts#L212-L219"
+  ],
+  "behavior": "The hover intent opens the popup for the innermost trigger that contains the event target, in each order of registration. Base UI takes the first trigger of the map that contains the target. An outer trigger that registered first then gets the popup for a target in an inner trigger that registered later.",
+  "dueWith": "packages/react/src/utils/popups/interactions/hoverIntent.ts"
+}
