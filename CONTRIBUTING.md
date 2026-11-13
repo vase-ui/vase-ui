@@ -773,7 +773,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `ToastStore` writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the interaction state of the same change.
 - A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
 - `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
-- The `title` and the `description` of a toast are `VNodeChild` values: a text, a number, a vnode, or an array of them.
+- A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
 - `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
 - `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
 

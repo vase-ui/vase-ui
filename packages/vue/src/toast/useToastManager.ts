@@ -18,6 +18,12 @@ export function useToastManager<Data extends object = any>(): UseToastManagerRet
   };
 }
 
+/**
+ * A text, or a function that returns rich content. A vnode is not a label, because a vnode that
+ * mounts a second time on a hydrated page loses its components.
+ */
+export type ToastLabel = string | number | (() => VNodeChild);
+
 export interface ToastObject<Data extends object> {
   /**
    * The unique identifier for the toast.
@@ -30,7 +36,7 @@ export interface ToastObject<Data extends object> {
   /**
    * The title of the toast.
    */
-  title?: VNodeChild;
+  title?: ToastLabel | undefined;
   /**
    * The type of the toast. Used to conditionally style the toast,
    * including conditionally rendering elements based on the type.
@@ -39,7 +45,7 @@ export interface ToastObject<Data extends object> {
   /**
    * The description of the toast.
    */
-  description?: VNodeChild;
+  description?: ToastLabel | undefined;
   /**
    * The amount of time (in ms) before the toast is auto dismissed.
    * A value of `0` will prevent the toast from being dismissed automatically.
@@ -95,7 +101,7 @@ export interface ToastManagerActionProps extends ButtonHTMLAttributes {
   /**
    * The content of the action button.
    */
-  children?: VNodeChild;
+  children?: ToastLabel | undefined;
 }
 
 export interface ToastManagerPositionerProps extends Omit<
