@@ -676,6 +676,33 @@ describe('<ScrollArea.Thumb />', () => {
       expect(rootContext.thumbYElement.value).toBe(null);
       expect(rootContext.thumbXElement.value).toBe(thumb);
     });
+
+    it('clears the holder of the old orientation when the change removes the scrollbar', async () => {
+      const orientation = shallowRef<'vertical' | 'horizontal'>('vertical');
+      const App = defineComponent(() => () => (
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <Probe />
+          <ScrollArea.Viewport style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '200px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation={orientation.value}>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
+      ));
+
+      await render(<App />);
+      await waitFor(() => expect(screen.getByTestId('thumb')).toBeInTheDocument());
+
+      expect(rootContext.thumbYElement.value).toBe(screen.getByTestId('thumb'));
+
+      orientation.value = 'horizontal';
+      await nextTick();
+
+      expect(screen.queryByTestId('thumb')).toBe(null);
+      expect(rootContext.thumbYElement.value).toBe(null);
+      expect(rootContext.thumbXElement.value).toBe(null);
+    });
   });
 
   describe('hydration', () => {
