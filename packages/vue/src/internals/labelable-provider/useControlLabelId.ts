@@ -13,10 +13,10 @@ import { useDeferredServerRender } from './useDeferredServerRender';
  * the control, also in the server HTML.
  */
 export function useControlLabelId(): ComputedRef<string | undefined> {
-  const { labelId, registerLabelId } = useLabelableContext();
+  const { labelId, registerControlId } = useLabelableContext();
 
   // A control with no provider has no label to wait for.
-  if (registerLabelId !== NOOP) {
+  if (registerControlId !== NOOP) {
     useDeferredServerRender();
   }
 
