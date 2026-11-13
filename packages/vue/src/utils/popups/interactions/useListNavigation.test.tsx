@@ -189,8 +189,7 @@ const List = defineComponent({
 });
 
 type Entry =
-  | string
-  | { label: string; items: Entry[]; orientation?: Orientation; options?: Options };
+  string | { label: string; items: Entry[]; orientation?: Orientation; options?: Options };
 
 interface ParentItem {
   props: InteractionProps;
