@@ -100,7 +100,8 @@ const props = withDefaults(defineProps<RadioGroupProps<Value>>(), {
 const emit = defineEmits<{
   /**
    * Callback fired when the value changes.
-   * A native reset of a group that has no `defaultValue` calls it with `undefined`.
+   * A native reset puts a group that has no `defaultValue` back to no value. The callback then gets
+   * `undefined`.
    */
   valueChange: [value: Value, eventDetails: RadioGroupChangeEventDetails];
   'update:value': [value: Value];
