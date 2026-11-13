@@ -526,6 +526,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - A function that a render function or a ref callback calls reads `toRaw(store.state)`. That read adds no dependency. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
+- Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Composite
