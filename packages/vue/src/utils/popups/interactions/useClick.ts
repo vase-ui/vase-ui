@@ -55,7 +55,7 @@ export interface UseClickProps {
  * Opens or closes the floating element when clicking the reference element.
  *
  * Call it in the `setup` of the trigger. The handlers read each option and the store when an event
- * comes, so a value, a ref or a getter follows a change. The frame and the touch timer stop when
+ * comes, so a ref or a getter follows a change. The frame and the touch timer stop when
  * the part unmounts and when `KeepAlive` deactivates it.
  * @see https://floating-ui.com/docs/useClick
  */
