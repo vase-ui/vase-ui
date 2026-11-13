@@ -68,7 +68,7 @@
       "title": "outsidePress ignored for third party elements",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
-      "reason": "The case needs the markers that `markOthers` writes when the focus manager is modal. The focus manager of Vase UI does not write them yet. The pull request that ports `markOthers.ts` ports the case."
+      "reason": "The case needs the markers that `markOthers` writes while a focus manager is open. The focus manager of Vase UI writes no marker. The pull request that ports `markOthers.ts` ports the case."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",

@@ -192,6 +192,14 @@ function releasePointerAfterTest() {
   });
 }
 
+// The focus manager moves the focus in an animation frame. The upstream tests run that frame at
+// once, so a press of Escape there starts in the popup.
+async function waitForFocusIn(element: () => HTMLElement) {
+  await waitFor(() => {
+    expect(element()).toContainElement(document.activeElement as HTMLElement);
+  });
+}
+
 function addOutsideElement() {
   const outside = document.createElement('div');
   outside.style.cssText = 'position: absolute; left: 500px; top: 20px; width: 60px; height: 60px';
@@ -1156,9 +1164,10 @@ describe('useDismiss', () => {
 
         await flushMicrotasks();
         screen.getByTestId('focus-button').focus();
-        await flushMicrotasks();
 
-        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+        await waitFor(() => {
+          expect(screen.getByRole('tooltip')).toBeInTheDocument();
+        });
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1178,6 +1187,7 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
+        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1197,6 +1207,7 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
+        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1222,6 +1233,7 @@ describe('useDismiss', () => {
 
         expect(screen.getByTestId('outer')).toBeInTheDocument();
         expect(screen.getByTestId('inner')).toBeInTheDocument();
+        await waitForFocusIn(() => screen.getByTestId('outer'));
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
@@ -1515,6 +1527,7 @@ describe('useDismiss', () => {
 
         expect(screen.getByText('outer')).toBeInTheDocument();
         expect(screen.getByText('inner')).toBeInTheDocument();
+        await waitForFocusIn(() => screen.getByText('inner').parentElement!);
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
