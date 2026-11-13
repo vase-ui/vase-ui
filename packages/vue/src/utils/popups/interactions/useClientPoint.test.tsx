@@ -20,6 +20,7 @@ import { createChangeEventDetails } from '../../../internals/createBaseUIEventDe
 import { REASONS } from '../../../internals/reasons';
 import { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { PopupTriggerMap } from '../popupTriggerMap';
+import type { PopupInteractionStore } from '../types';
 import { useClientPoint } from './useClientPoint';
 
 const { render } = createRenderer();
@@ -38,11 +39,14 @@ function expectRect({ x, y, width, height }: DOMRectInit) {
   expect(Number(screen.getByTestId('height')?.textContent)).toBe(height);
 }
 
-function createRootStore(referenceElement: HTMLElement) {
+function createRootStore(
+  referenceElement: HTMLElement | null,
+  options: { open?: boolean; positionerElement?: HTMLElement } = {},
+) {
   return new FloatingRootStore({
-    open: false,
+    open: options.open ?? false,
     anchorElement: referenceElement,
-    positionerElement: document.createElement('div'),
+    positionerElement: options.positionerElement ?? document.createElement('div'),
     triggerElements: new PopupTriggerMap(),
     defaultPopupId: undefined,
     nested: false,
@@ -929,6 +933,40 @@ describe('rules with no Base UI case', () => {
     await moveOnPage(300, 400);
 
     expect(store.state.anchorOverride).toBe(null);
+  });
+
+  it('moves the cursor anchor to the new store when the store changes', async () => {
+    // Both stores have the same positioner element. Thus only the change of the store restarts the
+    // window listener.
+    const positioner = document.createElement('div');
+    const first = createRootStore(null, { open: true, positionerElement: positioner });
+    const second = createRootStore(null, { open: true, positionerElement: positioner });
+    const store = shallowRef<PopupInteractionStore>(first);
+    const Part = defineComponent({
+      setup() {
+        const clientPoint = useClientPoint(store);
+        return () => <div {...clientPoint} style={{ pointerEvents: 'none' }} />;
+      },
+    });
+    const { unmount } = await render(<Part />);
+    const rectOf = (target: FloatingRootStore) =>
+      target.state.anchorOverride?.getBoundingClientRect();
+
+    await moveOnPage(100, 100);
+    expect(rectOf(first)).toMatchObject({ x: 100, y: 100 });
+
+    store.value = second;
+    await flushMicrotasks();
+    expect(first.state.anchorOverride).toBe(null);
+
+    await moveOnPage(300, 400);
+    expect({ first: first.state.anchorOverride, second: rectOf(second) }).toMatchObject({
+      first: null,
+      second: { x: 300, y: 400 },
+    });
+
+    unmount();
+    expect(second.state.anchorOverride).toBe(null);
   });
 
   it('removes the window listener while KeepAlive holds the part, and adds it back', async () => {
