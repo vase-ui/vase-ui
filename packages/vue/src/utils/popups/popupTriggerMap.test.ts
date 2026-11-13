@@ -121,4 +121,98 @@ describe('PopupTriggerMap', () => {
       'Vase UI: A trigger element cannot be registered under multiple IDs in PopupTriggerMap.',
     );
   });
+
+  describe('setActive', () => {
+    function createMap() {
+      const elements = {
+        first: document.createElement('button'),
+        second: document.createElement('button'),
+        third: document.createElement('button'),
+      };
+      const map = new PopupTriggerMap();
+      map.add('first', elements.first);
+      map.add('second', elements.second);
+      map.add('third', elements.third);
+      return { map, elements };
+    }
+
+    const idsOf = (map: PopupTriggerMap) => Array.from(map.entries(), ([id]) => id);
+
+    it('keeps the place of an entry that is not active', () => {
+      const { map } = createMap();
+
+      map.setActive('second', false);
+      expect(idsOf(map)).toEqual(['first', 'third']);
+
+      map.setActive('second', true);
+      expect(idsOf(map)).toEqual(['first', 'second', 'third']);
+    });
+
+    it('hides an entry that is not active from each reader', () => {
+      const { map, elements } = createMap();
+
+      map.setActive('second', false);
+
+      expect(map.getById('second')).toBeUndefined();
+      expect(map.hasElement(elements.second)).toBe(false);
+      expect(map.hasMatchingElement((element) => element === elements.second)).toBe(false);
+      expect(Array.from(map.elements())).toEqual([elements.first, elements.third]);
+      expect(map.size).toBe(2);
+    });
+
+    it('makes an entry active when its id gets a new element', () => {
+      const { map } = createMap();
+      const replacement = document.createElement('button');
+
+      map.setActive('second', false);
+      map.add('second', replacement);
+
+      expect(map.getById('second')).toBe(replacement);
+      expect(map.size).toBe(3);
+    });
+
+    it('forgets that an entry is not active when the entry is deleted', () => {
+      const { map } = createMap();
+
+      map.setActive('second', false);
+      map.delete('second');
+
+      expect(map.size).toBe(2);
+    });
+
+    it('does nothing for an id that has no entry', () => {
+      const { map } = createMap();
+
+      map.setActive('missing', false);
+
+      expect(map.size).toBe(3);
+    });
+  });
+
+  describe('delete with an element', () => {
+    it('keeps an entry that holds another element', () => {
+      const map = new PopupTriggerMap();
+      const first = document.createElement('button');
+      const second = document.createElement('button');
+      map.add('trigger', first);
+
+      map.delete('trigger', second);
+
+      expect(map.getById('trigger')).toBe(first);
+    });
+
+    it('removes an entry that holds the element, also when the entry is not active', () => {
+      const map = new PopupTriggerMap();
+      const button = document.createElement('button');
+      map.add('trigger', button);
+      map.setActive('trigger', false);
+
+      map.delete('trigger', button);
+      // `setActive` shows an entry that is still in the map.
+      map.setActive('trigger', true);
+
+      expect(map.getById('trigger')).toBeUndefined();
+      expect(map.size).toBe(0);
+    });
+  });
 });

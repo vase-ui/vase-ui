@@ -551,7 +551,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - Vue has no public batch for writes. A watcher with the default flush runs one time for an update of many keys. A watcher with `flush: 'sync'` runs after the write of each key, so it can read a state that is not complete.
 - `setState` finds the changed keys before it writes the first key. A sync watcher can write the store during an update, and that write stays.
 - `BasePopupStore` writes `open` and `openProp` after the other keys. A sync watcher of the open state then reads the trigger and the reason of the change.
-- A function that a render function or a ref callback calls reads `toRaw(store.state)`. That read adds no dependency. The write methods of a store read the state in this way.
+- A function that a render function, a ref callback or the cleanup of a `watch` calls reads `toRaw(store.state)`. That read adds no dependency. Vue runs the cleanup of a part in the render of its parent when the part unmounts. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
 - A handle holds an inert `NullStore` and a `shallowRef` that points at the store of the root that controls the handle. A `computed` that reads `handle.store`, or a getter such as `isOpen` that reads the state of that store, follows the pointer. A method such as `open()` reads `attachedStoreUntracked`, so an effect that calls it does not run again when a root attaches or detaches.
@@ -563,6 +563,16 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
 - A function that works with the store of any family types its parameter as `PopupTriggerDataStore<State>`, or as a `ReactiveStore<State, PopupStoreContext<never>, PopupStoreSelectors>` plus the members that it calls. A parameter of the type `BasePopupStore<…>` refuses a family store with other change event details. It also refuses a family store with a step that returns only keys that the family adds.
 - Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
+- A trigger part calls `useTriggerDataForwarding(triggerId, store, () => ({ payload: props.payload }))` in `setup`. It gives the `registerTrigger` that the call returns to `useRenderElement` as a `ref`. A trigger that gives no data to the store calls `useTriggerRegistration(triggerId, store)` in the same way.
+- `registerTrigger` only writes a `shallowRef`. One `watch` with `flush: 'post'` adds the element to the trigger map. It removes the entry when the element, the id or the store changes and when the part unmounts, but only an entry that holds its element.
+- The registration follows the store that a handle gives. A detached trigger moves from the inert store to the store of a root when the root attaches, and back when the root detaches.
+- A server render calls no `ref` callback, so it registers no trigger.
+- A registration changes `triggerCount` only while the popup is open.
+- The registration of the active trigger gives its element to the store, and its data while the popup is open. The registration of another trigger claims an open popup that has no active trigger, unless the popup opened with no trigger. The popup then gets the element and the data of that trigger.
+- While a trigger owns the mounted popup, each change of its data goes to the store.
+- `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated. A new entry in the hook would reverse the order of the triggers, because `KeepAlive` runs the `onActivated` hooks of a branch from the last part to the first part.
+- When the flag changes, the registration updates `triggerCount`. After the activation, it gives the data of the trigger to the store again.
+- A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree

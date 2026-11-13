@@ -1,15 +1,11 @@
 {
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
-    "packages/react/src/utils/popups/floating-root/**"
+    "packages/react/src/utils/popups/floating-root/**",
+    "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the registration of a popup trigger ports the file."
-    },
     {
       "upstream": "packages/react/src/utils/popups/popupRoot.tsx",
       "kind": "waits-on",
@@ -54,18 +50,6 @@
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.spec.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/popupStoreUtils.ts",
-      "reason": "The file tests `popupStoreUtils.ts`."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/popupStoreUtils.ts",
-      "reason": "The file tests `popupStoreUtils.ts`."
     },
     {
       "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
