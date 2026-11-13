@@ -9,9 +9,11 @@ const FIXTURES = join(import.meta.dirname, 'fixtures');
 const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
 const ENTRY = join(SAMPLE, 'index.ts');
 const PARTS = join(SAMPLE, 'index.parts.ts');
+const ROOT = join(SAMPLE, 'root/SampleRoot.vue');
 
 const CREATE_HANDLE = 'export function createHandle(): Handle {';
 const HANDLE = 'export interface Handle {\n  open: () => void;\n  close: () => void;\n}';
+const OPEN_PROP = '  open?: boolean | undefined;';
 
 const project = createVaseProject(join(FIXTURES, 'tsconfig.json'));
 
@@ -21,21 +23,23 @@ function exportOf(name: string): ExportMatch {
   return match;
 }
 
-/** Changes the text of `index.parts.ts` in memory for the time of `run`. The text is put back after it. */
-function withParts<T>(from: string, to: string, run: () => T): T {
-  const original = readFileSync(PARTS, 'utf8');
+/** Changes the text of a fixture file in memory for the time of `run`. The text is put back after it. */
+function withText<T>(path: string, from: string, to: string, run: () => T): T {
+  const original = readFileSync(path, 'utf8');
   assert.equal(
     original.includes(from),
     true,
-    `The seed does not apply. This text is not in ${PARTS}:\n${from}`,
+    `The seed does not apply. This text is not in ${path}:\n${from}`,
   );
-  project.updateFile(PARTS, original.replace(from, to));
+  project.updateFile(path, original.replace(from, to));
   try {
     return run();
   } finally {
-    project.updateFile(PARTS, original);
+    project.updateFile(path, original);
   }
 }
+
+const withParts = <T>(from: string, to: string, run: () => T): T => withText(PARTS, from, to, run);
 
 const readCreateHandle = () => project.readFunction(exportOf('createHandle'));
 
@@ -147,4 +151,29 @@ test('a union of literals has no property, although its apparent type has some',
     project.readProperties(exportOf('Side')),
   );
   assert.deepEqual(properties, []);
+});
+
+test('a prop that has the name of the listener of an emit has no metadata, because vue-component-meta leaves it out', () => {
+  const props = withText(
+    ROOT,
+    OPEN_PROP,
+    `${OPEN_PROP}\n  onOpenChangeComplete?: ((open: boolean) => void) | undefined;`,
+    () => project.readComponent(exportOf('Root'))?.props,
+  );
+  assert.deepEqual(props?.get('onOpenChangeComplete'), {
+    required: false,
+    default: null,
+    description: '',
+    type: '',
+  });
+});
+
+test('a prop that the SFC compiler reads and vue-component-meta lists under another name is an error', () => {
+  assert.throws(
+    () =>
+      withText(ROOT, OPEN_PROP, `${OPEN_PROP}\n  onVnodeMounted?: (() => void) | undefined;`, () =>
+        project.readComponent(exportOf('Root')),
+      ),
+    /the SFC compiler reads the prop "onVnodeMounted", but vue-component-meta does not list it/,
+  );
 });

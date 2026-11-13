@@ -7,7 +7,6 @@
     "packages/react/src/internals/field-constants/**",
     "packages/react/src/internals/field-register-control/**",
     "packages/react/src/internals/field-root-context/**",
-    "packages/react/src/internals/form-context/**",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
