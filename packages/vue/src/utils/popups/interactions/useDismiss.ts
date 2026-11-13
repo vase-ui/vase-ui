@@ -19,6 +19,7 @@ import {
   isShadowRoot,
 } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
+import { NOOP } from '../../../common/empty';
 import { mergeCleanups } from '../../../common/mergeCleanups';
 import { ownerDocument } from '../../../common/owner';
 import { platform } from '../../../common/platform';
@@ -86,6 +87,38 @@ export function normalizeProp(normalizable?: Bubbles) {
   };
 }
 
+function getFrameDocuments(doc: Document): Document[] {
+  const view = doc.defaultView;
+  const frameDocuments: Document[] = [];
+  for (let index = 0; view && index < view.length; index += 1) {
+    let frameDocument: Document;
+    try {
+      frameDocument = view[index].document;
+    } catch {
+      // A cross-origin frame throws when code reads its document.
+      continue;
+    }
+    frameDocuments.push(frameDocument, ...getFrameDocuments(frameDocument));
+  }
+  return frameDocuments;
+}
+
+/**
+ * Gives the frame element of `doc` that holds the target of the event, at any depth. It gives
+ * `null` when the target is in `doc` itself.
+ */
+function getFrameOfEvent(event: Event, doc: Document): Element | null {
+  let view = (getTarget(event) as Node | null)?.ownerDocument?.defaultView;
+  while (view && view.document !== doc) {
+    const frame = view.frameElement;
+    if (frame?.ownerDocument === doc) {
+      return frame;
+    }
+    view = frame?.ownerDocument.defaultView;
+  }
+  return null;
+}
+
 export interface UseDismissProps {
   /**
    * Whether the composable is enabled, including its document listeners and its event handlers.
@@ -138,6 +171,10 @@ export interface UseDismissProps {
  * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
  * the popup, also when `Teleport` moved it. Other content that `Teleport` moved out of the popup
  * is outside it.
+ *
+ * A press in a same-origin frame below the document of the popup counts as a press on the frame
+ * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
+ * a shadow tree.
  * @see https://floating-ui.com/docs/useDismiss
  */
 export function useDismiss(
@@ -419,10 +456,16 @@ export function useDismiss(
       );
     }
 
+    // The path of an event in a frame has no node of this document. The frame element then takes
+    // the place of the target.
+    function isEventWithin(event: Event, element: Element | null | undefined) {
+      return isEventTargetWithin(event, element) || contains(element, getFrameOfEvent(event, doc));
+    }
+
     function isEventWithinOwnElements(event: Event) {
       return (
-        isEventTargetWithin(event, store.select('positionerElement')) ||
-        isEventTargetWithin(event, store.select('anchorElement'))
+        isEventWithin(event, store.select('positionerElement')) ||
+        isEventWithin(event, store.select('anchorElement'))
       );
     }
 
@@ -431,7 +474,7 @@ export function useDismiss(
       const targetIsInsideChildren =
         tree.value &&
         getNodeChildren(tree.value.nodesRef.value, nodeId).some((node) =>
-          isEventTargetWithin(event, node.context?.elements.floating),
+          isEventWithin(event, node.context?.elements.floating),
         );
 
       return isEventWithinOwnElements(event) || targetIsInsideChildren;
@@ -455,8 +498,10 @@ export function useDismiss(
       }
 
       const target = getTarget(event);
+      // A press in a frame is a press on the frame element for the checks of this document.
+      const targetInDocument = getFrameOfEvent(event, doc) ?? target;
       const inertSelector = `[${createAttribute('inert')}]`;
-      const targetRoot = isElement(target) ? target.getRootNode() : null;
+      const targetRoot = isElement(targetInDocument) ? targetInDocument.getRootNode() : null;
       const markers = Array.from(
         (isShadowRoot(targetRoot)
           ? targetRoot
@@ -468,14 +513,14 @@ export function useDismiss(
 
       // If another trigger is clicked, don't close the floating element.
       if (
-        target &&
-        (triggers.hasElement(target as Element) ||
-          triggers.hasMatchingElement((trigger) => contains(trigger, target as Element)))
+        targetInDocument &&
+        (triggers.hasElement(targetInDocument as Element) ||
+          triggers.hasMatchingElement((trigger) => contains(trigger, targetInDocument as Element)))
       ) {
         return;
       }
 
-      let targetRootAncestor = isElement(target) ? target : null;
+      let targetRootAncestor = isElement(targetInDocument) ? targetInDocument : null;
       while (targetRootAncestor && !isLastTraversableNode(targetRootAncestor)) {
         const nextParent = getParentNode(targetRootAncestor);
         if (isLastTraversableNode(nextParent) || !isElement(nextParent)) {
@@ -489,10 +534,10 @@ export function useDismiss(
       // floating element rendered.
       if (
         markers.length &&
-        isElement(target) &&
-        !isRootElement(target) &&
+        isElement(targetInDocument) &&
+        !isRootElement(targetInDocument) &&
         // Clicked on a direct ancestor (e.g. FloatingOverlay).
-        !contains(target, store.select('positionerElement')) &&
+        !contains(targetInDocument, store.select('positionerElement')) &&
         // If the target root element contains none of the markers, then the
         // element was injected after the floating element rendered.
         markers.every((marker) => !contains(targetRootAncestor, marker))
@@ -502,6 +547,7 @@ export function useDismiss(
 
       // Check if the click occurred on the scrollbar
       // Skip for touch events: scrollbars don't receive touch events on most platforms
+      // In a frame, the offsets of the event are relative to its target, not to the frame element.
       if (isHTMLElement(target) && !('touches' in event)) {
         const lastTraversableNode = isLastTraversableNode(target);
         const style = getComputedStyle(target);
@@ -615,6 +661,15 @@ export function useDismiss(
       }
     }
 
+    // A press in a frame in the popup element reaches no capture listener of that element, so the
+    // popups above get no marker from it. This popup needs none: the frame element takes the place
+    // of the target in its own checks.
+    function markPressInFrame(event: Event) {
+      if (contains(store.select('positionerElement'), getFrameOfEvent(event, doc))) {
+        parent?.markInsideComponentTree();
+      }
+    }
+
     function addTargetEventListenerOnce<EventType extends Event>(
       event: EventType,
       listener: (event: EventType) => void,
@@ -624,6 +679,8 @@ export function useDismiss(
       if (!target) {
         return;
       }
+
+      markPressInFrame(event);
 
       // If propagation stops before the target, this runs on the next event of the type to reach
       // it instead, which must not be handled as the stopped one.
@@ -760,6 +817,61 @@ export function useDismiss(
       addTargetEventListenerOnce(event, handleTouchEnd);
     }
 
+    function listenForPress(pressDocument: Document) {
+      return mergeCleanups(
+        addEventListener(pressDocument, 'click', closeOnPressOutsideCapture, true),
+        addEventListener(pressDocument, 'pointerdown', closeOnPressOutsideCapture, true),
+        addEventListener(pressDocument, 'pointerup', handlePressEndCapture, true),
+        addEventListener(pressDocument, 'pointercancel', handlePressEndCapture, true),
+        addEventListener(pressDocument, 'mousedown', closeOnPressOutsideCapture, true),
+        addEventListener(pressDocument, 'mouseup', handlePressEndCapture, true),
+        addEventListener(pressDocument, 'touchstart', handleTouchStartCapture, {
+          capture: true,
+          passive: true,
+        }),
+        addEventListener(pressDocument, 'touchmove', handleTouchMoveCapture, {
+          capture: true,
+          passive: true,
+        }),
+        addEventListener(pressDocument, 'touchend', handleTouchEndCapture, {
+          capture: true,
+          passive: true,
+        }),
+      );
+    }
+
+    // A press in a frame sends no event to the document of the popup, so each frame below it gets
+    // the press listeners too. A frame has a new document when it loads, and `load` does not
+    // bubble. A capture listener for `load` on each document finds a frame that loads while the
+    // popup is open.
+    function listenInFrames() {
+      let stopListening = NOOP;
+
+      function listen() {
+        stopListening();
+        stopListening = mergeCleanups(
+          ...getFrameDocuments(doc).map((frameDocument) =>
+            mergeCleanups(
+              listenForPress(frameDocument),
+              addEventListener(frameDocument, 'load', handleFrameLoad, true),
+            ),
+          ),
+        );
+      }
+
+      function handleFrameLoad(event: Event) {
+        const target = getTarget(event);
+        if (isElement(target) && target.localName === 'iframe') {
+          listen();
+        }
+      }
+
+      listen();
+      return mergeCleanups(addEventListener(doc, 'load', handleFrameLoad, true), () =>
+        stopListening(),
+      );
+    }
+
     const unsubscribe = mergeCleanups(
       isEscapeKeyEnabled() &&
         mergeCleanups(
@@ -781,27 +893,7 @@ export function useDismiss(
           }),
           addEventListener(doc, 'compositionend', handleCompositionEnd),
         ),
-      outsidePressEnabled &&
-        mergeCleanups(
-          addEventListener(doc, 'click', closeOnPressOutsideCapture, true),
-          addEventListener(doc, 'pointerdown', closeOnPressOutsideCapture, true),
-          addEventListener(doc, 'pointerup', handlePressEndCapture, true),
-          addEventListener(doc, 'pointercancel', handlePressEndCapture, true),
-          addEventListener(doc, 'mousedown', closeOnPressOutsideCapture, true),
-          addEventListener(doc, 'mouseup', handlePressEndCapture, true),
-          addEventListener(doc, 'touchstart', handleTouchStartCapture, {
-            capture: true,
-            passive: true,
-          }),
-          addEventListener(doc, 'touchmove', handleTouchMoveCapture, {
-            capture: true,
-            passive: true,
-          }),
-          addEventListener(doc, 'touchend', handleTouchEndCapture, {
-            capture: true,
-            passive: true,
-          }),
-        ),
+      outsidePressEnabled && mergeCleanups(listenForPress(doc), listenInFrames()),
     );
 
     cleanup = () => {
