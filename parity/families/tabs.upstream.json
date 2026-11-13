@@ -1,0 +1,1857 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/tabs/**",
+    "docs/src/app/(docs)/react/components/tabs/**"
+  ],
+  "sources": [
+    "packages/react/src/tabs/index.parts.ts",
+    "packages/react/src/tabs/index.ts",
+    "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+    "packages/react/src/tabs/indicator/TabsIndicatorCssVars.ts",
+    "packages/react/src/tabs/indicator/TabsIndicatorDataAttributes.ts",
+    "packages/react/src/tabs/indicator/prehydrationScript.min.ts",
+    "packages/react/src/tabs/indicator/prehydrationScript.template.js",
+    "packages/react/src/tabs/list/TabsList.tsx",
+    "packages/react/src/tabs/list/TabsListContext.ts",
+    "packages/react/src/tabs/list/TabsListDataAttributes.ts",
+    "packages/react/src/tabs/panel/TabsPanel.tsx",
+    "packages/react/src/tabs/panel/TabsPanelDataAttributes.ts",
+    "packages/react/src/tabs/root/TabsRoot.tsx",
+    "packages/react/src/tabs/root/TabsRootContext.ts",
+    "packages/react/src/tabs/root/TabsRootDataAttributes.ts",
+    "packages/react/src/tabs/root/stateAttributesMapping.ts",
+    "packages/react/src/tabs/tab/TabsTab.tsx",
+    "packages/react/src/tabs/tab/TabsTabDataAttributes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tabs.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />"
+          ],
+          "title": "exposes null active tab state when the selected value has no matching tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "should not render when no tab is active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "should set CSS variables corresponding to the active tab",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "should update the position and movement variables when the active tab changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "should update the position variables when the tab list is resized",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "should account for scroll and border when the tab list is transformed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "accounts for a scrolled container between the tab list and the active tab",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "overlays the active tab when an ancestor has a 2D rotation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "overlays the active tab when an ancestor has a size-preserving flip",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "sets transformed offsets relative to the tab list when the list is not the offset parent",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "overlays the active tab when an ancestor uses the rotate longhand",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "overlays the active tab when an ancestor uses a flipping scale longhand",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "overlays the active tab when an ancestor has a 3D rotation (#4837)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "follows the active tab when it has its own transform translation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "follows the active tab when it uses the translate longhand",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "follows the active tab when the translate longhand uses percentages",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "updates position when a different tab resizes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "keeps observing a tab whose rendered element type changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "falls back to offset positions when the tab list is scaled to zero",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "updates position when a new tab is inserted and then resized",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "updates all indicators when a different tab resizes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "rendering"
+          ],
+          "title": "perf: single tab resize does not fan out excessive indicator rerenders",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration rendering"
+          ],
+          "title": "renders the inline pre-hydration script during server-side rendering"
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration rendering"
+          ],
+          "title": "inlines the script contents during server-side rendering",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration rendering"
+          ],
+          "title": "applies the CSP nonce to the pre-hydration script"
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration rendering"
+          ],
+          "title": "keeps the script during hydration and removes it afterwards",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration script execution"
+          ],
+          "title": "positions the indicator once a hidden streamed segment becomes visible",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration script execution"
+          ],
+          "title": "does not resurrect the indicator when the captured tab is no longer active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration script execution"
+          ],
+          "title": "stops once hydration has revealed the indicator",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Indicator />",
+            "pre-hydration script execution"
+          ],
+          "title": "keeps observing until the active tab is fully measurable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tabs/list/TabsList.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tabs.List />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "accessibility attributes"
+          ],
+          "title": "sets the aria-selected attribute on the active tab"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "prop: loopFocus"
+          ],
+          "title": "does not wrap focus past the first tab when `loopFocus` is false"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "prop: loopFocus"
+          ],
+          "title": "does not wrap focus past the last tab when `loopFocus` is false"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "keyboard navigation"
+          ],
+          "title": "moves focus to a tab disabled with the `disabled` prop"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "keyboard navigation"
+          ],
+          "title": "skips a natively disabled tab in a single keypress"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "roving focus after tab removal"
+          ],
+          "title": "moves the tab stop off a hidden successor when the highlighted tab is removed"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "roving focus after tab removal"
+          ],
+          "title": "can fall back to a tab that is focusable when disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "roving focus after tab removal"
+          ],
+          "title": "keeps the tab stop on the selected tab when focus is inside the list"
+        },
+        {
+          "describe": [
+            "<Tabs.List />",
+            "roving focus after tab removal"
+          ],
+          "title": "keeps tracking a successor through subsequent removals"
+        },
+        {
+          "describe": [
+            "<Tabs.List />"
+          ],
+          "title": "can be named via `aria-label`"
+        },
+        {
+          "describe": [
+            "<Tabs.List />"
+          ],
+          "title": "can be named via `aria-labelledby`"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tabs.Panel />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Tabs.Root>"
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />",
+            "panels sharing a value"
+          ],
+          "title": "keeps the surviving registration when a shadowed panel unmounts"
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />"
+          ],
+          "title": "sets the panel index data attribute"
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />",
+            "Suspense integration"
+          ],
+          "title": "renders a panel that suspends when opened with the boundary outside the root",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />",
+            "animations"
+          ],
+          "title": "triggers enter animation via data-starting-style when mounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Panel />",
+            "animations"
+          ],
+          "title": "applies data-ending-style before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tabs.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "should accept a null child"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "should support empty children"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "puts the selected child in tab order"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "sets the aria-labelledby attribute on tab panels to the corresponding tab id"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "sets the aria-controls attribute on tabs to the corresponding tab panel id"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "sets aria-controls on the first tab when no value is provided"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "syncs aria-controls to the mounted tab panel when keepMounted is false"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: children"
+          ],
+          "title": "cleans and replaces panel registrations in Strict Mode"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: value"
+          ],
+          "title": "should pass selected prop to children"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: value"
+          ],
+          "title": "should support values of different types"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: value"
+          ],
+          "title": "should support a function as the default value"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "should select the second tab when the first one is disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "should select the third tab when first two tabs are disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "should still honor explicit defaultValue even if it points to a disabled tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "continues honoring an initially disabled explicit defaultValue after defaultValue changes"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "should still honor explicit value prop even if it points to a disabled tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "does not set tabIndex=0 on disabled tabs when they are programmatically selected"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "disabled tabs"
+          ],
+          "title": "does not select any tab when all tabs are disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "when `activateOnFocus = true` should call onValueChange on pointerdown"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should call onValueChange when clicking",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should not call onValueChange on non-main button clicks"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should not call onValueChange when already active"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "when `activateOnFocus = true` should call onValueChange if an unactive tab gets focused"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "when `activateOnFocus = false` should not call onValueChange if an unactive tab gets focused"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when auto-selecting the first tab on mount"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange with the selected value when the implicit default matches a later tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when the implicit first tab is disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not cancel automatic value changes"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not move an uncontrolled selection when a user-initiated change is canceled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange with null when all tabs are initially disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not emit missing when an enabled tab appears after all tabs were disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not call onValueChange on initial render when defaultValue is provided"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not call onValueChange on initial render when defaultValue is null"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "treats defaultValue={undefined} as an implicit default when the first tab is disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when the selected tab becomes disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when an explicit disabled default becomes disabled again"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when the selected tab becomes disabled with keepMounted panels"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when the selected tab is removed"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange with null when the selected tab is removed and no tabs remain"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange with null when a populated tab list is replaced by an empty one"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "calls onValueChange when an explicit defaultValue points at a tab that is never present"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not emit a second change when the fallback resolves to the current value"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not call onValueChange when a controlled selected tab becomes disabled"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "keeps a roving focus entry point when a controlled selected tab is removed"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: orientation"
+          ],
+          "title": "does not add aria-orientation by default"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "prop: orientation"
+          ],
+          "title": "adds the proper aria-orientation when vertical"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "pointer navigation"
+          ],
+          "title": "selects the clicked tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "pointer navigation"
+          ],
+          "title": "does not select the clicked disabled tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to the last tab without activating it if focus is on the first tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to the previous tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`",
+            "with `activateOnFocus = true`"
+          ],
+          "title": "moves focus to the last tab while activating it if focus is on the first tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`",
+            "with `activateOnFocus = true`"
+          ],
+          "title": "moves focus to the previous tab while activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${previousItemKey}`"
+          ],
+          "title": "moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to the first tab without activating it if focus is on the last tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to the next tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`",
+            "with `activateOnFocus = false`"
+          ],
+          "title": "moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`",
+            "with `activateOnFocus = true`"
+          ],
+          "title": "moves focus to the first tab while activating it if focus is on the last tab"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`",
+            "with `activateOnFocus = true`"
+          ],
+          "title": "moves focus to the next tab while activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "`${nextItemKey}`"
+          ],
+          "title": "moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab element in a $name tablist",
+            "modifier keys"
+          ],
+          "title": "does not move focus when modifier key: $modifierKey is pressed"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "Home"
+          ],
+          "title": "when `activateOnFocus = false`, moves focus to the first tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "Home"
+          ],
+          "title": "when `activateOnFocus = true`, moves focus to the first tab while activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "Home"
+          ],
+          "title": "when `activateOnFocus = $activateOnFocus`, moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "End"
+          ],
+          "title": "when `activateOnFocus = false`, moves focus to the last tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "End"
+          ],
+          "title": "when `activateOnFocus = true`, moves focus to the last tab while activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab",
+            "when focus is on a tab regardless of orientation",
+            "End"
+          ],
+          "title": "when `activateOnFocus = $activateOnFocus`, moves focus to a disabled tab without activating it"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "keyboard navigation when focus is on a tab"
+          ],
+          "title": "should allow to focus first tab when there are no active tabs"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should set the `data-activation-direction` attribute on the tabs root with orientation=horizontal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should set the `data-activation-direction` attribute on the tabs root with orientation=vertical",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should update `data-activation-direction` on programmatic value changes with orientation=horizontal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should update `data-activation-direction` on programmatic value changes with orientation=vertical",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "keeps activation direction none after automatic disabled fallback",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "resets `data-activation-direction` when the selection is cleared and restored",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should update `data-activation-direction` on programmatic change after a canceled click",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should update `data-activation-direction` on programmatic change after a controlled parent ignores click",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should compute correct direction when adding and selecting a new tab in one controlled update",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "activation direction"
+          ],
+          "title": "should compute correct direction on final render when adding and selecting a new tab in one controlled update with out of order string values",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "nested tabs"
+          ],
+          "title": "keeps a nested root independent from the one hosting its panel"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "popups"
+          ],
+          "title": "works inside Popover"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "popups"
+          ],
+          "title": "works inside Dialog"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "highlight synchronization on external value change relative to focus"
+          ],
+          "title": "keeps controlled async activation and focus aligned with activateOnFocus=%s"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "highlight synchronization on external value change relative to focus"
+          ],
+          "title": "when focus is outside the tablist, highlight follows the new active tab (tabIndex=0 moves)"
+        },
+        {
+          "describe": [
+            "<Tabs.Root />",
+            "highlight synchronization on external value change relative to focus"
+          ],
+          "title": "when focus is inside the tablist, highlight stays put on external change and arrow keys continue from the focused tab"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tabs/tab/TabsTab.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tabs.Tab />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "prop: nativeButton"
+          ],
+          "title": "renders as an anchor and toggles selection when `nativeButton` is false"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "prop: nativeButton"
+          ],
+          "title": "renders a react-router Link"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "prop: nativeButton"
+          ],
+          "title": "settles when the rendered component recreates its merged ref"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Tabs.List>"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "pointer interaction"
+          ],
+          "title": "does not re-commit the value when the active tab is pressed"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "pointer interaction"
+          ],
+          "title": "does not activate a disabled tab that is pressed and focused"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "pointer interaction"
+          ],
+          "title": "does not activate a tab focused by a held secondary-button press"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "pointer interaction"
+          ],
+          "title": "activates on focus again once a secondary-button press has ended"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "pointer interaction"
+          ],
+          "title": "activates on focus again once a secondary-button press is cancelled"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "keyboard activation"
+          ],
+          "title": "activates the focused tab with %s when `activateOnFocus` is false"
+        },
+        {
+          "describe": [
+            "<Tabs.Tab />",
+            "state"
+          ],
+          "title": "exposes tab activation direction through the render prop",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "Tabs.Tab.Value",
+              "default": "0"
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "Tabs.Tab.Value",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: Tabs.Tab.Value, eventDetails: Tabs.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Tabs.Root.Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tabs.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tabs.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tabs.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TabsRootState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Tabs.Root.Orientation"
+              },
+              {
+                "name": "tabActivationDirection",
+                "optional": false,
+                "type": "Tabs.Tab.ActivationDirection"
+              }
+            ],
+            "code": "type TabsRootState = {\n    orientation: Tabs.Root.Orientation;\n    tabActivationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "TabsRootChangeEventReason",
+            "values": [
+              "none",
+              "disabled",
+              "missing",
+              "initial"
+            ],
+            "code": "type TabsRootChangeEventReason = 'none' | 'disabled' | 'missing' | 'initial';"
+          },
+          "changeEventDetails": {
+            "name": "TabsRootChangeEventDetails",
+            "code": "type TabsRootChangeEventDetails = ({\n    reason: 'none';\n} | {\n    reason: 'disabled';\n} | {\n    reason: 'missing';\n} | {\n    reason: 'initial';\n}) & {\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    activationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down' | 'none'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "List",
+          "tag": "div",
+          "props": [
+            {
+              "name": "activateOnFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tabs.List.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tabs.List.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tabs.List.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TabsListState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Tabs.Root.Orientation"
+              },
+              {
+                "name": "tabActivationDirection",
+                "optional": false,
+                "type": "Tabs.Tab.ActivationDirection"
+              }
+            ],
+            "code": "type TabsListState = {\n    orientation: Tabs.Root.Orientation;\n    tabActivationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down' | 'none'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Panel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "Tabs.Tab.Value",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tabs.Panel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tabs.Panel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tabs.Panel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TabsPanelState",
+            "fields": [
+              {
+                "name": "hidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Tabs.Root.Orientation"
+              },
+              {
+                "name": "tabActivationDirection",
+                "optional": false,
+                "type": "Tabs.Tab.ActivationDirection"
+              }
+            ],
+            "code": "type TabsPanelState = {\n    hidden: boolean;\n    transitionStatus: TransitionStatus;\n    orientation: Tabs.Root.Orientation;\n    tabActivationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down' | 'none'"
+            },
+            {
+              "name": "data-hidden",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "renderBeforeHydration",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tabs.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tabs.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tabs.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TabsIndicatorState",
+            "fields": [
+              {
+                "name": "activeTabPosition",
+                "optional": false,
+                "type": "Tabs.Tab.Position | null"
+              },
+              {
+                "name": "activeTabSize",
+                "optional": false,
+                "type": "Tabs.Tab.Size | null"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Tabs.Root.Orientation"
+              },
+              {
+                "name": "tabActivationDirection",
+                "optional": false,
+                "type": "Tabs.Tab.ActivationDirection"
+              }
+            ],
+            "code": "type TabsIndicatorState = {\n    activeTabPosition: Tabs.Tab.Position | null;\n    activeTabSize: Tabs.Tab.Size | null;\n    orientation: Tabs.Root.Orientation;\n    tabActivationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down' | 'none'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--active-tab-bottom",
+              "type": "number"
+            },
+            {
+              "name": "--active-tab-height",
+              "type": "number"
+            },
+            {
+              "name": "--active-tab-left",
+              "type": "number"
+            },
+            {
+              "name": "--active-tab-right",
+              "type": "number"
+            },
+            {
+              "name": "--active-tab-top",
+              "type": "number"
+            },
+            {
+              "name": "--active-tab-width",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Tab",
+          "tag": "button",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "Tabs.Tab.Value",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tabs.Tab.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tabs.Tab.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tabs.Tab.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TabsTabState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "active",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Tabs.Root.Orientation"
+              },
+              {
+                "name": "tabActivationDirection",
+                "optional": false,
+                "type": "Tabs.Tab.ActivationDirection"
+              }
+            ],
+            "code": "type TabsTabState = {\n    disabled: boolean;\n    active: boolean;\n    orientation: Tabs.Root.Orientation;\n    tabActivationDirection: Tabs.Tab.ActivationDirection;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down' | 'none'"
+            },
+            {
+              "name": "data-active",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.Orientation",
+          "code": "type TabsRootOrientation = 'horizontal' | 'vertical';"
+        },
+        {
+          "name": "Panel.Metadata",
+          "code": "type TabsPanelMetadata = {\n    id?: string;\n    value: Tabs.Tab.Value;\n};"
+        },
+        {
+          "name": "Tab.Value",
+          "code": "type TabsTabValue = Tabs.Tab.Value;"
+        },
+        {
+          "name": "Tab.ActivationDirection",
+          "code": "type TabsTabActivationDirection = 'left' | 'right' | 'up' | 'down' | 'none';"
+        },
+        {
+          "name": "Tab.Metadata",
+          "code": "type TabsTabMetadata = {\n    disabled: boolean;\n    id: string | undefined;\n    value: Tabs.Tab.Value | undefined;\n};"
+        },
+        {
+          "name": "Tab.Position",
+          "code": "type TabsTabPosition = {\n    left: number;\n    right: number;\n    top: number;\n    bottom: number;\n};"
+        },
+        {
+          "name": "Tab.Size",
+          "code": "type TabsTabSize = {\n    width: number;\n    height: number;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "TabsIndicatorCssVariables",
+          "code": "declare namespace TabsIndicatorCssVariables {\n    const activeTabLeft: '--active-tab-left';\n    const activeTabRight: '--active-tab-right';\n    const activeTabTop: '--active-tab-top';\n    const activeTabBottom: '--active-tab-bottom';\n    const activeTabWidth: '--active-tab-width';\n    const activeTabHeight: '--active-tab-height';\n}",
+          "constants": [
+            {
+              "name": "activeTabLeft",
+              "value": "--active-tab-left"
+            },
+            {
+              "name": "activeTabRight",
+              "value": "--active-tab-right"
+            },
+            {
+              "name": "activeTabTop",
+              "value": "--active-tab-top"
+            },
+            {
+              "name": "activeTabBottom",
+              "value": "--active-tab-bottom"
+            },
+            {
+              "name": "activeTabWidth",
+              "value": "--active-tab-width"
+            },
+            {
+              "name": "activeTabHeight",
+              "value": "--active-tab-height"
+            }
+          ]
+        },
+        {
+          "name": "TabsIndicatorDataAttributes",
+          "code": "declare namespace TabsIndicatorDataAttributes {\n    const activationDirection: 'data-activation-direction';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "TabsListDataAttributes",
+          "code": "declare namespace TabsListDataAttributes {\n    const activationDirection: 'data-activation-direction';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "TabsPanelDataAttributes",
+          "code": "declare namespace TabsPanelDataAttributes {\n    const index: 'data-index';\n    const activationDirection: 'data-activation-direction';\n    const orientation: 'data-orientation';\n    const hidden: 'data-hidden';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "hidden",
+              "value": "data-hidden"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "TabsRootDataAttributes",
+          "code": "declare namespace TabsRootDataAttributes {\n    const activationDirection: 'data-activation-direction';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "TabsTabDataAttributes",
+          "code": "declare namespace TabsTabDataAttributes {\n    const activationDirection: 'data-activation-direction';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const active: 'data-active';\n}",
+          "constants": [
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "active",
+              "value": "data-active"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/tabs/page.mdx",
+      "referenceTags": [
+        "TypesTabs.Root",
+        "TypesTabs.List",
+        "TypesTabs.Tab",
+        "TypesTabs.Indicator",
+        "TypesTabs.Panel"
+      ]
+    }
+  ]
+}

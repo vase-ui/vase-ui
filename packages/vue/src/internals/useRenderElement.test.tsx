@@ -1,5 +1,13 @@
-import { vi, expect, describe, it } from 'vitest';
-import { defineAsyncComponent, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { vi, expect, describe, it, onTestFinished } from 'vitest';
+import {
+  createSSRApp,
+  defineAsyncComponent,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  shallowRef,
+} from 'vue';
 import type {
   ButtonHTMLAttributes,
   Component,
@@ -8,7 +16,15 @@ import type {
   ImgHTMLAttributes,
   Slots,
 } from 'vue';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  flushMicrotasks,
+  hydrate,
+  renderOnServer,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
+import OverridingStylePart from '../../test/fixtures/OverridingStylePart.vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
 import { markChildrenMounted, useRenderElement } from './useRenderElement';
@@ -581,6 +597,70 @@ describe('useRenderElement', () => {
       expect(element.style.padding).toBe('10px');
       expect(element.style.color).toBe('red');
       expect(element.style.margin).toBe('1px');
+    });
+
+    it('keeps a style that the code wrote when the merged style becomes empty', async () => {
+      const { container, setProps } = await render(
+        <OverridingStyleTestComponent style={{ color: 'red' }} />,
+      );
+      const element = container.firstElementChild as HTMLElement;
+      // A part writes such a declaration to the DOM, as `ScrollArea.Viewport` does.
+      element.style.setProperty('--written', '1');
+
+      await setProps({ style: {} });
+
+      expect(element.style.color).toBe('');
+      expect(element.style.getPropertyValue('--written')).toBe('1');
+    });
+
+    it('applies a list of fallback values for a style property', async () => {
+      // Vue sets each value of the list in turn. The browser keeps the last value that it accepts.
+      const style = { color: ['not a color', 'red'] } as unknown as CSSProperties;
+
+      const { container } = await render(<OverridingStyleTestComponent style={style} />);
+
+      expect((container.firstElementChild as HTMLElement).style.color).toBe('red');
+    });
+
+    it.each([
+      { name: 'an empty style object', props: { style: {} } },
+      { name: 'an empty overriding style', props: { overridingStyle: {} } },
+    ])('hydrates an element that has no style attribute for $name', async ({ props }) => {
+      const serverHtml = await renderOnServer('test/fixtures/OverridingStylePart.vue', props);
+      // A `<template>` element parses the HTML with no side effect.
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+
+      // `hydrate` takes an empty `style` attribute for no attribute, so this assertion is the proof.
+      expect(template.content.firstElementChild?.hasAttribute('style')).toBe(false);
+      await hydrate(OverridingStylePart, { serverHtml, props });
+    });
+
+    it('applies a style that becomes non-empty after the hydration', async () => {
+      // `hydrate` gives no way to change a prop after the mount, so the test hydrates by hand.
+      const serverHtml = await renderOnServer('test/fixtures/OverridingStylePart.vue', {
+        style: {},
+      });
+      const container = document.createElement('div');
+      document.body.append(container);
+      container.innerHTML = serverHtml;
+      const element = container.firstElementChild as HTMLElement;
+
+      const style = shallowRef<CSSProperties>({});
+      const app = createSSRApp({ render: () => h(OverridingStylePart, { style: style.value }) });
+      onTestFinished(() => {
+        app.unmount();
+        container.remove();
+      });
+      app.mount(container);
+
+      style.value = { color: 'red' };
+      await nextTick();
+
+      // A mismatch makes Vue discard the server nodes and render new nodes.
+      expect(container.firstElementChild).toBe(element);
+      expect(element.style.color).toBe('red');
+      expect(takeReportedMessages()).toEqual([]);
     });
   });
 

@@ -48,9 +48,13 @@ export function markChildrenMounted(): void {
   }
 }
 
-function hasKeys(value: object | undefined): boolean {
-  for (const key in value) {
-    return true;
+// A list of fallback values for one property counts, because a client applies each value.
+function hasStyleValue(style: Record<string, unknown>): boolean {
+  for (const key in style) {
+    const value = style[key];
+    if (value !== undefined && value !== null && value !== '') {
+      return true;
+    }
   }
   return false;
 }
@@ -78,6 +82,7 @@ export function useRenderElement<
   const refCallbacks = Array.isArray(params.ref) ? params.ref : [params.ref];
   const childrenMarker: ChildrenMarker = { mounted: false };
   let hasCalledElementProps = false;
+  let hasWrittenStyleKey = false;
 
   if (params.children) {
     provide(CHILDREN_MARKER, childrenMarker);
@@ -137,15 +142,20 @@ export function useRenderElement<
     }
 
     // A style can be a string or an array in Vue, so `mergeObjects` does not fit here.
-    const stateStyle = componentProps.stateStyle?.(state);
-    const overridingStyle = params.overridingStyle?.();
-    if (styleAttribute || stateStyle || hasKeys(overridingStyle)) {
-      outProps.style = normalizeStyle([
-        outProps.style,
-        styleAttribute,
-        stateStyle,
-        overridingStyle,
-      ]);
+    const style = normalizeStyle([
+      outProps.style,
+      styleAttribute,
+      componentProps.stateStyle?.(state),
+      params.overridingStyle?.(),
+    ]) as Record<string, unknown>;
+    // On a server, Vue writes `style=""` for a `style` key that has no value. On a client, Vue
+    // removes the whole `style` attribute when the key goes away. That also removes each
+    // declaration that a part writes to the DOM, so the key stays after a render that wrote it.
+    if (hasWrittenStyleKey || hasStyleValue(style)) {
+      outProps.style = style;
+      hasWrittenStyleKey = true;
+    } else {
+      delete outProps.style;
     }
 
     if (!slots.render && (componentProps.as === undefined || componentProps.as === defaultTag)) {
