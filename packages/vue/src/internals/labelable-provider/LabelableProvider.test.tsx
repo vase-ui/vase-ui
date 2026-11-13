@@ -79,6 +79,15 @@ describe('labelable provider', () => {
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
       });
 
+      it('keeps the selected id when the last control goes away', async () => {
+        const { rerender } = await render(<TwoControls first second={false} />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<TwoControls first={false} second={false} />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+      });
+
       it('selects the other control when the selected control goes away', async () => {
         const { rerender } = await render(<TwoControls first second />);
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
@@ -288,9 +297,9 @@ describe('labelable provider', () => {
     });
 
     it('registers nothing for a message with an empty id', async () => {
-      await render(<DescribedControl messageIds={['']} />);
+      await render(<DescribedControl messageIds={['', 'message-a']} />);
 
-      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-describedby');
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'message-a');
     });
 
     // The compiled template of the fixture mounts a message that comes before the control, and then
