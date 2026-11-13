@@ -181,6 +181,8 @@ Give the constant the type `typeof DialogRoot`. Without it, the declaration buil
 
 A family whose upstream folder has no `index.parts.ts` declares the constant and its namespace in `index.ts`. A family whose upstream folder has an `index.parts.ts` keeps that file, also when it has one part. `pnpm parity:check` finds a counterpart by its path.
 
+A family can land in more than one pull request. Its `index.ts` then comes in the last one, so the package exports nothing of the family before then. The tests of the earlier pull requests import `../index.parts`.
+
 ## API convention
 
 ### Parts that render an element
@@ -590,6 +592,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
 - A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
+- The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
 
@@ -632,6 +635,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - When the flag changes, the registration updates `triggerCount`. After the activation, the active trigger gives its data to the store again.
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
+- The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root part only declares its props, its emits, its slot and its exposed actions.
 - `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
 - `options.onOpenChange` is a function of the part. It emits `openChange`, and then `update:open` when `details.isCanceled` is `false`. The composable puts it in `context.onOpenChange`. `options.onOpenChangeComplete` emits `openChangeComplete`.
 - The composable calls `useControlled` for `open` and for `triggerId` only to give two warnings. One is for a change between controlled and uncontrolled. The other is for a change of the default of an uncontrolled root. The store holds the state.
@@ -640,7 +644,8 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
-- `popupRoot.ts` has `usePopupRoot` and `useImplicitActiveTrigger`. The pull request that first needs `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot` or `usePopupRootSync` adds it with its cases.
+- `popupRoot.ts` has `usePopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`. The pull request that first needs `usePopupRootWithPopupId` or `useSingleAnchorPopupRoot` adds it with its cases.
+- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose store has the key `openMethod` calls it in `setup`.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -996,6 +1001,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A teleported child popup has two links to its parent: the popup tree and the `provide` chain of `useDismiss`. See [Popup dismissal](#popup-dismissal).
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
+- A dialog reports its open state to the dialog above it. While `KeepAlive` holds the dialog, it reports that it is closed. The dialog above is then the top dialog again, so Escape closes it. The report comes back at the activation.
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
 - A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. `ScrollAreaRoot.vue` does this for its hover state.
 - A part that reads `:hover` at mount reads it again in `onActivated`. No enter event comes for a pointer that is already over the part. `ScrollAreaViewport.vue` does this.
@@ -1348,6 +1354,7 @@ The thing that a row names decides which kinds the row can have:
 - A row that names a source file also covers the cases in that file.
 - A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
+- A row for a test file that imports the entry point of its family can name that entry point in `waitsOn`. A pull request that ports some cases of the file keeps the row. The row goes when each case of the file has a counterpart.
 - `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
 
 ### Rows of `parity/better`
