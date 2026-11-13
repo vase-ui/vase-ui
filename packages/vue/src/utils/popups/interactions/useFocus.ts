@@ -54,14 +54,21 @@ export function useFocus(
   let deactivated = false;
   let disposed = false;
 
+  // As in Base UI, one timer serves the open request of a focus and the check of a focus out. The
+  // flag tells which of the two started the timer last.
   const timeout = useTimeout();
+  let timerStartedForOpen = false;
   onScopeDispose(() => {
     disposed = true;
   });
 
-  // The timer holds a request that the focus made while the composable was enabled, for the store
-  // of that time. A change of either ends the request.
-  watch([enabled, currentStore], () => timeout.clear());
+  // A change of `enabled` or of the store ends an open request. It does not end the check of a focus
+  // out: as in Base UI, the check closes the store that the focus left.
+  watch([enabled, currentStore], () => {
+    if (timerStartedForOpen) {
+      timeout.clear();
+    }
+  });
 
   let stopWindowListeners: (() => void) | undefined;
   function listenToWindow() {
@@ -213,6 +220,7 @@ export function useFocus(
         return;
       }
 
+      timerStartedForOpen = true;
       timeout.start(delay, () => {
         if (blockFocus) {
           return;
@@ -230,6 +238,9 @@ export function useFocus(
       resetBlockedFocus();
 
       const relatedTarget = event.relatedTarget;
+      // The check closes the store that the focus left, also when the store changes before the
+      // check runs.
+      const current = currentStore();
 
       // Hit the non-modal focus management portal guard. Focus will be
       // moved into the floating element immediately after.
@@ -238,9 +249,9 @@ export function useFocus(
         relatedTarget.hasAttribute(createAttribute('focus-guard')) &&
         relatedTarget.getAttribute('data-type') === 'outside';
 
-      // Wait for the window blur listener to fire.
+      // Wait for the window blur listener to fire. The check replaces an open request that waits.
+      timerStartedForOpen = false;
       timeout.start(0, () => {
-        const current = currentStore();
         const domReference = current.select('anchorElement');
         const activeEl = activeElement(ownerDocument(domReference));
 

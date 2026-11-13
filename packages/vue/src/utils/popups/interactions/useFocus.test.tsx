@@ -184,26 +184,40 @@ describe('useFocus', () => {
       return { App, calls, showSecond, getStore: () => store };
     }
 
-    // One trigger. `opened` lists the store that gets each open request. A change of `second`
-    // moves the trigger to another store.
+    // One trigger, which is the anchor of two stores. `opened` and `closed` list the store that gets
+    // each open request and each close request. A change of `second` moves the trigger to another
+    // store.
     function createSingleTriggerApp(options: UseFocusProps = {}) {
       const second = shallowRef(false);
       const opened: string[] = [];
+      const closed: string[] = [];
+      let stores!: Record<'first' | 'second', FloatingRootStore>;
+
+      function createRoot(name: string) {
+        return useFloating({ onOpenChange: (open) => (open ? opened : closed).push(name) });
+      }
 
       const App = defineComponent({
         setup() {
-          const stores = {
-            first: useFloating({ onOpenChange: () => opened.push('first') }).context.rootStore,
-            second: useFloating({ onOpenChange: () => opened.push('second') }).context.rootStore,
-          };
+          const roots = { first: createRoot('first'), second: createRoot('second') };
+          stores = { first: roots.first.context.rootStore, second: roots.second.context.rootStore };
           const store = computed(() => (second.value ? stores.second : stores.first));
           const focusProps = useFocus(store, options);
 
-          return () => <button data-testid="trigger" {...focusProps} />;
+          return () => (
+            <button
+              data-testid="trigger"
+              {...focusProps}
+              ref={(node) => {
+                roots.first.refs.setReference(node);
+                roots.second.refs.setReference(node);
+              }}
+            />
+          );
         },
       });
 
-      return { App, second, opened };
+      return { App, second, opened, closed, getStores: () => stores };
     }
 
     type SingleTriggerApp = ReturnType<typeof createSingleTriggerApp>['App'];
@@ -307,6 +321,24 @@ describe('useFocus', () => {
       expect(isOpen()).toBe(false);
     });
 
+    it('does not close a popup that a press opened when the focus leaves a disabled trigger', async () => {
+      const { App, calls, getStore } = createFocusApp({ enabled: false });
+      await render(<App />);
+      getStore().setOpen(
+        true,
+        createChangeEventDetails(REASONS.triggerPress, new MouseEvent('click'), getTrigger()),
+      );
+      await flushMicrotasks();
+      await focus(getTrigger());
+      expect(isOpen()).toBe(true);
+
+      await focus(screen.getByTestId('outside'));
+      await tick(0);
+
+      expect(isOpen()).toBe(true);
+      expect(calls.map((call) => [call.open, call.reason])).toEqual([[true, REASONS.triggerPress]]);
+    });
+
     it('does not open when the focus leaves before the delay ends', async () => {
       const { App } = createFocusApp({ delay: 100 });
       await render(<App />);
@@ -384,6 +416,41 @@ describe('useFocus', () => {
       expect(calls.map((call) => call.open)).toEqual([true]);
     });
 
+    describe('the check that a focus out starts', () => {
+      it.each([
+        { name: 'the popup is open', delay: undefined },
+        { name: 'an open delay waits', delay: 100 },
+      ])('still runs when the trigger gets disabled before it: $name', async ({ delay }) => {
+        const enabled = shallowRef(true);
+        const { App, calls } = createFocusApp({ enabled, delay });
+        await render(<App />);
+        await focus(getTrigger());
+        await focus(screen.getByTestId('outside'));
+
+        enabled.value = false;
+        await flushMicrotasks();
+        await tick(0);
+
+        expect(isOpen()).toBe(false);
+        expect(calls.filter((call) => !call.open)).toEqual([
+          { open: false, reason: REASONS.triggerFocus, trigger: undefined },
+        ]);
+      });
+
+      it('closes the store that the focus left when the store changes before it runs', async () => {
+        const { App, second, closed } = createSingleTriggerApp();
+        await render(<App />);
+        await focus(getTrigger());
+        getTrigger().blur();
+
+        second.value = true;
+        await flushMicrotasks();
+        await tick(0);
+
+        expect(closed).toEqual(['first']);
+      });
+    });
+
     describe('after a dismissal by Escape or by a press of the trigger', () => {
       async function dismiss(reason: string) {
         const app = createFocusApp();
@@ -425,6 +492,20 @@ describe('useFocus', () => {
         await focus(getSecond());
 
         expect(isOpen()).toBe(true);
+      });
+
+      it('the focus of the trigger does not open the store that it moved to after Escape', async () => {
+        const { App, second, opened, getStores } = createSingleTriggerApp();
+        await render(<App />);
+        second.value = true;
+        await flushMicrotasks();
+        await focus(getTrigger());
+        expect(opened).toEqual(['second']);
+
+        getStores().second.setOpen(false, createChangeEventDetails(REASONS.escapeKey));
+        await fireEvent.focusIn(getTrigger());
+
+        expect(opened).toEqual(['second']);
       });
     });
 
