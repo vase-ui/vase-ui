@@ -10,6 +10,11 @@
     "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/composite/listIndex.test.ts",
+    "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+    "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+    "packages/react/src/internals/composite/root/CompositeRootContext.ts",
+    "packages/react/src/internals/composite/root/gridNavigation.ts",
+    "packages/react/src/internals/composite/root/useCompositeRoot.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
@@ -50,6 +55,10 @@
     "packages/react/src/internals/composite/list/CompositeListContext.ts",
     "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
+    "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+    "packages/react/src/internals/composite/root/CompositeRootContext.ts",
+    "packages/react/src/internals/composite/root/gridNavigation.ts",
+    "packages/react/src/internals/composite/root/useCompositeRoot.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
@@ -381,6 +390,303 @@
             "getNextListIndex"
           ],
           "title": "skips disabled indices"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "does not add aria-orientation when orientation is set"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "controlled mode"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "uncontrolled mode"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "uses an active item explicit index as the initial highlighted index"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "keeps native input behavior when the native target differs from the synthetic target"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "sets default prevention to $prevented for $key with $orientation orientation"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "updates the order of items",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "updates the order of items when their containers are reordered",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "list",
+            "Home and End keys"
+          ],
+          "title": "Home key moves focus to the first item"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list",
+            "Home and End keys"
+          ],
+          "title": "End key moves focus to the last item"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "calls onLoop and uses its return value"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list"
+          ],
+          "title": "does not loop or call onLoop when loopFocus is disabled"
+        },
+        {
+          "describe": [
+            "Composite",
+            "list",
+            "rtl"
+          ],
+          "title": "horizontal orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "list",
+            "rtl"
+          ],
+          "title": "both horizontal and vertical orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "prevents default for grid navigation outside the configured orientation"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "uniform 1x1 items"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "calls onLoop while navigating through grid cells"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "calls onLoop when looping vertically between rows"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "stays on the current item when onLoop returns prevIndex"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "does not loop or call onLoop when loopFocus is disabled"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "skips disabled indices"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid"
+          ],
+          "title": "packs items into earlier gaps when dense"
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid",
+            "rtl"
+          ],
+          "title": "horizontal orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid",
+            "rtl"
+          ],
+          "title": "both horizontal and vertical orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "grid",
+            "rtl"
+          ],
+          "title": "uses the forward edge when navigating from a spanning item",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: disabledIndices"
+          ],
+          "title": "moves the initial tab stop to the first enabled item when the default item is disabled"
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: disabledIndices"
+          ],
+          "title": "keeps the initial tab stop when all items are disabled"
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: disabledIndices"
+          ],
+          "title": "disables navigating item when their index is included"
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: disabledIndices"
+          ],
+          "title": "allows navigating items disabled in the DOM when their index is excluded"
+        },
+        {
+          "describe": [
+            "Composite",
+            "item removal"
+          ],
+          "title": "keeps the tab stop on the highlighted item when an earlier item is removed"
+        },
+        {
+          "describe": [
+            "Composite",
+            "item removal"
+          ],
+          "title": "moves the tab stop back into range when the highlighted item is removed"
+        },
+        {
+          "describe": [
+            "Composite",
+            "item removal"
+          ],
+          "title": "moves the tab stop to the active item when the highlighted item is removed"
+        },
+        {
+          "describe": [
+            "Composite",
+            "item removal"
+          ],
+          "title": "skips items that cannot hold the tab stop"
+        },
+        {
+          "describe": [
+            "Composite",
+            "item removal"
+          ],
+          "title": "keeps the tab stop in range when no item can hold it"
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: modifierKeys"
+          ],
+          "title": "prevents arrow key navigation when any modifier key is pressed by default"
+        },
+        {
+          "describe": [
+            "Composite",
+            "prop: modifierKeys"
+          ],
+          "title": "specifies allowed modifier keys that do not prevent arrow key navigation when pressed"
+        },
+        {
+          "describe": [
+            "nested Composite items (strict: %s)"
+          ],
+          "title": "keeps outer metadata and focus navigation when items share a DOM node"
+        },
+        {
+          "describe": [
+            "nested Composite items (strict: %s)"
+          ],
+          "title": "keeps the outer registration when only the inner item updates"
         }
       ]
     },

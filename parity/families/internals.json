@@ -9,6 +9,11 @@
     "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/composite/listIndex.test.ts",
+    "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+    "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+    "packages/react/src/internals/composite/root/CompositeRootContext.ts",
+    "packages/react/src/internals/composite/root/gridNavigation.ts",
+    "packages/react/src/internals/composite/root/useCompositeRoot.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
@@ -116,38 +121,6 @@
     },
     {
       "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
-      "describe": ["useButton", "param: focusableWhenDisabled"],
-      "title": "force overrides disabled attribute when put in a composite",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
-      "describe": ["useButton", "event handlers"],
-      "title": "key: Space fires keydown then click when in composite root context",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
-      "describe": ["useButton", "event handlers"],
-      "title": "key: Space fires keydown then click on native buttons in composite root context",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
-      "describe": ["useButton", "event handlers"],
-      "title": "`composite=false` keeps keyup activation inside composite root context",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
-      "reason": "The case renders `CompositeRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/internals/use-button/useButton.test.tsx",
       "describe": ["useButton", "server-side rendering"],
       "kind": "replaced",
       "test": "packages/vue/src/internals/use-button/useButton.node.test.tsx",
@@ -177,6 +150,29 @@
       "describe": ["<CompositeList />", "Suspense integration"],
       "kind": "not-applicable",
       "reason": "React hides a mounted tree and detaches its refs when a component in it suspends again. A mounted Vue component cannot suspend again."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React component that renders the element of a part and gives it the composite context. A Vue part renders its own element and calls `useCompositeRoot` of `root/useCompositeRoot.ts` in `setup`, which holds the work of this file."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/gridNavigation.ts",
+      "kind": "waits-on",
+      "reason": "Grid navigation and the `grid` parameter of `useCompositeRoot` are not ported yet."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+      "describe": ["Composite", "grid"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/root/gridNavigation.ts",
+      "reason": "The cases test grid navigation, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/internals/composite/item/useCompositeItem.ts",
+      "reason": "The cases render `CompositeItem`. Its composable, `useCompositeItem`, is not ported yet."
     }
   ],
   "surfaceAdditions": [],
