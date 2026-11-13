@@ -1,0 +1,9 @@
+{
+  "id": "VUE-12",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/root/useCollapsibleRoot.ts#L27-L29",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/collapsible/panel/CollapsiblePanel.tsx#L64-L69"
+  ],
+  "behavior": "When two panels of one collapsible are mounted, the trigger names the panel that registered last in `aria-controls`. When that panel unmounts, the trigger names the panel that stays. Base UI gives the trigger no `aria-controls` then, because the panel that stays does not register again.",
+  "dueWith": "packages/react/src/collapsible/panel/CollapsiblePanel.tsx"
+}
