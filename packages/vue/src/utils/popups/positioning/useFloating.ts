@@ -13,6 +13,7 @@ import { useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type {
   ExtendedElements,
+  FloatingNodeType,
   PopupPositioningContext,
   PositioningInteractionStore,
 } from '../types';
@@ -32,9 +33,10 @@ export interface UseFloatingOptions {
   positioning: Pick<UseAnchorPositioningReturnValue, 'placement' | 'reference'>;
   /**
    * The id of the node of the popup in the popup tree. Call `useFloatingNodeId` before this
-   * composable.
+   * composable. A popup that can move to the node of another part, such as the node of a detached
+   * trigger, gives a ref or a getter. The context then moves to the new node.
    */
-  nodeId?: string | undefined;
+  nodeId?: MaybeRefOrGetter<string | undefined>;
   /**
    * The tree to use when the tree of the context cannot reach the part.
    */
@@ -52,7 +54,7 @@ export interface UseFloatingOptions {
  * @see https://floating-ui.com/docs/useFloating
  */
 export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioningContext {
-  const { nodeId, positioning } = options;
+  const { positioning } = options;
 
   const rootStore = computed(() => toValue(options.rootStore));
   const tree = useFloatingTree(options.externalTree);
@@ -73,7 +75,9 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     get placement() {
       return positioning.placement.value;
     },
-    nodeId,
+    get nodeId() {
+      return toValue(options.nodeId);
+    },
     elements,
     get rootStore() {
       return rootStore.value;
@@ -91,6 +95,7 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
   );
 
   let published: PositioningInteractionStore | null = null;
+  let publishedNode: FloatingNodeType | undefined;
   let deactivated = false;
 
   function unpublish() {
@@ -98,6 +103,13 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
       published.context.positioning = undefined;
     }
     published = null;
+  }
+
+  function unpublishNode() {
+    if (publishedNode?.context === context) {
+      publishedNode.context = undefined;
+    }
+    publishedNode = undefined;
   }
 
   function publish() {
@@ -110,10 +122,15 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
       }
     }
 
+    const nodeId = toValue(options.nodeId);
     const node =
-      nodeId === undefined
+      deactivated || nodeId === undefined
         ? undefined
         : tree.value?.nodesRef.value.find((candidate) => candidate.id === nodeId);
+    if (node !== publishedNode) {
+      unpublishNode();
+      publishedNode = node;
+    }
     if (node) {
       node.context = context;
     }
@@ -122,10 +139,15 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
   // A server does not call `onBeforeMount`, so a server render writes nothing. The hook runs before
   // the `setup` of the parts below, so each of them finds the context.
   onBeforeMount(publish);
-  watch([rootStore, () => tree.value?.nodesRef.value], publish);
-  onScopeDispose(unpublish);
+  watch([rootStore, () => tree.value?.nodesRef.value, () => toValue(options.nodeId)], publish);
+  onScopeDispose(() => {
+    unpublish();
+    unpublishNode();
+  });
 
-  // The tree hides the context of a node while `KeepAlive` holds the part. The store does the same.
+  // The tree hides the context of a node only while the part of that node is deactivated. This
+  // popup can use the node of a part that stays active, so the node and the store lose the context
+  // here.
   onDeactivated(() => {
     deactivated = true;
     publish();
