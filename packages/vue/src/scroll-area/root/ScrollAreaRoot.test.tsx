@@ -1,15 +1,19 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, nextTick } from 'vue';
 import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
+  flushMicrotasks,
   hydrate,
   renderOnServer,
+  screen,
   waitSingleFrame,
 } from '#test-utils';
 import { styleDisableScrollbar } from '../../utils/styles';
+import { SCROLL_TIMEOUT } from '../constants';
 import ScrollAreaRootHydration from './ScrollAreaRootHydration.test.vue';
 
 function queryDisableScrollbarStyles(root: ParentNode) {
@@ -25,6 +29,54 @@ describe('<ScrollArea.Root />', () => {
     refInstanceof: window.HTMLDivElement,
     render,
   }));
+
+  describe('data-scrolling attribute', () => {
+    const { render: renderWithFakeTimers } = createRenderer();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('adds [data-scrolling] attribute when viewport is scrolled', async () => {
+      await renderWithFakeTimers(
+        <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>,
+      );
+
+      const root = screen.getByTestId('root');
+      const viewport = screen.getByTestId('viewport');
+
+      expect(root).not.toHaveAttribute('data-scrolling');
+
+      await fireEvent.pointerEnter(viewport);
+      await fireEvent.scroll(viewport, { target: { scrollTop: 1 } });
+
+      expect(root).toHaveAttribute('data-scrolling', '');
+
+      await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT);
+      await flushMicrotasks();
+
+      expect(root).not.toHaveAttribute('data-scrolling');
+
+      // Test horizontal scrolling
+      await fireEvent.pointerEnter(viewport);
+      await fireEvent.scroll(viewport, { target: { scrollLeft: 1 } });
+
+      expect(root).toHaveAttribute('data-scrolling', '');
+
+      await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT);
+      await flushMicrotasks();
+
+      expect(root).not.toHaveAttribute('data-scrolling');
+    });
+  });
 
   describe('style element', () => {
     it('keeps one style element for two apps, and removes it with the last app', async () => {
