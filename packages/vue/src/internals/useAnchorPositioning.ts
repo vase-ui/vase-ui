@@ -34,6 +34,11 @@ import { hide } from '../utils/popups/positioning/hideMiddleware';
 import { DEFAULT_SIDES } from '../utils/popups/positioning/adaptiveOriginConstants';
 import * as CommonPositionerCssVars from '../utils/popups/positioning/CommonPositionerCssVars';
 
+export { useFloatingRootStore } from '../utils/popups/floating-root/useFloatingRootStore';
+export type { UseFloatingRootStoreOptions } from '../utils/popups/floating-root/useFloatingRootStore';
+export type { FloatingRootStore } from '../utils/popups/floating-root/FloatingRootStore';
+export type { PositioningInteractionStore } from '../utils/popups/types';
+
 const AVAILABLE_WIDTH_VAR = CommonPositionerCssVars.availableWidth;
 const AVAILABLE_HEIGHT_VAR = CommonPositionerCssVars.availableHeight;
 
@@ -730,7 +735,9 @@ export function useAnchorPositioning(
     side: logicalRenderedSide,
     align: renderedAlign,
     physicalSide: renderedSide,
+    placement: renderedPlacement,
     anchorHidden,
+    reference,
     isPositioned,
     update,
   };
@@ -930,7 +937,17 @@ export interface UseAnchorPositioningReturnValue {
   side: ComputedRef<Side>;
   align: ComputedRef<Align>;
   physicalSide: ComputedRef<PhysicalSide>;
+  /**
+   * The placement that the popup has. It starts as the requested placement, and it changes when
+   * the popup flips.
+   */
+  placement: Readonly<Ref<Placement>>;
   anchorHidden: ComputedRef<boolean>;
+  /**
+   * The element or the virtual element that the popup is positioned against. It is `null` while
+   * the popup is not mounted and while `KeepAlive` holds the component.
+   */
+  reference: ComputedRef<Element | VirtualElement | null>;
   isPositioned: Readonly<Ref<boolean>>;
   update: () => void;
 }

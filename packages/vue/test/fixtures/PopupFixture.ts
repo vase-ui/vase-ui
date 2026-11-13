@@ -1,6 +1,7 @@
 import type { InjectionKey } from 'vue';
 import { NOOP } from '../../src/common/empty';
 import { NullStore } from '../../src/utils/popups/NullStore';
+import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginConstants';
 import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
 import {
   BasePopupStore,
@@ -16,11 +17,13 @@ import type {
   PopupTriggerStoreKeys,
 } from '../../src/utils/popups/store';
 
-// The fixture family of the popup root: a store with a key of its own, its handle, and the key of
-// its context. `PopupRootPart`, `PopupTriggerPart` and `PopupPart` are its parts.
+// The fixture family of the popup root: a store with keys of its own, its handle, and the key of
+// its context. `PopupRootPart`, `PopupTriggerPart`, `PopupPositionerPart` and `PopupPart` are its
+// parts.
 
 export type PopupFixtureState<Payload> = PopupStoreState<Payload> & {
   instantType: 'dismiss' | 'focus' | undefined;
+  adaptiveOrigin: AdaptiveOriginMiddleware | undefined;
 };
 
 type Context = PopupStoreContext<PopupOpenChangeEventDetails>;
@@ -28,6 +31,7 @@ type Context = PopupStoreContext<PopupOpenChangeEventDetails>;
 const selectors = {
   ...popupStoreSelectors,
   instantType: (state: PopupFixtureState<unknown>) => state.instantType,
+  adaptiveOrigin: (state: PopupFixtureState<unknown>) => state.adaptiveOrigin,
 };
 
 type Selectors = typeof selectors;
@@ -39,6 +43,7 @@ function createInitialState<Payload>(
   return {
     ...createInitialPopupStoreState<Payload>(defaultPopupId),
     instantType: undefined,
+    adaptiveOrigin: undefined,
     ...initialState,
   };
 }

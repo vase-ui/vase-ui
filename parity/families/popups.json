@@ -17,11 +17,6 @@
       "reason": "The pull request that first needs the file ports it, with its tests."
     },
     {
-      "upstream": "packages/react/src/utils/popups/popupPositioner.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs the file ports it, with its tests."
