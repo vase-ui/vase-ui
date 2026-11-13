@@ -32,46 +32,6 @@
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "does not submit if an unnamed registered field control is invalid",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "clears invalid state for an unnamed registered field control on change",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "keeps same-name field validity scoped on submit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "removes the previous registered field id when another control takes over",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "removes errors for every field that changes within a single commit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
       "describe": ["<Form />", "prop: onFormSubmit"],
       "title": "runs when the form is submitted",
       "kind": "waits-on",

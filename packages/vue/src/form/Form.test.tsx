@@ -5,6 +5,7 @@ import type { FormHTMLAttributes } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Form } from '@vase-ui/vue/form';
+import { Switch } from '@vase-ui/vue/switch';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -273,6 +274,116 @@ describe('<Form />', () => {
       await flushMicrotasks();
     },
   );
+
+  it('does not submit if an unnamed registered field control is invalid', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      event.preventDefault();
+    });
+
+    const { user } = await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root>
+          <Switch.Root required />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+  });
+
+  it('clears invalid state for an unnamed registered field control on change', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      event.preventDefault();
+    });
+
+    const { user } = await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root>
+          <Switch.Root required />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    const submit = screen.getByRole('button', { name: 'Submit' });
+    const switchControl = screen.getByRole('switch');
+
+    await user.click(submit);
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(switchControl).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+
+    await user.click(switchControl);
+
+    expect(switchControl).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByTestId('error')).toBe(null);
+
+    await user.click(submit);
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps same-name field validity scoped on submit', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      event.preventDefault();
+    });
+
+    const { user } = await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root name="shared">
+          <Switch.Root required data-testid="first" />
+          <Field.Error data-testid="first-error" />
+        </Field.Root>
+        <Field.Root name="shared">
+          <Switch.Root required defaultChecked data-testid="second" />
+          <Field.Error data-testid="second-error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('first')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('first-error')).toBeInTheDocument();
+    expect(screen.getByTestId('second')).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByTestId('second-error')).toBe(null);
+  });
+
+  it('removes the previous registered field id when another control takes over', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      event.preventDefault();
+    });
+
+    const { user } = await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root>
+          <Switch.Root required data-testid="first" />
+          <Switch.Root required defaultChecked data-testid="second" />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    const submit = screen.getByRole('button', { name: 'Submit' });
+
+    await user.click(submit);
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('error')).toBe(null);
+    expect(screen.getByTestId('first')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByTestId('second')).not.toHaveAttribute('aria-invalid');
+  });
 
   it('unmounted fields should be removed from the form', async () => {
     const submitSpy = vi.fn((event: SubmitEvent) => event.preventDefault());
@@ -767,6 +878,69 @@ describe('<Form />', () => {
       await user.tab();
       expect(validateSpy.mock.calls.length).toBe(1);
       expect(screen.getByTestId('name-error')).toHaveTextContent('field error');
+    });
+
+    it('removes errors for every field that changes within a single commit', async () => {
+      const errors = { a: 'A error', b: 'B error', c: 'C error' };
+
+      const MultiChangeApp = defineComponent(() => {
+        const a = shallowRef(false);
+        const b = shallowRef(false);
+        const c = shallowRef(false);
+
+        return () => (
+          <Form errors={errors}>
+            <Field.Root name="a">
+              <Switch.Root
+                checked={a.value}
+                onCheckedChange={(checked: boolean) => {
+                  a.value = checked;
+                }}
+              />
+              <Field.Error data-testid="a-error" />
+            </Field.Root>
+            <Field.Root name="b">
+              <Switch.Root
+                checked={b.value}
+                onCheckedChange={(checked: boolean) => {
+                  b.value = checked;
+                }}
+              />
+              <Field.Error data-testid="b-error" />
+            </Field.Root>
+            <Field.Root name="c">
+              <Switch.Root
+                checked={c.value}
+                onCheckedChange={(checked: boolean) => {
+                  c.value = checked;
+                }}
+              />
+              <Field.Error data-testid="c-error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                a.value = true;
+                b.value = true;
+              }}
+            >
+              Change both
+            </button>
+          </Form>
+        );
+      });
+
+      await render(<MultiChangeApp />);
+
+      expect(screen.queryByTestId('a-error')).not.toBe(null);
+      expect(screen.queryByTestId('b-error')).not.toBe(null);
+      expect(screen.queryByTestId('c-error')).not.toBe(null);
+
+      await fireEvent.click(screen.getByText('Change both'));
+
+      expect(screen.queryByTestId('a-error')).toBe(null);
+      expect(screen.queryByTestId('b-error')).toBe(null);
+      expect(screen.queryByTestId('c-error')).not.toBe(null);
     });
   });
 
