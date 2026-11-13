@@ -116,7 +116,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+import { computed, nextTick, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { ownerWindow } from '../../common/owner';
@@ -143,6 +143,7 @@ import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
+import { useCheckboxGroupContext } from '../../checkbox-group/CheckboxGroupContext';
 import { getCheckboxStateAttributesMapping } from '../utils/getCheckboxStateAttributesMapping';
 import { CheckboxRootContext } from './CheckboxRootContext';
 
@@ -173,6 +174,7 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, CheckboxRootState>;
 }>();
 
+const group = useCheckboxGroupContext();
 const { clearErrors } = useFormContext();
 const {
   state: fieldState,
@@ -183,21 +185,51 @@ const {
   validationMode,
   disabled: fieldDisabled,
   name: fieldName,
-  validation,
+  validation: fieldValidation,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
-const { getDescriptionProps } = useLabelableContext();
+const { getDescriptionProps, registerControlId } = useLabelableContext();
+
+// The field of the group owns the inputs of the checkboxes of the group.
+const validation = group?.validation ?? fieldValidation;
 
 const isDisabled = computed(
-  () => fieldDisabled.value || fieldItemContext.disabled.value || props.disabled,
+  () =>
+    fieldDisabled.value ||
+    fieldItemContext.disabled.value ||
+    (group?.disabled.value ?? false) ||
+    props.disabled,
 );
 const inputName = computed(() => fieldName.value ?? props.name);
+// In a group, the value of the checkbox is the name that the group lists when the checkbox is on.
+const itemValue = computed(() => props.value ?? inputName.value);
 const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 // Vue calls a ref setter during a render, so the setter reads no reactive state.
 let heldInput: HTMLInputElement | null = null;
 let unregisterInput: (() => void) | void;
+// `KeepAlive` takes the input out of the document, and the field must not use an input that is not
+// in the document. A deactivated required checkbox that is off would block the submit of the form,
+// and its value would stay in the values of the form. The plain variable is for the setter.
+let isInputHeld = false;
+const isDeactivated = shallowRef(false);
+
+function registerHeldInput() {
+  unregisterInput?.();
+  // A field can have more than one input, so the input goes to the registry of the field and not
+  // to `validation.inputRef`. The group reads the value when the form needs it, so a change of the
+  // value needs no new registration.
+  unregisterInput =
+    heldInput && !isInputHeld
+      ? validation.registerInput(heldInput, {
+          controlRef: () => element.value,
+          get value() {
+            return group ? itemValue.value : undefined;
+          },
+        })
+      : undefined;
+}
 
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
@@ -208,23 +240,41 @@ function setInputElement(value: unknown) {
 
   heldInput = input;
   inputElement.value = input;
-  unregisterInput?.();
-  // A field can have more than one input, so the input goes to the registry of the field and not
-  // to `validation.inputRef`.
-  unregisterInput = input
-    ? validation.registerInput(input, { controlRef: () => element.value, value: undefined })
-    : undefined;
+  registerHeldInput();
 }
+
+onDeactivated(() => {
+  isInputHeld = true;
+  isDeactivated.value = true;
+});
+
+onActivated(() => {
+  isInputHeld = false;
+  isDeactivated.value = false;
+});
+
+// `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A
+// registration in a hook would reverse the order of the inputs, and the order decides which input
+// the form focuses first. The watcher runs after the hooks, in the order of the parts.
+watch(isDeactivated, registerHeldInput);
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
 const rootId = useVaseUiId();
+// A group that shares the labelable scope of the checkbox is the control of the field and takes its
+// name from `aria-labelledby`. The checkboxes must not claim the control id of that scope, or each
+// of them would render the same id. A `Field.Item` opens a scope that the checkbox does own. The
+// provider chain does not change, so `setup` makes this choice one time.
+const ownsControlId = group?.registerControlId !== registerControlId;
 // An empty `id` is not an own id: the control takes the id of the provider.
-const controlId = useLabelableId({ id: () => props.id || undefined });
+const controlId = useLabelableId({ id: () => props.id || undefined, enabled: ownsControlId });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const [isChecked, setCheckedState] = useControlled({
-  controlled: () => props.checked,
+  controlled: () =>
+    group && itemValue.value !== undefined
+      ? group.value.value.includes(itemValue.value)
+      : props.checked,
   default: () => props.defaultChecked,
   name: 'Checkbox',
   state: 'checked',
@@ -235,12 +285,15 @@ useRegisterFieldControl(
   rootId,
   () => isChecked.value,
   undefined,
-  () => !isDisabled.value,
+  () => !group && !isDisabled.value,
   () => props.name,
 );
 
-setFilled(isChecked.value);
-watch(isChecked, setFilled);
+// A group derives the filled state of the field from its value.
+if (!group) {
+  setFilled(isChecked.value);
+  watch(isChecked, setFilled);
+}
 
 // The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
 // would come before `validation.change`, and the validation could show a new error. The timeout sets
@@ -248,6 +301,11 @@ watch(isChecked, setFilled);
 let isResetChangePending = false;
 
 useValueChanged(isChecked, () => {
+  // The group clears the error, sets the dirty state and validates its own value.
+  if (group) {
+    return;
+  }
+
   clearErrors(inputName.value);
   setDirty(isChecked.value !== validityData.value.initialValue);
 
@@ -304,6 +362,22 @@ function requestChange(nextChecked: boolean, event: Event) {
     return false;
   }
 
+  // The group gets the same `details` object, so a `cancel()` in `valueChange` of the group also
+  // stops `update:checked`.
+  const value = itemValue.value;
+  if (group && value !== undefined) {
+    group.setValue(
+      nextChecked
+        ? [...group.value.value, value]
+        : group.value.value.filter((item) => item !== value),
+      details,
+    );
+
+    if (details.isCanceled) {
+      return false;
+    }
+  }
+
   emit('update:checked', nextChecked);
   setCheckedState(nextChecked);
   return true;
@@ -328,6 +402,12 @@ function onInputClick(event: MouseEvent) {
 }
 
 useFormReset(inputElement, (event) => {
+  // The value of the group is the state of its checkboxes, so the group follows the reset.
+  if (group) {
+    group.reset(event);
+    return;
+  }
+
   const hasChanged =
     props.checked === undefined &&
     isChecked.value !== props.defaultChecked &&
@@ -440,7 +520,7 @@ const { element, elementProps } = useRenderElement('span', props, {
         setFocused(false);
 
         if (validationMode.value === 'onBlur') {
-          void validation.commit(input.checked);
+          void validation.commit(group ? group.value.value : input.checked);
         }
       },
       onKeydown,
@@ -487,7 +567,9 @@ function inputProps() {
     onFocusin() {
       element.value?.focus();
     },
-    ...(props.value !== undefined ? { value: props.value } : undefined),
+    ...(props.value !== undefined
+      ? { value: (group ? isChecked.value && props.value : props.value) || '' }
+      : undefined),
   };
 }
 
@@ -498,7 +580,7 @@ defineExpose({ element, inputElement });
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
   <input
-    v-if="!isChecked && inputName && uncheckedValue !== undefined"
+    v-if="!isChecked && !group && inputName && uncheckedValue !== undefined"
     type="hidden"
     :form="form"
     :name="inputName"
