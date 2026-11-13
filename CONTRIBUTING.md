@@ -215,7 +215,7 @@ A family whose upstream folder has no `index.parts.ts` declares the constant and
 - TSX and templates then accept the native attributes and listeners, with their types.
 - The SFC compiler ignores the extended type, so the run-time props are only the declared props. A native attribute stays in `$attrs`.
 - Omit a native attribute that the part declares as a prop: `Omit<ButtonHTMLAttributes, 'disabled'>`.
-- A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part.
+- A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
 
 The template of each such part has two lines and no wrapper component:
@@ -344,6 +344,10 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 
 - A callback that only tells the consumer about a change becomes an emit. The name loses `on`: `openChangeComplete`, `valueCommitted`, `itemHighlighted`, `loadingStatusChange`.
 - `update:x` exists only where the part has a prop `x`. `Accordion.Item` emits `openChange` and has no prop `open`, so it has no `update:open`.
+- A native listener that the part calls itself, after work of its own, is a declared emit. `Form` does this for `submit`: it emits `submit` only when each field is valid. A listener in the attributes would run before that work.
+- A part can need to know if a listener exists. `Form` prevents the native submit only when a `formSubmit` listener exists. Such a part declares the emit and also a prop with the `on` name: `onFormSubmit`.
+- Vue gives the listener to the prop, and the emit still calls it. Type the prop as a function or an array of functions, so that two listeners give no warning.
+- A listener with `.once` has the key `onFormSubmitOnce`. The prop does not see it. With no other listener, `Form` does not call it and does not prevent the native submit.
 - A callback whose result the component uses stays a function prop: `validate`, `format`, `getAriaValueText`, `filter`, `itemToStringValue`, `isItemEqualToValue`, `initialFocus`, `finalFocus`.
 
 ### Actions, handles, slots, composables and ids
@@ -679,6 +683,8 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Such an effect is a `watch` of its sources with `flush: 'post'`, plus a `MutationObserver` for the DOM change. `useAriaLabelledBy` keeps one observer for each document or shadow root.
 - A watcher that writes state that the render reads keeps the default flush. It runs before the render, so the component renders one time for the change. `useMediaQuery` and `useImageLoadingStatus` do this.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. Under `KeepAlive` it waits for the activation and gives the value before the deactivation.
+- A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` is such a prop. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
+- Watch such a prop with `deep: true`, and keep a plain copy of it in a `shallowRef`. Each change then gives a new object, and a `computed` that reads the copy runs again.
 - Do not use `watchPostEffect` for an effect. It runs again for each value that the effect reads, and an effect of upstream runs again only for the dependencies that it names. A dependency that the effect does not read, such as `restartKey` in `useOpenChangeComplete`, then starts no run.
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
 - A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` and `useRegisteredMessageId` do this.
@@ -791,6 +797,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `event.preventBaseUIHandler()`                                                                             | `event.preventVaseUIHandler()`                                                                                                                                                                                                                            |
 | `className`                                                                                                | `class`                                                                                                                                                                                                                                                   |
 | `tabIndex` as a prop or as a key of a props object                                                         | `tabindex`. An assertion on the DOM property keeps `tabIndex`.                                                                                                                                                                                            |
+| `noValidate` as a prop or as a key of a props object                                                       | `novalidate`. An assertion on the DOM property keeps `noValidate`.                                                                                                                                                                                        |
 | `crossOrigin`, `referrerPolicy` or `srcSet` as a prop or as a key of a props object                        | `crossorigin`, `referrerpolicy` or `srcset`. A DOM property keeps its name.                                                                                                                                                                               |
 | `render={<x />}`, an element with no props                                                                 | `as`                                                                                                                                                                                                                                                      |
 | `render={<x a={b} />}`, an element with props of its own                                                   | `v-slots={{ render }}`. The function returns `<x {...props} a={b} />`, with the own props after the spread.                                                                                                                                               |

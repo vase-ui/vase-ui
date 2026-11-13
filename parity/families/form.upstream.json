@@ -1,0 +1,360 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/form/**",
+    "docs/src/app/(docs)/react/components/form/**"
+  ],
+  "sources": [
+    "packages/react/src/form/Form.tsx",
+    "packages/react/src/form/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/form/Form.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/form/Form.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "does not submit if there are errors"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "blocks submit and focuses the first invalid field across custom and native validation"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "keeps focusing the first invalid field after a control value changes"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "keeps the registration-order focus fallback stable across disconnected trees"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "focuses the first invalid field in document order when keyed fields are reordered"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "submits when a valid async validator is pending"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "re-runs an onBlur cross-field validator on submit"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "retires a stale async validation result on the next submit"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "blocks submission on a resolved async error in $validationMode mode"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "does not submit if an unnamed registered field control is invalid"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "clears invalid state for an unnamed registered field control on change"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "keeps same-name field validity scoped on submit"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "removes the previous registered field id when another control takes over"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "unmounted fields should be removed from the form"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "excludes disabled fieldset fields from validation and onFormSubmit values"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "clears invalid UI when a fieldset field becomes disabled"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "clears invalid attributes when a field control becomes disabled"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "re-registers field controls when they become enabled again"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "should mark <Field.Control> as invalid and populate <Field.Error>"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "should not mark <Field.Control> as invalid if no error is provided"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "focuses asynchronously replaced external errors and clears only the changed own property"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "focuses the first invalid field only on submit"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "does not swap focus immediately on change after two submissions"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "removes errors upon change"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "runs field validation on first change after Form error is set"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "runs field validation on change when invalid prop is true and validationMode is onChange"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "does not run field validation on change for onBlur mode when invalid prop is true"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: errors"
+          ],
+          "title": "removes errors for every field that changes within a single commit"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: onFormSubmit"
+          ],
+          "title": "runs when the form is submitted"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: onFormSubmit"
+          ],
+          "title": "does not run when the form is invalid"
+        },
+        {
+          "describe": [
+            "<Form />"
+          ],
+          "title": "does not submit when invalid prop remains true even if validate returns null"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: noValidate"
+          ],
+          "title": "should disable native validation if set to true (default)"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: noValidate"
+          ],
+          "title": "should enable native validation if set to false"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: actionsRef"
+          ],
+          "title": "validates the form when the `validate` method is called"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: actionsRef"
+          ],
+          "title": "validates a field when the `validate` method is called with the field name"
+        },
+        {
+          "describe": [
+            "<Form />",
+            "prop: actionsRef"
+          ],
+          "title": "targets only the current Strict Mode registration after name, id, and control replacement"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/form/types.md",
+      "parts": [
+        {
+          "name": "Form",
+          "tag": "form",
+          "props": [
+            {
+              "name": "errors",
+              "required": false,
+              "type": "Errors",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Form.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "onFormSubmit",
+              "required": false,
+              "type": "((formValues: Record<string, any>, eventDetails: Form.SubmitEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "validationMode",
+              "required": false,
+              "type": "Form.ValidationMode",
+              "default": "'onSubmit'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Form.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Form.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, state: Form.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FormState",
+            "fields": [],
+            "code": "type FormState = {};"
+          },
+          "actions": {
+            "name": "FormActions",
+            "members": [
+              "validate"
+            ],
+            "code": "type FormActions = {\n    validate: (fieldName?: string) => void;\n};"
+          },
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Form.SubmitEventDetails",
+          "code": "type FormSubmitEventDetails = {\n    reason: 'none';\n    event: Event;\n};"
+        },
+        {
+          "name": "Form.SubmitEventReason",
+          "code": "type FormSubmitEventReason = 'none';"
+        },
+        {
+          "name": "Form.ValidationMode",
+          "code": "type FormValidationMode = 'onSubmit' | 'onBlur' | 'onChange';"
+        },
+        {
+          "name": "Form.Values",
+          "code": "type FormValues = Record<string, any>;"
+        }
+      ],
+      "additionalTypes": [],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/form/page.mdx",
+      "referenceTags": [
+        "TypesForm"
+      ]
+    }
+  ]
+}
