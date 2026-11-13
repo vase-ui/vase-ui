@@ -6,4 +6,5 @@ export { useLabelableId } from './useLabelableId';
 export { useLabel } from './useLabel';
 export type { UseLabelParameters, UseLabelReturnValue } from './useLabel';
 export { useControlLabelId } from './useControlLabelId';
+export { useDeferredServerRender } from './useDeferredServerRender';
 export { useRegisteredMessageId } from './useRegisteredMessageId';

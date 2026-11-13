@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, ref, shallowRef, Teleport } from 'vue';
 import type { FormHTMLAttributes } from 'vue';
+import { Field } from '@vase-ui/vue/field';
+import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Form } from '@vase-ui/vue/form';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
@@ -87,6 +89,310 @@ describe('<Form />', () => {
     refInstanceof: window.HTMLFormElement,
     render,
   }));
+
+  it('blocks submit and focuses the first invalid field across custom and native validation', async () => {
+    const onFormSubmit = vi.fn();
+    const select = vi.spyOn(HTMLInputElement.prototype, 'select');
+
+    try {
+      const { user } = await render(
+        <Form onFormSubmit={onFormSubmit}>
+          <Field.Root name="custom" validate={() => 'custom error'}>
+            <Field.Control data-testid="custom" />
+          </Field.Root>
+          <Field.Root name="native">
+            <Field.Control data-testid="native" required />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(onFormSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('custom')).toHaveFocus();
+      expect(select).toHaveBeenCalledTimes(1);
+    } finally {
+      select.mockRestore();
+    }
+  });
+
+  it('submits when a valid async validator is pending', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => {
+      event.preventDefault();
+    });
+    const validate = vi.fn(() => new Promise<null>(() => {}));
+
+    await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root validate={validate}>
+          <Field.Control />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('unmounted fields should be removed from the form', async () => {
+    const submitSpy = vi.fn((event: SubmitEvent) => event.preventDefault());
+
+    const App = defineComponent(() => {
+      const checked = shallowRef(true);
+
+      return () => (
+        <Form onSubmit={submitSpy}>
+          <Field.Root name="name">
+            <Field.Control defaultValue="Alice" />
+          </Field.Root>
+
+          <input
+            type="checkbox"
+            checked={checked.value}
+            onChange={() => {
+              checked.value = !checked.value;
+            }}
+          />
+
+          {checked.value && (
+            <Field.Root name="email">
+              <Field.Control defaultValue="" required data-testid="email" />
+            </Field.Root>
+          )}
+
+          <button>Submit</button>
+        </Form>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    const submit = screen.getByText('Submit');
+
+    await user.click(submit);
+    expect(submitSpy.mock.calls.length).toBe(0);
+    expect(screen.getByTestId('email')).toHaveAttribute('aria-invalid', 'true');
+
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(submit);
+    expect(submitSpy.mock.calls.length).toBe(1);
+  });
+
+  it('excludes disabled fieldset fields from validation and onFormSubmit values', async () => {
+    const handleSubmit = vi.fn();
+
+    await render(
+      <Form onFormSubmit={handleSubmit}>
+        <Fieldset.Root disabled>
+          <Field.Root name="disabled">
+            <Field.Control required data-testid="disabled" />
+          </Field.Root>
+        </Fieldset.Root>
+        <Field.Root name="enabled">
+          <Field.Control defaultValue="sent" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({ enabled: 'sent' });
+    expect(screen.getByTestId('disabled')).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('clears invalid attributes when a field control becomes disabled', async () => {
+    const handleSubmit = vi.fn();
+
+    const App = defineComponent(() => {
+      const disabled = shallowRef(false);
+
+      return () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="disabled">
+            <Field.Control disabled={disabled.value} required data-testid="control" />
+          </Field.Root>
+          <button
+            type="button"
+            onClick={() => {
+              disabled.value = true;
+            }}
+          >
+            Disable
+          </button>
+          <button type="submit">Submit</button>
+        </Form>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Disable' }));
+
+    expect(screen.getByTestId('control')).toBeDisabled();
+    expect(screen.getByTestId('control')).not.toHaveAttribute('aria-invalid');
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
+  });
+
+  it('re-registers field controls when they become enabled again', async () => {
+    const handleSubmit = vi.fn();
+
+    const App = defineComponent(() => {
+      const disabled = shallowRef(false);
+
+      return () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="control">
+            <Field.Control disabled={disabled.value} required data-testid="control" />
+          </Field.Root>
+          <button
+            type="button"
+            onClick={() => {
+              disabled.value = true;
+            }}
+          >
+            Disable
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              disabled.value = false;
+            }}
+          >
+            Enable
+          </button>
+          <button type="submit">Submit</button>
+        </Form>
+      );
+    });
+
+    const { user } = await render(<App />);
+    const submit = screen.getByRole('button', { name: 'Submit' });
+
+    await user.click(submit);
+
+    expect(handleSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Disable' }));
+    await user.click(submit);
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
+
+    await user.click(screen.getByRole('button', { name: 'Enable' }));
+    await user.click(submit);
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+
+    await user.type(screen.getByTestId('control'), 'sent');
+    await user.click(submit);
+
+    expect(handleSubmit).toHaveBeenCalledTimes(2);
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({ control: 'sent' });
+  });
+
+  describe('prop: actionsRef', () => {
+    it('targets only the current Strict Mode registration after name, id, and control replacement', async () => {
+      const initialValidate = vi.fn(() => null);
+      const renamedValidate = vi.fn(() => null);
+      const replacementValidate = vi.fn(() => null);
+      const handle: { form?: FormInstance } = {};
+
+      const App = defineComponent(() => {
+        const step = shallowRef(0);
+
+        return () => {
+          const visible = step.value !== 2;
+          const name = step.value === 0 ? 'initial' : 'current';
+          let validate = initialValidate;
+          if (step.value === 1) {
+            validate = renamedValidate;
+          } else if (step.value > 1) {
+            validate = replacementValidate;
+          }
+
+          return (
+            <>
+              <Form
+                ref={(value) => {
+                  handle.form = value as FormInstance | null as FormInstance;
+                }}
+              >
+                {visible && (
+                  <Field.Root key={step.value} name={name} validate={validate}>
+                    <Field.Control id={`control-${step.value}`} />
+                  </Field.Root>
+                )}
+              </Form>
+              <button
+                type="button"
+                onClick={() => {
+                  step.value = 1;
+                }}
+              >
+                Rename
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  step.value = 2;
+                }}
+              >
+                Unmount
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  step.value = 3;
+                }}
+              >
+                Replace
+              </button>
+              <button type="button" onClick={() => handle.form?.validate('initial')}>
+                Validate initial
+              </button>
+              <button type="button" onClick={() => handle.form?.validate('current')}>
+                Validate current
+              </button>
+            </>
+          );
+        };
+      });
+
+      const { user } = await render(<App />);
+
+      await user.click(screen.getByRole('button', { name: 'Rename' }));
+      await user.click(screen.getByRole('button', { name: 'Validate initial' }));
+      await user.click(screen.getByRole('button', { name: 'Validate current' }));
+
+      expect(initialValidate).not.toHaveBeenCalled();
+      expect(renamedValidate).toHaveBeenCalledTimes(1);
+
+      await user.click(screen.getByRole('button', { name: 'Unmount' }));
+      await user.click(screen.getByRole('button', { name: 'Validate current' }));
+      expect(renamedValidate).toHaveBeenCalledTimes(1);
+
+      await user.click(screen.getByRole('button', { name: 'Replace' }));
+      await user.click(screen.getByRole('button', { name: 'Validate current' }));
+
+      expect(replacementValidate).toHaveBeenCalledTimes(1);
+    });
+  });
 
   describe('prop: noValidate', () => {
     it('should disable native validation if set to true (default)', async () => {

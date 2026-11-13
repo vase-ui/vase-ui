@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { Collapsible } from '@vase-ui/vue/collapsible';
-import { createRenderer, waitFor } from '#test-utils';
-import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
+import { createRenderer, createTransitionRunCounter, nextEvent, waitFor } from '#test-utils';
 
 // A real pointer event makes Chromium compute style before the next frame callback. A later case
 // in the same file then passes without the layout read of the panel. This file has the cases that
@@ -20,6 +19,8 @@ describe('<Collapsible.Panel /> opened by a click', () => {
   ])(
     'runs one transition for each enter and each exit: $name',
     async ({ keepMounted }) => {
+      let isOpen = false;
+      const counter = createTransitionRunCounter(() => isOpen);
       const { container } = await render(() => (
         <>
           <style>{`
@@ -35,12 +36,17 @@ describe('<Collapsible.Panel /> opened by a click', () => {
             }
           `}</style>
 
-          <Collapsible.Root>
+          <Collapsible.Root
+            onOpenChange={(open: boolean) => {
+              isOpen = open;
+            }}
+          >
             <Collapsible.Trigger data-testid="trigger">Trigger</Collapsible.Trigger>
             <Collapsible.Panel
               class="click-transition-panel"
               data-testid="panel"
               keepMounted={keepMounted}
+              onTransitionrun={counter.onTransitionrun}
             >
               This is panel content
             </Collapsible.Panel>
@@ -51,27 +57,17 @@ describe('<Collapsible.Panel /> opened by a click', () => {
       const trigger = container.querySelector<HTMLButtonElement>('[data-testid="trigger"]')!;
       const getPanel = () => container.querySelector<HTMLElement>('[data-testid="panel"]');
 
-      const counts = { enter: 0, exit: 0 };
-      let phase: keyof typeof counts | undefined;
-      container.addEventListener('transitionrun', (event) => {
-        if (phase && (event.target as Element).matches('[data-testid="panel"]')) {
-          counts[phase] += 1;
-        }
-      });
-
       for (let cycle = 0; cycle < 6; cycle += 1) {
-        phase = 'enter';
-        // The click command can resolve after the transition has ended. The wait for the end event
-        // starts in the task of the start event, so the end event cannot come before the wait.
-        const entered = nextEvent(container, 'transitionrun').then(() =>
-          nextEvent(container, 'transitionend'),
-        );
-        await Promise.all([userEvent.click(trigger), entered]);
+        // The click command can resolve after the transition has ended. The wait starts before the
+        // click, so it gets the end event of this transition and no earlier one.
+        await nextEvent(container, 'transitionend', {
+          after: 'transitionrun',
+          action: () => userEvent.click(trigger),
+        });
         await waitFor(() => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });
 
-        phase = 'exit';
         await userEvent.click(trigger);
         await waitFor(
           () => {
@@ -80,10 +76,13 @@ describe('<Collapsible.Panel /> opened by a click', () => {
           },
           { timeout: 3000 },
         );
-        phase = undefined;
       }
 
-      expect(counts).toEqual({ enter: 6, exit: 6 });
+      // The browser can send the `transitionrun` of the last exit after the panel is hidden.
+      await waitFor(() => {
+        expect(counter.counts.exit).toBe(6);
+      });
+      expect(counter.counts).toEqual({ enter: 6, exit: 6 });
     },
     30_000,
   );

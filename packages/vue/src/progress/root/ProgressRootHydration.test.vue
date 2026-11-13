@@ -4,11 +4,12 @@ import { Progress } from '../index';
 defineProps<{
   value: number | null;
   labelId?: string | undefined;
+  ariaLabel?: string | undefined;
 }>();
 </script>
 
 <template>
-  <Progress.Root :value="value">
+  <Progress.Root :value="value" :aria-label="ariaLabel">
     <Progress.Label :id="labelId">Upload progress</Progress.Label>
     <Progress.Value />
     <Progress.Track>
