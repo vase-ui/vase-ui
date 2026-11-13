@@ -1,0 +1,2304 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/field/**",
+    "docs/src/app/(docs)/react/components/field/**"
+  ],
+  "sources": [
+    "packages/react/src/field/control/FieldControl.tsx",
+    "packages/react/src/field/control/FieldControlDataAttributes.ts",
+    "packages/react/src/field/description/FieldDescription.tsx",
+    "packages/react/src/field/description/FieldDescriptionDataAttributes.ts",
+    "packages/react/src/field/error/FieldError.tsx",
+    "packages/react/src/field/error/FieldErrorDataAttributes.ts",
+    "packages/react/src/field/index.parts.ts",
+    "packages/react/src/field/index.ts",
+    "packages/react/src/field/item/FieldItem.tsx",
+    "packages/react/src/field/item/FieldItemContext.ts",
+    "packages/react/src/field/item/FieldItemDataAttributes.ts",
+    "packages/react/src/field/label/FieldLabel.tsx",
+    "packages/react/src/field/label/FieldLabelDataAttributes.ts",
+    "packages/react/src/field/root/FieldRoot.tsx",
+    "packages/react/src/field/root/FieldRootDataAttributes.ts",
+    "packages/react/src/field/root/useFieldValidation.ts",
+    "packages/react/src/field/utils/getCombinedFieldValidityData.ts",
+    "packages/react/src/field/validity/FieldValidity.tsx"
+  ],
+  "typeTests": [
+    "packages/react/src/field/control/FieldControl.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/field/control/FieldControl.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "avoids rerendering for uncontrolled input changes"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "renders once per keystroke for controlled input changes"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates once when changed by the user"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates once when a controlled value is changed by the user"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "clears dirty state when a numeric controlled value returns to its initial value"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "syncs state and validates when the controlled value changes programmatically"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates the final controlled value when it is normalized on blur"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "keeps the final async validation when a controlled value is normalized on blur"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "does not validate when a controlled value is reset to the initial value on blur"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "sets filled state on mount when the control is prefilled"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "does not set filled state on mount for an empty controlled value"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "clears filled state when a controlled control remounts empty"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "clears filled state when an uncontrolled control remounts empty"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "forwards a changing defaultValue without warning"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "keeps filled state from the edited value when defaultValue changes"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "sets filled state from a controlled value on a custom element"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "does not validate when the change is canceled"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "does not clear errors or validate when change is prevented"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates once when Enter implicitly submits a form",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates when Enter does not implicitly submit the form",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates when a disabled submit button blocks implicit submission",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates the latest value when Enter does not submit the form"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "validates when Enter is pressed outside a form"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "shows a required error when a prefilled value is cleared"
+        },
+        {
+          "describe": [
+            "<Field.Control />",
+            "[data-focused]"
+          ],
+          "title": "is removed when the focused control becomes disabled"
+        },
+        {
+          "describe": [
+            "<Field.Control />",
+            "[data-focused]"
+          ],
+          "title": "is removed when the field root becomes disabled"
+        },
+        {
+          "describe": [
+            "<Field.Control />",
+            "[data-focused]"
+          ],
+          "title": "can be re-acquired after the control is re-enabled"
+        },
+        {
+          "describe": [
+            "<Field.Control />",
+            "[data-focused]"
+          ],
+          "title": "is removed when the focused control unmounts"
+        },
+        {
+          "describe": [
+            "<Field.Control />"
+          ],
+          "title": "should sync focused state when autoFocus is used with SSR",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Control />",
+            "id"
+          ],
+          "title": "updates the label association when the control is swapped"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/description/FieldDescription.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Description />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Description />"
+          ],
+          "title": "should set aria-describedby on the control automatically"
+        },
+        {
+          "describe": [
+            "<Field.Description />"
+          ],
+          "title": "should preserve user aria-describedby values on the control"
+        },
+        {
+          "describe": [
+            "<Field.Description />"
+          ],
+          "title": "does not register an empty description id"
+        },
+        {
+          "describe": [
+            "<Field.Description />"
+          ],
+          "title": "reflects the disabled state from Field.Item"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/error/FieldError.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Error />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Error />"
+          ],
+          "title": "should set aria-describedby on the control automatically"
+        },
+        {
+          "describe": [
+            "<Field.Error />"
+          ],
+          "title": "should show error messages by default"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "should only render when `match` matches constraint validation"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "should show custom errors"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "uses `match={false}` as the default slot for Form errors"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "uses an omitted `match` as the default slot for Form errors"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "uses the Field.Control name fallback for Form errors"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "ignores inherited Form error properties"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "renders Form error arrays as a list"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "renders single-item Form error arrays as text"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "renders client validation error arrays as a list"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "does not register an empty error id"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "ignores empty Form error arrays"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "uses `match={false}` as the default slot for client validation errors"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "uses the client validation path for specific matches when Form errors are present"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "prop: match"
+          ],
+          "title": "always renders the error message when `match` is true"
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "animations"
+          ],
+          "title": "triggers enter animation via data-starting-style when mounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Error />",
+            "animations"
+          ],
+          "title": "applies data-ending-style before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/item/FieldItem.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Item />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Item />",
+            "prop: disabled"
+          ],
+          "title": "reflects disabled state on the item"
+        },
+        {
+          "describe": [
+            "<Field.Item />",
+            "prop: disabled"
+          ],
+          "title": "disables a wrapped checkbox"
+        },
+        {
+          "describe": [
+            "<Field.Item />",
+            "prop: disabled"
+          ],
+          "title": "disables a wrapped radio"
+        },
+        {
+          "describe": [
+            "<Field.Item />"
+          ],
+          "title": "associates a Field.Item label with a parent checkbox"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/label/FieldLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Label />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Label />"
+          ],
+          "title": "should set htmlFor referencing the control automatically"
+        },
+        {
+          "describe": [
+            "<Field.Label />"
+          ],
+          "title": "when nativeLabel={false}, clicking focuses the associated control"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "control selection"
+          ],
+          "title": "keeps the selected control id when another control unmounts"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "control selection"
+          ],
+          "title": "falls over to the remaining control when the selected one unmounts"
+        },
+        {
+          "describe": [
+            "<Field.Label />"
+          ],
+          "title": "reflects the disabled state from Field.Item"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "dev warnings"
+          ],
+          "title": "does not warn by default"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "dev warnings"
+          ],
+          "title": "does not warn when the render function returns no element"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "dev warnings"
+          ],
+          "title": "errors if nativeLabel=true but ref is not a label"
+        },
+        {
+          "describe": [
+            "<Field.Label />",
+            "dev warnings"
+          ],
+          "title": "errors if nativeLabel=false but ref is a label"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/root/FieldRoot.react17.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Root /> with the React 17 id fallback"
+          ],
+          "title": "falls back to a generated id when an explicit control id is removed"
+        },
+        {
+          "describe": [
+            "<Field.Root /> with the React 17 id fallback"
+          ],
+          "title": "allows mount-time imperative validation before the fallback id is assigned"
+        },
+        {
+          "describe": [
+            "<Field.Root /> with the React 17 id fallback"
+          ],
+          "title": "reports label mismatches without the owner-stack API"
+        },
+        {
+          "describe": [
+            "<Field.Root /> with the React 17 id fallback"
+          ],
+          "title": "reports non-native label mismatches without the owner-stack API"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "updates label association when replacing one control with another"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "drops a stale explicit id when an id-less control replaces the control that owned it"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "re-associates the label when a CheckboxGroup is replaced by another control"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "updates label associations when the control id changes"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "falls back to a generated id when the control id is removed"
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "does not set `aria-labelledby` during SSR when Field.Label is absent",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "removes `aria-labelledby` when Field.Label is removed after hydration",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "preserves label association without looping when a control is unmounted and remounted",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "preserves a non-native label association when a control is unmounted and remounted",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "keeps an explicit control id while the subtree is hidden",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />"
+          ],
+          "title": "keeps the group label suppressed while its subtree is hidden",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: disabled"
+          ],
+          "title": "should add data-disabled style hook to all components"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: disabled"
+          ],
+          "title": "keeps an explicitly invalid field marked invalid while disabled"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: disabled"
+          ],
+          "title": "keeps a disabled field with form errors marked invalid"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "when not in <Form> the function does not run by default"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "runs after native validations"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "treats $label result as valid"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "publishes neutral validity while a validator is in flight in %s mode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "retires a previously valid result to neutral while revalidating in %s mode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "keeps a previously resolved error while revalidating in %s mode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "retires a stale native error to neutral once the constraint passes again"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "keeps a native constraint failure published while the validator is in flight in %s mode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate",
+            "async validation pending state"
+          ],
+          "title": "retires a resolved async error to neutral while revalidating in onSubmit mode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "accepts synchronous and async validators with no return value"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "should apply aria-invalid prop to control once validation finishes"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "receives all form values as the 2nd argument"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "unmounted fields are excluded from the validate fn"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "submits the replacement control value when swapping field-aware controls"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "excludes registration-gated controls from onFormSubmit when their field name is removed"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "uses the Field.Control name for form submission and form validation values"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "updates the Field.Control name fallback when the name changes"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "uses the Field.Control name fallback when the Field.Root name is removed"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validate"
+          ],
+          "title": "updates field-aware control name fallbacks when the name changes"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onSubmit"
+          ],
+          "title": "should validate the field on submit"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onSubmit"
+          ],
+          "title": "revalidates on change"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onChange"
+          ],
+          "title": "validates the field on change"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "validates the field on blur"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "should not mark invalid if `valueMissing` is the only error and not yet dirtied"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "does not publish errors while `valueMissing` is suppressed"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "should mark invalid if `valueMissing` is the only error and dirtied"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "supports async validation"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "ignores stale async validation results"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur"
+          ],
+          "title": "should apply [data-field] style hooks to field components"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "revalidation"
+          ],
+          "title": "revalidates on change for `valueMissing`"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "revalidation"
+          ],
+          "title": "handles both `required` and `typeMismatch`"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "revalidation"
+          ],
+          "title": "revalidates on change when clearing a type mismatch leaves only `valueMissing`"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "revalidation"
+          ],
+          "title": "clears valueMissing on change but defers other native errors like typeMismatch until blur when both are active"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "computed validity state"
+          ],
+          "title": "should not mark field as invalid for valueMissing if not dirty"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "computed validity state"
+          ],
+          "title": "should mark field as invalid for valueMissing if dirty"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validationMode",
+            "onBlur",
+            "computed validity state"
+          ],
+          "title": "should mark field as invalid for other errors (e.g., typeMismatch) even if not dirty"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "should debounce validation"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "should debounce validation for field-aware controls"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "should debounce validation for radio groups"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "drops a pending debounced validation when the control unmounts"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "ignores async validation results superseded during debounce"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "drops an in-flight async validation when the control unmounts"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "keeps the published error when async validation rejects"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "drops a pending validation when another field-aware control takes ownership"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: validateDebounceTime"
+          ],
+          "title": "keeps a pending debounce armed across the first registration"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "keeps a message set outside the field when submitting"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "keeps a message set outside the field when validating on change"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "keeps a message set outside the field when revalidating on change"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "keeps other native errors deferred while a message set outside the field survives"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "clears the message it set itself"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "restores a message its own one displaced"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "does not restore a message that was withdrawn while its own one was installed"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "clears its own message on an input that became disabled"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "does not adopt a native message as the message it displaced"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "keeps a message set outside the field on another input of the same field"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "ignores a message set outside the field on a control barred from validation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "custom validity ownership"
+          ],
+          "title": "does not write its own message to a barred control",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "touched"
+          ],
+          "title": "should apply [data-touched] style hook to all components when touched"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "dirty"
+          ],
+          "title": "should apply [data-dirty] style hook to all components when dirty"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "dirty"
+          ],
+          "title": "should clear [data-dirty] when a null-valued control returns to its empty initial value"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "dirty"
+          ],
+          "title": "should clear [data-dirty] when a Select returns to its null initial value"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "dirty"
+          ],
+          "title": "keeps [data-dirty] on a RadioGroup when returning to the first picked value"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "control remount"
+          ],
+          "title": "clears dirty after an empty text control returns to empty following a null-valued control"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "control remount"
+          ],
+          "title": "keeps the original baseline when a controlled control remounts"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "control remount"
+          ],
+          "title": "keeps the field baseline when the control is swapped"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "control remount"
+          ],
+          "title": "captures the baseline only once in StrictMode"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "filled"
+          ],
+          "title": "should apply [data-filled] style hook to all components when filled"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "filled"
+          ],
+          "title": "changes [data-filled] when the value is changed externally"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "style hooks",
+            "focused"
+          ],
+          "title": "should apply [data-focused] style hook to all components when focused"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "defaultValue behavior"
+          ],
+          "title": "should not reset to defaultValue when input value is programmatically changed and then focused"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "defaultValue behavior"
+          ],
+          "title": "should not reset to defaultValue when input value is programmatically changed to non-empty value and then focused"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: dirty"
+          ],
+          "title": "controls the dirty state"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: dirty"
+          ],
+          "title": "uses the controlled dirty state for required validation"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: dirty"
+          ],
+          "title": "does not update controlled dirty state from user input"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: touched"
+          ],
+          "title": "controls the touched state"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: touched"
+          ],
+          "title": "does not update controlled touched state on blur"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "validates the field when the `validate` method is called"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "validates a logical field without a mounted control"
+        },
+        {
+          "describe": [
+            "<Field.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "validates the current control value when the `validate` method is called"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/field/validity/FieldValidity.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Field.Validity />"
+          ],
+          "title": "surfaces valueMissing immediately after a stale custom error in $validationMode mode"
+        },
+        {
+          "describe": [
+            "<Field.Validity />"
+          ],
+          "title": "defers badInput during required change revalidation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Field.Validity />",
+            "validationMode=onSubmit"
+          ],
+          "title": "should pass validity data"
+        },
+        {
+          "describe": [
+            "<Field.Validity />",
+            "validationMode=onBlur"
+          ],
+          "title": "should pass validity data"
+        },
+        {
+          "describe": [
+            "<Field.Validity />",
+            "validationMode=onBlur"
+          ],
+          "title": "should correctly pass errors when validate function returns a string"
+        },
+        {
+          "describe": [
+            "<Field.Validity />",
+            "validationMode=onBlur"
+          ],
+          "title": "should correctly pass errors when validate function returns an array of strings"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/field/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Field.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "dirty",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "touched",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "invalid",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "validate",
+              "required": false,
+              "type": "((value: unknown, formValues: Form.Values) => string | void | string[] | Promise<string | void | string[] | null> | null)",
+              "default": null
+            },
+            {
+              "name": "validationMode",
+              "required": false,
+              "type": "Form.ValidationMode",
+              "default": "'onSubmit'"
+            },
+            {
+              "name": "validationDebounceTime",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldRootState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldRootState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": {
+            "name": "FieldRootActions",
+            "members": [
+              "validate"
+            ],
+            "code": "type FieldRootActions = {\n    validate: () => void;\n};"
+          },
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldItemState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldDescriptionState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldDescriptionState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Control",
+          "tag": "input",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string | number | string[]",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: string, eventDetails: Field.Control.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Control.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Control.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Control.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldControlState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldControlState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "FieldControlChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type FieldControlChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "FieldControlChangeEventDetails",
+            "code": "type FieldControlChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Label",
+          "tag": "label",
+          "props": [
+            {
+              "name": "nativeLabel",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Label.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Label.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Label.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldLabelState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldLabelState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Error",
+          "tag": "div",
+          "props": [
+            {
+              "name": "match",
+              "required": false,
+              "type": "boolean | 'valid' | 'badInput' | 'customError' | 'patternMismatch' | 'rangeOverflow' | 'rangeUnderflow' | 'stepMismatch' | 'tooLong' | 'tooShort' | 'typeMismatch' | 'valueMissing'",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Field.Error.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Field.Error.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Field.Error.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldErrorState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type FieldErrorState = {\n    transitionStatus: TransitionStatus;\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Validity",
+          "tag": null,
+          "props": [
+            {
+              "name": "children",
+              "required": true,
+              "type": "((state: Field.Validity.State) => React.ReactNode)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "FieldValidityState",
+            "fields": [
+              {
+                "name": "validity",
+                "optional": false,
+                "type": "{ badInput: boolean; customError: boolean; patternMismatch: boolean; rangeOverflow: boolean; rangeUnderflow: boolean; stepMismatch: boolean; tooLong: boolean; tooShort: boolean; typeMismatch: boolean; valueMissing: boolean; valid: boolean | null; }"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "errors",
+                "optional": false,
+                "type": "string[]"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "unknown"
+              },
+              {
+                "name": "error",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "initialValue",
+                "optional": false,
+                "type": "unknown"
+              }
+            ],
+            "code": "type FieldValidityState = {\n    validity: {\n        badInput: boolean;\n        customError: boolean;\n        patternMismatch: boolean;\n        rangeOverflow: boolean;\n        rangeUnderflow: boolean;\n        stepMismatch: boolean;\n        tooLong: boolean;\n        tooShort: boolean;\n        typeMismatch: boolean;\n        valueMissing: boolean;\n        valid: boolean | null;\n    };\n    transitionStatus: TransitionStatus;\n    errors: string[];\n    value: unknown;\n    error: string;\n    initialValue: unknown;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "Field.ValidityData",
+          "code": "type FieldValidityData = {\n    state: {\n        badInput: boolean;\n        customError: boolean;\n        patternMismatch: boolean;\n        rangeOverflow: boolean;\n        rangeUnderflow: boolean;\n        stepMismatch: boolean;\n        tooLong: boolean;\n        tooShort: boolean;\n        typeMismatch: boolean;\n        valueMissing: boolean;\n        valid: boolean | null;\n    };\n    error: string;\n    errors: string[];\n    value: unknown;\n    initialValue: unknown;\n};"
+        },
+        {
+          "name": "FieldControlDataAttributes",
+          "code": "declare namespace FieldControlDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "FieldDescriptionDataAttributes",
+          "code": "declare namespace FieldDescriptionDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "FieldErrorDataAttributes",
+          "code": "declare namespace FieldErrorDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "FieldItemDataAttributes",
+          "code": "declare namespace FieldItemDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "FieldLabelDataAttributes",
+          "code": "declare namespace FieldLabelDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "FieldRootDataAttributes",
+          "code": "declare namespace FieldRootDataAttributes {\n    const disabled: 'data-disabled';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "ValidationMode",
+          "code": "type ValidationMode = 'onSubmit' | 'onBlur' | 'onChange';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/field/page.mdx",
+      "referenceTags": [
+        "TypesField.Root",
+        "TypesField.Label",
+        "TypesField.Control",
+        "TypesField.Description",
+        "TypesField.Item",
+        "TypesField.Error",
+        "TypesField.Validity"
+      ]
+    }
+  ]
+}
