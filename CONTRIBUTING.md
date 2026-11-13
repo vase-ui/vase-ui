@@ -235,7 +235,7 @@ A part that Base UI writes as another part renders that part and no element of i
 
 - Set `inheritAttrs: false`. Bind `{ ...$attrs, ...props }` on that part. The declared props are not in `$attrs`, so the spread gives both.
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
-- Vue takes a declared event out of `$attrs`. Listen to each declared event of that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
+- Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
 ### Parts with nodes of their own
