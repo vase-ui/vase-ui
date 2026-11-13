@@ -19,12 +19,20 @@ import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
 import type { ValuePopupFixtureDetails } from '../../../test/fixtures/ValuePopupFixture';
-import { useImplicitActiveTrigger, useSingleAnchorPopupRoot } from './popupRoot';
+import { useImplicitActiveTrigger, usePopupRootSync, useSingleAnchorPopupRoot } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { REASONS } from '../../internals/reasons';
-import { createPopupOpenState } from './store';
+import { ReactiveStore } from './ReactiveStore';
+import {
+  createInitialPopupStoreState,
+  createPopupOpenState,
+  createPopupStoreContext,
+  popupStoreSelectors,
+} from './store';
+import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
 import { provideFloatingNode } from './tree/FloatingTree';
 import {
   createTestPopupStore,
@@ -1936,5 +1944,58 @@ describe('useSingleAnchorPopupRoot', () => {
         'Vase UI: A component is changing the uncontrolled open state of SingleAnchorRoot to be controlled.',
       ),
     ]);
+  });
+});
+
+describe('usePopupRootSync', () => {
+  const { render } = createRenderer();
+
+  type State = PopupStoreState<unknown> & { openMethod: InteractionType | null };
+
+  function createStoreWithOpenMethod() {
+    return new ReactiveStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>(
+      { ...createInitialPopupStoreState(), openMethod: null },
+      createPopupStoreContext(),
+      popupStoreSelectors,
+    );
+  }
+
+  const SyncTest = defineComponent({
+    props: {
+      store: {
+        type: Object as PropType<ReturnType<typeof createStoreWithOpenMethod>>,
+        required: true,
+      },
+      open: { type: Boolean, required: true },
+    },
+    setup(props) {
+      usePopupRootSync(props.store, () => props.open);
+      return () => null;
+    },
+  });
+
+  it('clears the open method when the popup closes, and keeps it while the popup is open', async () => {
+    const store = createStoreWithOpenMethod();
+    const open = shallowRef(false);
+    await render(() => <SyncTest store={store} open={open.value} />);
+
+    store.set('openMethod', 'touch');
+    open.value = true;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+
+    open.value = false;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe(null);
+  });
+
+  it('clears the open method when the root unmounts', async () => {
+    const store = createStoreWithOpenMethod();
+    const { unmount } = await render(() => <SyncTest store={store} open />);
+    store.set('openMethod', 'mouse');
+
+    unmount();
+
+    expect(store.state.openMethod).toBe(null);
   });
 });
