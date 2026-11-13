@@ -181,6 +181,35 @@ async function expectAvatarPageWithImage(page: Page) {
   expect(await page.getByTestId('fallback').count()).toBe(0);
 }
 
+// `from` is the button that has the tab stop after hydration.
+const TOOLBARS = [
+  { toolbar: 'plain', from: 'plain-1', to: 'plain-2' },
+  { toolbar: 'disabled-first', from: 'disabled-first-2', to: 'disabled-first-3' },
+  { toolbar: 'async', from: 'async-1', to: 'async-2' },
+];
+
+function readToolbarTabindexes(page: Page, toolbar: string) {
+  return page
+    .getByTestId(toolbar)
+    .getByRole('button')
+    .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('tabindex')));
+}
+
+// A server runs the `setup` of the first button of the toolbar `async` after the `setup` of the
+// buttons that follow it. The server HTML then has the tab stop on the second button.
+async function expectToolbarPage(page: Page) {
+  expect(await readToolbarTabindexes(page, 'plain')).toEqual(['0', '-1', '-1']);
+  expect(await readToolbarTabindexes(page, 'disabled-first')).toEqual(['-1', '0', '-1']);
+  expect(await readToolbarTabindexes(page, 'async')).toEqual(['-1', '0', '-1']);
+}
+
+// After the mount, the tab stop is the first button that can get focus.
+async function expectHydratedToolbarPage(page: Page) {
+  expect(await readToolbarTabindexes(page, 'plain')).toEqual(['0', '-1', '-1']);
+  expect(await readToolbarTabindexes(page, 'disabled-first')).toEqual(['-1', '0', '-1']);
+  expect(await readToolbarTabindexes(page, 'async')).toEqual(['0', '-1', '-1']);
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -242,6 +271,11 @@ const PAGES: PageCase[] = [
     path: '/avatar',
     expectPage: expectAvatarPageWithFallback,
     expectHydratedPage: expectAvatarPageWithImage,
+  },
+  {
+    path: '/toolbar',
+    expectPage: expectToolbarPage,
+    expectHydratedPage: expectHydratedToolbarPage,
   },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -335,6 +369,24 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     });
     expect(await panel.getAttribute('hidden')).toBeNull();
   });
+
+  it.each(TOOLBARS)(
+    'moves the focus of the toolbar $toolbar with an arrow key after hydration',
+    async ({ from, to }) => {
+      const page = await createPage('/toolbar');
+      const messages = collectMessages(page);
+
+      await page.getByTestId(from).focus();
+      await page.keyboard.press('ArrowRight');
+
+      expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+        to,
+      );
+      expect(await page.getByTestId(to).getAttribute('tabindex')).toBe('0');
+      expect(await page.getByTestId(from).getAttribute('tabindex')).toBe('-1');
+      expect(messages).toEqual([]);
+    },
+  );
 
   it.each(RANGE_PAGES)(
     'formats a value of $path with the locale of the visitor after hydration',
