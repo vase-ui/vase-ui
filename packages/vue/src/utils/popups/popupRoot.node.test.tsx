@@ -95,6 +95,7 @@ describe('usePopupRoot on a server', () => {
     // The portal renders the popup after the mount, so a server never reads the id of the popup.
     const html = await renderRoot({ ...props, popupId: 'my-popup' });
 
+    expect(readTriggers(html)).toEqual([open]);
     expect(html).toBe(await renderRoot(props));
     expect(html).not.toContain('my-popup');
   });
