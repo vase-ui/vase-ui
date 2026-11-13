@@ -570,7 +570,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - A registration changes `triggerCount` only while the popup is open.
 - The registration of the active trigger gives its element to the store, and its data while the popup is open. The registration of another trigger claims an open popup that has no active trigger, unless the popup opened with no trigger. The popup then gets the element and the data of that trigger.
 - While a trigger owns the mounted popup, each change of its data goes to the store.
-- `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated. A new entry in the hook would reverse the order of the triggers, because `KeepAlive` runs the `onActivated` hooks of a branch from the last part to the first part.
+- `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated.
 - When the flag changes, the registration updates `triggerCount`. After the activation, it gives the data of the trigger to the store again.
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
