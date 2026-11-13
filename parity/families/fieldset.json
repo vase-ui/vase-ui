@@ -10,8 +10,8 @@
       "describe": ["<Fieldset.Root />"],
       "title": "passes disabled to rendered Base UI roots",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/thumb/SliderThumb.tsx",
-      "reason": "The case renders `CheckboxGroup` and four parts of Slider, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The pull request that adds that file names the next file that has no counterpart."
+      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
+      "reason": "The case renders `CheckboxGroup` and `Slider.Track`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The pull request that adds that file names the next file that has no counterpart."
     },
     {
       "upstream": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",

@@ -9,6 +9,8 @@ import type {
   SliderRootProps,
   SliderRootState,
 } from './root/SliderRoot.vue';
+import SliderThumb from './thumb/SliderThumb.vue';
+import type { SliderThumbProps, SliderThumbState } from './thumb/SliderThumb.vue';
 
 /**
  * Groups all parts of the slider.
@@ -33,4 +35,14 @@ export const Control: typeof SliderControl = SliderControl;
 export namespace Control {
   export type State = SliderControlState;
   export type Props = SliderControlProps;
+}
+
+/**
+ * The draggable part of the slider at the tip of the indicator.
+ * Renders a `<div>` element and a nested `<input type="range">`.
+ */
+export const Thumb: typeof SliderThumb = SliderThumb;
+export namespace Thumb {
+  export type State = SliderThumbState;
+  export type Props = SliderThumbProps;
 }
