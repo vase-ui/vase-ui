@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/collapsible/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "cc9f9668b74d801c912ca5a20bd3773b0f9e46f23dba66a47651f8648ec34707",
+    "hero/css-modules/index.tsx": "a7125bef08661e69800ba4d854b37a7d31546e1ab3ae14c085db97f919a77032"
+  }
+}
