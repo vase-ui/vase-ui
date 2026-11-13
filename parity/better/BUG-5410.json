@@ -2,5 +2,5 @@
   "id": "BUG-5410",
   "evidence": ["https://github.com/mui/base-ui/issues/5410"],
   "behavior": "A press in a same-origin iframe closes a popup that is not modal.",
-  "dueWith": "packages/react/src/popover/root/PopoverRoot.tsx"
+  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
 }

@@ -44,6 +44,8 @@
     "packages/react/test/conformanceTests/**",
     "packages/react/test/createRenderer.ts",
     "packages/react/test/describeConformance.tsx",
+    "packages/react/test/formData.ts",
+    "packages/react/test/hiddenInputSizeTests.tsx",
     "packages/react/test/index.ts",
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
@@ -111,6 +113,8 @@
     "packages/react/test/conformanceTests/utils.ts",
     "packages/react/test/createRenderer.ts",
     "packages/react/test/describeConformance.tsx",
+    "packages/react/test/formData.ts",
+    "packages/react/test/hiddenInputSizeTests.tsx",
     "packages/react/test/index.ts",
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
@@ -1746,6 +1750,20 @@
             "with a non-native button"
           ],
           "suite": "testRenderProp"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/hiddenInputSizeTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "hidden input size"
+          ],
+          "title": "grows from zero size to an on-screen 1px box when reported invalid",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
         }
       ]
     },
