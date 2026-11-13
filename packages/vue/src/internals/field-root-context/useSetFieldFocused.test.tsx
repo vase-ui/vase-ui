@@ -1,5 +1,5 @@
 import { expect, describe, it, onTestFinished } from 'vitest';
-import { createSSRApp, defineComponent, KeepAlive, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, KeepAlive, onActivated, shallowRef } from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
@@ -21,6 +21,13 @@ describe('useSetFieldFocused', () => {
   // can clear the focused state.
   function blockFocusout(element: HTMLElement) {
     element.addEventListener('focusout', (event) => event.stopImmediatePropagation(), true);
+  }
+
+  // A control can have focus that no `focusin` event reported, such as a control that has focus
+  // before the hydration. A case that needs such a control blocks the event of its focus. Then only
+  // the code of the composable can set the focused state.
+  function blockFocusin(element: HTMLElement) {
+    element.addEventListener('focusin', (event) => event.stopImmediatePropagation(), true);
   }
 
   describe('in a field', () => {
@@ -172,6 +179,45 @@ describe('useSetFieldFocused', () => {
 
       expect(control).not.toHaveFocus();
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+    });
+
+    it('sets the focused state when `KeepAlive` activates a control that has focus with no focus event', async () => {
+      const shown = shallowRef(true);
+      const focusOnActivation = shallowRef(false);
+      // `KeepAlive` runs the `onActivated` hooks of one branch from its last part to its first part.
+      // The hook of this part then runs before the hook of the control, so the control has focus
+      // when its own hook runs.
+      const FocusOnActivation = defineComponent(() => {
+        onActivated(() => {
+          if (focusOnActivation.value) {
+            screen.getByTestId('control').focus();
+          }
+        });
+        return () => null;
+      });
+      const Control = defineComponent(() => () => (
+        <>
+          <FieldControlPart data-testid="control" />
+          <FocusOnActivation />
+        </>
+      ));
+      const Test = defineComponent(() => () => (
+        <FieldScope data-testid="root">
+          <KeepAlive>{shown.value ? <Control /> : null}</KeepAlive>
+        </FieldScope>
+      ));
+      await render(<Test />);
+      const control = screen.getByTestId('control');
+      blockFocusin(control);
+      shown.value = false;
+      await flushMicrotasks();
+
+      focusOnActivation.value = true;
+      shown.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveFocus();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused');
     });
 
     it('sets the focused state of a control that has focus before the hydration', async () => {
