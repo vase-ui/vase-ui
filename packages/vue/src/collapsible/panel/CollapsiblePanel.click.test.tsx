@@ -60,8 +60,10 @@ describe('<Collapsible.Panel /> opened by a click', () => {
       for (let cycle = 0; cycle < 6; cycle += 1) {
         // The click command can resolve after the transition has ended. The wait starts before the
         // click, so it gets the end event of this transition and no earlier one.
-        const entered = nextEvent(container, 'transitionend', { after: 'transitionrun' });
-        await Promise.all([userEvent.click(trigger), entered]);
+        await nextEvent(container, 'transitionend', {
+          after: 'transitionrun',
+          action: () => userEvent.click(trigger),
+        });
         await waitFor(() => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });

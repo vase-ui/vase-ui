@@ -2,28 +2,26 @@
  * Waits for the next event of a type on a target. It fails when none comes, so a missing animation
  * gives a message and not a timeout of the test.
  * With `after`, an event of the type counts only when an event of the type `after` came first.
- * Call it before the action, so that the document has a listener of the end event when the
- * transition starts. A late frame can end a transition in the update that starts it, and Chromium
- * then sends no `transitionend` to a listener that comes later.
+ * With `action`, the function runs after the listeners are attached, and the 3 seconds start when
+ * it ends. A command of the browser, such as a real click, can take more than 3 seconds on a busy
+ * machine.
+ * Attach the listeners before the action, so that the document has a listener of the end event
+ * when the transition starts. A late frame can end a transition in the update that starts it, and
+ * Chromium then sends no `transitionend` to a listener that comes later.
  */
 export function nextEvent(
   target: EventTarget,
   type: string,
-  { after }: { after?: string } = {},
+  { after, action }: { after?: string; action?: () => unknown } = {},
 ): Promise<Event> {
   return new Promise((resolve, reject) => {
     let hasAfterEvent = after === undefined;
-    const timer = setTimeout(() => {
-      removeListeners();
-      reject(
-        new Error(
-          after === undefined
-            ? `No ${type} event came in 3 seconds.`
-            : `No ${type} event came after a ${after} event in 3 seconds.`,
-        ),
-      );
-    }, 3000);
-    function removeListeners() {
+    let isSettled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    function settle() {
+      isSettled = true;
+      clearTimeout(timer);
       target.removeEventListener(type, handleEvent);
       if (after !== undefined) {
         target.removeEventListener(after, handleAfterEvent);
@@ -33,17 +31,35 @@ export function nextEvent(
       hasAfterEvent = true;
     }
     function handleEvent(event: Event) {
-      if (!hasAfterEvent) {
+      if (hasAfterEvent) {
+        settle();
+        resolve(event);
+      }
+    }
+    function startTimer() {
+      if (isSettled) {
         return;
       }
-      clearTimeout(timer);
-      removeListeners();
-      resolve(event);
+      timer = setTimeout(() => {
+        settle();
+        reject(
+          new Error(
+            after === undefined
+              ? `No ${type} event came in 3 seconds.`
+              : `No ${type} event came after a ${after} event in 3 seconds.`,
+          ),
+        );
+      }, 3000);
     }
+
     if (after !== undefined) {
       target.addEventListener(after, handleAfterEvent);
     }
     target.addEventListener(type, handleEvent);
+    (async () => action?.())().then(startTimer, (error: unknown) => {
+      settle();
+      reject(error);
+    });
   });
 }
 
