@@ -244,7 +244,8 @@ describe('FloatingPortalLite', () => {
   });
 
   describe('portal above', () => {
-    // A stand-in for the portal element that a portal with focus guards provides.
+    // `FloatingPortalLite` does not provide `PortalContext`. This mock provides it, as the portal
+    // with focus guards does.
     const portalNode = shallowRef<HTMLElement | null>(null);
     const PortalAbove = defineComponent({
       setup(_, { slots }) {
