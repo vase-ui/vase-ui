@@ -498,8 +498,9 @@ describe('FloatingFocusManager', () => {
         </FloatingPortal>
       ));
 
-      // The unmount of the first manager also clears the state for the portal, so the portal has no
-      // outside guard to send the Tab key through. The case reads the refs instead.
+      // The second manager writes its guards in an update before the first manager unmounts. When
+      // one update replaces the first manager, the first manager clears its refs before the second
+      // manager writes them.
       hasSecond.value = true;
       await nextTick();
       const [secondBefore, secondAfter] = getInsideGuards().slice(2);
@@ -573,14 +574,14 @@ describe('FloatingFocusManager', () => {
       await fireEvent.click(screen.getByTestId('reference'));
     }
 
-    it('loses the focus in WebKit', async () => {
+    it('loses the focus when the engine is WebKit', async () => {
       setWebKit(true);
       await closeWithFocusInField();
 
       expect(screen.getByTestId('one')).not.toHaveFocus();
     });
 
-    it('keeps the focus in the other engines', async () => {
+    it('keeps the focus when the engine is not WebKit', async () => {
       setWebKit(false);
       await closeWithFocusInField();
 
