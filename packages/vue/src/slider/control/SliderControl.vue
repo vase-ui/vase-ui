@@ -568,6 +568,7 @@ function setControl(element: HTMLElement | null) {
     controlElement.value = null;
   }
   control = null;
+  // The style of a removed element has no values, so the next element reads its own style.
   styles = null;
 }
 
@@ -582,6 +583,7 @@ onDeactivated(() => {
   focusFrame.cancel();
   stopListening();
   setDragging(false);
+  resetPressedThumb();
 });
 
 onScopeDispose(stopListening);

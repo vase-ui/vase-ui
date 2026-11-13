@@ -10,6 +10,10 @@ import type {
   SliderRootState,
 } from './root/SliderRoot.vue';
 
+/**
+ * Groups all parts of the slider.
+ * Renders a `<div>` element.
+ */
 export const Root: typeof SliderRoot = SliderRoot;
 export namespace Root {
   export type State = SliderRootState;
@@ -21,6 +25,10 @@ export namespace Root {
   export type CommitEventDetails = SliderRootCommitEventDetails;
 }
 
+/**
+ * The clickable, interactive part of the slider.
+ * Renders a `<div>` element.
+ */
 export const Control: typeof SliderControl = SliderControl;
 export namespace Control {
   export type State = SliderControlState;
