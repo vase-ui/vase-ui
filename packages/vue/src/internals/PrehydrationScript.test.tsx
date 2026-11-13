@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createApp, nextTick } from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
 import PrehydrationScriptPart from '../../test/fixtures/PrehydrationScriptPart.vue';
@@ -14,6 +14,28 @@ function insertServerHtml(html: string, targetDocument: Document = document) {
   range.selectNodeContents(container);
   container.append(range.createContextualFragment(html));
   return container;
+}
+
+function mountPart() {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const app = createApp(PrehydrationScriptPart);
+  onTestFinished(() => {
+    app.unmount();
+    container.remove();
+  });
+  app.mount(container);
+  return container;
+}
+
+// A page that requires Trusted Types for scripts and has no `vue` entry in its `trusted-types` list
+// makes Vue throw when it assigns an `innerHTML` prop. A frame with that policy does not show it,
+// because Vue creates the element in the document of the test. The spy shows the assignment in each
+// engine.
+function recordScriptHtmlAssignments() {
+  const setter = vi.spyOn(Element.prototype, 'innerHTML', 'set');
+  onTestFinished(() => setter.mockRestore());
+  return () => setter.mock.contexts.filter((element) => element instanceof HTMLScriptElement);
 }
 
 function readElement(container: Element) {
@@ -41,15 +63,7 @@ describe('PrehydrationScript', () => {
   });
 
   it('renders an empty script that does not run in a mount with no server HTML', async () => {
-    const container = document.createElement('div');
-    document.body.append(container);
-    const app = createApp(PrehydrationScriptPart);
-    onTestFinished(() => {
-      app.unmount();
-      container.remove();
-    });
-
-    app.mount(container);
+    const container = mountPart();
 
     expect(container.querySelector('script')?.textContent).toBe('');
     expect(readElement(container)).toEqual({ hidden: true, prehydrated: '' });
@@ -57,6 +71,24 @@ describe('PrehydrationScript', () => {
     await nextTick();
 
     expect(container.querySelector('script')).toBe(null);
+  });
+
+  it('assigns no innerHTML to the script in a mount with no server HTML', async () => {
+    const readAssignments = recordScriptHtmlAssignments();
+
+    mountPart();
+    await nextTick();
+
+    expect(readAssignments()).toEqual([]);
+  });
+
+  it('assigns no innerHTML to the script while the part hydrates', async () => {
+    const serverHtml = await renderOnServer(PART);
+    const readAssignments = recordScriptHtmlAssignments();
+
+    await hydrate(PrehydrationScriptPart, { serverHtml });
+
+    expect(readAssignments()).toEqual([]);
   });
 
   it('sets the nonce, so that a policy that needs the nonce runs the script', async () => {
