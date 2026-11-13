@@ -376,7 +376,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
-- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked` or `v-model:pressed`. There is no `modelValue` alias.
+- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed` or `v-model:snapPoint`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
@@ -566,6 +566,7 @@ The state of a field:
 ### What Vue replaces
 
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
+- A store of Base UI whose purpose is a write that renders nothing stays a plain object with `getSnapshot` and `subscribe`. `nestedSwipeProgressStore` of `Drawer.Root` is an example.
 - A popup store is `shallowReactive` state, selector functions and a plain `context`. Each root makes one. See [Popup store](#popup-store).
 - `useId` gives the ids.
 - `Teleport` puts the portal element, with the popup in it, into the container. It has no `defer`, because the portal renders the `Teleport` after the mount, when the container exists. See [Popup portal](#popup-portal).
@@ -650,7 +651,8 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
 - `activeTriggerProps`, `inactiveTriggerProps` and `popupProps` have the type `HTMLAttributes` of Vue. They hold attributes and listeners, and no `ref`.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
-- The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root part only declares its props, its emits, its slot and its exposed actions.
+- The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root parts of Dialog and Alert Dialog only declare their props, their emits, their slot and their exposed actions.
+- `Drawer.Root` also provides `DrawerRootContext`, reports to `Drawer.Provider` and holds the close watcher. It gives the composable a function in place of its `emit`. For `update:open` and `openChangeComplete`, the function only emits the event. For `openChange`, it emits the event and returns when `details.isCanceled` is `true`. For a close of a root that has snap points, it then calls `setActiveSnapPoint` with the default snap point and the reason of the close. The composable then calls the function for `update:open`, so `update:open` comes after `snapPointChange` and `update:snapPoint`.
 - `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
 - A prop of the root that the store also holds, such as `disabled`, goes into the first state in `createStore`. One `watch` writes each later change. The server HTML then has the first state.
 - `options.onOpenChange` is a function of the part. It emits `openChange`, and then `update:open` when `details.isCanceled` is `false`. The composable puts it in `context.onOpenChange`. `options.onOpenChangeComplete` emits `openChangeComplete`.
@@ -1035,6 +1037,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A dialog reports its open state to the dialog above it. While `KeepAlive` holds the dialog, it reports that it is closed. The dialog above is then the top dialog again, so Escape closes it. The report comes back at the activation.
+- A drawer in a `Drawer.Provider` reports its open state to the provider, and a drawer can hold a close watcher. While `KeepAlive` holds the drawer, it reports to the provider that it is closed, and it destroys its close watcher. Both come back at the activation.
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
 - A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. `ScrollAreaRoot.vue` does this for its hover state.
 - A part that reads `:hover` at mount reads it again in `onActivated`. No enter event comes for a pointer that is already over the part. `ScrollAreaViewport.vue` does this.
