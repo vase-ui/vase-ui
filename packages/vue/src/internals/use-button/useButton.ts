@@ -1,11 +1,11 @@
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { inject, toValue, watch } from 'vue';
+import { toValue, watch } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { error } from '../../common/error';
 import { makeEventPreventable, mergeProps } from '../../merge-props';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { useFocusableWhenDisabled } from '../../utils/useFocusableWhenDisabled';
-import { CompositeRootContext } from '../composite/root/CompositeRootContext';
+import { useCompositeRootContext } from '../composite/root/CompositeRootContext';
 import type { VaseUIEvent } from '../types';
 
 /**
@@ -14,7 +14,7 @@ import type { VaseUIEvent } from '../types';
  * Each parameter is a value, a ref or a getter, so the attributes follow the props of the part.
  */
 export function useButton(parameters: UseButtonParameters = {}): UseButtonReturnValue {
-  const compositeRootContext = inject(CompositeRootContext, undefined);
+  const compositeRootContext = useCompositeRootContext(true);
 
   // `setup` runs one time, so a read of a parameter here would never see a change.
   const isDisabled = () => toValue(parameters.disabled) ?? false;

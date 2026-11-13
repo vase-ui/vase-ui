@@ -3,6 +3,8 @@
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/composite.test.ts",
     "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/item/CompositeItem.tsx",
+    "packages/react/src/internals/composite/item/useCompositeItem.ts",
     "packages/react/src/internals/composite/list/CompositeList.tsx",
     "packages/react/src/internals/composite/list/CompositeList.test.tsx",
     "packages/react/src/internals/composite/list/CompositeListContext.ts",
@@ -169,10 +171,9 @@
       "reason": "The cases test grid navigation, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/internals/composite/root/CompositeRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/composite/item/useCompositeItem.ts",
-      "reason": "The cases render `CompositeItem`. Its composable, `useCompositeItem`, is not ported yet."
+      "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React component that renders the element of an item part and gives it the tab stop. A Vue part renders its own element and calls `useCompositeItem` of `item/useCompositeItem.ts` in `setup`, which holds the work of this file."
     }
   ],
   "surfaceAdditions": [],
