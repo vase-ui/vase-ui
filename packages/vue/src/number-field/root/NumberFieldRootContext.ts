@@ -1,5 +1,5 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
 import type { EventWithOptionalKeyState, IncrementValueParameters } from '../utils/types';
 import type {
   NumberFieldRootChangeEventDetails,
@@ -20,7 +20,7 @@ export interface NumberFieldRootContext {
   /**
    * The element of the text input. `NumberField.Input` writes it.
    */
-  inputRef: Ref<HTMLInputElement | null>;
+  inputRef: ShallowRef<HTMLInputElement | null>;
   focusInput: () => void;
   /**
    * `false` while the text of the input holds an edit that is not a value yet.
