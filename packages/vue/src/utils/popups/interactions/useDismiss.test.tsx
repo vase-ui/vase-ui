@@ -759,10 +759,11 @@ describe('useDismiss', () => {
       await render(<Popup name="popup" />);
 
       await fireEvent.compositionEnd(document.body);
+      vi.advanceTimersByTime(4);
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(true);
 
-      vi.advanceTimersByTime(5);
+      vi.advanceTimersByTime(1);
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(false);
     });
