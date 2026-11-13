@@ -657,17 +657,17 @@ describe('<Switch.Root />', () => {
         await user.click(screen.getByRole('button', { name: 'Submit' }));
         expect(submitSpy).toHaveBeenCalledTimes(1);
 
-        // The switch follows the reset in a timeout of 0 ms. The form was submitted and the field
-        // is dirty, so the field validates the new state and a required switch that is off is
-        // invalid again. The description and the attribute of the consumer stay.
+        // The switch follows the reset in a timeout of 0 ms. The reset clears the error of the field
+        // and does not validate the new state. The description and the attribute of the consumer
+        // stay.
         await user.click(screen.getByRole('button', { name: 'Reset' }));
         await waitFor(() => {
           expect(switchElement).toHaveAttribute('aria-checked', 'false');
         });
-        expect(switchElement).toHaveAttribute('aria-invalid', 'true');
+        expect(switchElement).not.toHaveAttribute('aria-invalid');
         expect(switchElement).toHaveAttribute(
           'aria-describedby',
-          `external-description ${description.id} ${screen.getByTestId('error').id}`,
+          `external-description ${description.id}`,
         );
       },
     );
