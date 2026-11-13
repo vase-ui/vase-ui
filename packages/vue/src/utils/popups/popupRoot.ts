@@ -127,7 +127,22 @@ export function usePopupRoot<Store extends PopupRootStore>(
   createStore: (initialState: PopupRootInitialState, defaultPopupId: string | undefined) => Store,
   options: UsePopupRootOptions<Store>,
 ) {
-  const defaultPopupId = useVaseUiId();
+  return usePopupRootWithPopupId(props, createStore, useVaseUiId(), options);
+}
+
+/**
+ * Does what `usePopupRoot` does, for a root that gives its own default popup id instead of a
+ * generated one. Call it in `setup` of the root.
+ *
+ * @param defaultPopupId The default popup id, or a ref or a getter of it. `undefined` leaves the
+ * popup with no default id. The store follows each change of the id.
+ */
+export function usePopupRootWithPopupId<Store extends PopupRootStore>(
+  props: PopupRootProps,
+  createStore: (initialState: PopupRootInitialState, defaultPopupId: string | undefined) => Store,
+  defaultPopupId: MaybeRefOrGetter<string | undefined>,
+  options: UsePopupRootOptions<Store>,
+) {
   const store = createStore(
     {
       open: props.defaultOpen ?? false,
@@ -135,7 +150,11 @@ export function usePopupRoot<Store extends PopupRootStore>(
       activeTriggerId: props.defaultTriggerId ?? null,
       triggerIdProp: props.triggerId,
     },
-    defaultPopupId.value,
+    toValue(defaultPopupId),
+  );
+  watch(
+    () => toValue(defaultPopupId),
+    (id) => store.set('defaultPopupId', id),
   );
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;

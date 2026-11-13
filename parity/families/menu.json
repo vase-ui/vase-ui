@@ -1,0 +1,896 @@
+{
+  "upstreamPaths": ["packages/react/src/menu/**", "docs/src/app/(docs)/react/components/menu/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/menu/arrow/MenuArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `arrow` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/arrow/MenuArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `arrow` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `backdrop` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdropDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `backdrop` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `checkbox-item-indicator` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `checkbox-item-indicator` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `checkbox-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItemContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `checkbox-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `checkbox-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/clear/MenuClear.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/clear/MenuClearDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/empty/MenuEmpty.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderOptions.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterDropdown.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterGroup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterImpl.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterList.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterPopup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/moveHighlightFrom.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterKeyDown.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterRoot.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterSubmenuTrigger.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useVirtualFocusParentHandoff.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `group-label` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `group` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroupContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `group` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/input/MenuInput.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/input/MenuInputDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItem.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItemCommonProps.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `link-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `link-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/list/MenuList.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `list` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `popup` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `popup` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortal.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `portal` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortalContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `portal` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `positioner` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `positioner` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `positioner` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositionerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `positioner` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-group` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroupContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-group` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-item-indicator` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-item-indicator` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItemContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `radio-item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `submenu-root` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `submenu-root` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `submenu-trigger` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `submenu-trigger` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTrigger.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `trigger` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTriggerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `trigger` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `trigger` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/findRootOwnerId.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `utils` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/utils/stateAttributesMapping.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `utils` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewport.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `viewport` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewportCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `viewport` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewportDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `viewport` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
+      "reason": "The type test is for a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/positioner/MenuPositioner.tsx",
+      "reason": "The type test is for a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/arrow/MenuArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/arrow/MenuArrow.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/backdrop/MenuBackdrop.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterGroup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterParts.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterPopup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.initialHighlight.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.react17.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.scoping.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.webkit.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterKeyDown.test.ts",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-root/useMenuFilterSubmenuTrigger.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.pointerFocus.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/group-label/MenuGroupLabel.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/group-label/MenuGroupLabel.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/group/MenuGroup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/group/MenuGroup.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/list/MenuList.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortal.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/portal/MenuPortal.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/positioner/MenuPositioner.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-group/MenuRadioGroup.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item/MenuRadioItem.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/MenuTrigger.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/MenuTrigger.tsx",
+      "reason": "Vase UI does not have `Menu.Trigger`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Input",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/input/MenuInput.tsx",
+      "reason": "Vase UI does not have `Menu.Input`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Clear",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/clear/MenuClear.tsx",
+      "reason": "Vase UI does not have `Menu.Clear`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "List",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/list/MenuList.tsx",
+      "reason": "Vase UI does not have `Menu.List`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/portal/MenuPortal.tsx",
+      "reason": "Vase UI does not have `Menu.Portal`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Backdrop",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/backdrop/MenuBackdrop.tsx",
+      "reason": "Vase UI does not have `Menu.Backdrop`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Positioner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/positioner/MenuPositioner.tsx",
+      "reason": "Vase UI does not have `Menu.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Vase UI does not have `Menu.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Arrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/arrow/MenuArrow.tsx",
+      "reason": "Vase UI does not have `Menu.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Item",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "Vase UI does not have `Menu.Item`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Viewport",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",
+      "reason": "Vase UI does not have `Menu.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/group/MenuGroup.tsx",
+      "reason": "Vase UI does not have `Menu.Group`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "GroupLabel",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/group-label/MenuGroupLabel.tsx",
+      "reason": "Vase UI does not have `Menu.GroupLabel`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Separator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Vase UI does not have `Menu.Separator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Empty",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/empty/MenuEmpty.tsx",
+      "reason": "Vase UI does not have `Menu.Empty`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "SubmenuRoot",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
+      "reason": "Vase UI does not have `Menu.SubmenuRoot`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "SubmenuTrigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "Vase UI does not have `Menu.SubmenuTrigger`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioGroup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-group/MenuRadioGroup.tsx",
+      "reason": "Vase UI does not have `Menu.RadioGroup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioItem",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item/MenuRadioItem.tsx",
+      "reason": "Vase UI does not have `Menu.RadioItem`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "RadioItemIndicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicator.tsx",
+      "reason": "Vase UI does not have `Menu.RadioItemIndicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "CheckboxItem",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.tsx",
+      "reason": "Vase UI does not have `Menu.CheckboxItem`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "CheckboxItemIndicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicator.tsx",
+      "reason": "Vase UI does not have `Menu.CheckboxItemIndicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "FilterProvider",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "Vase UI does not have `Menu.FilterProvider`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "LinkItem",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
+      "reason": "Vase UI does not have `Menu.LinkItem`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/arrow/MenuArrowDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuArrowDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuBackdropDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/backdrop/MenuBackdropDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuBackdropDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuCheckboxItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item/MenuCheckboxItemDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuCheckboxItemDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuCheckboxItemIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/checkbox-item-indicator/MenuCheckboxItemIndicatorDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuCheckboxItemIndicatorDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuClearDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/clear/MenuClearDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuClearDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuInputDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/input/MenuInputDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuInputDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItemDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuItemDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuLinkItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/link-item/MenuLinkItemDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuLinkItemDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopupDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuPopupDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPositionerCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/positioner/MenuPositionerCssVars.ts",
+      "reason": "Vase UI does not have the file that `MenuPositionerCssVariables` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuPositionerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/positioner/MenuPositionerDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuPositionerDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuRadioItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item/MenuRadioItemDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuRadioItemDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuRadioItemIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/radio-item-indicator/MenuRadioItemIndicatorDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuRadioItemIndicatorDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuSeparatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
+      "reason": "Vase UI does not have the file that `MenuSeparatorDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuSubmenuTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuSubmenuTriggerDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/MenuTriggerDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuTriggerDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuViewportCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/viewport/MenuViewportCssVars.ts",
+      "reason": "Vase UI does not have the file that `MenuViewportCssVariables` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "MenuViewportDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/viewport/MenuViewportDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuViewportDataAttributes` comes from."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "useFilter",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "Vase UI does not have the file that `useFilter` comes from."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "MenuHandle<Payload>",
+      "reason": "`Menu.Handle` is the class `MenuHandle`, and the check prints the name of the class."
+    }
+  ],
+  "notApplicableCommits": []
+}
