@@ -6,31 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/number-field/index.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have a part of Number Field, so the family has no entry point."
-    },
-    {
-      "upstream": "packages/react/src/number-field/index.parts.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have a part of Number Field, so the family has no entry point."
-    },
-    {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.Root`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRootDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.Root`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRootContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.Root`."
-    },
-    {
       "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `NumberField.Increment` and `NumberField.Decrement`."
@@ -44,16 +19,6 @@
       "upstream": "packages/react/src/number-field/input/NumberFieldInputDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `NumberField.Input`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.Group`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/group/NumberFieldGroupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.Group`."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
@@ -111,22 +76,6 @@
       "reason": "Only `NumberField.ScrubArea` imports the file. Vase UI does not have that part."
     },
     {
-      "upstream": "packages/react/src/number-field/utils/stateAttributesMapping.ts",
-      "kind": "waits-on",
-      "reason": "The file imports the state type of `NumberField.Root`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/number-field/utils/types.ts",
-      "kind": "waits-on",
-      "reason": "Only `NumberField.Root` and the parts of Number Field import the file. Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "The type test reads the props of `NumberField.Root`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.spec.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
@@ -135,14 +84,14 @@
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "Each case of the file renders `NumberField.Root`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "Each case of the file that Vase UI does not port yet renders `NumberField.Input`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/number-field/root/NumberFieldRoot.iOS.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "Each case of the file renders `NumberField.Root`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "Each case of the file renders `NumberField.Input`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.test.tsx",
@@ -155,12 +104,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
       "reason": "Each case of the file renders `NumberField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
-      "reason": "Each case of the file renders `NumberField.Group`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
@@ -208,24 +151,10 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "Vase UI does not have `NumberField.Root`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "Input",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
       "reason": "Vase UI does not have `NumberField.Input`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "Group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
-      "reason": "Vase UI does not have `NumberField.Group`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
@@ -257,24 +186,10 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldRootDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "Vase UI does not have `NumberField.Root`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
       "entry": "NumberFieldInputDataAttributes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
       "reason": "Vase UI does not have `NumberField.Input`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldGroupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
-      "reason": "Vase UI does not have `NumberField.Group`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
