@@ -34,6 +34,29 @@ describe('<Progress.Root /> on a server', () => {
     );
   });
 
+  it.each([
+    { name: 'an aria-label', attributes: { 'aria-label': 'Storage' }, labelledBy: undefined },
+    {
+      name: 'an aria-labelledby',
+      attributes: { 'aria-labelledby': 'outside' },
+      labelledBy: 'outside',
+    },
+  ])(
+    'renders no aria-labelledby of its own on a root that the consumer names: $name',
+    async ({ attributes, labelledBy }) => {
+      const html = await renderToString(<Progress.Root value={30} {...attributes} />);
+
+      expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toBe(labelledBy);
+      expect(html).not.toContain('vase-ui-');
+    },
+  );
+
+  it('renders the generated id in the aria-labelledby of a root with a blank aria-label', async () => {
+    const html = await renderToString(<Progress.Root value={30} aria-label="  " />);
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+  });
+
   it('gives the indicator no style attribute while the value is indeterminate', async () => {
     const html = await renderToString(
       <Progress.Root value={null}>

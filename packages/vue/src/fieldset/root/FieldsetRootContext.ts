@@ -3,6 +3,9 @@ import type { ComputedRef, InjectionKey } from 'vue';
 import type { LabelIdSetter } from '../../utils/useRegisteredLabelId';
 
 export interface FieldsetRootContext {
+  /**
+   * The id of the legend that the root has now. It is `undefined` when the root has no legend.
+   */
   legendId: ComputedRef<string | undefined>;
   setLegendId: LabelIdSetter;
   defaultLegendId: ComputedRef<string>;

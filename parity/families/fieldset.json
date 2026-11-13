@@ -35,7 +35,7 @@
       "title": "does not set `aria-labelledby` during SSR when legend is absent",
       "kind": "replaced",
       "test": "packages/vue/src/fieldset/legend/FieldsetLegend.node.test.tsx",
-      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The result differs from Base UI on purpose. The root assumes a legend until it is mounted, so the server HTML points at the generated id. An `aria-labelledby` with no valid IDREF gives no name (step 2B of https://www.w3.org/TR/accname-1.2/#computation-steps), so `aria-label` and the native name still apply. The case \"renders the generated id in the aria-labelledby of a root that has no legend\" asserts the server HTML. The case \"has no aria-labelledby when it has no legend\" in `FieldsetRoot.test.tsx` asserts that the mounted root has none."
+      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The result differs from Base UI on purpose. A root that the consumer does not name assumes a legend until it is mounted, so the server HTML points at the generated id. An `aria-labelledby` with no valid IDREF gives no name (step 2B of https://www.w3.org/TR/accname-1.2/#computation-steps), so `aria-label` and the native name still apply. A root that has a non-blank `aria-label` or an `aria-labelledby` of the consumer has no generated id in the server HTML. The case \"renders the generated id in the aria-labelledby of a root that has no legend\" asserts the server HTML. The case \"renders no aria-labelledby of its own on a root that the consumer names: $name\" asserts that a named root has no generated id. The case \"has no aria-labelledby when it has no legend\" in `FieldsetRoot.test.tsx` asserts that the mounted root has none."
     }
   ],
   "surfaceAdditions": [

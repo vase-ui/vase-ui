@@ -18,7 +18,7 @@ import { Progress } from '@vase-ui/vue/progress';
         <Progress.Indicator data-testid="currency-indicator" />
       </Progress.Track>
     </Progress.Root>
-    <Progress.Root :value="42">
+    <Progress.Root data-testid="percent-root" :value="42" aria-label="Storage">
       <Progress.Value data-testid="percent-value" />
     </Progress.Root>
   </main>
