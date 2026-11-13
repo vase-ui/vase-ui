@@ -53,10 +53,9 @@ function shiftDecimal(value: number, exponentDelta: number) {
   return Number(`${coefficient}e${Number(exponent) + exponentDelta}`);
 }
 
-// Where '.' is not the group separator of the locale, text with two dots or more is a number
-// only when each dot before the last one can be a group separator: one to three digits, then
-// groups of three digits.
-const DOTS_AS_GROUP_SEPARATORS_RE = /^\d{1,3}(?:\.\d{3})+\.[^.]*$/;
+// Text with two dots or more is a number only when each dot before the last one can be a group
+// separator. The sign is optional, because a sign after a currency label is still in the text.
+const DOTS_AS_GROUP_SEPARATORS_RE = /^[-+]?\d{1,3}(?:\.\d{3})+\.[^.]*$/;
 
 export const ANY_MINUS_RE = /[-−－‒–—﹣]/gu;
 export const ANY_PLUS_RE = /[+＋﹢]/gu;

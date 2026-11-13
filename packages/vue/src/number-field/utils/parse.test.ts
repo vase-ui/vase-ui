@@ -202,6 +202,7 @@ describe('NumberField parse', () => {
       { name: 'groups of one digit', text: '1.2.3' },
       { name: 'a first group of four digits', text: '1234.567.89' },
       { name: 'a middle group of two digits', text: '12.34.567' },
+      { name: 'a short group after a group of three', text: '1.234.5.6' },
       { name: 'an empty first group', text: '.234.5' },
       { name: 'a minus sign before the text', text: '-1.2.3' },
       { name: 'a percent sign after the text', text: '1.2.3%' },
@@ -215,6 +216,15 @@ describe('NumberField parse', () => {
       expect(parseNumber('12.345.678.9')).toBe(12345678.9);
       expect(parseNumber('-123.456.789.01')).toBe(-123456789.01);
       expect(parseNumber('1.234.567.89e2')).toBe(123456789);
+      // A sign after the label is still in the text when the check runs
+      const usd = { style: 'currency', currency: 'USD' } as const;
+      expect(parseNumber('$-1.234.567.89', 'en-US', usd)).toBe(-1234567.89);
+      expect(parseNumber('$+1.234.567.89', 'en-US', usd)).toBe(1234567.89);
+    });
+
+    it('BUG-5424: applies the rule to the decimal separator of the locale', () => {
+      expect(parseNumber('1,2,3', 'de-DE')).toBe(null);
+      expect(parseNumber('1.234.567,89', 'de-DE')).toBe(1234567.89);
     });
 
     it('collapses extra dots from mixed-locale inputs', () => {
