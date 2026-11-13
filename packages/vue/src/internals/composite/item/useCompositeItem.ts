@@ -15,13 +15,8 @@ import { useCompositeRootContext } from '../root/CompositeRootContext';
 export function useCompositeItem<Metadata>(
   params: UseCompositeItemParameters<Metadata> = {},
 ): UseCompositeItemReturnValue {
-  const {
-    highlightItemOnHover,
-    highlightedIndex,
-    onHighlightedIndexChange,
-    hasSetDefaultIndex,
-    takeInitialTabStop,
-  } = useCompositeRootContext();
+  const { highlightItemOnHover, highlightedIndex, onHighlightedIndexChange, takeInitialTabStop } =
+    useCompositeRootContext();
   const { ref, index } = useCompositeListItem({ metadata: params.metadata });
   const isHydrating = useIsHydrating();
 
@@ -31,14 +26,11 @@ export function useCompositeItem<Metadata>(
     toValue(params.disabled) ?? false,
   );
 
-  // Until the item is mounted and the root has its first map, the item keeps the tab stop that
-  // `takeInitialTabStop` gave. The server HTML and the first client render are then equal, also for
-  // an item that renders for the first time after the first map, for example below a `<Suspense>`.
-  // After that, the tab stop is the item at the highlighted index, as in Base UI.
+  // Until the item is mounted, it keeps the tab stop that `takeInitialTabStop` gave. This is also
+  // true for an item that renders after its root is mounted, such as an item below a `<Suspense>`.
+  // After the mount, the tab stop is the item at the highlighted index, as in Base UI.
   const isTabStop = computed(() =>
-    isHydrating.value || !hasSetDefaultIndex.value
-      ? initialTabStop
-      : highlightedIndex.value === index.value,
+    isHydrating.value ? initialTabStop : highlightedIndex.value === index.value,
   );
 
   // Only a listener reads the element, so it is a plain variable.
@@ -63,11 +55,19 @@ export function useCompositeItem<Metadata>(
     }
   }
 
-  const compositeProps = computed<Omit<HTMLProps, 'ref'>>(() => ({
-    tabindex: isTabStop.value ? 0 : -1,
-    onFocusin,
-    onMousemove,
-  }));
+  const compositeProps = computed<Omit<HTMLProps, 'ref'>>(() => {
+    const tabindex = isTabStop.value ? 0 : -1;
+    return {
+      // A browser can run `setup` in another order than a server, so its first `tabindex` can
+      // differ from the server HTML. `data-allow-mismatch` stops the Vue warning for that.
+      // Hydration does not patch an attribute. The string differs from the number that the item
+      // gives after the mount, so Vue then writes the attribute again.
+      tabindex: isHydrating.value ? String(tabindex) : tabindex,
+      'data-allow-mismatch': isHydrating.value ? 'attribute' : undefined,
+      onFocusin,
+      onMousemove,
+    };
+  });
 
   return { compositeProps, compositeRef, index };
 }
@@ -85,9 +85,10 @@ export interface UseCompositeItemParameters<Metadata> extends Pick<
   active?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
    * Whether the item cannot hold the first tab stop. Base UI does not have this parameter. The
-   * composable reads it one time, in `setup`. When the root has no `hasActiveItem`, the server
-   * HTML gives the tab stop to the first item that is not disabled. Give it when the part writes a
-   * disabled attribute. The part still writes the attribute itself.
+   * composable reads it one time, in `setup`. When the root has no `hasActiveItem`, the tab stop
+   * of the server HTML is the first item that can hold it. That item is not disabled and is at or
+   * after the highlighted index of the root. Give it when the part writes a disabled attribute.
+   * The part still writes the attribute itself.
    */
   disabled?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
@@ -95,6 +96,7 @@ export interface UseCompositeItemParameters<Metadata> extends Pick<
 export interface UseCompositeItemReturnValue {
   /**
    * The `tabindex` and the listeners of the item: `onFocusin` and `onMousemove`.
+   * While the item hydrates, the object also has `data-allow-mismatch`.
    * The part puts this object first in the `props` of `useRenderElement`.
    */
   compositeProps: ComputedRef<Omit<HTMLProps, 'ref'>>;

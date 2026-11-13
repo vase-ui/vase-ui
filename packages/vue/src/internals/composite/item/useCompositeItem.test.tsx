@@ -1,9 +1,10 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { createSSRApp } from 'vue';
+import { createApp, createSSRApp } from 'vue';
 import type { Component } from 'vue';
 import {
   createRenderer,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
@@ -13,11 +14,13 @@ import {
 } from '#test-utils';
 import CompositeItem from '../../../../test/fixtures/CompositeItemPart.vue';
 import CompositeRoot from '../../../../test/fixtures/CompositeRootPart.vue';
+import CompositeItemAsyncComponent from './CompositeItemAsyncComponent.test.vue';
 import CompositeItemAsyncSetup from './CompositeItemAsyncSetup.test.vue';
 import CompositeItemTabStop from './CompositeItemTabStop.test.vue';
 
 const TAB_STOP_FIXTURE = 'src/internals/composite/item/CompositeItemTabStop.test.vue';
 const ASYNC_SETUP_FIXTURE = 'src/internals/composite/item/CompositeItemAsyncSetup.test.vue';
+const ASYNC_COMPONENT_FIXTURE = 'src/internals/composite/item/CompositeItemAsyncComponent.test.vue';
 
 // The `tabindex` of the items a, b and c.
 function readTabindexes(root: ParentNode) {
@@ -114,6 +117,59 @@ describe('useCompositeItem', () => {
       expect(within(container).getByTestId('b')).toBe(b);
       expect(takeReportedMessages()).toEqual([]);
     });
+
+    it('hydrates a list with an item in an async component that the server has loaded', async () => {
+      // The first server render loads the async component. The second render then runs the `setup`
+      // of b in the order of the document.
+      await renderOnServer(ASYNC_COMPONENT_FIXTURE);
+      const serverHtml = await renderOnServer(ASYNC_COMPONENT_FIXTURE);
+      const { container, mount } = startHydration(CompositeItemAsyncComponent, serverHtml, {});
+      const [a, b, c] = ['a', 'b', 'c'].map((testId) => within(container).getByTestId(testId));
+
+      expect(readTabindexes(container)).toEqual(['-1', '0', '-1']);
+
+      mount();
+
+      // The browser has not loaded the component. It runs the `setup` of b after the `setup` of c,
+      // and the root maps the items before b renders. The root then keeps the tab stop on c.
+      await waitFor(() => {
+        expect(b).toHaveAttribute('tabindex', '-1');
+      });
+      expect(readTabindexes(container)).toEqual(['-1', '-1', '0']);
+      expect(container.querySelector('[data-allow-mismatch]')).toBeNull();
+      expect(within(container).getByTestId('a')).toBe(a);
+      expect(within(container).getByTestId('b')).toBe(b);
+      expect(within(container).getByTestId('c')).toBe(c);
+      expect(takeReportedMessages()).toEqual([]);
+    });
+  });
+
+  it('moves the tab stop to the focused item when the root is not in the document', async () => {
+    // A list skips an element that is not in the document, so this root never gets a map.
+    const container = document.createElement('div');
+    const app = createApp({
+      render: () => (
+        <CompositeRoot>
+          <CompositeItem data-testid="1" />
+          <CompositeItem data-testid="2" />
+          <CompositeItem data-testid="3" />
+        </CompositeRoot>
+      ),
+    });
+    onTestFinished(() => app.unmount());
+    app.mount(container);
+    await flushMicrotasks();
+
+    const item1 = within(container).getByTestId('1');
+    const item3 = within(container).getByTestId('3');
+
+    expect(item1).toHaveAttribute('tabindex', '0');
+    expect(item3).toHaveAttribute('tabindex', '-1');
+
+    await fireEvent.focusIn(item3);
+
+    expect(item3).toHaveAttribute('tabindex', '0');
+    expect(item1).toHaveAttribute('tabindex', '-1');
   });
 
   it('moves focus to an item when the pointer moves over it and the root highlights on hover', async () => {

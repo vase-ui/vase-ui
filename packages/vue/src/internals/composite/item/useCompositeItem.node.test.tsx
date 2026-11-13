@@ -27,6 +27,12 @@ describe('useCompositeItem', () => {
       expect(readTabindexes(html)).toEqual(['-1', '0', '-1']);
     });
 
+    it('gives the tab stop to the item at the highlighted index of a controlled root', async () => {
+      const html = await renderToString(<CompositeItemTabStop highlightedIndex={2} />);
+
+      expect(readTabindexes(html)).toEqual(['-1', '-1', '0']);
+    });
+
     it('gives the tab stop to one item when two items are active', async () => {
       const html = await renderToString(<CompositeItemTabStop hasActiveItem active={['b', 'c']} />);
 

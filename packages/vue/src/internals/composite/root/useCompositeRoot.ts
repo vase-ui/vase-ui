@@ -42,7 +42,7 @@ export function useCompositeRoot<Metadata>(
   const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
 
   let rootElement: HTMLElement | null = null;
-  const hasSetDefaultIndex = shallowRef(false);
+  let hasSetDefaultIndex = false;
   let hasGivenInitialTabStop = false;
   let highlightedElement: HTMLElement | null = null;
 
@@ -78,7 +78,7 @@ export function useCompositeRoot<Metadata>(
 
     const disabledIndices = toValue(params.disabledIndices);
 
-    if (hasSetDefaultIndex.value) {
+    if (hasSetDefaultIndex) {
       const elements = elementsRef.value;
       // Items that come or go around the highlighted item change its index. The tab stop must
       // follow the item. Without this step, navigation continues from the wrong place.
@@ -103,7 +103,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    hasSetDefaultIndex.value = true;
+    hasSetDefaultIndex = true;
 
     const sortedElements = Array.from(map.keys()) as Array<HTMLElement | null>;
     const activeItem =
@@ -149,7 +149,7 @@ export function useCompositeRoot<Metadata>(
     if (
       disabledIndices == null ||
       toValue(params.highlightedIndex) != null ||
-      !hasSetDefaultIndex.value
+      !hasSetDefaultIndex
     ) {
       return;
     }
@@ -291,15 +291,28 @@ export function useCompositeRoot<Metadata>(
     target.setSelectionRange(0, target.value.length);
   }
 
-  // This function gives the tab stop of the server HTML and of the first client render, before the
-  // first map. It gives `true` to at most one caller, in the order of the `setup` calls.
+  // This function gives the tab stop of the server HTML and of the first client render. An item
+  // keeps that tab stop until the item is mounted. The function gives `true` to at most one
+  // caller, in the order of the `setup` calls.
   // A server writes the HTML of an item right after the `setup` of that item. It does not know the
-  // items that come later, so it cannot find the first enabled item of the document. The order of
-  // `setup` is the order of the document, with the exceptions that the comment in
-  // `useCompositeListItem` lists. The usual one is an item below a component with an async `setup`.
-  // The tab stop can then be on a later enabled item until the first sort after the mount.
-  // The server HTML has no tab stop in two cases: `hasActiveItem` is `true` and no item is active,
-  // or each item is disabled.
+  // items that come later, so it cannot find the first enabled item of the document.
+  // The order of `setup` is the order of the document, with the exceptions that the comment in
+  // `useCompositeListItem` lists. Two exceptions are usual.
+  // - An item below a component with an async `setup`. A server runs the `setup` of that item
+  //   after the items that follow it. The tab stop can then be on a later enabled item until the
+  //   first sort after the mount.
+  // - An item in an async component that a module makes one time, such as a lazy component of
+  //   Nuxt. After its first render, a server has loaded the component and runs its `setup` in the
+  //   order of the document. A browser has not loaded it when the page hydrates, so it runs that
+  //   `setup` after the later items. The server and the browser then give the tab stop to
+  //   different items. The item gives `data-allow-mismatch` while it hydrates, so Vue reports no
+  //   mismatch. After the mount, Vue writes the `tabindex` again and the DOM follows the
+  //   highlighted index.
+  // The server HTML has no tab stop in three cases.
+  // - `hasActiveItem` is `true` and no item is active.
+  // - Each item is disabled.
+  // - The root is controlled, the highlighted index is above 0, and no enabled item has that index
+  //   or a higher index.
   function takeInitialTabStop(index: number, active: boolean, disabled: boolean) {
     if (hasGivenInitialTabStop) {
       return false;
@@ -318,7 +331,6 @@ export function useCompositeRoot<Metadata>(
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
-    hasSetDefaultIndex: computed(() => hasSetDefaultIndex.value),
     takeInitialTabStop,
   });
 

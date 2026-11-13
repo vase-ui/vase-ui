@@ -5,6 +5,7 @@ import CompositeItemAsyncBranch from './CompositeItemAsyncBranch.test.vue';
 
 const props = defineProps<{
   hasActiveItem?: boolean;
+  highlightedIndex?: number;
   active?: string[];
   disabled?: string[];
   late?: boolean;
@@ -12,6 +13,7 @@ const props = defineProps<{
 
 const { props: compositeProps, rootRef } = useCompositeRoot({
   hasActiveItem: () => props.hasActiveItem,
+  highlightedIndex: () => props.highlightedIndex,
 });
 
 // A family writes the attributes of an item itself, so the fixture does the same.
