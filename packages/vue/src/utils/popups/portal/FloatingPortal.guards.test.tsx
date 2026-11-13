@@ -460,7 +460,7 @@ describe('FloatingPortal', () => {
     const Page = defineComponent({
       name: 'Page',
       setup: () => () => (
-        <div>
+        <div data-testid="host">
           <FloatingPortal data-testid="portal">
             <FocusManagerPart>
               <input data-testid="input" />
@@ -477,6 +477,7 @@ describe('FloatingPortal', () => {
     const portal = screen.getByTestId('portal');
     const input = screen.getByTestId<HTMLInputElement>('input');
     const guards = getOutsideGuards();
+    const owner = getOwner(screen.getByTestId('host'));
     input.value = 'typed';
     input.focus();
     expect(guards).toHaveLength(2);
@@ -487,6 +488,7 @@ describe('FloatingPortal', () => {
 
     expect(portal.isConnected).toBe(false);
     expect(guards.map((guard) => guard.isConnected)).toEqual([false, false]);
+    expect(owner.isConnected).toBe(false);
     expect(document.activeElement).toBe(document.body);
 
     showPage.value = true;
@@ -497,6 +499,7 @@ describe('FloatingPortal', () => {
     expect(screen.getByTestId('input')).toBe(input);
     expect(input.value).toBe('typed');
     expect(getOutsideGuards().map((guard, index) => guard === guards[index])).toEqual([true, true]);
+    expect(getOwner(screen.getByTestId('host'))).toBe(owner);
   });
 
   describe('hydration', () => {

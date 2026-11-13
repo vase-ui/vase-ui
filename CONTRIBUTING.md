@@ -669,7 +669,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The owner element has `aria-owns` with the `id` that the portal element has in the DOM. Assistive technology then reads the popup as a child of the owner element. `portalOwnerRole` gives a `role` to the owner element.
 - The `id` attribute and the `#render` slot can replace the generated `id`. The portal thus reads the `id` after each DOM update.
 - Unless the popup is modal, the portal listens to `focusin` and `focusout` in the capture phase. When the focus moves from the portal to an element outside it, the portal sets `tabindex="-1"` on each tabbable element in the portal.
-- The portal restores those elements when the focus comes back from outside, and when the popup opens. An element in the portal is thus tabbable only after the focus has entered through a guard or with the pointer.
+- The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
 
 ### Composite
 
