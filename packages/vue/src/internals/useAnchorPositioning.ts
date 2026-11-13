@@ -144,8 +144,16 @@ function resolveAnchor(
 type BoundaryValue = Boundary | null | undefined;
 type ResolvedBoundary = 'clippingAncestors' | Element | Element[] | Rect;
 
+const RECT_KEYS = ['x', 'y', 'width', 'height'] as const;
+
 function isRect(value: object): value is Rect {
-  return !('nodeType' in value) && 'width' in value && 'height' in value;
+  // The ref of a component with no `expose` also gives its props, and a prop can have the name of a
+  // side of a rectangle. Thus a component is never a rectangle.
+  return (
+    !('nodeType' in value) &&
+    !('$props' in value) &&
+    RECT_KEYS.every((key) => typeof (value as Record<string, unknown>)[key] === 'number')
+  );
 }
 
 function resolveBoundary(
@@ -555,8 +563,8 @@ export function useAnchorPositioning(
     [
       mounted,
       isActive,
-      // A getter of a consumer can read the DOM, so it does not run before the mount.
-      () => (isActive.value ? toValue(toValue(params.anchor)) : null),
+      // A getter of a consumer can read the DOM, so it runs only while the popup is mounted.
+      () => (mounted.value && isActive.value ? toValue(toValue(params.anchor)) : null),
       () => toValue(params.defaultAnchor),
     ],
     registerAnchor,
@@ -592,16 +600,18 @@ export function useAnchorPositioning(
     },
   );
 
+  const open = () => (toValue(params.keepMounted) ? mounted.value : undefined);
+
   const {
     x,
     y,
     middlewareData,
     update,
     placement: renderedPlacement,
-    isPositioned,
+    isPositioned: floatingIsPositioned,
     floatingStyles,
   } = useFloating(reference, floating, {
-    open: () => (toValue(params.keepMounted) ? mounted.value : undefined),
+    open,
     placement: () => floatingOptions.value.placement,
     middleware: () => floatingOptions.value.middleware,
     strategy: () => floatingOptions.value.strategy,
@@ -625,6 +635,19 @@ export function useAnchorPositioning(
     () => {
       restartAutoUpdate?.();
     },
+  );
+
+  // `useFloating` reads `open` when a position pass starts, and Base UI reads it when the pass
+  // ends. A pass that ends after the popup closed then gives `true` for a closed popup. This ref is
+  // `true` only when a pass ends while the popup is open. The end of a pass is a source, because
+  // `useFloating` keeps `true` from an earlier open.
+  const isPositioned = shallowRef(false);
+  watch(
+    [middlewareData, floatingIsPositioned],
+    () => {
+      isPositioned.value = floatingIsPositioned.value && open() !== false;
+    },
+    { flush: 'sync' },
   );
 
   // An arrow that mounts or unmounts after the popup has a position does not resize the

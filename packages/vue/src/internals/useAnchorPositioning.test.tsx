@@ -1,5 +1,5 @@
 import { expect, vi, describe, beforeEach, it, onTestFinished } from 'vitest';
-import { createSSRApp, defineComponent, KeepAlive, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { ShallowRef } from 'vue';
 import type { VirtualElement } from '@floating-ui/vue';
 import {
@@ -196,6 +196,28 @@ describe('useAnchorPositioning', () => {
       await waitForPlace(popup, BELOW);
     });
 
+    it('calls a getter only while the popup is mounted', async () => {
+      const open = shallowRef(false);
+      const trigger = createAnchor();
+      const anchor = vi.fn(() => trigger);
+      await render(() => (
+        <PositionerPart anchor={anchor} mounted={open.value} keepMounted {...popupProps} />
+      ));
+      const popup = screen.getByTestId('popup');
+      await settle();
+      expect(anchor).not.toHaveBeenCalled();
+
+      open.value = true;
+      await waitForPlace(popup, BELOW);
+      await settle();
+      expect(anchor).toHaveBeenCalled();
+      const callsWhileOpen = anchor.mock.calls.length;
+
+      open.value = false;
+      await settle();
+      expect(anchor).toHaveBeenCalledTimes(callsWhileOpen);
+    });
+
     it('moves to a new anchor while the popup is open, and back to the trigger', async () => {
       const other = createAnchor({ left: '50px', top: '300px' });
       const { props, popup } = await renderPopup();
@@ -358,21 +380,39 @@ describe('useAnchorPositioning', () => {
       },
     );
 
+    // The ref of a component with no `expose` also gives its props. These props have the names and
+    // the types of a rectangle, and their values are not the pixels of the element.
+    const BoxWithRectangleProps = defineComponent({
+      props: {
+        x: { type: Number, default: 1 },
+        y: { type: Number, default: 2 },
+        width: { type: Number, default: 3 },
+        height: { type: Number, default: 4 },
+      },
+      setup: () => () => <div />,
+    });
+
     it.each([
       { name: 'an element', boundary: (part: Part | null) => part?.element },
       { name: 'a component', boundary: (part: Part | null) => part },
+      {
+        name: 'a component that has width and height props',
+        Box: BoxWithRectangleProps,
+        boundary: (part: Part | null) => part,
+      },
       {
         name: 'a list of elements',
         boundary: (part: Part | null) => (part?.element ? [part.element] : []),
       },
       { name: 'a getter', boundary: (part: Part | null) => () => part },
       { name: 'a rectangle', boundary: () => ({ x: 150, y: 0, width: 120, height: 400 }) },
-    ])('keeps the popup in a collision boundary that is $name', async ({ boundary }) => {
+    ])('keeps the popup in a collision boundary that is $name', async ({ Box, boundary }) => {
       const trigger = createAnchor();
       const part = shallowRef<Part | null>(null);
+      const BoundaryBox = Box ?? PlainPart;
       await render(() => (
         <>
-          <PlainPart
+          <BoundaryBox
             ref={part}
             style={{
               position: 'fixed',
@@ -440,7 +480,7 @@ describe('useAnchorPositioning', () => {
       });
     });
 
-    it('writes no available size when a position pass ends after the popup closed', async () => {
+    it('ignores a position pass that ends after the popup closed', async () => {
       const kept = { keepMounted: true, disableAnchorTracking: true };
       const { trigger, props, part, popup } = await renderPopup({ mounted: true, ...kept });
       await waitForPlace(popup, BELOW);
@@ -452,6 +492,15 @@ describe('useAnchorPositioning', () => {
       await settle();
 
       expect(availableHeight(popup)).toBe(heightBelow());
+      expect(popup.style.opacity).toBe('0');
+      expect(popup.style.transform).toBe('');
+
+      // The position of the old pass must not show when the popup opens again.
+      props.value = { mounted: true, ...kept };
+      await nextTick();
+      expect(popup.style.opacity).toBe('0');
+      expect(popup.style.transform).toBe('');
+      await waitForPlace(popup, { left: BELOW.left, top: 300 + ANCHOR.height });
     });
   });
 
@@ -630,6 +679,25 @@ describe('useAnchorPositioning', () => {
         elementResize: true,
         layoutShift: true,
       });
+    });
+
+    it('does not start `autoUpdate` when the prop changes while the popup is closed', async () => {
+      const kept = { keepMounted: true };
+      const { props, popup } = await renderPopup({
+        mounted: true,
+        disableAnchorTracking: true,
+        ...kept,
+      });
+      await waitForPlace(popup, BELOW);
+
+      props.value = { mounted: false, disableAnchorTracking: true, ...kept };
+      await settle();
+      const callsWhileOpen = autoUpdateSpy.mock.calls.length;
+
+      props.value = { mounted: false, disableAnchorTracking: false, ...kept };
+      await settle();
+
+      expect(autoUpdateSpy).toHaveBeenCalledTimes(callsWhileOpen);
     });
   });
 
