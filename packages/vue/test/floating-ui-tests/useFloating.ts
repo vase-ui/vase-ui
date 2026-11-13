@@ -32,7 +32,9 @@ interface UseFloatingOptions {
  * Floating UI's public `useFloating`: `refs.setReference` and `refs.setFloating` also register the
  * elements in the root store. Base UI components hand their elements to the store directly, so
  * only the ported Floating UI tests use this. It makes the positioning context and computes no
- * position.
+ * position. It has no `rootStore`, `elements` or `externalTree` option, and `refs.setReference`
+ * takes no virtual element, because no Base UI test uses them. The port of a test that needs one
+ * adds it.
  */
 export function useFloating(options: UseFloatingOptions = {}) {
   const reference = shallowRef<Element | null>(null);
