@@ -1,0 +1,203 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/input/**",
+    "docs/src/app/(docs)/react/components/input/**"
+  ],
+  "sources": [
+    "packages/react/src/input/Input.tsx",
+    "packages/react/src/input/InputDataAttributes.ts",
+    "packages/react/src/input/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/input/Input.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/input/Input.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Input />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/input/types.md",
+      "parts": [
+        {
+          "name": "Input",
+          "tag": "input",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string | number | string[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string | string[] | number",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: string, eventDetails: Input.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Input.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Input.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Input.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "InputState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type InputState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "InputChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type InputChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "InputChangeEventDetails",
+            "code": "type InputChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "InputDataAttributes",
+          "code": "declare namespace InputDataAttributes {\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/input/page.mdx",
+      "referenceTags": [
+        "TypesInput"
+      ]
+    }
+  ]
+}

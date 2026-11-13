@@ -1,0 +1,1023 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/switch/**",
+    "docs/src/app/(docs)/react/components/switch/**"
+  ],
+  "sources": [
+    "packages/react/src/switch/index.parts.ts",
+    "packages/react/src/switch/index.ts",
+    "packages/react/src/switch/root/SwitchRoot.tsx",
+    "packages/react/src/switch/root/SwitchRootContext.ts",
+    "packages/react/src/switch/root/SwitchRootDataAttributes.ts",
+    "packages/react/src/switch/stateAttributesMapping.ts",
+    "packages/react/src/switch/thumb/SwitchThumb.tsx",
+    "packages/react/src/switch/thumb/SwitchThumbDataAttributes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "tolerates imperative interaction in its ref callback before the hidden input mounts"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "should change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "should update its state when changed from outside"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "should update its state if the underlying input is toggled"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "ignores a hidden input click canceled before React handles it"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "interactions"
+          ],
+          "title": "can be activated with $key key"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "extra props"
+          ],
+          "title": "should override the built-in attributes"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "extra props"
+          ],
+          "title": "sets `aria-labelledby` from a sibling label associated with the hidden input"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "extra props"
+          ],
+          "title": "updates fallback `aria-labelledby` when the hidden input id changes"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "extra props"
+          ],
+          "title": "prefers `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "extra props"
+          ],
+          "title": "prefers a render element's `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onCheckedChange"
+          ],
+          "title": "should call onCheckedChange when clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onCheckedChange"
+          ],
+          "title": "should report keyboard modifier event properties when calling onCheckedChange"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onCheckedChange"
+          ],
+          "title": "does not change state when canceled via a root click"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onCheckedChange"
+          ],
+          "title": "does not change state when canceled via a hidden input click"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onClick"
+          ],
+          "title": "should call onClick when clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onClick"
+          ],
+          "title": "propagates a single click event to ancestors per user click (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: onClick"
+          ],
+          "title": "does not propagate to ancestors when stopPropagation() is called (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: disabled"
+          ],
+          "title": "uses aria-disabled instead of HTML disabled"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: disabled"
+          ],
+          "title": "should not have the `disabled` attribute when `disabled` is not set"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: disabled"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should have the `aria-readonly` attribute"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not have the aria attribute when `readOnly` is not set"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not change its state when its label is clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: required"
+          ],
+          "title": "should have the `aria-required` attribute"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: required"
+          ],
+          "title": "should not have the aria attribute when `required` is not set"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "prop: inputRef"
+          ],
+          "title": "should be able to access the native input"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "title": "should place the style hooks on the root and the thumb"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "title": "should set the name attribute only on the input"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "title": "should not set the value attribute by default"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "title": "should set the value attribute only on the input"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "with native <label>"
+          ],
+          "title": "should toggle the switch when a wrapping <label> is clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "with native <label>"
+          ],
+          "title": "should toggle the switch when a explicitly linked <label> is clicked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "with native <label>"
+          ],
+          "title": "should associate `id` with the native button when `nativeButton=true`"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "preserves Field validation props through canceled changes, submit, and reset",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "should include the switch value in form submission, matching native checkbox behavior",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "submits uncheckedValue to an external form when off",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "does not submit uncheckedValue when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "matches native checkbox form submission behavior",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "should submit uncheckedValue when switch is off and uncheckedValue is specified",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "should submit custom uncheckedValue when switch is off",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "submits custom value and uncheckedValue across an off/on/off cycle",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "triggers native HTML validation on submit"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "should receive disabled prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "should receive name prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when checked after being initially unchecked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "clears [data-filled] when a controlled switch remounts unchecked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "removes [data-filled] attribute when unchecked after being initially checked"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "[data-focused]"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "does not set [data-focused] when disabled"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused switch becomes disabled"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused switch unmounts"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onChange"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "validates once when changed by the user"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "revalidates when a controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "Field.Label",
+            "implicit"
+          ],
+          "title": "sets `for` on the label"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "Field.Label",
+            "explicit association"
+          ],
+          "title": "when the label is sibling to the switch"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "Field.Label",
+            "explicit association"
+          ],
+          "title": "when rendering a non-native button"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field",
+            "Field.Label",
+            "explicit association"
+          ],
+          "title": "when rendering a non-native label"
+        },
+        {
+          "describe": [
+            "<Switch.Root />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        },
+        {
+          "describe": [
+            "<Switch.Root />"
+          ],
+          "title": "can render a native button"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/switch/thumb/SwitchThumb.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Switch.Thumb />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Switch.Thumb />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Switch.Root>"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/switch/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "span",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultChecked",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "checked",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onCheckedChange",
+              "required": false,
+              "type": "((checked: boolean, eventDetails: Switch.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "uncheckedValue",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Switch.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Switch.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Switch.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SwitchRootState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SwitchRootState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "SwitchRootChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type SwitchRootChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "SwitchRootChangeEventDetails",
+            "code": "type SwitchRootChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Thumb",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Switch.Thumb.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Switch.Thumb.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Switch.Thumb.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SwitchThumbState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SwitchThumbState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "SwitchRootDataAttributes",
+          "code": "declare namespace SwitchRootDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SwitchThumbDataAttributes",
+          "code": "declare namespace SwitchThumbDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/switch/page.mdx",
+      "referenceTags": [
+        "TypesSwitch.Root",
+        "TypesSwitch.Thumb"
+      ]
+    }
+  ]
+}
