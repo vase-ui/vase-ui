@@ -1,4 +1,4 @@
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import * as Tooltip from '../index.parts';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 
 const renderButton: ComponentRenderFn<HTMLProps, Tooltip.Trigger.State> = ({ props }) => (

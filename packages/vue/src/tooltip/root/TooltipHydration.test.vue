@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import * as Tooltip from '../index.parts';
 
 withDefaults(defineProps<{ defaultOpen?: boolean; defaultTriggerId?: string | null }>(), {
   defaultOpen: false,

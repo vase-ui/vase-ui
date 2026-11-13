@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import * as Tooltip from '../index.parts';
 import {
   createRenderer,
   flushMicrotasks,

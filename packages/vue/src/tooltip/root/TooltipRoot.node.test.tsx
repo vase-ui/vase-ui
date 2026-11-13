@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import * as Tooltip from '../index.parts';
 
 function button(id: string, attributes: string) {
   return `<button ${attributes} type="button"><!--[-->${id}<!--]--></button>`;
