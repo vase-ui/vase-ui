@@ -8,36 +8,6 @@
       "title": "prefers a render element's `aria-label` over an associated label",
       "kind": "not-applicable",
       "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
-    },
-    {
-      "upstream": "packages/react/src/radio/indicator/RadioIndicator.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Radio.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/radio/indicator/RadioIndicatorDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Radio.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/radio/indicator/RadioIndicator.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
-      "reason": "Each case of the file renders `Radio.Indicator`, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
-      "entry": "Indicator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
-      "reason": "Vase UI does not have `Radio.Indicator`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
-      "entry": "RadioIndicatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
-      "reason": "Vase UI does not have `Radio.Indicator`."
     }
   ],
   "surfaceAdditions": [

@@ -72,7 +72,7 @@ export namespace Description {
  * Renders an `<input>` element.
  *
  * You can omit this part and use any Vase UI input component instead. For example,
- * Input, Checkbox or Select, among others, will work with Field out of the box.
+ * Input, Checkbox or Switch, among others, will work with Field out of the box.
  */
 export const Control: typeof FieldControl = FieldControl;
 export namespace Control {

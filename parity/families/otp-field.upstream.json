@@ -1,0 +1,1791 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/otp-field/**",
+    "docs/src/app/(docs)/react/components/otp-field/**"
+  ],
+  "sources": [
+    "packages/react/src/otp-field/index.parts.ts",
+    "packages/react/src/otp-field/index.ts",
+    "packages/react/src/otp-field/input/OTPFieldInput.tsx",
+    "packages/react/src/otp-field/input/OTPFieldInputDataAttributes.ts",
+    "packages/react/src/otp-field/root/OTPFieldRoot.tsx",
+    "packages/react/src/otp-field/root/OTPFieldRootContext.ts",
+    "packages/react/src/otp-field/root/OTPFieldRootDataAttributes.ts",
+    "packages/react/src/otp-field/utils/otp.ts",
+    "packages/react/src/otp-field/utils/stateAttributesMapping.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/otp-field/input/OTPFieldInput.spec.tsx",
+    "packages/react/src/otp-field/root/OTPFieldRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/otp-field/input/OTPFieldInput.android.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<OTPField.Input /> Android"
+          ],
+          "title": "commits each change during an IME composition"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "renders one textbox per slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus with arrow keys"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus with arrow keys in RTL"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "redirects focus to the first empty slot when a later empty slot is focused"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the next slot after typing"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "selects the last slot after typing into it for the first time"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps focus in place when typing is canceled"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps the filled slot selected when typing an invalid character"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "commits an IME composition once on compositionend instead of per intermediate change"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "reports characters rejected from a committed IME composition"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "ignores keyboard commands while a composition is buffered"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "does not commit a composition that ends after the field becomes $prop"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "selects the slot value on mousedown"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "allows a composed mousedown handler to prevent focus"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "allows a composed focus handler to prevent internal focus state"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "allows a composed blur handler to preserve internal focus state"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the next slot when typing the same character into a filled slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the field boundary with %s"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "stops propagation when ArrowDown moves focus to the empty end slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps focus on the empty end slot with ArrowDown"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps focus on the final slot with ArrowDown when the value is complete"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "does not reselect the final slot when typing the same character"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the first slot with Home"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the empty end slot with End"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the field boundaries with %s + arrow keys"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "moves focus to the field boundaries with %s + arrow keys in RTL"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps arrow and home/end navigation working in readonly mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "leaves vertical arrow navigation unhandled in disabled mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "blocks Delete and Backspace from changing the value in readonly mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "blocks paste from changing the value in readonly mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "warns in development when clipboard text cannot be read during paste handling"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "ignores a paste event when clipboard text is unavailable"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "allows tabbing out of the field from the active slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "deletes the current character and moves focus to the previous slot on backspace"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "deletes the previous filled slot when backspacing on an empty non-first slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "clears all slots with %s + Backspace"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps focus in place when backspace is canceled"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "deletes the current character with Delete without moving focus"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "selects the previous slot value after backspacing into the first slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps focus in place when paste is canceled"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "replaces values from the middle when pasting into a later slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "marks each input as complete when all slots are filled"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "adds disabled and readonly state attributes to each slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "applies the Field label to every slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "applies a native label to every slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "keeps the shared label on the first slot even if an aria-label is provided"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "warns when aria-label is provided on the first slot without an associated label"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "does not warn for a first-slot aria-label when a native label is associated"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "does not warn for a first-slot aria-label when Field.Label is associated"
+        },
+        {
+          "describe": [
+            "<OTPField.Input />"
+          ],
+          "title": "throws a descriptive error when rendered outside <OTPField.Root>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/otp-field/root/OTPFieldRoot.react17.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<OTPField.Root /> with the React 17 id fallback"
+          ],
+          "title": "omits generated slot ids during SSR until the client fallback is assigned"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling"
+          ],
+          "title": "splits the default value across inputs"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling"
+          ],
+          "title": "clamps an overlong default value to the rendered slot count"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling"
+          ],
+          "title": "assigns slot indexes from render order when omitted"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling"
+          ],
+          "title": "supports grouped layouts without affecting slot counting"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling"
+          ],
+          "title": "updates the rendered value in controlled mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "built-in filtering"
+          ],
+          "title": "supports alphabetic values when set to `alpha`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "built-in filtering"
+          ],
+          "title": "supports typing alphabetic values when set to `alpha`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "built-in filtering"
+          ],
+          "title": "supports alphanumeric values when set to `alphanumeric`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "built-in filtering"
+          ],
+          "title": "applies single-character validation to each visible slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "hidden validation input"
+          ],
+          "title": "renders the hidden validation input with an alphanumeric pattern during SSR"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "hidden validation input"
+          ],
+          "title": "omits the hidden validation pattern when set to `none`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "hidden validation input"
+          ],
+          "title": "allows a custom inputMode when validation is set to `none`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: validationType",
+            "hidden validation input"
+          ],
+          "title": "allows overriding the built-in inputMode when needed"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: normalizeValue"
+          ],
+          "title": "supports custom normalization when `validationType` is `none`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: normalizeValue"
+          ],
+          "title": "composes with built-in validation and advances focus"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: normalizeValue"
+          ],
+          "title": "composes built-in validation and custom normalization for pasted values"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: normalizeValue"
+          ],
+          "title": "composes built-in validation and custom normalization from a non-first slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueChange"
+          ],
+          "title": "fires `input-change` when typing"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueChange"
+          ],
+          "title": "fires `input-clear` when clearing a slot by input"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires when typing is normalized before the OTP value updates"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires when custom normalization removes characters"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires when custom normalization removes characters after built-in validation"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires when built-in validation removes characters before custom normalization expands the value"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires when custom normalization removes all characters after built-in validation"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires `input-paste` when pasted text is normalized before the OTP value updates"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueInvalid"
+          ],
+          "title": "fires `input-paste` when custom normalization removes characters after built-in validation"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "fires when typing completes the OTP"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "fires `input-paste` when pasting completes the OTP"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "fires `input-paste` when a complete paste replaces a complete OTP"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "fires `input-paste` when pasting into a middle slot completes the OTP"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "does not fire when a completion-making paste is canceled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "does not fire before the OTP becomes complete"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "does not fire later for a stale controlled completion attempt"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "fires after an asynchronously accepted controlled completion"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "value handling",
+            "prop: onValueComplete"
+          ],
+          "title": "does not fire again when a controlled value changes from one complete value to another"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Field"
+          ],
+          "title": "associates Field.Label with the first slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Field"
+          ],
+          "title": "applies the Field description to the group"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Field"
+          ],
+          "title": "validates the latest value only after focus leaves the OTP field in onBlur mode"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "accessibility"
+          ],
+          "title": "forwards root `aria-describedby` to the group"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "accessibility"
+          ],
+          "title": "forwards root `aria-labelledby` to the group only"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "accessibility",
+            "prop: autoComplete"
+          ],
+          "title": "applies the default autocomplete to the first slot only"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "accessibility",
+            "prop: autoComplete"
+          ],
+          "title": "allows overriding the autocomplete attribute"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "prop: disabled"
+          ],
+          "title": "disables every slot and prevents value changes"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "prop: readOnly"
+          ],
+          "title": "marks every slot as readonly and prevents value changes"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "prop: readOnly"
+          ],
+          "title": "tracks focus state when a readonly slot receives focus"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "prop: mask",
+            "native masking"
+          ],
+          "title": "renders password slot inputs when enabled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "prop: mask",
+            "slot overrides"
+          ],
+          "title": "allows overriding the input type on individual slots"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "typing"
+          ],
+          "title": "fills consecutive slots when typing multiple characters into the first input"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "typing"
+          ],
+          "title": "replaces consecutive slots when typing multiple characters into a later input"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "pasting"
+          ],
+          "title": "fills consecutive slots when pasting a code"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "external value changes"
+          ],
+          "title": "moves focus to the first empty slot when a controlled value is $name while focused"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "external value changes"
+          ],
+          "title": "keeps focus on the tab stop when leading slots unmount as the value is cleared"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "external value changes"
+          ],
+          "title": "keeps focus on a slot that is still reachable after a controlled value shrinks"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "external value changes"
+          ],
+          "title": "does not move focus into the field when the value is cleared while focus is outside"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "external value changes"
+          ],
+          "title": "accepts typing and Backspace after a controlled clear while focused"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "keyboard"
+          ],
+          "title": "removes a character and moves focus to the previous slot with backspace"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "keyboard"
+          ],
+          "title": "does not fire `onValueChange` for Delete on an empty slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "keyboard"
+          ],
+          "title": "does not fire `onValueChange` for Backspace on an already-empty first slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "keyboard"
+          ],
+          "title": "does not move focus later for a stale controlled change"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "interactions",
+            "keyboard"
+          ],
+          "title": "moves focus after an asynchronously accepted controlled change"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "blocks form submission while the code is incomplete"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "allows form submission when the code is complete"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "renders the hidden validation input with the provided name"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "redirects hidden validation input focus to the first visible slot"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "accepts valid hidden-input autofill and moves focus to the first slot when autofill is cleared"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "handles password manager autofill through the hidden input"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "composes validation and custom normalization during hidden input autofill"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "ignores hidden-input autofill when $lockState inside Field"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form"
+          ],
+          "title": "ignores hidden-input autofill when $lockState outside Field"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "does not auto-submit the owning form when the OTP becomes complete by default"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "submits its own form when an unscoped control in another form mounts later"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "submits the hidden input form when $name"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "submits the completed named OTP value from the owning form when enabled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "keeps the completed value when the owning form has no requestSubmit method"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "does not call flushSync inside a layout effect when auto-submitting a Base UI Form"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "blocks invalid Base UI Form auto-submit without calling flushSync inside a layout effect"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "keeps focus on the first invalid field when auto-submit is blocked"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: autoSubmit"
+          ],
+          "title": "does not submit the owning form before the OTP becomes complete when enabled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: form"
+          ],
+          "title": "submits an associated external form when used with `autoSubmit`"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "prop: form"
+          ],
+          "title": "does not submit an ancestor form when the explicit form id is not a form"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "server-side rendering"
+          ],
+          "title": "renders visible inputs with unique IDs"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "Form",
+            "server-side rendering"
+          ],
+          "title": "renders a hidden validation input with the provided length"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused field becomes disabled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused field unmounts"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is kept when a previously focused slot unmounts after focus moves to a sibling"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused slot unmounts but its field remains"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "updates standalone filled and focused state on the root"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "sets `data-complete` when all slots are filled"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "renders a fallback hidden input id when name is not provided"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "warns when length does not match the rendered input count"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "warns with singular input wording when one input is rendered"
+        },
+        {
+          "describe": [
+            "<OTPField.Root />"
+          ],
+          "title": "warns when length is not a positive integer (%p)"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/otp-field/utils/otp.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "removes whitespace from pasted values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "returns an empty string when stripping nullish values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "normalizes, filters, and clamps numeric values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "normalizes alphabetic values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "normalizes alphanumeric values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "returns an empty string for nullish input values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "uses custom normalization when validationType is none"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "applies custom normalization after built-in validation"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "filters custom normalization output through built-in validation"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "clamps values after custom normalization"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "returns an empty string for negative lengths"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "replaces values from the middle of the OTP"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "replaces values from the first slot"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "replaces values at the last slot"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "applies custom normalization when replacing OTP values"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "preserves suffix characters when custom normalization removes part of a middle replacement"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "removes a character from the first slot"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "removes a character from the last slot"
+        },
+        {
+          "describe": [
+            "otp utils"
+          ],
+          "title": "leaves the value unchanged when removing an out-of-bounds index"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/otp-field/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: string, eventDetails: OTPField.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "autoComplete",
+              "required": false,
+              "type": "string",
+              "default": "'one-time-code'"
+            },
+            {
+              "name": "autoSubmit",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "inputMode",
+              "required": false,
+              "type": "'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'",
+              "default": null
+            },
+            {
+              "name": "length",
+              "required": true,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "mask",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "normalizeValue",
+              "required": false,
+              "type": "((value: string) => string)",
+              "default": null
+            },
+            {
+              "name": "onValueComplete",
+              "required": false,
+              "type": "((value: string, eventDetails: OTPField.Root.CompleteEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onValueInvalid",
+              "required": false,
+              "type": "((value: string, eventDetails: OTPField.Root.InvalidEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "validationType",
+              "required": false,
+              "type": "OTPField.Root.ValidationType",
+              "default": "'numeric'"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: OTPField.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: OTPField.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: OTPField.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "OTPFieldRootState",
+            "fields": [
+              {
+                "name": "complete",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "length",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type OTPFieldRootState = {\n    complete: boolean;\n    disabled: boolean;\n    length: number;\n    readOnly: boolean;\n    required: boolean;\n    value: string;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "OTPFieldRootChangeEventReason",
+            "values": [
+              "input-change",
+              "input-clear",
+              "input-paste",
+              "keyboard"
+            ],
+            "code": "type OTPFieldRootChangeEventReason = 'input-change' | 'input-clear' | 'input-paste' | 'keyboard';"
+          },
+          "changeEventDetails": {
+            "name": "OTPFieldRootChangeEventDetails",
+            "code": "type OTPFieldRootChangeEventDetails = ({\n    reason: 'input-change';\n    event: InputEvent | Event;\n} | {\n    reason: 'input-clear';\n    event: InputEvent | Event | FocusEvent;\n} | {\n    reason: 'input-paste';\n    event: ClipboardEvent;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Input",
+          "tag": "input",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: OTPField.Input.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: OTPField.Input.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, state: OTPField.Input.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "OTPFieldInputState",
+            "fields": [
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "index",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "length",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "complete",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type OTPFieldInputState = {\n    filled: boolean;\n    index: number;\n    value: string;\n    disabled: boolean;\n    length: number;\n    required: boolean;\n    readOnly: boolean;\n    complete: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-complete",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: SeparatorState) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: SeparatorState) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: SeparatorState) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "OTPFieldSeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type OTPFieldSeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.CompleteEventDetails",
+          "code": "type OTPFieldRootCompleteEventDetails = {\n    reason: 'input-change';\n    event: InputEvent | Event;\n} | {\n    reason: 'input-paste';\n    event: ClipboardEvent;\n};"
+        },
+        {
+          "name": "Root.CompleteEventReason",
+          "code": "type OTPFieldRootCompleteEventReason = 'input-change' | 'input-paste';"
+        },
+        {
+          "name": "Root.InvalidEventDetails",
+          "code": "type OTPFieldRootInvalidEventDetails = {\n    reason: 'input-change';\n    event: InputEvent | Event;\n} | {\n    reason: 'input-paste';\n    event: ClipboardEvent;\n};"
+        },
+        {
+          "name": "Root.InvalidEventReason",
+          "code": "type OTPFieldRootInvalidEventReason = 'input-change' | 'input-paste';"
+        },
+        {
+          "name": "Root.ValidationType",
+          "code": "type OTPFieldRootValidationType = 'numeric' | 'alpha' | 'alphanumeric' | 'none';"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "OTPFieldInputDataAttributes",
+          "code": "declare namespace OTPFieldInputDataAttributes {\n    const complete: 'data-complete';\n    const filled: 'data-filled';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "OTPFieldRootDataAttributes",
+          "code": "declare namespace OTPFieldRootDataAttributes {\n    const complete: 'data-complete';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "complete",
+              "value": "data-complete"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "OTPFieldSeparatorDataAttributes",
+          "code": "declare namespace OTPFieldSeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "ValidationType",
+          "code": "type ValidationType = 'numeric' | 'alpha' | 'alphanumeric' | 'none';"
+        },
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/otp-field/page.mdx",
+      "referenceTags": [
+        "TypesOTPField.Root",
+        "TypesOTPField.Input",
+        "TypesOTPField.Separator"
+      ]
+    }
+  ]
+}

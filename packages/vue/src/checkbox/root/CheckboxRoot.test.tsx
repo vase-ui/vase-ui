@@ -533,6 +533,17 @@ describe('<Checkbox.Root />', () => {
       expect(input.checked).toBe(true);
       expect(input.indeterminate).toBe(true);
     });
+
+    it('sets indeterminate style hooks on the root and indicator', async () => {
+      await render(
+        <Checkbox.Root indeterminate>
+          <Checkbox.Indicator data-testid="indicator" />
+        </Checkbox.Root>,
+      );
+
+      expect(screen.getByRole('checkbox')).toHaveAttribute('data-indeterminate', '');
+      expect(screen.getByTestId('indicator')).toHaveAttribute('data-indeterminate', '');
+    });
   });
 
   it('should update its state if the underlying input is toggled', async () => {
@@ -546,6 +557,37 @@ describe('<Checkbox.Root />', () => {
     await flushMicrotasks();
 
     expect(checkbox).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('should place the style hooks on the root and the indicator', async () => {
+    const { setProps } = await render(
+      <Checkbox.Root defaultChecked disabled readOnly required>
+        <Checkbox.Indicator />
+      </Checkbox.Root>,
+    );
+
+    const [checkbox] = screen.getAllByRole('checkbox');
+    const indicator = checkbox.querySelector('span');
+
+    expect(checkbox).toHaveAttribute('data-checked', '');
+    expect(checkbox).not.toHaveAttribute('data-unchecked');
+
+    expect(checkbox).toHaveAttribute('data-disabled', '');
+    expect(checkbox).toHaveAttribute('data-readonly', '');
+    expect(checkbox).toHaveAttribute('data-required', '');
+
+    expect(indicator).toHaveAttribute('data-checked', '');
+    expect(indicator).not.toHaveAttribute('data-unchecked');
+
+    expect(indicator).toHaveAttribute('data-disabled', '');
+    expect(indicator).toHaveAttribute('data-readonly', '');
+    expect(indicator).toHaveAttribute('data-required', '');
+
+    await setProps({ disabled: false, readOnly: false });
+    await fireEvent.click(checkbox);
+
+    expect(checkbox).toHaveAttribute('data-unchecked', '');
+    expect(checkbox).not.toHaveAttribute('data-checked');
   });
 
   it('should set the name attribute only on the input', async () => {

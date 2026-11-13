@@ -274,7 +274,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - The part declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row.
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
-- A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of the checked state. A click on the input clears the property. A server cannot write it, because HTML has no attribute for it.
+- A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of `indeterminate`. A click on the input clears the property, and the write in the tick after an accepted click sets it again. A script that writes `checked` does not clear the property. A server cannot write it, because HTML has no attribute for it.
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - A control whose field can have more than one input registers its input with `validation.registerInput` in the `ref` setter. It keeps the function that `registerInput` returns, and calls it when the input changes or goes away. It does not write `validation.inputRef`.
@@ -752,6 +752,17 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A popup takes its number in `onBeforeMount` when it is open at the mount, and in a `watch` of `open` with the default flush when it opens later. `onBeforeMount` runs for a parent before its child, and `onMounted` does not. A server does not call `onBeforeMount`, so a server render takes no number.
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
 - Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
+
+### Popup click
+
+`useClick(store, options)` opens or closes a popup for a press of its trigger. The code is in `src/utils/popups/interactions/useClick.ts`. It follows the rules of [Popup interactions](#popup-interactions).
+
+- A trigger part calls `useClick` in `setup`. `store` is a store, a ref or a getter, because the store of a trigger with a handle changes.
+- The result is one plain object with `reference`.
+- Each option is a value, a ref or a getter. A getter of `stickIfOpen` is read at each press, as the function of Base UI.
+- The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
+- `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
+- A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 
 ### Composite
 
