@@ -15,10 +15,12 @@ import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils'
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
+import { ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
 import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
+import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
@@ -62,6 +64,7 @@ const DOCUMENT_LISTENER_TYPES = [
   'touchstart',
   'touchmove',
   'touchend',
+  'load',
 ];
 
 /** Counts the listeners of `useDismiss` that `doc` holds. */
@@ -261,6 +264,35 @@ function addOutsideElement() {
   return outside;
 }
 
+/**
+ * Adds an iframe that holds a button. A sandboxed iframe has an opaque origin, so it is
+ * cross-origin.
+ */
+function addFrame({
+  parent = document.body,
+  sandboxed = false,
+  top = 300,
+}: { parent?: Element; sandboxed?: boolean; top?: number } = {}) {
+  const frame = document.createElement('iframe');
+  frame.srcdoc = '<button style="width: 80px; height: 40px">in the frame</button>';
+  if (sandboxed) {
+    frame.setAttribute('sandbox', '');
+  }
+  frame.style.cssText = `position: absolute; left: 20px; top: ${top}px; width: 200px; height: 100px; border: 0`;
+  const loaded = new Promise<void>((resolve) => {
+    frame.addEventListener('load', () => resolve(), { once: true });
+  });
+  parent.append(frame);
+  onTestFinished(() => frame.remove());
+  return { frame, loaded };
+}
+
+/** A real press in the iframe. The default position is on the button of `addFrame`. */
+async function pressInFrame(frame: HTMLIFrameElement, position = { x: 20, y: 20 }) {
+  await userEvent.click(frame, { position });
+  await flushMicrotasks();
+}
+
 const mouse = { pointerType: 'mouse' };
 
 async function pressAndClick(target: Element) {
@@ -275,7 +307,7 @@ describe('useDismiss', () => {
   const { render } = createRenderer();
 
   describe('document listeners', () => {
-    it('has none while the popup is closed, 12 while it is open, and none after a close or an unmount', async () => {
+    it('has none while the popup is closed, 13 while it is open, and none after a close or an unmount', async () => {
       const count = countListeners();
       const { unmount } = await render(<Popup name="popup" defaultOpen={false} />);
       const closed = count();
@@ -291,14 +323,14 @@ describe('useDismiss', () => {
 
       expect({ closed, open, afterClose, afterUnmount: count() }).toEqual({
         closed: 0,
-        open: 12,
+        open: 13,
         afterClose: 0,
         afterUnmount: 0,
       });
     });
 
     it.each([
-      { name: 'no Escape listener', dismiss: { escapeKey: false }, listeners: 9 },
+      { name: 'no Escape listener', dismiss: { escapeKey: false }, listeners: 10 },
       { name: 'no outside press listener', dismiss: { outsidePress: false }, listeners: 3 },
       { name: 'no listener while not enabled', dismiss: { enabled: false }, listeners: 0 },
     ])('has $name for its option', async ({ dismiss, listeners }) => {
@@ -317,7 +349,7 @@ describe('useDismiss', () => {
 
       enabled.value = true;
       await nextTick();
-      expect(count()).toBe(12);
+      expect(count()).toBe(13);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(false);
@@ -327,14 +359,14 @@ describe('useDismiss', () => {
       const count = countListeners();
       const escapeKey = shallowRef(false);
       await render(<Popup name="popup" dismiss={{ escapeKey }} />);
-      expect(count()).toBe(9);
+      expect(count()).toBe(10);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(true);
 
       escapeKey.value = true;
       await nextTick();
-      expect(count()).toBe(12);
+      expect(count()).toBe(13);
 
       await fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(isOpen('popup')).toBe(false);
@@ -370,9 +402,9 @@ describe('useDismiss', () => {
         openAfterActivation,
         open: isOpen('popup'),
       }).toEqual({
-        active: 12,
+        active: 13,
         deactivated: 0,
-        activated: 12,
+        activated: 13,
         openAfterActivation: true,
         open: false,
       });
@@ -388,10 +420,35 @@ describe('useDismiss', () => {
       // The portal renders its `Teleport` one flush after its mount.
       await render(<Popup name="popup" portalContainer={frameDocument.body} />);
 
-      expect({ main: count(), frame: countInFrame() }).toEqual({ main: 0, frame: 12 });
+      expect({ main: count(), frame: countInFrame() }).toEqual({ main: 0, frame: 13 });
 
       await fireEvent.pointerDown(frameDocument.body, mouse);
       expect(frameDocument.querySelector('[data-testid="popup"]')).toBe(null);
+    });
+
+    it('has none in a frame document while the popup is closed, 10 while it is open, and none after a close or an unmount', async () => {
+      const { frame, loaded } = addFrame();
+      await loaded;
+      const countInFrame = countListeners(frame.contentDocument!);
+      const { unmount } = await render(<Popup name="popup" defaultOpen={false} />);
+      const closed = countInFrame();
+
+      await fireEvent.click(screen.getByTestId('popup-trigger'));
+      const open = countInFrame();
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      const afterClose = countInFrame();
+
+      await fireEvent.click(screen.getByTestId('popup-trigger'));
+      unmount();
+
+      // Nine press listeners, and the `load` listener for a frame in the frame.
+      expect({ closed, open, afterClose, afterUnmount: countInFrame() }).toEqual({
+        closed: 0,
+        open: 10,
+        afterClose: 0,
+        afterUnmount: 0,
+      });
     });
 
     it('gives the popup element a passive capture listener for touchmove', async () => {
@@ -817,6 +874,202 @@ describe('useDismiss', () => {
       await userEvent.click(outside);
       await flushMicrotasks();
       expect(isOpenInShadow()).toBe(false);
+    });
+  });
+
+  describe('frames', () => {
+    it.each([
+      { mode: 'sloppy', eventType: 'pointerdown' },
+      { mode: 'intentional', eventType: 'click' },
+    ] as const)(
+      'BUG-5410: a press in a same-origin iframe closes the popup in the $mode form',
+      async ({ mode, eventType }) => {
+        releasePointerAfterTest();
+        const { frame, loaded } = addFrame();
+        await loaded;
+        const changes: Change[] = [];
+        await render(
+          <Popup
+            name="popup"
+            dismiss={{ outsidePressEvent: mode }}
+            onChange={(change: Change) => changes.push(change)}
+          />,
+        );
+
+        await pressInFrame(frame);
+
+        expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
+      },
+    );
+
+    it('BUG-5410: a press in an iframe that loads while the popup is open closes the popup', async () => {
+      releasePointerAfterTest();
+      await render(<Popup name="popup" />);
+      const { frame, loaded } = addFrame();
+      await loaded;
+
+      await pressInFrame(frame);
+
+      expect(isOpen('popup')).toBe(false);
+    });
+
+    it('BUG-5410: a press in an iframe in an iframe closes the popup', async () => {
+      releasePointerAfterTest();
+      const outer = addFrame();
+      await outer.loaded;
+      await render(<Popup name="popup" />);
+      // The inner frame loads in the outer frame, which is not the document of the popup.
+      const inner = addFrame({ parent: outer.frame.contentDocument!.body, top: 0 });
+      await inner.loaded;
+
+      await pressInFrame(outer.frame, { x: 40, y: 20 });
+
+      expect(isOpen('popup')).toBe(false);
+    });
+
+    it('keeps the popup open for a press in an iframe in the popup', async () => {
+      releasePointerAfterTest();
+      await render(<Popup name="popup" />);
+      const { frame, loaded } = addFrame({ parent: screen.getByTestId('popup') });
+      frame.style.position = 'static';
+      await loaded;
+
+      await pressInFrame(frame);
+
+      expect(isOpen('popup')).toBe(true);
+    });
+
+    it.each([{ mode: 'sloppy' }, { mode: 'intentional' }] as const)(
+      'keeps the popup open in the $mode form for a press in an iframe in a popup that Teleport moved',
+      async ({ mode }) => {
+        releasePointerAfterTest();
+        const dismiss = { outsidePressEvent: mode };
+        await render(
+          <Popup name="parent" dismiss={dismiss}>
+            <Popup name="child" teleport dismiss={dismiss} />
+          </Popup>,
+        );
+        const { frame, loaded } = addFrame({ parent: screen.getByTestId('child') });
+        frame.style.position = 'static';
+        await loaded;
+
+        await pressInFrame(frame);
+
+        expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({
+          parent: true,
+          child: true,
+        });
+      },
+    );
+
+    it('keeps the popup above open for a press in an iframe in a node of its tree', async () => {
+      releasePointerAfterTest();
+      // The child listens for no press, so only the floating tree links it to the popup above.
+      await render(
+        <Tree>
+          <Popup name="parent" node>
+            <Popup name="child" node teleport dismiss={{ outsidePress: false }} />
+          </Popup>
+        </Tree>,
+      );
+      const { frame, loaded } = addFrame({ parent: screen.getByTestId('child') });
+      frame.style.position = 'static';
+      await loaded;
+
+      await pressInFrame(frame);
+
+      expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({
+        parent: true,
+        child: true,
+      });
+    });
+
+    it('removes the listeners of a frame that left the page when it searches the frames again', async () => {
+      const first = addFrame();
+      await first.loaded;
+      const countInFirst = countListeners(first.frame.contentDocument!);
+      await render(<Popup name="popup" />);
+      const whileThere = countInFirst();
+
+      first.frame.remove();
+      const second = addFrame({ top: 420 });
+      await second.loaded;
+
+      expect({ whileThere, afterSearch: countInFirst() }).toEqual({
+        whileThere: 10,
+        afterSearch: 0,
+      });
+    });
+
+    it('does not search the frames again for the load of an element that is not a frame', async () => {
+      const { frame, loaded } = addFrame();
+      await loaded;
+      await render(<Popup name="popup" />);
+      const addToFrame = vi.spyOn(frame.contentDocument!, 'addEventListener');
+
+      await fireEvent.load(document.body);
+
+      expect(addToFrame).not.toHaveBeenCalled();
+    });
+
+    it('skips a cross-origin iframe and listens in the frames after it', async () => {
+      releasePointerAfterTest();
+      const crossOrigin = addFrame({ sandboxed: true });
+      const sameOrigin = addFrame({ top: 420 });
+      await Promise.all([crossOrigin.loaded, sameOrigin.loaded]);
+      // The document of a cross-origin frame throws on a read. The popup must not.
+      expect(() => crossOrigin.frame.contentWindow!.document).toThrow();
+      await render(<Popup name="popup" />);
+
+      await pressInFrame(sameOrigin.frame);
+
+      expect(isOpen('popup')).toBe(false);
+    });
+
+    it('does not close for a press on the scrollbar of an iframe', async () => {
+      const { frame, loaded } = addFrame();
+      await loaded;
+      const frameDocument = frame.contentDocument!;
+      const scroller = frameDocument.createElement('div');
+      scroller.style.cssText = 'width: 100px; height: 100px; overflow: scroll';
+      scroller.innerHTML = '<div style="height: 400px"></div>';
+      frameDocument.body.append(scroller);
+      await render(<Popup name="popup" />);
+      const FramePointerEvent = ownerWindow(scroller).PointerEvent;
+
+      const onScrollbar = new FramePointerEvent('pointerdown', {
+        bubbles: true,
+        pointerType: 'mouse',
+      });
+      Object.defineProperty(onScrollbar, 'offsetX', { value: scroller.clientWidth + 1 });
+      await fireEvent(scroller, onScrollbar);
+      expect(isOpen('popup')).toBe(true);
+
+      await fireEvent(
+        scroller,
+        new FramePointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }),
+      );
+      expect(isOpen('popup')).toBe(false);
+    });
+
+    it('takes a press in an iframe for a press on its element when the document has inert markers', async () => {
+      releasePointerAfterTest();
+      const host = document.createElement('div');
+      host.innerHTML = `<div ${createAttribute('inert')}></div>`;
+      document.body.append(host);
+      onTestFinished(() => host.remove());
+      // The first iframe is in the part of the document that has a marker. A third party injected
+      // the second iframe, after the markers.
+      const marked = addFrame({ parent: host });
+      const injected = addFrame({ top: 420 });
+      await Promise.all([marked.loaded, injected.loaded]);
+      await render(<Popup name="popup" />);
+
+      await pressInFrame(injected.frame);
+      expect(isOpen('popup')).toBe(true);
+
+      await pressInFrame(marked.frame);
+      expect(isOpen('popup')).toBe(false);
     });
   });
 });
