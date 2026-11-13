@@ -256,7 +256,7 @@ const TestLateArrow = defineComponent({
       collisionPadding: 5,
       sticky: false,
       arrowPadding: 5,
-      // No observer starts another position pass, so only the arrow can start one.
+      // No observer starts a new position pass, so only a change of the arrow or of the anchor does.
       disableAnchorTracking: true,
       keepMounted: false,
       collisionAvoidance: { fallbackAxisSide: 'none' },
@@ -1055,11 +1055,11 @@ describe('useAnchorPositioning', () => {
       // No flush is pending when the gate opens.
       await flushMicrotasks();
 
-      // The first position is written in the second microtask after the gate opens. The flush that
-      // mounts the arrow runs between the first and the second microtask. The microtask of
+      // The pass continues in a microtask after the gate opens, and it writes the position in a
+      // later microtask. The flush that mounts the arrow runs between the two. The microtask of
       // `arrowRef` then runs after the write of the position and before the next flush. It must
-      // find `isPositioned` set. If it does not, the arrow keeps the position of the first pass,
-      // which used no arrow.
+      // find `isPositioned` set. Without that, the arrow keeps the position of the first pass,
+      // which used a fake arrow.
       openGate({});
       showArrow.value = true;
 
