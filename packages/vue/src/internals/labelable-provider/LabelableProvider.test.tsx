@@ -107,6 +107,21 @@ describe('labelable provider', () => {
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
       });
 
+      it('selects the control again when it gets `enabled` true again and the other control goes away', async () => {
+        const { rerender } = await render(<TwoControls first second />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<TwoControls first second firstEnabled={false} />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+
+        await rerender(<TwoControls first second firstEnabled />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+
+        await rerender(<TwoControls first second={false} firstEnabled />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+      });
+
       it('keeps the control selected when its id changes beside another control', async () => {
         const ChangedId = defineComponent(
           (props: { firstId: string }) => () => (
@@ -766,6 +781,32 @@ describe('labelable provider', () => {
         await rerender(<Field shown />);
 
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+      });
+
+      it('keeps the selected control when a control with no id comes after it', async () => {
+        const hasFirst = shallowRef(true);
+        const Field = defineField(() => (
+          <>
+            <KeepAlive>{hasFirst.value ? <LabelableControl id="a" /> : null}</KeepAlive>
+            <LabelableControl id="b" />
+            <LabelableControl />
+          </>
+        ));
+        const { rerender } = await render(<Field shown />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        // The selection moves to `b` while the inner `KeepAlive` hides `a`. It stays when `a` comes
+        // back, so the selected control is not the first entry.
+        hasFirst.value = false;
+        await flushMicrotasks();
+        hasFirst.value = true;
+        await flushMicrotasks();
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+
+        await rerender(<Field shown={false} />);
+        await rerender(<Field shown />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
       });
     });
   });

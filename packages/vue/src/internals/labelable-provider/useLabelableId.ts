@@ -93,14 +93,16 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   });
 
   onActivated(() => {
-    // `onActivated` also runs at the first mount inside `KeepAlive`, where `onMounted` registered.
-    if (!isDeactivated.value) {
-      return;
-    }
-
     isDeactivated.value = false;
-    // A control with no id claims the default id again. A control that has an id has its entry.
-    register();
+  });
+
+  // A control with no id claims the default id of the provider again when `KeepAlive` activates it.
+  // The claim waits for the flush after the hooks. In the hook of this control, the controls before
+  // it in the branch are still deactivated and give no id. The claim then resets the selected id.
+  watch(isDeactivated, (deactivated) => {
+    if (!deactivated) {
+      register();
+    }
   });
 
   // `onScopeDispose` runs while Vue unmounts the control. The `onMounted` of a control that
