@@ -111,29 +111,27 @@ describe('FloatingPortal', () => {
       expect(listPlaceOfPortal(screen.getByTestId('host'))).toEqual([]);
     });
 
-    it('sends the Tab key from the trigger to the first inside guard, and Shift+Tab from the next field to the last one', async () => {
+    it('sends the Tab key from the trigger to the first field of the popup, and Shift+Tab from the next field to the last one', async () => {
       await render(
         <div>
           <input data-testid="trigger" />
           <FloatingPortal>
             <FocusManagerPart>
-              <input data-testid="inside" />
+              <input data-testid="first-inside" />
+              <input data-testid="last-inside" />
             </FocusManagerPart>
           </FloatingPortal>
           <input data-testid="next" />
         </div>,
       );
-      const [firstInsideGuard, lastInsideGuard] = document.querySelectorAll('[data-type="inside"]');
 
       screen.getByTestId('trigger').focus();
       await userEvent.tab();
-      expect(document.activeElement).toBe(firstInsideGuard);
-      await userEvent.tab();
-      expect(screen.getByTestId('inside')).toHaveFocus();
+      expect(screen.getByTestId('first-inside')).toHaveFocus();
 
       screen.getByTestId('next').focus();
       await userEvent.tab({ shift: true });
-      expect(document.activeElement).toBe(lastInsideGuard);
+      expect(screen.getByTestId('last-inside')).toHaveFocus();
     });
 
     it('sends the focus from the first guard to the tabbable before it when the focus comes from inside the popup', async () => {
