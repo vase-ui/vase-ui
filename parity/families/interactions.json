@@ -157,45 +157,6 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": [
-        "useDismiss",
-        "prop: bubbles",
-        "prop: bubbles.escapeKey",
-        "when Escape reaches the document"
-      ],
-      "title": "closes only the most recently opened layer",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
-      "reason": "The case opens each layer with `useClick`. The pull request that adds the click interaction ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": [
-        "useDismiss",
-        "prop: bubbles",
-        "prop: bubbles.escapeKey",
-        "when Escape reaches the document"
-      ],
-      "title": "closes the layers below when the layers above bubble",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
-      "reason": "The case opens each layer with `useClick`. The pull request that adds the click interaction ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": [
-        "useDismiss",
-        "prop: bubbles",
-        "prop: bubbles.escapeKey",
-        "when Escape reaches the document"
-      ],
-      "title": "handles the Escape again once the layer above closed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
-      "reason": "The case opens each layer with `useClick`. The pull request that adds the click interaction ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
       "describe": ["useDismiss", "prop: capture", "prop: capture.outsidePress"],
       "title": "when true",
       "kind": "waits-on",
@@ -215,8 +176,8 @@
       "describe": ["useDismiss"],
       "title": "nested floating elements with different portal containers",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
-      "reason": "The case needs `useClick` and `FloatingFocusManager`. A row has one `waitsOn`, so the row names one of these files. The pull request that adds that file names the next file that has no counterpart."
+      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",

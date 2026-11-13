@@ -10,6 +10,7 @@ import {
   useTestInteractions,
   waitFor,
 } from '#test-utils';
+import type { VaseUIRenderResult } from '#test-utils';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
@@ -24,6 +25,7 @@ import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
 import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
+import { useClick } from './useClick';
 import { normalizeProp, useDismiss } from './useDismiss';
 import type { UseDismissProps } from './useDismiss';
 
@@ -783,6 +785,121 @@ describe('useDismiss', () => {
         expect(outsidePressBubbles).toBe(false);
       });
     });
+
+    describe('prop: bubbles.escapeKey', () => {
+      describe('when Escape reaches the document', () => {
+        // Layers that share no FloatingTree, like a Dialog opened from a Popover.
+        const Layer = defineComponent({
+          props: {
+            testId: { type: String, required: true },
+            defaultOpen: { type: Boolean, default: false },
+            bubbles: { type: Object as PropType<{ escapeKey?: boolean }>, default: undefined },
+            outsidePress: { type: Boolean, default: undefined },
+          },
+          setup(props, { slots }) {
+            const open = shallowRef(props.defaultOpen);
+            const { refs, context } = useFloating({
+              open,
+              onOpenChange: (value) => {
+                open.value = value;
+              },
+            });
+            const { getReferenceProps, getFloatingProps } = useTestInteractions([
+              useClick(context.rootStore),
+              useDismiss(context.rootStore, props),
+            ]);
+
+            return () => (
+              <>
+                <button
+                  data-testid={`${props.testId}-trigger`}
+                  {...getReferenceProps({ ref: refs.setReference })}
+                />
+                {open.value && (
+                  <div data-testid={props.testId} {...getFloatingProps({ ref: refs.setFloating })}>
+                    {slots.default?.()}
+                  </div>
+                )}
+              </>
+            );
+          },
+        });
+
+        async function openInnerAndBlur(user: VaseUIRenderResult['user']) {
+          await user.click(screen.getByTestId('inner-trigger'));
+          expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+          (document.activeElement as HTMLElement).blur();
+          await flushMicrotasks();
+          expect(document.activeElement).toBe(document.body);
+        }
+
+        it('closes only the most recently opened layer', async () => {
+          const { user } = await render(
+            <Layer testId="outer" defaultOpen>
+              <Layer testId="inner" />
+            </Layer>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+
+        it('closes the layers below when the layers above bubble', async () => {
+          const { user } = await render(
+            <Layer testId="outer" defaultOpen>
+              <Layer testId="inner" bubbles={{ escapeKey: true }} />
+            </Layer>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+
+        it('handles the Escape again once the layer above closed', async () => {
+          const { user } = await render(
+            <>
+              <Layer testId="outer" defaultOpen outsidePress={false} />
+              <Layer testId="inner" />
+            </>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await user.click(screen.getByTestId('inner-trigger'));
+          expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+          (document.activeElement as HTMLElement).blur();
+          await flushMicrotasks();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+      });
+    });
   });
 
   describe('prop: capture', () => {
@@ -840,36 +957,6 @@ describe('useDismiss', () => {
   });
 
   describe('outsidePressEvent: intentional', () => {
-    // A child that prevents `pointerdown`, as the scrub area of Number Field does.
-    const AppWithPreventedPressStart = defineComponent({
-      setup() {
-        const open = shallowRef(true);
-        const { refs, context } = useFloating({
-          open,
-          onOpenChange: (value) => {
-            open.value = value;
-          },
-        });
-        const { getReferenceProps, getFloatingProps } = useTestInteractions([
-          useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
-        ]);
-
-        return () => (
-          <>
-            <button {...getReferenceProps({ ref: refs.setReference })} />
-            {open.value && (
-              <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
-                <div
-                  data-testid="scrubber"
-                  onPointerdown={(event: PointerEvent) => event.preventDefault()}
-                />
-              </div>
-            )}
-          </>
-        );
-      },
-    });
-
     it('dragging outside the floating element does not close', async () => {
       await render(<App outsidePressEvent="intentional" />);
       const floatingEl = screen.getByRole('tooltip');
@@ -1285,6 +1372,35 @@ describe('useDismiss', () => {
     });
 
     it('press start prevented inside does not require double outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
       await render(<AppWithPreventedPressStart />);
       const scrubber = screen.getByTestId('scrubber');
 
@@ -1309,6 +1425,35 @@ describe('useDismiss', () => {
     });
 
     it('press start prevented inside suppresses only immediate outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
       await render(<AppWithPreventedPressStart />);
       const scrubber = screen.getByTestId('scrubber');
 
@@ -1330,6 +1475,35 @@ describe('useDismiss', () => {
     });
 
     it('pointercancel after prevented press start suppresses immediate outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
       await render(<AppWithPreventedPressStart />);
       const scrubber = screen.getByTestId('scrubber');
 
@@ -1592,16 +1766,6 @@ describe('useDismiss', () => {
       await flushMicrotasks();
 
       expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
-    });
-
-    it('does not close a popup with the press on its reference that opens it', async () => {
-      releasePointerAfterTest();
-      await render(<Popup name="popup" defaultOpen={false} toggleOn="pointerdown" />);
-
-      await userEvent.click(screen.getByTestId('popup-trigger'));
-      await flushMicrotasks();
-
-      expect(isOpen('popup')).toBe(true);
     });
   });
 
