@@ -1,4 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { createApp, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
@@ -7,6 +8,8 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
+  isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -24,6 +27,14 @@ function readAttributes(element: HTMLElement) {
       .filter(({ name }) => name !== 'data-id')
       .map(({ name, value }) => [name, name === 'style' ? element.style.cssText : value]),
   );
+}
+
+// The pointer of the browser stays where a case leaves it, for each later test. A call with no
+// coordinates would move the pointer to the element of the last press, which is gone by then.
+function releasePointerAfterTest() {
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+  });
 }
 
 describe('<ScrollArea.Scrollbar />', () => {
@@ -160,6 +171,42 @@ describe('<ScrollArea.Scrollbar />', () => {
   });
 
   describe('track pointer down', () => {
+    it('ignores non-primary pointer presses', async () => {
+      await render(
+        <ScrollArea.Root>
+          <ScrollArea.Viewport data-testid="viewport" style={{ scrollSnapType: 'y mandatory' }} />
+          <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      await fireEvent.pointerDown(screen.getByTestId('scrollbar'), {
+        button: 2,
+        clientY: 100,
+        pointerId: 1,
+      });
+
+      expect(viewport.scrollTop).toBe(0);
+      expect(viewport.style.scrollSnapType).toBe('y mandatory');
+    });
+
+    it('handles a track press when no viewport is mounted', async () => {
+      await render(
+        <ScrollArea.Root>
+          <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const scrollbar = screen.getByTestId('scrollbar');
+      await fireEvent.pointerDown(scrollbar, { button: 0, clientY: 100, pointerId: 1 });
+
+      expect(scrollbar).not.toHaveAttribute('data-scrolling');
+    });
+
     it('does not start a track gesture without a thumb', async () => {
       await render(
         <ScrollArea.Root>
@@ -178,11 +225,485 @@ describe('<ScrollArea.Scrollbar />', () => {
       expect(viewport.scrollTop).toBe(0);
       expect(viewport.style.scrollSnapType).toBe('y mandatory');
     });
+
+    it('ignores thumb clicks when the native path differs from the synthetic target', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" data-testid="vertical" keepMounted>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const verticalScrollbar = screen.getByTestId('vertical');
+      const thumb = screen.getByTestId('thumb');
+
+      Object.defineProperties(viewport, {
+        clientHeight: {
+          configurable: true,
+          value: 200,
+        },
+        scrollHeight: {
+          configurable: true,
+          value: 1000,
+        },
+        scrollTop: {
+          configurable: true,
+          writable: true,
+          value: 0,
+        },
+      });
+
+      Object.defineProperties(verticalScrollbar, {
+        offsetHeight: {
+          configurable: true,
+          value: 200,
+        },
+        getBoundingClientRect: {
+          configurable: true,
+          value: () => ({
+            top: 0,
+          }),
+        },
+      });
+
+      Object.defineProperty(thumb, 'offsetHeight', {
+        configurable: true,
+        value: 40,
+      });
+
+      const event = new MouseEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientY: 160,
+      });
+
+      Object.defineProperty(event, 'composedPath', {
+        configurable: true,
+        value: () => [thumb, verticalScrollbar],
+      });
+
+      await fireEvent(verticalScrollbar, event);
+
+      expect(viewport.scrollTop).toBe(0);
+    });
+
+    it('marks the scroll area as scrolling when pressing the track', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" data-testid="vertical" keepMounted>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const verticalScrollbar = screen.getByTestId('vertical');
+      const thumb = screen.getByTestId('thumb');
+
+      Object.defineProperties(viewport, {
+        clientHeight: {
+          configurable: true,
+          value: 200,
+        },
+        scrollHeight: {
+          configurable: true,
+          value: 1000,
+        },
+        scrollTop: {
+          configurable: true,
+          writable: true,
+          value: 0,
+        },
+      });
+
+      Object.defineProperties(verticalScrollbar, {
+        offsetHeight: {
+          configurable: true,
+          value: 200,
+        },
+        getBoundingClientRect: {
+          configurable: true,
+          value: () => ({
+            top: 0,
+          }),
+        },
+      });
+
+      Object.defineProperties(thumb, {
+        offsetHeight: {
+          configurable: true,
+          value: 40,
+        },
+        setPointerCapture: {
+          configurable: true,
+          value: () => {},
+        },
+      });
+
+      await fireEvent.pointerDown(verticalScrollbar, { button: 0, clientY: 160, pointerId: 1 });
+
+      expect(viewport.scrollTop).not.toBe(0);
+      // The scrolling state lasts 500 ms. `fireEvent` resolves after the Vue flush in the same
+      // task, so no timer can end the state before the assertion.
+      expect(verticalScrollbar).toHaveAttribute('data-scrolling');
+    });
+
+    it('clears track drag state on pointer cancel', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" data-testid="vertical" keepMounted>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const verticalScrollbar = screen.getByTestId('vertical');
+      const thumb = screen.getByTestId('thumb');
+
+      Object.defineProperties(viewport, {
+        clientHeight: {
+          configurable: true,
+          value: 200,
+        },
+        scrollHeight: {
+          configurable: true,
+          value: 1000,
+        },
+        scrollTop: {
+          configurable: true,
+          writable: true,
+          value: 0,
+        },
+      });
+
+      Object.defineProperties(verticalScrollbar, {
+        offsetHeight: {
+          configurable: true,
+          value: 200,
+        },
+        getBoundingClientRect: {
+          configurable: true,
+          value: () => ({
+            top: 0,
+          }),
+        },
+      });
+
+      Object.defineProperties(thumb, {
+        offsetHeight: {
+          configurable: true,
+          value: 40,
+        },
+        setPointerCapture: {
+          configurable: true,
+          value: () => {},
+        },
+        hasPointerCapture: {
+          configurable: true,
+          value: () => false,
+        },
+      });
+
+      await fireEvent.pointerDown(verticalScrollbar, { button: 0, clientY: 160, pointerId: 1 });
+
+      const scrollTopAfterTrackPress = viewport.scrollTop;
+
+      await fireEvent.pointerCancel(verticalScrollbar, { pointerId: 1 });
+      await fireEvent.pointerMove(thumb, { clientY: 180, pointerId: 1, buttons: 1 });
+
+      expect(viewport.scrollTop).toBe(scrollTopAfterTrackPress);
+    });
+  });
+
+  // A synthetic `mousedown` does not move the focus. These cases assert the cancellation that stops
+  // the focus change, and not the `activeElement`.
+  describe('track mouse down', () => {
+    async function renderScrollbarWithThumb() {
+      await render(
+        <ScrollArea.Root>
+          <ScrollArea.Viewport data-testid="viewport" />
+          <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted>
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+    }
+
+    // Native scrollbars keep focus for every button, not just the primary one.
+    it.each([
+      { name: 'primary', button: 0 },
+      { name: 'middle', button: 1 },
+      { name: 'secondary', button: 2 },
+    ])(
+      'cancels a $name press on the track so focus stays on the active element',
+      async ({ button }) => {
+        await renderScrollbarWithThumb();
+
+        const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true, button });
+        screen.getByTestId('scrollbar').dispatchEvent(event);
+
+        expect(event.defaultPrevented).toBe(true);
+      },
+    );
+
+    it('cancels the press on the thumb so focus stays on the active element', async () => {
+      await renderScrollbarWithThumb();
+
+      const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 });
+      screen.getByTestId('thumb').dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
+    });
+  });
+
+  // The vertical and horizontal track-click branches share one axis-parameterized path. `getOffset`
+  // reads logical margins and paddings, so these cases run against real layout. They pin the
+  // horizontal LTR path and the RTL inversion. A press on the track takes the pointer capture of the
+  // thumb, so each case presses with the real pointer of the browser. The track has a cross size,
+  // because a real pointer cannot press an element with no area.
+  describe.skipIf(isJSDOM)('track click by axis', () => {
+    async function renderAxisTrack(
+      orientation: 'horizontal' | 'vertical',
+      direction: TextDirection,
+    ) {
+      await render(
+        <DirectionProvider direction={direction}>
+          <ScrollArea.Root style={{ width: '200px', height: '200px', direction }}>
+            <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+              <div style={{ width: '1000px', height: '1000px' }} />
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar
+              orientation={orientation}
+              data-testid="scrollbar"
+              keepMounted
+              style={orientation === 'vertical' ? { width: '10px' } : { height: '10px' }}
+            >
+              <ScrollArea.Thumb data-testid="thumb" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </DirectionProvider>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const scrollbar = screen.getByTestId('scrollbar');
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => expect(thumb.offsetWidth + thumb.offsetHeight).toBeGreaterThan(0));
+
+      return { viewport, scrollbar };
+    }
+
+    it('scrolls down when clicking below the thumb on a vertical track', async () => {
+      const { viewport, scrollbar } = await renderAxisTrack('vertical', 'ltr');
+      const rect = scrollbar.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: rect.width / 2, y: rect.height - 5 },
+        keys: '[MouseLeft>]',
+      });
+
+      expect(viewport.scrollTop).toBeGreaterThan(0);
+    });
+
+    it('scrolls right when clicking the end of a horizontal LTR track', async () => {
+      const { viewport, scrollbar } = await renderAxisTrack('horizontal', 'ltr');
+      const rect = scrollbar.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: rect.width - 5, y: rect.height / 2 },
+        keys: '[MouseLeft>]',
+      });
+
+      expect(viewport.scrollLeft).toBeGreaterThan(0);
+    });
+
+    it('scrolls into the negative RTL range when clicking a horizontal RTL track', async () => {
+      const { viewport, scrollbar } = await renderAxisTrack('horizontal', 'rtl');
+      const rect = scrollbar.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: 5, y: rect.height / 2 },
+        keys: '[MouseLeft>]',
+      });
+
+      expect(viewport.scrollLeft).toBeLessThan(0);
+    });
+  });
+
+  // The jump-to-click assignment must run with snapping already disabled, or the
+  // assigned position quantizes to the nearest snap point and the thumb stays
+  // offset from the pointer for the whole drag. Requires real layout for the
+  // track/thumb offset math. The press and the release are those of the real pointer. The thumb has
+  // the capture, so it gets the `pointerup`.
+  describe.skipIf(isJSDOM)('scroll snap on track press', () => {
+    it('does not snap the initial jump-to-click position', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: '400px', height: '200px' }}>
+          <ScrollArea.Viewport
+            data-testid="viewport"
+            style={{ width: '100%', height: '100%', scrollSnapType: 'x mandatory' }}
+          >
+            <div style={{ display: 'flex' }}>
+              {Array.from({ length: 10 }, (_, index) => (
+                <div
+                  key={index}
+                  style={{
+                    flexShrink: 0,
+                    width: '200px',
+                    height: '100px',
+                    scrollSnapAlign: 'start',
+                  }}
+                />
+              ))}
+            </div>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation="horizontal"
+            data-testid="scrollbar"
+            keepMounted
+            style={{ height: '10px' }}
+          >
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const scrollbar = screen.getByTestId('scrollbar');
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => expect(thumb.offsetWidth).toBeGreaterThan(0));
+      releasePointerAfterTest();
+
+      // Aim mid-way between the 800 and 1000 snap points (200px items).
+      const targetScroll = 900;
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      const maxThumbOffset = scrollbar.offsetWidth - thumb.offsetWidth;
+      const rect = scrollbar.getBoundingClientRect();
+      const clickX = (targetScroll / maxScroll) * maxThumbOffset + thumb.offsetWidth / 2;
+
+      await userEvent.pointer({
+        target: scrollbar,
+        coords: { x: clickX, y: rect.height / 2 },
+        keys: '[MouseLeft>]',
+      });
+
+      expect(Math.abs(viewport.scrollLeft - targetScroll)).toBeLessThanOrEqual(1);
+
+      // Releasing restores snapping, which re-snaps to the nearest snap point.
+      await userEvent.pointer({ keys: '[/MouseLeft]' });
+      await waitFor(() => expect(viewport.scrollLeft % 200).toBe(0));
+    });
+  });
+
+  // A short or heavily padded track drives `maxThumbOffset` to zero or negative
+  // once the thumb hits its `MIN_THUMB_SIZE` floor. Dragging the thumb then
+  // divides by a non-positive offset, teleporting the scroll position to an
+  // extreme instead of moving proportionally. Asserted with real layout: a 16px
+  // track ties the floored thumb to the track length (offset 0); a 10px track is
+  // shorter than the floored thumb (negative offset). A drag takes the pointer capture of the
+  // thumb, so the two drag cases use the real pointer of the browser. A press on the track returns
+  // before the capture, so the two click cases fire a synthetic event.
+  describe.skipIf(isJSDOM)('non-positive thumb offset', () => {
+    async function renderShortTrack(trackHeight: number) {
+      await render(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation="vertical"
+            data-testid="vertical"
+            keepMounted
+            style={{ height: `${trackHeight}px`, bottom: 'auto', width: '12px' }}
+          >
+            <ScrollArea.Thumb data-testid="thumb" />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const verticalScrollbar = screen.getByTestId('vertical');
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => expect(thumb.offsetHeight).toBeGreaterThan(0));
+
+      return { viewport, verticalScrollbar, thumb };
+    }
+
+    it('does not jump the scroll when dragging a thumb that fills the track', async () => {
+      const { viewport, thumb } = await renderShortTrack(16);
+      const rect = thumb.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      // Park the scroll mid-range so an erroneous jump to an edge is detectable.
+      viewport.scrollTop = 400;
+      await userEvent.pointer({
+        target: thumb,
+        coords: { x: rect.width / 2, y: rect.height / 2 },
+        keys: '[MouseLeft>]',
+      });
+      await userEvent.pointer({
+        coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 + 5 },
+      });
+
+      expect(viewport.scrollTop).toBe(400);
+    });
+
+    it('does not jump the scroll when dragging a thumb taller than the track', async () => {
+      const { viewport, thumb } = await renderShortTrack(10);
+      const rect = thumb.getBoundingClientRect();
+      releasePointerAfterTest();
+
+      viewport.scrollTop = 400;
+      await userEvent.pointer({
+        target: thumb,
+        coords: { x: rect.width / 2, y: rect.height / 2 },
+        keys: '[MouseLeft>]',
+      });
+      await userEvent.pointer({
+        coords: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 + 5 },
+      });
+
+      expect(viewport.scrollTop).toBe(400);
+    });
+
+    it('does not jump the scroll when clicking a track whose thumb fills the track', async () => {
+      const { viewport, verticalScrollbar } = await renderShortTrack(16);
+
+      viewport.scrollTop = 400;
+      await fireEvent.pointerDown(verticalScrollbar, { button: 0, clientY: 5, pointerId: 1 });
+
+      expect(viewport.scrollTop).toBe(400);
+    });
+
+    it('does not jump the scroll when clicking a track whose thumb is taller than the track', async () => {
+      const { viewport, verticalScrollbar } = await renderShortTrack(10);
+
+      viewport.scrollTop = 400;
+      await fireEvent.pointerDown(verticalScrollbar, { button: 0, clientY: 5, pointerId: 1 });
+
+      expect(viewport.scrollTop).toBe(400);
+    });
   });
 
   describe('prop: orientation', () => {
     let rootContext!: ScrollAreaRootContext;
-    // The holders are in the context of the root. Nothing else shows them until the thumb exists.
     const Probe = defineComponent(() => {
       rootContext = useScrollAreaRootContext();
       return () => null;
@@ -413,6 +934,91 @@ describe('<ScrollArea.Scrollbar />', () => {
       await fireEvent.wheel(scrollbar, { deltaY: 50 });
 
       expect(scrollbar).not.toHaveAttribute('data-scrolling');
+    });
+
+    it.skipIf(isJSDOM)('registers after the horizontal scrollbar becomes visible', async () => {
+      await render(
+        <DirectionProvider direction="rtl">
+          <ScrollArea.Root style={{ width: '200px', height: '200px', direction: 'rtl' }}>
+            <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+              <div style={{ width: '1000px', height: '200px' }} />
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar orientation="horizontal" data-testid="horizontal">
+              <ScrollArea.Thumb />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </DirectionProvider>,
+      );
+
+      const viewport = screen.getByTestId('viewport') as HTMLDivElement;
+      const horizontalScrollbar = await screen.findByTestId('horizontal');
+
+      await waitFor(() => expect(horizontalScrollbar).toHaveAttribute('data-has-overflow-x'));
+
+      await fireEvent.wheel(horizontalScrollbar, { deltaX: -50 });
+
+      expect(viewport.scrollLeft).toBe(-50);
+    });
+  });
+
+  describe.skipIf(isJSDOM)('data overflow attributes (scrollbars)', () => {
+    const VIEWPORT_SIZE = 200;
+    const SCROLLABLE_CONTENT_SIZE = 1000;
+
+    it('applies data attributes on vertical and horizontal scrollbars', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: `${VIEWPORT_SIZE}px`, height: `${VIEWPORT_SIZE}px` }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div
+              style={{
+                width: `${SCROLLABLE_CONTENT_SIZE}px`,
+                height: `${SCROLLABLE_CONTENT_SIZE}px`,
+              }}
+            />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" data-testid="scrollbar-vertical">
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+          <ScrollArea.Scrollbar orientation="horizontal" data-testid="scrollbar-horizontal">
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const vScrollbar = screen.getByTestId('scrollbar-vertical');
+      const hScrollbar = screen.getByTestId('scrollbar-horizontal');
+
+      await waitFor(() => {
+        expect({
+          vHasOverflowY: vScrollbar.hasAttribute('data-has-overflow-y'),
+          vOverflowYStart: vScrollbar.hasAttribute('data-overflow-y-start'),
+          vOverflowYEnd: vScrollbar.hasAttribute('data-overflow-y-end'),
+          hHasOverflowX: hScrollbar.hasAttribute('data-has-overflow-x'),
+          hOverflowXStart: hScrollbar.hasAttribute('data-overflow-x-start'),
+          hOverflowXEnd: hScrollbar.hasAttribute('data-overflow-x-end'),
+        }).toEqual({
+          vHasOverflowY: true,
+          vOverflowYStart: false,
+          vOverflowYEnd: true,
+          hHasOverflowX: true,
+          hOverflowXStart: false,
+          hOverflowXEnd: true,
+        });
+      });
+
+      // Scroll to middle
+      const halfY = (viewport.scrollHeight - viewport.clientHeight) / 2;
+      const halfX = (viewport.scrollWidth - viewport.clientWidth) / 2;
+      await fireEvent.scroll(viewport, {
+        target: { scrollTop: halfY, scrollLeft: halfX },
+      });
+      await flushMicrotasks();
+
+      expect(vScrollbar).toHaveAttribute('data-overflow-y-start');
+      expect(vScrollbar).toHaveAttribute('data-overflow-y-end');
+      expect(hScrollbar).toHaveAttribute('data-overflow-x-start');
+      expect(hScrollbar).toHaveAttribute('data-overflow-x-end');
     });
   });
 

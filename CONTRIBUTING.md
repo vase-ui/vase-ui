@@ -290,6 +290,8 @@ Rules:
 ### `useRenderElement` and `useRender`
 
 - Each part that renders an element calls the internal composable `useRenderElement` in setup. It returns `element`, which the part exposes, and the function `elementProps`.
+- `useRenderElement` takes its `ref` callbacks one time, in `setup`. It calls a callback only when the element changes. A change of a prop that keeps the element calls none.
+- A part that chooses a holder from a prop reads the prop in the callback. A `watch` of the prop moves the element to the other holder. `ScrollAreaScrollbar.vue` is the model.
 - Upstream's `useRenderElement` has a parameter `enabled`. The Vue composable has none, because the template decides if the part renders an element.
 - A part that renders no element in some state uses `v-if` in its template. The template then does not call `elementProps()`.
 - `useRender` is public. It gives the API of a part to a component of a consumer.
@@ -492,6 +494,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - Where Base UI types a member as a React state setter, the function takes a value. A Vue write is immediate, so a caller that needs the last value reads the ref.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
+- A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
 
 ### Composite
 
@@ -509,6 +512,17 @@ The composite root:
 - The highlighted index goes through `useControlled`. A root with `onHighlightedIndexChange` and no `highlightedIndex` also writes its own state. Base UI writes no state in that case.
 - The composable adds no attribute to the element of the root.
 - The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
+- The composable returns `props`, `rootRef` and `highlightedIndex`. A part below the root reads `onHighlightedIndexChange` and `relayKeyboardEvent` from `useCompositeRootContext()`. Base UI's hook also returns them, for its `CompositeRoot` component.
+
+Grid navigation:
+
+- A root part that is a grid gives `grid: gridNavigation(config)` to `useCompositeRoot`. The function is in `root/gridNavigation.ts`. A root part with no grid does not import that file. A bundler can then remove the grid code.
+- `grid` is a plain function and not a `MaybeRefOrGetter`, because `toValue` calls a function. The root reads it when a key comes.
+- `config` holds `cols`, `dense` and `itemSizes`. It is a value, a ref or a getter. The navigator reads it when a key comes.
+- `cols` is a whole number of 1 or more. A fraction counts as its whole part. A value below 1, or a value that is not a finite number, counts as 1.
+- An item width or an item height that is not a finite number counts as 1.
+- With a grid, each key that moves the highlight calls `event.preventDefault()`, also an arrow key outside `orientation`.
+- An item that is wider than the grid gets the width of the grid, in each build. A development build also reports the item. Base UI throws in a development build, and its loop does not end in a production build.
 
 The composite item:
 
@@ -556,7 +570,12 @@ The tab stop on a server:
 - In such a list, the tab stop of the server HTML can be on another item than the tab stop after the mount. A server writes the HTML of an item before it knows the later items.
 - While an item hydrates, it gives `data-allow-mismatch="attribute"` and a `tabindex` that is a string. Vue then reports no mismatch when the server and the browser give the tab stop to different items.
 - After the mount, the item gives a number. Hydration does not patch an attribute, but the string and the number are different values, so Vue writes the attribute again.
-- An item that is mounted after its root keeps the `tabindex` of the server HTML until its own mount. The server HTML can have the tab stop on that item. The list then has two tab stops from the mount of the root until the mount of that item.
+- An item can be mounted after its root: an item in an async component, or below a `<Suspense>` inside the root. Its element keeps the `tabindex` of the server HTML until the item is mounted.
+- While such an element has `tabindex="0"`, the mounted items do not take the tab stop. The list then has one tab stop. That element has no listeners of its own until its item is mounted.
+- While an item hydrates, it also gives the attribute `data-vase-ui-hydrating-composite-item` with the id of its root. The root finds the element by that attribute. Thus it does not wait for an item of a nested composite or for an element of a consumer.
+- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index.
+- The root searches its own element only. It does not find an item whose element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab stop, the list can have two tab stops until the item is mounted.
+- A `<Suspense>` outside the root holds the mount of the root. Until it resolves, the list keeps the tab stop of the server HTML.
 - The server HTML has no tab stop in three cases:
   - The root part sets `hasActiveItem` and no item is active.
   - Each item is disabled.
@@ -618,6 +637,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.
 - A transition must sometimes start from a value that an earlier DOM update set. Then read the layout of the element after that update. `useCollapsiblePanel` calls `getBoundingClientRect()` in `nextTick` after it writes the measured size. Without that read, the exit transition does not start.
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
+- Write a style key with a vendor prefix in its CSS form, such as `'-webkit-user-select'`. A server render writes the key `WebkitUserSelect` as `webkit-user-select`, which is not a CSS property.
 - Vue writes each key of the rendered style again on each render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration also in a record that the part renders, until the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` wraps `elementProps()` and merges `animation-name: none` and the record last. They then win over `style` and `stateStyle` of the consumer.
@@ -629,9 +649,11 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Hydration does not patch an attribute, so the part also writes `hidden="until-found"` to the element at mount.
 - A transition continues when an element gets `hidden="until-found"`, because the element has no `display: none`. When the element becomes hidden, the part first writes a plain `hidden` and reads the computed style one time. The browser then cancels the transitions.
 - Base UI adds some listeners to the element of the part with `addEventListener`. Give such a handler in the props of the part. An example is `onBeforematch` of `Collapsible.Panel`. The element of a `#render` slot then gets the listener too.
+- A listener that Base UI adds with `{ passive: false }` also goes in the props. An example is the `wheel` listener of `ScrollArea.Scrollbar`. Vue adds the listener of an element with no `passive` option. A browser makes a `wheel` listener passive by default only on the window, the document, the root element and the body.
 - The popup tree is the only link between a teleported child popup and its parent.
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
+- A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
 - An effect that reads the DOM stops while the part is deactivated. `onDeactivated` runs the cleanup of the effect, and `onActivated` runs the effect again. `useCollapsiblePanel` does this for its size effect and its close effect.
 - `onActivated` also runs at the first mount in a `KeepAlive`. Keep a flag that `onDeactivated` sets. Do nothing in `onActivated` while the flag is not set.
 - Where the effect is a `watch` with `onCleanup`, the flag is a `shallowRef` in the sources of that `watch`. The callback returns while the flag is set. `ScrollAreaViewport.vue` does this for its observer.
@@ -747,6 +769,8 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `toHaveComputedStyle(obj)`                                                                                 | `toHaveStyle(obj)`, which also reads the computed style                                                                                                                                                                                                   |
 | `toHaveComputedStyle({})`                                                                                  | `not.toHaveAttribute('style')`, because `toHaveStyle({})` fails for an empty object                                                                                                                                                                       |
 | An event                                                                                                   | Add `await`                                                                                                                                                                                                                                               |
+| An enter or leave call of `fireEvent` on a descendant of the element that has the listener                 | The same call on the element that has the listener. The calls are `pointerEnter`, `pointerLeave`, `mouseEnter` and `mouseLeave`. The native events do not bubble. React makes its events from events that bubble, such as `pointerover`.                  |
+| `waitFor` on a state that a timer of the part ends, directly after an event                                | A direct assertion after the awaited event. `fireEvent` resolves after the Vue flush, in the same task, so the timer cannot end the state first.                                                                                                          |
 | An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check)                                   | No change                                                                                                                                                                                                                                                 |
 | `isJSDOM`                                                                                                  | Always `false`                                                                                                                                                                                                                                            |
 | `reactMajor < 19` in a condition                                                                           | Always `false`                                                                                                                                                                                                                                            |
@@ -803,6 +827,7 @@ The hydration helpers:
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
+- `test/fixtures/HydrationFixture.vue` is an exception. It is the fixture of `test/hydration.test.tsx`, which tests the hydration helpers. It has no `.test.vue` name, and it is not in the folder of its test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
 - The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.
 - To assert on the server HTML before the hydration, parse it in a `<template>` element. That parse has no side effect.
@@ -913,12 +938,12 @@ The thing that a row names decides which kinds the row can have:
 
 Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID>.json`:
 
-| Key        | Content                                                                                                                                                                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `BUG-<number>` for the correction of a Base UI issue, with the number of the issue. `VUE-<number>` for a behavior that is specific to the Vue port. The file name is the id plus `.json`. |
-| `evidence` | One or more `https://` links. Each link is an issue, a pull request, a standard, a Vue documentation page, or a line of source at a tag or a commit.                                      |
-| `behavior` | What Vase UI does.                                                                                                                                                                        |
-| `dueWith`  | One upstream path. `pnpm parity:check` refuses a path with `/` at its end. The row is due when the path has a counterpart.                                                                |
+| Key        | Content                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`       | `BUG-<number>` for the correction of a Base UI issue, with the number of the issue. `VUE-<number>` for a behavior that is specific to the Vue port. `VUE-<number>` is also the id of a correction of Base UI that has no issue. The evidence is then a line of source at a commit. The file name is the id plus `.json`. |
+| `evidence` | One or more `https://` links. Each link is an issue, a pull request, a standard, a Vue documentation page, or a line of source at a tag or a commit.                                                                                                                                                                     |
+| `behavior` | What Vase UI does.                                                                                                                                                                                                                                                                                                       |
+| `dueWith`  | One upstream path. `pnpm parity:check` refuses a path with `/` at its end. The row is due when the path has a counterpart.                                                                                                                                                                                               |
 
 - A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
 - `pnpm parity:check` fails on a due row that has no such title.
