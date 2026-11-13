@@ -24,7 +24,7 @@ export interface AccordionTriggerProps
    */
   disabled?: boolean | undefined;
   /**
-   * The id of the trigger.
+   * The id of the trigger. The panel uses it for `aria-labelledby`.
    * If the id is absent or empty, the trigger has the id that the item generates.
    */
   id?: string | undefined;
@@ -39,6 +39,7 @@ const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
+import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -66,7 +67,16 @@ const { getButtonProps, buttonRef } = useButton({
   native: () => props.nativeButton,
 });
 
-const { defaultTriggerId, state: itemState } = useAccordionItemContext();
+const { defaultTriggerId, registerTriggerId, state: itemState } = useAccordionItemContext();
+
+const triggerId = computed(() => props.id || defaultTriggerId.value);
+
+const source = Symbol();
+
+useRegisteredId(
+  () => triggerId.value,
+  (getId) => registerTriggerId(source, getId),
+);
 
 const state = computed<AccordionTriggerState>(() => ({
   ...itemState.value,
@@ -80,7 +90,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     {
       'aria-controls': open.value ? panelId.value : undefined,
       'aria-expanded': open.value,
-      id: props.id || defaultTriggerId.value,
+      id: triggerId.value,
       onClick: handleTrigger,
     },
     attrs,

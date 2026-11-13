@@ -13,6 +13,8 @@ export interface AccordionRootContext<Value = any> {
     nextOpen: boolean,
     eventDetails: AccordionRootChangeEventDetails,
   ) => void;
+  hiddenUntilFound: ComputedRef<boolean>;
+  keepMounted: ComputedRef<boolean>;
   state: ComputedRef<AccordionRootState<Value>>;
   value: ComputedRef<AccordionValue<Value>>;
 }
