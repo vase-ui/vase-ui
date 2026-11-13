@@ -26,7 +26,7 @@ export interface FloatingPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, provide, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, onUpdated, provide, shallowRef, useTemplateRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../../common/empty';
 import { ownerVisuallyHidden } from '../../../internals/constants';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
@@ -114,7 +114,6 @@ function readNodeId() {
   nodeId.value = element.value?.id || undefined;
 }
 
-onMounted(readNodeId);
 onUpdated(readNodeId);
 
 const beforeOutsideGuard = useTemplateRef('beforeOutsideGuard');
