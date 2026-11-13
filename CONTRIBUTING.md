@@ -688,6 +688,24 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It is a `span` with `tabindex="0"`. It exposes its element as `element`. It gives the attributes and listeners of a consumer to the `span`: `<FocusGuard data-type="inside" @focusin="…" />`. Its own attributes win over the same attributes of a consumer, as in Base UI.
 - The guard has `aria-hidden="true"`. In WebKit on an Apple system, it has `role="button"` and `aria-label="Focus guard"` instead. VoiceOver moves the focus with its cursor, but in WebKit only onto a focusable element that has `role="button"`. Without a name, axe reports a button with no name.
 - The guard reads `platform` in `onMounted`, as [Server render](#server-render) says for a value of the browser. The server HTML thus has `aria-hidden="true"` and no role. The mount adds the role and the label.
+- `FloatingFocusManager.vue` moves the focus into a popup when it opens, and it keeps the Tab key in a modal popup. A popup part renders it around its popup element, in the portal.
+- It renders no element. It reads the popup element from `positionerElement` of the store with `getFloatingFocusElement`, and the reference from `anchorElement`.
+- It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
+- A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
+- A `keydown` listener on the document stops the Tab key while the focus is in a modal popup that has no tabbable element. The guards have nothing to focus then.
+- `previousFocusableElement` and `nextFocusableElement` take an element, a ref or a getter. They name the element that gets the focus when the Tab key leaves a popup that is not modal. When the value is `null`, or the ref or the getter gives no element, the focus goes to the outside guard of the portal.
+- The initial focus moves one animation frame after the DOM update of the open. For a virtual `mousedown`, such as the press of a screen reader, it moves in the same task.
+- `initialFocus` is `true`, `false`, an element, a component, a ref of one of them, or a function of the interaction type. `false`, and a function that returns `false` or nothing, move no focus.
+- `true`, `null` and an empty ref use the default: the first tabbable element, or else the popup element. A ref is empty when it holds `null` or `undefined`.
+- A template gives the value of a ref, so `:initial-focus="field"` gives `null` first and then the element. The part reads the prop in a microtask after the DOM update, and thus gets the element.
+- When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
+- `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.
+- The part keeps its effects in one list. `update` runs each effect whose sources changed, in the sequence of the list: first its last cleanup, then its setup. `onMounted` and one `watch` with `flush: 'post'` call `update`.
+- Two `watch` calls of one component with `flush: 'post'` run in the sequence of the writes to their sources. They do not run in the sequence of the calls. The list gives the sequence of the effects of Base UI.
+- A server calls no `onMounted` and runs no `watch` with `flush: 'post'`, so no effect runs there.
+- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the `keydown` listener of the document, and takes it back.
+- The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
+- The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
 
 ### Popup portal
 
@@ -1200,6 +1218,7 @@ The hydration helpers:
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
+- `test/fixtures/FocusManagerPart.vue` is a focus manager with a store of its own. The tests of the portal use it.
 - `test/fixtures/HydrationFixture.vue`, `StyledElement.vue` and `ClassedElement.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
 - The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.

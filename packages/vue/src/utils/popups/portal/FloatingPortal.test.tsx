@@ -3,6 +3,8 @@ import { defineComponent, onMounted, shallowRef, watch } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { useFloating } from '../../../../test/fixtures/useFloating';
+import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import type { FloatingPortalContainer } from './useFloatingPortalNode';
@@ -164,6 +166,27 @@ describe('FloatingPortal', () => {
     expect(portal).not.toBeNull();
     expect(portal).toHaveClass('closed');
     expect(portal).toHaveAttribute('data-vase-ui-portal');
+  });
+
+  test('uses the rendered portal ID for the aria-owns relationship', async () => {
+    const Test = defineComponent({
+      setup() {
+        const { context, refs } = useFloating({ open: true });
+
+        return () => (
+          <FloatingPortal id="custom-portal">
+            <FloatingFocusManager store={context.rootStore} modal={false}>
+              <div ref={refs.setFloating} />
+            </FloatingFocusManager>
+          </FloatingPortal>
+        );
+      },
+    });
+
+    await render(<Test />);
+    await flushMicrotasks();
+
+    expect(document.querySelector('[aria-owns]')).toHaveAttribute('aria-owns', 'custom-portal');
   });
 
   test('FloatingPortalLite forwards HTML props to the portal element', async () => {
