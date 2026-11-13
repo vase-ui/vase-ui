@@ -46,7 +46,18 @@ Then give the nonce to the root component as a prop, for example with `createSSR
 
 ## Disable inline style elements
 
-You do not need a `nonce` for `<style>` elements if you disable them and use external style sheets only. Components must then get their CSS from custom class names or other methods.
+You do not need a `nonce` for `<style>` elements if you disable them and use external style sheets only.
+
+`<ScrollArea.Root>` renders an inline `<style>` element. It hides the native scrollbar of `<ScrollArea.Viewport>`. With `disableStyleElements`, put the rules of that element in your own style sheet:
+
+```css
+.vase-ui-disable-scrollbar {
+  scrollbar-width: none;
+}
+.vase-ui-disable-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+```
 
 Set `disableStyleElements` to remove these elements:
 
@@ -64,6 +75,7 @@ If your CSP blocks inline style _attributes_ in addition to _elements_, you can 
 
 1. Add `'unsafe-inline'` to the `style-src-attr` directive, or use `style-src-elem` and not `style-src`. A style attribute is a smaller security risk than a style element, but a high-security environment can reject this option.
 2. Render the affected components only on the client. The first HTML then has no inline styles.
+3. Unset an inline style of a part in its `style` attribute, and put the style in your CSS. An example is `<ScrollArea.Viewport :style="{ overflow: undefined }">`. Check each new version of Vase UI for new inline styles.
 
 ## API reference
 
