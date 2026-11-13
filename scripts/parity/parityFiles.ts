@@ -84,6 +84,8 @@ export interface FamilyExtract {
   typeTests: string[];
   cases: { file: string; rows: TestRow[] }[];
   surface: SurfaceFile[];
+  /** The `<Types…>` tags of each `page.mdx`, as upstream writes them, in the sequence of the page. */
+  pages: { file: string; referenceTags: string[] }[];
 }
 
 export interface BetterRow {
@@ -427,6 +429,7 @@ const extract = object({
   typeTests: strings,
   cases: array(object({ file: nonEmptyString, rows: array(testRow) })),
   surface: array(surfaceFile),
+  pages: array(object({ file: nonEmptyString, referenceTags: strings })),
 });
 
 const betterRow = object({

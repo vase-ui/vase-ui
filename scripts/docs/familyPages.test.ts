@@ -23,13 +23,18 @@ function makeDocs(paths: string[]): string {
   return root;
 }
 
-test('a page in the components folder is a family page', () => {
-  const root = makeDocs(['components/button.md', 'components/accordion.md']);
+test('a page in the components folder or the utils folder is a family page', () => {
+  const root = makeDocs([
+    'components/button.md',
+    'components/accordion.md',
+    'utils/merge-props.md',
+  ]);
   assert.deepEqual(
     listFamilyPages(root).sort((a, b) => a.path.localeCompare(b.path)),
     [
       { path: 'components/accordion.md', family: 'accordion' },
       { path: 'components/button.md', family: 'button' },
+      { path: 'utils/merge-props.md', family: 'merge-props' },
     ],
   );
 });
@@ -45,13 +50,14 @@ test('a page in another folder, a top-level page and a sample folder are not fam
   assert.deepEqual(listFamilyPages(root), [{ path: 'components/button.md', family: 'button' }]);
 });
 
-test('a docs folder with no components folder has no family page', () => {
+test('a docs folder with no folder of family pages has no family page', () => {
   assert.deepEqual(listFamilyPages(makeDocs(['quick-start.md'])), []);
 });
 
 for (const { path, family } of [
   { path: 'components/button.md', family: 'button' },
   { path: 'components/merge-props.md', family: 'merge-props' },
+  { path: 'utils/merge-props.md', family: 'merge-props' },
   { path: 'components/button/notes.md', family: undefined },
   { path: 'guides/button.md', family: undefined },
   { path: 'quick-start.md', family: undefined },

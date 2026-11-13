@@ -15,6 +15,7 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
 
@@ -765,6 +766,9 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it('still animates on close and reopen after being initially open', async () => {
+      // With the animations of the part off, the part hides the panel one frame after the ending
+      // style, and the browser cancels the animation.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <>
           <style>{`
@@ -813,28 +817,31 @@ describe('<Collapsible.Panel />', () => {
 
       expect(panel.getAnimations().length).toBe(0);
 
-      await user.click(trigger);
+      // The state exists only while the animation runs. The listener exists before the click, so
+      // the test reads the state when the animation starts.
+      const closing = nextEvent(panel, 'animationstart').then(() => ({
+        closed: panel.hasAttribute('data-closed'),
+        animations: panel.getAnimations().length,
+      }));
+      const [closingState] = await Promise.all([closing, user.click(trigger)]);
+      expect(closingState).toEqual({ closed: true, animations: 1 });
 
-      // The animation runs only while the panel is closing, so check both in one snapshot.
       await waitFor(() => {
-        expect({
-          closed: panel.hasAttribute('data-closed'),
-          animations: panel.getAnimations().length,
-        }).toEqual({ closed: true, animations: 1 });
+        expect(panel).toHaveAttribute('hidden');
       });
 
-      await user.click(trigger);
-
-      // The animation runs only while the panel is opening, so check both in one snapshot.
-      await waitFor(() => {
-        expect({
-          open: panel.hasAttribute('data-open'),
-          animations: panel.getAnimations().length,
-        }).toEqual({ open: true, animations: 1 });
-      });
+      const opening = nextEvent(panel, 'animationstart').then(() => ({
+        open: panel.hasAttribute('data-open'),
+        animations: panel.getAnimations().length,
+      }));
+      const [openingState] = await Promise.all([opening, user.click(trigger)]);
+      expect(openingState).toEqual({ open: true, animations: 1 });
     });
 
     it('restores measured dimensions before applying a closing keyframe animation', async () => {
+      // With the animations of the part off, the part removes the panel one frame after the ending
+      // style, and the browser cancels the animation before it ends.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const { user } = await render(
         <>
           <style>{`
@@ -870,15 +877,31 @@ describe('<Collapsible.Panel />', () => {
         expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
       });
 
+      // The size must be in pixels when the animation starts, when the ending style comes and when
+      // the animation ends. A listener records the size at each moment, so the test does not
+      // depend on the time at which the click resolves.
+      const heights: Record<string, string> = {};
+      const recordHeight = (moment: string) => {
+        heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
+      };
+      panel.addEventListener('animationstart', () => recordHeight('animationstart'));
+      panel.addEventListener('animationend', () => recordHeight('animationend'));
+      new MutationObserver(() => {
+        if (panel.hasAttribute('data-ending-style')) {
+          recordHeight('data-ending-style');
+        }
+      }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
+
       await user.click(trigger);
 
-      // All three hold only while the closing animation runs, so check them in one snapshot.
       await waitFor(() => {
-        expect({
-          endingStyle: panel.hasAttribute('data-ending-style'),
-          height: panel.style.getPropertyValue('--collapsible-panel-height'),
-          animations: panel.getAnimations().length,
-        }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/), animations: 1 });
+        expect(Object.keys(heights)).toHaveLength(3);
+      });
+
+      expect(heights).toEqual({
+        animationstart: expect.stringMatching(/px$/),
+        'data-ending-style': expect.stringMatching(/px$/),
+        animationend: expect.stringMatching(/px$/),
       });
     });
 
@@ -1380,6 +1403,10 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it('restores the transition duration before the first close after a beforematch open', async () => {
+      // With the animations of the part off, the part hides the panel one frame after the ending
+      // style, and the browser cancels the transition.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
       function App() {
         return (
           <>
@@ -1431,15 +1458,18 @@ describe('<Collapsible.Panel />', () => {
 
       expect(getComputedStyle(panel).transitionDuration).toBe('0s');
 
-      await user.click(trigger);
-
-      // All three hold only while the closing transition runs, so check them in one snapshot.
-      await waitFor(() => {
-        expect({
-          endingStyle: panel.hasAttribute('data-ending-style'),
-          transitionDuration: panel.style.transitionDuration,
-          animations: panel.getAnimations().length,
-        }).toEqual({ endingStyle: true, transitionDuration: '123ms', animations: 1 });
+      // The state exists only while the transition runs. The listener exists before the click, so
+      // the test reads the state when the transition runs.
+      const closing = nextEvent(panel, 'transitionrun').then(() => ({
+        endingStyle: panel.hasAttribute('data-ending-style'),
+        transitionDuration: panel.style.transitionDuration,
+        animations: panel.getAnimations().length,
+      }));
+      const [closingState] = await Promise.all([closing, user.click(trigger)]);
+      expect(closingState).toEqual({
+        endingStyle: true,
+        transitionDuration: '123ms',
+        animations: 1,
       });
     });
 

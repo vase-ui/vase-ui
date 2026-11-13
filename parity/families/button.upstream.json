@@ -169,5 +169,13 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/button/page.mdx",
+      "referenceTags": [
+        "TypesButton"
+      ]
+    }
   ]
 }

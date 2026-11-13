@@ -85,5 +85,15 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/direction-provider/page.mdx",
+      "referenceTags": [
+        "TypesDirectionProvider",
+        "TypesUseDirection",
+        "TypesDirectionProviderAdditionalTypes"
+      ]
+    }
   ]
 }

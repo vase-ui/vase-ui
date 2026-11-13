@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The folders of `docs` that hold one page for each family. */
-const FAMILY_PAGE_FOLDERS = ['components'];
+const FAMILY_PAGE_FOLDERS = ['components', 'utils'];
 
 const FAMILY_PAGE = /^([^/]+)\/([^/]+)\.md$/;
 

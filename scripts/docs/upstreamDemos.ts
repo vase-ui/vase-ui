@@ -2,8 +2,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { format, resolveConfig } from 'prettier';
+import ts from 'typescript';
 import type { FamilyFile } from '../parity/parityFiles.ts';
-import { DOCS_FOLDER_PREFIX } from '../parity/paths.ts';
+import { DOCS_FOLDER_PREFIX, VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
   familyFile,
@@ -18,12 +20,19 @@ import { docsFolderGlobs } from './upstreamDocs.ts';
 /** A demo of Base UI has one folder for each variant. The Tailwind variants are not ported. */
 const TAILWIND_FOLDER = 'tailwind';
 
+const ENTRY_POINT_IMPORT = /^@base-ui\/react\/([^/]+)$/;
+
 export interface DemoRecord {
   commit: string;
   /** The folder of Base UI that holds the demos of the family. */
   upstream: string;
   /** The SHA-256 of each upstream file, by its path from `upstream`. */
   files: Record<string, string>;
+  /**
+   * The entry points of Base UI that a demo imports besides its family, such as `toggle`, by the
+   * folder of the demo. A demo that imports no other entry point has no row.
+   */
+  entryPoints?: Record<string, string[]>;
 }
 
 export interface UpstreamDemos {
@@ -70,7 +79,22 @@ function upstreamDemosFolder(name: string, family: FamilyFile): string {
   return `${glob.slice(0, -'/**'.length)}/demos`;
 }
 
-/** Reads the demo files of a family from the file list of Base UI at the matched commit of the family. */
+/** The names of the entry points of Base UI that the file imports, other than the entry point `own`. */
+function importedEntryPoints(text: string, own: string): string[] {
+  return ts.preProcessFile(text, true, true).importedFiles.flatMap(({ fileName }) => {
+    const name = ENTRY_POINT_IMPORT.exec(fileName)?.[1];
+    return name === undefined || name === own ? [] : [name];
+  });
+}
+
+function sortedUnique(names: string[]): string[] {
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+/**
+ * Reads the demo files of a family from the file list of Base UI at the matched commit of the family.
+ * The record also names the other entry points that each demo imports.
+ */
 export function readUpstreamDemos(
   name: string,
   family: FamilyFile,
@@ -80,6 +104,7 @@ export function readUpstreamDemos(
   const upstream = upstreamDemosFolder(name, family);
   const files: Record<string, string> = {};
   const styles = new Map<string, string>();
+  const imported = new Map<string, string[]>();
   for (const path of upstreamFiles) {
     if (!path.startsWith(`${upstream}/`)) {
       continue;
@@ -94,15 +119,40 @@ export function readUpstreamDemos(
     files[local] = sha256(text);
     if (local.endsWith('.css')) {
       styles.set(local, text);
+    } else if (/\.tsx?$/.test(local) && local.includes('/')) {
+      const demo = local.slice(0, local.indexOf('/'));
+      imported.set(demo, [...(imported.get(demo) ?? []), ...importedEntryPoints(text, name)]);
     }
   }
-  return { record: { commit: family.matchedCommit, upstream, files }, styles };
+  const entryPoints = Object.fromEntries(
+    [...imported]
+      .filter(([, names]) => names.length > 0)
+      .map(([demo, names]): [string, string[]] => [demo, sortedUnique(names)])
+      .sort(([a], [b]) => a.localeCompare(b, 'en')),
+  );
+  return {
+    record: {
+      commit: family.matchedCommit,
+      upstream,
+      files,
+      ...(Object.keys(entryPoints).length > 0 ? { entryPoints } : {}),
+    },
+    styles,
+  };
 }
 
 /** The files that the command writes, by their path from the repository root. */
-export function expectedFiles(name: string, demos: UpstreamDemos): Map<string, string> {
+export async function expectedFiles(
+  name: string,
+  demos: UpstreamDemos,
+): Promise<Map<string, string>> {
+  // Prettier sets the line breaks of the arrays. The record then passes `prettier --check`.
+  const record = await format(JSON.stringify(demos.record, null, 2), {
+    ...(await resolveConfig(join(REPOSITORY_ROOT, recordPath(name)))),
+    parser: 'json',
+  });
   return new Map([
-    [recordPath(name), `${JSON.stringify(demos.record, null, 2)}\n`],
+    [recordPath(name), record],
     ...[...demos.styles].map(([path, text]): [string, string] => [
       `${demosFolder(name)}/${path}`,
       text,
@@ -110,8 +160,12 @@ export function expectedFiles(name: string, demos: UpstreamDemos): Map<string, s
   ]);
 }
 
-/** Checks the records and the copied style sheets of the families against each other. Each problem says what to do. */
-export function checkDemos(families: DemoFamily[]): string[] {
+/**
+ * Checks the records and the copied style sheets of the families against each other. Each problem
+ * says what to do. `entryPoints` holds the names of the entry points that Vase UI has. A demo
+ * with no Vue file waits while an entry point that it imports is not among them.
+ */
+export function checkDemos(families: DemoFamily[], entryPoints: ReadonlySet<string>): string[] {
   const problems: string[] = [];
   for (const { name, matchedCommit, record, files } of families) {
     const folder = demosFolder(name);
@@ -150,7 +204,13 @@ export function checkDemos(families: DemoFamily[]): string[] {
     }
     for (const path of Object.keys(record.files)) {
       const demo = /^(.+)\/css-modules\/index\.tsx$/.exec(path)?.[1];
-      if (demo !== undefined && !files.has(`${demo}/css-modules/index.vue`)) {
+      if (demo === undefined || files.has(`${demo}/css-modules/index.vue`)) {
+        continue;
+      }
+      const waits = (record.entryPoints?.[demo] ?? []).some(
+        (entryPoint) => !entryPoints.has(entryPoint),
+      );
+      if (!waits) {
         problems.push(
           `${folder}/${demo}/css-modules/index.vue does not exist. Base UI has the demo ${demo}. Port it.`,
         );
@@ -181,6 +241,16 @@ export function demoFamilyNames(root: string): string[] {
     : [];
   const pages = listFamilyPages(join(root, 'docs')).map(({ family }) => family);
   return [...new Set([...pages, ...folders])].sort((a, b) => a.localeCompare(b, 'en'));
+}
+
+/** The names of the entry points of Vase UI: the folders of the source that have an `index.ts`. */
+export function loadEntryPoints(root: string): Set<string> {
+  const source = join(root, VASE_SOURCE_ROOT);
+  return new Set(
+    readdirSync(source, { withFileTypes: true })
+      .filter((item) => item.isDirectory() && existsSync(join(source, item.name, 'index.ts')))
+      .map((item) => item.name),
+  );
 }
 
 function readFamilyFiles(root: string): FamilyFiles[] {
@@ -216,7 +286,7 @@ export function loadDemoFamilies(root: string): DemoFamily[] {
   });
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
     options: { upstream: { type: 'string' }, check: { type: 'boolean' } },
@@ -236,7 +306,7 @@ function main(): void {
     const demos = readUpstreamDemos(name, family, listFiles(clone, commit), (path) =>
       readFileAt(clone, commit, path),
     );
-    for (const [path, text] of expectedFiles(name, demos)) {
+    for (const [path, text] of await expectedFiles(name, demos)) {
       const file = join(REPOSITORY_ROOT, path);
       if (!values.check) {
         mkdirSync(dirname(file), { recursive: true });
@@ -255,7 +325,7 @@ function main(): void {
 
 if (import.meta.main) {
   try {
-    main();
+    await main();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

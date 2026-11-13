@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/utils/merge-props/demos",
+  "files": {
+    "prevent-base-ui-handler/css-modules/index.module.css": "01c18074e777fe83dd9a828671bd5ac25bbe68cbf2a1d93fa94a9c09c1daadaf",
+    "prevent-base-ui-handler/css-modules/index.tsx": "5a95a61ca87f9c5fbba4a1fccafa04d156295406300acbc83e4fadc8e1d5c906"
+  },
+  "entryPoints": {
+    "prevent-base-ui-handler": ["toggle"]
+  }
+}
