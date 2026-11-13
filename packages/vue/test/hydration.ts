@@ -128,6 +128,8 @@ function serializeChildren(element: Element): string {
 // `style` is the style that the browser parsed, and an empty style has no attribute.
 // Vue writes `border:0` on a server and does not patch `style` when it hydrates.
 // A browser writes `border: 0px` for a client-only render.
+// An empty `class` has no attribute. For an undefined `class` on a root element, Vue writes no
+// attribute on a server and `class=""` on a client.
 function serialize(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.nodeValue ?? '';
@@ -141,7 +143,7 @@ function serialize(node: Node): string {
     name,
     value: name === 'style' ? element.style.cssText : value,
   }))
-    .filter(({ name, value }) => name !== 'style' || value !== '')
+    .filter(({ name, value }) => !((name === 'style' || name === 'class') && value === ''))
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const tag = element.localName;
   const attributeText = attributes.map(({ name, value }) => ` ${name}="${value}"`).join('');
