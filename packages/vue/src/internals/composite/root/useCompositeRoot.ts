@@ -308,6 +308,9 @@ export function useCompositeRoot<Metadata>(
   //   different items. The item gives `data-allow-mismatch` while it hydrates, so Vue reports no
   //   mismatch. After the mount, Vue writes the `tabindex` again and the DOM follows the
   //   highlighted index.
+  // An item that is mounted after its root keeps the `tabindex` of the server HTML until its own
+  // mount. If the server HTML has the tab stop on that item, the list has two tab stops from the
+  // mount of the root until the mount of that item.
   // The server HTML has no tab stop in three cases.
   // - `hasActiveItem` is `true` and no item is active.
   // - Each item is disabled.
