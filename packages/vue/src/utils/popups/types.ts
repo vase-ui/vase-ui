@@ -50,8 +50,9 @@ export interface PopupInteractionReader {
 
 /**
  * Plain values that the interaction composables of one popup share.
- * A detached trigger uses an inert store before a root attaches. That store freezes its context, so
- * code that can run against it only reads these fields.
+ * A detached trigger uses an inert store before a root attaches, and `getEmptyRootStore` gives
+ * another. Both stores freeze their context, so code that can run against them only reads these
+ * fields.
  */
 export interface PopupInteractionContext {
   readonly events: PopupEvents;
