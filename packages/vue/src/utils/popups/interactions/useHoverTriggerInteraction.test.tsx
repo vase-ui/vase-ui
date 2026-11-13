@@ -41,7 +41,15 @@ describe('useHoverTriggerInteraction', () => {
   });
 
   // The setup of the cases that give the listeners to a wrapper of the trigger. The popup is open.
-  function useWrapped(onOpenChange: (open: boolean, details: unknown) => void) {
+  function useWrapped(
+    onOpenChange: (open: boolean, details: unknown) => void,
+    options: UseHoverTriggerInteractionProps = {
+      mouseOnly: true,
+      restMs: 100,
+      delay: { close: 0 },
+      move: false,
+    },
+  ) {
     const open = shallowRef(true);
     const triggerElement = shallowRef<Element | null>(null);
     const { refs, context } = useFloating({
@@ -52,10 +60,7 @@ describe('useHoverTriggerInteraction', () => {
       },
     });
     const hoverProps = useHoverTriggerInteraction(context.rootStore, {
-      mouseOnly: true,
-      restMs: 100,
-      delay: { close: 0 },
-      move: false,
+      ...options,
       triggerElement,
     });
     // A function ref that registers the element of a trigger. Vue calls it with `null` at unmount.
@@ -213,6 +218,7 @@ describe('useHoverTriggerInteraction', () => {
             // Simulate active close transition lifecycle while closed.
             context.rootStore.set('transitionStatus', nextOpen ? undefined : 'ending');
           },
+          { mouseOnly: true, move: false, delay: { open: 500, close: 0 } },
         );
 
         closeFromHover = () => {
