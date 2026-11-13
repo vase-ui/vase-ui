@@ -4,6 +4,7 @@ import type { VaseUIChangeEventDetails } from '../internals/createBaseUIEventDet
 import type { UseFieldValidationReturnValue } from '../internals/field-root-context/FieldRootContext';
 import type { LabelableContext } from '../internals/labelable-provider/LabelableContext';
 import type { VaseUIEventReasons } from '../internals/reasons';
+import type { UseCheckboxGroupParentReturnValue } from './useCheckboxGroupParent';
 
 export interface CheckboxGroupContext {
   value: ComputedRef<string[]>;
@@ -11,6 +12,11 @@ export interface CheckboxGroupContext {
     value: string[],
     eventDetails: VaseUIChangeEventDetails<VaseUIEventReasons['none']>,
   ) => void;
+  /**
+   * The names of all checkboxes in the group. A group that has them has a parent checkbox.
+   */
+  allValues: ComputedRef<string[] | undefined>;
+  parent: UseCheckboxGroupParentReturnValue;
   disabled: ComputedRef<boolean>;
   validation: UseFieldValidationReturnValue;
   /**

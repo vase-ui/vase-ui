@@ -10,14 +10,6 @@
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />"],
-      "title": "re-associates the label when a CheckboxGroup is replaced by another control",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
       "title": "does not set `aria-labelledby` during SSR when Field.Label is absent",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
@@ -54,14 +46,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
       "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />"],
-      "title": "keeps the group label suppressed while its subtree is hidden",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -132,14 +116,6 @@
       "prop": "validationMode",
       "kind": "not-applicable",
       "reason": "The row gives the default `'onSubmit'`. The part has no Vue default: a prop that is absent takes the `validationMode` of the form, and `'onSubmit'` with no form, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
-      "describe": ["<Field.Item />"],
-      "title": "associates a Field.Item label with a parent checkbox",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [

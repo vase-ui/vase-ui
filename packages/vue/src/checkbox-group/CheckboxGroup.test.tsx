@@ -13,13 +13,16 @@ import {
   isJSDOM,
   renderOnServer,
   screen,
+  waitFor,
 } from '#test-utils';
 import CheckboxGroupHydration from './CheckboxGroupHydration.test.vue';
+import CheckboxGroupParentHydration from './CheckboxGroupParentHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type FormInstance = { element: HTMLFormElement | null };
 
 const HYDRATION_FIXTURE = 'src/checkbox-group/CheckboxGroupHydration.test.vue';
+const PARENT_HYDRATION_FIXTURE = 'src/checkbox-group/CheckboxGroupParentHydration.test.vue';
 
 // A container that a case gives to a `Teleport`. The container leaves the document with the case.
 function createPortalContainer() {
@@ -297,6 +300,76 @@ describe('<CheckboxGroup />', () => {
       expect(red).toHaveAttribute('aria-checked', 'true');
       expect(green).toHaveAttribute('aria-checked', 'true');
       expect(blue).toHaveAttribute('aria-checked', 'false');
+    });
+
+    it('keeps omitted defaults isolated between groups in Strict Mode', async () => {
+      const { user } = await render(
+        <>
+          <CheckboxGroup allValues={['a-1', 'a-2']}>
+            <Checkbox.Root parent data-testid="a-parent" />
+            <Checkbox.Root value="a-1" data-testid="a-1" />
+            <Checkbox.Root value="a-2" data-testid="a-2" />
+          </CheckboxGroup>
+          <CheckboxGroup allValues={['b-1', 'b-2']}>
+            <Checkbox.Root parent data-testid="b-parent" />
+            <Checkbox.Root value="b-1" data-testid="b-1" />
+            <Checkbox.Root value="b-2" data-testid="b-2" />
+          </CheckboxGroup>
+        </>,
+      );
+
+      const aParent = screen.getByTestId('a-parent');
+      const a1 = screen.getByTestId('a-1');
+      const a2 = screen.getByTestId('a-2');
+      const bParent = screen.getByTestId('b-parent');
+      const b1 = screen.getByTestId('b-1');
+      const b2 = screen.getByTestId('b-2');
+
+      await user.click(a1);
+      expect(aParent).toHaveAttribute('aria-checked', 'mixed');
+      expect(bParent).toHaveAttribute('aria-checked', 'false');
+      expect(b1).toHaveAttribute('aria-checked', 'false');
+      expect(b2).toHaveAttribute('aria-checked', 'false');
+
+      await user.click(bParent);
+      expect(b1).toHaveAttribute('aria-checked', 'true');
+      expect(b2).toHaveAttribute('aria-checked', 'true');
+      expect(a1).toHaveAttribute('aria-checked', 'true');
+      expect(a2).toHaveAttribute('aria-checked', 'false');
+
+      await user.click(aParent);
+      expect(a1).toHaveAttribute('aria-checked', 'true');
+      expect(a2).toHaveAttribute('aria-checked', 'true');
+      expect(bParent).toHaveAttribute('aria-checked', 'true');
+
+      await user.click(b1);
+      expect(bParent).toHaveAttribute('aria-checked', 'mixed');
+      expect(aParent).toHaveAttribute('aria-checked', 'true');
+    });
+  });
+
+  describe('prop: allValues', () => {
+    it('gives the parent its state from the new names when they change', async () => {
+      const allValues = shallowRef(['a']);
+      await render(() => (
+        <CheckboxGroup allValues={allValues.value} defaultValue={['a']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <Checkbox.Root value="a" />
+          <Checkbox.Root value="b" />
+        </CheckboxGroup>
+      ));
+      const parent = screen.getByTestId('parent');
+      const getInput = () => document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+
+      expect(parent).toHaveAttribute('aria-checked', 'true');
+
+      allValues.value = ['a', 'b'];
+      await flushMicrotasks();
+
+      expect(parent).toHaveAttribute('aria-checked', 'mixed');
+      expect(parent).toHaveAttribute('data-indeterminate', '');
+      expect(getInput().indeterminate).toBe(true);
+      expect(parent).toHaveAttribute('aria-controls');
     });
   });
 
@@ -758,6 +831,30 @@ describe('<CheckboxGroup />', () => {
       checkboxes.forEach((checkbox) => expect(checkbox).toHaveAttribute('aria-invalid', 'true'));
     });
 
+    it('validates with the group value when toggling the parent checkbox', async () => {
+      const validateSpy = vi.fn((_value: unknown) => null);
+
+      const { user } = await render(
+        <Field.Root validationMode="onChange" validate={validateSpy} name="fruits">
+          <CheckboxGroup allValues={['apple', 'orange']}>
+            <Checkbox.Root parent data-testid="parent" />
+            <Checkbox.Root value="apple" />
+            <Checkbox.Root value="orange" />
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      const parent = screen.getByTestId('parent');
+
+      await user.click(parent);
+      expect(validateSpy).toHaveBeenCalledTimes(1);
+      expect(validateSpy.mock.lastCall?.[0]).toEqual(['apple', 'orange']);
+
+      await user.click(parent);
+      expect(validateSpy).toHaveBeenCalledTimes(2);
+      expect(validateSpy.mock.lastCall?.[0]).toEqual([]);
+    });
+
     it('revalidates when the controlled value changes externally', async () => {
       const validateSpy = vi.fn((value: unknown) => {
         const values = value as string[];
@@ -869,6 +966,21 @@ describe('<CheckboxGroup />', () => {
     }
 
     it.each([false, true])(
+      'keeps checkbox ids unique when the group shares one Field.Root (nativeButton=%s)',
+      async (nativeButton) => {
+        await render(<CheckboxGroupParentHydration nativeButton={nativeButton} />);
+
+        expectUniqueIds(nativeButton ? 4 : 7);
+        // Queried without `hidden`, so the relationship has to reach the exposed checkboxes
+        // rather than the hidden inputs behind them.
+        expect(screen.getByTestId('parent').getAttribute('aria-controls')!.split(' ')).toEqual([
+          screen.getByTestId('fuji').id,
+          screen.getByTestId('gala').id,
+        ]);
+      },
+    );
+
+    it.each([false, true])(
       'keeps ids unique without allValues in a shared Field.Root (nativeButton=%s)',
       async (nativeButton) => {
         const checkboxProps = { nativeButton, as: nativeButton ? 'button' : undefined };
@@ -884,6 +996,90 @@ describe('<CheckboxGroup />', () => {
         );
 
         expectUniqueIds(nativeButton ? 3 : 5);
+      },
+    );
+
+    // The suppression runs after the mount, so the server HTML still has the `for` that the
+    // provider resolved before the group registered.
+    it('labels the group rather than pointing Field.Label at one checkbox inside it', async () => {
+      const serverHtml = await renderOnServer(PARENT_HYDRATION_FIXTURE);
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+
+      expect(template.content.querySelector('[data-testid="label"]')?.hasAttribute('for')).toBe(
+        true,
+      );
+
+      const { container } = await hydrate(CheckboxGroupParentHydration, { serverHtml });
+      const label = container.querySelector('[data-testid="label"]')!;
+
+      expect(label).not.toHaveAttribute('for');
+      expect(container.querySelector('[data-testid="group"]')).toHaveAttribute(
+        'aria-labelledby',
+        label.id,
+      );
+    });
+
+    it('gives each checkbox in a shared Field.Root its own accessible name', async () => {
+      await render(
+        <Field.Root name="apples">
+          <CheckboxGroup allValues={['fuji', 'gala']}>
+            <label>
+              <Checkbox.Root parent data-testid="parent" />
+              All
+            </label>
+            <label>
+              <Checkbox.Root value="fuji" data-testid="fuji" />
+              Fuji
+            </label>
+            <label>
+              <Checkbox.Root value="gala" data-testid="gala" />
+              Gala
+            </label>
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      ['All', 'Fuji', 'Gala'].forEach((name, index) => {
+        const testId = ['parent', 'fuji', 'gala'][index];
+        const labelId = screen.getByTestId(testId).getAttribute('aria-labelledby')!;
+        expect(document.getElementById(labelId)).toHaveTextContent(name);
+      });
+    });
+
+    it.each([false, true])(
+      'points parent aria-controls at the children once they register (nativeButton=%s)',
+      async (nativeButton) => {
+        const props = { variant: 'items', nativeButton } as const;
+        const serverHtml = await renderOnServer(PARENT_HYDRATION_FIXTURE, props);
+        const template = document.createElement('template');
+        template.innerHTML = serverHtml;
+
+        const parent = template.content.querySelector('[data-testid="parent"]')!;
+        const fuji = template.content.querySelector('[data-testid="fuji"]')!;
+        const labels = template.content.querySelectorAll('[data-testid="label"]');
+
+        // Server markup claims nothing: the parent can't control a child that hasn't mounted.
+        expect(parent.hasAttribute('aria-controls')).toBe(false);
+
+        // Each label must reach its own item's labelable element: the button itself with
+        // `nativeButton`, the hidden input rendered next to it otherwise.
+        [parent, fuji].forEach((control, index) => {
+          const labelable = nativeButton ? control : control.nextElementSibling;
+          expect(labelable).not.toBe(null);
+          expect(labels[index].getAttribute('for')).toBe(labelable!.id);
+        });
+
+        const { container } = await hydrate(CheckboxGroupParentHydration, { serverHtml, props });
+
+        // Queried without `hidden`, so the relationship has to reach the exposed checkbox
+        // rather than the hidden input behind it.
+        await waitFor(() => {
+          expect(container.querySelector('[data-testid="parent"]')).toHaveAttribute(
+            'aria-controls',
+            container.querySelector('[data-testid="fuji"]')!.id,
+          );
+        });
       },
     );
 
@@ -1890,6 +2086,39 @@ describe('<CheckboxGroup />', () => {
       expect(screen.getByTestId('second')).toHaveFocus();
     });
 
+    it('focuses the first child checkbox instead of a parent checkbox for Form errors', async () => {
+      const App = defineComponent(() => {
+        const errors = shallowRef<Form.Props['errors']>({});
+
+        return () => (
+          <Form
+            errors={errors.value}
+            onSubmit={(event: SubmitEvent) => {
+              event.preventDefault();
+              errors.value = { group: 'server error' };
+            }}
+          >
+            <Field.Root name="group">
+              <CheckboxGroup defaultValue={[]} allValues={['one', 'two']}>
+                <Checkbox.Root parent data-testid="parent" />
+                <Checkbox.Root value="one" data-testid="first" />
+                <Checkbox.Root value="two" />
+              </CheckboxGroup>
+              <Field.Error />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      await user.click(screen.getByText('Submit'));
+
+      expect(screen.getByTestId('first')).toHaveFocus();
+      expect(screen.getByTestId('parent')).not.toHaveFocus();
+    });
+
     it('focuses a later invalid field when an inputless group is invalid without a control', async () => {
       const { user } = await render(
         <Form>
@@ -1927,6 +2156,64 @@ describe('<CheckboxGroup />', () => {
       await user.click(screen.getByText('Submit'));
 
       expect(screen.getByTestId('email')).toHaveFocus();
+    });
+
+    it('excludes parent checkboxes from form submission', async () => {
+      const allValues = ['fuji-apple', 'gala-apple', 'granny-smith-apple'];
+
+      const App = defineComponent(() => {
+        const value = shallowRef<string[]>(['fuji-apple', 'gala-apple']);
+        return () => (
+          <Form
+            onSubmit={(event: SubmitEvent) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget as HTMLFormElement);
+              expect(formData.getAll('apple')).toEqual([
+                'fuji-apple',
+                'gala-apple',
+                'granny-smith-apple',
+              ]);
+            }}
+          >
+            <Field.Root name="apple">
+              <CheckboxGroup
+                value={value.value}
+                onValueChange={(nextValue: string[]) => {
+                  value.value = nextValue;
+                }}
+                allValues={allValues}
+              >
+                <Field.Item>
+                  <Checkbox.Root parent />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="fuji-apple" />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="gala-apple" />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="granny-smith-apple" />
+                </Field.Item>
+              </CheckboxGroup>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      const [parentCheckbox, , , checkbox3] = screen.getAllByRole('checkbox');
+
+      expect(parentCheckbox).toHaveAttribute('aria-checked', 'mixed');
+
+      await user.click(checkbox3);
+
+      expect(parentCheckbox).toHaveAttribute('aria-checked', 'true');
+
+      const submit = screen.getByText('Submit');
+      await fireEvent.click(submit);
     });
 
     it('appends the id attribute of the error to aria-describedby of individual checkboxes', async () => {
@@ -2804,6 +3091,44 @@ describe('<CheckboxGroup />', () => {
       const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
 
       await hydrate(CheckboxGroupHydration, { serverHtml, props });
+    });
+
+    it.each([
+      { name: 'a parent with no child on', props: {} },
+      { name: 'a parent with one child on', props: { defaultValue: ['fuji'] } },
+      { name: 'a parent with each child on', props: { defaultValue: ['fuji', 'gala'] } },
+      { name: 'a parent in an item with a label', props: { variant: 'items' as const } },
+      {
+        name: 'a parent that is a native button',
+        props: { defaultValue: ['fuji'], nativeButton: true },
+      },
+    ])('hydrates $name with no mismatch', async ({ props }) => {
+      const serverHtml = await renderOnServer(PARENT_HYDRATION_FIXTURE, props);
+
+      await hydrate(CheckboxGroupParentHydration, { serverHtml, props });
+    });
+
+    it('writes `indeterminate` to the input of the parent and lists the children after the mount', async () => {
+      const props = { defaultValue: ['fuji'] };
+      const serverHtml = await renderOnServer(PARENT_HYDRATION_FIXTURE, props);
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+
+      expect(
+        template.content.querySelector('[data-testid="parent"]')?.hasAttribute('aria-controls'),
+      ).toBe(false);
+
+      const { container } = await hydrate(CheckboxGroupParentHydration, { serverHtml, props });
+      const parent = container.querySelector('[data-testid="parent"]')!;
+
+      expect(parent).toHaveAttribute('aria-checked', 'mixed');
+      expect(
+        container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.indeterminate,
+      ).toBe(true);
+      expect(parent).toHaveAttribute(
+        'aria-controls',
+        `${container.querySelector('[data-testid="fuji"]')!.id} ${container.querySelector('[data-testid="gala"]')!.id}`,
+      );
     });
 
     it('has the `for` of the provider on the label in the server HTML, and drops it after the mount', async () => {
