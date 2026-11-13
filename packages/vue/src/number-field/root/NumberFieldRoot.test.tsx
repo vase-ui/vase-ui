@@ -877,6 +877,36 @@ describe('<NumberField />', () => {
       expect(screen.getByTestId('error')).toHaveTextContent('Enter a number');
     });
 
+    it('keeps the root that mounted last as the input of the field when an earlier root renders again', async () => {
+      const showSecond = shallowRef(false);
+      const step = shallowRef(1);
+      let field = null as FieldRootInstance | null;
+      await render(() => (
+        <Field.Root
+          ref={(instance) => {
+            field = instance as FieldRootInstance | null;
+          }}
+        >
+          <NumberField.Root step={step.value} />
+          {showSecond.value ? <NumberField.Root required /> : null}
+          <Field.Error match="valueMissing" data-testid="error">
+            Enter a number
+          </Field.Error>
+        </Field.Root>
+      ));
+      showSecond.value = true;
+      await flushMicrotasks();
+      // The first root patches its input again, with the same element.
+      step.value = 2;
+      await flushMicrotasks();
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      field!.validate();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Enter a number');
+    });
+
     describe('VUE-21: a native reset clears the error of the field', () => {
       beforeEach(() => {
         vi.useFakeTimers();

@@ -288,6 +288,10 @@ let ownHiddenInput: HTMLInputElement | null = null;
 
 function setHiddenInputElement(next: unknown) {
   const input = next as HTMLInputElement | null;
+  // Vue calls a function ref again on each patch, with the same element.
+  if (input === ownHiddenInput) {
+    return;
+  }
   if (input !== null || validation.inputRef.value === ownHiddenInput) {
     validation.inputRef.value = input;
   }
