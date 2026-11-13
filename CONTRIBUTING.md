@@ -464,7 +464,7 @@ A part that binds the id of a part that comes after it:
 - The part that binds the attribute makes the call. A call in a component around it does not help.
 - Make the call with no condition on the environment. Vue makes a component that has the hook a boundary for `useId`, on a server and in a browser. With the hook only on a server, a part below the part gets another id in the browser. Vue then reports a hydration mismatch.
 - A part that defers assumes nothing. With no registered id, it has no attribute.
-- A part after the control that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The control gets the id of that part after the page hydrates.
+- A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 
 The label of a root:
 
