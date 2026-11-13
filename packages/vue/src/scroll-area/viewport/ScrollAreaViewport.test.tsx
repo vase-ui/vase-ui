@@ -540,15 +540,18 @@ describe('<ScrollArea.Viewport />', () => {
 
       await renderWithFakeTimers(<App />);
       const viewport = screen.getByTestId('viewport');
+      // The count after the mount holds the animation wait timer of the viewport. It can also hold
+      // a timer of Vue: the first app of a page starts one in a development build. So the test
+      // compares counts. The scroll adds the scroll end timer. The deactivation must remove the
+      // two timers of the viewport.
+      const timersAfterMount = vi.getTimerCount();
 
       await fireEvent.scroll(viewport, { target: { scrollTop: 100 } });
 
       expect(viewport).toHaveAttribute('data-overflow-y-start');
       expect(observe).toHaveBeenCalledTimes(1);
       expect(disconnect).not.toHaveBeenCalled();
-      // The scroll end timer and the animation wait timer of the viewport are pending. The fake
-      // clock does not move, so no timer has run.
-      expect(vi.getTimerCount()).toBe(2);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       // The pointer move makes the next scroll a user scroll. The deactivation must end that state,
       // as the scroll end timer does.
@@ -557,7 +560,7 @@ describe('<ScrollArea.Viewport />', () => {
       await nextTick();
 
       expect(disconnect).toHaveBeenCalledTimes(1);
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount - 1);
 
       visible.value = true;
       await nextTick();
