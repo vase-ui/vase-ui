@@ -1,0 +1,134 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/checkbox/**",
+    "docs/src/app/(docs)/react/components/checkbox/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Checkbox.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "The file tests `Checkbox.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/indicator/CheckboxIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Checkbox.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.react17.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The file tests the id paths for React 17. It mocks `SafeReact`, so that React has no `useId`. Vue `useId` gives the ids."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRootContext.ts",
+      "kind": "waits-on",
+      "reason": "Only `Checkbox.Indicator` reads the context, and Vase UI does not have it. The pull request that adds the indicator adds the context."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "prop: indeterminate"],
+      "title": "sets indeterminate style hooks on the root and indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "The case renders `Checkbox.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "prop: indeterminate"],
+      "title": "sets grouped parent aria when manually indeterminate",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "prop: indeterminate"],
+      "title": "sets grouped parent native input state when manually indeterminate",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />"],
+      "title": "should place the style hooks on the root and the indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "The case renders `Checkbox.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "with native <label>"],
+      "title": "assigns an input id to a valueless child in a parent checkbox group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "with native <label>"],
+      "title": "assigns a root id to a valueless native button in a parent checkbox group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />", "Field", "[data-filled]"],
+      "title": "adds [data-filled] attribute when any checkbox is filled when inside a group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
+      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "describe": ["<Checkbox.Root />"],
+      "title": "prefers a render element's `aria-label` over an associated label",
+      "kind": "not-applicable",
+      "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
+      "entry": "Indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "Vase UI does not have `Checkbox.Indicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
+      "entry": "CheckboxIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+      "reason": "The data attributes belong to `Checkbox.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
+      "entry": "Root",
+      "prop": "parent",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The prop makes the parent checkbox of a `CheckboxGroup`, which Vase UI does not have."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "ariaLabel",
+      "reason": "The part reads `aria-label` to find out if a label names the checkbox, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "prop": "ariaLabelledby",
+      "reason": "The part reads `aria-labelledby` to find out if a label names the checkbox, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
