@@ -165,7 +165,7 @@ export function useHoverTriggerInteraction(
   watch([enabled, () => toValue(store).context.events], listenToOpenChange);
   onScopeDispose(() => stopListening?.());
 
-  watch([enabled, move, mouseOnly, tree], () => {
+  watch([enabled, move, mouseOnly, tree, intent], () => {
     moveCountsAsEnter = true;
   });
 

@@ -351,6 +351,30 @@ describe('useHoverTriggerInteraction', () => {
       return { App, calls, getStore: () => store };
     }
 
+    // A trigger that moves from the first store to the second store when `second` is `true`.
+    // `opened` lists the store that gets each open request.
+    function createStoreChangeApp(options: UseHoverTriggerInteractionProps = {}) {
+      const second = shallowRef(false);
+      const opened: string[] = [];
+      const App = defineComponent({
+        setup() {
+          const stores = {
+            first: useFloating({ onOpenChange: () => opened.push('first') }).context.rootStore,
+            second: useFloating({ onOpenChange: () => opened.push('second') }).context.rootStore,
+          };
+          const store = computed(() => (second.value ? stores.second : stores.first));
+          const hoverProps = useHoverTriggerInteraction(store, options);
+          return () => (
+            <div style={NO_POINTER_EVENTS}>
+              <button data-testid="trigger" {...hoverProps} />
+            </div>
+          );
+        },
+      });
+
+      return { App, second, opened };
+    }
+
     // `KeepAlive` deactivates the app while `Other` shows. It does not unmount the app.
     const Other = defineComponent({ setup: () => () => <p>other</p> });
 
@@ -483,6 +507,18 @@ describe('useHoverTriggerInteraction', () => {
         expect(isOpen()).toBe(true);
       },
     );
+
+    it('the first mousemove of a period counts as an enter again after a change of the store', async () => {
+      const { App, second, opened } = createStoreChangeApp();
+      await render(<App />);
+      await fireEvent.mouseMove(getTrigger());
+
+      second.value = true;
+      await flushMicrotasks();
+      await fireEvent.mouseMove(getTrigger());
+
+      expect(opened).toEqual(['first', 'second']);
+    });
 
     it('stops the open delay when the trigger unmounts', async () => {
       const { App, calls } = createHoverApp({ delay: 500 });
@@ -765,23 +801,7 @@ describe('useHoverTriggerInteraction', () => {
     });
 
     it('stops the open delay of the old store when the store changes', async () => {
-      const second = shallowRef(false);
-      const opened: string[] = [];
-      const App = defineComponent({
-        setup() {
-          const stores = {
-            first: useFloating({ onOpenChange: () => opened.push('first') }).context.rootStore,
-            second: useFloating({ onOpenChange: () => opened.push('second') }).context.rootStore,
-          };
-          const store = computed(() => (second.value ? stores.second : stores.first));
-          const hoverProps = useHoverTriggerInteraction(store, { delay: 500 });
-          return () => (
-            <div style={NO_POINTER_EVENTS}>
-              <button data-testid="trigger" {...hoverProps} />
-            </div>
-          );
-        },
-      });
+      const { App, second, opened } = createStoreChangeApp({ delay: 500 });
       await render(<App />);
       const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
