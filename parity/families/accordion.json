@@ -1,0 +1,216 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/accordion/**",
+    "docs/src/app/(docs)/react/components/accordion/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Accordion.Panel`."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanelCssVars.ts",
+      "kind": "waits-on",
+      "reason": "The file has the CSS variables of `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanelDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "The file has the data attributes of `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/panel/AccordionPanel.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the file renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />"],
+      "title": "warns when hiddenUntilFound overrides keepMounted={false}",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have. It also sets `hiddenUntilFound` and `keepMounted` on the root, and only the panel reads them."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "ARIA attributes"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "uncontrolled"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "controlled"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "prop: disabled"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "keyboard interactions"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "keyboard activation timing"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "BaseUIChangeEventDetails"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "prop: multiple"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />", "prop: onValueChange"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Each case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/root/AccordionRoot.test.tsx",
+      "describe": ["<Accordion.Root />"],
+      "title": "allows onMouseUp to call preventBaseUIHandler on the trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/item/AccordionItem.test.tsx",
+      "describe": ["<Accordion.Item />", "state"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case of the block renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "describe": ["<Accordion.Trigger />"],
+      "title": "renders the disabled attribute when disabled",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "describe": ["<Accordion.Trigger />"],
+      "title": "adds data-disabled when only the trigger is disabled",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "describe": ["<Accordion.Trigger />"],
+      "title": "keeps a non-native trigger tabbable",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "describe": ["<Accordion.Trigger />"],
+      "title": "does not render the root value as data-value",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/accordion/trigger/AccordionTrigger.test.tsx",
+      "describe": ["<Accordion.Trigger />"],
+      "title": "keeps data-panel-open instead of data-open",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The case renders `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Root",
+      "prop": "hiddenUntilFound",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Only `Accordion.Panel` reads the prop, and Vase UI does not have that part."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Root",
+      "prop": "keepMounted",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Only `Accordion.Panel` reads the prop, and Vase UI does not have that part."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Panel",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "Vase UI does not have `Accordion.Panel`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionPanelCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The entry has the CSS variables of `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "AccordionPanelDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/accordion/panel/AccordionPanel.tsx",
+      "reason": "The entry has the data attributes of `Accordion.Panel`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Root",
+      "prop": "loopFocus",
+      "kind": "not-applicable",
+      "reason": "Base UI deprecated the prop, and it has no effect. `parity/scope.json` lists it as not ported."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/accordion/types.md",
+      "entry": "Root",
+      "prop": "orientation",
+      "kind": "not-applicable",
+      "reason": "Base UI deprecated the prop, and it does not change the keyboard. `parity/scope.json` lists it as not ported. The state keeps `orientation` with the default value of Base UI, `vertical`, so each part has `data-orientation=\"vertical\"`."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
