@@ -1,0 +1,8 @@
+{
+  "id": "VUE-10",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/element.ts#L22-L26"
+  ],
+  "behavior": "The check of an event target reads the disabled state of the innermost trigger that contains the target, in each order of registration. Base UI reads the first trigger of the map that contains the target. An outer trigger that registered first then decides for a target in an inner trigger that registered later.",
+  "dueWith": "packages/react/src/utils/popups/element.ts"
+}
