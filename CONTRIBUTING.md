@@ -516,6 +516,11 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - A function that a render function or a ref callback calls reads `toRaw(store.state)`. That read adds no dependency. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
+- A handle holds an inert `NullStore` and a `shallowRef` that points at the store of the root that controls the handle. A `computed` that reads `handle.store`, or a getter such as `isOpen` that reads the state of that store, follows the pointer.
+- A root attaches its store to its handle in `onBeforeMount`. `attachStore` returns the function that detaches the store. A server does not call `onBeforeMount`, so a server render writes nothing to a handle that all requests share. Do not attach in `setup`.
+- A trigger that has a handle calls `usePopupHandleStore(() => props.handle)` in `setup`. The result is the inert store of the handle while the trigger hydrates, and then the store that the handle points at. Hydration does not patch an attribute, so a trigger that reads the store of the root while it hydrates keeps the attribute values of the server HTML.
+- When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
+- `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Composite

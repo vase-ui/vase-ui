@@ -16,16 +16,6 @@
       "reason": "The pull request that adds the open change rules of the popup store ports the file."
     },
     {
-      "upstream": "packages/react/src/utils/popups/popupHandle.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the popup handle ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/usePopupHandleStore.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the popup handle ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/popupStoreUtils.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the registration of a popup trigger ports the file."
@@ -106,9 +96,10 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "describe": ["concrete popup handles"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/popupHandle.ts",
-      "reason": "The file tests `popupHandle.ts`."
+      "waitsOn": "packages/react/src/menu/store/MenuHandle.ts",
+      "reason": "The cases run for the handles of Alert Dialog, Dialog, Menu, Popover, Preview Card and Tooltip, which Vase UI does not have. Menu comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/utils/popups/popupRoot.test.tsx",
