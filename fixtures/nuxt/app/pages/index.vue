@@ -12,6 +12,7 @@
       <li><NuxtLink to="/avatar">Avatar</NuxtLink></li>
       <li><NuxtLink to="/toolbar">Toolbar</NuxtLink></li>
       <li><NuxtLink to="/toggle-group">Toggle Group</NuxtLink></li>
+      <li><NuxtLink to="/switch">Switch</NuxtLink></li>
       <li><NuxtLink to="/scroll-area">Scroll Area</NuxtLink></li>
       <li><NuxtLink to="/field">Field</NuxtLink></li>
       <li><NuxtLink to="/tabs">Tabs</NuxtLink></li>

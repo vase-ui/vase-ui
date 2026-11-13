@@ -263,6 +263,26 @@ A part whose own node is text, such as `Progress.Value`, has four more rules:
 - Do not write an interpolation that can be empty. Do not render a `<slot>` that the consumer did not give. A client-only render then leaves empty text nodes in the element, and `toBeEmptyDOMElement` fails. A `v-if` chain that renders nothing leaves one comment, and the matcher ignores a comment.
 - Give `describeConformance` no `childrenSelector` for such a part, because a selector cannot match a text node. Add a case that mounts `children` in the `#render` slot and compares the text.
 
+### Parts with a hidden input
+
+Some upstream parts render a hidden `<input>` beside their element. `Switch.Root` is the model. The input gives the part the form behavior of a native control.
+
+- The part has more than one root node: its element, then its inputs. The inputs are not in the element. An `<input>` in a `<button>` is not valid HTML, and a `#render` slot would have to mount the inputs.
+- The template has the two lines of a part. The inputs come after them.
+- The input that has the state of the part has one `v-bind` and no other attribute. The `ref` setter is a key of the bound object. With a second attribute, the compiler calls the `mergeProps` of Vue, which makes a new `style` object in each render. See [What differs from the React source](#what-differs-from-the-react-source).
+- A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
+- The part declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row.
+- Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
+- The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
+- For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
+- The part listens to `reset` on the root node of the input, because the form of the input can change. The listener ignores an event whose target is not the form of the input when the event arrives. The part decides in a 0 ms timeout, after the listeners of the event. It does nothing when a listener prevented the event. An uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change.
+
+```vue
+<slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+<component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+<input v-bind="inputProps()" />
+```
+
 ### Element targets
 
 One helper, `resolveElement(value)`, changes a value into an element:
@@ -742,21 +762,23 @@ The tab stop on a server:
 
 A handler key of a DOM event is `on` plus the DOM event name with one capital. Vue makes the event name from the key with `hyphenate`, so `onKeyDown` listens to `key-down`. No browser sends that event. Vue gives no warning.
 
-| React                              | Vue                                               |
-| ---------------------------------- | ------------------------------------------------- |
-| `onKeyDown`                        | `onKeydown`                                       |
-| `onPointerDown`                    | `onPointerdown`                                   |
-| `onMouseMove`                      | `onMousemove`                                     |
-| `onDoubleClick`                    | `onDblclick`                                      |
-| `onContextMenu`                    | `onContextmenu`                                   |
-| `onFocus`, `onBlur`                | `onFocusin`, `onFocusout`                         |
-| `onChange` on a text input         | `onInput`. A part also listens to `onChange`.     |
-| `onKeyDownCapture`                 | `onKeydownCapture`. The `Capture` suffix stays.   |
-| `onOpenChange` (a component event) | `onOpenChange`. A component event keeps its name. |
+| React                                     | Vue                                               |
+| ----------------------------------------- | ------------------------------------------------- |
+| `onKeyDown`                               | `onKeydown`                                       |
+| `onPointerDown`                           | `onPointerdown`                                   |
+| `onMouseMove`                             | `onMousemove`                                     |
+| `onDoubleClick`                           | `onDblclick`                                      |
+| `onContextMenu`                           | `onContextmenu`                                   |
+| `onFocus`, `onBlur`                       | `onFocusin`, `onFocusout`                         |
+| `onChange` on a text input                | `onInput`. A part also listens to `onChange`.     |
+| `onChange` on a checkbox or a radio input | `onClick`                                         |
+| `onKeyDownCapture`                        | `onKeydownCapture`. The `Capture` suffix stays.   |
+| `onOpenChange` (a component event)        | `onOpenChange`. A component event keeps its name. |
 
 - The rule applies to the handler keys of a part and to a ported test.
 - React implements `onFocus` and `onBlur` with `focusin` and `focusout`.
 - React calls `onChange` of a text input on each `input` event, and on a `change` event that has a new value.
+- React calls `onChange` of a checkbox or a radio input on the `click` event. A check of `event.nativeEvent.defaultPrevented` in such a handler becomes a check of `event.defaultPrevented`.
 - To stop the focus handler of a part, call `event.preventVaseUIHandler()` from a `focusin` or `focusout` listener.
 - ESLint reports a React name from a fixed list, with or without the `Capture` suffix. It reports an object key, a property read and a JSX attribute in script, in `packages/vue/src`, in test files and in `packages/vue/test`. It does not read a template.
 - The lint rule has a fixed list of names, because a pattern for a second capital also matches a component event, such as `onOpenChange`.
@@ -816,7 +838,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration that a part writes to its element also in a record that the part renders. Remove the declaration from the record when the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
-- A hidden input that `handleHiddenInputInvalid` grows gets the style constant itself, in a bound object, outside `mergeProps`.
+- A hidden input that `handleHiddenInputInvalid` grows gets the style constant itself, in a bound object, outside `mergeProps`. That bound object is the only attribute of the input.
 - A root can write a temporary declaration to the element of another part. `ScrollAreaRoot.vue` does this for `scroll-snap-type`, while a thumb drag or a track press is active.
 - The root saves the inline value that it finds, and it restores that value at the end.
 - A render of the other part can replace the declaration. The other part thus calls the root in `onUpdated`, and the root writes the declaration again.
@@ -944,6 +966,8 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `ref` on the outermost vnode, or on a child of a plain element                                             | A function for `render`: `render(() => <Button ref={ref} />)`                                                                                                                                                                                             |
 | A `Wrapper` that forwards a ref                                                                            | A `Wrapper` that exposes `element`. A wrapper that can render no element sets `element` with a function ref.                                                                                                                                              |
 | `React.createRef()` and `ref.current`                                                                      | A function ref that writes a variable, or a `shallowRef`. A ref on a part gives the component, so read its `element`.                                                                                                                                     |
+| `inputRef={ref}`                                                                                           | A ref on the part. Read `inputElement` of the component.                                                                                                                                                                                                  |
+| A `ref` callback on a part that acts on the element                                                        | The `#render` slot with a function ref on its element. The function calls `props.ref` first, and it acts one time. Vue calls a function ref again on each patch.                                                                                          |
 | `{ current: value }` as a ref object                                                                       | `shallowRef(value)`                                                                                                                                                                                                                                       |
 | `actionsRef` and `actionsRef.current?.validate()`                                                          | A function ref on the root in a function for `render`, then `root.validate()`                                                                                                                                                                             |
 | `useMergedRefs(a, b)`                                                                                      | A function ref that calls each ref                                                                                                                                                                                                                        |
@@ -1060,7 +1084,7 @@ The hydration helpers:
 - After mount and two ticks, it fails the test on a Vue warning or a console call. It also fails the test when the hydrated DOM differs from a client-only render.
 - The comparison ignores comments and the order of the attributes.
 - It compares the `style` of each element as the browser parses it, so `border:0` is equal to `border: 0px`. An empty `style` or `class` attribute is equal to no attribute.
-- `hydrate` mounts two apps in one document, so each generated id is in the document two times. Do not make a hydration test depend on `getElementById` or on the `labels` of an input.
+- `hydrate` mounts two apps in one document, so each generated id is in the document two times. Do not make a hydration test depend on `getElementById` or on a `<label>` that names a control with `for`.
 - To test what an inline script of the server HTML does before the app starts, insert the HTML with a fragment of a range, as `hydrate` does. Make the assertions before a mount. `internals/PrehydrationScript.test.tsx` is the model.
 - To test a nonce, load an `<iframe>` whose document has a `Content-Security-Policy` in a `<meta>` element. Insert the server HTML into the document of the frame, and collect its `securitypolicyviolation` events.
 
@@ -1118,7 +1142,7 @@ The hydration helpers:
 - A test belongs in the file of the part whose prop or behavior it asserts.
 - For text in a locale format, compute the expected text with the same locale and options as the component.
 - Do not write a generated id in a test. The id holds a count of the earlier `useId` calls, so a new call in a part changes later ids. Read the id from the element or from the HTML.
-- A case of Vase UI's own that depends on the Vue version or on the browser probes for the behavior. A condition names no engine. Each outcome has a case with `runIf`, as in `collapsible/panel/CollapsiblePanel.node.test.tsx` for Vue and `internals/labelable-provider/useAriaLabelledBy.test.tsx` for a browser.
+- A case of Vase UI's own that depends on the Vue version or on the browser probes for the behavior. A condition names no engine. Each outcome has a case with `runIf`, as in `collapsible/panel/CollapsiblePanel.node.test.tsx`.
 - A test of a position waits for the rectangle of the popup with `waitFor`. It does not count microtasks, frames or ticks.
 - To count position passes, mock `@floating-ui/vue` with `vi.mock` and `vi.importActual`, and count the calls of the `fn` of the `offset` middleware. To count the listeners and the observers of a popup, count the calls of `autoUpdate` and of its cleanup.
 - A test that asserts "no position pass" turns anchor tracking off. With tracking, the observers of `autoUpdate` start two more passes in the first frames after the open.

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-16",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts#L72-L73",
+    "https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels"
+  ],
+  "behavior": "When the `id` of a control changes, the control gets the `aria-labelledby` of the native `<label>` that names the new `id`, in each browser. Base UI reads `labels` of the hidden input, and WebKit keeps that list as it was before the change.",
+  "dueWith": "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts"
+}
