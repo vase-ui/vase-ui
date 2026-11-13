@@ -54,4 +54,18 @@ describe('<ScrollArea.Root /> on a server', () => {
       ].join(''),
     );
   });
+
+  it('renders the viewport out of the tab order, with the class that hides the native scrollbar', async () => {
+    const html = await renderToString(
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>Content</ScrollArea.Viewport>
+      </ScrollArea.Root>,
+    );
+
+    const [startTag, dataId] = /<div data-id="([^"]*)"[^>]*>/.exec(html) ?? [];
+    expect(dataId).toMatch(/-viewport$/);
+    expect(startTag).toBe(
+      `<div data-id="${dataId}" tabindex="-1" class="vase-ui-disable-scrollbar" style="overflow:scroll;">`,
+    );
+  });
 });

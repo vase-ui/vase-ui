@@ -31,11 +31,6 @@
       "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
     },
     {
-      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbarCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Scrollbar`."
-    },
-    {
       "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `ScrollArea.Thumb`."
@@ -46,36 +41,16 @@
       "reason": "Vase UI does not have `ScrollArea.Thumb`."
     },
     {
-      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewportDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
       "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "reason": "Each case of the file renders `ScrollArea.Viewport`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "Each case of the file that has no counterpart renders `ScrollArea.Scrollbar`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "reason": "The file tests `ScrollArea.Viewport`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
+      "reason": "Each case of the file that has no counterpart renders `ScrollArea.Scrollbar`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
@@ -117,27 +92,6 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "reason": "Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
-      "entry": "ScrollAreaViewportCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
-      "entry": "ScrollAreaViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.tsx",
-      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
       "entry": "Scrollbar",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
@@ -148,7 +102,7 @@
       "entry": "ScrollAreaScrollbarCssVariables",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.tsx",
-      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Scrollbar`."
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Scrollbar`. `ScrollAreaViewport.vue` already reads the file for the names of the thumb size."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
