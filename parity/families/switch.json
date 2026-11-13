@@ -1,0 +1,243 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/switch/**",
+    "docs/src/app/(docs)/react/components/switch/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />"],
+      "suite": "hiddenInputSizeTests",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/hiddenInputSizeTests.tsx",
+      "reason": "Vase UI does not have the shared suite. The case \"grows from zero size to an on-screen 1px box when reported invalid\" in the block \"hidden input size\" of the same test file tests the same behavior."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "extra props"],
+      "title": "prefers `aria-label` over an associated label",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Label`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The case \"prefers `aria-label` over a native label around the switch\" tests the half with a native label."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "extra props"],
+      "title": "prefers a render element's `aria-label` over an associated label",
+      "kind": "not-applicable",
+      "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "prop: onCheckedChange"],
+      "title": "does not change state when canceled via a root click",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"the hidden input has the state of the switch\" tests a canceled change with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "prop: onCheckedChange"],
+      "title": "does not change state when canceled via a hidden input click",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"the hidden input has the state of the switch\" tests a canceled change with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "preserves Field validation props through canceled changes, submit, and reset",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Root`, `Field.Description` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "should include the switch value in form submission, matching native checkbox behavior",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a native form\" tests the form data with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "matches native checkbox form submission behavior",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a native form\" tests the form data with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "should submit uncheckedValue when switch is off and uncheckedValue is specified",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a native form\" tests the form data with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "should submit custom uncheckedValue when switch is off",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a native form\" tests the form data with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "submits custom value and uncheckedValue across an off/on/off cycle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a native form\" tests the form data with no field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "triggers native HTML validation on submit",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Form"],
+      "title": "clears external errors on change",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "should receive disabled prop from Field.Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "should receive name prop from Field.Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "[data-touched]",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "[data-dirty]",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field", "[data-filled]"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "Each case of the block renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "[data-focused]",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "does not set [data-focused] when disabled",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root`, which Vase UI does not have. The block \"in a field\" tests the same wiring with a fixture field."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field", "[data-focused] without a blur event"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "Each case of the block renders `Field.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "prop: validationMode=onSubmit",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "prop: validationMode=onChange",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root` with `validate`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "validates once when changed by the user",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root` with `validate`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "revalidates when a controlled value changes externally",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
+      "reason": "The case renders `Field.Root` with `validate`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "prop: validationMode=onBlur",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Error`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field", "Field.Label"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "Each case of the block renders `Field.Root` and `Field.Label`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files. The server cases of the family test the label of a provider with a fixture label."
+    },
+    {
+      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
+      "describe": ["<Switch.Root />", "Field"],
+      "title": "Field.Description",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/description/FieldDescription.tsx",
+      "reason": "The case renders `Field.Root` and `Field.Description`, which Vase UI does not have. A row has one `waitsOn`, so the row names one of these files."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "ariaLabel",
+      "reason": "The part reads `aria-label` to find out if a label names the switch, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "prop": "ariaLabelledby",
+      "reason": "The part reads `aria-labelledby` to find out if a label names the switch, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
