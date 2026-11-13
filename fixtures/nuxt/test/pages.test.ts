@@ -485,6 +485,21 @@ async function expectHydratedTabsPage(page: Page) {
   await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
 }
 
+async function expectInputPage(page: Page) {
+  const input = await readAttributes(page.getByTestId('input'), [
+    'id',
+    'name',
+    'value',
+    'data-filled',
+  ]);
+
+  expect(input.id).toBeTruthy();
+  expect(input).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
+  expect(
+    await readAttributes(page.getByTestId('invalid-input'), ['data-invalid', 'aria-invalid']),
+  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -582,6 +597,7 @@ const PAGES: PageCase[] = [
   },
   { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
+  { path: '/input', expectPage: expectInputPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },

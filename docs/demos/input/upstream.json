@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/input/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "63b5db4f73545e5ad1345476af062bba7dfee3c071fc94b11eb569fcea56bdf3",
+    "hero/css-modules/index.tsx": "2ed68231cc076bbbcef33bfa0fcfdabf6a465123d8e7160aca4a3e1c8d6651d9"
+  }
+}

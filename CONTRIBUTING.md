@@ -231,6 +231,13 @@ The template of each such part has two lines and no wrapper component:
 - A part with a void default tag (`img`, `input`) has no default slot.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
+A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
+
+- Set `inheritAttrs: false`. Bind `{ ...$attrs, ...props }` on that part. The declared props are not in `$attrs`, so the spread gives both.
+- Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
+- Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
+- Expose the `element` of that part.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
