@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Tabs } from '@vase-ui/vue/tabs';
+import TabsIndicatorHydration from '../indicator/TabsIndicatorHydration.test.vue';
 import TabsRootHydration from './TabsRootHydration.test.vue';
 
 /** The start tag of the element that has the selector text. */
@@ -121,5 +122,56 @@ describe('<Tabs.Root />', () => {
         expect(readAttribute(html, 'id="panel-a"', 'aria-labelledby')).toBe(labelledby);
       },
     );
+
+    it('renders a hidden indicator with no style, and the script directly after it', async () => {
+      const html = await renderToString(<TabsIndicatorHydration renderBeforeHydration />);
+      const tag = readTag(html, 'data-testid="indicator"');
+
+      expect(tag).toContain(' role="presentation"');
+      expect(hasBareAttribute(tag, 'hidden')).toBe(true);
+      expect(tag).not.toContain(' style=');
+      expect(html).toMatch(
+        /<span [^>]*data-testid="indicator"[^>]*>(<!--[[\]]-->)*<\/span><script>/,
+      );
+    });
+
+    it('allows the style and the attributes that the script changes, only with the script', async () => {
+      const withScript = readTag(
+        await renderToString(<TabsIndicatorHydration renderBeforeHydration />),
+        'data-testid="indicator"',
+      );
+      const withoutScript = readTag(
+        await renderToString(<TabsIndicatorHydration />),
+        'data-testid="indicator"',
+      );
+
+      expect(withScript).toContain(' data-allow-mismatch="style,attribute"');
+      expect(withoutScript).not.toContain('data-allow-mismatch');
+    });
+
+    it('renders no script without `renderBeforeHydration`', async () => {
+      const html = await renderToString(<TabsIndicatorHydration />);
+
+      expect(html).toContain('data-testid="indicator"');
+      expect(html).not.toContain('<script');
+    });
+
+    it('renders no indicator and no script when the value is null', async () => {
+      const html = await renderToString(
+        <TabsIndicatorHydration value={null} renderBeforeHydration />,
+      );
+
+      expect(html).toContain('role="tablist"');
+      expect(html).not.toContain('data-testid="indicator"');
+      expect(html).not.toContain('<script');
+    });
+
+    it('sets the orientation and the activation direction of the indicator', async () => {
+      const html = await renderToString(<TabsIndicatorHydration />);
+      const tag = readTag(html, 'data-testid="indicator"');
+
+      expect(tag).toContain(' data-orientation="horizontal"');
+      expect(tag).toContain(' data-activation-direction="none"');
+    });
   });
 });

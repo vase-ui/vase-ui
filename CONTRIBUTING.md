@@ -455,6 +455,7 @@ The hydration state:
 - For a value in a locale format, call `useFormatLocale(locale)`. It gives the locale of the consumer. With no such locale, it gives `en-US` until the component is mounted, and then `undefined`, which is the runtime locale.
 - The server HTML and the first client render then have the same text.
 - A composable that reads another value of the browser obeys the same rule. It gives the server value in the first client render, and it reads the real value in `onMounted`. `useMediaQuery` does this. A client-only mount thus renders again when the two values differ.
+- A part that measures the layout gives no measurement on a server and in the first client render. `Tabs.Indicator` reads the layout in a `computed` that gives `null` while `useIsHydrating()` is `true`. The server HTML and the first client render are then equal.
 
 The label of a root:
 
@@ -724,6 +725,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An effect that needs the element of the part, such as an observer, is a `watch` of the `element` of `useRenderElement` with `flush: 'post'`. Start the observer in the callback. Stop it in `onCleanup`. Vue runs the cleanup when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
 - An effect of Base UI with no dependency list runs after each commit, so it also sees a DOM change of another component. A Vue component with the same props does not render again when its parent renders.
 - Such an effect is a `watch` of its sources with `flush: 'post'`, plus a `MutationObserver` for the DOM change. `useAriaLabelledBy` keeps one observer for each document or shadow root.
+- A part of Base UI that measures the layout in each render becomes a `computed` that reads the measurement. Each value that can move the element is a source of the `computed`, such as the orientation. A `ResizeObserver` reports only a change of size, so its listener raises a `shallowRef` count that is one more source. The count replaces `useForcedRerendering`. `Tabs.Indicator` is the model.
 - A watcher that writes state that the render reads keeps the default flush. It runs before the render, so the component renders one time for the change. `useMediaQuery` and `useImageLoadingStatus` do this.
 - `isPositioned` of `useAnchorPositioning` is the exception: its `watch` has `flush: 'sync'`.
 - `useFloating` sets `isPositioned` from the `open` option that it read when the position pass started. A pass can start while the popup is open and end after the popup closed. `useFloating` then gives `true` for a closed popup, and the part shows an old position.
@@ -1023,6 +1025,7 @@ The hydration helpers:
 - Put one assertion in each `waitFor`.
 - Do not put a negative assertion in `waitFor`: it passes on the first try. Advance the timers or flush first, then assert. Assert a state that a timer ends directly after the timer advances. Where a case waits for a first measurement, wait for a value that the measurement writes. Then assert the absence.
 - A case that tests the observer of the content waits for the first measurement, and then for two animation frames. The first notification of each observer then has come. If the content changes before it, the observer of the viewport measures. The case then does not test the observer of the content. `ScrollAreaContent.test.tsx` is the model.
+- `waitFor` can resolve in the microtask checkpoint of a `ResizeObserver` callback, because a `MutationObserver` runs it. A change of the layout in that checkpoint gives the loop error of the browser. Call `await flushMicrotasks()` before the next change.
 - The pointer of the browser stays where a case leaves it, for each later test. A case that uses a real pointer releases it in `onTestFinished`, with coordinates. A call with no coordinates moves the pointer to the element of the last press, which is gone by then. `releasePointerAfterTest` of `ScrollAreaScrollbar.test.tsx` does this.
 - A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
