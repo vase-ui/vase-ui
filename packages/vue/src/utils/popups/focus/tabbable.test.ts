@@ -460,6 +460,40 @@ it.each([
   expect(tabbable(document.body)).toContain(element);
 });
 
+it.each([
+  { name: 'contenteditable', tag: 'div', attribute: 'contenteditable' },
+  { name: 'audio with controls', tag: 'audio', attribute: 'controls' },
+  { name: 'video with controls', tag: 'video', attribute: 'controls' },
+  { name: 'details with no summary', tag: 'details', attribute: undefined },
+])('VUE-19: takes $name out of the tab order with tabindex="-1"', ({ tag, attribute }) => {
+  const element = document.createElement(tag);
+
+  if (attribute) {
+    element.setAttribute(attribute, '');
+  }
+  document.body.append(element);
+  expect(tabbable(document.body)).toContain(element);
+
+  element.setAttribute('tabindex', '-1');
+
+  expect(isTabbable(element)).toBe(false);
+  expect(tabbable(document.body)).not.toContain(element);
+});
+
+it.each([
+  { name: 'an empty tabindex', value: '' },
+  { name: 'a tabindex that is not an integer', value: 'abc' },
+])('VUE-19: keeps contenteditable in the tab order with $name', ({ value }) => {
+  const element = document.createElement('div');
+
+  element.setAttribute('contenteditable', '');
+  element.setAttribute('tabindex', value);
+  document.body.append(element);
+
+  expect(isTabbable(element)).toBe(true);
+  expect(tabbable(document.body)).toContain(element);
+});
+
 it('keeps the order of the document for elements with a positive tabindex', () => {
   const first = document.createElement('button');
   const second = document.createElement('button');

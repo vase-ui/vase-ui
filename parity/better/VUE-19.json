@@ -1,0 +1,9 @@
+{
+  "id": "VUE-19",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/tabbable.ts#L97-L112",
+    "https://html.spec.whatwg.org/multipage/interaction.html#attr-tabindex"
+  ],
+  "behavior": "`tabbable()` leaves out a `details`, `audio[controls]`, `video[controls]` or `contenteditable` element that has `tabindex=\"-1\"`, because the Tab key skips it. Base UI lists it. A `tabindex` value that is not an integer counts as no attribute.",
+  "dueWith": "packages/react/src/utils/popups/focus/tabbable.ts"
+}
