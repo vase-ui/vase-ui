@@ -10,6 +10,7 @@ import {
   flushMicrotasks,
   hiddenInputSizeTests,
   hydrate,
+  isJSDOM,
   mockRuntimeLocale,
   renderOnServer,
   screen,
@@ -55,8 +56,11 @@ describe('<NumberField />', () => {
 
   hiddenInputSizeTests({
     render,
-    // Base UI also renders `NumberField.Input` here. The suite reads only the hidden input.
-    createComponent: (props) => <NumberField.Root {...props} />,
+    createComponent: (props) => (
+      <NumberField.Root {...props}>
+        <NumberField.Input />
+      </NumberField.Root>
+    ),
   });
 
   describe('hidden input size', () => {
@@ -991,6 +995,1023 @@ describe('<NumberField />', () => {
       await settleReset();
 
       expect(getHiddenInput().value).toBe('1');
+    });
+  });
+
+  it('blocks submission when step mismatch occurs', async () => {
+    await render(
+      <form data-testid="form">
+        <NumberField.Root name="quantity" min={0} step={0.1}>
+          <NumberField.Group>
+            <NumberField.Input />
+          </NumberField.Group>
+        </NumberField.Root>
+        <button type="submit">Submit</button>
+      </form>,
+    );
+
+    const input = screen.getByRole('textbox');
+    await fireEvent.input(input, { target: { value: '0.11' } });
+
+    const hiddenInput = document.querySelector(
+      'input[type="number"][name="quantity"]',
+    ) as HTMLInputElement;
+    expect(hiddenInput).not.toBe(null);
+    expect(hiddenInput.validity.stepMismatch).toBe(true);
+
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(form.checkValidity()).toBe(false);
+  });
+
+  it.skipIf(isJSDOM)('blocks submission when step mismatch occurs with default step', async () => {
+    await render(
+      <form data-testid="form">
+        <NumberField.Root name="quantity" min={0}>
+          <NumberField.Group>
+            <NumberField.Input />
+          </NumberField.Group>
+        </NumberField.Root>
+        <button type="submit">Submit</button>
+      </form>,
+    );
+
+    const input = screen.getByRole('textbox');
+    await fireEvent.input(input, { target: { value: '0.11' } });
+
+    const hiddenInput = document.querySelector(
+      'input[type="number"][name="quantity"]',
+    ) as HTMLInputElement;
+    expect(hiddenInput).not.toBe(null);
+    expect(hiddenInput.validity.stepMismatch).toBe(true);
+
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(form.checkValidity()).toBe(false);
+  });
+
+  it('does not block submission when step="any"', async () => {
+    await render(
+      <form data-testid="form">
+        <NumberField.Root name="quantity" min={0} step="any">
+          <NumberField.Group>
+            <NumberField.Input />
+          </NumberField.Group>
+        </NumberField.Root>
+        <button type="submit">Submit</button>
+      </form>,
+    );
+
+    const input = screen.getByRole('textbox');
+    await fireEvent.input(input, { target: { value: '0.11' } });
+
+    const hiddenInput = document.querySelector(
+      'input[type="number"][name="quantity"]',
+    ) as HTMLInputElement;
+    expect(hiddenInput).not.toBe(null);
+    expect(hiddenInput.validity.stepMismatch).toBe(false);
+
+    const form = screen.getByTestId<HTMLFormElement>('form');
+    expect(form.checkValidity()).toBe(true);
+  });
+
+  describe('prop: readOnly', () => {
+    it('keeps focus state in sync on a readOnly field', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root readOnly>
+            <NumberField.Input data-testid="input" />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+      const input = screen.getByTestId('input');
+
+      await fireEvent.focusIn(input);
+      expect(input).toHaveAttribute('data-focused', '');
+
+      await fireEvent.focusOut(input);
+      expect(input).not.toHaveAttribute('data-focused');
+    });
+  });
+
+  describe('prop: allowOutOfRange', () => {
+    it('allows range overflow validation when true', async () => {
+      await render(
+        <form data-testid="form">
+          <NumberField.Root name="quantity" max={5} allowOutOfRange>
+            <NumberField.Group>
+              <NumberField.Input />
+            </NumberField.Group>
+          </NumberField.Root>
+          <button type="submit">Submit</button>
+        </form>,
+      );
+
+      const input = screen.getByRole('textbox');
+      await fireEvent.input(input, { target: { value: '6' } });
+
+      const hiddenInput = document.querySelector(
+        'input[type="number"][name="quantity"]',
+      ) as HTMLInputElement;
+
+      expect(hiddenInput).not.toBe(null);
+      expect(hiddenInput.value).toBe('6');
+      expect(hiddenInput.validity.rangeOverflow).toBe(true);
+
+      const form = screen.getByTestId<HTMLFormElement>('form');
+      expect(form.checkValidity()).toBe(false);
+    });
+
+    it('clamps to range when false', async () => {
+      await render(
+        <form data-testid="form">
+          <NumberField.Root name="quantity" max={5} allowOutOfRange={false}>
+            <NumberField.Group>
+              <NumberField.Input />
+            </NumberField.Group>
+          </NumberField.Root>
+          <button type="submit">Submit</button>
+        </form>,
+      );
+
+      const input = screen.getByRole('textbox');
+      await fireEvent.input(input, { target: { value: '6' } });
+
+      const hiddenInput = document.querySelector(
+        'input[type="number"][name="quantity"]',
+      ) as HTMLInputElement;
+
+      expect(hiddenInput).not.toBe(null);
+      expect(hiddenInput.value).toBe('5');
+      expect(hiddenInput.validity.rangeOverflow).toBe(false);
+
+      const form = screen.getByTestId<HTMLFormElement>('form');
+      expect(form.checkValidity()).toBe(true);
+    });
+  });
+
+  describe('Form', () => {
+    it('should include the input value in the form submission', async () => {
+      let fieldValue = '';
+
+      await render(
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget as HTMLFormElement);
+            fieldValue = formData.get('test') as string;
+          }}
+        >
+          <Field.Root name="test">
+            <NumberField.Root defaultValue={undefined}>
+              <NumberField.Input />
+            </NumberField.Root>
+            <button type="submit">Submit</button>
+          </Field.Root>
+        </Form>,
+      );
+
+      const submitButton = screen.getByText('Submit');
+      submitButton.click();
+      await flushMicrotasks();
+      expect(fieldValue).toBe('');
+
+      await fireEvent.input(screen.getByRole('textbox'), { target: { value: '50' } });
+      submitButton.click();
+      await flushMicrotasks();
+      expect(fieldValue).toBe('50');
+    });
+
+    it('should not include formatting in the submitted value', async () => {
+      const format: Intl.NumberFormatOptions = {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      };
+
+      let fieldValue = '';
+
+      await render(
+        <Form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget as HTMLFormElement);
+            fieldValue = formData.get('test') as string;
+          }}
+        >
+          <Field.Root name="test">
+            <NumberField.Root defaultValue={54.5} format={format} locale="de-DE">
+              <NumberField.Input />
+            </NumberField.Root>
+            <button type="submit">Submit</button>
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByRole('textbox');
+      const expectedValue = new Intl.NumberFormat('de-DE', format).format(54.5);
+      expect(input).toHaveValue(expectedValue);
+
+      const submitButton = screen.getByText('Submit');
+
+      submitButton.click();
+      await flushMicrotasks();
+
+      expect(fieldValue).toBe('54.5');
+    });
+
+    it.skipIf(isJSDOM)('submits to an external form when `form` is provided', async () => {
+      let fieldValue = '';
+
+      await render(
+        <>
+          <form
+            id="external-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget as HTMLFormElement);
+              fieldValue = formData.get('test') as string;
+            }}
+          >
+            <button type="submit">Submit</button>
+          </form>
+          <NumberField.Root name="test" form="external-form" defaultValue={54.5}>
+            <NumberField.Input />
+          </NumberField.Root>
+        </>,
+      );
+
+      screen.getByText('Submit').click();
+      await flushMicrotasks();
+
+      expect(fieldValue).toBe('54.5');
+    });
+
+    it.skipIf(isJSDOM)('only validates the form specified by `form`', async () => {
+      const onParentSubmit = vi.fn((event: Event) => {
+        event.preventDefault();
+      });
+      const onExternalSubmit = vi.fn((event: Event) => {
+        event.preventDefault();
+        return new FormData(event.currentTarget as HTMLFormElement).getAll('quantity');
+      });
+      const { user } = await render(
+        <>
+          <form id="external-form" onSubmit={onExternalSubmit}>
+            <button type="submit">Submit external</button>
+          </form>
+          <form onSubmit={onParentSubmit}>
+            <NumberField.Root name="quantity" form="external-form" required>
+              <NumberField.Input />
+            </NumberField.Root>
+            <button type="submit">Submit parent</button>
+          </form>
+        </>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Submit parent' }));
+      expect(onParentSubmit).toHaveBeenCalledOnce();
+
+      await user.click(screen.getByRole('button', { name: 'Submit external' }));
+      expect(onExternalSubmit).not.toHaveBeenCalled();
+
+      await user.type(screen.getByRole('textbox'), '12');
+      await user.click(screen.getByRole('button', { name: 'Submit external' }));
+      expect(onExternalSubmit).toHaveBeenCalledOnce();
+      expect(onExternalSubmit).toHaveReturnedWith(['12']);
+    });
+
+    it('updates both input form owners when `form` changes or is removed', async () => {
+      let root: { inputElement: HTMLInputElement | null } | null = null;
+      const TestCase = defineComponent({
+        props: { form: { type: String, default: undefined } },
+        setup(props) {
+          return () => (
+            <>
+              <form id="first-form" data-testid="first-form" />
+              <form id="second-form" data-testid="second-form" />
+              <form data-testid="parent-form">
+                <NumberField.Root
+                  form={props.form}
+                  ref={(instance) => {
+                    root = instance as { inputElement: HTMLInputElement | null } | null;
+                  }}
+                >
+                  <NumberField.Input />
+                </NumberField.Root>
+              </form>
+            </>
+          );
+        },
+      });
+
+      const { rerender } = await render(<TestCase form="first-form" />);
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      expect(input.form).toBe(screen.getByTestId('first-form'));
+      expect(root!.inputElement?.form).toBe(input.form);
+
+      await rerender(<TestCase form="second-form" />);
+      expect(input.form).toBe(screen.getByTestId('second-form'));
+      expect(root!.inputElement?.form).toBe(input.form);
+
+      await rerender(<TestCase />);
+      expect(input.form).toBe(screen.getByTestId('parent-form'));
+      expect(root!.inputElement?.form).toBe(input.form);
+    });
+
+    it('should handle browser autofill', async () => {
+      const onValueChange = vi.fn();
+
+      await render(
+        <Field.Root name="quantity">
+          <NumberField.Root onValueChange={onValueChange}>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole('textbox');
+      const hiddenInput = document.querySelector('input[type="number"][name="quantity"]');
+
+      expect(hiddenInput).not.toBe(null);
+      await fireEvent.change(hiddenInput!, { target: { value: '42' } });
+
+      expect(onValueChange.mock.calls.length).toBe(1);
+      expect(onValueChange.mock.calls[0][0]).toBe(42);
+      expect(input).toHaveValue('42');
+    });
+
+    it('validates the parsed number when handling browser autofill', async () => {
+      const validate = vi.fn((_value: unknown) => null);
+
+      await render(
+        <Field.Root name="quantity" validationMode="onChange" validate={validate}>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const hiddenInput = document.querySelector('input[type="number"][name="quantity"]');
+
+      expect(hiddenInput).not.toBe(null);
+      await fireEvent.change(hiddenInput!, { target: { value: '42' } });
+
+      expect(validate).toHaveBeenCalled();
+      expect(validate.mock.calls.every(([value]) => value === 42)).toBe(true);
+      expect(validate.mock.lastCall?.[0]).toBe(42);
+    });
+
+    it.each([
+      { lockState: 'readOnly', ariaInvalid: 'true' },
+      { lockState: 'disabled', ariaInvalid: null },
+    ] as const)(
+      'ignores hidden-input autofill when $lockState inside Field',
+      async ({ lockState, ariaInvalid }) => {
+        const onValueChange = vi.fn();
+
+        await render(
+          <Form errors={{ quantity: 'test' }}>
+            <Field.Root name="quantity">
+              <NumberField.Root
+                defaultValue={1}
+                readOnly={lockState === 'readOnly'}
+                disabled={lockState === 'disabled'}
+                onValueChange={onValueChange}
+              >
+                <NumberField.Input />
+              </NumberField.Root>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+
+        const input = screen.getByRole('textbox');
+        const hiddenInput = document.querySelector(
+          'input[type="number"][name="quantity"]',
+        ) as HTMLInputElement;
+
+        expect(hiddenInput).not.toBe(null);
+        expect(screen.getByTestId('error')).toHaveTextContent('test');
+        // A disabled control is not marked invalid.
+        expect(input.getAttribute('aria-invalid')).toBe(ariaInvalid);
+
+        await fireEvent.change(hiddenInput, { target: { value: '42' } });
+
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(input).toHaveValue('1');
+        expect(screen.getByTestId('error')).toHaveTextContent('test');
+      },
+    );
+
+    it.each([{ lockState: 'readOnly' }, { lockState: 'disabled' }] as const)(
+      'ignores hidden-input autofill when $lockState outside Field',
+      async ({ lockState }) => {
+        const onValueChange = vi.fn();
+
+        await render(
+          <NumberField.Root
+            name="quantity"
+            defaultValue={1}
+            readOnly={lockState === 'readOnly'}
+            disabled={lockState === 'disabled'}
+            onValueChange={onValueChange}
+          >
+            <NumberField.Input />
+          </NumberField.Root>,
+        );
+
+        const input = screen.getByRole('textbox');
+        const hiddenInput = document.querySelector(
+          'input[type="number"][name="quantity"]',
+        ) as HTMLInputElement;
+
+        expect(hiddenInput).not.toBe(null);
+
+        await fireEvent.change(hiddenInput, { target: { value: '42' } });
+
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(input).toHaveValue('1');
+      },
+    );
+  });
+
+  describe('Field', () => {
+    it('[data-touched]', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.focusOut(input);
+
+      expect(input).toHaveAttribute('data-touched', '');
+    });
+
+    it('[data-dirty]', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      expect(input).not.toHaveAttribute('data-dirty');
+
+      await fireEvent.input(input, { target: { value: '1' } });
+
+      expect(input).toHaveAttribute('data-dirty', '');
+    });
+
+    describe('[data-filled]', () => {
+      it('adds [data-filled] attribute when filled', async () => {
+        await render(
+          <Field.Root>
+            <NumberField.Root>
+              <NumberField.Input data-testid="input" />
+            </NumberField.Root>
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        expect(input).not.toHaveAttribute('data-filled');
+
+        await fireEvent.input(input, { target: { value: '1' } });
+
+        expect(input).toHaveAttribute('data-filled', '');
+
+        await fireEvent.input(input, { target: { value: '' } });
+
+        expect(input).not.toHaveAttribute('data-filled');
+      });
+
+      it('has [data-filled] attribute when already filled', async () => {
+        await render(
+          <Field.Root>
+            <NumberField.Root defaultValue={1}>
+              <NumberField.Input data-testid="input" />
+            </NumberField.Root>
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        expect(input).toHaveAttribute('data-filled');
+
+        await fireEvent.input(input, { target: { value: '' } });
+
+        expect(input).not.toHaveAttribute('data-filled');
+      });
+    });
+
+    it('[data-filled]', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input data-testid="input" />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('data-focused');
+
+      await fireEvent.focusIn(input);
+
+      expect(input).toHaveAttribute('data-focused', '');
+
+      await fireEvent.focusOut(input);
+
+      expect(input).not.toHaveAttribute('data-focused');
+    });
+
+    it('adds [data-focused] attribute on every focus', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input data-testid="input" />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      await fireEvent.focusIn(input);
+      expect(input).toHaveAttribute('data-focused', '');
+
+      await fireEvent.focusOut(input);
+      expect(input).not.toHaveAttribute('data-focused');
+
+      await fireEvent.focusIn(input);
+      expect(input).toHaveAttribute('data-focused', '');
+    });
+
+    describe('[data-focused] without a blur event', () => {
+      function NumberFields(props: { firstMounted?: boolean; firstDisabled?: boolean }) {
+        const { firstMounted = true, firstDisabled = false } = props;
+        return (
+          <Field.Root data-testid="root">
+            {firstMounted && (
+              <NumberField.Root disabled={firstDisabled}>
+                <NumberField.Input data-testid="first" />
+              </NumberField.Root>
+            )}
+          </Field.Root>
+        );
+      }
+
+      it('is removed when the focused input becomes disabled', async () => {
+        const { setProps } = await render(<NumberFields />);
+
+        const input = screen.getByTestId('first');
+        input.focus();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+
+        await setProps({ firstDisabled: true });
+
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+        expect(input).not.toHaveAttribute('data-focused');
+      });
+
+      it('is removed when the focused input unmounts', async () => {
+        const { setProps } = await render(<NumberFields />);
+
+        screen.getByTestId('first').focus();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+
+        await setProps({ firstMounted: false });
+
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+      });
+    });
+
+    it('prop: validate', async () => {
+      await render(
+        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole('textbox');
+
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.focusOut(input);
+
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    describe('prop: validationMode', () => {
+      it('onSubmit', async () => {
+        await render(
+          <Form>
+            <Field.Root validate={(value) => (value === 1 ? 'custom error' : null)}>
+              <NumberField.Root required data-testid="root">
+                <NumberField.Input data-testid="input" />
+              </NumberField.Root>
+              <Field.Error data-testid="error" match="valueMissing">
+                valueMissing error
+              </Field.Error>
+              <Field.Error data-testid="error" match="customError" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const input = screen.getByRole('textbox');
+        expect(input).not.toHaveAttribute('aria-invalid');
+
+        await fireEvent.input(input, { target: { value: '1' } });
+        await fireEvent.focusOut(input);
+        expect(input).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.input(input, { target: { value: '' } });
+        await fireEvent.focusOut(input);
+        expect(input).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.click(screen.getByText('submit'));
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+        expect(screen.queryByTestId('error')).toHaveTextContent('valueMissing error');
+        expect(screen.getByTestId('root')).toHaveAttribute('data-invalid');
+        expect(input).toHaveAttribute('data-invalid');
+
+        await fireEvent.input(input, { target: { value: '2' } });
+        expect(input).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+        expect(input).not.toHaveAttribute('data-invalid');
+        expect(screen.getByTestId('root')).toHaveAttribute('data-valid');
+        expect(input).toHaveAttribute('data-valid');
+        // re-invalidate the field value
+        await fireEvent.input(input, { target: { value: '1' } });
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+        expect(screen.queryByTestId('error')).toHaveTextContent('custom error');
+
+        await fireEvent.input(input, { target: { value: '3' } });
+        expect(input).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.input(input, { target: { value: '' } });
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+        expect(screen.queryByTestId('error')).toHaveTextContent('valueMissing error');
+      });
+
+      it('onChange', async () => {
+        await render(
+          <Field.Root
+            validationMode="onChange"
+            validate={(value) => {
+              return value === 1 ? 'error' : null;
+            }}
+          >
+            <NumberField.Root>
+              <NumberField.Input data-testid="input" />
+            </NumberField.Root>
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        expect(input).not.toHaveAttribute('aria-invalid');
+
+        await fireEvent.input(input, { target: { value: '1' } });
+
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+      });
+
+      it('revalidates when the controlled value changes externally', async () => {
+        const validateSpy = vi.fn((value: unknown) =>
+          (value as number | null) === 5 ? 'error' : null,
+        );
+
+        const App = defineComponent(() => {
+          const value = shallowRef<number | null>(null);
+
+          return () => (
+            <>
+              <Field.Root validationMode="onChange" validate={validateSpy} name="quantity">
+                <NumberField.Root
+                  value={value.value}
+                  onValueChange={(next) => {
+                    value.value = next;
+                  }}
+                >
+                  <NumberField.Input data-testid="input" />
+                </NumberField.Root>
+              </Field.Root>
+              <button
+                type="button"
+                onClick={() => {
+                  value.value = 5;
+                }}
+              >
+                Set externally
+              </button>
+            </>
+          );
+        });
+
+        await render(<App />);
+
+        const input = screen.getByTestId('input');
+        const toggle = screen.getByText('Set externally');
+
+        expect(input).not.toHaveAttribute('aria-invalid');
+        const initialCallCount = validateSpy.mock.calls.length;
+
+        await fireEvent.click(toggle);
+
+        expect(validateSpy.mock.calls.length).toBe(initialCallCount + 1);
+        expect(validateSpy.mock.lastCall?.[0]).toBe(5);
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+      });
+
+      it('onBlur', async () => {
+        await render(
+          <Field.Root
+            validationMode="onBlur"
+            validate={(value) => {
+              return value === 1 ? 'error' : null;
+            }}
+          >
+            <NumberField.Root required>
+              <NumberField.Input data-testid="input" />
+            </NumberField.Root>
+            <Field.Error data-testid="error" />
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+        expect(input).not.toHaveAttribute('aria-invalid');
+
+        await fireEvent.input(input, { target: { value: '1' } });
+        expect(input).not.toHaveAttribute('aria-invalid');
+        await fireEvent.focusOut(input);
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+        // revalidation
+        await fireEvent.input(input, { target: { value: '2' } });
+        expect(input).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+      });
+    });
+
+    it('prevents form submission when the value does not match the step', async () => {
+      const handleSubmit = vi.fn((event: Event) => event.preventDefault());
+      await render(
+        <form onSubmit={handleSubmit}>
+          <NumberField.Root name="quantity" defaultValue={0} min={0} step={0.1}>
+            <NumberField.Input data-testid="input" />
+          </NumberField.Root>
+          <button type="submit">submit</button>
+        </form>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      input.focus();
+      await flushMicrotasks();
+
+      await fireEvent.input(input, { target: { value: '0.11' } });
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit.mock.calls.length).toBe(0);
+
+      await fireEvent.input(input, { target: { value: '0.1' } });
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit.mock.calls.length).toBe(1);
+      expect(
+        new FormData(handleSubmit.mock.calls[0][0].target as HTMLFormElement).get('quantity'),
+      ).toBe('0.1');
+    });
+
+    it('prevents Form/Field submission when the value does not match the step', async () => {
+      const handleSubmit = vi.fn();
+      await render(
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="quantity">
+            <NumberField.Root defaultValue={0} min={0} step={0.1}>
+              <NumberField.Input data-testid="input" />
+            </NumberField.Root>
+            <Field.Error match="stepMismatch" data-testid="error">
+              step mismatch
+            </Field.Error>
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      input.focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await fireEvent.input(input, { target: { value: '0.11' } });
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('error')).toHaveTextContent('step mismatch');
+
+      await fireEvent.input(input, { target: { value: '0.1' } });
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit.mock.calls.length).toBe(1);
+      expect(handleSubmit.mock.calls[0][0].quantity).toBe(0.1);
+    });
+
+    it('disables the input when disabled=true', async () => {
+      await render(
+        <Field.Root disabled>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      expect(input).toHaveAttribute('disabled', '');
+    });
+
+    it('does not disable the input when disabled=false', async () => {
+      await render(
+        <Field.Root disabled={false}>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      expect(input).not.toHaveAttribute('disabled');
+    });
+
+    it('is validated with latest value when validationMode=onBlur', async () => {
+      const validate = vi.fn((..._args: unknown[]) => 'error');
+
+      await render(
+        <Form>
+          <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+            <NumberField.Root defaultValue={undefined}>
+              <NumberField.Input />
+            </NumberField.Root>
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByRole('textbox');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.input(input, { target: { value: '1' } });
+      await fireEvent.focusOut(input);
+
+      expect(validate.mock.calls.length).toBe(1);
+      expect(validate.mock.calls[0]).toEqual([1, { quantity: 1 }]);
+    });
+
+    it('is validated with clamped value when validationMode=onBlur', async () => {
+      const validate = vi.fn((..._args: unknown[]) => null);
+
+      await render(
+        <Form>
+          <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+            <NumberField.Root max={10}>
+              <NumberField.Input />
+            </NumberField.Root>
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByRole('textbox');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.input(input, { target: { value: '1000' } });
+      await fireEvent.focusOut(input);
+
+      expect(validate.mock.calls.length).toBe(1);
+      expect(validate.mock.calls[0]).toEqual([10, { quantity: 10 }]);
+      expect(input).toHaveValue('10');
+    });
+
+    it('revalidates an external change after a blur that normalizes back to the current value', async () => {
+      const validate = (value: unknown) => (value === 5 ? 'error' : null);
+
+      const App = defineComponent(() => {
+        const value = shallowRef<number | null>(5);
+        return () => (
+          <Form>
+            <Field.Root validationMode="onBlur" validate={validate} name="quantity">
+              <NumberField.Root
+                value={value.value}
+                onValueChange={(next) => {
+                  value.value = next;
+                }}
+                max={5}
+              >
+                <NumberField.Input />
+              </NumberField.Root>
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                value.value = 3;
+              }}
+            >
+              external
+            </button>
+          </Form>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const input = screen.getByRole('textbox');
+
+      // Blur after typing a value that clamps back to the current value (5). This sets the
+      // internal block-revalidation flag and commits an error, but since the stored value is
+      // unchanged `useValueChanged` won't fire to reset the flag.
+      await fireEvent.focusIn(input);
+      await fireEvent.input(input, { target: { value: '9' } });
+      await fireEvent.focusOut(input);
+      expect(input).toHaveValue('5');
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+
+      // The flag must have been reset on blur so the next external change revalidates and
+      // clears the error rather than being swallowed.
+      await user.click(screen.getByText('external'));
+      expect(input).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('Field.Label', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input />
+          </NumberField.Root>
+          <Field.Label data-testid="label" />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', screen.getByRole('textbox').id);
+    });
+
+    it('Field.Description', async () => {
+      await render(
+        <Field.Root>
+          <NumberField.Root>
+            <NumberField.Input aria-describedby="external-description" />
+          </NumberField.Root>
+          <Field.Description data-testid="description" />
+        </Field.Root>,
+      );
+
+      expect(screen.getByRole('textbox')).toHaveAttribute(
+        'aria-describedby',
+        `external-description ${screen.getByTestId('description').id}`,
+      );
+    });
+  });
+
+  describe('hidden input', () => {
+    it('keeps a selection the consumer sets in onFocus when forwarding focus', async () => {
+      await render(
+        <NumberField.Root defaultValue={100}>
+          <NumberField.Input
+            onFocusin={(event) => (event.currentTarget as HTMLInputElement).select()}
+          />
+        </NumberField.Root>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      getHiddenInput().focus();
+      await flushMicrotasks();
+
+      expect(input).toHaveFocus();
+      expect(input.selectionStart).toBe(0);
+      expect(input.selectionEnd).toBe(input.value.length);
     });
   });
 });
