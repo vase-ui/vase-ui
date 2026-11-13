@@ -170,6 +170,17 @@ async function expectCollapsiblePage(page: Page) {
   expect(untilFoundPanelId).not.toBe(openPanelId);
 }
 
+// The server cannot know whether the image loads, so it renders the fallback and no image.
+async function expectAvatarPageWithFallback(page: Page) {
+  expect(await page.getByTestId('fallback').textContent()).toBe('LT');
+  expect(await page.getByTestId('image').count()).toBe(0);
+}
+
+async function expectAvatarPageWithImage(page: Page) {
+  await page.getByTestId('image').waitFor();
+  expect(await page.getByTestId('fallback').count()).toBe(0);
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -211,7 +222,14 @@ async function expectMediaQueryPage(page: Page) {
   expect(await page.getByTestId('wide').textContent()).toBe('true');
 }
 
-const PAGES = [
+interface PageCase {
+  path: string;
+  expectPage: (page: Page) => Promise<void>;
+  // For a page that changes after the mount. `expectPage` then holds for the server HTML only.
+  expectHydratedPage?: (page: Page) => Promise<void>;
+}
+
+const PAGES: PageCase[] = [
   { path: '/button', expectPage: expectButtonPage },
   { path: '/separator', expectPage: expectSeparatorPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
@@ -220,6 +238,11 @@ const PAGES = [
   })),
   { path: '/fieldset', expectPage: expectFieldsetPage },
   { path: '/collapsible', expectPage: expectCollapsiblePage },
+  {
+    path: '/avatar',
+    expectPage: expectAvatarPageWithFallback,
+    expectHydratedPage: expectAvatarPageWithImage,
+  },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -272,16 +295,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(getServerLogs().filter((line) => /\[Vue warn\]|Vase UI:/.test(line))).toEqual([]);
   });
 
-  it.each(PAGES)('hydrates $path with no message', async ({ path, expectPage }) => {
-    const page = await createPage();
-    const messages = collectMessages(page);
+  it.each(PAGES)(
+    'hydrates $path with no message',
+    async ({ path, expectPage, expectHydratedPage = expectPage }) => {
+      const page = await createPage();
+      const messages = collectMessages(page);
 
-    await page.goto(url(path), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
+      await page.goto(url(path), { waitUntil: 'hydration' });
+      await waitForTwoFrames(page);
 
-    expect(messages).toEqual([]);
-    await expectPage(page);
-  });
+      expect(messages).toEqual([]);
+      await expectHydratedPage(page);
+    },
+  );
 
   it('counts the clicks on a button after hydration', async () => {
     const page = await createPage('/button');

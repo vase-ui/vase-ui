@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/avatar/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9d053f9570b1f2861cfc37124696369d3a8acb5f6cc1bf1ceb7581b32677e818",
+    "hero/css-modules/index.tsx": "62268c1001351fc6c989ffb02650a82c87db18602e6bcdd25b2a7df61d574993"
+  }
+}
