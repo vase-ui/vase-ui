@@ -31,7 +31,7 @@ Import the component and assemble its parts:
 
 <<< ./field/Anatomy.vue
 
-In the server HTML, `Field.Control` already has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`. The parts can be in any order. A screen reader can name the control before the page hydrates. `Field.Error` names the control only while it shows.
+In the server HTML, `Field.Control` already has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`. The parts can be in any order. A screen reader can name the control before the page hydrates. `Field.Control` has the id of `Field.Error` in `aria-describedby` only while the error shows.
 
 A native reset of the form puts an uncontrolled `Field.Control` back to its default value. The field then clears its error, and `data-filled` and `data-dirty` follow the new value. The reset starts no validation.
 
