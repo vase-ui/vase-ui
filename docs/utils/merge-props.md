@@ -57,10 +57,6 @@ In this demo, a click does not change the Toggle while `locked` is `true`:
 
 :::
 
-In this sample, the keyboard handlers of Button do not run while `locked` is `true`:
-
-<<< ./merge-props/PreventVaseUIHandler.vue
-
 ## Passing a function instead of an object
 
 Each argument can be a props object or a function. The function gets the props that are merged up to that point, from left to right. It returns a props object. Use it when you compute the next props from the props that are already merged.
