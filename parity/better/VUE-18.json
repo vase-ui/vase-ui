@@ -1,0 +1,8 @@
+{
+  "id": "VUE-18",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/accordion/panel/AccordionPanel.tsx#L54-L55"
+  ],
+  "behavior": "A panel with an empty `id` has the id that its item generates. The open trigger names that id in `aria-controls`. Base UI gives the panel `id=\"\"` then, so `aria-controls` names no element.",
+  "dueWith": "packages/react/src/accordion/panel/AccordionPanel.tsx"
+}
