@@ -4,6 +4,9 @@
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
+    "packages/react/src/internals/field-constants/**",
+    "packages/react/src/internals/field-root-context/**",
+    "packages/react/src/internals/form-context/**",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/labelable-provider/**",
@@ -113,13 +116,6 @@
       "kind": "replaced",
       "test": "packages/vue/src/internals/use-button/useButton.node.test.tsx",
       "reason": "A server render runs in Node with no DOM. The cases are in the test file that the Node project runs, with the same titles."
-    },
-    {
-      "upstream": "packages/react/src/internals/stateAttributesMapping.test.ts",
-      "describe": ["shared state-attribute mappings", "fieldValidityMapping"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/internals/field-constants/constants.ts",
-      "reason": "The cases test `fieldValidityMapping` of the field constants, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",

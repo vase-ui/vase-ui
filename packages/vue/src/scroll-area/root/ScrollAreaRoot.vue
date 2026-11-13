@@ -83,7 +83,7 @@ function normalizeOverflowEdgeThreshold(threshold: ScrollAreaRootProps['overflow
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef } from 'vue';
+import { computed, onDeactivated, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { contains, getTarget } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
@@ -168,6 +168,14 @@ function handleScroll(scrollPosition: Coords) {
     startScrolling(false);
   }
 }
+
+onDeactivated(() => {
+  scrollYTimeout.clear();
+  scrollXTimeout.clear();
+  // The timers that were cleared would have ended the scrolling state.
+  scrollingY.value = false;
+  scrollingX.value = false;
+});
 
 // CSS scroll snap puts each scroll on a snap point, so a thumb drag jumps between snap points.
 // A native scrollbar does not snap during a drag. Stop the snap until the pointer is released.
