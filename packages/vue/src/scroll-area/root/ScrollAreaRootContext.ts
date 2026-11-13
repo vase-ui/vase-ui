@@ -33,7 +33,7 @@ export interface ScrollAreaRootContext {
   handlePointerUp(event: PointerEvent): void;
   handleScroll(scrollPosition: Coords): void;
   disableViewportSnap(): void;
-  viewportSnapDisabled: Readonly<Ref<boolean>>;
+  reapplyViewportSnapNone(): void;
   rootId: ComputedRef<string>;
   hiddenState: Readonly<Ref<HiddenState>>;
   setHiddenState(hiddenState: HiddenState): void;
