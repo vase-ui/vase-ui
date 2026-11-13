@@ -117,7 +117,15 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import { onActivated, onDeactivated, onMounted, provide, shallowRef, watch } from 'vue';
+import {
+  normalizeStyle,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
@@ -162,6 +170,7 @@ const {
   setHovering,
   touchModality,
   handleScroll,
+  viewportSnapDisabled,
   viewportState: state,
 } = useScrollAreaRootContext();
 
@@ -362,7 +371,7 @@ function handleViewportScroll() {
   });
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
+const { element, elementProps: renderElementProps } = useRenderElement('div', props, {
   ref: (viewport) => {
     viewportElement.value = viewport;
   },
@@ -386,6 +395,19 @@ const { element, elementProps } = useRenderElement('div', props, {
   stateAttributesMapping: scrollAreaStateAttributesMapping,
 });
 
+// `useRenderElement` merges the `style` attribute and `stateStyle` of the consumer after the props
+// of the part. The temporary `scroll-snap-type: none` of a thumb drag must win over them, so the
+// part merges it last.
+function elementProps() {
+  const outProps = renderElementProps();
+
+  if (viewportSnapDisabled.value) {
+    outProps.style = normalizeStyle([outProps.style, { scrollSnapType: 'none' }]);
+  }
+
+  return outProps;
+}
+
 onMounted(removeCSSVariableInheritance);
 
 // A change of the hidden state mounts or removes a scrollbar and a thumb.
@@ -408,12 +430,14 @@ watch(
   { flush: 'post' },
 );
 
-onMounted(() => {
-  // No enter event comes for a pointer that is already over the viewport at load.
+// No enter event comes for a pointer that is already over the viewport, at load or when `KeepAlive`
+// brings the viewport back.
+function setHoveringIfHovered() {
   if (viewportElement.value?.matches(':hover')) {
     setHovering(true);
   }
-});
+}
+onMounted(setHoveringIfHovered);
 
 // `KeepAlive` takes the element of a deactivated viewport out of the document. The element then has
 // no layout, so the observer and the timers stop until the viewport is active again.
@@ -436,6 +460,8 @@ onActivated(() => {
   // The browser resets the scroll position of an element that left the document. It sends no
   // scroll event, so the viewport measures again.
   measureAfterUpdate();
+  // The root cleared the hover state on deactivation.
+  setHoveringIfHovered();
 });
 
 watch(
