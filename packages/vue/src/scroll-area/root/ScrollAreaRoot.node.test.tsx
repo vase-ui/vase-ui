@@ -103,4 +103,24 @@ describe('<ScrollArea.Root /> on a server', () => {
       '<div data-orientation="horizontal" style="visibility:hidden;width:var(--scroll-area-thumb-width);">',
     ]);
   });
+
+  it('renders the content, and no corner before a measurement', async () => {
+    const html = await renderToString(
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>
+          <ScrollArea.Content>Text</ScrollArea.Content>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar keepMounted />
+        <ScrollArea.Scrollbar orientation="horizontal" keepMounted />
+        <ScrollArea.Corner data-testid="corner" />
+      </ScrollArea.Root>,
+    );
+
+    // The text is the first node in the content.
+    expect(/<div [^>]*>(?=<!--\[-->Text)/.exec(html)?.[0]).toBe(
+      '<div role="presentation" style="min-width:fit-content;">',
+    );
+    // No measurement exists on a server, so the corner is hidden.
+    expect(html).not.toContain('data-testid="corner"');
+  });
 });
