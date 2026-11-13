@@ -132,7 +132,8 @@ if (valueOfProps !== undefined) {
   setFilled(valueOfProps !== '');
 }
 
-// The value of the last `input` or `change` event that the part handled.
+// The value that the input has after the last event that the part handled. A write of Vue, of the
+// part or of a reset sets it too.
 let handledValue: string | undefined;
 
 function syncFilled() {
@@ -142,11 +143,13 @@ function syncFilled() {
   }
 }
 
-onMounted(() => {
+function syncAfterWrite() {
   handledValue = (element.value as HTMLInputElement | null)?.value;
   syncFilled();
-});
-watch([serializedValue, serializedDefaultValue], syncFilled, { flush: 'post' });
+}
+
+onMounted(syncAfterWrite);
+watch([serializedValue, serializedDefaultValue], syncAfterWrite, { flush: 'post' });
 
 useValueChanged(serializedValue, () => {
   if (serializedValue.value === undefined) {
@@ -199,6 +202,7 @@ function handleInput(event: Event) {
       if (expectedValue !== undefined && input.value !== expectedValue) {
         input.value = expectedValue;
       }
+      handledValue = input.value;
     });
     return;
   }
@@ -214,11 +218,9 @@ function handleInput(event: Event) {
 }
 
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. The value of the prop is not new, because Vue or the part wrote it to the input.
-// Some programs that fill a form send only `change`.
+// value is new. Some programs that fill a form send only `change`.
 function handleChange(event: Event) {
-  const value = (event.currentTarget as HTMLInputElement).value;
-  if (value !== handledValue && value !== serializedValue.value) {
+  if ((event.currentTarget as HTMLInputElement).value !== handledValue) {
     handleInput(event);
   }
 }
@@ -330,6 +332,7 @@ watch(
           return;
         }
         const value = (input as HTMLInputElement).value;
+        handledValue = value;
         setFilled(value !== '');
         setDirty(value !== (validityData.value.initialValue ?? ''));
       });

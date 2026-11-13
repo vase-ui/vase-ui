@@ -628,7 +628,7 @@ describe('<Field.Control />', () => {
         keep: () => 'abc',
       },
     ])(
-      'ignores a change event that has the value of the prop for $name',
+      'ignores a change event that has the value that Vue or the part wrote, for $name',
       async ({ initialValue, typed, keep }) => {
         const handleValueChange = vi.fn();
 
@@ -658,6 +658,81 @@ describe('<Field.Control />', () => {
         expect(handleValueChange).toHaveBeenCalledWith(typed);
       },
     );
+
+    it('handles a change event that has the last typed value after the parent cleared the value', async () => {
+      const handleValueChange = vi.fn();
+
+      const App = defineComponent(() => {
+        const value = shallowRef('');
+        return () => (
+          <Field.Root data-testid="root">
+            <Field.Control
+              value={value.value}
+              onValueChange={(next) => {
+                handleValueChange(next);
+                value.value = next;
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                value.value = '';
+              }}
+            >
+              clear
+            </button>
+          </Field.Root>
+        );
+      });
+
+      await render(<App />);
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      await fireEvent.input(input, { target: { value: 'a' } });
+      await fireEvent.click(screen.getByRole('button'));
+
+      expect(input).toHaveValue('');
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-filled');
+
+      // A program that fills a form can send only `change`, with the value that the user typed last.
+      await fireEvent.change(input, { target: { value: 'a' } });
+
+      expect(handleValueChange).toHaveBeenCalledTimes(2);
+      expect(handleValueChange).toHaveBeenLastCalledWith('a');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-filled', '');
+    });
+
+    it('handles a change event that has a value that the parent refused', async () => {
+      const handleValueChange = vi.fn();
+
+      const App = defineComponent(() => {
+        const invalid = shallowRef(false);
+        return () => (
+          <Field.Root invalid={invalid.value}>
+            <Field.Control
+              value="abc"
+              onValueChange={(next) => {
+                handleValueChange(next);
+                // The control renders in the same flush as the event, and Vue writes the prop.
+                invalid.value = true;
+              }}
+            />
+          </Field.Root>
+        );
+      });
+
+      await render(<App />);
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+      await fireEvent.input(input, { target: { value: 'abcd' } });
+
+      expect(input).toHaveValue('abc');
+
+      await fireEvent.change(input, { target: { value: 'abcd' } });
+
+      expect(handleValueChange).toHaveBeenCalledTimes(2);
+      expect(handleValueChange).toHaveBeenLastCalledWith('abcd');
+    });
   });
 
   describe('native reset', () => {
@@ -709,6 +784,34 @@ describe('<Field.Control />', () => {
         expect(root).not.toHaveAttribute('data-dirty');
       },
     );
+
+    it('BUG-6206: handles a change event that has the last typed value after a native reset', async () => {
+      const handleValueChange = vi.fn();
+
+      await render(
+        <form data-testid="form">
+          <Field.Root data-testid="root">
+            <Field.Control onValueChange={handleValueChange} />
+          </Field.Root>
+        </form>,
+      );
+
+      const root = screen.getByTestId('root');
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      await fireEvent.input(input, { target: { value: 'a' } });
+      screen.getByTestId<HTMLFormElement>('form').reset();
+      await settle();
+
+      expect(input).toHaveValue('');
+      expect(root).not.toHaveAttribute('data-filled');
+
+      // A program that fills a form can send only `change`, with the value that the user typed last.
+      await fireEvent.change(input, { target: { value: 'a' } });
+
+      expect(handleValueChange.mock.calls.map(([value]) => value)).toEqual(['a', 'a']);
+      expect(root).toHaveAttribute('data-filled', '');
+    });
 
     it('BUG-6206: keeps its state when a listener prevents the reset', async () => {
       await render(
