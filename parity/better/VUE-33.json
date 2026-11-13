@@ -1,0 +1,9 @@
+{
+  "id": "VUE-33",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L1043",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L1066"
+  ],
+  "behavior": "A `previousFocusableElement` or `nextFocusableElement` that is a ref or a getter with no element is the same as `null`. When the Tab key leaves the popup, the focus then goes to the outside guard of the portal, which moves it on. Base UI falls back only when the prop itself is empty. A ref object with no `current` moves no focus there, and the focus stays on a hidden guard of the popup.",
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx"
+}
