@@ -1482,6 +1482,46 @@ describe('<Slider.Thumb />', () => {
       expect(observe).toHaveBeenCalledTimes(4);
       expect(disconnect).toHaveBeenCalledTimes(1);
     });
+
+    it('does not measure an inset thumb while KeepAlive holds it, and measures it again at the activation', async () => {
+      const value = shallowRef(30);
+      const visible = shallowRef(true);
+      const Content = defineComponent(() => () => (
+        <Slider.Root value={value.value} thumbAlignment="edge" style={{ width: '200px' }}>
+          <Slider.Control style={{ position: 'relative', width: '100%', height: '10px' }}>
+            <Slider.Thumb data-testid="thumb" style={{ width: '20px', height: '10px' }} />
+          </Slider.Control>
+        </Slider.Root>
+      ));
+      const App = defineComponent(() => () => (
+        <KeepAlive>{visible.value ? <Content /> : null}</KeepAlive>
+      ));
+
+      await render(<App />);
+
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => {
+        expect(thumb.style.getPropertyValue('--position')).toBe('32%');
+      });
+      const measure = vi.spyOn(thumb, 'getBoundingClientRect');
+      onTestFinished(() => {
+        measure.mockRestore();
+      });
+
+      visible.value = false;
+      await nextTick();
+      value.value = 60;
+      await nextTick();
+
+      expect(measure).not.toHaveBeenCalled();
+      expect(thumb.style.getPropertyValue('--position')).toBe('32%');
+
+      visible.value = true;
+
+      await waitFor(() => {
+        expect(thumb.style.getPropertyValue('--position')).toBe('59%');
+      });
+    });
   });
 
   describe('hydration', () => {

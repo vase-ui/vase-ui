@@ -299,8 +299,20 @@ function getInsetPosition() {
   }
 }
 
+// `KeepAlive` takes the thumb out of the document. The thumb then has no layout, so the measure
+// and the observer stop until the thumb is active again.
+const isDeactivated = shallowRef(false);
+
+onDeactivated(() => {
+  isDeactivated.value = true;
+});
+
+onActivated(() => {
+  isDeactivated.value = false;
+});
+
 function measureWhenInset() {
-  if (inset.value) {
+  if (inset.value && !isDeactivated.value) {
     getInsetPosition();
   }
 }
@@ -621,18 +633,6 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
   stateAttributesMapping: sliderStateAttributesMapping,
   children: true,
-});
-
-// `KeepAlive` takes the thumb out of the document. The thumb then has no layout, so the observer
-// stops until the thumb is active again.
-const isDeactivated = shallowRef(false);
-
-onDeactivated(() => {
-  isDeactivated.value = true;
-});
-
-onActivated(() => {
-  isDeactivated.value = false;
 });
 
 watch(
