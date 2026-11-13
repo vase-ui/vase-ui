@@ -752,6 +752,17 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
 - Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
 
+### Popup click
+
+`useClick(store, options)` opens or closes a popup for a press of its trigger. The code is in `src/utils/popups/interactions/useClick.ts`. It follows the rules of [Popup interactions](#popup-interactions).
+
+- A trigger part calls `useClick` in `setup`. `store` is a store, a ref or a getter, because the store of a trigger with a handle changes.
+- The result is one plain object with `reference`.
+- Each option is a value, a ref or a getter. A getter of `stickIfOpen` is read at each press, as the function of Base UI.
+- The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part.
+- `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
+- A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
