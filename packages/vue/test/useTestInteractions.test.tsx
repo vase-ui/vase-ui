@@ -123,11 +123,13 @@ describe('useTestInteractions', () => {
     const entry = shallowRef<TestElementProps>({ reference: { onClick: oldOnClick } });
     const { getReferenceProps } = await renderInteractions([toEntry(entry)]);
 
+    // @ts-expect-error The prop getter returns unknown values; the interaction supplies a callable onClick.
+    getReferenceProps().onClick();
     entry.value = { reference: { onClick: newOnClick } };
     // @ts-expect-error The prop getter returns unknown values; the interaction supplies a callable onClick.
     getReferenceProps().onClick();
 
+    expect(oldOnClick).toHaveBeenCalledTimes(1);
     expect(newOnClick).toHaveBeenCalledTimes(1);
-    expect(oldOnClick).not.toHaveBeenCalled();
   });
 });
