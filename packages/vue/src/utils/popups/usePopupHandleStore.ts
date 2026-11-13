@@ -9,7 +9,8 @@ import type { PopupHandleStoreProvider } from './popupHandle';
  * handle. Once a root attaches, the result is the store of that root.
  *
  * While the trigger hydrates, the result is the inert store. The server HTML of the trigger comes
- * from that store, and hydration does not patch an attribute.
+ * from that store. Hydration does not patch an attribute of a bound object, which is how a part
+ * binds its attributes.
  *
  * The result is `undefined` when the trigger has no handle, so that the caller can use the store of
  * its root.

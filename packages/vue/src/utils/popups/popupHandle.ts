@@ -100,8 +100,22 @@ export class BasePopupHandle<
     markRaw(this);
   }
 
+  /**
+   * The store of the root that controls the handle, or `null`. This read depends on the pointer. A
+   * getter that reads it, such as `isOpen`, then follows each change of the pointer.
+   */
   protected get attachedStore() {
     return this.attachedStoreRef.value;
+  }
+
+  /**
+   * The store of the newest attached root, or `null`. This read has no dependency, because the
+   * list of the stores is a plain array. A method that an event handler or an effect calls reads
+   * it. An effect that calls `open()` or `close()` then does not run again when a root attaches or
+   * detaches.
+   */
+  protected get attachedStoreUntracked() {
+    return this.attachedStores[this.attachedStores.length - 1] ?? null;
   }
 
   /**
@@ -176,7 +190,7 @@ export class BasePopupHandle<
    * with no trigger.
    */
   protected openByTrigger(triggerId: string | null | undefined) {
-    const attachedStore = this.attachedStore;
+    const attachedStore = this.attachedStoreUntracked;
 
     if (attachedStore === null) {
       if (process.env.NODE_ENV !== 'production') {
@@ -233,7 +247,7 @@ export class BasePopupHandle<
    * Call it only in an event handler or an effect, and not in a render.
    */
   protected closePopup() {
-    const attachedStore = this.attachedStore;
+    const attachedStore = this.attachedStoreUntracked;
 
     if (attachedStore === null) {
       if (process.env.NODE_ENV !== 'production') {

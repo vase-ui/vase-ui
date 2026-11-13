@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { computed, createSSRApp, ref } from 'vue';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { computed, createSSRApp, nextTick, ref, watchEffect } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import {
   PopupHandleFixtureStore,
@@ -8,6 +8,10 @@ import {
 import PopupHandleHydration from '../../../test/fixtures/PopupHandleHydration.test.vue';
 
 describe('BasePopupHandle', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('stays inert when two server renders share the handle of a module', async () => {
     // All server requests share the handle of a module.
     const handle = createPopupHandleFixture();
@@ -49,5 +53,26 @@ describe('BasePopupHandle', () => {
 
     detach();
     expect(handle.store).toBe(handle.fallback);
+  });
+
+  it('lets an effect call open() and close() with no dependency on the attached root', async () => {
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const handle = createPopupHandleFixture();
+    const detach = handle.attachStore(new PopupHandleFixtureStore());
+    const effect = vi.fn(() => {
+      handle.open(null);
+      handle.close();
+    });
+    const stop = watchEffect(effect);
+    expect(effect).toHaveBeenCalledTimes(1);
+
+    detach();
+    await nextTick();
+    handle.attachStore(new PopupHandleFixtureStore());
+    await nextTick();
+    stop();
+
+    expect(effect).toHaveBeenCalledTimes(1);
+    expect(consoleWarn).not.toHaveBeenCalled();
   });
 });

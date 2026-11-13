@@ -64,6 +64,14 @@ export class PopupHandleFixture extends BasePopupHandle<HandleStore, PopupHandle
   get fallback() {
     return this.fallbackStore;
   }
+
+  open(triggerId: string | null | undefined) {
+    this.openByTrigger(triggerId);
+  }
+
+  close() {
+    this.closePopup();
+  }
 }
 
 export function createPopupHandleFixture() {

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, nextTick } from 'vue';
+import { defineComponent, nextTick, shallowRef } from 'vue';
 import { createRenderer, hydrate, renderOnServer } from '#test-utils';
 import {
   PopupHandleFixtureStore,
   createPopupHandleFixture,
 } from '../../../test/fixtures/PopupHandleFixture';
+import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
 import PopupHandleHydration from '../../../test/fixtures/PopupHandleHydration.test.vue';
 import { usePopupHandleStore } from './usePopupHandleStore';
 
@@ -47,6 +48,28 @@ describe('usePopupHandleStore', () => {
     expect(output.textContent).toBe('inert');
   });
 
+  it('follows a change of the handle that the getter gives', async () => {
+    const handleA = createPopupHandleFixture();
+    const rootStoreA = new PopupHandleFixtureStore();
+    handleA.attachStore(rootStoreA);
+    const handleB = createPopupHandleFixture();
+    const handle = shallowRef<PopupHandleFixture | undefined>(handleA);
+    let result!: ReturnType<typeof usePopupHandleStore>;
+    const Reader = defineComponent(() => {
+      result = usePopupHandleStore(() => handle.value);
+      return () => null;
+    });
+
+    await render(<Reader />);
+    expect(result.value).toBe(rootStoreA);
+
+    handle.value = handleB;
+    expect(result.value).toBe(handleB.fallback);
+
+    handle.value = undefined;
+    expect(result.value).toBeUndefined();
+  });
+
   describe('hydration', () => {
     async function hydrateWithRoot(props: { defaultOpen: boolean; defaultTriggerId: string }) {
       const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
@@ -58,7 +81,8 @@ describe('usePopupHandleStore', () => {
     }
 
     // The root attaches before the trigger that follows it hydrates. Hydration does not patch an
-    // attribute, so a trigger that read the store of the root would keep the server HTML.
+    // attribute of a bound object, which is how a part binds its attributes. A trigger that read
+    // the store of the root would then keep the server HTML.
     it('gives the inert store while a trigger with a handle hydrates, and the store of the root after it', async () => {
       const { server, client } = await hydrateWithRoot({
         defaultOpen: true,
