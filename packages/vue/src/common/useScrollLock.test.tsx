@@ -907,8 +907,8 @@ describe('useScrollLock', () => {
       return { A: Locker, B: createLocker(copy.useScrollLock) };
     }
 
-    it('VUE-6: keeps the page locked until each copy has released its lock', async () => {
-      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
+    async function expectLockedUntilEachCopyHasReleased(css: string) {
+      const page = await createScrollDocument({ css });
       setOriginalState(page);
       const original = state(page);
       const { A, B } = await createCopies();
@@ -921,14 +921,26 @@ describe('useScrollLock', () => {
       ));
       await waitForLock(page);
       expect(getScrollLockRegistry()?.lockCount).toBe(2);
+      const locked = snapshot(page);
 
       await release(enabled.a);
       await wait(0);
-      expect(isPageLocked(page)).toBe(true);
+      expect(snapshot(page)).toEqual(locked);
 
       await release(enabled.b);
       await waitFor(() => expect(state(page)).toEqual(original), POLL);
+    }
+
+    it('VUE-6: keeps a page that has overlay scrollbars locked until each copy has released its lock', async () => {
+      await expectLockedUntilEachCopyHasReleased(HIDDEN_SCROLLBARS_CSS);
     });
+
+    it.runIf(hasBodyStrategy)(
+      'VUE-6: keeps a page that has scrollbars that take space locked until each copy has released its lock',
+      async () => {
+        await expectLockedUntilEachCopyHasReleased(CUSTOM_SCROLLBARS_CSS);
+      },
+    );
 
     it('VUE-6: takes one lock and one restore when a copy acquires and releases in one task', async () => {
       const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
