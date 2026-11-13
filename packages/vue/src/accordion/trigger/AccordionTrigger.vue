@@ -26,6 +26,10 @@ export interface AccordionTriggerProps
   /**
    * The id of the trigger. The panel uses it for `aria-labelledby`.
    * If the id is absent or empty, the trigger has the id that the item generates.
+   * If the panel comes before the trigger in the template, a server render writes the panel first.
+   * The `aria-labelledby` of the panel in the server HTML then names the id that the item generates
+   * until the page hydrates. It does not name a trigger that has an `id` of its own until then.
+   * To correct this, set `aria-labelledby` on `Accordion.Panel` to the same id.
    */
   id?: string | undefined;
 }
