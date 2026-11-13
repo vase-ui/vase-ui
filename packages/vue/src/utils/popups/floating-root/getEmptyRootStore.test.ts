@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { isReactive } from 'vue';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { getEmptyRootStore } from './getEmptyRootStore';
@@ -28,7 +29,7 @@ describe('getEmptyRootStore', () => {
     });
   });
 
-  it('takes no write, and its context is frozen', () => {
+  it('takes no write, and its state and its context are frozen', () => {
     const store = getEmptyRootStore();
     const onOpenChange = vi.fn();
     store.context.events.on('openchange', onOpenChange);
@@ -41,6 +42,7 @@ describe('getEmptyRootStore', () => {
     expect(store.select('anchor')).toBe(null);
     expect(store.select('anchorElement')).toBe(null);
     expect(onOpenChange).not.toHaveBeenCalled();
+    expect(isReactive(Reflect.get(store, 'state'))).toBe(false);
     expect(() => {
       store.context.nested = true;
     }).toThrow(TypeError);
