@@ -8,10 +8,12 @@
       <li><NuxtLink to="/fieldset">Fieldset</NuxtLink></li>
       <li><NuxtLink to="/form">Form</NuxtLink></li>
       <li><NuxtLink to="/collapsible">Collapsible</NuxtLink></li>
+      <li><NuxtLink to="/accordion">Accordion</NuxtLink></li>
       <li><NuxtLink to="/avatar">Avatar</NuxtLink></li>
       <li><NuxtLink to="/toolbar">Toolbar</NuxtLink></li>
       <li><NuxtLink to="/toggle-group">Toggle Group</NuxtLink></li>
       <li><NuxtLink to="/scroll-area">Scroll Area</NuxtLink></li>
+      <li><NuxtLink to="/field">Field</NuxtLink></li>
       <li><NuxtLink to="/providers">Providers</NuxtLink></li>
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
       <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>

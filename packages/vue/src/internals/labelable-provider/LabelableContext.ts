@@ -31,10 +31,6 @@ export interface LabelableContext {
   labelId: ComputedRef<string | undefined>;
   registerLabelId: RegisterId;
   /**
-   * The `id` that the provider made for a label that has no `id` of its own.
-   */
-  defaultLabelId: ComputedRef<string | undefined>;
-  /**
    * The `id`s of the elements that give an accessible description, in the order of the parts.
    */
   messageIds: ComputedRef<string[]>;
@@ -55,7 +51,6 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   resetControlId: NOOP,
   labelId: computed(() => undefined),
   registerLabelId: NOOP,
-  defaultLabelId: computed(() => undefined),
   messageIds: computed(() => EMPTY_ARRAY),
   registerMessageId: NOOP,
   getDescriptionProps: (externalProps) => externalProps,

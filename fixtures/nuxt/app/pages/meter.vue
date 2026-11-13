@@ -18,7 +18,7 @@ import { Meter } from '@vase-ui/vue/meter';
         <Meter.Indicator data-testid="currency-indicator" />
       </Meter.Track>
     </Meter.Root>
-    <Meter.Root :value="42">
+    <Meter.Root data-testid="percent-root" :value="42" aria-label="Storage">
       <Meter.Value data-testid="percent-value" />
     </Meter.Root>
   </main>

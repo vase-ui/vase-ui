@@ -13,16 +13,12 @@ import { useRegisteredId } from './useRegisteredId';
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
-  const {
-    controlId: contextControlId,
-    registerLabelId: registerContextLabelId,
-    defaultLabelId,
-  } = useLabelableContext();
+  const { controlId: contextControlId, registerLabelId: registerContextLabelId } =
+    useLabelableContext();
 
-  // The id of a label that has no provider.
   const ownId = useVaseUiId();
 
-  const id = computed(() => toValue(params.id) ?? defaultLabelId.value ?? ownId.value);
+  const id = computed(() => toValue(params.id) ?? ownId.value);
 
   const source = Symbol();
 
@@ -94,8 +90,7 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
 export interface UseLabelParameters {
   /**
    * The `id` of the label.
-   * The default is the id that the provider made for the label. With no provider, it is a
-   * generated id.
+   * The default is a generated id.
    */
   id?: MaybeRefOrGetter<string | undefined> | undefined;
   /**

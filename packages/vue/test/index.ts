@@ -10,6 +10,7 @@ export {
   pressWithTouch,
 } from './pointer';
 export * from './wait';
+export * from './animation';
 export { describeConformance } from './describeConformance';
 export { screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';

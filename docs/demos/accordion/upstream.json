@@ -1,0 +1,10 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/accordion/demos",
+  "files": {
+    "_index.module.css": "f59b00962625c2711a390cb0567bcc9b83bf5ba91377ea7773489400b4153e5f",
+    "hero/css-modules/index.tsx": "da685f26be4776534ddf1f1a21c256f715d844e333598f083c7ee89d7d721853",
+    "hidden-until-found/css-modules/index.tsx": "cc2fcdbf32e1153127fccc3dd288cacffc08319e74df5839bc622745ee9e0731",
+    "multiple/css-modules/index.tsx": "7fdaf87a9f557e7ab8d508185a9dcfbda7f666dfb19f68d403e221a66fa9fdca"
+  }
+}
