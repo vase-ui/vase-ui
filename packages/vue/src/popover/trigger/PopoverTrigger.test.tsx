@@ -118,27 +118,21 @@ describe('<Popover.Trigger />', () => {
     }
   });
 
-  it('fits the as prop of a toolbar button, and takes a toolbar button as its as prop', async () => {
+  it('takes a toolbar button as its as prop', async () => {
     await render(
       <Toolbar.Root>
         <Popover.Root>
-          <Toolbar.Button as={Popover.Trigger}>Button as trigger</Toolbar.Button>
           <Popover.Trigger as={Toolbar.Button}>Trigger as button</Popover.Trigger>
         </Popover.Root>
       </Toolbar.Root>,
     );
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons.map((button) => button.textContent)).toEqual([
-      'Button as trigger',
-      'Trigger as button',
-    ]);
-    for (const button of buttons) {
-      expect(button).toHaveAttribute('aria-haspopup', 'dialog');
-      expect(button).toHaveAttribute('aria-expanded', 'false');
-      expect(button).toHaveAttribute('data-orientation', 'horizontal');
-    }
-    expect(buttons.map((button) => button.getAttribute('tabindex'))).toEqual(['0', '-1']);
+    const button = screen.getByRole('button');
+    expect(button).toHaveTextContent('Trigger as button');
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).toHaveAttribute('data-orientation', 'horizontal');
+    expect(button).toHaveAttribute('tabindex', '0');
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

@@ -21,8 +21,7 @@ const numberPayloadHandle = Popover.createHandle<number>();
 <Popover.Trigger handle={numberPayloadHandle} payload={42} />;
 <Popover.Trigger handle={numberPayloadHandle} />;
 
-// The trigger is not a generic component, so that it fits the `as` prop of another part. It does
-// not check the type of `payload` against the handle.
+// @ts-expect-error The handle requires a number payload, not a string.
 <Popover.Trigger handle={numberPayloadHandle} payload={'invalid'} />;
 
-<Toolbar.Button as={Popover.Trigger} />;
+<Popover.Trigger as={Toolbar.Button} />;

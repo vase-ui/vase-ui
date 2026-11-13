@@ -44,7 +44,7 @@ export interface PopoverTriggerProps<Payload = unknown>
 }
 </script>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="Payload = unknown">
 import { computed } from 'vue';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
@@ -65,7 +65,7 @@ import type { PopoverHandleStore } from '../store/PopoverStore';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<PopoverTriggerProps>(), {
+const props = withDefaults(defineProps<PopoverTriggerProps<Payload>>(), {
   as: 'button',
   disabled: false,
   nativeButton: true,

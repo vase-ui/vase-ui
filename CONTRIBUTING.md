@@ -348,7 +348,7 @@ Rules:
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
-- A trigger part of a popup family, such as `Popover.Trigger`, is such a part. Its `payload` thus has the type `unknown` in a template and in TSX, and the part does not check `payload` against `handle`.
+- A trigger part of a popup family, such as `Popover.Trigger`, is a generic SFC, so that vue-tsc checks `payload` against `handle`. Give another part to its `as` prop or its `#render` slot: `<Popover.Trigger :as="Toolbar.Button">`. Do not give the trigger to the `as` prop of another part.
 
 ### State and `v-model`
 
