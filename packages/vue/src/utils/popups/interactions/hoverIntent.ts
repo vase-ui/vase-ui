@@ -309,6 +309,7 @@ export class HoverIntent {
 
       this.safePolygonHandler = handleClose({
         ...handleCloseContextBase,
+        placement: handleCloseContextBase.placement ?? null,
         tree: options.tree(),
         x: event.clientX,
         y: event.clientY,
