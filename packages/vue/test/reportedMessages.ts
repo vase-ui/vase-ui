@@ -1,4 +1,5 @@
 import { beforeEach, onTestFinished } from 'vitest';
+import { version } from 'vue';
 import type { App } from 'vue';
 
 const consoleMethods = ['warn', 'error'] as const;
@@ -8,18 +9,40 @@ const originalConsole = { warn: console.warn, error: console.error };
 // The list exists only while a test runs.
 let messages: string[] | undefined;
 
+const activeEffectMessage =
+  'console.warn: [Vue warn] Active effect was not restored correctly - this is likely a Vue internal bug.';
+
+/**
+ * Says whether a console call is a reported message. On a prerelease of Vue 3.6, one call is not:
+ * `Active effect was not restored correctly`. Vue 3.6 clears the active effect before `setup` and
+ * does not restore it when `setup` throws. The render effect of the parent then writes the message
+ * to `console.warn`. Vue 3.5 does not write it. Vue does not plan to restore its state after an
+ * error of `setup`: https://github.com/vuejs/core/issues/16068
+ *
+ * Delete this function when the tests run a release of Vue 3.6. The version check is then false,
+ * and the cases that expect an error of `setup` show what that release does.
+ */
+export function isReportedMessage(text: string, vueVersion: string): boolean {
+  const isVue36Prerelease = /^3\.6\.0-/.test(vueVersion);
+  return !(isVue36Prerelease && text === activeEffectMessage);
+}
+
 /**
  * Fails each test that ends with a message that it did not take. A message is a Vue warning of an
  * app that `recordVueWarnings` was called on, or a call to `console.warn` or `console.error` that
- * reaches the console. A console spy that has `mockImplementation` takes its calls, so they do not
- * reach the console. A message that comes when no test runs goes to the console.
+ * reaches the console and for which `isReportedMessage` returns `true`. A console spy that has
+ * `mockImplementation` takes its calls, so they do not reach the console. A message that comes when
+ * no test runs goes to the console.
  */
 export function failOnReportedMessages(): void {
   for (const method of consoleMethods) {
     // An assignment and not `vi.spyOn`: `vi.restoreAllMocks()` in a test removes a spy.
     console[method] = (...args: unknown[]) => {
       if (messages) {
-        messages.push(`console.${method}: ${args.map(String).join(' ')}`);
+        const text = `console.${method}: ${args.map(String).join(' ')}`;
+        if (isReportedMessage(text, version)) {
+          messages.push(text);
+        }
       } else {
         originalConsole[method].apply(console, args);
       }
