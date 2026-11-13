@@ -1,4 +1,4 @@
-import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { afterEach, beforeEach, expect, vi, describe, it, onTestFinished } from 'vitest';
 import { KeepAlive, createSSRApp, defineComponent, h, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -27,6 +27,13 @@ function createFormDataSpy(name: string) {
     event.preventDefault();
     return new FormData(event.currentTarget as HTMLFormElement).get(name);
   });
+}
+
+// The part follows a reset in a timeout of 0 ms, after the listeners of the event.
+// The case that calls this function uses fake timers.
+async function settleReset() {
+  vi.advanceTimersByTime(0);
+  await flushMicrotasks();
 }
 
 describe('<Switch.Root />', () => {
@@ -1333,6 +1340,14 @@ describe('<Switch.Root />', () => {
     });
 
     describe('BUG-6206: a native reset', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
       it.each([
         { name: 'on', defaultChecked: true, data: ['yes'] },
         { name: 'off', defaultChecked: false, data: ['no'] },
@@ -1357,6 +1372,7 @@ describe('<Switch.Root />', () => {
           expect(switchElement).toHaveAttribute('aria-checked', String(!defaultChecked));
 
           await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+          await settleReset();
 
           expect(switchElement).toHaveAttribute('aria-checked', String(defaultChecked));
           expect(getFormData()).toEqual(data);
@@ -1366,6 +1382,7 @@ describe('<Switch.Root />', () => {
 
           // A reset with nothing to change.
           await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+          await settleReset();
 
           expect(handleChange).toHaveBeenCalledTimes(2);
         },
@@ -1414,6 +1431,20 @@ describe('<Switch.Root />', () => {
           ),
         },
         {
+          name: 'a switch whose window cancels the reset',
+          renderForm: () => {
+            // The window gets the event after the root node of the switch.
+            const cancelReset = (event: Event) => event.preventDefault();
+            window.addEventListener('reset', cancelReset);
+            onTestFinished(() => window.removeEventListener('reset', cancelReset));
+            return () => (
+              <form data-testid="form">
+                <Switch.Root name="notifications" />
+              </form>
+            );
+          },
+        },
+        {
           name: 'a switch of another form',
           renderForm: () => () => (
             <div>
@@ -1429,7 +1460,7 @@ describe('<Switch.Root />', () => {
         await fireEvent.click(switchElement);
 
         screen.getByTestId<HTMLFormElement>('form').reset();
-        await flushMicrotasks();
+        await settleReset();
 
         expect(switchElement).toHaveAttribute('aria-checked', 'true');
         expect(screen.getByRole<HTMLInputElement>('checkbox', { hidden: true }).checked).toBe(true);
@@ -1447,7 +1478,7 @@ describe('<Switch.Root />', () => {
         expect(getFormData()).toEqual(['on']);
 
         screen.getByTestId<HTMLFormElement>('form').reset();
-        await flushMicrotasks();
+        await settleReset();
 
         expect(switchElement).toHaveAttribute('aria-checked', 'false');
         expect(getFormData()).toEqual([]);
@@ -1583,6 +1614,14 @@ describe('<Switch.Root />', () => {
   });
 
   describe('KeepAlive', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('keeps its state, and a reset of the form does not change a switch that is not shown', async () => {
       const App = defineComponent({
         props: { shown: { type: Boolean, default: true } },
@@ -1605,13 +1644,14 @@ describe('<Switch.Root />', () => {
       expect(new FormData(form).getAll('notifications')).toEqual([]);
 
       form.reset();
+      await settleReset();
       await setProps({ shown: true });
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
       expect(new FormData(form).getAll('notifications')).toEqual(['on']);
 
       form.reset();
-      await flushMicrotasks();
+      await settleReset();
 
       expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
     });

@@ -109,6 +109,7 @@ import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
+import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
@@ -272,14 +273,23 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeCheckedToInput);
 }
 
+const resetTimeout = useTimeout();
+
 function onReset(event: Event) {
-  if (event.defaultPrevented || event.target !== inputElement.value?.form) {
+  if (event.target !== inputElement.value?.form) {
     return;
   }
 
-  if (props.checked === undefined && isChecked.value !== props.defaultChecked) {
-    requestChange(props.defaultChecked, event);
-  }
+  // A listener that runs later can still prevent the event. The browser then resets nothing.
+  resetTimeout.start(0, () => {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (props.checked === undefined && isChecked.value !== props.defaultChecked) {
+      requestChange(props.defaultChecked, event);
+    }
+  });
 }
 
 watch(
@@ -297,6 +307,7 @@ watch(
         addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput),
         // The form of the input can change, so the listener is on the root node.
         addEventListener(input.getRootNode(), 'reset', onReset),
+        resetTimeout.clear,
       ),
     );
   },

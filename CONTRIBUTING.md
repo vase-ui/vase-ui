@@ -268,7 +268,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
-- The part listens to `reset` on the root node of the input, because the form of the input can change. An uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change.
+- The part listens to `reset` on the root node of the input, because the form of the input can change. The listener ignores an event whose target is not the form of the input when the event arrives. The part decides in a 0 ms timeout, after the listeners of the event. It does nothing when a listener prevented the event. An uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change.
 
 ```vue
 <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
