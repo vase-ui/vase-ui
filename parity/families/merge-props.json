@@ -14,13 +14,13 @@
     },
     {
       "entry": "mergeProps",
-      "returns": "NativeElements[T]",
-      "reason": "The type is the attributes of the element `T`, as Vue declares them. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
+      "returns": "MergedProps<T>",
+      "reason": "With a type argument, the type is `NativeElements[T]`: the attributes of the element `T`, as Vue declares them. With no type argument, it is `NativeElements['div']`: the attributes that each HTML element has. Base UI's type is then in effect `any`. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
     },
     {
       "entry": "mergePropsN",
-      "returns": "NativeElements[T]",
-      "reason": "The type is the attributes of the element `T`, as Vue declares them. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
+      "returns": "MergedProps<T>",
+      "reason": "With a type argument, the type is `NativeElements[T]`: the attributes of the element `T`, as Vue declares them. With no type argument, it is `NativeElements['div']`: the attributes that each HTML element has. Base UI's type is then in effect `any`. Each listener gets the DOM event, so a template can bind the result. Each handler of a set gets a `VaseUIEvent`."
     }
   ],
   "notApplicableCommits": []

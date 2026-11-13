@@ -287,8 +287,8 @@ Rules:
 - A set can be a function `(merged) => props`.
 - `ref` is not merged.
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
-- The type argument is the tag of the element: `mergeProps<'button'>`. With no type argument, the tag is `div`. The sets and the result then have only the attributes that each HTML element has.
-- A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event: the type of the result is `NativeElements[T]`.
+- The type argument is the tag of the element: `mergeProps<'button'>`. The sets and the result then have the attributes of that element. With no type argument, a set accepts the attributes of each element, and the type of the result is `NativeElements['div']`: the attributes that each HTML element has.
+- A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event. With a type argument, the type of the result is `NativeElements[T]`.
 - Vue types a listener of an element as a function of the DOM event. A template thus refuses a bound object whose listeners need a `VaseUIEvent`.
 
 ### `useRenderElement` and `useRender`
@@ -352,6 +352,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on list parts, `{ value }` on `Select.Value`.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
+- Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `value` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
 - Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
@@ -518,6 +519,8 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
 - A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
+- A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger of the Accordion then reads `useCollapsibleRootContext()`, and it uses the composables of Collapsible with no change.
+- Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
 
 ### Popup store
 
@@ -535,6 +538,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - A function that a render function or a ref callback calls reads `toRaw(store.state)`. That read adds no dependency. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
+- Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Composite
@@ -594,6 +598,7 @@ The item registry:
 - Give an object as metadata through a `computed` or a ref. A getter that makes a new object on each call makes the list publish a new map on each sort.
 - `elementsRef` and `labelsRef` are `shallowRef` values. The list gives each a new array on each sort. An explicit index can leave an empty slot in the array.
 - An item with no list is valid. Its index is its explicit index, or `-1`.
+- A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
 
 The index on a server:
 
@@ -688,6 +693,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The read is not `offsetHeight`, because an `<svg>` has no such property.
 - Without that read, Vue removes the attribute before the first style computation. The enter transition then does not start.
 - Omit `element` only when the element has no enter transition.
+- `Accordion.Item` gives no `element` to `useCollapsibleRoot`. Its state has no transition status, so its element never has `data-starting-style`.
 - Vue applies a state write of an animation frame callback in the microtask after that callback. The browser computes the style of the frame after that microtask.
 - A transition must sometimes start from a value that an earlier DOM update set. Then read the layout of the element after that update. `useCollapsiblePanel` calls `getBoundingClientRect()` in `nextTick` after it writes the measured size. Without that read, the exit transition does not start.
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
