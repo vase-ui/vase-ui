@@ -52,10 +52,12 @@ export type AccordionItemChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue';
+import { computed, provide, shallowRef } from 'vue';
 import { CollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import { useCollapsibleRoot } from '../../collapsible/root/useCollapsibleRoot';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -111,7 +113,8 @@ function onOpenChange(nextOpen: boolean, eventDetails: AccordionItemChangeEventD
 }
 
 // The call gives no `element`. The state of the item has no transition status, so the element of
-// the item never has `data-starting-style`.
+// the item never has `data-starting-style`. The panel reads its own computed style while its
+// status is `starting`.
 const collapsible = useCollapsibleRoot({
   open: isOpen,
   onOpenChange,
@@ -136,7 +139,28 @@ const state = computed<AccordionItemState>(() => ({
   open: isOpen.value,
 }));
 
-provide(AccordionItemContext, { defaultTriggerId: useVaseUiId(), state });
+const defaultTriggerId = useVaseUiId();
+const { ids: triggerIds, registerId } = createIdRegistry();
+// The panel can render before its trigger registers. Until a trigger registers, the item assumes a
+// trigger with the generated id.
+const hasRegisteredTrigger = shallowRef(false);
+
+const registerTriggerId: RegisterId = (source, getId) => {
+  if (getId) {
+    hasRegisteredTrigger.value = true;
+  }
+  registerId(source, getId);
+};
+
+provide(AccordionItemContext, {
+  defaultTriggerId,
+  registerTriggerId,
+  state,
+  triggerId: computed(
+    () =>
+      triggerIds.value.at(-1) ?? (hasRegisteredTrigger.value ? undefined : defaultTriggerId.value),
+  ),
+});
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
