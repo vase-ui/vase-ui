@@ -2,8 +2,17 @@ import type { VirtualElement } from '@floating-ui/vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
+import type { FloatingTreeStore } from './tree/FloatingTreeStore';
 
 export type ReferenceType = Element | VirtualElement;
+
+export type NarrowedElement<T> = T extends Element ? T : Element;
+
+export interface ExtendedElements {
+  reference: ReferenceType | null;
+  floating: HTMLElement | null;
+  domReference: NarrowedElement<ReferenceType> | null;
+}
 
 export interface PopupEvents {
   emit<T extends string>(event: T, data?: any): void;
@@ -93,3 +102,21 @@ export interface PositioningInteractionStore extends PopupInteractionStore {
    */
   clearPositioning(): void;
 }
+
+/**
+ * What the popup of a node gives to the other popups of its tree.
+ */
+export interface PopupPositioningContext {
+  open: boolean;
+  nodeId: string | undefined;
+  elements: ExtendedElements;
+  rootStore: PopupInteractionStore;
+}
+
+export interface FloatingNodeType {
+  id: string | undefined;
+  parentId: string | null;
+  context?: PopupPositioningContext | undefined;
+}
+
+export type FloatingTreeType = FloatingTreeStore;
