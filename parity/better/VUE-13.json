@@ -1,0 +1,10 @@
+{
+  "id": "VUE-13",
+  "evidence": [
+    "https://vuejs.org/guide/essentials/reactivity-fundamentals.html#deep-reactivity",
+    "https://vuejs.org/api/reactivity-core.html#watch",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/form/Form.tsx#L71-L75"
+  ],
+  "behavior": "Form follows a change that the consumer makes in place to a reactive `errors` object, such as a new key. Base UI sees only a new object. Form watches the prop deeply and keeps a new plain copy for each change.",
+  "dueWith": "packages/react/src/form/Form.tsx"
+}
