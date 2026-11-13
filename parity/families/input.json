@@ -1,0 +1,14 @@
+{
+  "upstreamPaths": ["packages/react/src/input/**", "docs/src/app/(docs)/react/components/input/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Input",
+      "prop": "disabled",
+      "reason": "The part gives its attributes to `Field.Control`, which declares `disabled` as a Boolean. The native attribute type `Booleanish` is not assignable to that prop, so the part declares `disabled` as `Field.Control` does. `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

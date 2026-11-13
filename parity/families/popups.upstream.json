@@ -2,7 +2,8 @@
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
-    "packages/react/src/utils/popups/floating-root/**"
+    "packages/react/src/utils/popups/floating-root/**",
+    "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
@@ -29,7 +30,8 @@
     "packages/react/src/utils/popups/types.ts",
     "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
     "packages/react/src/utils/popups/usePopupHandleStore.ts",
-    "packages/react/src/utils/popups/useTriggerFocusGuards.ts"
+    "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+    "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "typeTests": [
     "packages/react/src/utils/popups/popupStoreUtils.spec.ts",

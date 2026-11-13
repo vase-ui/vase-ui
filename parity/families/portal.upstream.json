@@ -1,0 +1,152 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/portal/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
+    "packages/react/src/utils/popups/portal/FloatingPortalLite.tsx"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "allows custom containers",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "allows refs as containers",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "allows containers to be initially null",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "reattaches the portal when the container changes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "forwards HTML props to the portal element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "uses the rendered portal ID for the aria-owns relationship",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingPortal"
+          ],
+          "title": "FloatingPortalLite forwards HTML props to the portal element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "mounts directly inside a ref attached later in the commit (ancestor=$ancestor, strict=$strict)"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "mounts inside an ancestor ref before the next paint"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "$name without canceling a view transition",
+          "conditions": [
+            "skipIf(isJSDOM || !React.ViewTransition || typeof document.startViewTransition !== 'function')"
+          ]
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "does not cancel a view transition that reveals a hidden pending portal",
+          "conditions": [
+            "skipIf(isJSDOM || !React.ViewTransition || !React.Activity || typeof document.startViewTransition !== 'function')"
+          ]
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "keeps content connected when an indicator exit removes the container in the same checkpoint",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "mounts children once in a connected container when a later update replaces its ref"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "mounts deeply nested portals inside their ancestor refs"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "batches sibling portals without adding commits for each container ref"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "uses the fallback container when a ref stays empty (nested=$nested)"
+        },
+        {
+          "describe": [
+            "$name container resolution"
+          ],
+          "title": "cancels a queued container check when the container prop changes (clear=$clear)"
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}
