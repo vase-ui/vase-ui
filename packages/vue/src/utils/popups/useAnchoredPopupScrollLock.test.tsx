@@ -279,7 +279,7 @@ describe('useAnchoredPopupScrollLock', () => {
   });
 
   describe('on a server', () => {
-    it('renders the part and takes no lock, because Node has no document', async () => {
+    it('renders the part and takes no lock', async () => {
       const html = await renderOnServer(PART_FILE, { enabled: true });
 
       expect(html).toBe(

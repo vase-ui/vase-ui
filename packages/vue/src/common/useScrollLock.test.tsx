@@ -165,7 +165,7 @@ function createExternalLocks() {
       },
     },
     {
-      name: 'the overflow longhands of the html element',
+      name: 'the overflow longhands of html',
       lock({ html }: ScrollDocument) {
         html.style.setProperty('scrollbar-gutter', 'stable');
         html.style.setProperty('overflow-x', 'hidden');

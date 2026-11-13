@@ -69,8 +69,8 @@ function supportsStableScrollbarGutter(referenceElement: Element | null) {
     return false;
   }
 
-  // The probe writes styles and reads the layout, which can stop a transition that runs on the page.
-  // Thus each document gets one probe, and the result stays for the life of the document.
+  // The probe writes styles and reads the layout. In WebKit, that can stop a transition that runs on
+  // the page. Thus each document gets one probe, and the result stays for the life of the document.
   // https://github.com/mui/base-ui/issues/6119
   const { stableGutter } = getRegistry();
   const known = stableGutter.get(doc);

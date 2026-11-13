@@ -783,12 +783,12 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 
 The scroll lock stops the scroll of the page under a modal popup. The code is in `src/common/useScrollLock.ts`, `src/utils/popups/useAnchoredPopupScrollLock.ts` and `src/utils/popups/InternalBackdrop.vue`.
 
-- The positioner of an anchored popup calls `useAnchoredPopupScrollLock` in `setup`. The root of a Dialog calls `useScrollLock`.
+- Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup. Call `useScrollLock` in `setup` of the root of a Dialog.
 - Each parameter of the two composables is a value, a ref or a getter. A getter that gives `undefined` means that the lock is off. Only a call with no argument is on by default.
 - A lock exists only while the part is enabled, is mounted and is not held by `KeepAlive`. A server render takes no lock.
 - The lock reads the scrollbars from the window of the document that it locks (`VUE-37`).
 - One plain object on `globalThis[Symbol.for('vase-ui.scroll-lock')]` holds the state. Its fields are `version`, `lockCount`, `restore` and `stableGutter`. Two copies of the library then share one count (`VUE-6`). Each copy keeps its own timers.
-- The probe for `scrollbar-gutter` writes styles and reads the layout. That can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
+- The probe for `scrollbar-gutter` writes styles and reads the layout. In WebKit, that can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
 - `InternalBackdrop.vue` has the form of `FocusGuard.vue`: `inheritAttrs: false`, no `as`, no `#render` slot and no default slot. It exposes `element`.
 - The clip path of the backdrop follows its `cutout` through `autoUpdate`. React measures the cutout when the positioner renders. A Vue child does not render with its parent.
 - A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space, or a gutter that works, asks `probeStrategy`. It runs only in an engine that has them.
