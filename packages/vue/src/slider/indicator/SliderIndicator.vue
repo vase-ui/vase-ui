@@ -100,8 +100,8 @@ const { element, elementProps } = useRenderElement('div', props, {
   stateAttributesMapping: sliderStateAttributesMapping,
 });
 
-// The script of the server HTML also writes `--end-position`, which no render has. The hydrated
-// indicator then differs from the indicator of a client-only render.
+// For a range, the script of the server HTML also writes `--end-position`. No render has that
+// property, so the hydrated indicator differs from the indicator of a client-only render.
 onMounted(() => {
   if (renderBeforeHydration.value) {
     element.value?.style.removeProperty('--end-position');
