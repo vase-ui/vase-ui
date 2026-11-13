@@ -1713,5 +1713,18 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/scroll-area/page.mdx",
+      "referenceTags": [
+        "TypesScrollArea.Root",
+        "TypesScrollArea.Viewport",
+        "TypesScrollArea.Content",
+        "TypesScrollArea.Scrollbar",
+        "TypesScrollArea.Thumb",
+        "TypesScrollArea.Corner"
+      ]
+    }
   ]
 }

@@ -29,6 +29,7 @@ const extract: FamilyExtract = {
   typeTests: [],
   cases: [],
   surface: [surface],
+  pages: [],
 };
 
 // Base UI documents `Sample.Handle`, and the fixture declares `Handle`.

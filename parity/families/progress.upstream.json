@@ -680,5 +680,17 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/progress/page.mdx",
+      "referenceTags": [
+        "TypesProgress.Root",
+        "TypesProgress.Track",
+        "TypesProgress.Indicator",
+        "TypesProgress.Value",
+        "TypesProgress.Label"
+      ]
+    }
   ]
 }

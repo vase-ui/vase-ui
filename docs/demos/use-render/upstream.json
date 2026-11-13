@@ -1,0 +1,14 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/utils/use-render/demos",
+  "files": {
+    "render-callback/css-modules/index.module.css": "6e21c303334e6b0de24b47864cbe64b6863bff91e1795c48ba2e218852a0dbec",
+    "render-callback/css-modules/index.tsx": "c0c5ed21ef8ec7bfa74340dc5e827dcb3f60d8fe533d0063c28a8aa2129becac",
+    "render/css-modules/index.module.css": "6f1a85a04a86741d9ea7d5b11571a916b5790b5bc01af516e1a3b4f568e276af",
+    "render/css-modules/index.tsx": "1e15674194b3da13a4b0b4181495f468bfb72c95ae676e3c955eeb7972d6a80e"
+  },
+  "entryPoints": {
+    "render": ["merge-props"],
+    "render-callback": ["merge-props"]
+  }
+}

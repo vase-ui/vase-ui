@@ -682,5 +682,16 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/avatar/page.mdx",
+      "referenceTags": [
+        "TypesAvatar.Root",
+        "TypesAvatar.Image",
+        "TypesAvatar.Fallback",
+        "TypesAvatarAdditional"
+      ]
+    }
   ]
 }

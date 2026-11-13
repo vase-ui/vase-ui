@@ -362,7 +362,7 @@ test('validateUpstreamFile needs the commit to be the sha of the last row', () =
 });
 
 test('validateExtract needs each key and a row of each kind to have its fields', () => {
-  const extract = {
+  const extract: Json = {
     commit: COMMIT,
     upstreamPaths: ['a/**'],
     sources: ['a/b.ts'],
@@ -377,8 +377,14 @@ test('validateExtract needs each key and a row of each kind to have its fields',
       },
     ],
     surface: [],
+    pages: [{ file: 'a/page.mdx', referenceTags: ['TypesA.Root', 'TypesA'] }],
   };
   assert.deepEqual(validateExtract('x.upstream.json', extract), []);
+  const withoutPages = { ...extract };
+  delete withoutPages.pages;
+  assert.deepEqual(validateExtract('x.upstream.json', withoutPages), [
+    'x.upstream.json: needs the key "pages".',
+  ]);
   assert.match(
     validateExtract('x.upstream.json', {
       ...extract,

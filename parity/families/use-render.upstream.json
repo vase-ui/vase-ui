@@ -210,5 +210,13 @@
       ],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/use-render/page.mdx",
+      "referenceTags": [
+        "TypesUseRender"
+      ]
+    }
   ]
 }

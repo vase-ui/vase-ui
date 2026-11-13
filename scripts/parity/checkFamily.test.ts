@@ -23,6 +23,7 @@ function makeExtract(overrides: Partial<FamilyExtract> = {}): FamilyExtract {
     typeTests: [],
     cases: [{ file: UPSTREAM_FILE, rows: [first, second, suite] }],
     surface: [],
+    pages: [],
     ...overrides,
   };
 }
