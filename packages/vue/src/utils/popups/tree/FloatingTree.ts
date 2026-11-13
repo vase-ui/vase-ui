@@ -15,7 +15,7 @@ import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from
 import { FloatingTreeStore } from './FloatingTreeStore';
 
 const FloatingNodeContext: InjectionKey<ComputedRef<string | undefined>> = Symbol();
-const FloatingTreeContext: InjectionKey<FloatingTreeType> = Symbol();
+const FloatingTreeContext: InjectionKey<ComputedRef<FloatingTreeType>> = Symbol();
 
 /**
  * Returns the parent node id for nested floating elements, if available.
@@ -33,7 +33,7 @@ export function useFloatingTree(
   externalTree?: MaybeRefOrGetter<FloatingTreeStore | undefined>,
 ): ComputedRef<FloatingTreeType | null> {
   const contextTree = inject(FloatingTreeContext, null);
-  return computed(() => toValue(externalTree) ?? contextTree);
+  return computed(() => toValue(externalTree) ?? contextTree?.value ?? null);
 }
 
 /**
@@ -110,10 +110,16 @@ export function provideFloatingNode(id: MaybeRefOrGetter<string | undefined>): v
  * - Nested virtual list navigation
  * - Nested floating elements that each open on hover
  * - Custom communication between parent and child floating elements
+ *
+ * `externalTree` is a store, a ref or a getter, and the parts below follow a change of it. With no
+ * tree, the part provides one tree of its own.
  * @see https://floating-ui.com/docs/FloatingTree
  */
-export function provideFloatingTree(externalTree?: FloatingTreeStore): FloatingTreeStore {
-  const tree = externalTree ?? new FloatingTreeStore();
+export function provideFloatingTree(
+  externalTree?: MaybeRefOrGetter<FloatingTreeStore | undefined>,
+): ComputedRef<FloatingTreeStore> {
+  const ownTree = new FloatingTreeStore();
+  const tree = computed(() => toValue(externalTree) ?? ownTree);
   provide(FloatingTreeContext, tree);
   return tree;
 }
