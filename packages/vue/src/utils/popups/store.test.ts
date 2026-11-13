@@ -889,8 +889,8 @@ describe('BasePopupStore', () => {
       expect(store.state.anchorElement).toBe(null);
       expect(store.state.anchorOverride).toBe(null);
       expect(store.state.positionerElement).toBe(positioner);
-      // A sync watcher that runs between two updates reads a state that is not complete. Thus one
-      // update is one call of `setState`.
+      // `ReactiveStore` has no listener of a whole update. One update is one call of `setState`, so
+      // the case counts those calls.
       expect(store.steps).toEqual(['commit']);
     });
   });
