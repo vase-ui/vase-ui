@@ -1,4 +1,4 @@
-import type { VirtualElement } from '@floating-ui/vue';
+import type { Placement, VirtualElement } from '@floating-ui/vue';
 import type { HTMLAttributes } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -117,7 +117,9 @@ export interface PositioningInteractionStore extends PopupInteractionStore {
 }
 
 /**
- * What the popup of a node gives to the other popups of its tree.
+ * What the positioner of a popup gives to the interaction composables of the popup and to the other
+ * popups of its tree. `open` is a plain value. Each other member that can change is a getter, so a
+ * read gives the current value.
  */
 export interface PopupPositioningContext {
   /**
@@ -126,6 +128,10 @@ export interface PopupPositioningContext {
    * that closes the popup.
    */
   open: boolean;
+  /**
+   * The placement that the popup has now, after a flip.
+   */
+  placement?: Placement | undefined;
   nodeId: string | undefined;
   elements: ExtendedElements;
   rootStore: PopupInteractionStore;
