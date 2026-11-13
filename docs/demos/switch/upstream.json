@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/switch/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "7cf248239c72472bbc6a06b729db5564d76ba53a8f3bd638af5c39f3b6a2b94f",
+    "hero/css-modules/index.tsx": "a0a60465aff3693659755fb3feb66becf77e01fba42d8048e308c437d866ef4f"
+  }
+}
