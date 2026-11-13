@@ -1,6 +1,9 @@
 {
   "id": "BUG-5424",
-  "evidence": ["https://github.com/mui/base-ui/issues/5424"],
-  "behavior": "A Number Field submits the number that it shows.",
-  "dueWith": "packages/react/src/number-field/root/NumberFieldRoot.tsx"
+  "evidence": [
+    "https://github.com/mui/base-ui/issues/5424",
+    "https://github.com/mui/base-ui/pull/5557"
+  ],
+  "behavior": "A Number Field submits the number that it shows. Text with two dots or more is a number only when each dot before the last one can be a group separator, as in `1.234.567.89`. Other text, such as `1.2.3`, does not change the value. Base UI reads `1.2.3` as 12.3, so the field shows `1.2.3` and submits 12.3.",
+  "dueWith": "packages/react/src/number-field/utils/parse.ts"
 }
