@@ -11,6 +11,7 @@ import {
 import type { HTMLAttributes } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
+import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import type { HTMLProps } from '../../internals/types';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
@@ -25,8 +26,8 @@ function toStoreProps(props: InteractionProps) {
 }
 
 /**
- * Gives a dialog its dismissal, and keeps the count of the open dialogs below it. Call it in
- * `setup` of the root.
+ * Gives a dialog its dismissal, the count of the open dialogs below it, and the registries of its
+ * titles and its descriptions. Call it in `setup` of the root.
  */
 export function useDialogInteractions({
   store,
@@ -160,6 +161,19 @@ export function useDialogInteractions({
       parentContext?.onNestedDialogOpen?.(0, 0);
     }
   });
+
+  // Each registry keeps the ids of the parts of one kind. When one of two titles unmounts, the
+  // popup names the title that stays. A write of the id from each part would clear the name.
+  const titleIds = createIdRegistry();
+  const descriptionIds = createIdRegistry();
+  store.context.registerTitleId = titleIds.registerId;
+  store.context.registerDescriptionId = descriptionIds.registerId;
+  watch(
+    () => [titleIds.ids.value.at(-1), descriptionIds.ids.value.at(-1)] as const,
+    ([titleElementId, descriptionElementId]) => {
+      store.update({ titleElementId, descriptionElementId });
+    },
+  );
 
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: toStoreProps(dismiss.reference),
