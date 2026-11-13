@@ -1,0 +1,9 @@
+{
+  "id": "VUE-27",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L542-L544",
+    "https://www.w3.org/TR/pointerevents3/#dom-element-setpointercapture"
+  ],
+  "behavior": "A `pointerdown` whose pointer the browser does not know, such as an event that a script dispatched, still starts and ends a drag. `Slider.Control` calls `setPointerCapture` in a `try` block, because Firefox throws `NotFoundError` for such a pointer. Base UI has no guard there. The throw then stops the handler before it adds the listeners that end the drag.",
+  "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
+}

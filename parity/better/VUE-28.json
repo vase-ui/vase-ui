@@ -1,0 +1,11 @@
+{
+  "id": "VUE-28",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L124-L128",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L186",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/control/SliderControl.tsx#L38-L41",
+    "https://vuejs.org/guide/essentials/template-refs.html#function-refs"
+  ],
+  "behavior": "`Slider.Control` reads the computed style of its element again after the element changes, for example when `as` changes. Base UI reads the style one time and keeps it. The kept style belongs to an element that left the document, and a browser gives such a style no values. Base UI then reads the border and the padding of the control as 0, and a press on a control that has them gives a wrong value.",
+  "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
+}
