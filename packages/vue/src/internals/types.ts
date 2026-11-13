@@ -90,6 +90,6 @@ export type RequiredExcept<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T
 export type Orientation = 'horizontal' | 'vertical';
 
 /**
- * The package supports Vue 3.5.0, which does not export `ClassValue`.
+ * The package supports Vue 3.5.12, which does not export `ClassValue`.
  */
 export type ClassValue = HTMLAttributes['class'];

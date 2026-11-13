@@ -55,7 +55,7 @@ describe('useRegisterFieldControl', () => {
     return { values, registerFieldControl, callsInSetup, Field, Control };
   }
 
-  it('registers one getter after the mount, and the getter follows a change of `id`, `name` and `value` with no second call', async () => {
+  it('registers one getter after the mount, and the getter follows a change of `id`, `name` and `value`', async () => {
     const { values, registerFieldControl, callsInSetup, Field, Control } = setup();
 
     await render(
@@ -80,7 +80,6 @@ describe('useRegisterFieldControl', () => {
       name: 'other name',
       value: 'other value',
     });
-    expect(registerFieldControl).toHaveBeenCalledTimes(1);
   });
 
   it('gives `undefined` while `enabled` is `false`, and the values again when it is `true`', async () => {
@@ -101,7 +100,72 @@ describe('useRegisterFieldControl', () => {
     await flushMicrotasks();
 
     expect(getRegistration()).toBeUndefined();
+  });
+
+  it.each([
+    { name: 'id', change: { id: 'other' } },
+    { name: 'name', change: { name: 'other name' } },
+    { name: 'value', change: { value: 'other value' } },
+    { name: 'enabled', change: { enabled: false } },
+  ])(
+    'registers the same getter again with the same source when `$name` changes',
+    async ({ change }) => {
+      const { values, registerFieldControl, Field, Control } = setup();
+      await render(
+        <Field>
+          <Control />
+        </Field>,
+      );
+      expect(registerFieldControl).toHaveBeenCalledTimes(1);
+
+      values.value = { ...values.value, ...change };
+      await flushMicrotasks();
+
+      expect(registerFieldControl).toHaveBeenCalledTimes(2);
+      const [[source, getRegistration], [nextSource, nextGetRegistration]] =
+        registerFieldControl.mock.calls;
+      expect(nextSource).toBe(source);
+      expect(nextGetRegistration).toBe(getRegistration);
+    },
+  );
+
+  it('does not register again when a write gives equal values', async () => {
+    const { values, registerFieldControl, Field, Control } = setup();
+    await render(
+      <Field>
+        <Control />
+      </Field>,
+    );
+
+    values.value = { ...values.value };
+    await flushMicrotasks();
+
     expect(registerFieldControl).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers one time, at the mount, when a value changes before the mount', async () => {
+    const { values, registerFieldControl, callsInSetup, Field } = setup();
+    const ControlThatChangesInSetup = defineComponent(() => {
+      const element = shallowRef<HTMLElement | null>(null);
+      useRegisterFieldControl(
+        element,
+        () => values.value.id,
+        () => values.value.value,
+      );
+      values.value = { ...values.value, value: 'value from setup' };
+      callsInSetup.count = registerFieldControl.mock.calls.length;
+      return () => <input ref={element} />;
+    });
+
+    await render(
+      <Field>
+        <ControlThatChangesInSetup />
+      </Field>,
+    );
+
+    expect(callsInSetup.count).toBe(0);
+    expect(registerFieldControl).toHaveBeenCalledTimes(1);
+    expect(registerFieldControl.mock.calls[0][1]()).toMatchObject({ value: 'value from setup' });
   });
 
   it('removes the registration when the control goes away', async () => {

@@ -26,7 +26,8 @@ export function useFieldControlRegistration(
     source: symbol;
     registration: FieldControlRegistration;
   }>();
-  // The last control that gives a value is the active control, as the last label gives `labelId`.
+  // The active control is the last control of the registry that gives a registration. When it goes
+  // away, the field uses the control before it.
   const activeControl = computed(() => controls.value.at(-1));
   const getActiveSource = () => activeControl.value?.source;
 
@@ -34,14 +35,15 @@ export function useFieldControlRegistration(
     source,
     getRegistration,
   ) => {
-    registerControl(
-      source,
-      getRegistration &&
-        (() => {
-          const registration = getRegistration();
-          return registration && { source, registration };
-        }),
-    );
+    // A control that registers again goes to the end. The registry then has the order in which the
+    // controls registered or changed.
+    registerControl(source, undefined);
+    if (getRegistration) {
+      registerControl(source, () => {
+        const registration = getRegistration();
+        return registration && { source, registration };
+      });
+    }
   };
 
   const registeredFieldName = computed(() =>

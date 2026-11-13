@@ -13,7 +13,8 @@ export function useOpenChangeComplete(parameters: UseOpenChangeCompleteParameter
   let abortController: AbortController | undefined;
 
   // The wait needs the DOM update, not the paint. A `watch` with `flush: 'post'` runs after it.
-  // `watchPostEffect` is not an option: in Vue 3.5.0 it runs one time in a server render.
+  // `watchPostEffect` is not an option: `run` does not read `restartKey`, and a change of
+  // `restartKey` must start a run.
   function run() {
     abortController?.abort();
     abortController = undefined;
