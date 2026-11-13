@@ -111,6 +111,7 @@ import { serializeValue } from '../../internals/serializeValue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -246,6 +247,10 @@ if (group) {
   // A click checks the input and unchecks the other inputs of a group that has a name. A parent
   // that controls the group can keep the old value, and then no radio renders again.
   watch(group.inputSyncRequest, writeCheckedToInput, { flush: 'post' });
+
+  // The radio follows the reset with its own input. The input that the group exposes changes with
+  // the value and can be absent.
+  useFormReset(inputElement, group.reset);
 
   // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
   // stay in the group and in the field: the field would validate an input that the user cannot reach.
