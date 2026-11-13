@@ -34,6 +34,16 @@ describe('<Tabs.Root />', () => {
       },
       { name: 'a selected disabled tab', props: { value: 'a', firstDisabled: true }, stop: 0 },
       { name: 'a value of null', props: { value: null }, stop: 0 },
+      {
+        name: 'a value of null, first disabled',
+        props: { value: null, firstDisabled: true },
+        stop: 0,
+      },
+      {
+        name: 'a default value of null, first disabled',
+        props: { defaultValue: null, firstDisabled: true },
+        stop: 0,
+      },
       { name: 'the implicit default, numbers', props: { numeric: true }, stop: 0 },
       { name: 'the implicit default, strings', props: {}, stop: 0 },
       { name: 'the implicit default, first disabled', props: { firstDisabled: true }, stop: 1 },

@@ -108,16 +108,7 @@ function computeActivationDirection(
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  provide,
-  shallowReactive,
-  shallowRef,
-  watch,
-} from 'vue';
+import { computed, onMounted, provide, shallowReactive, shallowRef, watch } from 'vue';
 import { useControlled } from '../../common/useControlled';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -182,16 +173,6 @@ let shouldNotifyInitialValueChange = !hasExplicitDefaultValue;
 // is enabled. After that, a disabled selection falls back.
 let shouldHonorDisabledDefaultValue = hasExplicitDefaultValue;
 let didRegisterTabs = false;
-let lastKnownTabElement: Element | undefined;
-// `KeepAlive` takes the tabs out of the document and empties the map. That is no removal.
-let isDeactivated = false;
-
-onDeactivated(() => {
-  isDeactivated = true;
-});
-onActivated(() => {
-  isDeactivated = false;
-});
 
 const tabMap = shallowRef<TabMap>(new Map());
 // A tab and a panel register in `setup`, so that the server HTML of a part that renders later has
@@ -233,8 +214,6 @@ function findId(
   return found;
 }
 
-// The state is written when the value changes, before the parts render. A tab or a panel then
-// renders one time with the new value and its direction.
 const tabActivationDirection = shallowRef<TabsTabActivationDirection>('none');
 // The value that the direction is computed against. It stays on the old value while the new tab
 // has no element. The direction is then computed again when the tab map changes.
@@ -261,7 +240,10 @@ function updateActivationDirection() {
   }
 }
 
-watch([activeTabValue, tabMap], updateActivationDirection, { flush: 'sync' });
+// The watcher has the default flush. It runs after Vue writes each new prop of the root, so the
+// direction uses the new orientation. It runs before the render, so each tab or panel renders one
+// time with the new value and its direction.
+watch([activeTabValue, tabMap], updateActivationDirection);
 
 function onValueChange(newValue: TabsTabValue, eventDetails: TabsRootChangeEventDetails) {
   eventDetails.activationDirection = computeActivationDirection(
@@ -309,23 +291,22 @@ function commitAutomaticValueChange(
 
 // A controlled root keeps the exact value of the parent, also when that tab is disabled or missing.
 function run() {
-  if (isControlled || isDeactivated) {
+  if (isControlled) {
     return;
   }
 
   const map = tabMap.value;
 
   if (map.size === 0) {
-    // The map is empty while the last known tab element is still in the document, for example while
-    // a tab leaves with a `<Transition>`. That is no removal.
-    if (didRegisterTabs && activeTabValue.value !== null && !lastKnownTabElement?.isConnected) {
+    // In Vue, only `KeepAlive` empties the map while the tab parts exist. A deactivated tab part
+    // stays in the registry, so an empty registry is a removal.
+    if (didRegisterTabs && activeTabValue.value !== null && tabs.size === 0) {
       commitAutomaticValueChange(null, REASONS.missing);
     }
     return;
   }
 
   didRegisterTabs = true;
-  lastKnownTabElement = map.keys().next().value;
 
   let selectedTabMetadata: TabsTabMetadata | undefined;
   let firstEnabledTabMetadata: TabsTabMetadata | undefined;

@@ -136,7 +136,9 @@ const tabMetadata = computed<TabsTabMetadata>(() => ({
 const { compositeProps, compositeRef, index } = useCompositeItem<TabsTabMetadata>({
   metadata: tabMetadata,
   active,
-  disabled: () => props.disabled,
+  // With no selection, no fallback runs. The first tab then keeps the tab stop after the mount, also
+  // when it is disabled. The server HTML gives it the same tab stop.
+  disabled: () => props.disabled && activeTabValue.value !== null,
 });
 
 const { getButtonProps, buttonRef } = useButton({

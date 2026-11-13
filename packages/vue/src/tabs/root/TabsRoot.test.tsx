@@ -1,5 +1,5 @@
-import { expect, vi, describe, beforeEach, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { expect, vi, describe, it } from 'vitest';
+import { defineComponent, KeepAlive, shallowRef, Transition } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Tabs } from '@vase-ui/vue/tabs';
@@ -28,16 +28,6 @@ function readTabindexes(root: ParentNode) {
 
 describe('<Tabs.Root />', () => {
   const { render } = createRenderer();
-
-  beforeEach(function beforeHook({ skip }) {
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    // Base UI skips each case of this block in Safari. Its comment names a `scrollLeft` assignment
-    // that no case of the block makes. The user agent of WebKit in Playwright is Safari too.
-    if (isSafari) {
-      skip();
-    }
-  });
 
   describeConformance(<Tabs.Root value={0} />, () => ({
     render,
@@ -1554,11 +1544,6 @@ describe('<Tabs.Root />', () => {
       expect(secondTab).toHaveAttribute('aria-selected', 'false');
     });
   });
-});
-
-// Base UI skips each case above in Safari. The cases below run in each engine.
-describe('<Tabs.Root /> in each engine', () => {
-  const { render } = createRenderer();
 
   describe('activation direction', () => {
     // A vertical list needs tabs that stack.
@@ -1626,6 +1611,17 @@ describe('<Tabs.Root /> in each engine', () => {
         expect(root).toHaveAttribute('data-activation-direction', backward);
       },
     );
+
+    it('computes the direction with the new orientation when the value and the orientation change together', async () => {
+      const { setProps } = await renderTwoTabs(
+        { value: 0, orientation: 'horizontal' },
+        { display: 'block' },
+      );
+
+      await setProps({ value: 1, orientation: 'vertical' });
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-activation-direction', 'down');
+    });
 
     it('computes the direction again when the tab map has the tab that was added with the value', async () => {
       const TestComponent = defineComponent(
@@ -1731,8 +1727,50 @@ describe('<Tabs.Root /> in each engine', () => {
     });
   });
 
+  describe('removal of the last tab', () => {
+    it('emits valueChange with null when the last tab leaves with a Transition', async () => {
+      const handleChange = vi.fn();
+      let finishLeave = () => {};
+      const TestComponent = defineComponent(
+        (props: { visible: boolean }) => () => (
+          <Tabs.Root defaultValue={0} onValueChange={handleChange}>
+            <Tabs.List>
+              <Transition
+                css={false}
+                onLeave={(_element: Element, done: () => void) => {
+                  finishLeave = done;
+                }}
+              >
+                {props.visible ? <Tabs.Tab value={0} /> : null}
+              </Transition>
+            </Tabs.List>
+          </Tabs.Root>
+        ),
+        { props: ['visible'] },
+      );
+      const { setProps } = await render(<TestComponent visible />);
+      const tab = screen.getByRole('tab');
+
+      await setProps({ visible: false });
+
+      // The element stays in the document until the Transition ends, but the tab part is gone.
+      expect(tab).toBeInTheDocument();
+      expect(handleChange.mock.calls.map(([value, { reason }]) => [value, reason])).toEqual([
+        [null, 'missing'],
+      ]);
+
+      finishLeave();
+      await flushMicrotasks();
+
+      expect(tab).not.toBeInTheDocument();
+      expect(handleChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('KeepAlive', () => {
-    it('keeps the selection when KeepAlive takes the tabs out of the document and back', async () => {
+    const Other = defineComponent(() => () => <span />);
+
+    it('keeps the selection when KeepAlive takes the root out of the document and back', async () => {
       const handleChange = vi.fn();
       const Inner = defineComponent(() => () => (
         <Tabs.Root defaultValue={1} onValueChange={handleChange}>
@@ -1742,10 +1780,37 @@ describe('<Tabs.Root /> in each engine', () => {
           </Tabs.List>
         </Tabs.Root>
       ));
-      const Other = defineComponent(() => () => <span />);
       const App = defineComponent(
         (props: { visible: boolean }) => () => (
           <KeepAlive>{props.visible ? <Inner /> : <Other />}</KeepAlive>
+        ),
+        { props: ['visible'] },
+      );
+      const { setProps } = await render(<App visible />);
+      const tabs = screen.getAllByRole('tab');
+
+      await setProps({ visible: false });
+      await flushMicrotasks();
+      await setProps({ visible: true });
+      await flushMicrotasks();
+
+      expect(handleChange).not.toHaveBeenCalled();
+      expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    });
+
+    it('keeps the selection when KeepAlive takes the list out of the document and back', async () => {
+      const handleChange = vi.fn();
+      const Inner = defineComponent(() => () => (
+        <Tabs.List>
+          <Tabs.Tab value={0} />
+          <Tabs.Tab value={1} />
+        </Tabs.List>
+      ));
+      const App = defineComponent(
+        (props: { visible: boolean }) => () => (
+          <Tabs.Root defaultValue={1} onValueChange={handleChange}>
+            <KeepAlive>{props.visible ? <Inner /> : <Other />}</KeepAlive>
+          </Tabs.Root>
         ),
         { props: ['visible'] },
       );
@@ -1830,6 +1895,18 @@ describe('<Tabs.Root /> in each engine', () => {
         client: 1,
       },
       { name: 'an explicit default value', props: { defaultValue: 'b' }, server: 1, client: 1 },
+      {
+        name: 'a value of null, first disabled',
+        props: { value: null, firstDisabled: true },
+        server: 0,
+        client: 0,
+      },
+      {
+        name: 'a default value of null, first disabled',
+        props: { defaultValue: null, firstDisabled: true },
+        server: 0,
+        client: 0,
+      },
       // A server cannot tell that the value names no tab. The first tab takes the tab stop at the mount.
       { name: 'a value that names no tab', props: { value: 'zzz' }, server: undefined, client: 0 },
     ] as const)(
