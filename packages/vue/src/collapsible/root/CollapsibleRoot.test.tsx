@@ -142,6 +142,26 @@ describe('<Collapsible.Root />', () => {
       expect(screen.getByTestId('panel')).toBe(panel);
       expect(trigger).toHaveAttribute('aria-controls', panel.id);
     });
+
+    it('names the last of two panels in aria-controls, then the first panel when the last panel unmounts', async () => {
+      function App({ secondPanelMounted }: { secondPanelMounted: boolean }) {
+        return (
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger />
+            <Collapsible.Panel id="first-panel-id" />
+            {secondPanelMounted && <Collapsible.Panel id="second-panel-id" />}
+          </Collapsible.Root>
+        );
+      }
+
+      const { rerender } = await render(<App secondPanelMounted />);
+      const trigger = screen.getByRole('button');
+
+      expect(trigger).toHaveAttribute('aria-controls', 'second-panel-id');
+
+      await rerender(<App secondPanelMounted={false} />);
+      expect(trigger).toHaveAttribute('aria-controls', 'first-panel-id');
+    });
   });
 
   describe('collapsible status', () => {
