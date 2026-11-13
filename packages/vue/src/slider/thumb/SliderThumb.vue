@@ -60,7 +60,17 @@ export interface SliderThumbProps
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, provide, shallowRef, useAttrs, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  provide,
+  shallowRef,
+  useAttrs,
+  watch,
+} from 'vue';
 import type { Component } from 'vue';
 import { clamp } from '../../common/clamp';
 import { formatNumber } from '../../common/formatNumber';
@@ -613,10 +623,22 @@ const { element, elementProps } = useRenderElement('div', props, {
   children: true,
 });
 
+// `KeepAlive` takes the thumb out of the document. The thumb then has no layout, so the observer
+// stops until the thumb is active again.
+const isDeactivated = shallowRef(false);
+
+onDeactivated(() => {
+  isDeactivated.value = true;
+});
+
+onActivated(() => {
+  isDeactivated.value = false;
+});
+
 watch(
-  [controlElement, element, inset],
-  ([control, thumb, isInset], _previous, onCleanup) => {
-    if (!isInset || !control || !thumb) {
+  [controlElement, element, inset, isDeactivated],
+  ([control, thumb, isInset, deactivated], _previous, onCleanup) => {
+    if (!isInset || !control || !thumb || deactivated) {
       return;
     }
 
