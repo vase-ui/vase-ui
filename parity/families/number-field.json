@@ -1,0 +1,311 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/number-field/**",
+    "docs/src/app/(docs)/react/components/number-field/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/number-field/index.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have a part of Number Field, so the family has no entry point."
+    },
+    {
+      "upstream": "packages/react/src/number-field/index.parts.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have a part of Number Field, so the family has no entry point."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Root`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRootDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Root`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRootContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Root`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Increment` and `NumberField.Decrement`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Input`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInputDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Input`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Group`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroupDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Group`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Increment`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrementDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Increment`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Decrement`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrementDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.Decrement`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.ScrubArea`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.ScrubArea`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.ScrubArea`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/constants.ts",
+      "kind": "waits-on",
+      "reason": "Only the tests of `NumberField.Increment` and `NumberField.Decrement` import the file. Vase UI does not have these parts."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
+      "kind": "waits-on",
+      "reason": "Only `NumberField.ScrubArea` imports the file. Vase UI does not have that part."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/stateAttributesMapping.ts",
+      "kind": "waits-on",
+      "reason": "The file imports the state type of `NumberField.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/types.ts",
+      "kind": "waits-on",
+      "reason": "Only `NumberField.Root` and the parts of Number Field import the file. Vase UI does not have them."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "reason": "The type test reads the props of `NumberField.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "The type test reads the `render` props of `NumberField.Input`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "reason": "Each case of the file renders `NumberField.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/NumberFieldRoot.iOS.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "reason": "Each case of the file renders `NumberField.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/root/useNumberFieldStepperButton.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+      "reason": "Each case of the file renders `NumberField.Increment` or `NumberField.Decrement`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "Each case of the file renders `NumberField.Input`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/group/NumberFieldGroup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+      "reason": "Each case of the file renders `NumberField.Group`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "reason": "Each case of the file renders `NumberField.Increment`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/decrement/NumberFieldDecrement.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+      "reason": "Each case of the file renders `NumberField.Decrement`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "reason": "Each case of the file renders `NumberField.ScrubArea`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.gecko.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "reason": "The case of the file renders `NumberField.ScrubArea`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+      "reason": "Each case of the file renders `NumberField.ScrubAreaCursor`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/getViewportRect.test.ts",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/utils/getViewportRect.ts",
+      "reason": "Each case of the file calls `getViewportRect`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/number-field/utils/parse.test.ts",
+      "describe": ["NumberField parse", "parseNumber"],
+      "title": "keeps only the last of many dots",
+      "kind": "replaced",
+      "test": "packages/vue/src/number-field/utils/parse.test.ts",
+      "reason": "The case reads `.0.0.0 … .5` as 0.5. Vase UI does not read dots that are not group separators (BUG-5424, https://github.com/mui/base-ui/issues/5424), so that text gives `null`. The case \"BUG-5424: keeps only the last of many dots that are group separators\" tests the same count of dots with groups of three digits, and it tests that the text of Base UI gives `null`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "reason": "Vase UI does not have `NumberField.Root`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Input",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "Vase UI does not have `NumberField.Input`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+      "reason": "Vase UI does not have `NumberField.Group`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Increment",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "reason": "Vase UI does not have `NumberField.Increment`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "Decrement",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+      "reason": "Vase UI does not have `NumberField.Decrement`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "ScrubArea",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "reason": "Vase UI does not have `NumberField.ScrubArea`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "ScrubAreaCursor",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldRootDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+      "reason": "Vase UI does not have `NumberField.Root`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldInputDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
+      "reason": "Vase UI does not have `NumberField.Input`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldGroupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+      "reason": "Vase UI does not have `NumberField.Group`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldIncrementDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+      "reason": "Vase UI does not have `NumberField.Increment`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldDecrementDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+      "reason": "Vase UI does not have `NumberField.Decrement`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldScrubAreaDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+      "reason": "Vase UI does not have `NumberField.ScrubArea`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "entry": "NumberFieldScrubAreaCursorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
