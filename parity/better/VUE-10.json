@@ -1,0 +1,8 @@
+{
+  "id": "VUE-10",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/field-register-control/useFieldControlRegistration.ts#L135-L145"
+  ],
+  "behavior": "When the active control of a field goes away, the field uses the control that was active before it and is still there. The same occurs when the active control is disabled and when `KeepAlive` deactivates it. The field has no control only when none is left.",
+  "dueWith": "packages/react/src/internals/field-register-control/useFieldControlRegistration.ts"
+}
