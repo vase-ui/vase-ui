@@ -8,6 +8,12 @@
     "packages/react/src/utils/popups/constants.ts",
     "packages/react/src/utils/popups/event.ts",
     "packages/react/src/utils/popups/event.test.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/arrow.ts",
+    "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
@@ -29,6 +35,11 @@
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/popups/constants.ts",
     "packages/react/src/utils/popups/event.ts",
+    "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/arrow.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.ts",
@@ -79,6 +90,23 @@
             "isVirtualPointerEvent"
           ],
           "title": "recognizes an iOS VoiceOver touch"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "hideMiddleware"
+          ],
+          "title": "matches Floating UI hide() for reference overflow %#"
+        },
+        {
+          "describe": [
+            "hideMiddleware"
+          ],
+          "title": "treats an all-zero reference rect as hidden"
         }
       ]
     },

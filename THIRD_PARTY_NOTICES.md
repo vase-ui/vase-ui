@@ -4,7 +4,7 @@ Vase UI contains code that Base UI ported from the projects below.
 
 ## Floating UI
 
-This notice covers the popup modules that Base UI ported from [Floating UI](https://github.com/floating-ui/floating-ui), such as `FloatingFocusManager`, `FloatingPortal` and `FloatingTree`.
+This notice covers the popup modules that Base UI ported from [Floating UI](https://github.com/floating-ui/floating-ui), such as `FloatingFocusManager`, `FloatingPortal`, `FloatingTree` and the `arrow` middleware. Vase UI also has two run-time dependencies from the same project, each with the MIT license: `@floating-ui/vue` and `@floating-ui/utils`.
 
 ```text
 MIT License
