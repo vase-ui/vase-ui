@@ -39,15 +39,16 @@ describe('<RadioGroup />', () => {
     });
 
     it.each([
-      { name: 'that a radio has', defaultValue: 'b' },
-      { name: 'that no radio has', defaultValue: 'z' },
+      { name: 'that a radio has', defaultValue: 'b', filled: true },
+      { name: 'that no radio has', defaultValue: 'z', filled: true },
+      { name: '`null` that a radio has', defaultValue: null, filled: false },
     ])(
-      'hydrates a group with a value $name in a field with no mismatch and fills the label and the description after it',
-      async ({ defaultValue }) => {
+      'hydrates a group with a value $name in a field with no mismatch and the filled state of the label and the description after it',
+      async ({ defaultValue, filled }) => {
         const props = { defaultValue };
         const serverHtml = await renderOnServer(FIELD_HYDRATION_FIXTURE, props);
 
-        expect(readFilled(parse(serverHtml))).toEqual([true, true]);
+        expect(readFilled(parse(serverHtml))).toEqual([filled, filled]);
 
         await hydrate(RadioGroupFieldHydration, { serverHtml, props });
       },

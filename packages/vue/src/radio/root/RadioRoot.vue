@@ -182,7 +182,9 @@ function setInputElement(value: unknown) {
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
-if (checked.value) {
+// A radio in a group leaves the first `filled` state to the group. A server runs the `setup` of
+// the radio after it wrote the parts that come after the group.
+if (!group && checked.value) {
   setFilled(true);
 }
 
