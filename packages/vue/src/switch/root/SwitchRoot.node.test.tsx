@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import { Field } from '@vase-ui/vue/field';
 import { Switch } from '@vase-ui/vue/switch';
 import FieldScope from '../../../test/fixtures/FieldScope.vue';
+import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
+import LabelableMessage from '../../../test/fixtures/LabelableMessage.vue';
 import SwitchRootHydration from './SwitchRootHydration.test.vue';
 
 function tag(html: string, pattern: RegExp) {
   return html.match(pattern)?.[0] ?? '';
+}
+
+function readId(html: string, testId: string) {
+  return tag(html, new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`)).match(/ id="([^"]+)"/)?.[1];
 }
 
 describe('<Switch.Root />', () => {
@@ -88,6 +95,39 @@ describe('<Switch.Root />', () => {
       expect(labelId).toBeTruthy();
       expect(root).toContain(` aria-labelledby="${labelId}"`);
       expect(labelTag).toContain(` for="${inputId}"`);
+    });
+
+    it('names and describes the switch with the label and the messages that come after it', async () => {
+      const html = await renderToString(
+        <Field.Root>
+          <Switch.Root />
+          <LabelableLabel data-testid="label">Notifications</LabelableLabel>
+          <LabelableMessage data-testid="description">Description</LabelableMessage>
+          <LabelableMessage data-testid="error">Error</LabelableMessage>
+        </Field.Root>,
+      );
+      const root = tag(html, /<span[^>]*role="switch"[^>]*>/);
+      const input = tag(html, /<input[^>]*type="checkbox"[^>]*>/);
+      const labelId = readId(html, 'label');
+      const describedBy = `${readId(html, 'description')} ${readId(html, 'error')}`;
+
+      expect(labelId).toBeTruthy();
+      expect(root).toContain(` aria-labelledby="${labelId}"`);
+      expect(root).toContain(` aria-describedby="${describedBy}"`);
+      expect(input).toContain(` aria-describedby="${describedBy}"`);
+    });
+
+    it('only describes the switch when the field has no label', async () => {
+      const html = await renderToString(
+        <Field.Root>
+          <Switch.Root />
+          <LabelableMessage data-testid="description">Description</LabelableMessage>
+        </Field.Root>,
+      );
+      const root = tag(html, /<span[^>]*role="switch"[^>]*>/);
+
+      expect(root).not.toContain('aria-labelledby');
+      expect(root).toContain(` aria-describedby="${readId(html, 'description')}"`);
     });
 
     it('gives the switch no `aria-labelledby` from a native label, which a server cannot find', async () => {
