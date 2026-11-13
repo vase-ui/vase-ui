@@ -15,9 +15,9 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
-import { mark, timed } from '../../../test/fixtures/timeline';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -301,12 +301,10 @@ describe('<Collapsible.Panel />', () => {
       expect(panel).toHaveAttribute('data-open');
     });
 
-    it(
-      'restores a measured height before applying closing transition styles',
-      timed(async () => {
-        const { user } = await render(
-          <>
-            <style>{`
+    it('restores a measured height before applying closing transition styles', async () => {
+      const { user } = await render(
+        <>
+          <style>{`
             .transition-test-panel {
               overflow: hidden;
               height: var(--collapsible-panel-height);
@@ -318,37 +316,32 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-            <Collapsible.Root defaultOpen>
-              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-              <Collapsible.Panel class="transition-test-panel" data-testid="panel">
-                {PANEL_CONTENT}
-              </Collapsible.Panel>
-            </Collapsible.Root>
-          </>,
-        );
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+            <Collapsible.Panel class="transition-test-panel" data-testid="panel">
+              {PANEL_CONTENT}
+            </Collapsible.Panel>
+          </Collapsible.Root>
+        </>,
+      );
 
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
-        const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
 
-        await waitFor(() => {
-          expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
-        });
+      await waitFor(() => {
+        expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
+      });
 
-        mark('click');
-        await user.click(trigger);
-        mark('click resolved');
+      await user.click(trigger);
 
-        // Both hold only mid-transition, so check them in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            endingStyle: panel.hasAttribute('data-ending-style'),
-            height: panel.style.getPropertyValue('--collapsible-panel-height'),
-          };
-          mark(`check ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
-        });
-      }),
-    );
+      // Both hold only mid-transition, so check them in one snapshot.
+      await waitFor(() => {
+        expect({
+          endingStyle: panel.hasAttribute('data-ending-style'),
+          height: panel.style.getPropertyValue('--collapsible-panel-height'),
+        }).toEqual({ endingStyle: true, height: expect.stringMatching(/px$/) });
+      });
+    });
 
     it('unmounts a zero-size panel without waiting for unrelated transitions', async () => {
       await render(
@@ -772,12 +765,13 @@ describe('<Collapsible.Panel />', () => {
       expect(panel.getAnimations()).toHaveLength(1);
     });
 
-    it(
-      'still animates on close and reopen after being initially open',
-      timed(async () => {
-        const { user } = await render(
-          <>
-            <style>{`
+    it('still animates on close and reopen after being initially open', async () => {
+      // With the animations of the part off, the part hides the panel one frame after the ending
+      // style, and the browser cancels the animation.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <>
+          <style>{`
             @keyframes panel-slide-down {
               from {
                 height: 0;
@@ -809,56 +803,48 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-            <Collapsible.Root defaultOpen>
-              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-              <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
-                {PANEL_CONTENT}
-              </Collapsible.Panel>
-            </Collapsible.Root>
-          </>,
-        );
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+            <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
+              {PANEL_CONTENT}
+            </Collapsible.Panel>
+          </Collapsible.Root>
+        </>,
+      );
 
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
-        const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
 
-        expect(panel.getAnimations().length).toBe(0);
+      expect(panel.getAnimations().length).toBe(0);
 
-        mark('click 1');
-        await user.click(trigger);
-        mark('click 1 resolved');
+      // The animation lasts 100 milliseconds, and the click can resolve after it. The listener
+      // exists before the click, so the test reads the state when the animation starts.
+      const closing = nextEvent(panel, 'animationstart').then(() => ({
+        closed: panel.hasAttribute('data-closed'),
+        animations: panel.getAnimations().length,
+      }));
+      const [closingState] = await Promise.all([closing, user.click(trigger)]);
+      expect(closingState).toEqual({ closed: true, animations: 1 });
 
-        // The animation runs only while the panel is closing, so check both in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            closed: panel.hasAttribute('data-closed'),
-            animations: panel.getAnimations().length,
-          };
-          mark(`check 1 ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({ closed: true, animations: 1 });
-        });
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('hidden');
+      });
 
-        mark('click 2');
-        await user.click(trigger);
-        mark('click 2 resolved');
+      const opening = nextEvent(panel, 'animationstart').then(() => ({
+        open: panel.hasAttribute('data-open'),
+        animations: panel.getAnimations().length,
+      }));
+      const [openingState] = await Promise.all([opening, user.click(trigger)]);
+      expect(openingState).toEqual({ open: true, animations: 1 });
+    });
 
-        // The animation runs only while the panel is opening, so check both in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            open: panel.hasAttribute('data-open'),
-            animations: panel.getAnimations().length,
-          };
-          mark(`check 2 ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({ open: true, animations: 1 });
-        });
-      }),
-    );
-
-    it(
-      'restores measured dimensions before applying a closing keyframe animation',
-      timed(async () => {
-        const { user } = await render(
-          <>
-            <style>{`
+    it('restores measured dimensions before applying a closing keyframe animation', async () => {
+      // With the animations of the part off, the part removes the panel one frame after the ending
+      // style, and the browser cancels the animation before it ends.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { user } = await render(
+        <>
+          <style>{`
             @keyframes panel-slide-up {
               from {
                 height: var(--collapsible-panel-height);
@@ -875,49 +861,54 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-            <Collapsible.Root defaultOpen>
-              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-              <Collapsible.Panel class="closing-animation-panel" data-testid="panel">
-                {PANEL_CONTENT}
-              </Collapsible.Panel>
-            </Collapsible.Root>
-          </>,
-        );
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+            <Collapsible.Panel class="closing-animation-panel" data-testid="panel">
+              {PANEL_CONTENT}
+            </Collapsible.Panel>
+          </Collapsible.Root>
+        </>,
+      );
 
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
-        const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
 
-        await waitFor(() => {
-          expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
-        });
+      await waitFor(() => {
+        expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
+      });
 
-        mark('click');
-        await user.click(trigger);
-        mark('click resolved');
+      // The size must be in pixels when the animation starts, when the ending style comes and when
+      // the animation ends. Each moment lasts a few milliseconds, and the click can resolve after
+      // it. The listeners exist before the click, and the test asserts on what they recorded.
+      const heights: Record<string, string> = {};
+      const recordHeight = (moment: string) => {
+        heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
+      };
+      panel.addEventListener('animationstart', () => recordHeight('animationstart'));
+      panel.addEventListener('animationend', () => recordHeight('animationend'));
+      new MutationObserver(() => {
+        if (panel.hasAttribute('data-ending-style')) {
+          recordHeight('data-ending-style');
+        }
+      }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
 
-        // All three hold only while the closing animation runs, so check them in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            endingStyle: panel.hasAttribute('data-ending-style'),
-            height: panel.style.getPropertyValue('--collapsible-panel-height'),
-            animations: panel.getAnimations().length,
-          };
-          mark(`check ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({
-            endingStyle: true,
-            height: expect.stringMatching(/px$/),
-            animations: 1,
-          });
-        });
-      }),
-    );
+      await user.click(trigger);
 
-    it(
-      'still animates on reopen after being initially open when only open keyframes are defined',
-      timed(async () => {
-        const { user } = await render(
-          <>
-            <style>{`
+      await waitFor(() => {
+        expect(Object.keys(heights)).toHaveLength(3);
+      });
+
+      expect(heights).toEqual({
+        animationstart: expect.stringMatching(/px$/),
+        'data-ending-style': expect.stringMatching(/px$/),
+        animationend: expect.stringMatching(/px$/),
+      });
+    });
+
+    it('still animates on reopen after being initially open when only open keyframes are defined', async () => {
+      const { user } = await render(
+        <>
+          <style>{`
             @keyframes panel-slide-down {
               from {
                 height: 0;
@@ -934,43 +925,36 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-            <Collapsible.Root defaultOpen>
-              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-              <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
-                {PANEL_CONTENT}
-              </Collapsible.Panel>
-            </Collapsible.Root>
-          </>,
-        );
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+            <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
+              {PANEL_CONTENT}
+            </Collapsible.Panel>
+          </Collapsible.Root>
+        </>,
+      );
 
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
-        const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
 
-        expect(panel.getAnimations().length).toBe(0);
+      expect(panel.getAnimations().length).toBe(0);
 
-        mark('click 1');
-        await user.click(trigger);
-        mark('click 1 resolved');
+      await user.click(trigger);
 
-        await waitFor(() => {
-          expect(panel).toHaveAttribute('data-closed');
-        });
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('data-closed');
+      });
 
-        mark('click 2');
-        await user.click(trigger);
-        mark('click 2 resolved');
+      await user.click(trigger);
 
-        // The animation runs only while the panel is opening, so check both in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            open: panel.hasAttribute('data-open'),
-            animations: panel.getAnimations().length,
-          };
-          mark(`check ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({ open: true, animations: 1 });
-        });
-      }),
-    );
+      // The animation runs only while the panel is opening, so check both in one snapshot.
+      await waitFor(() => {
+        expect({
+          open: panel.hasAttribute('data-open'),
+          animations: panel.getAnimations().length,
+        }).toEqual({ open: true, animations: 1 });
+      });
+    });
   });
 
   describe.skipIf(isJSDOM)('React.Activity', () => {
@@ -1334,13 +1318,11 @@ describe('<Collapsible.Panel />', () => {
 
   // An engine with no `beforematch` cannot run these cases.
   describe.skipIf(isJSDOM || !('onbeforematch' in window))('interrupted beforematch opens', () => {
-    it(
-      'keeps the temporary zero animation duration until the panel closes',
-      timed(async () => {
-        function App() {
-          return (
-            <>
-              <style>{`
+    it('keeps the temporary zero animation duration until the panel closes', async () => {
+      function App() {
+        return (
+          <>
+            <style>{`
               @keyframes panel-slide-down {
                 from {
                   height: 0;
@@ -1375,63 +1357,56 @@ describe('<Collapsible.Panel />', () => {
               }
             `}</style>
 
-              <Collapsible.Root>
-                <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-                <Collapsible.Panel
-                  class="animation-test-panel"
-                  data-testid="panel"
-                  hiddenUntilFound
-                  keepMounted
-                >
-                  {PANEL_CONTENT}
-                </Collapsible.Panel>
-              </Collapsible.Root>
-            </>
-          );
-        }
+            <Collapsible.Root>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel
+                class="animation-test-panel"
+                data-testid="panel"
+                hiddenUntilFound
+                keepMounted
+              >
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          </>
+        );
+      }
 
-        const { user } = await render(<App />);
+      const { user } = await render(<App />);
 
-        const panel = screen.getByTestId('panel');
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
 
-        await fireBeforeMatch(panel);
+      await fireBeforeMatch(panel);
 
-        await waitFor(() => {
-          expect(panel).toHaveAttribute('data-open');
-        });
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('data-open');
+      });
 
-        await waitForAnimationFrame();
-        await waitForAnimationFrame();
-        await flushMicrotasks();
+      await waitForAnimationFrame();
+      await waitForAnimationFrame();
+      await flushMicrotasks();
 
-        expect(getComputedStyle(panel).animationDuration).toBe('0s');
+      expect(getComputedStyle(panel).animationDuration).toBe('0s');
 
-        mark('click');
-        await user.click(trigger);
-        mark('click resolved');
+      await user.click(trigger);
 
-        // The animation runs only while the panel is closing, so check both in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            closed: panel.hasAttribute('data-closed'),
-            animations: panel.getAnimations().length,
-          };
-          mark(`check ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({ closed: true, animations: 1 });
-        });
+      // The animation runs only while the panel is closing, so check both in one snapshot.
+      await waitFor(() => {
+        expect({
+          closed: panel.hasAttribute('data-closed'),
+          animations: panel.getAnimations().length,
+        }).toEqual({ closed: true, animations: 1 });
+      });
 
-        expect(getComputedStyle(panel).animationDuration).toBe('0.123s');
-      }),
-    );
+      expect(getComputedStyle(panel).animationDuration).toBe('0.123s');
+    });
 
-    it(
-      'restores the transition duration before the first close after a beforematch open',
-      timed(async () => {
-        function App() {
-          return (
-            <>
-              <style>{`
+    it('restores the transition duration before the first close after a beforematch open', async () => {
+      function App() {
+        return (
+          <>
+            <style>{`
               .transition-test-panel {
                 overflow: hidden;
                 height: var(--collapsible-panel-height);
@@ -1446,59 +1421,50 @@ describe('<Collapsible.Panel />', () => {
               }
             `}</style>
 
-              <Collapsible.Root>
-                <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-                <Collapsible.Panel
-                  class="transition-test-panel"
-                  data-testid="panel"
-                  hiddenUntilFound
-                  keepMounted
-                  style={{ transitionDuration: '123ms' }}
-                >
-                  {PANEL_CONTENT}
-                </Collapsible.Panel>
-              </Collapsible.Root>
-            </>
-          );
-        }
+            <Collapsible.Root>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel
+                class="transition-test-panel"
+                data-testid="panel"
+                hiddenUntilFound
+                keepMounted
+                style={{ transitionDuration: '123ms' }}
+              >
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          </>
+        );
+      }
 
-        const { user } = await render(<App />);
+      const { user } = await render(<App />);
 
-        const panel = screen.getByTestId('panel');
-        const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
 
-        await fireBeforeMatch(panel);
+      await fireBeforeMatch(panel);
 
-        await waitFor(() => {
-          expect(panel).toHaveAttribute('data-open');
-        });
+      await waitFor(() => {
+        expect(panel).toHaveAttribute('data-open');
+      });
 
-        await waitForAnimationFrame();
-        await waitForAnimationFrame();
-        await flushMicrotasks();
+      await waitForAnimationFrame();
+      await waitForAnimationFrame();
+      await flushMicrotasks();
 
-        expect(getComputedStyle(panel).transitionDuration).toBe('0s');
+      expect(getComputedStyle(panel).transitionDuration).toBe('0s');
 
-        mark('click');
-        await user.click(trigger);
-        mark('click resolved');
+      await user.click(trigger);
 
-        // All three hold only while the closing transition runs, so check them in one snapshot.
-        await waitFor(() => {
-          const snapshot = {
-            endingStyle: panel.hasAttribute('data-ending-style'),
-            transitionDuration: panel.style.transitionDuration,
-            animations: panel.getAnimations().length,
-          };
-          mark(`check ${JSON.stringify(snapshot)}`);
-          expect(snapshot).toEqual({
-            endingStyle: true,
-            transitionDuration: '123ms',
-            animations: 1,
-          });
-        });
-      }),
-    );
+      // All three hold only while the closing transition runs, so check them in one snapshot.
+      await waitFor(() => {
+        expect({
+          endingStyle: panel.hasAttribute('data-ending-style'),
+          transitionDuration: panel.style.transitionDuration,
+          animations: panel.getAnimations().length,
+        }).toEqual({ endingStyle: true, transitionDuration: '123ms', animations: 1 });
+      });
+    });
 
     it('does not suppress a later animated open after a no-motion beforematch open', async () => {
       const App = defineComponent(() => {
