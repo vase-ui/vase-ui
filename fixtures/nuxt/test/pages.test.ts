@@ -611,25 +611,112 @@ async function expectHydratedSwitchPage(page: Page) {
   expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(labelId);
 }
 
-function readRadios(page: Page, testId: string, attributeName: string) {
-  return page
-    .getByTestId(testId)
-    .locator('[role="radio"]')
-    .evaluateAll((radios, name) => radios.map((radio) => radio.getAttribute(name)), attributeName);
-}
-
-async function readIndicator(page: Page, testId: string) {
+// The attributes of an indicator, or `null` when the page has no element for it.
+async function readIndicator(page: Page, testId: string, attributeNames: string[]) {
   const indicator = page.getByTestId(testId);
   if ((await indicator.count()) === 0) {
     return null;
   }
 
-  return readAttributes(indicator, [
-    'data-checked',
-    'data-unchecked',
-    'data-starting-style',
-    'data-ending-style',
-  ]);
+  return readAttributes(indicator, attributeNames);
+}
+
+const CHECKBOX_INDICATOR_ATTRIBUTES = ['data-checked', 'data-unchecked', 'data-indeterminate'];
+const RADIO_INDICATOR_ATTRIBUTES = [
+  'data-checked',
+  'data-unchecked',
+  'data-starting-style',
+  'data-ending-style',
+];
+
+async function readCheckboxPage(page: Page) {
+  const read = (testId: string) =>
+    readAttributes(page.getByTestId(testId), [
+      'role',
+      'aria-checked',
+      'data-checked',
+      'data-indeterminate',
+      'aria-label',
+    ]);
+  const form = page.getByTestId('form');
+
+  return {
+    terms: await read('terms'),
+    news: await read('news'),
+    some: await read('some'),
+    indicators: {
+      terms: await readIndicator(page, 'terms-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
+      news: await readIndicator(page, 'news-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
+      some: await readIndicator(page, 'some-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
+      kept: await readIndicator(page, 'kept-indicator', CHECKBOX_INDICATOR_ATTRIBUTES),
+    },
+    // The entries that a submit of the server HTML sends.
+    formData: await form.evaluate((element) =>
+      Array.from(
+        new FormData(element as HTMLFormElement),
+        ([name, value]) => `${name}=${String(value)}`,
+      ),
+    ),
+    indeterminate: await form.evaluate((element) =>
+      Array.from(
+        element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+        (input) => input.indeterminate,
+      ),
+    ),
+  };
+}
+
+async function expectCheckboxPage(page: Page) {
+  expect(await readCheckboxPage(page)).toEqual({
+    terms: {
+      role: 'checkbox',
+      'aria-checked': 'false',
+      'data-checked': null,
+      'data-indeterminate': null,
+      'aria-label': null,
+    },
+    news: {
+      role: 'checkbox',
+      'aria-checked': 'true',
+      'data-checked': '',
+      'data-indeterminate': null,
+      'aria-label': 'News',
+    },
+    some: {
+      role: 'checkbox',
+      'aria-checked': 'mixed',
+      'data-checked': null,
+      'data-indeterminate': '',
+      'aria-label': 'Some',
+    },
+    indicators: {
+      terms: null,
+      news: { 'data-checked': '', 'data-unchecked': null, 'data-indeterminate': null },
+      some: { 'data-checked': null, 'data-unchecked': null, 'data-indeterminate': '' },
+      kept: { 'data-checked': null, 'data-unchecked': '', 'data-indeterminate': null },
+    },
+    formData: ['terms=no', 'news=on'],
+    // HTML has no attribute for `indeterminate`, so a server cannot write it.
+    indeterminate: [false, false, false, false],
+  });
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedCheckboxPage(page: Page) {
+  const { formData, indeterminate } = await readCheckboxPage(page);
+  expect(formData).toEqual(['terms=no', 'news=on']);
+  expect(indeterminate).toEqual([false, false, true, false]);
+  const labelId = await page.getByTestId('label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(labelId);
+}
+
+function readRadios(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('[role="radio"]')
+    .evaluateAll((radios, name) => radios.map((radio) => radio.getAttribute(name)), attributeName);
 }
 
 // The entries that a submit of the form sends.
@@ -660,9 +747,9 @@ async function expectRadioGroupPage(page: Page) {
   // indicator has a transition attribute, because a radio that is checked at the mount does not
   // animate in.
   expect({
-    apple: await readIndicator(page, 'apple-indicator'),
-    banana: await readIndicator(page, 'banana-indicator'),
-    cherry: await readIndicator(page, 'cherry-indicator'),
+    apple: await readIndicator(page, 'apple-indicator', RADIO_INDICATOR_ATTRIBUTES),
+    banana: await readIndicator(page, 'banana-indicator', RADIO_INDICATOR_ATTRIBUTES),
+    cherry: await readIndicator(page, 'cherry-indicator', RADIO_INDICATOR_ATTRIBUTES),
   }).toEqual({
     apple: null,
     banana: {
@@ -736,6 +823,11 @@ const PAGES: PageCase[] = [
     path: '/switch',
     expectPage: expectSwitchPage,
     expectHydratedPage: expectHydratedSwitchPage,
+  },
+  {
+    path: '/checkbox',
+    expectPage: expectCheckboxPage,
+    expectHydratedPage: expectHydratedCheckboxPage,
   },
   { path: '/radio-group', expectPage: expectRadioGroupPage },
   {
@@ -831,19 +923,37 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
+  it('changes a checkbox on a click on its label and on the checkbox after hydration, and mounts and unmounts its indicator', async () => {
+    const page = await createPage('/checkbox');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('label').click();
+    await page.getByTestId('news').click();
+    await page.getByTestId('news-indicator').waitFor({ state: 'detached' });
+
+    expect(await page.getByTestId('terms').getAttribute('aria-checked')).toBe('true');
+    expect(await page.getByTestId('terms-indicator').getAttribute('data-checked')).toBe('');
+    expect(await page.getByTestId('news').getAttribute('aria-checked')).toBe('false');
+    expect(await page.getByTestId('news-value').textContent()).toBe('false');
+    expect((await readCheckboxPage(page)).formData).toEqual(['terms=on']);
+    expect(messages).toEqual([]);
+  });
+
   it('selects a radio of /radio-group with a click and with an arrow key after hydration, and moves its indicator', async () => {
     const page = await createPage('/radio-group');
     const messages = collectMessages(page);
     const readFocusedTestId = () =>
       page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+    const readRadioIndicator = (testId: string) =>
+      readIndicator(page, testId, RADIO_INDICATOR_ATTRIBUTES);
 
     await page.getByTestId('apple').click();
     await page.getByTestId('banana-indicator').waitFor({ state: 'detached' });
 
     expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['true', 'false', 'false']);
     expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['0', '-1', '-1']);
-    expect(await readIndicator(page, 'apple-indicator')).toMatchObject({ 'data-checked': '' });
-    expect(await readIndicator(page, 'cherry-indicator')).toMatchObject({ 'data-unchecked': '' });
+    expect(await readRadioIndicator('apple-indicator')).toMatchObject({ 'data-checked': '' });
+    expect(await readRadioIndicator('cherry-indicator')).toMatchObject({ 'data-unchecked': '' });
     expect(await page.getByTestId('value').textContent()).toBe('apple');
     expect(await readFormData(page)).toEqual(['fruit=apple']);
 
@@ -853,7 +963,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readFocusedTestId()).toBe('banana');
     expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['false', 'true', 'false']);
     expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', '0', '-1']);
-    expect(await readIndicator(page, 'banana-indicator')).toMatchObject({ 'data-checked': '' });
+    expect(await readRadioIndicator('banana-indicator')).toMatchObject({ 'data-checked': '' });
     expect(await page.getByTestId('value').textContent()).toBe('banana');
     expect(await readFormData(page)).toEqual(['fruit=banana']);
     expect(messages).toEqual([]);
