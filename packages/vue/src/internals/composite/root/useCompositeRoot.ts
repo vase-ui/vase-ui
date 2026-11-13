@@ -370,8 +370,10 @@ export function useCompositeRoot<Metadata>(
   // The server HTML can give the tab stop to an item that is mounted after its root. That item can
   // have no `setup` yet, so only the DOM tells the root. Each item that hydrates has an attribute
   // with the id of its root. Thus an item of a nested composite and an element of the consumer do
-  // not count. An item whose element is outside the element of the root, in a `Teleport`, is not
-  // found.
+  // not count.
+  // Limit: the search covers the element of the root only. The root does not find an item whose
+  // element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab
+  // stop, the list can have two tab stops until the item is mounted.
   // The first check runs in a post-flush job. That job runs after the renders that the mounted
   // hooks queue, so each mounted item has already removed its attribute. A check in `onMounted`
   // would be too early.

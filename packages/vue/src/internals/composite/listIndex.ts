@@ -430,21 +430,32 @@ export function getGridNavigatedIndex(
 }
 
 /**
+ * Gives the number of columns that grid navigation uses: the whole part of `cols`. A grid has at
+ * least one column, so a value below 1 or a value that is not a finite number gives 1. Such a value
+ * makes the search for a free cell and a step of the navigation run with no end.
+ */
+export function getGridColumns(cols: number) {
+  const columns = floor(cols);
+  return Number.isFinite(columns) && columns >= 1 ? columns : 1;
+}
+
+/**
  * Gives the index of the item that fills each cell. An item takes at most one whole row, so an
  * item that is wider than the grid gets the width of the grid.
  */
 export function createGridCellMap(sizes: Dimensions[], cols: number, dense: boolean) {
+  const columns = getGridColumns(cols);
   const cellMap: (number | undefined)[] = [];
   let startIndex = 0;
   sizes.forEach((size, index) => {
     // An item that is wider than the grid fits in no row. The search for a free place would never end.
-    const width = Math.min(size.width, cols);
+    const width = Math.min(size.width, columns);
     const { height } = size;
-    if (process.env.NODE_ENV !== 'production' && size.width > cols) {
+    if (process.env.NODE_ENV !== 'production' && size.width > columns) {
       error(
-        `The grid item at index ${index} has a width of ${size.width} columns, and the grid has ${cols} columns.`,
-        `Grid navigation cannot place an item that is wider than the grid, so it gives the item a width of ${cols} columns.`,
-        `Give the item a width of at most ${cols}, or give the grid more columns.`,
+        `The grid item at index ${index} has a width of ${size.width} columns, and the grid has ${columns} columns.`,
+        `Grid navigation cannot place an item that is wider than the grid, so it gives the item a width of ${columns} columns.`,
+        `Give the item a width of at most ${columns}, or give the grid more columns.`,
       );
     }
     let itemPlaced = false;
@@ -455,11 +466,11 @@ export function createGridCellMap(sizes: Dimensions[], cols: number, dense: bool
       const targetCells: number[] = [];
       for (let i = 0; i < width; i += 1) {
         for (let j = 0; j < height; j += 1) {
-          targetCells.push(startIndex + i + j * cols);
+          targetCells.push(startIndex + i + j * columns);
         }
       }
       if (
-        (startIndex % cols) + width <= cols &&
+        (startIndex % columns) + width <= columns &&
         targetCells.every((cell) => cellMap[cell] == null)
       ) {
         targetCells.forEach((cell) => {

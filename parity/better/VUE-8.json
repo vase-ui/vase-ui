@@ -3,6 +3,6 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/listIndex.ts#L440-L470"
   ],
-  "behavior": "Grid navigation gives an item that is wider than the grid the width of the grid, in each build. A development build also reports the item. No build stays in a loop that does not end.",
+  "behavior": "Grid navigation gives an item that is wider than the grid the width of the grid, in each build. A development build also reports the item. It uses the whole part of a number of columns, and it uses 1 for a number of columns that is below 1 or not a finite number. No build stays in a loop that does not end.",
   "dueWith": "packages/react/src/internals/composite/listIndex.ts"
 }

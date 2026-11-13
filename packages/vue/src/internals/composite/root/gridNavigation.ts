@@ -5,6 +5,7 @@ import {
   createGridCellMap,
   getGridCellIndexOfCorner,
   getGridCellIndices,
+  getGridColumns,
   getGridNavigatedIndex,
   isListIndexDisabled,
 } from '../listIndex';
@@ -20,6 +21,8 @@ export interface CompositeGridItemSize {
 export interface CompositeGridConfig {
   /**
    * The number of columns. A whole number, 1 or more.
+   * A fraction counts as its whole part. A value below 1, or a value that is not a finite number,
+   * counts as 1.
    */
   cols: number;
   dense?: boolean | undefined;
@@ -50,7 +53,10 @@ export function gridNavigation(
   config: MaybeRefOrGetter<CompositeGridConfig>,
 ): CompositeGridNavigator {
   return (state) => {
-    const { cols, dense = false, itemSizes } = toValue(config);
+    const { cols: configuredCols, dense = false, itemSizes } = toValue(config);
+    // The steps below use `cols` as a divisor and as a step size, so it must be a whole number,
+    // 1 or more.
+    const cols = getGridColumns(configuredCols);
     const {
       disabledIndices,
       elementsRef,
