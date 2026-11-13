@@ -649,6 +649,20 @@ describe('useTriggerDataForwarding', () => {
     expect(store.state.payload).toBeUndefined();
   });
 
+  it('gives the element and the payload of the active trigger to an open popup that is not mounted', async () => {
+    const store = createTestPopupStore();
+    const element = document.createElement('button');
+    // The popup is not mounted, so only the registration of the trigger can give the payload.
+    store.update({ open: true, activeTriggerId: 'trigger' });
+
+    await render(
+      <TestForwardedTrigger id="trigger" store={store} element={element} payload="from trigger" />,
+    );
+
+    expect(store.state.activeTriggerElement).toBe(element);
+    expect(store.state.payload).toBe('from trigger');
+  });
+
   it('gives the payload of the active trigger when two triggers share one popup', async () => {
     const store = createTestPopupStore();
     const first = document.createElement('button');
