@@ -1,0 +1,1367 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/checkbox/**",
+    "docs/src/app/(docs)/react/components/checkbox/**"
+  ],
+  "sources": [
+    "packages/react/src/checkbox/index.parts.ts",
+    "packages/react/src/checkbox/index.ts",
+    "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
+    "packages/react/src/checkbox/indicator/CheckboxIndicatorDataAttributes.ts",
+    "packages/react/src/checkbox/root/CheckboxRoot.tsx",
+    "packages/react/src/checkbox/root/CheckboxRootContext.ts",
+    "packages/react/src/checkbox/root/CheckboxRootDataAttributes.ts",
+    "packages/react/src/checkbox/utils/getCheckboxStateAttributesMapping.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/checkbox/indicator/CheckboxIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Checkbox.Root>"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "title": "should not render indicator by default"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "title": "should render indicator when checked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "prop: keepMounted"
+          ],
+          "title": "should keep indicator mounted when unchecked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "prop: keepMounted"
+          ],
+          "title": "should keep indicator mounted when checked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "prop: keepMounted"
+          ],
+          "title": "should keep indicator mounted when indeterminate"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "title": "should remove the indicator when there is no exit animation defined"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />"
+          ],
+          "title": "should remove the indicator when the animation finishes"
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "animations"
+          ],
+          "title": "triggers enter animation via data-starting-style when mounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "animations"
+          ],
+          "title": "applies data-ending-style before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Indicator />",
+            "animations"
+          ],
+          "title": "removes all indicators in a single commit when multiple checkboxes are unchecked",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/checkbox/root/CheckboxRoot.react17.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Checkbox.Root /> with the React 17 id fallback"
+          ],
+          "title": "drops an explicit id when the prop is removed (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root /> with the React 17 id fallback"
+          ],
+          "title": "does not reuse an unmounted Checkbox id for a keyed id-less Checkbox (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root /> with the React 17 id fallback"
+          ],
+          "title": "assigns the label association once the fallback ids arrive (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root /> with the React 17 id fallback"
+          ],
+          "title": "wires parent aria-controls once the fallback ids are assigned (nativeButton=%s)"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "ARIA attributes"
+          ],
+          "title": "sets the correct aria attributes"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "extra props"
+          ],
+          "title": "can override the built-in attributes"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "id"
+          ],
+          "title": "drops an explicit id when the prop is removed (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "id"
+          ],
+          "title": "does not reuse an unmounted Checkbox id for a keyed id-less Checkbox (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "id"
+          ],
+          "title": "defers an explicit id until hydration but keeps Field.Label associated during SSR (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: onClick"
+          ],
+          "title": "propagates a single click event to ancestors per user click (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: onClick"
+          ],
+          "title": "does not propagate to ancestors when stopPropagation() is called (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "tolerates imperative interaction in its ref callback before the hidden input mounts"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "should change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "should update its state when changed from outside"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "should call onCheckedChange when clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "does not update its state when onCheckedChange cancels the event"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "should report keyboard modifier event properties when calling onCheckedChange"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "should update its state if the underlying input is toggled"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "ignores a hidden input click canceled before React handles it"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "can be activated with Space key"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "interactions"
+          ],
+          "title": "does not activate with Enter key"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: disabled"
+          ],
+          "title": "uses aria-disabled instead of HTML disabled"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: disabled"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should have the `aria-readonly` attribute"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not have the aria attribute when `readOnly` is not set"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: readOnly"
+          ],
+          "title": "should not change its state when its label is clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "should set the `aria-checked` attribute as \"mixed\""
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "should not have the aria attribute when `indeterminate` is not set"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "should not be overridden by `checked` prop"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "sets the native input state when indeterminate"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "keeps the native input state when checked changes while indeterminate remains"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "sets indeterminate style hooks on the root and indicator"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "sets grouped parent aria when manually indeterminate"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "prop: indeterminate"
+          ],
+          "title": "sets grouped parent native input state when manually indeterminate"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "should update its state if the underlying input is toggled"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "should place the style hooks on the root and the indicator"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "should set the name attribute only on the input"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "should toggle the checkbox when a wrapping <label> is clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "should toggle the checkbox when a explicitly linked <label> is clicked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "should associate `id` with the native button when `nativeButton=true`"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "falls back to the Field control id when id is empty"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "assigns an input id to a valueless child in a parent checkbox group"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "with native <label>"
+          ],
+          "title": "assigns a root id to a valueless native button in a parent checkbox group"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "triggers native HTML validation on submit"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "should include the checkbox value in form submission, matching native checkbox behavior",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits the form when Enter is pressed while focused",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "does not submit the form with Enter when the consumer prevents default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "does not submit the form with Enter when an ancestor prevents default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits the form with Enter when readOnly",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits the form once with Enter when rendered as a native button",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "does not submit the form with Enter when there is no submit button",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "does not submit the form with Enter when the default button is disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits to an external form with Enter when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "submits uncheckedValue to an external form when unchecked",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "should include the custom checkbox value in form submission, matching native checkbox behavior",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "matches native checkbox form submission behavior",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "should submit uncheckedValue when checkbox is unchecked and uncheckedValue is specified",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "does not submit uncheckedValue when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Form"
+          ],
+          "title": "should submit custom uncheckedValue when checkbox is unchecked",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "should receive disabled prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "should receive name prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when checked after being initially unchecked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "removes [data-filled] attribute when unchecked after being initially checked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "clears [data-filled] when a controlled checkbox remounts unchecked"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when any checkbox is filled when inside a group"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "[data-focused]"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "does not set [data-focused] when disabled"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused checkbox becomes disabled"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused checkbox unmounts"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is kept when the checkbox is focused during mount in StrictMode"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "[data-invalid]"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "[data-valid]"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "props: validationMode=onChange"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "validates once when changed by the user"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "revalidates when a controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "Field.Label",
+            "explicit association"
+          ],
+          "title": "when label and checkbox are siblings"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field",
+            "Field.Label",
+            "implicit association"
+          ],
+          "title": "sets `for` on the label"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "should change state when clicking the checkbox if it has a wrapping label"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "sets `aria-labelledby` from a sibling label associated with the hidden input"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "updates fallback `aria-labelledby` when the hidden input id changes"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "prefers `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "prefers a render element's `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "ignores a blank `aria-label` (%j)"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "dynamic %s label"
+          ],
+          "title": "updates the accessible name when `aria-label` is added, cleared, or removed"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />",
+            "dynamic %s label"
+          ],
+          "title": "updates the accessible name when the associated label mounts and unmounts"
+        },
+        {
+          "describe": [
+            "<Checkbox.Root />"
+          ],
+          "title": "can render a native button"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/checkbox/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "span",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": "undefined"
+            },
+            {
+              "name": "defaultChecked",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "checked",
+              "required": false,
+              "type": "boolean",
+              "default": "undefined"
+            },
+            {
+              "name": "onCheckedChange",
+              "required": false,
+              "type": "((checked: boolean, eventDetails: Checkbox.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "indeterminate",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "parent",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "uncheckedValue",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Checkbox.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Checkbox.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Checkbox.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CheckboxRootState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "indeterminate",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type CheckboxRootState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    indeterminate: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "CheckboxRootChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type CheckboxRootChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "CheckboxRootChangeEventDetails",
+            "code": "type CheckboxRootChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Checkbox.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Checkbox.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Checkbox.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CheckboxIndicatorState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "indeterminate",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type CheckboxIndicatorState = {\n    transitionStatus: TransitionStatus;\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    indeterminate: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-indeterminate",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "CheckboxIndicatorDataAttributes",
+          "code": "declare namespace CheckboxIndicatorDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const indeterminate: 'data-indeterminate';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "CheckboxRootDataAttributes",
+          "code": "declare namespace CheckboxRootDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const indeterminate: 'data-indeterminate';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "indeterminate",
+              "value": "data-indeterminate"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/checkbox/page.mdx",
+      "referenceTags": [
+        "TypesCheckbox.Root",
+        "TypesCheckbox.Indicator"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
+import { Checkbox } from '@vase-ui/vue/checkbox';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Radio } from '@vase-ui/vue/radio';
@@ -1387,6 +1388,35 @@ describe('<Field.Root />', () => {
 
       await tick(1);
 
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByText('error')).not.toBe(null);
+    });
+
+    it('should debounce validation for field-aware controls', async () => {
+      const validate = vi.fn((value) => (value ? 'error' : null));
+
+      await render(
+        <Field.Root validationDebounceTime={100} validationMode="onChange" validate={validate}>
+          <Checkbox.Root />
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole('checkbox');
+
+      await fireEvent.click(control);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(99);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(1);
+
+      expect(validate).toHaveBeenCalledTimes(1);
       expect(control).toHaveAttribute('aria-invalid', 'true');
       expect(screen.queryByText('error')).not.toBe(null);
     });

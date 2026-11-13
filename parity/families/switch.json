@@ -7,14 +7,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />"],
-      "suite": "hiddenInputSizeTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/hiddenInputSizeTests.tsx",
-      "reason": "Vase UI does not have the shared suite. The case \"grows from zero size to an on-screen 1px box when reported invalid\" in the block \"hidden input size\" of the same test file tests the same behavior."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
       "describe": ["<Switch.Root />", "extra props"],
       "title": "prefers a render element's `aria-label` over an associated label",
       "kind": "not-applicable",

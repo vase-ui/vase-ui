@@ -1,4 +1,5 @@
 export * from '../src/common/testUtils';
+export { createFormDataSpy } from './formData';
 export { createRenderer } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
@@ -9,9 +10,11 @@ export {
   pressWithScreenReader,
   pressWithTouch,
 } from './pointer';
+export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
 export * from './animation';
 export { describeConformance } from './describeConformance';
+export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';

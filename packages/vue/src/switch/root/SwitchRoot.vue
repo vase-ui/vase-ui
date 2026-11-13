@@ -106,10 +106,8 @@ export type SwitchRootChangeEventDetails = VaseUIChangeEventDetails<SwitchRootCh
 <script setup lang="ts">
 import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
-import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
-import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
@@ -125,6 +123,7 @@ import {
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -285,31 +284,18 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeCheckedToInput);
 }
 
-const resetTimeout = useTimeout();
+useFormReset(inputElement, (event) => {
+  const hasChanged =
+    props.checked === undefined &&
+    isChecked.value !== props.defaultChecked &&
+    requestChange(props.defaultChecked, event);
 
-function onReset(event: Event) {
-  if (event.target !== inputElement.value?.form) {
-    return;
+  if (hasChanged) {
+    isResetChangePending = true;
+  } else {
+    clearFieldError(isChecked.value);
   }
-
-  // A listener that runs later can still prevent the event. The browser then resets nothing.
-  resetTimeout.start(0, () => {
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    const hasChanged =
-      props.checked === undefined &&
-      isChecked.value !== props.defaultChecked &&
-      requestChange(props.defaultChecked, event);
-
-    if (hasChanged) {
-      isResetChangePending = true;
-    } else {
-      clearFieldError(isChecked.value);
-    }
-  });
-}
+});
 
 watch(
   inputElement,
@@ -320,15 +306,8 @@ watch(
 
     writeCheckedToInput();
 
-    onCleanup(
-      mergeCleanups(
-        // Chromium restores the form state of a page after `load`, with no event on the input.
-        addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput),
-        // The form of the input can change, so the listener is on the root node.
-        addEventListener(input.getRootNode(), 'reset', onReset),
-        resetTimeout.clear,
-      ),
-    );
+    // Chromium restores the form state of a page after `load`, with no event on the input.
+    onCleanup(addEventListener(ownerWindow(input), 'pageshow', writeCheckedToInput));
   },
   { flush: 'post' },
 );
