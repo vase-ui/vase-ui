@@ -1,6 +1,7 @@
-import { onScopeDispose, toValue, watch } from 'vue';
+import { toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import { useLabelableContext } from './LabelableContext';
+import { useRegisteredId } from './useRegisteredId';
 
 /**
  * A part that describes the control calls it in `setup`, such as a description or an error.
@@ -33,12 +34,5 @@ export function useRegisteredMessageId(id: MaybeRefOrGetter<string | undefined>)
     });
   }
 
-  const getId = () => toValue(id) || undefined;
-
-  // A direct call in `setup` puts the id in the server HTML of each part that renders after this
-  // one. Do not write this as a `watch` with `immediate` and `onCleanup`: a server render stops
-  // that watcher after its first run, and the stop runs the cleanup.
-  register(getId());
-  watch(getId, register);
-  onScopeDispose(() => register(undefined));
+  useRegisteredId(() => toValue(id) || undefined, register);
 }

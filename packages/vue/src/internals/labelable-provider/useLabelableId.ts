@@ -1,4 +1,12 @@
-import { computed, onMounted, onScopeDispose, toValue, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  toValue,
+  watch,
+} from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { NOOP } from '../noop';
 import { useVaseUiId } from '../useBaseUiId';
@@ -20,6 +28,9 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   let hasRegistered = false;
   let hadExplicitId = false;
   let isMounted = false;
+  // `KeepAlive` removes the DOM of a deactivated control from the document, so the provider must
+  // not keep its registration.
+  let isDeactivated = false;
 
   function unregister() {
     if (!hasRegistered || registerControlId === NOOP) {
@@ -31,7 +42,7 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   }
 
   function register() {
-    if (!isEnabled() || registerControlId === NOOP) {
+    if (isDeactivated || !isEnabled() || registerControlId === NOOP) {
       unregister();
       return;
     }
@@ -64,6 +75,23 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
 
   // A change before the mount also waits, for the same reason.
   watch([id, isEnabled], () => {
+    if (isMounted) {
+      register();
+    }
+  });
+
+  onDeactivated(() => {
+    isDeactivated = true;
+    unregister();
+  });
+
+  onActivated(() => {
+    // `onActivated` also runs at the first mount inside `KeepAlive`, where `onMounted` registered.
+    if (!isDeactivated) {
+      return;
+    }
+
+    isDeactivated = false;
     if (isMounted) {
       register();
     }

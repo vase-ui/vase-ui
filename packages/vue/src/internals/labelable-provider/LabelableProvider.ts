@@ -30,9 +30,9 @@ export function provideLabelableContext(): LabelableContext {
     }
 
     const ids = Array.from(controlRegistrations.values());
-    // With no registration, the id stays between the unmount of a control and the mount of the
-    // next. A control that comes back with the same id then changes nothing, and a control with no
-    // id resets the id through `resetControlId`.
+    // With no registration, the id stays. `KeepAlive` removes the registration of a deactivated
+    // control, and the id of that control stays selected until `KeepAlive` activates it again. A
+    // control with no id resets the id through `resetControlId`.
     if (ids.length === 0) {
       return;
     }

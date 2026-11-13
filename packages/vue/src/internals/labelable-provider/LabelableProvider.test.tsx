@@ -1,6 +1,6 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent } from 'vue';
-import { createRenderer, hydrate, renderOnServer, screen } from '#test-utils';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { createRenderer, flushMicrotasks, hydrate, renderOnServer, screen } from '#test-utils';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableMessage from '../../../test/fixtures/LabelableMessage.vue';
@@ -356,6 +356,140 @@ describe('labelable provider', () => {
         'aria-describedby',
         'outer-message inner-message',
       );
+    });
+  });
+
+  describe('under `KeepAlive`', () => {
+    // Each part has its own key, so `KeepAlive` keeps both parts and deactivates the one that the
+    // other part replaces.
+    const ControlInKeepAlive = defineComponent(
+      (props: {
+        swapped: boolean;
+        firstId?: string | null | undefined;
+        secondId?: string | undefined;
+      }) =>
+        () => (
+          <LabelableScope>
+            <LabelableLabel data-testid="label">Label</LabelableLabel>
+            <KeepAlive>
+              {props.swapped ? (
+                <LabelableControl key="second" id={props.secondId} data-testid="control" />
+              ) : (
+                <LabelableControl key="first" id={props.firstId} data-testid="control" />
+              )}
+            </KeepAlive>
+          </LabelableScope>
+        ),
+      { props: ['swapped', 'firstId', 'secondId'] },
+    );
+
+    it('gives the label the id of the control that is shown', async () => {
+      const ids = { firstId: 'a', secondId: 'b' };
+      const { rerender } = await render(<ControlInKeepAlive swapped={false} {...ids} />);
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await rerender(<ControlInKeepAlive swapped {...ids} />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('id', 'b');
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+
+      await rerender(<ControlInKeepAlive swapped={false} {...ids} />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('id', 'a');
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+    });
+
+    it('restores `for` when a control with no id replaces a control that registers `null`', async () => {
+      const { rerender } = await render(<ControlInKeepAlive swapped={false} firstId={null} />);
+      expect(screen.getByTestId('label')).not.toHaveAttribute('for');
+
+      await rerender(<ControlInKeepAlive swapped firstId={null} />);
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', screen.getByTestId('control').id);
+    });
+
+    it('ignores a change of the id of a deactivated control until `KeepAlive` activates the control', async () => {
+      const firstId = shallowRef('a');
+      const First = defineComponent(() => () => <LabelableControl id={firstId.value} />);
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <LabelableLabel data-testid="label">Label</LabelableLabel>
+            <KeepAlive>{props.shown ? <First /> : null}</KeepAlive>
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await rerender(<Shown shown={false} />);
+
+      firstId.value = 'c';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'c');
+    });
+
+    it('names the control with the label that is shown', async () => {
+      const LabelInKeepAlive = defineComponent(
+        (props: { swapped: boolean }) => () => (
+          <LabelableScope>
+            <KeepAlive>
+              {props.swapped ? (
+                <LabelableLabel key="second" id="label-b" />
+              ) : (
+                <LabelableLabel key="first" id="label-a" />
+              )}
+            </KeepAlive>
+            <LabelableControl data-testid="control" />
+          </LabelableScope>
+        ),
+        { props: ['swapped'] },
+      );
+      const { rerender } = await render(<LabelInKeepAlive swapped={false} />);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'label-a');
+
+      await rerender(<LabelInKeepAlive swapped />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'label-b');
+
+      await rerender(<LabelInKeepAlive swapped={false} />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'label-a');
+    });
+
+    it('removes the id of a deactivated message and ignores a change of that id until `KeepAlive` activates the message', async () => {
+      const messageId = shallowRef('error-a');
+      const Message = defineComponent(() => () => <LabelableMessage id={messageId.value} />);
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <KeepAlive>{props.shown ? <Message /> : null}</KeepAlive>
+            <LabelableControl data-testid="control" />
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'error-a');
+
+      await rerender(<Shown shown={false} />);
+
+      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-describedby');
+
+      messageId.value = 'error-b';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('control')).not.toHaveAttribute('aria-describedby');
+
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-describedby', 'error-b');
     });
   });
 

@@ -1,10 +1,11 @@
 import { isHTMLElement, isShadowRoot } from '@floating-ui/utils/dom';
-import { computed, onScopeDispose, toValue, watch } from 'vue';
+import { computed, toValue } from 'vue';
 import type { ComputedRef, LabelHTMLAttributes, MaybeRefOrGetter } from 'vue';
 import { ownerDocument } from '../../common/owner';
 import { closest, getTarget } from '../../common/shadowDom';
 import { useVaseUiId } from '../useBaseUiId';
 import { useLabelableContext } from './LabelableContext';
+import { useRegisteredId } from './useRegisteredId';
 
 /**
  * A label calls it in `setup`. The part reads `.value` in the function that it gives to
@@ -22,17 +23,13 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
 
   const id = computed(() => toValue(params.id) ?? defaultLabelId.value ?? ownId.value);
 
-  // A direct call in `setup` puts the id in the server HTML of each part that renders after this
-  // label.
   const source = Symbol();
   function register(nextId: string | undefined) {
     registerContextLabelId(source, nextId);
     params.registerLabelId?.(source, nextId);
   }
 
-  register(id.value);
-  watch(id, register);
-  onScopeDispose(() => register(undefined));
+  useRegisteredId(() => id.value, register);
 
   const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
 
@@ -110,7 +107,7 @@ export interface UseLabelParameters {
   /**
    * Registers the label with the root that owns it, as the labelable context does.
    * A root that has labels of its own makes the function with `createLabelIdRegistry()`.
-   * The id is `undefined` when the label goes away.
+   * The id is `undefined` when the label goes away or `KeepAlive` deactivates it.
    */
   registerLabelId?: ((source: symbol, labelId: string | undefined) => void) | undefined;
   /**
