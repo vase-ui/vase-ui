@@ -55,6 +55,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm docs:build`                                | Builds the site into `docs/.vitepress/dist`. It fails when the check of `pnpm parity:check` fails. `pnpm docs:preview` then serves the built site.                                                                                                                                          |
 | `pnpm docs:dev`                                  | Starts the development server of the site.                                                                                                                                                                                                                                                  |
 | `pnpm --filter @vase-ui/nuxt-fixture dev`        | Starts the development server of the Nuxt fixture, `fixtures/nuxt`. Run `pnpm build` first.                                                                                                                                                                                                 |
+| `pnpm --filter @vase-ui/nuxt-fixture typecheck`  | Runs `nuxt prepare`. Then it runs the vue-tsc of `packages/vue` on the app of the Nuxt fixture. Run `pnpm build` first.                                                                                                                                                                     |
 | `pnpm test`                                      | Runs all tests of `packages/vue`. It does not run `pnpm test:nuxt`.                                                                                                                                                                                                                         |
 | `pnpm test:node`                                 | Runs the tests that have no DOM.                                                                                                                                                                                                                                                            |
 | `pnpm test:browser`                              | Runs the browser tests in Chromium, Firefox and WebKit.                                                                                                                                                                                                                                     |
@@ -282,6 +283,9 @@ Rules:
 - A set can be a function `(merged) => props`.
 - `ref` is not merged.
 - An event is an object that has `preventDefault`. Do not use `instanceof`.
+- The type argument is the tag of the element: `mergeProps<'button'>`. With no type argument, the tag is `div`. The sets and the result then have only the attributes that each HTML element has.
+- A handler in a set gets a `VaseUIEvent`. A listener of the result gets the DOM event: the type of the result is `NativeElements[T]`.
+- Vue types a listener of an element as a function of the DOM event. A template thus refuses a bound object whose listeners need a `VaseUIEvent`.
 
 ### `useRenderElement` and `useRender`
 
@@ -547,6 +551,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - There is no jsdom.
 - A file with a name that ends in `.spec.ts` or `.spec.tsx` is a type test. vue-tsc checks it, and no test runner runs it.
 - The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
+- The job `test-nuxt` also runs `pnpm --filter @vase-ui/nuxt-fixture typecheck`. vue-tsc then checks the templates of the fixture against the built package, as it does in the project of a consumer.
 
 ### How to port a test
 

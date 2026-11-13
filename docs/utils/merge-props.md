@@ -61,6 +61,8 @@ The return value of the function replaces the props that are merged up to that p
 
 This function accepts up to 5 arguments. Each one is a props object or a function that returns a props object. To merge more than 5 sets of props, use `mergePropsN`.
 
+The type argument is the tag of the element that gets the result: `mergeProps<'button'>`. With no type argument, the tag is `div`. The sets and the result then have only the attributes that each HTML element has.
+
 <ApiReference name="mergeProps" />
 
 ### mergePropsN
