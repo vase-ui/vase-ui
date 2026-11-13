@@ -28,225 +28,10 @@
       "reason": "Vase UI does not have `Tabs.Indicator`."
     },
     {
-      "upstream": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tabs.Panel`."
-    },
-    {
-      "upstream": "packages/react/src/tabs/panel/TabsPanelDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tabs.Panel`."
-    },
-    {
       "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
       "reason": "Each case of the file renders `Tabs.Indicator`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "Each case of the file renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: children"],
-      "title": "sets the aria-labelledby attribute on tab panels to the corresponding tab id",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: children"],
-      "title": "sets the aria-controls attribute on tabs to the corresponding tab panel id",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: children"],
-      "title": "sets aria-controls on the first tab when no value is provided",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: children"],
-      "title": "syncs aria-controls to the mounted tab panel when keepMounted is false",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: children"],
-      "title": "cleans and replaces panel registrations in Strict Mode",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: value"],
-      "title": "should support values of different types",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "should select the second tab when the first one is disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "should select the third tab when first two tabs are disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "should still honor explicit defaultValue even if it points to a disabled tab",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "should still honor explicit value prop even if it points to a disabled tab",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "does not set tabIndex=0 on disabled tabs when they are programmatically selected",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "disabled tabs"],
-      "title": "does not select any tab when all tabs are disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: onValueChange"],
-      "title": "calls onValueChange when the selected tab becomes disabled with keepMounted panels",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: onValueChange"],
-      "title": "calls onValueChange with null when the selected tab is removed and no tabs remain",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "prop: onValueChange"],
-      "title": "calls onValueChange with null when a populated tab list is replaced by an empty one",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "pointer navigation"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "Each case of the block renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should set the `data-activation-direction` attribute on the tabs root with orientation=horizontal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should set the `data-activation-direction` attribute on the tabs root with orientation=vertical",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should update `data-activation-direction` on programmatic value changes with orientation=horizontal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should update `data-activation-direction` on programmatic value changes with orientation=vertical",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "keeps activation direction none after automatic disabled fallback",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should update `data-activation-direction` on programmatic change after a canceled click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should update `data-activation-direction` on programmatic change after a controlled parent ignores click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should compute correct direction when adding and selecting a new tab in one controlled update",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "activation direction"],
-      "title": "should compute correct direction on final render when adding and selecting a new tab in one controlled update with out of order string values",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case renders `Tabs.Panel`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
@@ -255,13 +40,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
       "reason": "The case renders `Tabs.Indicator`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
-      "describe": ["<Tabs.Root />", "nested tabs"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The case of the block renders `Tabs.Panel`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
@@ -280,18 +58,18 @@
       "reason": "The case renders `Dialog`, which Vase UI does not have."
     },
     {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "describe": ["<Tabs.Panel />", "Suspense integration"],
+      "title": "renders a panel that suspends when opened with the boundary outside the root",
+      "kind": "not-applicable",
+      "reason": "React hides the mounted tree and shows the fallback when a panel suspends after the mount. A mounted Vue component cannot suspend again."
+    },
+    {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
       "entry": "Root",
       "prop": "defaultValue",
       "kind": "not-applicable",
       "reason": "The part must tell an absent `defaultValue` from `defaultValue={0}`. Only the absent prop makes the root emit the initial change and fall back from a disabled tab. A Vue prop with a default cannot tell the two apart, so the prop has no default. The part uses `0` for an absent prop, which is the default that Base UI documents."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
-      "entry": "Panel",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "Vase UI does not have `Tabs.Panel`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
@@ -313,13 +91,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
       "reason": "The entry point exports the names of a part with the part. Vase UI does not have `Tabs.Indicator`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
-      "entry": "TabsPanelDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tabs/panel/TabsPanel.tsx",
-      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `Tabs.Panel`."
     }
   ],
   "surfaceAdditions": [
@@ -327,6 +98,11 @@
       "entry": "Tab",
       "prop": "id",
       "reason": "The part reads `id` to give it to the root for the `aria-labelledby` of the panel, so it is a declared prop. Base UI reads it from the native attributes of the tab, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Panel",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for the `aria-controls` of the tab, so it is a declared prop. `types.md` has no row for a native attribute. Base UI gives the root a generated id, and an `id` of the consumer replaces only the id of the element."
     }
   ],
   "returnTypeDifferences": [],
