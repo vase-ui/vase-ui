@@ -582,7 +582,7 @@ describe('<Toolbar.Root />', () => {
     });
   });
 
-  // This case is the last one of the file. In Vue 3.5.0, a `setup` that throws leaves the current
+  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case of the file then gets a warning about a slot.
   describe('useToolbarRootContext', () => {
     it('throws when a part is outside Toolbar.Root', async () => {
