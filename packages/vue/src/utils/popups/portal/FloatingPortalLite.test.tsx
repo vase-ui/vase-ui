@@ -5,13 +5,12 @@ import {
   nextTick,
   onMounted,
   onUnmounted,
-  provide,
   shallowRef,
   watch,
 } from 'vue';
 import type { ComponentPublicInstance, MaybeRefOrGetter, ShallowRef } from 'vue';
 import { createRenderer, describeConformance, hydrate, renderOnServer, screen } from '#test-utils';
-import { PortalContext } from './FloatingPortalContext';
+import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import FloatingPortalLiteHydration from './FloatingPortalLiteHydration.test.vue';
 import type { FloatingPortalContainer } from './useFloatingPortalNode';
@@ -244,39 +243,26 @@ describe('FloatingPortalLite', () => {
   });
 
   describe('portal above', () => {
-    // `FloatingPortalLite` does not provide `PortalContext`. This mock provides it, as the portal
-    // with focus guards does.
-    const portalNode = shallowRef<HTMLElement | null>(null);
-    const PortalAbove = defineComponent({
-      setup(_, { slots }) {
-        provide(PortalContext, { portalNode });
-        return () => slots.default?.();
-      },
-    });
-
     it.each<{ name: string; hasContainer: boolean }>([
       { name: 'it has no container', hasContainer: false },
       { name: 'it has a container', hasContainer: true },
     ])(
       'renders in the container, or else in the portal element above, when $name',
       async ({ hasContainer }) => {
-        const above = addContainer();
         const container = addContainer();
-        portalNode.value = above;
-        onTestFinished(() => {
-          portalNode.value = null;
-        });
 
         await render(
-          <PortalAbove>
+          <FloatingPortal data-testid="above">
             <FloatingPortalLite
               container={hasContainer ? container : undefined}
               data-testid="portal"
             />
-          </PortalAbove>,
+          </FloatingPortal>,
         );
 
-        expect(screen.getByTestId('portal').parentElement).toBe(hasContainer ? container : above);
+        expect(screen.getByTestId('portal').parentElement).toBe(
+          hasContainer ? container : screen.getByTestId('above'),
+        );
       },
     );
 
