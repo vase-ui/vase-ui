@@ -1,6 +1,9 @@
 import { expect, describe, it } from 'vitest';
+import { defineComponent } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
 import { describeConformance, createRenderer, screen } from '#test-utils';
+import { useAccordionItemContext } from '../item/AccordionItemContext';
+import type { AccordionItemContext } from '../item/AccordionItemContext';
 
 describe('<Accordion.Trigger />', () => {
   const { render } = createRenderer();
@@ -80,5 +83,44 @@ describe('<Accordion.Trigger />', () => {
     const triggers = screen.getAllByRole('button');
     expect(triggers[0]).toHaveAttribute('data-index', '0');
     expect(triggers[1]).toHaveAttribute('data-index', '1');
+  });
+
+  describe('prop: id', () => {
+    // The item makes the generated id. The probe reads it, so that no case writes a generated id.
+    let itemContext!: AccordionItemContext;
+    const ItemProbe = defineComponent(() => {
+      itemContext = useAccordionItemContext();
+      return () => null;
+    });
+
+    function App({ id }: { id: string | undefined }) {
+      return (
+        <Accordion.Root>
+          <Accordion.Item>
+            <ItemProbe />
+            <Accordion.Header>
+              <Accordion.Trigger id={id}>Trigger</Accordion.Trigger>
+            </Accordion.Header>
+          </Accordion.Item>
+        </Accordion.Root>
+      );
+    }
+
+    it.each([
+      { name: 'is undefined', first: undefined, second: undefined },
+      { name: 'is empty', first: '', second: '' },
+      { name: 'is set', first: 'mine', second: 'other' },
+      { name: 'is removed later', first: 'mine', second: undefined },
+      { name: 'is emptied later', first: 'mine', second: '' },
+    ])('has the set id, or else the generated id, when the id $name', async ({ first, second }) => {
+      const { rerender } = await render(<App id={first} />);
+      const trigger = screen.getByRole('button');
+
+      expect(trigger).toHaveAttribute('id', first || itemContext.defaultTriggerId.value);
+
+      await rerender(<App id={second} />);
+
+      expect(trigger).toHaveAttribute('id', second || itemContext.defaultTriggerId.value);
+    });
   });
 });

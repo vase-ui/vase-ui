@@ -16,13 +16,18 @@ export interface AccordionTriggerProps
   extends
     NativeButtonProps,
     VaseUIComponentProps<AccordionTriggerState>,
-    /* @vue-ignore */ Omit<WithVaseUIEvent<ButtonHTMLAttributes>, 'disabled'> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<ButtonHTMLAttributes>, 'disabled' | 'id'> {
   /**
    * Whether the trigger should ignore user interaction.
    * A disabled item or a disabled root also disables the trigger.
    * @default false
    */
   disabled?: boolean | undefined;
+  /**
+   * The id of the trigger.
+   * If the id is absent or empty, the trigger has the id that the item generates.
+   */
+  id?: string | undefined;
 }
 
 const stateAttributesMapping: StateAttributesMapping<AccordionItemState> = {
@@ -75,7 +80,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     {
       'aria-controls': open.value ? panelId.value : undefined,
       'aria-expanded': open.value,
-      id: defaultTriggerId.value,
+      id: props.id || defaultTriggerId.value,
       onClick: handleTrigger,
     },
     attrs,
