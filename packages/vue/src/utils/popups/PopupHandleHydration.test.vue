@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { createPopupHandleFixture } from './PopupHandleFixture';
-import type { PopupHandleFixture } from './PopupHandleFixture';
-import PopupHandleRootPart from './PopupHandleRootPart.vue';
-import PopupHandleTriggerPart from './PopupHandleTriggerPart.vue';
+import { createPopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
+import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
+import PopupHandleRootPart from '../../../test/fixtures/PopupHandleRootPart.vue';
+import PopupHandleTriggerPart from '../../../test/fixtures/PopupHandleTriggerPart.vue';
 
 const props = defineProps<{
   handle?: PopupHandleFixture | undefined;

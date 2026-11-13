@@ -6,10 +6,10 @@ import {
   createPopupHandleFixture,
 } from '../../../test/fixtures/PopupHandleFixture';
 import type { PopupHandleFixture } from '../../../test/fixtures/PopupHandleFixture';
-import PopupHandleHydration from '../../../test/fixtures/PopupHandleHydration.test.vue';
+import PopupHandleHydration from './PopupHandleHydration.test.vue';
 import { usePopupHandleStore } from './usePopupHandleStore';
 
-const HYDRATION_FIXTURE = 'test/fixtures/PopupHandleHydration.test.vue';
+const HYDRATION_FIXTURE = 'src/utils/popups/PopupHandleHydration.test.vue';
 
 function readExpanded(root: ParentNode) {
   return Object.fromEntries(

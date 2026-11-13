@@ -5,7 +5,7 @@ import {
   PopupHandleFixtureStore,
   createPopupHandleFixture,
 } from '../../../test/fixtures/PopupHandleFixture';
-import PopupHandleHydration from '../../../test/fixtures/PopupHandleHydration.test.vue';
+import PopupHandleHydration from './PopupHandleHydration.test.vue';
 
 describe('BasePopupHandle', () => {
   afterEach(() => {
