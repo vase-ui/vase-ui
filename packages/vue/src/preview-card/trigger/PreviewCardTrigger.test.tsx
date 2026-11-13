@@ -1,0 +1,183 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
+import { REASONS } from '../../internals/reasons';
+import * as PreviewCard from '../index.parts';
+import { CLOSE_DELAY, OPEN_DELAY } from '../utils/constants';
+
+describe('<PreviewCard.Trigger />', () => {
+  const { render } = createRenderer();
+
+  describeConformance(<PreviewCard.Trigger />, () => ({
+    refInstanceof: window.HTMLAnchorElement,
+    render(node) {
+      return render(<PreviewCard.Root open>{node}</PreviewCard.Root>);
+    },
+  }));
+
+  // The real pointer of the browser can rest on the link. A dispatched event then still reaches
+  // the link, and the real pointer sends no event of its own.
+  const noRealPointer = { pointerEvents: 'none' } as const;
+
+  async function enter(link: HTMLElement, pointerType = 'mouse') {
+    await fireEvent.pointerEnter(link, { pointerType });
+    await fireEvent.mouseEnter(link);
+  }
+
+  async function renderCard(triggerProps: Record<string, unknown> = {}) {
+    const onOpenChange = vi.fn();
+    await render(
+      <PreviewCard.Root onOpenChange={onOpenChange}>
+        <PreviewCard.Trigger href="#preview" style={noRealPointer} {...triggerProps}>
+          Link
+        </PreviewCard.Trigger>
+      </PreviewCard.Root>,
+    );
+    return { link: screen.getByRole('link', { name: 'Link' }), onOpenChange };
+  }
+
+  describe('hover', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function tick(ms: number) {
+      vi.advanceTimersByTime(ms);
+      await flushMicrotasks();
+    }
+
+    it.each([
+      { name: 'the default delay', props: {}, delay: OPEN_DELAY },
+      { name: 'the `delay` prop', props: { delay: 100 }, delay: 100 },
+    ])('opens after $name when the pointer enters the link', async ({ props, delay }) => {
+      const { link, onOpenChange } = await renderCard(props);
+
+      await enter(link);
+      await tick(delay - 1);
+      expect(link).not.toHaveAttribute('data-popup-open');
+
+      await tick(1);
+      expect(link).toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        true,
+        expect.objectContaining({ reason: REASONS.triggerHover, trigger: link }),
+      );
+    });
+
+    it.each([
+      { name: 'the default close delay', props: {}, closeDelay: CLOSE_DELAY },
+      { name: 'the `closeDelay` prop', props: { closeDelay: 100 }, closeDelay: 100 },
+    ])('closes after $name when the pointer leaves the link', async ({ props, closeDelay }) => {
+      const { link, onOpenChange } = await renderCard({ delay: 0, ...props });
+      await enter(link);
+      expect(link).toHaveAttribute('data-popup-open');
+
+      await fireEvent.mouseLeave(link);
+      await tick(closeDelay - 1);
+      expect(link).toHaveAttribute('data-popup-open');
+
+      await tick(1);
+      expect(link).not.toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        false,
+        expect.objectContaining({ reason: REASONS.triggerHover, trigger: link }),
+      );
+    });
+
+    it('stays open when the pointer comes back before the close delay ends', async () => {
+      const { link, onOpenChange } = await renderCard({ delay: 0 });
+      await enter(link);
+
+      await fireEvent.mouseLeave(link);
+      await tick(CLOSE_DELAY - 1);
+      expect(link).toHaveAttribute('data-popup-open');
+
+      await fireEvent.mouseEnter(link);
+      await tick(CLOSE_DELAY);
+      expect(link).toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not open for a touch pointer', async () => {
+      const { link, onOpenChange } = await renderCard({ delay: 0 });
+
+      await enter(link, 'touch');
+      await fireEvent.mouseMove(link);
+      await tick(OPEN_DELAY);
+
+      expect(link).not.toHaveAttribute('data-popup-open');
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it('opens again on hover after Escape closes it', async () => {
+      const { link, onOpenChange } = await renderCard({ delay: 100 });
+      await enter(link);
+      await tick(100);
+      expect(link).toHaveAttribute('data-popup-open');
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(link).not.toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        false,
+        expect.objectContaining({ reason: REASONS.escapeKey }),
+      );
+
+      // A browser can send no new `pointerenter` after a close, so the pointer enters again with
+      // mouse events only.
+      await fireEvent.mouseEnter(link);
+      await fireEvent.mouseMove(link);
+      await tick(100);
+      expect(link).toHaveAttribute('data-popup-open');
+    });
+  });
+
+  it('closes a card that the pointer opened when `KeepAlive` deactivates the link', async () => {
+    const onOpenChange = vi.fn();
+    const visible = shallowRef(true);
+    const Page = defineComponent({
+      setup: () => () => (
+        <PreviewCard.Root onOpenChange={onOpenChange}>
+          <PreviewCard.Trigger href="#preview" delay={0} style={noRealPointer}>
+            Link
+          </PreviewCard.Trigger>
+        </PreviewCard.Root>
+      ),
+    });
+    await render(() => <KeepAlive>{visible.value ? <Page /> : null}</KeepAlive>);
+
+    const link = screen.getByRole('link', { name: 'Link' });
+    await enter(link);
+    expect(link).toHaveAttribute('data-popup-open');
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+    expect(onOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.triggerHover }),
+    );
+
+    visible.value = true;
+    await flushMicrotasks();
+    expect(link).not.toHaveAttribute('data-popup-open');
+  });
+
+  it('throws without PreviewCard.Root or a handle', async () => {
+    await expect(render(<PreviewCard.Trigger />)).rejects.toThrow(
+      'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`.',
+    );
+    expect(takeReportedMessages()).toHaveLength(1);
+  });
+});
