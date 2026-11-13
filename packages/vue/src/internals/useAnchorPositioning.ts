@@ -189,15 +189,9 @@ type PaddingObject = { top: number; right: number; bottom: number; left: number 
  * new object with the same content on each render, and such an object must start no position pass.
  */
 function stableComputed<T>(getter: () => T, isEqual: (a: T, b: T) => boolean): ComputedRef<T> {
-  // Vue 3.5.0 gives no last value to the getter of a `computed`, so this variable holds it.
-  let last: { value: T } | undefined;
-  return computed(() => {
+  return computed<T>((last) => {
     const value = getter();
-    if (last && isEqual(last.value, value)) {
-      return last.value;
-    }
-    last = { value };
-    return value;
+    return last !== undefined && isEqual(last, value) ? last : value;
   });
 }
 
@@ -640,7 +634,8 @@ export function useAnchorPositioning(
   // `useFloating` reads `open` when a position pass starts, and Base UI reads it when the pass
   // ends. A pass that ends after the popup closed then gives `true` for a closed popup. This ref is
   // `true` only when a pass ends while the popup is open. The end of a pass is a source, because
-  // `useFloating` keeps `true` from an earlier open.
+  // `useFloating` keeps `true` from an earlier open. The flush is `sync`: a reader outside a
+  // render, such as the microtask of `arrowRef`, needs the value in the write that ends the pass.
   const isPositioned = shallowRef(false);
   watch(
     [middlewareData, floatingIsPositioned],
