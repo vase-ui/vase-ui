@@ -21,17 +21,24 @@ export function resolveElement(
     return value;
   }
 
-  // The public instance of a component with no `expose` answers `in` for its props too,
-  // so `element` can be a prop of another type.
-  // A wrapper can set the exposed `element` after its render. The root element can be the wrong
-  // element, so an empty `element` gives `null`.
+  // The public instance of a component with no `expose` also gives its props. A `<script setup>`
+  // component has such an instance only when its template is inline, as in a production build.
+  // A value that is the prop of that name is thus not an exposed element.
   if ('element' in value) {
     const exposed = value.element;
-    if (isElement(exposed)) {
-      return exposed;
-    }
-    if (exposed == null) {
-      return null;
+    // A ref on a Vapor component gives no `$props`.
+    const targetProps: Record<string, unknown> | undefined = value.$props;
+    const isProp =
+      targetProps != null && 'element' in targetProps && targetProps.element === exposed;
+    if (!isProp) {
+      if (isElement(exposed)) {
+        return exposed;
+      }
+      // A wrapper can set the exposed `element` after its render. The root element can be the
+      // wrong element, so an empty `element` gives `null`.
+      if (exposed == null) {
+        return null;
+      }
     }
   }
 

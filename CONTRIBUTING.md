@@ -200,10 +200,12 @@ A family whose upstream folder has no `index.parts.ts` declares the constant and
 - If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
 - The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
 - In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object. It gives no warning.
-- A development build shows a warning when a part with a `#render` slot has no element after mount.
+- A development build shows a warning when the `#render` slot of a part gives no element.
+- The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
 - If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
 - Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
-- `Collapsible.Panel` is an exception to the style order. Its temporary declarations win over `style` and `stateStyle`. See [What differs from the React source](#what-differs-from-the-react-source).
+- A part can have declarations that must win over `style` and `stateStyle`. The part gives them to `useRenderElement` as `overridingStyle`, a function that returns a style object or `undefined`. The composable merges the result last. `undefined` or an empty object adds no `style` key.
+- `Collapsible.Panel` gives `animation-name: none` and its temporary declarations in this way. See [What differs from the React source](#what-differs-from-the-react-source).
 - Each part that renders an element sets `defineOptions({ inheritAttrs: false })`. Each attribute and listener goes to the element through `mergeProps`.
 - The exported props interface of a part extends `VaseUIComponentProps<State>`. That interface declares `as`, `stateClass` and `stateStyle`.
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
@@ -236,7 +238,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - It renders the nodes around its default slot, in upstream's order.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
-- A development build shows a warning when the `#render` slot does not mount `children`.
+- A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
 
 <!-- prettier-ignore -->
@@ -259,14 +261,16 @@ One helper, `resolveElement(value)`, changes a value into an element:
 - An element stays the same. A ref on a functional component is its root element, so it also stays the same.
 - A component that exposes an element as `element` gives that element. Each Vase UI part does this. A wrapper component of a consumer can do it too.
 - A component that exposes an empty `element` (`null` or `undefined`) gives `null`, with no warning. Its root element can be the wrong element.
-- If `element` has a value that is not an element and not empty, the next rule applies. An example is a string prop with the name `element`.
+- If the exposed `element` has a value that is not an element and not empty, the next rule applies.
+- A prop with the name `element` is not an exposed element. The next rule applies.
 - Another component gives `$el` when that is an element. If not, the result is `null` and a development build shows a warning.
 
 Rules:
 
 - The `ref` setter of a part calls `resolveElement`. Thus `as="RouterLink"` and `<RouterLink v-bind="props">` work.
 - A part calls `resolveElement` again at mount. A component can set its exposed `element` after its render. At mount, the element exists.
-- The ref of a component with no `expose` also gives access to its props. If such a component has a prop `element` with no value, `resolveElement` gives `null`.
+- The ref of a component with no `expose` also gives access to its props. `resolveElement` compares `element` with the prop of that name in `$props`. When the two are the same value, it reads `$el`.
+- The SFC compiler adds an empty `expose()` call to a `<script setup>` component with no `defineExpose`. It adds no call when it compiles the template inline, as a production build does. The rule above gives the two builds the same element.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
 - Find an element by its `nodeType`. Do not use `instanceof`.
 
@@ -410,7 +414,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 
 The hydration state:
 
-- `useIsHydrating()` and `useIsHydrated()` are in `src/common/hydration.ts`. Each returns a `ComputedRef<boolean>`.
+- `useIsHydrating()` and `useIsHydrated()` are in `src/common/hydration.ts`. `useIsHydrating()` returns a `ComputedRef<boolean>`. `useIsHydrated()` returns a `Readonly<Ref<boolean>>`.
 - `useIsHydrating()` gives `true` on a server. On the client, it gives `true` until the component that calls it is mounted.
 - Vue has no public API that tells a hydration from a client-only mount in `setup`. The helpers use two facts of the lifecycle.
 - A server render never calls `onMounted`. An app that hydrates calls it after the hydration of the component.
@@ -640,7 +644,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Write a style key with a vendor prefix in its CSS form, such as `'-webkit-user-select'`. A server render writes the key `WebkitUserSelect` as `webkit-user-select`, which is not a CSS property.
 - Vue writes each key of the rendered style again on each render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
 - Thus keep each temporary declaration also in a record that the part renders, until the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
-- `CollapsiblePanel.vue` wraps `elementProps()` and merges `animation-name: none` and the record last. They then win over `style` and `stateStyle` of the consumer.
+- `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
@@ -817,7 +821,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - After each test in a browser, `test/setup.ts` waits for one 0 ms timer of the browser. The wait comes after each unmount and before the check of the messages. The next test then starts in a new task. A 0 ms timer that the last test set in the task in which the test ended ran before the new task. The browser delays a timer by 4 ms or more when timers nest more than five deep. A delayed timer that the last test set in an earlier task can run in the next test. Without the wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the browser. Fake timers do not replace this timer.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
-- `describeConformance` needs a part that has its element at mount. Give a part with no element at mount the prop that mounts it: `<Avatar.Image src="test.png" keepMounted />`.
+- `describeConformance` needs a part that has its element when the `render` option of the call resolves. For a part with no element at mount, that option makes the element appear: it renders an open root, or it does the action that mounts the part. The call for `Avatar.Image` needs no action, because the test file mocks `Image` and the element appears in the flush after the mount.
 - `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
 - A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
 

@@ -4,6 +4,7 @@ import AnimatedPanel from './AnimatedPanel.vue';
 import ChildrenPart from './ChildrenPart.vue';
 import GenericPart from './GenericPart.vue';
 import HydrationFixture from './HydrationFixture.vue';
+import OverridingStylePart from './OverridingStylePart.vue';
 import PlainPart from './PlainPart.vue';
 
 describe('fixture parts on a server', () => {
@@ -35,6 +36,22 @@ describe('fixture parts on a server', () => {
     const html = await renderToString(<GenericPart option="a" value="a" />);
 
     expect(html).toBe('<div data-selected><!--[--><!--]--></div>');
+  });
+
+  it.each([
+    { name: 'no overriding style', props: {}, html: '<div><!--[--><!--]--></div>' },
+    {
+      name: 'an empty overriding style',
+      props: { overridingStyle: {} },
+      html: '<div><!--[--><!--]--></div>',
+    },
+    {
+      name: 'an overriding style after the style of the consumer',
+      props: { overridingStyle: { margin: '3px' }, style: { margin: '1px', color: 'red' } },
+      html: '<div style="margin:3px;color:red;"><!--[--><!--]--></div>',
+    },
+  ])('renders OverridingStylePart: $name', async ({ props, html }) => {
+    expect(await renderToString(<OverridingStylePart {...props} />)).toBe(html);
   });
 
   // A transition effect that ran on a server would throw here, because Node has no

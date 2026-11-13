@@ -1,10 +1,10 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { Ref } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { useIsHydrated, useIsHydrating } from './hydration';
 
-function createProbe(hook: () => ComputedRef<boolean>, testId: string) {
+function createProbe(hook: () => Readonly<Ref<boolean>>, testId: string) {
   return defineComponent(() => {
     const value = hook();
     return () => <span data-testid={testId}>{value.value ? 'yes' : 'no'}</span>;
