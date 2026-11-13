@@ -416,12 +416,13 @@ function resetChecked(event: Event) {
 
 useFormReset(inputElement, (event) => {
   if (group) {
-    // The value of the group is the state of the checkboxes that have a value, so the group follows
-    // the reset. The group also clears the error of the field one time.
+    // The group puts back each checkbox that has an `itemValue`, and it clears the error of the
+    // field one time for each reset.
     group.reset(event);
 
-    // A checkbox with no value is not in the value of the group, so it puts its own state back.
-    // `useValueChanged` returns early in a group, so no flag and no clear of the error are needed.
+    // The group does not hold the state of a checkbox with no `itemValue`, so that checkbox puts
+    // its own state back. The callback of `useValueChanged` returns early in a group, so the
+    // checkbox sets no flag and clears no error.
     if (itemValue.value === undefined) {
       resetChecked(event);
     }
