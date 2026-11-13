@@ -614,11 +614,21 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - The registration follows the store that a handle gives. A detached trigger moves from the inert store to the store of a root when the root attaches, and back when the root detaches.
 - A server render calls no `ref` callback, so it registers no trigger.
 - A registration changes `triggerCount` only while the popup is open.
-- The registration of the active trigger gives its element to the store, and its data while the popup is open. The registration of another trigger claims an open popup that has no active trigger, unless the popup opened with no trigger. The popup then gets the element and the data of that trigger.
+- The registration of the active trigger gives its element to the store, and its data while the popup is open. The registration of another trigger claims an open popup that has no active trigger, unless the popup opened with no trigger. The popup then gets the element and the data of that trigger. The activation of a trigger by `KeepAlive` claims no popup, because the root picks the trigger.
 - While a trigger owns the mounted popup, each change of its data goes to the store.
 - `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated.
-- When the flag changes, the registration updates `triggerCount`. After the activation, it gives the data of the trigger to the store again.
+- When the flag changes, the registration updates `triggerCount`. After the activation, the active trigger gives its data to the store again.
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
+- A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
+- `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
+- `options.onOpenChange` is a function of the part. It emits `openChange`, and then `update:open` when `details.isCanceled` is `false`. The composable puts it in `context.onOpenChange`. `options.onOpenChangeComplete` emits `openChangeComplete`.
+- The composable calls `useControlled` for `open` and for `triggerId` only to give two warnings. One is for a change between controlled and uncontrolled. The other is for a change of the default of an uncontrolled root. The store holds the state.
+- `useUnmountAfterClose` runs the transition. A `watch` with `flush: 'sync'` copies `mounted` and `transitionStatus` to the store in the write that changes them. A caller that reads the store after a write of `open` thus reads the new values.
+- `context.nested` is `true` when `useFloatingParentNodeId()` gives an id.
+- `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
+- When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
+- `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
+- `popupRoot.ts` has `usePopupRoot` and `useImplicitActiveTrigger`. The pull request that first needs `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot` or `usePopupRootSync` adds it with its cases.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -812,7 +822,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Such an effect is a `watch` of its sources with `flush: 'post'`, plus a `MutationObserver` for the DOM change. `useAriaLabelledBy` keeps one observer for each document or shadow root.
 - A part of Base UI that measures the layout in each render becomes a `computed` that reads the measurement. Each value that can move the element is a source of the `computed`, such as the orientation. A `ResizeObserver` reports only a change of size, so its listener raises a `shallowRef` count that is one more source. The count replaces `useForcedRerendering`. `Tabs.Indicator` is the model.
 - A watcher that writes state that the render reads keeps the default flush. It runs before the render, so the component renders one time for the change. `useMediaQuery` and `useImageLoadingStatus` do this.
-- `isPositioned` of `useAnchorPositioning` is the exception: its `watch` has `flush: 'sync'`.
+- `isPositioned` of `useAnchorPositioning` and the copy of `mounted` and `transitionStatus` in `usePopupRoot` are exceptions: their watchers have `flush: 'sync'`.
 - `useFloating` sets `isPositioned` from the `open` option that it read when the position pass started. A pass can start while the popup is open and end after the popup closed. `useFloating` then gives `true` for a closed popup, and the part shows an old position.
 - The composable keeps its own `isPositioned` in a `shallowRef`. One `watch` on `middlewareData` and on the `isPositioned` of `useFloating` writes it. The value is `true` only when the `isPositioned` of `useFloating` is `true` and `open` is not `false` at that time.
 - Each reader of `isPositioned` reads this ref. A reader outside a render, such as the microtask of a function ref, needs the value in the write that ends the pass.

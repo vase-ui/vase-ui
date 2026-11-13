@@ -1,0 +1,9 @@
+{
+  "id": "VUE-22",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/popupRoot.tsx#L426-L439",
+    "https://vuejs.org/guide/built-ins/keep-alive.html"
+  ],
+  "behavior": "Triggers can join an open popup that has no active trigger, and none of them claims it. A mount of triggers that claim nothing does this, and so does an activation by `KeepAlive`. The popup then takes the first trigger of its map that is in the document. Base UI takes a trigger there only when it is the only one. Base UI has no counterpart of `KeepAlive`.",
+  "dueWith": "packages/react/src/utils/popups/popupRoot.tsx"
+}
