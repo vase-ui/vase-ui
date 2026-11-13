@@ -16,14 +16,6 @@
     {
       "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
       "describe": ["<Switch.Root />", "extra props"],
-      "title": "prefers `aria-label` over an associated label",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
-      "reason": "The case renders `Field.Label`, which Vase UI does not have. The case \"prefers `aria-label` over a native label around the switch\" tests the half with a native label."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "extra props"],
       "title": "prefers a render element's `aria-label` over an associated label",
       "kind": "not-applicable",
       "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
@@ -32,24 +24,9 @@
       "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
       "describe": ["<Switch.Root />", "Form"],
       "title": "preserves Field validation props through canceled changes, submit, and reset",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/description/FieldDescription.tsx",
-      "reason": "The case renders `Field.Description`, which Vase UI does not have. The last lines of the case say that a native reset does not change the switch. Vase UI resets an uncontrolled switch to `defaultChecked` (`BUG-6206`), and the block \"BUG-6206: a native reset\" of the same test file tests that."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Field", "Field.Label"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
-      "reason": "Each case of the block renders `Field.Label`, which Vase UI does not have. The server cases of the family test the label of a provider with a fixture label."
-    },
-    {
-      "upstream": "packages/react/src/switch/root/SwitchRoot.test.tsx",
-      "describe": ["<Switch.Root />", "Field"],
-      "title": "Field.Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/description/FieldDescription.tsx",
-      "reason": "The case renders `Field.Description`, which Vase UI does not have."
+      "kind": "replaced",
+      "test": "packages/vue/src/switch/root/SwitchRoot.test.tsx",
+      "reason": "The last lines of the case say that a native reset does not change the switch. Vase UI resets an uncontrolled switch to `defaultChecked` (`BUG-6206`). The case \"preserves Field validation props through canceled changes, submit, and a native reset\" has the other assertions of the upstream case and the reset of Vase UI. The block \"BUG-6206: a native reset\" tests the reset of a switch in a form."
     }
   ],
   "surfaceAdditions": [

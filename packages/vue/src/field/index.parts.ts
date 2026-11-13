@@ -5,8 +5,17 @@ import type {
   FieldControlProps,
   FieldControlState,
 } from './control/FieldControl.vue';
+import FieldDescription from './description/FieldDescription.vue';
+import type {
+  FieldDescriptionProps,
+  FieldDescriptionState,
+} from './description/FieldDescription.vue';
 import FieldError from './error/FieldError.vue';
 import type { FieldErrorProps, FieldErrorState } from './error/FieldError.vue';
+import FieldItem from './item/FieldItem.vue';
+import type { FieldItemProps, FieldItemState } from './item/FieldItem.vue';
+import FieldLabel from './label/FieldLabel.vue';
+import type { FieldLabelProps, FieldLabelState } from './label/FieldLabel.vue';
 import FieldRoot from './root/FieldRoot.vue';
 import type {
   FieldRootActions,
@@ -29,6 +38,16 @@ export namespace Root {
 }
 
 /**
+ * An accessible label that is automatically associated with the field control.
+ * Renders a `<label>` element.
+ */
+export const Label: typeof FieldLabel = FieldLabel;
+export namespace Label {
+  export type Props = FieldLabelProps;
+  export type State = FieldLabelState;
+}
+
+/**
  * An error message displayed if the field control fails validation.
  * Renders a `<div>` element.
  */
@@ -36,6 +55,16 @@ export const Error: typeof FieldError = FieldError;
 export namespace Error {
   export type Props = FieldErrorProps;
   export type State = FieldErrorState;
+}
+
+/**
+ * A paragraph with additional information about the field.
+ * Renders a `<p>` element.
+ */
+export const Description: typeof FieldDescription = FieldDescription;
+export namespace Description {
+  export type Props = FieldDescriptionProps;
+  export type State = FieldDescriptionState;
 }
 
 /**
@@ -61,6 +90,16 @@ export const Validity: typeof FieldValidity = FieldValidity;
 export namespace Validity {
   export type Props = FieldValidityProps;
   export type State = FieldValidityState;
+}
+
+/**
+ * Groups individual items in a checkbox group or radio group with a label and description.
+ * Renders a `<div>` element.
+ */
+export const Item: typeof FieldItem = FieldItem;
+export namespace Item {
+  export type Props = FieldItemProps;
+  export type State = FieldItemState;
 }
 
 export type ValidityData = FieldValidityData;
