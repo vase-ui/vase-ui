@@ -12,7 +12,7 @@
       "title": "runs when the form is submitted",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Root` and `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"emits submit and then formSubmit with the values of the named fields, and prevents the default\" tests the same behavior of Form with the fixture field."
+      "reason": "The case renders `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"emits submit and then formSubmit with the values of the named fields, and prevents the default\" tests the same behavior of Form with the fixture field."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -20,7 +20,7 @@
       "title": "validates the form when the `validate` method is called",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Root` and `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"validates each field when it gets no name\" tests the same behavior of Form with the fixture field."
+      "reason": "The case renders `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"validates each field when it gets no name\" tests the same behavior of Form with the fixture field."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -28,7 +28,7 @@
       "title": "validates a field when the `validate` method is called with the field name",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Root` and `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"validates only the first field with that name\" tests the same behavior of Form with the fixture field."
+      "reason": "The case renders `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"validates only the first field with that name\" tests the same behavior of Form with the fixture field."
     }
   ],
   "surfaceAdditions": [
