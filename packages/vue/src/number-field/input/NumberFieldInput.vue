@@ -572,7 +572,10 @@ const { element, elementProps } = useRenderElement('input', props, {
       value: state.value.inputValue,
       type: 'text',
       autocomplete: 'off',
-      autocorrect: 'off',
+      // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string
+      // `off` then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute, and a
+      // server writes it in lower case.
+      autoCorrect: 'autocorrect' in attrs ? undefined : 'off',
       spellcheck: 'false',
       'aria-roledescription': 'Number field',
       'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,

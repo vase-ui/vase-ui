@@ -2057,6 +2057,16 @@ describe('<NumberField.Input />', () => {
       expect(screen.getByRole('textbox')).toHaveAttribute('id', 'amount');
     });
 
+    it('replaces `autocorrect` with the attribute of the consumer', async () => {
+      await render(
+        <NumberField.Root>
+          <NumberField.Input autocorrect="on" />
+        </NumberField.Root>,
+      );
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('autocorrect', 'on');
+    });
+
     it('replaces `aria-roledescription` with the attribute of the consumer', async () => {
       await render(
         <NumberField.Root>
