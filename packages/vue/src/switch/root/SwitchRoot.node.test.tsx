@@ -52,7 +52,9 @@ describe('<Switch.Root />', () => {
         <SwitchRootHydration name="notifications" value="yes" uncheckedValue="no" {...props} />,
       );
 
-      expect(html.includes('<input type="hidden" name="notifications" value="no">')).toBe(hidden);
+      expect(html.match(/<input[^>]*type="hidden"[^>]*>/g) ?? []).toEqual(
+        hidden ? ['<input type="hidden" name="notifications" value="no">'] : [],
+      );
       expect(tag(html, /<input[^>]*type="checkbox"[^>]*>/)).toContain(' value="yes"');
     });
 
