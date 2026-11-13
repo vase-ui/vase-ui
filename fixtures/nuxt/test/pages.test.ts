@@ -611,6 +611,78 @@ async function expectHydratedSwitchPage(page: Page) {
   expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(labelId);
 }
 
+function readRadios(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('[role="radio"]')
+    .evaluateAll((radios, name) => radios.map((radio) => radio.getAttribute(name)), attributeName);
+}
+
+async function readIndicator(page: Page, testId: string) {
+  const indicator = page.getByTestId(testId);
+  if ((await indicator.count()) === 0) {
+    return null;
+  }
+
+  return readAttributes(indicator, [
+    'data-checked',
+    'data-unchecked',
+    'data-starting-style',
+    'data-ending-style',
+  ]);
+}
+
+// The entries that a submit of the form sends.
+function readFormData(page: Page) {
+  return page
+    .getByTestId('form')
+    .evaluate((form) =>
+      Array.from(
+        new FormData(form as HTMLFormElement),
+        ([name, value]) => `${name}=${String(value)}`,
+      ),
+    );
+}
+
+// The tab stop is on the checked radio, or on the first radio that is not disabled when no radio is
+// checked. The label comes after the group, and the server HTML names the group with it.
+async function expectRadioGroupPage(page: Page) {
+  const labelId = await page.getByTestId('label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await readAttributes(page.getByTestId('fruit'), ['role', 'aria-labelledby'])).toEqual({
+    role: 'radiogroup',
+    'aria-labelledby': labelId,
+  });
+  expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['false', 'true', 'false']);
+  expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', '0', '-1']);
+  expect(await readFormData(page)).toEqual(['fruit=banana']);
+  // The indicator of a radio that is not checked has no element, unless it has `keepMounted`. No
+  // indicator has a transition attribute, because a radio that is checked at the mount does not
+  // animate in.
+  expect({
+    apple: await readIndicator(page, 'apple-indicator'),
+    banana: await readIndicator(page, 'banana-indicator'),
+    cherry: await readIndicator(page, 'cherry-indicator'),
+  }).toEqual({
+    apple: null,
+    banana: {
+      'data-checked': '',
+      'data-unchecked': null,
+      'data-starting-style': null,
+      'data-ending-style': null,
+    },
+    cherry: {
+      'data-checked': null,
+      'data-unchecked': '',
+      'data-starting-style': null,
+      'data-ending-style': null,
+    },
+  });
+
+  expect(await readRadios(page, 'empty', 'aria-checked')).toEqual(['false', 'false', 'false']);
+  expect(await readRadios(page, 'empty', 'tabindex')).toEqual(['-1', '0', '-1']);
+}
+
 // The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
@@ -665,6 +737,7 @@ const PAGES: PageCase[] = [
     expectPage: expectSwitchPage,
     expectHydratedPage: expectHydratedSwitchPage,
   },
+  { path: '/radio-group', expectPage: expectRadioGroupPage },
   {
     path: '/scroll-area',
     expectPage: expectScrollAreaPage,
@@ -755,6 +828,34 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('wifi').getAttribute('aria-checked')).toBe('false');
     expect(await page.getByTestId('wifi-value').textContent()).toBe('false');
     expect((await readSwitchPage(page)).formData).toEqual(['notifications=on']);
+    expect(messages).toEqual([]);
+  });
+
+  it('selects a radio of /radio-group with a click and with an arrow key after hydration, and moves its indicator', async () => {
+    const page = await createPage('/radio-group');
+    const messages = collectMessages(page);
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('apple').click();
+    await page.getByTestId('banana-indicator').waitFor({ state: 'detached' });
+
+    expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['true', 'false', 'false']);
+    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['0', '-1', '-1']);
+    expect(await readIndicator(page, 'apple-indicator')).toMatchObject({ 'data-checked': '' });
+    expect(await readIndicator(page, 'cherry-indicator')).toMatchObject({ 'data-unchecked': '' });
+    expect(await page.getByTestId('value').textContent()).toBe('apple');
+    expect(await readFormData(page)).toEqual(['fruit=apple']);
+
+    await page.keyboard.press('ArrowDown');
+    await page.getByTestId('apple-indicator').waitFor({ state: 'detached' });
+
+    expect(await readFocusedTestId()).toBe('banana');
+    expect(await readRadios(page, 'fruit', 'aria-checked')).toEqual(['false', 'true', 'false']);
+    expect(await readRadios(page, 'fruit', 'tabindex')).toEqual(['-1', '0', '-1']);
+    expect(await readIndicator(page, 'banana-indicator')).toMatchObject({ 'data-checked': '' });
+    expect(await page.getByTestId('value').textContent()).toBe('banana');
+    expect(await readFormData(page)).toEqual(['fruit=banana']);
     expect(messages).toEqual([]);
   });
 

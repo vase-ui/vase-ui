@@ -1,3 +1,5 @@
+import RadioIndicator from './indicator/RadioIndicator.vue';
+import type { RadioIndicatorProps, RadioIndicatorState } from './indicator/RadioIndicator.vue';
 import RadioRoot from './root/RadioRoot.vue';
 import type { RadioRootProps, RadioRootState } from './root/RadioRoot.vue';
 
@@ -12,4 +14,14 @@ export const Root: typeof RadioRoot = RadioRoot;
 export namespace Root {
   export type State = RadioRootState;
   export type Props<Value = any> = RadioRootProps<Value>;
+}
+
+/**
+ * Indicates whether the radio button is selected.
+ * Renders a `<span>` element.
+ */
+export const Indicator: typeof RadioIndicator = RadioIndicator;
+export namespace Indicator {
+  export type Props = RadioIndicatorProps;
+  export type State = RadioIndicatorState;
 }
