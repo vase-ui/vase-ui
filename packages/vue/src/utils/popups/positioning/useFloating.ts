@@ -81,7 +81,6 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     },
   };
 
-  // The store that holds the context now.
   let published: PositioningInteractionStore | null = null;
   let deactivated = false;
 

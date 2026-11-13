@@ -142,13 +142,13 @@ export function usePopupPositioner<State extends PopupPositionerState>(
     state,
     styles: positioning.positionerStyles,
     transitionStatus: () => store.select('transitionStatus'),
-    ref(element) {
+    ref(positioner) {
       // A compiled template can mount a new positioner before it unmounts the old one. The old
       // one then must not clear the element of the new one.
-      if (element !== null || toRaw(store.state).positionerElement === positionerElement) {
-        store.set('positionerElement', element);
+      if (positioner !== null || toRaw(store.state).positionerElement === positionerElement) {
+        store.set('positionerElement', positioner);
       }
-      positionerElement = element;
+      positionerElement = positioner;
     },
     hidden: () => !mounted.value,
     inert: () => toValue(options.inert) ?? !open.value,
