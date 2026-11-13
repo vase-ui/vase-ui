@@ -4,12 +4,12 @@ import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
 import styles from './index.module.css';
 
-const id = useId();
+const captionId = useId();
 </script>
 
 <template>
-  <RadioGroup :aria-labelledby="id" default-value="fuji-apple" :class="styles.RadioGroup">
-    <div :class="styles.Caption" :id="id">Best apple</div>
+  <RadioGroup :aria-labelledby="captionId" default-value="fuji-apple" :class="styles.RadioGroup">
+    <div :class="styles.Caption" :id="captionId">Best apple</div>
 
     <label :class="styles.Item">
       <Radio.Root value="fuji-apple" :class="styles.Radio">
