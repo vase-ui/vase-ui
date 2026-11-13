@@ -1202,6 +1202,32 @@ describe('usePopupRoot', () => {
         [false, 'none'],
       ]);
     });
+
+    it('keeps a controlled popup open with no active trigger when it opens in the update that removes its only trigger', async () => {
+      const open = shallowRef(false);
+      const showTrigger = shallowRef(true);
+      const changes: unknown[] = [];
+      const root = createRootRef();
+      const { queryByRole } = await render(() => (
+        <PopupRootPart
+          ref={root.ref}
+          open={open.value}
+          onOpenChange={(next, details) => changes.push([next, details.reason])}
+        >
+          {showTrigger.value ? <PopupTriggerPart id="a">a</PopupTriggerPart> : null}
+          <PopupPart>popup</PopupPart>
+        </PopupRootPart>
+      ));
+      expect(queryByRole('dialog')).toBe(null);
+
+      open.value = true;
+      showTrigger.value = false;
+      await flushMicrotasks();
+
+      expect(changes).toEqual([]);
+      expect(root.current.store.state.activeTriggerId).toBe(null);
+      expect(queryByRole('dialog')).not.toBe(null);
+    });
   });
 
   describe('with a handle', () => {

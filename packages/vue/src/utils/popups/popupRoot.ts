@@ -384,8 +384,9 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
     }
   }
 
-  // `KeepAlive` takes the triggers out of the map, and a run then would take that for an unmount.
-  // The triggers of a deactivated root join again when it activates.
+  // `KeepAlive` hides the triggers of a deactivated root from each reader of the map, and a run
+  // then would take that for an unmount. The triggers of a deactivated root join again when it
+  // activates.
   onDeactivated(() => {
     deactivated.value = true;
     previousTriggerCount = 0;
