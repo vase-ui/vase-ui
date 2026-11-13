@@ -419,7 +419,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - Each part must render with `renderToString` in Node with no DOM.
 - Code in setup does not touch `window` or `document`. The exception is a read behind a `typeof` check, where an option of the API needs the value before the mount.
 - `useMediaQuery` reads `window.matchMedia` in this way for its option `noSsr`. `src/common/platform` reads `navigator` in the same way when the module loads.
-- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. Nine values are exceptions, and each can change when its component is mounted. Three are an `aria-labelledby`: that of a root with a label part, that of a control in a field, and that of a control that only a native `<label>` names. Two more are the id of a control that has an `id` prop in a field, and an `aria-valuetext` in a locale format. The sixth is the `tabindex` of an item of a composite. See [Composite](#composite). The seventh is the `aria-controls` of an open `Collapsible.Trigger` or `Accordion.Trigger` whose panel has an `id` prop. The eighth is the pair of `aria-controls` on a `Tabs.Tab` and `aria-labelledby` on a `Tabs.Panel`. The part that renders first has no such attribute in the server HTML, because the other part registers later. It gets the attribute in the first flush on the client. The ninth is the `aria-labelledby` of an `Accordion.Panel` that renders before its trigger, when the trigger has an `id` prop. The server HTML then has the id that the item generates. The first flush on the client replaces it with the `id` of the trigger.
+- Compute labels, `aria-*` attributes and the roving tabindex at render, from props and ids. Do not compute them in `onMounted`. Eight values are exceptions, and each can change when its component is mounted. Two are an `aria-labelledby`: that of a root with a label part, and that of a control that only a native `<label>` names. Two more are the id of a control that has an `id` prop in a field, and an `aria-valuetext` in a locale format. The fifth is the `tabindex` of an item of a composite. See [Composite](#composite). The sixth is the `aria-controls` of an open `Collapsible.Trigger` or `Accordion.Trigger` whose panel has an `id` prop. The seventh is the pair of `aria-controls` on a `Tabs.Tab` and `aria-labelledby` on a `Tabs.Panel`. The part that renders first has no such attribute in the server HTML, because the other part registers later. It gets the attribute in the first flush on the client. The eighth is the `aria-labelledby` of an `Accordion.Panel` that renders before its trigger, when the trigger has an `id` prop. The server HTML then has the id that the item generates. The first flush on the client replaces it with the `id` of the trigger.
 - Hydration must give no warning. The hydrated DOM must be equal to a client-only render. Vue does not compare `aria-*`, `role` or `data-*`.
 - The element gets no `style` key while the merged style has no value, because Vue writes `style=""` for an empty key on a server. After a render that wrote a `style` key, the key stays. Vue removes the whole `style` attribute when the key goes away, and with it each declaration that a part writes to the DOM.
 - One internal SFC, `internals/PrehydrationScript.vue`, renders each prehydration script. A part renders `<PrehydrationScript :script="script" />` where its script expects it. A script that follows its element finds the element with `document.currentScript.previousElementSibling`.
@@ -457,30 +457,42 @@ The hydration state:
 - A composable that reads another value of the browser obeys the same rule. It gives the server value in the first client render, and it reads the real value in `onMounted`. `useMediaQuery` does this. A client-only mount thus renders again when the two values differ.
 - A part that measures the layout gives no measurement on a server and in the first client render. `Tabs.Indicator` reads the layout in a `computed` that gives `null` while `useIsHydrating()` is `true`. The server HTML and the first client render are then equal.
 
+A part that binds the id of a part that comes after it:
+
+- A server writes the attributes of an element before the `setup` of each part that comes after the element.
+- A part that binds the id of such a part calls `useDeferredServerRender()` of `src/internals/labelable-provider` in `setup`. Examples are the id of a label, of a message and of a legend.
+- Vue then renders the part on a server in a later microtask. Before that render, Vue runs the `setup` of each part that it reaches in the same synchronous pass. The server HTML has the id, in each order of the parts.
+- The part that binds the attribute makes the call. A call in a component around it does not help.
+- Make the call with no condition on the environment. Vue makes a component that has the hook a boundary for `useId`, on a server and in a browser. With the hook only on a server, a part below the part gets another id in the browser. Vue then reports a hydration mismatch.
+- A part that defers assumes nothing. With no registered id, it has no attribute.
+- A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
+
 The label of a root:
 
-- A root with a label part calls `useLabelId()` of `src/utils/useRegisteredLabelId.ts`. The root binds `labelId` to `aria-labelledby`. It provides `setLabelId` and `defaultLabelId` in its context.
+- A root with a label part calls `useLabelId()` of `src/utils/useRegisteredLabelId.ts`. The root binds `getAriaLabelledBy(attrs)` to `aria-labelledby`, in the `props` function that it gives to `useRenderElement`. It provides `setLabelId` and `defaultLabelId` in its context.
 - The label calls `useRegisteredLabelId(() => props.id, setLabelId, defaultLabelId)` and binds the result to `id`. The result is the `id` prop, or the id that the root made.
-- A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML.
+- A server render writes the attributes of the root before the `setup` of the label runs. The label cannot give its id in time for the server HTML. A root cannot defer for its label, because a deferral moves the attributes and the `setup` of the label together.
 - Thus the root assumes a label until it is mounted. The server HTML has `aria-labelledby` with the generated id.
+- A root with a non-blank `aria-label` of the consumer assumes no label. The server HTML has no `aria-labelledby`. A root that has a label gets the id of the label when it is mounted.
+- The first render in a browser assumes what the server assumed, because Vue does not patch `aria-labelledby` when it hydrates.
+- `labelId` of `useLabelId()` is the id of the registered label, with no assumption. `legendId` in the context of `Fieldset.Root` is that id.
 - After the mount, a root with no label has no `aria-labelledby`. A root whose label has an `id` prop has that id. Vue gives no warning, and the hydrated DOM is equal to a client-only render.
-- Until the page hydrates, the server HTML of those two roots points at the generated id.
+- Until the page hydrates, the server HTML of those two roots points at the generated id, unless the consumer gives the root a non-blank `aria-label`.
 - An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
 
 The label, the control and the messages of a field:
 
 - `provideLabelableContext()` of `src/internals/labelable-provider` makes the labelable context and provides it. A root that owns a control and its label calls it in `setup`, such as the root of a field.
-- The provider makes one id for the control and one id for the label. A part with no `id` prop takes the id that the provider made. The label and the control then agree in the server HTML, in each order of the two parts.
+- The provider makes one id, for the control. A control with no `id` prop takes that id. The label and the control then agree in the server HTML, in each order of the two parts. A label with no `id` prop makes its own id, so two labels in one provider have two ids.
 - A control calls `useLabelableId({ id })` and binds the result to `id`. A label calls `useLabel({ native })`. A native `<label>` gets `for` with the id of the control. An element that is not a `<label>` gets a click handler that focuses the control.
 - A control with an `id` prop has the id of the provider until the control is mounted. Then it registers a getter for its own id, and the label follows. With its own id from the start, the control would not match a label that comes before it.
 - A label and a message register a getter for their id one time in `setup`. Each part that Vue renders after that `setup` has the id in the server HTML. `useLabel()` registers the label. A message calls `useRegisteredMessageId(id)`.
 - `labelId` of the context is the id of the last label that has one. `messageIds` lists the ids of the messages in the order of the registrations, which is the order of the mount.
 - A control gets `aria-describedby` from `getDescriptionProps` of the context.
-- A control calls `useControlLabelId()` when its element is not a labelable element of HTML, such as a `<span>` with a role. It gives the result to `useAriaLabelledBy`, which follows this list. Until the control is mounted, the result is the id of a registered label. With no registered label, it is the id that the provider made for the label. A label that comes after the control then names it in the server HTML.
-- The control holds that state, and the provider does not. A control can hydrate after its provider.
-- When the field has no label, that `aria-labelledby` has no target until the control is mounted. A label with an `id` prop that comes after the control also does not name the control in the server HTML.
-- A control makes no assumption for a message. A message that comes after the control is in `aria-describedby` after the first flush on the client, before a paint.
+- A control calls `useControlLabelId()` when its element is not a labelable element of HTML, such as a `<span>` with a role. It gives the result to `useAriaLabelledBy`, which follows this list. The result is the id of the registered label, and `undefined` with no label. The control defers when it has a provider. A label that comes after it then names it in the server HTML, also with an `id` prop.
+- When the field has no label, the control has no `aria-labelledby`, in the server HTML also.
+- A control that defers has the id of a message that comes after it in `aria-describedby` in the server HTML. In a client-only mount, it has that id after the first flush, before a paint.
 - A control whose element is not a labelable element calls `useAriaLabelledBy` and binds the result to `aria-labelledby`.
 - It passes `useControlLabelId()` as `labelId`, the `shallowRef` of its hidden input as the source, and the id of that input as the source id.
 - A native `<label>` names the control only after the mount. A server has no DOM, and the label of the consumer has no id.
