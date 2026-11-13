@@ -27,13 +27,14 @@ const texts: Record<string, string> = {
   'packages/react/src/dialog/Dialog.tsx': 'export const Dialog = 1;',
   'docs/src/app/(docs)/react/utils/clamp/types.md':
     '# Clamp\n\n## API Reference\n\n### clamp\n\n**Return Value:**\n\n```tsx\ntype ReturnValue = number;\n```\n',
-  'docs/src/app/(docs)/react/utils/clamp/page.mdx': '# Clamp page',
+  'docs/src/app/(docs)/react/utils/clamp/page.mdx':
+    '# Clamp page\n\nThis line has <TypesNote /> in the middle.\n\n<TypesClamp.Root />\n\n<TypesClamp hideDescription />\n',
   'README.md': '# Base UI',
 };
 const files = Object.keys(texts);
 const read = (path: string): string => texts[path];
 
-test('buildExtract sorts the files of a family into sources, type tests, cases and the surface', () => {
+test('buildExtract sorts the files of a family into sources, type tests, cases, the surface and the pages', () => {
   const extract = buildExtract(
     makeFamily('packages/utils/src/**', 'docs/src/app/(docs)/react/utils/clamp/*'),
     files,
@@ -59,6 +60,12 @@ test('buildExtract sorts the files of a family into sources, type tests, cases a
     extract.surface.map(({ file, functions }) => [file, functions.map(({ name }) => name)]),
     [['docs/src/app/(docs)/react/utils/clamp/types.md', ['clamp']]],
   );
+  assert.deepEqual(extract.pages, [
+    {
+      file: 'docs/src/app/(docs)/react/utils/clamp/page.mdx',
+      referenceTags: ['TypesClamp.Root', 'TypesClamp'],
+    },
+  ]);
 });
 
 test('buildExtract leaves out a file that no glob names and a matching file outside the mapped roots', () => {
@@ -66,6 +73,7 @@ test('buildExtract leaves out a file that no glob names and a matching file outs
   assert.deepEqual(extract.sources, ['packages/utils/src/clamp.ts']);
   assert.deepEqual(extract.typeTests, ['packages/utils/src/clamp.spec.ts']);
   assert.equal(extract.surface.length, 0);
+  assert.deepEqual(extract.pages, []);
 });
 
 test('buildExtract refuses a glob that matches no file', () => {

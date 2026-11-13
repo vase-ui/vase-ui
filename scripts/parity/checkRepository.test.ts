@@ -109,6 +109,7 @@ function makeExtract(): FamilyExtract {
     typeTests: [],
     cases: [],
     surface: [],
+    pages: [],
   };
 }
 

@@ -88,5 +88,13 @@
       "additionalTypes": [],
       "externalTypes": []
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/utils/csp-provider/page.mdx",
+      "referenceTags": [
+        "TypesCSPProvider"
+      ]
+    }
   ]
 }

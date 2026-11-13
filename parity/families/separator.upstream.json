@@ -113,5 +113,13 @@
         }
       ]
     }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/separator/page.mdx",
+      "referenceTags": [
+        "TypesSeparator"
+      ]
+    }
   ]
 }

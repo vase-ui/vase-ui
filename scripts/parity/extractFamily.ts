@@ -30,6 +30,14 @@ export function missingPaths(
     );
 }
 
+/**
+ * The names of the `<Types…>` tags that start a line of a `page.mdx`, in the sequence of the page.
+ * Only these tags hold the sequence in which the page shows the parts of its API reference.
+ */
+function readReferenceTags(text: string): string[] {
+  return Array.from(text.matchAll(/^<(Types\w*(?:\.\w+)?)/gm), ([, name]) => name);
+}
+
 export function buildExtract(
   family: FamilyFile,
   files: readonly string[],
@@ -59,6 +67,10 @@ export function buildExtract(
       .filter((file) => file.endsWith('/types.md'))
       .sort()
       .map((file) => readTypesMd(file, read(file))),
+    pages: matched
+      .filter((file) => file.endsWith('/page.mdx'))
+      .sort()
+      .map((file) => ({ file, referenceTags: readReferenceTags(read(file)) })),
   };
 }
 
