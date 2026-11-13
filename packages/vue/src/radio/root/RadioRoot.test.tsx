@@ -8,6 +8,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hiddenInputSizeTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -25,27 +26,16 @@ describe('<Radio.Root />', () => {
     render,
   }));
 
-  describe('hidden input size', () => {
-    it('grows from zero size to an on-screen 1px box when reported invalid', async () => {
-      const { container } = await render(
-        <RadioGroup required>
-          <Radio.Root value="a" />
-        </RadioGroup>,
-      );
-      const input = container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
-      // An unnamed radio is never missing a value, so the case fails it as a field does.
-      input.setCustomValidity('Invalid');
-      expect(input.validity.valid).toBe(false);
-      const rect = () => {
-        const { top, width, height } = input.getBoundingClientRect();
-        return { top, width, height };
-      };
-      expect(rect()).toEqual({ top: 0, width: 0, height: 0 });
-      input.reportValidity();
-      await flushMicrotasks();
-      expect(rect()).toEqual({ top: 0, width: 1, height: 1 });
-    });
+  hiddenInputSizeTests({
+    render,
+    createComponent: (props) => (
+      <RadioGroup {...props}>
+        <Radio.Root value="a" />
+      </RadioGroup>
+    ),
+  });
 
+  describe('hidden input size', () => {
     it('keeps the 1px size in the next render of the radio', async () => {
       const { container } = await render(
         <RadioGroup required>

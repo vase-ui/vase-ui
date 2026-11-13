@@ -5,14 +5,6 @@
     {
       "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
       "describe": ["<Radio.Root />"],
-      "suite": "hiddenInputSizeTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/hiddenInputSizeTests.tsx",
-      "reason": "Vase UI does not have the shared suite. The case \"grows from zero size to an on-screen 1px box when reported invalid\" in the block \"hidden input size\" of the same test file tests the same behavior."
-    },
-    {
-      "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
-      "describe": ["<Radio.Root />"],
       "title": "prefers a render element's `aria-label` over an associated label",
       "kind": "not-applicable",
       "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
