@@ -1,4 +1,5 @@
 export * from './LabelableProvider';
+export { useAriaLabelledBy } from './useAriaLabelledBy';
 export { useLabelableContext } from './LabelableContext';
 export { createLabelIdRegistry } from './createLabelIdRegistry';
 export { useLabelableId } from './useLabelableId';

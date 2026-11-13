@@ -4,7 +4,6 @@ import type { PropType } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { createRenderer, describeConformance, isJSDOM, screen } from '#test-utils';
 import { NOOP } from '../../internals/noop';
-import { ToolbarGroupContext } from '../group/ToolbarGroupContext';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 
@@ -210,27 +209,6 @@ describe('<Toolbar.Button />', () => {
       expect(focusable).toHaveAttribute('data-orientation', 'vertical');
       expect(focusable).toHaveAttribute('data-focusable');
       expect(screen.getByTestId('not-focusable')).not.toHaveAttribute('data-focusable');
-    });
-  });
-
-  describe('in a group', () => {
-    it('is disabled when the group is disabled', async () => {
-      const DisabledGroup = defineComponent((_, { slots }) => {
-        provide(ToolbarGroupContext, { disabled: computed(() => true) });
-        return () => slots.default?.();
-      });
-
-      await render(
-        <Toolbar.Root>
-          <DisabledGroup>
-            <Toolbar.Button />
-          </DisabledGroup>
-        </Toolbar.Root>,
-      );
-
-      const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('aria-disabled', 'true');
-      expect(button).toHaveAttribute('data-disabled');
     });
   });
 

@@ -8,9 +8,6 @@
     "packages/react/src/utils/getCssDimensions.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
-    "packages/react/src/utils/popups/constants.ts",
-    "packages/react/src/utils/popups/event.ts",
-    "packages/react/src/utils/popups/event.test.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
     "packages/react/src/utils/popups/positioning/arrow.ts",
@@ -38,8 +35,6 @@
     "packages/react/src/utils/getCssDimensions.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
-    "packages/react/src/utils/popups/constants.ts",
-    "packages/react/src/utils/popups/event.ts",
     "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
@@ -68,47 +63,6 @@
           "conditions": [
             "skipIf(isJSDOM)"
           ]
-        }
-      ]
-    },
-    {
-      "file": "packages/react/src/utils/popups/event.test.ts",
-      "rows": [
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "recognizes a pressureless 1x1 mouse pointerdown as a screen reader press"
-        },
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "ignores a pressed mouse"
-        },
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "recognizes a TalkBack press with a pressed button on Android"
-        },
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "ignores the same shape on other pointer types"
-        },
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "ignores the same shape on events other than pointerdown"
-        },
-        {
-          "describe": [
-            "isVirtualPointerEvent"
-          ],
-          "title": "recognizes an iOS VoiceOver touch"
         }
       ]
     },

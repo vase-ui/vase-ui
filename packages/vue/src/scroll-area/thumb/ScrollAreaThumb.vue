@@ -60,8 +60,11 @@ function getElementHolder(thumbOrientation: 'vertical' | 'horizontal') {
 
 const { element, elementProps } = useRenderElement('div', props, {
   // `useRenderElement` calls this callback only when the element changes. The callback reads the
-  // orientation when it runs. A change of the orientation of the scrollbar does not change the
-  // element, so the `watch` below moves the element to the other holder.
+  // orientation when it runs. While the scrollbar stays mounted, a change of its orientation does
+  // not change the element, so the `watch` below moves the element to the other holder. When the
+  // change removes the scrollbar, the thumb leaves with it and the `watch` does not run. The
+  // callback then clears the holder of the new orientation, and the old holder keeps the removed
+  // element until another thumb mounts for that axis.
   ref: (thumb) => {
     getElementHolder(orientation.value).value = thumb;
   },
