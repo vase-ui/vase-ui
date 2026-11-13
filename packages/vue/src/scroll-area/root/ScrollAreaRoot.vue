@@ -123,6 +123,7 @@ const scrollingX = shallowRef(false);
 const scrollingY = shallowRef(false);
 const touchModality = shallowRef(false);
 const hasMeasuredScrollbar = shallowRef(false);
+const viewportSnapDisabled = shallowRef(false);
 const cornerSize = shallowRef<Size>(DEFAULT_SIZE);
 const thumbSize = shallowRef<Size>(DEFAULT_SIZE);
 const overflowEdges = shallowRef<OverflowEdges>(DEFAULT_OVERFLOW_EDGES);
@@ -175,18 +176,35 @@ onDeactivated(() => {
   // The timers that were cleared would have ended the scrolling state.
   scrollingY.value = false;
   scrollingX.value = false;
+  // `KeepAlive` took the element out of the document, so the browser dropped the pointer capture.
+  // No release event and no leave event comes.
+  activePointerId = null;
+  restoreViewportSnap();
+  hovering.value = false;
 });
 
 // CSS scroll snap puts each scroll on a snap point, so a thumb drag jumps between snap points.
 // A native scrollbar does not snap during a drag. Stop the snap until the pointer is released.
 // The restored value snaps the viewport again.
 // Save the value one time. A second pointer in the drag would save `none`.
+// A track press scrolls right after this call, so the function writes to the element at once.
+// Vue writes each key of the rendered style again on each render. The flag makes the viewport
+// render `none` last. Without it, the next render would put the saved value back in the drag.
 function disableViewportSnap() {
   const viewport = viewportElement.value;
   if (viewport && savedSnapType === null) {
     savedSnapType = viewport.style.scrollSnapType;
     viewport.style.scrollSnapType = 'none';
+    viewportSnapDisabled.value = true;
   }
+}
+
+function restoreViewportSnap() {
+  if (viewportElement.value && savedSnapType !== null) {
+    viewportElement.value.style.scrollSnapType = savedSnapType;
+  }
+  savedSnapType = null;
+  viewportSnapDisabled.value = false;
 }
 
 function handlePointerDown(event: PointerEvent) {
@@ -233,12 +251,7 @@ function handlePointerUp(event: PointerEvent) {
   // Each release path then acts in the same way: a release, `pointercancel` and a missed release.
   (currentOrientation === 'vertical' ? scrollingY : scrollingX).value = false;
 
-  if (savedSnapType !== null) {
-    if (viewportElement.value) {
-      viewportElement.value.style.scrollSnapType = savedSnapType;
-    }
-    savedSnapType = null;
-  }
+  restoreViewportSnap();
 
   const thumb = currentOrientation === 'vertical' ? thumbYElement.value : thumbXElement.value;
   // `pointercancel` releases the capture by itself. A release of a capture that is gone throws.
@@ -352,6 +365,7 @@ provide(ScrollAreaRootContext, {
   handlePointerUp,
   handleScroll,
   disableViewportSnap,
+  viewportSnapDisabled,
   rootId,
   hiddenState,
   setHiddenState(next) {

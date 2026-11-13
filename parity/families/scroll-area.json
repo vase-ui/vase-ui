@@ -21,38 +21,31 @@
       "reason": "Vase UI does not have `ScrollArea.Corner`."
     },
     {
-      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "describe": ["<ScrollArea.Root />", "sizing"],
       "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Thumb`."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumbDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `ScrollArea.Thumb`."
+      "waitsOn": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "reason": "Each case of the block that has no counterpart renders `ScrollArea.Corner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "describe": ["<ScrollArea.Root />", "context stability"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "Each case of the file that has no counterpart renders `ScrollArea.Thumb`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/corner/ScrollAreaCorner.tsx",
+      "reason": "The case of the block renders `ScrollArea.Corner`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/scroll-area/viewport/ScrollAreaViewport.test.tsx",
+      "upstream": "packages/react/src/scroll-area/root/ScrollAreaRoot.test.tsx",
+      "describe": ["<ScrollArea.Root />", "overflow data attributes"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "Each case of the file that has no counterpart renders `ScrollArea.Thumb`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
+      "reason": "Each case of the block that has no counterpart renders `ScrollArea.Content`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/content/ScrollAreaContent.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
       "reason": "The file tests `ScrollArea.Content`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "Each case of the file that has no counterpart renders `ScrollArea.Thumb`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/scrollbar/ScrollAreaScrollbar.test.tsx",
@@ -67,12 +60,6 @@
       "title": "adds [data-hovering] when the synthetic pointer target differs from the native path",
       "kind": "not-applicable",
       "reason": "The case dispatches `pointerover` and tests the target of a React synthetic enter event. A Vue listener gets the native event, whose path starts at its target. An own case covers the native event."
-    },
-    {
-      "upstream": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "The file tests `ScrollArea.Thumb`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/scroll-area/corner/ScrollAreaCorner.test.tsx",
@@ -93,20 +80,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/scroll-area/content/ScrollAreaContent.tsx",
       "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Content`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
-      "entry": "Thumb",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "Vase UI does not have `ScrollArea.Thumb`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
-      "entry": "ScrollAreaThumbDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/scroll-area/thumb/ScrollAreaThumb.tsx",
-      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `ScrollArea.Thumb`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/scroll-area/types.md",
