@@ -67,24 +67,8 @@
       "describe": ["useDismiss", "default options"],
       "title": "outsidePress ignored for third party elements",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "default options"],
-      "title": "dismisses when clicking outside a shared shadow root while focus is managed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "default options"],
-      "title": "outsidePress not ignored for nested floating elements",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
+      "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
+      "reason": "The case needs the markers that `markOthers` writes when the focus manager is modal. The focus manager of Vase UI does not write them yet. The pull request that ports `markOthers.ts` ports the case."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
@@ -93,86 +77,6 @@
       "kind": "replaced",
       "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
       "reason": "The case presses a plain button in a portal in the popup. Vue gives that event to no listener of the popup element, so that button is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.outsidePress"],
-      "title": "when true",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.outsidePress"],
-      "title": "when false",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.outsidePress"],
-      "title": "mixed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.escapeKey"],
-      "title": "without FloatingTree",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useFocus.ts",
-      "reason": "The case opens a tooltip with `useFocus`. The pull request that adds the focus interaction ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.escapeKey"],
-      "title": "when true",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.escapeKey"],
-      "title": "when false",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: bubbles", "prop: bubbles.escapeKey"],
-      "title": "mixed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: capture", "prop: capture.outsidePress"],
-      "title": "when true",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "prop: capture", "prop: capture.escapeKey"],
-      "title": "when false",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss"],
-      "title": "nested floating elements with different portal containers",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
-      "reason": "The case renders `FloatingFocusManager`. The pull request that adds the focus manager ports the case."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",

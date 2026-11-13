@@ -22,12 +22,19 @@ import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
+import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
-import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
+import {
+  provideFloatingNode,
+  provideFloatingTree,
+  useFloatingNodeId,
+  useFloatingParentNodeId,
+} from '../tree/FloatingTree';
 import { useClick } from './useClick';
 import { normalizeProp, useDismiss } from './useDismiss';
 import type { UseDismissProps } from './useDismiss';
+import { useFocus } from './useFocus';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set
 // the flag.
@@ -709,6 +716,181 @@ describe('useDismiss', () => {
         host.remove();
       }
     });
+
+    it('dismisses when clicking outside a shared shadow root while focus is managed', async () => {
+      const App = defineComponent({
+        props: { shadowRoot: { type: Object as PropType<ShadowRoot>, required: true } },
+        setup(props) {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {isOpen.value && (
+                <FloatingPortal container={props.shadowRoot}>
+                  <FloatingFocusManager store={context.rootStore}>
+                    <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
+                  </FloatingFocusManager>
+                </FloatingPortal>
+              )}
+            </>
+          );
+        },
+      });
+
+      const host = document.body.appendChild(document.createElement('div'));
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      const container = document.createElement('div');
+      shadowRoot.appendChild(container);
+
+      try {
+        const { user } = await render(
+          <Teleport to={container}>
+            <App shadowRoot={shadowRoot} />
+          </Teleport>,
+        );
+        await flushMicrotasks();
+
+        await user.click(document.body);
+        await flushMicrotasks();
+
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
+      } finally {
+        host.remove();
+      }
+    });
+
+    it('outsidePress not ignored for nested floating elements', async () => {
+      const Popover = defineComponent({
+        props: {
+          id: { type: String, required: true },
+          modal: { type: Boolean as PropType<boolean | null>, default: null },
+        },
+        setup(props, { slots }) {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => {
+            const dialogJsx = (
+              <div
+                role="dialog"
+                data-testid={props.id}
+                {...getFloatingProps({ ref: refs.setFloating })}
+              >
+                {slots.default?.()}
+              </div>
+            );
+
+            return (
+              <>
+                <button {...getReferenceProps({ ref: refs.setReference })} />
+                {isOpen.value && (
+                  <>
+                    {props.modal == null ? (
+                      dialogJsx
+                    ) : (
+                      <FloatingFocusManager store={context.rootStore} modal={props.modal}>
+                        {dialogJsx}
+                      </FloatingFocusManager>
+                    )}
+                  </>
+                )}
+              </>
+            );
+          };
+        },
+      });
+
+      const App = defineComponent({
+        props: {
+          modal: { type: Array as unknown as PropType<[boolean, boolean] | null>, default: null },
+        },
+        setup(props) {
+          return () => (
+            <Popover id="popover-1" modal={props.modal ? props.modal[0] : true}>
+              <Popover id="popover-2" modal={props.modal ? props.modal[1] : null} />
+            </Popover>
+          );
+        },
+      });
+
+      const { user, unmount } = await render(<App modal={[true, true]} />);
+      await flushMicrotasks();
+
+      let popover1 = screen.getByTestId('popover-1');
+      let popover2 = screen.getByTestId('popover-2');
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount();
+
+      const { unmount: unmount2 } = await render(<App modal={[true, false]} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount2();
+
+      const { unmount: unmount3 } = await render(<App modal={[false, true]} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount3();
+
+      await render(<App modal={null} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+    });
   });
 
   describe('options set to false', () => {
@@ -742,6 +924,64 @@ describe('useDismiss', () => {
   });
 
   describe('prop: bubbles', () => {
+    const dialogProps = {
+      testId: { type: String, required: true },
+      bubbles: {
+        type: [Boolean, Object] as PropType<UseDismissProps['bubbles']>,
+        default: undefined,
+      },
+    } as const;
+
+    const Dialog = defineComponent({
+      props: dialogProps,
+      setup(props, { slots }) {
+        const open = shallowRef(true);
+        const nodeId = useFloatingNodeId();
+
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+          nodeId,
+        });
+        provideFloatingNode(nodeId);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([
+          useDismiss(context.rootStore, props),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingFocusManager store={context.rootStore}>
+                <div {...getFloatingProps({ ref: refs.setFloating })} data-testid={props.testId}>
+                  {slots.default?.()}
+                </div>
+              </FloatingFocusManager>
+            )}
+          </>
+        );
+      },
+    });
+
+    const NestedDialog = defineComponent({
+      props: dialogProps,
+      setup(props, { slots }) {
+        const parentId = useFloatingParentNodeId();
+
+        return () =>
+          parentId.value == null ? (
+            <Tree>
+              <Dialog {...props}>{slots.default?.()}</Dialog>
+            </Tree>
+          ) : (
+            <Dialog {...props}>{slots.default?.()}</Dialog>
+          );
+      },
+    });
+
     describe('normalizeProp', () => {
       it('undefined', () => {
         const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = normalizeProp();
@@ -786,7 +1026,216 @@ describe('useDismiss', () => {
       });
     });
 
+    describe('prop: bubbles.outsidePress', () => {
+      it('when true', async () => {
+        await render(
+          <NestedDialog testId="outer">
+            <NestedDialog testId="inner">
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('when false', async () => {
+        await render(
+          <NestedDialog testId="outer" bubbles={{ outsidePress: false }}>
+            <NestedDialog testId="inner" bubbles={{ outsidePress: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('mixed', async () => {
+        await render(
+          <NestedDialog testId="outer" bubbles={{ outsidePress: true }}>
+            <NestedDialog testId="inner" bubbles={{ outsidePress: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+    });
+
     describe('prop: bubbles.escapeKey', () => {
+      it('without FloatingTree', async () => {
+        const App = defineComponent({
+          setup() {
+            const popoverOpen = shallowRef(true);
+            const tooltipOpen = shallowRef(false);
+
+            const popover = useFloating({
+              open: popoverOpen,
+              onOpenChange: (value) => {
+                popoverOpen.value = value;
+              },
+            });
+            const tooltip = useFloating({
+              open: tooltipOpen,
+              onOpenChange: (value) => {
+                tooltipOpen.value = value;
+              },
+            });
+
+            const popoverInteractions = useTestInteractions([
+              useDismiss(popover.context.rootStore),
+            ]);
+            const tooltipFocus = useFocus(tooltip.context.rootStore);
+            const tooltipInteractions = useTestInteractions([
+              useDismiss(tooltip.context.rootStore),
+            ]);
+
+            return () => (
+              <>
+                <button
+                  ref={popover.refs.setReference}
+                  {...popoverInteractions.getReferenceProps()}
+                />
+                {popoverOpen.value && (
+                  <div
+                    role="dialog"
+                    ref={popover.refs.setFloating}
+                    {...popoverInteractions.getFloatingProps()}
+                  >
+                    <button
+                      data-testid="focus-button"
+                      ref={tooltip.refs.setReference}
+                      {...tooltipFocus}
+                      {...tooltipInteractions.getReferenceProps()}
+                    />
+                  </div>
+                )}
+                {tooltipOpen.value && (
+                  <div
+                    role="tooltip"
+                    ref={tooltip.refs.setFloating}
+                    {...tooltipInteractions.getFloatingProps()}
+                  />
+                )}
+              </>
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+
+        await flushMicrotasks();
+        screen.getByTestId('focus-button').focus();
+        await flushMicrotasks();
+
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      it('when true', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles>
+            <NestedDialog testId="inner" bubbles>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('when false', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles={{ escapeKey: false }}>
+            <NestedDialog testId="inner" bubbles={{ escapeKey: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('mixed', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles={{ escapeKey: true }}>
+            <NestedDialog testId="inner" bubbles={{ escapeKey: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
       describe('when Escape reaches the document', () => {
         // Layers that share no FloatingTree, like a Dialog opened from a Popover.
         const Layer = defineComponent({
@@ -952,6 +1401,132 @@ describe('useDismiss', () => {
 
         expect(escapeKeyCapture).toBe(false);
         expect(outsidePressCapture).toBe(false);
+      });
+    });
+
+    const Overlay = defineComponent({
+      setup(_, { slots }) {
+        return () => (
+          <div
+            style="width: 100vw; height: 100vh"
+            onPointerdown={(event: PointerEvent) => event.stopPropagation()}
+            onKeydown={(event: KeyboardEvent) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation();
+              }
+            }}
+          >
+            <span>outside</span>
+            {slots.default?.()}
+          </div>
+        );
+      },
+    });
+
+    const Dialog = defineComponent({
+      props: { id: { type: String, required: true } },
+      setup(props, { slots }) {
+        const open = shallowRef(true);
+        const nodeId = useFloatingNodeId();
+
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+          nodeId,
+        });
+        provideFloatingNode(nodeId);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([
+          useDismiss(context.rootStore),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingPortal>
+                <FloatingFocusManager store={context.rootStore}>
+                  <div {...getFloatingProps({ ref: refs.setFloating })}>
+                    <span>{props.id}</span>
+                    {slots.default?.()}
+                  </div>
+                </FloatingFocusManager>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      },
+    });
+
+    const NestedDialog = defineComponent({
+      props: { id: { type: String, required: true } },
+      setup(props, { slots }) {
+        const parentId = useFloatingParentNodeId();
+
+        return () =>
+          parentId.value == null ? (
+            <Tree>
+              <Dialog {...props}>{slots.default?.()}</Dialog>
+            </Tree>
+          ) : (
+            <Dialog {...props}>{slots.default?.()}</Dialog>
+          );
+      },
+    });
+
+    describe('prop: capture.outsidePress', () => {
+      it('when true', async () => {
+        const { user } = await render(
+          <Overlay>
+            <NestedDialog id="outer">
+              <NestedDialog id="inner" />
+            </NestedDialog>
+          </Overlay>,
+        );
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.getByText('inner')).toBeInTheDocument();
+
+        await user.click(screen.getByText('outer'));
+        await flushMicrotasks();
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+
+        await user.click(screen.getByText('outside'));
+        await flushMicrotasks();
+
+        expect(screen.queryByText('outer')).not.toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+      });
+    });
+
+    describe('prop: capture.escapeKey', () => {
+      it('when false', async () => {
+        const { user } = await render(
+          <Overlay>
+            <NestedDialog id="outer">
+              <NestedDialog id="inner" />
+            </NestedDialog>
+          </Overlay>,
+        );
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.getByText('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByText('outer')).not.toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
       });
     });
   });
@@ -1522,6 +2097,80 @@ describe('useDismiss', () => {
       await fireEvent.click(document.body);
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
+  });
+
+  it('nested floating elements with different portal containers', async () => {
+    const ButtonWithFloating = defineComponent({
+      props: {
+        portalContainer: { type: Object as PropType<HTMLElement>, default: undefined },
+        triggerText: { type: String, required: true },
+      },
+      setup(props, { slots }) {
+        const open = shallowRef(false);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+        });
+
+        const click = useClick(context.rootStore);
+        const dismiss = useDismiss(context.rootStore);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
+
+        return () => (
+          <>
+            <button ref={refs.setReference} {...getReferenceProps()}>
+              {props.triggerText}
+            </button>
+            {open.value && (
+              <FloatingPortal container={props.portalContainer}>
+                <FloatingFocusManager store={context.rootStore} modal={false}>
+                  <div ref={refs.setFloating} {...getFloatingProps()}>
+                    {slots.default?.()}
+                  </div>
+                </FloatingFocusManager>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      },
+    });
+
+    const App = defineComponent({
+      setup() {
+        const otherContainer = shallowRef<HTMLDivElement | null>(null);
+
+        return () => {
+          const portal1 = undefined;
+          const portal2 = otherContainer.value ?? undefined;
+
+          return (
+            <>
+              <ButtonWithFloating portalContainer={portal1} triggerText="open 1">
+                <ButtonWithFloating portalContainer={portal2} triggerText="open 2">
+                  <button>nested</button>
+                </ButtonWithFloating>
+              </ButtonWithFloating>
+              <div ref={otherContainer} />
+            </>
+          );
+        };
+      },
+    });
+
+    const { user } = await render(<App />);
+
+    await user.click(screen.getByText('open 1'));
+    expect(screen.getByText('open 2')).toBeInTheDocument();
+
+    await user.click(screen.getByText('open 2'));
+    await flushMicrotasks();
+
+    expect(screen.getByText('open 1')).toBeInTheDocument();
+    expect(screen.getByText('open 2')).toBeInTheDocument();
+    expect(screen.getByText('nested')).toBeInTheDocument();
   });
 
   describe('document listeners', () => {
