@@ -211,8 +211,7 @@ let heldInput: HTMLInputElement | null = null;
 let unregisterInput: (() => void) | void;
 // `KeepAlive` takes the input out of the document, and the field must not use an input that is not
 // in the document. A deactivated required checkbox that is off would block the submit of the form,
-// and its value would stay in the values of the form. The plain variable is for the setter.
-let isInputHeld = false;
+// and its value would stay in the values of the form.
 const isDeactivated = shallowRef(false);
 
 function registerHeldInput() {
@@ -220,15 +219,14 @@ function registerHeldInput() {
   // A field can have more than one input, so the input goes to the registry of the field and not
   // to `validation.inputRef`. The group reads the value when the form needs it, so a change of the
   // value needs no new registration.
-  unregisterInput =
-    heldInput && !isInputHeld
-      ? validation.registerInput(heldInput, {
-          controlRef: () => element.value,
-          get value() {
-            return group ? itemValue.value : undefined;
-          },
-        })
-      : undefined;
+  unregisterInput = heldInput
+    ? validation.registerInput(heldInput, {
+        controlRef: () => element.value,
+        get value() {
+          return group ? itemValue.value : undefined;
+        },
+      })
+    : undefined;
 }
 
 function setInputElement(value: unknown) {
@@ -244,19 +242,24 @@ function setInputElement(value: unknown) {
 }
 
 onDeactivated(() => {
-  isInputHeld = true;
   isDeactivated.value = true;
 });
 
 onActivated(() => {
-  isInputHeld = false;
   isDeactivated.value = false;
 });
 
 // `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A
 // registration in a hook would reverse the order of the inputs, and the order decides which input
 // the form focuses first. The watcher runs after the hooks, in the order of the parts.
-watch(isDeactivated, registerHeldInput);
+watch(isDeactivated, (deactivated) => {
+  if (deactivated) {
+    unregisterInput?.();
+    unregisterInput = undefined;
+  } else {
+    registerHeldInput();
+  }
+});
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 
