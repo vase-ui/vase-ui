@@ -30,6 +30,13 @@ function createAnimation() {
   };
 }
 
+function createEnterStyle(popupClass: string) {
+  return `
+    .${popupClass} { transition: opacity 10s; }
+    .${popupClass}[data-starting-style] { opacity: 0; }
+  `;
+}
+
 function createExitStyle(popupClass: string) {
   const animationName = randomStringValue();
   return `
@@ -204,6 +211,21 @@ describe('useUnmountAfterClose', () => {
       expect(host.onUnmount).toHaveBeenCalledTimes(1);
     });
 
+    it('calls onUnmount one time for a forceUnmount call while open and one after the close in one task', async () => {
+      const host = createHost();
+      const open = shallowRef(true);
+      host.preventUnmountOnClose.value = true;
+      await render(<host.Host open={open} />);
+
+      host.result.forceUnmount();
+      open.value = false;
+      host.result.forceUnmount();
+      await nextTick();
+
+      expect(host.onUnmount).toHaveBeenCalledTimes(1);
+      expect(host.result.mounted.value).toBe(false);
+    });
+
     it.each([
       { name: 'close first, uncontrolled', controlled: false, closeFirst: true },
       { name: 'close first, controlled', controlled: true, closeFirst: true },
@@ -265,6 +287,30 @@ describe('useUnmountAfterClose', () => {
   describe('with animations enabled', () => {
     beforeEach(() => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    });
+
+    // Read no style and no layout in this case. A read starts the transition that the composable
+    // must start, and the case then passes with a broken composable.
+    it('starts the enter transition when a closed popup opens', async () => {
+      const host = createHost();
+      const popupClass = randomStringValue();
+      const open = shallowRef(false);
+      const { container } = await render(() => (
+        <div>
+          <style>{createEnterStyle(popupClass)}</style>
+          <host.Host open={open.value} popupClass={popupClass} />
+        </div>
+      ));
+      const transitionRuns: Event[] = [];
+      container.addEventListener('transitionrun', (event) => {
+        transitionRuns.push(event);
+      });
+
+      open.value = true;
+
+      await waitFor(() => {
+        expect(transitionRuns).toHaveLength(1);
+      });
     });
 
     it('keeps the popup mounted until the exit animation finishes, then unmounts it', async () => {
