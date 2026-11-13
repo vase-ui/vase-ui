@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { createSSRApp, defineComponent, nextTick, shallowRef, Teleport } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -8,9 +10,11 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
+  waitFor,
   within,
 } from '#test-utils';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
@@ -353,6 +357,118 @@ describe('<Field.Control />', () => {
     expect(validate).not.toHaveBeenCalled();
   });
 
+  it.skipIf(isJSDOM)('validates once when Enter implicitly submits a form', async () => {
+    // Real browser input is needed: implicit form submission on Enter is browser behavior.
+    const validate = vi.fn(() => null);
+    const handleSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+
+    await render(
+      <Form onSubmit={handleSubmit}>
+        <Field.Root validate={validate}>
+          <Field.Control defaultValue="a" />
+        </Field.Root>
+        <button type="submit">submit</button>
+      </Form>,
+    );
+
+    const control = screen.getByRole<HTMLInputElement>('textbox');
+
+    await userEvent.type(control, '[Enter]');
+    await flushMicrotasks();
+
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it.skipIf(isJSDOM)('validates when Enter does not implicitly submit the form', async () => {
+    // Real browser input is needed: implicit form submission on Enter is browser behavior.
+    const validate = vi.fn(() => null);
+    const handleSubmit = vi.fn();
+
+    await render(
+      <Form onSubmit={handleSubmit}>
+        <Field.Root validate={validate}>
+          <Field.Control defaultValue="a" />
+        </Field.Root>
+        <input />
+      </Form>,
+    );
+
+    const control = screen.getByDisplayValue<HTMLInputElement>('a');
+
+    await userEvent.type(control, '[Enter]');
+    await flushMicrotasks();
+
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
+  it.skipIf(isJSDOM)(
+    'validates when a disabled submit button blocks implicit submission',
+    async () => {
+      // Real browser input is needed: implicit form submission on Enter is browser behavior.
+      const validate = vi.fn(() => null);
+      const handleSubmit = vi.fn();
+
+      await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root validate={validate}>
+            <Field.Control defaultValue="a" />
+          </Field.Root>
+          <button type="submit" disabled>
+            submit
+          </button>
+        </Form>,
+      );
+
+      const control = screen.getByRole<HTMLInputElement>('textbox');
+
+      await userEvent.type(control, '[Enter]');
+      await flushMicrotasks();
+
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(handleSubmit).not.toHaveBeenCalled();
+    },
+  );
+
+  it('validates the latest value when Enter does not submit the form', async () => {
+    const validate = vi.fn((_value: unknown) => null);
+
+    const App = defineComponent(() => {
+      const value = shallowRef('a');
+      return () => (
+        <Form
+          onKeydown={() => {
+            value.value = '';
+          }}
+        >
+          <Field.Root validate={validate}>
+            <Field.Control
+              value={value.value}
+              onValueChange={(nextValue) => {
+                value.value = nextValue;
+              }}
+            />
+          </Field.Root>
+          <input />
+        </Form>
+      );
+    });
+
+    await render(<App />);
+
+    const control = screen.getByDisplayValue<HTMLInputElement>('a');
+    control.focus();
+    await flushMicrotasks();
+    await fireEvent.keyDown(control, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(validate).toHaveBeenCalledTimes(1);
+    });
+
+    expect(validate.mock.lastCall?.[0]).toBe('');
+  });
+
   it('validates when Enter is pressed outside a form', async () => {
     const validate = vi.fn(() => null);
 
@@ -483,6 +599,65 @@ describe('<Field.Control />', () => {
 
       expect(handleValueChange).toHaveBeenCalledTimes(1);
     });
+
+    it('ignores a change event that has the value of the mount', async () => {
+      const handleValueChange = vi.fn();
+
+      await render(
+        <Field.Root>
+          <Field.Control defaultValue="foo" onValueChange={handleValueChange} />
+        </Field.Root>,
+      );
+
+      await fireEvent.change(screen.getByRole('textbox'));
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      {
+        name: 'a parent that changes the value',
+        initialValue: '',
+        typed: 'a',
+        keep: (next: string) => next.toUpperCase(),
+      },
+      {
+        name: 'a parent that refuses the value',
+        initialValue: 'abc',
+        typed: 'abcd',
+        keep: () => 'abc',
+      },
+    ])(
+      'ignores a change event that has the value of the prop for $name',
+      async ({ initialValue, typed, keep }) => {
+        const handleValueChange = vi.fn();
+
+        const App = defineComponent(() => {
+          const value = shallowRef(initialValue);
+          return () => (
+            <Field.Root>
+              <Field.Control
+                value={value.value}
+                onValueChange={(next) => {
+                  handleValueChange(next);
+                  value.value = keep(next);
+                }}
+              />
+            </Field.Root>
+          );
+        });
+
+        await render(<App />);
+
+        const input = screen.getByRole<HTMLInputElement>('textbox');
+        await fireEvent.input(input, { target: { value: typed } });
+        // A browser sends one `change` event when the input loses focus after real typing.
+        await fireEvent.change(input);
+
+        expect(handleValueChange).toHaveBeenCalledTimes(1);
+        expect(handleValueChange).toHaveBeenCalledWith(typed);
+      },
+    );
   });
 
   describe('native reset', () => {
@@ -552,6 +727,33 @@ describe('<Field.Control />', () => {
       input.value = 'written';
       form.addEventListener('reset', (event) => event.preventDefault(), { once: true });
       form.reset();
+      await settle();
+
+      expect(input).toHaveValue('written');
+      expect(root).not.toHaveAttribute('data-filled');
+      expect(root).not.toHaveAttribute('data-dirty');
+    });
+
+    it('BUG-6206: ignores the reset of another form', async () => {
+      await render(
+        <div>
+          <form>
+            <Field.Root data-testid="root">
+              <Field.Control />
+            </Field.Root>
+          </form>
+          <form data-testid="other-form" />
+        </div>,
+      );
+
+      const root = screen.getByTestId('root');
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      // A script that writes the value sends no event, so only a reset can change the state.
+      input.value = 'written';
+      expect(root).not.toHaveAttribute('data-filled');
+
+      screen.getByTestId<HTMLFormElement>('other-form').reset();
       await settle();
 
       expect(input).toHaveValue('written');

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import {
   createRenderer,
   describeConformance,
@@ -9,7 +10,6 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
-import FieldFormContext from './FieldFormContext.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type FieldControlInstance = InstanceType<typeof Field.Control>;
@@ -48,6 +48,24 @@ describe('<Field.Root />', () => {
     render,
   }));
 
+  describe('prop: disabled', () => {
+    it('keeps a disabled field with form errors marked invalid', async () => {
+      await render(
+        <Form errors={{ name: 'Server error' }}>
+          <Field.Root name="name" disabled>
+            <Field.Control data-testid="control" />
+          </Field.Root>
+        </Form>,
+      );
+
+      const control = screen.getByTestId('control');
+
+      expect(control).toHaveAttribute('data-invalid', '');
+      // It does not participate in native constraint validation.
+      expect(control).not.toHaveAttribute('aria-invalid');
+    });
+  });
+
   describe('prop: validate', () => {
     it('accepts synchronous and async validators with no return value', async () => {
       await render(
@@ -59,6 +77,130 @@ describe('<Field.Root />', () => {
 
       expect(screen.getByTestId('sync')).toBeInTheDocument();
       expect(screen.getByTestId('async')).toBeInTheDocument();
+    });
+
+    it('unmounted fields are excluded from the validate fn', async () => {
+      const validateSpy = vi.fn();
+      const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+
+      const App = defineComponent(() => {
+        const checked = shallowRef(true);
+
+        return () => (
+          <Form onSubmit={onSubmit}>
+            <input
+              type="checkbox"
+              checked={checked.value}
+              onChange={() => {
+                checked.value = !checked.value;
+              }}
+            />
+            {checked.value && (
+              <Field.Root name="input1">
+                <Field.Control defaultValue="one" />
+              </Field.Root>
+            )}
+            <Field.Root name="input2" validate={validateSpy}>
+              <Field.Control defaultValue="two" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(validateSpy.mock.calls.length).toBe(1);
+      expect(validateSpy.mock.calls[0][1]).toEqual({
+        input1: 'one',
+        input2: 'two',
+      });
+
+      await fireEvent.click(screen.getByRole('checkbox'));
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(validateSpy.mock.calls.length).toBe(2);
+      expect(validateSpy.mock.lastCall?.[1]).toEqual({
+        input2: 'two',
+      });
+      expect(onSubmit).toHaveBeenCalledTimes(2);
+    });
+
+    it('uses the Field.Control name for form submission and form validation values', async () => {
+      const handleSubmit = vi.fn();
+      const validate = vi.fn((_value: unknown, _formValues: Form.Values) => null);
+
+      await render(
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root>
+            <Field.Control name="email" defaultValue="one@example.com" />
+          </Field.Root>
+          <Field.Root name="confirmEmail" validate={validate}>
+            <Field.Control defaultValue="one@example.com" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(validate.mock.lastCall?.[1]).toEqual({
+        email: 'one@example.com',
+        confirmEmail: 'one@example.com',
+      });
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({
+        email: 'one@example.com',
+        confirmEmail: 'one@example.com',
+      });
+    });
+
+    it('updates the Field.Control name fallback when the name changes', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const name = shallowRef<string | undefined>('email');
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root>
+              <Field.Control name={name.value} defaultValue="one@example.com" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = 'alternateEmail';
+              }}
+            >
+              Change name
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = undefined;
+              }}
+            >
+              Clear name
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ email: 'one@example.com' });
+
+      await fireEvent.click(screen.getByText('Change name'));
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({
+        alternateEmail: 'one@example.com',
+      });
+
+      await fireEvent.click(screen.getByText('Clear name'));
+      await fireEvent.click(screen.getByText('submit'));
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
     });
   });
 
@@ -465,7 +607,13 @@ describe('<Field.Root />', () => {
 
   describe('form context', () => {
     it('is valid, and not neutral, after the user types over the error of a form', async () => {
-      await render(<FieldFormContext errors={{ name: 'Server error' }} />);
+      await render(
+        <Form errors={{ name: 'Server error' }}>
+          <Field.Root name="name" data-testid="root">
+            <Field.Control data-testid="control" />
+          </Field.Root>
+        </Form>,
+      );
 
       const root = screen.getByTestId('root');
       expect(root).toHaveAttribute('data-invalid', '');
@@ -479,7 +627,13 @@ describe('<Field.Root />', () => {
     it('takes the validation mode of the form when it has no mode of its own', async () => {
       const validate = vi.fn(() => null);
 
-      await render(<FieldFormContext validationMode="onChange" validate={validate} />);
+      await render(
+        <Form validationMode="onChange">
+          <Field.Root name="name" validate={validate}>
+            <Field.Control data-testid="control" />
+          </Field.Root>
+        </Form>,
+      );
 
       await fireEvent.input(screen.getByTestId('control'), { target: { value: 'a' } });
 

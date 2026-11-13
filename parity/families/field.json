@@ -31,40 +31,8 @@
       "describe": ["<Field.Control />"],
       "title": "does not clear errors or validate when change is prevented",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Field.Error` and `Form`, which Vase UI does not have. `Form` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "validates once when Enter implicitly submits a form",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "validates when Enter does not implicitly submit the form",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "validates when a disabled submit button blocks implicit submission",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "validates the latest value when Enter does not submit the form",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
+      "reason": "The case renders `Field.Error`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
@@ -263,27 +231,11 @@
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: disabled"],
-      "title": "keeps a disabled field with form errors marked invalid",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "prop: validate"],
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Field.Item`, `Form`, `CheckboxGroup`, `Checkbox`, `Switch`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validate"],
-      "title": "unmounted fields are excluded from the validate fn",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
+      "reason": "The case renders `Field.Item`, `CheckboxGroup`, `Checkbox`, `Switch`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -291,7 +243,7 @@
       "title": "submits the replacement control value when swapping field-aware controls",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Form`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -299,23 +251,7 @@
       "title": "excludes registration-gated controls from onFormSubmit when their field name is removed",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `Field.Item`, `Form`, `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validate"],
-      "title": "uses the Field.Control name for form submission and form validation values",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validate"],
-      "title": "updates the Field.Control name fallback when the name changes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/form/Form.tsx",
-      "reason": "The case renders `Form`, which Vase UI does not have."
+      "reason": "The case renders `Field.Item`, `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -323,7 +259,7 @@
       "title": "updates field-aware control name fallbacks when the name changes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
-      "reason": "The case renders `Form` and `NumberField`, which Vase UI does not have. `NumberField` comes last, so the row names its file."
+      "reason": "The case renders `NumberField`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",

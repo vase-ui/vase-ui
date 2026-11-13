@@ -214,9 +214,11 @@ function handleInput(event: Event) {
 }
 
 // React calls `onChange` of a text input for an `input` event and for a `change` event, when the
-// value is new. Some programs that fill a form send only `change`.
+// value is new. The value of the prop is not new, because Vue or the part wrote it to the input.
+// Some programs that fill a form send only `change`.
 function handleChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledValue) {
+  const value = (event.currentTarget as HTMLInputElement).value;
+  if (value !== handledValue && value !== serializedValue.value) {
     handleInput(event);
   }
 }
