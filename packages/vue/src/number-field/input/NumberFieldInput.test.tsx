@@ -2057,14 +2057,17 @@ describe('<NumberField.Input />', () => {
       expect(screen.getByRole('textbox')).toHaveAttribute('id', 'amount');
     });
 
-    it('replaces `autocorrect` with the attribute of the consumer', async () => {
+    it.each([
+      { name: 'the value `on`', value: 'on' },
+      { name: 'the value `off`', value: 'off' },
+    ])('has the `autocorrect` of the consumer: $name', async ({ value }) => {
       await render(
         <NumberField.Root>
-          <NumberField.Input autocorrect="on" />
+          <NumberField.Input autocorrect={value} />
         </NumberField.Root>,
       );
 
-      expect(screen.getByRole('textbox')).toHaveAttribute('autocorrect', 'on');
+      expect(screen.getByRole('textbox')).toHaveAttribute('autocorrect', value);
     });
 
     it('replaces `aria-roledescription` with the attribute of the consumer', async () => {
@@ -2359,6 +2362,20 @@ describe('<NumberField.Input />', () => {
       expect(input).toHaveAttribute('aria-labelledby', serverId('label'));
       expect(input).toHaveAttribute('aria-describedby', serverId('description'));
       expect(input).toHaveValue('5');
+    });
+
+    it.each([
+      { name: 'no attribute of the consumer', props: {}, value: 'off' },
+      { name: 'an attribute of the consumer', props: { autocorrect: 'on' }, value: 'on' },
+    ])('writes one `autocorrect` attribute in the server HTML: $name', async ({ props, value }) => {
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, { parts: ['input'], ...props });
+
+      expect(serverHtml.match(/ autocorrect=/gi)).toHaveLength(1);
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(
+        template.content.querySelector('[data-testid="input"]')?.getAttribute('autocorrect'),
+      ).toBe(value);
     });
 
     it('formats the text in the locale of the runtime after the mount', async () => {

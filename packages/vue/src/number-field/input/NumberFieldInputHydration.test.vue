@@ -8,6 +8,7 @@ defineProps<{
   parts: Part[];
   defaultValue?: number | undefined;
   format?: Intl.NumberFormatOptions | undefined;
+  autocorrect?: string | undefined;
 }>();
 </script>
 
@@ -16,7 +17,7 @@ defineProps<{
     <template v-for="part in parts" :key="part">
       <Field.Label v-if="part === 'label'" data-testid="label">Label</Field.Label>
       <NumberField.Root v-else-if="part === 'input'" :default-value="defaultValue" :format="format">
-        <NumberField.Input data-testid="input" />
+        <NumberField.Input data-testid="input" :autocorrect="autocorrect" />
       </NumberField.Root>
       <Field.Description v-else-if="part === 'description'" data-testid="description">
         Description

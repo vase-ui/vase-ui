@@ -561,39 +561,44 @@ function setOwnInput(next: HTMLElement | null) {
 const { element, elementProps } = useRenderElement('input', props, {
   state,
   ref: setOwnInput,
-  props: (attrs) => [
-    {
-      id: id.value,
-      form: form.value,
-      required: state.value.required ? '' : undefined,
-      disabled: state.value.disabled ? '' : undefined,
-      readonly: state.value.readOnly ? '' : undefined,
-      inputmode: inputMode.value,
-      value: state.value.inputValue,
-      type: 'text',
-      autocomplete: 'off',
-      // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string
-      // `off` then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute, and a
-      // server writes it in lower case.
-      autoCorrect: 'autocorrect' in attrs ? undefined : 'off',
-      spellcheck: 'false',
-      'aria-roledescription': 'Number field',
-      'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
-      'aria-labelledby': labelId.value,
-      onFocusin: handleFocusin,
-      onFocusout: handleFocusout,
-      onInput: handleInput,
-      onChange: handleChange,
-      onKeydown: handleKeydown,
-      onPaste: handlePaste,
-      onCompositionend: handleCompositionend,
-      // Vue adds the listener with no `passive` option, so `preventDefault` stops the scroll of
-      // the page.
-      onWheel: isWheelScrubEnabled.value ? onInputWheel : undefined,
-    },
-    attrs,
-    (merged) => validation.getValidationProps(state.value.disabled, merged),
-  ],
+  props: (attrs) => {
+    // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string `off`
+    // then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute in each version, and
+    // a server writes it in lower case. The value of the consumer moves to that key, because two
+    // keys for one attribute give two attributes on a server.
+    const { autocorrect, ...elementAttrs } = attrs;
+
+    return [
+      {
+        id: id.value,
+        form: form.value,
+        required: state.value.required ? '' : undefined,
+        disabled: state.value.disabled ? '' : undefined,
+        readonly: state.value.readOnly ? '' : undefined,
+        inputmode: inputMode.value,
+        value: state.value.inputValue,
+        type: 'text',
+        autocomplete: 'off',
+        autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
+        spellcheck: 'false',
+        'aria-roledescription': 'Number field',
+        'aria-invalid': !state.value.disabled && invalid.value ? true : undefined,
+        'aria-labelledby': labelId.value,
+        onFocusin: handleFocusin,
+        onFocusout: handleFocusout,
+        onInput: handleInput,
+        onChange: handleChange,
+        onKeydown: handleKeydown,
+        onPaste: handlePaste,
+        onCompositionend: handleCompositionend,
+        // Vue adds the listener with no `passive` option, so `preventDefault` stops the scroll of
+        // the page.
+        onWheel: isWheelScrubEnabled.value ? onInputWheel : undefined,
+      },
+      elementAttrs,
+      (merged) => validation.getValidationProps(state.value.disabled, merged),
+    ];
+  },
   stateAttributesMapping,
 });
 
