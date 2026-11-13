@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
@@ -258,6 +258,134 @@ describe('<Radio.Indicator />', () => {
         expect(screen.queryByTestId('indicator-a')).toBe(null);
       });
       expect(hadEndingStyle).toBe(true);
+    });
+
+    // The indicator waits for the end of an animation only while its radio is not checked.
+    it('reads no animation of an indicator that enters', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      let transitionFinished = false;
+      const getAnimations = vi.fn((): Animation[] => []);
+
+      const style = `
+        .animation-test-indicator {
+          transition: opacity 1ms;
+        }
+
+        .animation-test-indicator[data-starting-style] {
+          opacity: 0;
+        }
+      `;
+
+      const Test = defineComponent(() => {
+        const value = shallowRef('b');
+
+        function handleSelectA() {
+          value.value = 'a';
+        }
+
+        return () => (
+          <div>
+            <style>{style}</style>
+            <button onClick={handleSelectA}>Select a</button>
+            <RadioGroup value={value.value}>
+              <Radio.Root value="a">
+                <Radio.Indicator
+                  class="animation-test-indicator"
+                  onTransitionend={() => {
+                    transitionFinished = true;
+                  }}
+                  v-slots={{
+                    render: ({ props }: { props: Record<string, any> }) => (
+                      <span
+                        {...props}
+                        ref={(element: any) => {
+                          props.ref(element);
+                          if (element) {
+                            element.getAnimations = getAnimations;
+                          }
+                        }}
+                      />
+                    ),
+                  }}
+                />
+              </Radio.Root>
+              <Radio.Root value="b" />
+            </RadioGroup>
+          </div>
+        );
+      });
+
+      const { user } = await render(<Test />);
+
+      await user.click(screen.getByText('Select a'));
+
+      await waitFor(() => {
+        expect(transitionFinished).toBe(true);
+      });
+      expect(getAnimations).not.toHaveBeenCalled();
+    });
+
+    it('removes the indicators of many groups in a single commit when their values change together', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      const style = `
+        @keyframes test-anim {
+          to {
+            opacity: 0;
+          }
+        }
+
+        .animation-test-indicator[data-ending-style] {
+          animation: test-anim 1ms;
+        }
+      `;
+
+      const Test = defineComponent(() => {
+        const value = shallowRef('a');
+
+        function handleSelectB() {
+          value.value = 'b';
+        }
+
+        return () => (
+          <div>
+            <style>{style}</style>
+            <button onClick={handleSelectB}>Select b</button>
+            {Array.from({ length: 10 }, (_, index) => (
+              <RadioGroup value={value.value} key={index}>
+                <Radio.Root value="a">
+                  <Radio.Indicator
+                    class="animation-test-indicator"
+                    data-testid={`indicator-${index}`}
+                  />
+                </Radio.Root>
+                <Radio.Root value="b" />
+              </RadioGroup>
+            ))}
+          </div>
+        );
+      });
+
+      const { container, user } = await render(<Test />);
+
+      // One Vue flush changes the DOM in one task, so it calls the observer one time.
+      const indicatorCounts: number[] = [];
+      const observer = new MutationObserver(() => {
+        indicatorCounts.push(container.querySelectorAll('[data-testid^="indicator-"]').length);
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      onTestFinished(() => observer.disconnect());
+
+      await user.click(screen.getByText('Select b'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('indicator-0')).toBe(null);
+      });
+      expect(screen.queryByTestId('indicator-9')).toBe(null);
+
+      expect(indicatorCounts).toContain(0);
+      expect(indicatorCounts.every((count) => count === 0 || count === 10)).toBe(true);
     });
   });
 
