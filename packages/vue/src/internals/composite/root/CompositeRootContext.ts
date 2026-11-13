@@ -12,6 +12,19 @@ export interface CompositeRootContext {
    * with this function.
    */
   relayKeyboardEvent: (event: KeyboardEvent) => void;
+  /**
+   * Whether the root has made its first map of the items. Base UI does not have this field,
+   * because its items always read the highlighted index. A Vue item keeps the tab stop of
+   * `takeInitialTabStop` until this field is `true`. The first client render is then equal to the
+   * server HTML.
+   */
+  hasSetDefaultIndex: ComputedRef<boolean>;
+  /**
+   * Tells an item if it holds the tab stop before the first map of the root. An item calls it one
+   * time, in `setup`. Base UI does not have this function. Its server HTML has `tabindex="-1"` on
+   * each item. The root gives `true` to at most one caller.
+   */
+  takeInitialTabStop: (index: number, active: boolean, disabled: boolean) => boolean;
 }
 
 export const CompositeRootContext: InjectionKey<CompositeRootContext> = Symbol();

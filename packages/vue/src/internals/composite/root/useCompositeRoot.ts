@@ -42,7 +42,8 @@ export function useCompositeRoot<Metadata>(
   const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
 
   let rootElement: HTMLElement | null = null;
-  let hasSetDefaultIndex = false;
+  const hasSetDefaultIndex = shallowRef(false);
+  let hasGivenInitialTabStop = false;
   let highlightedElement: HTMLElement | null = null;
 
   const [highlightedIndex, setHighlightedIndex] = useControlled({
@@ -77,7 +78,7 @@ export function useCompositeRoot<Metadata>(
 
     const disabledIndices = toValue(params.disabledIndices);
 
-    if (hasSetDefaultIndex) {
+    if (hasSetDefaultIndex.value) {
       const elements = elementsRef.value;
       // Items that come or go around the highlighted item change its index. The tab stop must
       // follow the item. Without this step, navigation continues from the wrong place.
@@ -102,7 +103,7 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    hasSetDefaultIndex = true;
+    hasSetDefaultIndex.value = true;
 
     const sortedElements = Array.from(map.keys()) as Array<HTMLElement | null>;
     const activeItem =
@@ -148,7 +149,7 @@ export function useCompositeRoot<Metadata>(
     if (
       disabledIndices == null ||
       toValue(params.highlightedIndex) != null ||
-      !hasSetDefaultIndex
+      !hasSetDefaultIndex.value
     ) {
       return;
     }
@@ -162,11 +163,15 @@ export function useCompositeRoot<Metadata>(
   }
 
   onMounted(run);
+  // The check reads `elementsRef`, so the list of elements is a source. Under `KeepAlive`, the
+  // items register again in `onActivated`, and the list sorts in a later post-flush job. A check
+  // that runs before that sort reads an empty list, so it must run again after the sort.
   watch(
     [
       () => toValue(params.disabledIndices),
       () => toValue(params.highlightedIndex),
       highlightedIndex,
+      elementsRef,
     ],
     run,
     { flush: 'post' },
@@ -286,11 +291,35 @@ export function useCompositeRoot<Metadata>(
     target.setSelectionRange(0, target.value.length);
   }
 
+  // This function gives the tab stop of the server HTML and of the first client render, before the
+  // first map. It gives `true` to at most one caller, in the order of the `setup` calls.
+  // A server writes the HTML of an item right after the `setup` of that item. It does not know the
+  // items that come later, so it cannot find the first enabled item of the document. The order of
+  // `setup` is the order of the document, with the exceptions that the comment in
+  // `useCompositeListItem` lists. The usual one is an item below a component with an async `setup`.
+  // The tab stop can then be on a later enabled item until the first sort after the mount.
+  // The server HTML has no tab stop in two cases: `hasActiveItem` is `true` and no item is active,
+  // or each item is disabled.
+  function takeInitialTabStop(index: number, active: boolean, disabled: boolean) {
+    if (hasGivenInitialTabStop) {
+      return false;
+    }
+
+    const isTabStop = toValue(params.hasActiveItem)
+      ? active
+      : !disabled && index >= highlightedIndex.value;
+    hasGivenInitialTabStop = isTabStop;
+
+    return isTabStop;
+  }
+
   provide(CompositeRootContext, {
     highlightedIndex,
     onHighlightedIndexChange,
     highlightItemOnHover: computed(() => toValue(params.highlightItemOnHover) ?? false),
     relayKeyboardEvent: onKeydown,
+    hasSetDefaultIndex: computed(() => hasSetDefaultIndex.value),
+    takeInitialTabStop,
   });
 
   return {
@@ -412,6 +441,13 @@ export interface UseCompositeRootParameters<Metadata> {
    * changes.
    */
   onMapChange?: ((newMap: Map<Element, CompositeMetadata<Metadata>>) => void) | undefined;
+  /**
+   * Tells the root that an item is active. The tab stop of the server HTML is then the first active
+   * item. If no item is active, the server HTML has no tab stop. Set it only when the root knows
+   * that an item is active. Base UI does not have this parameter. Its server HTML has
+   * `tabindex="-1"` on each item.
+   */
+  hasActiveItem?: MaybeRefOrGetter<boolean | undefined> | undefined;
 }
 
 export interface UseCompositeRootReturnValue {
