@@ -9,9 +9,13 @@
     "packages/react/src/internals/field-constants/**",
     "packages/react/src/internals/field-register-control/**",
     "packages/react/src/internals/field-root-context/**",
+    "packages/react/src/internals/filter.ts",
+    "packages/react/src/internals/filter.test.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
+    "packages/react/src/internals/itemEquality.ts",
+    "packages/react/src/internals/itemEquality.test.ts",
     "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
     "packages/react/src/internals/PrehydrationScript.tsx",
@@ -20,6 +24,8 @@
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+    "packages/react/src/internals/resolveValueLabel.tsx",
+    "packages/react/src/internals/resolveValueLabel.test.ts",
     "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/stateAttributesMapping.test.ts",
@@ -80,8 +86,10 @@
     "packages/react/src/internals/field-root-context/FieldRootContext.ts",
     "packages/react/src/internals/field-root-context/index.ts",
     "packages/react/src/internals/field-root-context/useSetFieldFocused.ts",
+    "packages/react/src/internals/filter.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
+    "packages/react/src/internals/itemEquality.ts",
     "packages/react/src/internals/labelable-provider/LabelableContext.ts",
     "packages/react/src/internals/labelable-provider/LabelableProvider.tsx",
     "packages/react/src/internals/labelable-provider/index.ts",
@@ -93,6 +101,7 @@
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
+    "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
     "packages/react/src/internals/types.ts",
@@ -726,6 +735,29 @@
       ]
     },
     {
+      "file": "packages/react/src/internals/filter.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getFilter"
+          ],
+          "title": "caches different locales separately"
+        },
+        {
+          "describe": [
+            "getFilter"
+          ],
+          "title": "caches equivalent locale inputs"
+        },
+        {
+          "describe": [
+            "getFilter"
+          ],
+          "title": "matches locale-aware substrings without accent sensitivity"
+        }
+      ]
+    },
+    {
       "file": "packages/react/src/internals/getStateAttributesProps.test.ts",
       "rows": [
         {
@@ -763,6 +795,101 @@
             "getStateAttributesProps"
           ],
           "title": "supports nulls returned from custom mapping"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/itemEquality.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "anchors to the first selected item in rendered order, not value order"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "returns null when nothing in the value array is rendered"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "treats an array as a single value outside multiple mode"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "anchors to the first selected item with a custom comparer"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "reads the selected values once instead of rescanning them for every item"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "keeps `+0` and `-0` distinct, like `Object.is`"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "matches `NaN` and `null` against themselves"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "never matches an `undefined` item or an `undefined` selected value"
+        },
+        {
+          "describe": [
+            "findSelectionIndex"
+          ],
+          "title": "never matches a hole left by an unmounted item"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "does not claim an unselected item"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "claims when no item holds the index yet"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "claims from a later holder"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "leaves the index with an earlier selected holder"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "takes over from an earlier holder that is no longer selected"
+        },
+        {
+          "describe": [
+            "resolveSelectedIndex"
+          ],
+          "title": "takes over when the earlier holder has left the registry"
         }
       ]
     },
@@ -862,6 +989,115 @@
             "resolveRenderedAriaLabel"
           ],
           "title": "cannot see an aria-label applied by a render function"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/resolveValueLabel.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "resolveValueLabel",
+            "isGroupedItems"
+          ],
+          "title": "classifies %s"
+        },
+        {
+          "describe": [
+            "resolveValueLabel"
+          ],
+          "title": "resolves a flat item label when the item has an unrelated items field"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns true when grouped items contain a null-valued item with a label"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns false when grouped items contain a null-valued item without a label"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns false when grouped items do not contain a null-valued item"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "supports grouped items with custom heading keys"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns true when flat items contain a null-valued item with a label"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns false when flat items do not contain a null-valued item"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns false when items is a Record without a \"null\" key"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns true when items is a Record with a \"null\" key"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "hasNullItemLabel"
+          ],
+          "title": "returns false when items is undefined"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "record items with prototype member names"
+          ],
+          "title": "falls back to the stringified label when the value matches an Object.prototype member"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "record items with prototype member names"
+          ],
+          "title": "resolves an own key that matches an Object.prototype member"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "record items with prototype member names"
+          ],
+          "title": "keeps resolving the null placeholder key in a record"
+        },
+        {
+          "describe": [
+            "resolveValueLabel",
+            "record items with prototype member names"
+          ],
+          "title": "falls back to the stringified label when an own key has a nullish label"
         }
       ]
     },
