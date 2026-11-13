@@ -106,9 +106,10 @@ const { element, elementProps } = useRenderElement('button', props, {
     // With `as` or a `#render` slot, the element can be another part, such as a menu trigger.
     // That part needs `disabled` to make its own disabled state. The default button gets no
     // `disabled` here, so a disabled button that can get focus still gets hover events, for
-    // example for a tooltip. An enabled item gets no key: on an element that has no `disabled`
-    // property, a browser writes `false` as `disabled="false"`, and the composite then reads
-    // the item as disabled.
+    // example for a tooltip. An enabled item gets no key. On an element that has no `disabled`
+    // property, a browser writes `false` as `disabled="false"` and a server writes no attribute.
+    // The hydrated DOM then differs from a client-only render. Also, `isElementDisabled` and a
+    // `[disabled]` selector read the attribute as disabled, whatever its value.
     // TODO: follow up after https://github.com/mui/base-ui/issues/1976#issuecomment-2916905663
     (slots.render || props.as !== 'button') && itemDisabled.value
       ? FORWARDED_DISABLED

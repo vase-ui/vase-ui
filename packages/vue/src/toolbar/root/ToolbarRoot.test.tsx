@@ -433,12 +433,12 @@ describe('<Toolbar.Root />', () => {
     it.each([
       { name: 'a toolbar with no disabled item', props: {}, tabindexes: ['0', '-1', '-1'] },
       {
-        name: 'a toolbar whose first item is disabled and not focusable',
+        name: 'a first item disabled and not focusable',
         props: { first: 'disabled' },
         tabindexes: ['-1', '0', '-1'],
       },
       {
-        name: 'a toolbar whose first item is disabled and focusable',
+        name: 'a first item disabled and focusable',
         props: { first: 'focusable' },
         tabindexes: ['0', '-1', '-1'],
       },
