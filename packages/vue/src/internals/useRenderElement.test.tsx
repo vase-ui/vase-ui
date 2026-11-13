@@ -3,6 +3,7 @@ import { defineAsyncComponent, defineComponent, h, onMounted, shallowRef } from 
 import type {
   ButtonHTMLAttributes,
   Component,
+  CSSProperties,
   HTMLAttributes,
   ImgHTMLAttributes,
   Slots,
@@ -10,7 +11,7 @@ import type {
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { EMPTY_OBJECT } from '../common/empty';
 import type { ComponentRenderFn, HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from './types';
-import { useRenderElement } from './useRenderElement';
+import { markChildrenMounted, useRenderElement } from './useRenderElement';
 
 interface ActiveState {
   active?: boolean | undefined;
@@ -47,6 +48,21 @@ function renderPart<State>(
 function renderSpan({ props }: { props: HTMLProps }) {
   return <span {...props} />;
 }
+
+// A template ref of the target is set after the render of the target. The part reads the
+// exposed `element` of the target, which is `null` until then.
+const InnerElementTarget = defineComponent({
+  inheritAttrs: false,
+  setup(_, { attrs, expose }) {
+    const inner = shallowRef<Element | null>(null);
+    expose({ element: inner });
+    return () => (
+      <div data-testid="outer">
+        <span {...attrs} ref={inner} data-testid="inner" />
+      </div>
+    );
+  },
+});
 
 describe('useRenderElement', () => {
   const { render } = createRenderer();
@@ -111,6 +127,20 @@ describe('useRenderElement', () => {
         props.enabled === false ? null : renderPart(props, slots, elementProps, EMPTY_OBJECT);
     },
     { props: ['as', 'enabled', 'refs', 'onClick'], inheritAttrs: false },
+  );
+
+  const OverridingStyleTestComponent = defineComponent(
+    (
+      props: VaseUIComponentProps<Record<string, never>> &
+        WithVaseUIEvent<HTMLAttributes> & { overridingStyle?: CSSProperties | undefined },
+      { slots },
+    ) => {
+      const { elementProps } = useRenderElement('div', props, {
+        overridingStyle: () => props.overridingStyle,
+      });
+      return () => renderPart(props, slots, elementProps, EMPTY_OBJECT);
+    },
+    { props: ['as', 'stateClass', 'stateStyle', 'overridingStyle'], inheritAttrs: false },
   );
 
   it('accepts className as function', async () => {
@@ -508,6 +538,42 @@ describe('useRenderElement', () => {
       expect(element.style.margin).toBe('2px');
     });
 
+    it.each([
+      { name: 'an object', style: { padding: '20px', margin: '1px' } },
+      { name: 'a string', style: 'padding: 20px; margin: 1px' },
+    ])(
+      'lets the overriding style of the part win over a style attribute that is $name, and over the state style',
+      async ({ style }) => {
+        const { container } = await render(
+          <OverridingStyleTestComponent
+            overridingStyle={{ padding: '30px', margin: '3px' }}
+            style={style}
+            stateStyle={() => ({ margin: '2px', color: 'red' })}
+          />,
+        );
+
+        const element = container.firstElementChild as HTMLElement;
+        expect(element.style.padding).toBe('30px');
+        expect(element.style.margin).toBe('3px');
+        expect(element.style.color).toBe('red');
+      },
+    );
+
+    it('follows an overriding style that changes', async () => {
+      const { container, setProps } = await render(
+        <OverridingStyleTestComponent
+          overridingStyle={{ padding: '30px' }}
+          style={{ padding: '20px' }}
+        />,
+      );
+      const element = container.firstElementChild as HTMLElement;
+      expect(element.style.padding).toBe('30px');
+
+      await setProps({ overridingStyle: undefined });
+
+      expect(element.style.padding).toBe('20px');
+    });
+
     it('merges a string style attribute of the consumer with the object style of the part', async () => {
       const { container } = await render(<TestComponent style="color: red; margin: 1px" />);
 
@@ -586,6 +652,25 @@ describe('useRenderElement', () => {
       expect(image).toHaveAttribute('alt', 'A cat');
     });
 
+    it('gives type="button" only while a default tag that is a getter gives button', async () => {
+      const GetterTagPart = defineComponent(
+        (props: { tag: string }) => {
+          const { elementProps } = useRenderElement(() => props.tag, {});
+          return () => h(props.tag, elementProps());
+        },
+        { props: ['tag'], inheritAttrs: false },
+      );
+
+      const { container, setProps } = await render(<GetterTagPart tag="div" />);
+      expect(container.firstElementChild).not.toHaveAttribute('type');
+
+      await setProps({ tag: 'button' });
+      expect(container.firstElementChild).toHaveAttribute('type', 'button');
+
+      await setProps({ tag: 'div' });
+      expect(container.firstElementChild).not.toHaveAttribute('type');
+    });
+
     it.each([
       { name: 'the default tag', createNode: () => <ButtonPart as="button" />, type: 'button' },
       { name: 'another tag', createNode: () => <ButtonPart as="span" />, type: null },
@@ -644,22 +729,129 @@ describe('useRenderElement', () => {
     });
   });
 
-  describe('target component with an outer element and an inner element', () => {
-    // A template ref of the target is set after the render of the target. The part reads the
-    // exposed `element` of the target, which is `null` until then.
-    const Target = defineComponent({
-      inheritAttrs: false,
-      setup(_, { attrs, expose }) {
-        const inner = shallowRef<Element | null>(null);
-        expose({ element: inner });
-        return () => (
-          <div data-testid="outer">
-            <span {...attrs} ref={inner} data-testid="inner" />
-          </div>
-        );
-      },
+  describe('warnings for a `#render` slot that the part renders after the mount', () => {
+    function renderEmptySpan() {
+      return <span />;
+    }
+
+    it('warns when the slot binds no props on its element', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <RerenderTestComponent enabled={false} v-slots={{ render: renderEmptySpan }} />,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(<RerenderTestComponent enabled v-slots={{ render: renderEmptySpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The `#render` slot gave no element to the part.',
+      );
     });
 
+    it('does not warn when the slot binds props, and when the part then renders no element', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <RerenderTestComponent enabled={false} v-slots={{ render: renderSpan }} />,
+      );
+
+      await rerender(<RerenderTestComponent enabled v-slots={{ render: renderSpan }} />);
+      await rerender(<RerenderTestComponent enabled={false} v-slots={{ render: renderSpan }} />);
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not warn for a component in the slot that sets its exposed element after its render', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      let component: ComponentWithElement | null = null;
+      const renderTarget = ({ props }: { props: HTMLProps }) => <InnerElementTarget {...props} />;
+      const Test = (props: { enabled: boolean }) => (
+        <RerenderTestComponent
+          enabled={props.enabled}
+          ref={(value) => {
+            component = value as ComponentWithElement | null;
+          }}
+          v-slots={{ render: renderTarget }}
+        />
+      );
+      const { rerender } = await render(<Test enabled={false} />);
+
+      await rerender(<Test enabled />);
+
+      expect(component!.element).toBe(screen.getByTestId('inner'));
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('checks the slot again when the part renders it a second time', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { rerender } = await render(
+        <RerenderTestComponent enabled v-slots={{ render: renderSpan }} />,
+      );
+      await rerender(<RerenderTestComponent enabled={false} v-slots={{ render: renderSpan }} />);
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      await rerender(<RerenderTestComponent enabled v-slots={{ render: renderEmptySpan }} />);
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'Vase UI: The `#render` slot gave no element to the part.',
+      );
+    });
+
+    describe('of a part with `children`', () => {
+      const OwnNode = defineComponent(() => {
+        markChildrenMounted();
+        return () => <span data-testid="own-node" />;
+      });
+
+      const ChildrenTestComponent = defineComponent(
+        (props: { enabled: boolean }, { slots }) => {
+          const { elementProps } = useRenderElement('div', {}, { children: true });
+          return () =>
+            props.enabled
+              ? slots.render?.({ props: elementProps(), state: EMPTY_OBJECT, children: OwnNode })
+              : null;
+        },
+        { props: ['enabled'], inheritAttrs: false },
+      );
+
+      it('warns when the slot does not mount `children`', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const { rerender } = await render(
+          <ChildrenTestComponent enabled={false} v-slots={{ render: renderSpan }} />,
+        );
+        expect(warnSpy).not.toHaveBeenCalled();
+
+        await rerender(<ChildrenTestComponent enabled v-slots={{ render: renderSpan }} />);
+
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy.mock.calls[0][0]).toContain(
+          'Vase UI: The `#render` slot did not mount `children`.',
+        );
+      });
+
+      it('does not warn when the slot mounts `children`', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const renderWithChildren = ({
+          props,
+          children,
+        }: {
+          props: HTMLProps;
+          children: Component;
+        }) => <span {...props}>{h(children)}</span>;
+        const { rerender } = await render(
+          <ChildrenTestComponent enabled={false} v-slots={{ render: renderWithChildren }} />,
+        );
+
+        await rerender(<ChildrenTestComponent enabled v-slots={{ render: renderWithChildren }} />);
+
+        expect(screen.getByTestId('own-node')).not.toBeNull();
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('target component with an outer element and an inner element', () => {
     it('gives the inner element, and never the outer element, to the part', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const refs = vi.fn();
@@ -673,7 +865,7 @@ describe('useRenderElement', () => {
         return () => (
           <RerenderTestComponent
             enabled
-            as={Target}
+            as={InnerElementTarget}
             refs={refs}
             ref={(value) => {
               component = value as ComponentWithElement | null;

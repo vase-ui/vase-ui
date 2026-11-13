@@ -1,5 +1,5 @@
 import { computed, onMounted, shallowRef } from 'vue';
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, Ref } from 'vue';
 
 // Vue has no public API that tells a hydration from a client-only mount in `setup`.
 // The lifecycle gives two facts. A server render never calls `onMounted`.
@@ -13,12 +13,12 @@ import type { ComputedRef } from 'vue';
 // renders again in the flush after the mount, before a paint.
 
 /** Gives `true` once the component that calls it is mounted on the client. */
-export function useIsHydrated(): ComputedRef<boolean> {
+export function useIsHydrated(): Readonly<Ref<boolean>> {
   const hydrated = shallowRef(false);
   onMounted(() => {
     hydrated.value = true;
   });
-  return computed(() => hydrated.value);
+  return hydrated;
 }
 
 /**

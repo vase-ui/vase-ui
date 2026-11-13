@@ -121,9 +121,7 @@ describe('<Avatar.Image />', () => {
     restoreImage();
   });
 
-  // The suite checks the warning for a `#render` element that lacks the ref of the part when the
-  // part mounts. Without `keepMounted`, the part has no element then.
-  describeConformance(<Avatar.Image src="test.png" keepMounted />, () => ({
+  describeConformance(<Avatar.Image src="test.png" />, () => ({
     render: (node) => {
       return render(<Avatar.Root>{node}</Avatar.Root>);
     },

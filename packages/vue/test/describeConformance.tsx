@@ -18,6 +18,9 @@ export interface VaseUiConformanceTestsOptions {
   /**
    * The suite always passes a vnode, so a part test can wrap it:
    * `(node) => render(<Root>{node}</Root>)`.
+   * The promise resolves when the part has its element. For a part with no element at mount,
+   * the option makes the element appear: it renders an open root, or it does the action that
+   * mounts the part.
    */
   render: (element: VNode) => Promise<VaseUIRenderResult>;
   /**

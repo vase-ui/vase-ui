@@ -1,14 +1,22 @@
 import {
   inject,
   normalizeStyle,
+  onBeforeUpdate,
   onMounted,
+  onUpdated,
   provide,
   shallowRef,
   toValue,
   useAttrs,
   useSlots,
 } from 'vue';
-import type { ComponentPublicInstance, InjectionKey, MaybeRefOrGetter, ShallowRef } from 'vue';
+import type {
+  ComponentPublicInstance,
+  CSSProperties,
+  InjectionKey,
+  MaybeRefOrGetter,
+  ShallowRef,
+} from 'vue';
 import { EMPTY_OBJECT } from '../common/empty';
 import { mergeObjects } from '../common/mergeObjects';
 import { warn } from '../common/warn';
@@ -40,11 +48,18 @@ export function markChildrenMounted(): void {
   }
 }
 
+function hasKeys(value: object | undefined): boolean {
+  for (const key in value) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Makes the props of the element of a part. A part calls it in `setup`.
  * The template of the part calls `elementProps()` and binds the result on its element.
  *
- * @param element The default tag of the part.
+ * @param element The default tag of the part, as a value, a ref or a getter.
  * @param componentProps The reactive props object of the part. Do not destructure it.
  * The composable reads `as`, `stateClass` and `stateStyle`.
  * @param params Other parameters for the element.
@@ -53,7 +68,7 @@ export function useRenderElement<
   State extends Record<string, any>,
   RenderedElementType extends Element = HTMLElement,
 >(
-  element: string,
+  element: MaybeRefOrGetter<string>,
   componentProps: UseRenderElementComponentProps<State>,
   params: UseRenderElementParameters<State, RenderedElementType> = {},
 ): UseRenderElementReturnValue<RenderedElementType> {
@@ -96,6 +111,7 @@ export function useRenderElement<
   function elementProps(): HTMLProps {
     hasCalledElementProps = true;
 
+    const defaultTag = toValue(element);
     const state = toValue(params.state) ?? (EMPTY_OBJECT as State);
     const { class: classAttribute, style: styleAttribute, ...consumerAttrs } = attrs;
 
@@ -122,15 +138,21 @@ export function useRenderElement<
 
     // A style can be a string or an array in Vue, so `mergeObjects` does not fit here.
     const stateStyle = componentProps.stateStyle?.(state);
-    if (styleAttribute || stateStyle) {
-      outProps.style = normalizeStyle([outProps.style, styleAttribute, stateStyle]);
+    const overridingStyle = params.overridingStyle?.();
+    if (styleAttribute || stateStyle || hasKeys(overridingStyle)) {
+      outProps.style = normalizeStyle([
+        outProps.style,
+        styleAttribute,
+        stateStyle,
+        overridingStyle,
+      ]);
     }
 
-    if (!slots.render && (componentProps.as === undefined || componentProps.as === element)) {
-      if (element === 'button' && !('type' in outProps)) {
+    if (!slots.render && (componentProps.as === undefined || componentProps.as === defaultTag)) {
+      if (defaultTag === 'button' && !('type' in outProps)) {
         outProps.type = 'button';
       }
-      if (element === 'img' && !('alt' in outProps)) {
+      if (defaultTag === 'img' && !('alt' in outProps)) {
         outProps.alt = '';
       }
     }
@@ -138,21 +160,27 @@ export function useRenderElement<
     return outProps as HTMLProps;
   }
 
-  onMounted(() => {
-    // A target component can set its exposed `element` after its render.
-    // At mount it has the element, so the callbacks never get the root element of such a target.
-    update();
+  // A target component can set its exposed `element` after its render.
+  // At mount it has the element, so the callbacks never get the root element of such a target.
+  onMounted(update);
 
-    if (process.env.NODE_ENV !== 'production' && slots.render) {
-      if (componentProps.as !== undefined && componentProps.as !== element) {
-        warn(
-          'The `as` prop and the `#render` slot are both set.',
-          'The `#render` slot wins, so `as` has no effect.',
-          'Remove one of them.',
-        );
+  if (process.env.NODE_ENV !== 'production') {
+    let slotWasRendered = false;
+
+    // A part can render its `#render` slot for the first time after the mount.
+    // The checks thus run after each render in which the slot appears.
+    const checkRenderSlot = () => {
+      const slotIsRendered = hasCalledElementProps && slots.render !== undefined;
+      const slotAppeared = slotIsRendered && !slotWasRendered;
+      slotWasRendered = slotIsRendered;
+
+      if (!slotAppeared) {
+        return;
       }
 
-      if (hasCalledElementProps && heldElement === null) {
+      // A target component in the slot can have its element only now.
+      // The part gives that element to the callbacks in its next render.
+      if (heldElement === null && resolveElement(target) === null) {
         warn(
           'The `#render` slot gave no element to the part.',
           'The part cannot find its element, so the behavior that needs the element does not work.',
@@ -161,15 +189,34 @@ export function useRenderElement<
         );
       }
 
-      if (params.children && hasCalledElementProps && !childrenMarker.mounted) {
+      if (params.children && !childrenMarker.mounted) {
         warn(
           'The `#render` slot did not mount `children`.',
           'The part then lacks the nodes of its own, so it does not work.',
           'Mount it in the element: `<component :is="children">`.',
         );
       }
-    }
-  });
+    };
+
+    onBeforeUpdate(() => {
+      hasCalledElementProps = false;
+    });
+    onMounted(() => {
+      if (
+        slots.render &&
+        componentProps.as !== undefined &&
+        componentProps.as !== toValue(element)
+      ) {
+        warn(
+          'The `as` prop and the `#render` slot are both set.',
+          'The `#render` slot wins, so `as` has no effect.',
+          'Remove one of them.',
+        );
+      }
+      checkRenderSlot();
+    });
+    onUpdated(checkRenderSlot);
+  }
 
   return { element: elementRef, elementProps };
 }
@@ -202,6 +249,11 @@ export type UseRenderElementParameters<State, RenderedElementType extends Elemen
    * The part then warns when the slot does not mount `children`.
    */
   children?: boolean | undefined;
+  /**
+   * A function that returns a style of the part that wins over the `style` attribute and
+   * `stateStyle`. The composable merges it last. `undefined` or an empty object adds no style.
+   */
+  overridingStyle?: (() => CSSProperties | undefined) | undefined;
 };
 
 export type UseRenderElementComponentProps<State> = VaseUIComponentProps<State>;

@@ -8,10 +8,14 @@ describe('resolveElement', () => {
   const { render } = createRenderer();
 
   // Renders the target with a function ref and gives the value that Vue gives to the ref.
-  async function getRefValue(Target: Component | FunctionalComponent) {
+  async function getRefValue(
+    Target: Component | FunctionalComponent,
+    props: Record<string, unknown> = {},
+  ) {
     let value: Element | ComponentPublicInstance | null = null;
     const Test = () =>
       h(Target, {
+        ...props,
         ref: (refValue: Element | ComponentPublicInstance | null) => {
           value = refValue;
         },
@@ -85,6 +89,61 @@ describe('resolveElement', () => {
     const value = await getRefValue(Target);
 
     expect(resolveElement(value)).toBe(document.querySelector('[data-testid="root"]'));
+  });
+
+  // The SFC compiler makes one of these two forms from a `<script setup>` component that has no
+  // `defineExpose`. A build with an inline template, such as a production build, makes the first.
+  describe.each([
+    {
+      form: 'no expose call, as a build with an inline template makes it',
+      setup: () => () => <div data-testid="root" />,
+    },
+    {
+      form: 'an empty expose call, as a build with a separate template makes it',
+      setup: (_: unknown, { expose }: { expose: () => void }) => {
+        expose();
+        return () => <div data-testid="root" />;
+      },
+    },
+  ])('a component that has a prop named element and $form', ({ setup }) => {
+    const Target = defineComponent({ props: { element: null }, setup });
+
+    it.each([
+      { name: 'no value', props: {} },
+      { name: 'an element', props: { element: document.createElement('p') } },
+    ])('returns the root element when the prop has $name', async ({ props }) => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const value = await getRefValue(Target, props);
+
+      expect(resolveElement(value)).toBe(document.querySelector('[data-testid="root"]'));
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  it('returns the exposed element of a component that also has a prop named element', async () => {
+    const Target = defineComponent({
+      props: { element: null },
+      setup(_, { expose }) {
+        const inner = shallowRef<Element | null>(null);
+        expose({ element: inner });
+        return () => (
+          <div>
+            <span ref={inner} data-testid="inner" />
+          </div>
+        );
+      },
+    });
+
+    const value = await getRefValue(Target, { element: 'section' });
+
+    expect(resolveElement(value)).toBe(document.querySelector('[data-testid="inner"]'));
+  });
+
+  it('returns the exposed element of a value that has no $props, as a ref on a Vapor component gives it', () => {
+    const element = document.createElement('div');
+
+    expect(resolveElement({ element } as unknown as ComponentPublicInstance)).toBe(element);
   });
 
   it('returns the root element of a component', async () => {
