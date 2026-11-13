@@ -8,7 +8,8 @@ import type { RegisterId } from './LabelableContext';
  *
  * Each part registers one time, by source, and keeps its place. Two parts can have the same `id`,
  * and Vue can mount a part before it unmounts the part that it replaces. A removal by `id` value
- * would then remove the `id` of the new part.
+ * would then remove the `id` of the new part. A source that registers again after its removal goes
+ * to the end. The control registry of a field does this when a control changes.
  */
 export function createIdRegistry<Id = string>(): {
   ids: ComputedRef<Id[]>;

@@ -17,8 +17,7 @@
     "types": ["node", "vitest/browser"],
     "paths": {
       "@vase-ui/vue": ["./src/index.ts"],
-      "@vase-ui/vue/*": ["./src/*"],
-      "#test-utils": ["./test/index.ts"]
+      "@vase-ui/vue/*": ["./src/*"]
     }
   },
   "include": ["src", "test", "scripts", "*.config.ts"],

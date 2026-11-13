@@ -1,0 +1,14 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/toggle-group/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "5b6177ab811720290ec40368dedd1c908f46df1499757a5501d6058c156be696",
+    "hero/css-modules/index.tsx": "c51a612d8a269fcaa21ddd4a86c631a514def0f16837aa2bae9d178569725bea",
+    "multiple/css-modules/index.module.css": "5b6177ab811720290ec40368dedd1c908f46df1499757a5501d6058c156be696",
+    "multiple/css-modules/index.tsx": "7b5cc2e5a14ab05c161449a767dae512800048c6d6661613238833f94fbca37d"
+  },
+  "entryPoints": {
+    "hero": ["toggle"],
+    "multiple": ["toggle"]
+  }
+}

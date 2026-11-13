@@ -2,5 +2,5 @@
   "id": "VUE-4",
   "evidence": ["https://vuejs.org/guide/built-ins/teleport.html"],
   "behavior": "A press in a child popup that `Teleport` moved does not close the parent popup. Escape closes the top popup first.",
-  "dueWith": "packages/react/src/utils/popups/tree/FloatingTree.tsx"
+  "dueWith": "packages/react/src/utils/popups/interactions/useDismiss.ts"
 }
