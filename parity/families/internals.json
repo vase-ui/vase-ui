@@ -5,6 +5,7 @@
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/field-constants/**",
+    "packages/react/src/internals/field-register-control/**",
     "packages/react/src/internals/field-root-context/**",
     "packages/react/src/internals/form-context/**",
     "packages/react/src/internals/getStateAttributesProps.ts",
