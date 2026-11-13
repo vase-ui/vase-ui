@@ -63,6 +63,31 @@ export function nextEvent(
   });
 }
 
+/**
+ * Resolves with the list that the next `getAnimations()` call on the element returns. A part makes
+ * that call when it starts to wait for the animations of the element. It then waits for the
+ * animations of that list, and it attaches to each of them before the test continues.
+ * It fails when no call comes in 3 seconds. The 3 seconds start when the function is called, so
+ * start the action in a timer task or with an event. A command of the browser can take longer.
+ * Call it before the action. With three or more elements in one frame, a part can get the
+ * animations of an element from the root of the tree. This function does not see that read.
+ */
+export function nextAnimationsRead(element: Element): Promise<Animation[]> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      Reflect.deleteProperty(element, 'getAnimations');
+      reject(new Error('No part read the animations of the element in 3 seconds.'));
+    }, 3000);
+    element.getAnimations = (options) => {
+      Reflect.deleteProperty(element, 'getAnimations');
+      clearTimeout(timer);
+      const animations = element.getAnimations(options);
+      resolve(animations);
+      return animations;
+    };
+  });
+}
+
 export function openInTimerTask(open: { value: boolean }) {
   setTimeout(() => {
     open.value = true;
@@ -82,25 +107,70 @@ export interface FrameProbeResult {
   isSameFrame: boolean;
 }
 
+const MINIMUM_EXIT_DURATION = 10_000;
+const SEEK_MARGIN = 50;
+
 /**
  * Tells if a frame paints between the end of the exit animation and the removal of the panel.
+ * The exit must last 100 s. A part reads its animations some frames after the close, and a late
+ * frame can end a short exit before that read. The part then finds no animation to wait for.
+ * The probe calls `close` and waits until the part reads the animations of the panel. Then it
+ * moves each animation to 50 ms before its end. The browser ends the exit in a frame, as it does
+ * for a user, and no call of the test ends it.
  * The reaction to the end reads the time of the timeline and requests one frame. If the removal
  * is done in that frame callback, no frame ran between the end and the removal. The time of the
  * callback shows that it belongs to the frame of the end.
+ * It rejects when the part finds no animation, and when the panel goes before the end of the exit:
+ * the browser then cancels the animation.
+ * The probe reads `isGone` in one callback of the frame of the end. A removal in a later callback
+ * of that frame is before the paint, but the probe reports it as late. A part that waits for
+ * `finished` removes the panel in the microtasks before each callback, so the limit does not
+ * apply to it.
  */
-export function probeFrameAfterExit(panel: HTMLElement, isGone: () => boolean) {
+export async function probeFrameAfterExit(
+  panel: HTMLElement,
+  isGone: () => boolean,
+  close: () => void,
+): Promise<FrameProbeResult> {
+  const read = nextAnimationsRead(panel);
+  close();
+  const animations = await read;
+  if (animations.length === 0) {
+    throw new Error('The part found no exit animation on the panel.');
+  }
+  const endTimes = animations.map((animation) =>
+    Number(animation.effect!.getComputedTiming().endTime),
+  );
+  if (endTimes.some((endTime) => endTime < MINIMUM_EXIT_DURATION)) {
+    throw new Error(
+      'The exit animation of the panel lasts less than 10 seconds. Give the exit a duration of 100 s.',
+    );
+  }
+  animations.forEach((animation, index) => {
+    animation.currentTime = endTimes[index] - SEEK_MARGIN;
+  });
+
   return new Promise<FrameProbeResult>((resolve, reject) => {
-    const animations = panel.getAnimations();
-    if (animations.length === 0) {
-      reject(new Error('The panel has no animation to wait for.'));
-      return;
-    }
-    Promise.all(animations.map((animation) => animation.finished)).then(() => {
-      const endTime = Number(document.timeline.currentTime);
-      requestAnimationFrame((frameTime) => {
-        resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
-      });
-    }, reject);
+    const timer = setTimeout(() => {
+      reject(new Error('The exit animation did not end in 3 seconds.'));
+    }, 3000);
+    Promise.all(animations.map((animation) => animation.finished)).then(
+      () => {
+        clearTimeout(timer);
+        const endTime = Number(document.timeline.currentTime);
+        requestAnimationFrame((frameTime) => {
+          resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
+        });
+      },
+      () => {
+        clearTimeout(timer);
+        reject(
+          new Error(
+            'The browser canceled the exit animation. The panel went before the end of the exit.',
+          ),
+        );
+      },
+    );
   });
 }
 

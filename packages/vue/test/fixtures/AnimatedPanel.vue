@@ -163,4 +163,11 @@ defineExpose({ element });
     opacity: 0;
   }
 }
+
+/* The exit of a panel that a test moves to its end must not end by itself. A late frame can end a
+   short exit before the part reads its animations. */
+.animated-panel-long-exit[data-ending-style] {
+  transition-duration: 100s;
+  animation-duration: 100s;
+}
 </style>
