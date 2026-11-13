@@ -193,7 +193,7 @@ test('the description of a part is the JSDoc of its export', () => {
   assert.equal(part('Sample.Popup').description, '');
 });
 
-test('the parts follow the types.md, and a part with no export or no component is left out', () => {
+test('the parts keep the sequence of the file, and a part with no export or no component is left out', () => {
   const [root, popup] = types.parts;
   const file = {
     ...types,
@@ -286,6 +286,13 @@ test('the reference of button has the prop disabled and the attribute data-disab
   assert.deepEqual(button.dataAttributes, [
     { name: 'data-disabled', type: null, description: 'Present when the button is disabled.' },
   ]);
+});
+
+test('the reference of progress has its parts in the sequence of the Base UI page', () => {
+  assert.deepEqual(
+    read('progress').parts.map(({ name }) => name),
+    ['Progress.Root', 'Progress.Track', 'Progress.Indicator', 'Progress.Value', 'Progress.Label'],
+  );
 });
 
 test('the reference of separator has data-orientation with its type', () => {

@@ -1,5 +1,6 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { docsFolderOf } from '../parity/checkSurface.ts';
+import type { FamilyExtract } from '../parity/parityFiles.ts';
 import { VASE_SOURCE_ROOT } from '../parity/paths.ts';
 import {
   extractCommand,
@@ -9,7 +10,7 @@ import {
   REPOSITORY_ROOT,
 } from '../parity/repository.ts';
 import type { FamilyFiles } from '../parity/repository.ts';
-import type { SurfaceFile } from '../parity/typesMd.ts';
+import type { SurfaceFile, SurfacePart } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import type {
   ComponentSurface,
@@ -101,7 +102,7 @@ function constantsOf(project: VaseProject, entryFile: string, namespace: string)
 }
 
 /**
- * The parts of a `types.md`, in its sequence. A part with no export in the entry file is left out,
+ * The parts of `file`, in their sequence. A part with no export in the entry file is left out,
  * and so is an export that is not a component from a `.vue` file. `pnpm parity:check` reports both.
  */
 export function buildApiParts(
@@ -168,6 +169,21 @@ export function buildApiTypes(
   });
 }
 
+/**
+ * Puts the parts of a `types.md` in the sequence of the `<Types…>` tags of the Base UI page in the
+ * same folder. The tag `TypesProgress.Root` names the part `Root`. A part that no tag names comes
+ * last, in the sequence of the `types.md`.
+ */
+function sortPartsByPage(file: SurfaceFile, pages: FamilyExtract['pages']): SurfaceFile {
+  const page = pages.find((row) => dirname(row.file) === dirname(file.file));
+  const titles = (page?.referenceTags ?? []).flatMap((tag) => tag.split('.').slice(1));
+  const place = ({ name }: SurfacePart): number => {
+    const index = titles.indexOf(name);
+    return index === -1 ? titles.length : index;
+  };
+  return { ...file, parts: [...file.parts].sort((a, b) => place(a) - place(b)) };
+}
+
 /** Returns a function from a family name to the API reference of the family. The first call makes the project. */
 export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: string) => ApiReference {
   let project: VaseProject | undefined;
@@ -189,7 +205,8 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         `There is no family file ${familyFile(family)}, but the site has a page for ${family}. Add the family file.`,
       );
     }
-    const typesFiles = files.extract?.surface ?? [];
+    const pages = files.extract?.pages ?? [];
+    const typesFiles = (files.extract?.surface ?? []).map((file) => sortPartsByPage(file, pages));
     if (typesFiles.length === 0) {
       throw new Error(
         `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
