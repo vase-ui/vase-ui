@@ -16,7 +16,7 @@ const attr = createAttribute('portal');
 export type FloatingPortalContainer =
   HTMLElement | ShadowRoot | ComponentPublicInstance | null | undefined;
 
-export interface UseFloatingPortalNodeParameters {
+export interface UseFloatingPortalNodeProps {
   /**
    * The container of the portal element, as the `container` prop of the part gives it. The prop
    * can be an element, a shadow root, a component, or a ref or a getter for one of them.
@@ -31,7 +31,7 @@ export interface UseFloatingPortalNodeParameters {
   componentProps: UseRenderElementComponentProps<any>;
 }
 
-export interface UseFloatingPortalNodeReturnValue extends UseRenderElementReturnValue {
+export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue {
   /**
    * The element that the `Teleport` of the part renders into, or `null` while the part renders
    * no `Teleport`. It is `null` on a server and until the part is mounted.
@@ -48,7 +48,7 @@ function isShadowRoot(value: object): value is ShadowRoot {
 }
 
 function resolveContainer(
-  container: UseFloatingPortalNodeParameters['container'],
+  container: UseFloatingPortalNodeProps['container'],
   parentPortalNode: Readonly<Ref<HTMLElement | null>> | undefined,
 ): HTMLElement | ShadowRoot | null {
   const prop = toValue(container);
@@ -68,8 +68,8 @@ function resolveContainer(
  * to `containerElement`, and the portal element is inside that `Teleport`.
  */
 export function useFloatingPortalNode(
-  params: UseFloatingPortalNodeParameters,
-): UseFloatingPortalNodeReturnValue {
+  params: UseFloatingPortalNodeProps,
+): UseFloatingPortalNodeResult {
   const uniqueId = useId();
   const parentPortalNode = usePortalContext()?.portalNode;
 
