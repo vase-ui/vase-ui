@@ -1,0 +1,10 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/tabs/demos",
+  "files": {
+    "animated-panels/css-modules/index.module.css": "6db706c2bc4f9552fa6786b24bd31807a87bd72677c584e30db964dfb23c9134",
+    "animated-panels/css-modules/index.tsx": "75da4e3669a696e418de1f9c4baaffb9ec9cdc9473d2fa876df9a4bc58a97f98",
+    "hero/css-modules/index.module.css": "e1be52846a463c6b9742f41872f105cf17117a23253bd90ceafd42e9b51069c9",
+    "hero/css-modules/index.tsx": "8fe32caa2efc31fc3c0d8394346aa170c98b8e850b5569ed0abd97cff005335a"
+  }
+}
