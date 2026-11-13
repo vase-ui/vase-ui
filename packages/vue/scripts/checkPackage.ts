@@ -12,6 +12,7 @@ process.chdir(fileURLToPath(new URL('..', import.meta.url)));
 const PACKAGE_DIRECTORY = '.package-check';
 const DIST_DIRECTORY = `${PACKAGE_DIRECTORY}/dist`;
 const CONSUMER_DIRECTORY = 'test/package-check/consumer';
+const SOURCE_ROOTS = ['src', 'test/package-check/src'];
 const PREPACK_FILES = ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md'];
 
 function runBin(name: string, args: string[]): void {
@@ -51,13 +52,13 @@ async function main(): Promise<void> {
   }
 
   console.log('[2/9] Build the package with the fixture families');
-  writeBarrel('test/package-check/index.ts', ['src', 'test/package-check/src']);
+  writeBarrel('test/package-check/index.ts', SOURCE_ROOTS);
   const entry = {
     index: 'test/package-check/index.ts',
     ...familyEntries('src'),
     ...familyEntries('test/package-check/src'),
   };
-  await buildPackage({ ...buildOptions(entry, DIST_DIRECTORY), config: false });
+  await buildPackage({ ...buildOptions(entry, DIST_DIRECTORY, SOURCE_ROOTS), config: false });
   const builtFiles = readdirSync(DIST_DIRECTORY, { encoding: 'utf8', recursive: true }).filter(
     (file) => file.endsWith('.js'),
   );
@@ -118,10 +119,13 @@ async function main(): Promise<void> {
   console.log('[9/9] Bundle the consumer files and load the package in Node');
   const singlePart = await bundleConsumerFile('singlePart.ts');
   const multiPartRoot = await bundleConsumerFile('multiPartRoot.ts');
+  const scriptedPart = await bundleConsumerFile('scriptedPart.ts');
   expectContent('singlePart.ts', singlePart, 'data-single-part', true);
   expectContent('singlePart.ts', singlePart, 'data-multi-part', false);
   expectContent('multiPartRoot.ts', multiPartRoot, 'data-multi-part-root', true);
   expectContent('multiPartRoot.ts', multiPartRoot, 'data-single-part', false);
+  expectContent('scriptedPart.ts', scriptedPart, 'data-scripted-part', true);
+  expectContent('scriptedPart.ts', scriptedPart, 'data-scripted-part-ran', false);
   console.log(
     `  multiPartRoot.ts: ${multiPartRoot.includes('data-multi-part-item') ? 'has' : 'has no'} data-multi-part-item (not asserted)`,
   );

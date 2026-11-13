@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { createApp, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -18,6 +18,7 @@ import {
 } from '#test-utils';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
 import type { ScrollAreaRootContext } from '../root/ScrollAreaRootContext';
+import { SCROLL_TIMEOUT } from '../constants';
 import ScrollAreaScrollbarHydration from './ScrollAreaScrollbarHydration.test.vue';
 
 // `data-id` holds an id that Vue generates, so it can differ between two apps.
@@ -94,6 +95,79 @@ describe('<ScrollArea.Scrollbar />', () => {
     );
 
     expect(screen.getByTestId('scrollbar')).toBeInTheDocument();
+  });
+
+  describe('data-scrolling attribute', () => {
+    const { render: renderWithFakeTimers } = createRenderer();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('adds [data-scrolling] attribute when viewport is scrolled in the correct direction', async () => {
+      await renderWithFakeTimers(
+        <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" data-testid="vertical" keepMounted />
+          <ScrollArea.Scrollbar orientation="horizontal" data-testid="horizontal" keepMounted />
+          <ScrollArea.Corner />
+        </ScrollArea.Root>,
+      );
+
+      const verticalScrollbar = screen.getByTestId('vertical');
+      const horizontalScrollbar = screen.getByTestId('horizontal');
+      const viewport = screen.getByTestId('viewport');
+
+      expect(verticalScrollbar).not.toHaveAttribute('data-scrolling');
+      expect(horizontalScrollbar).not.toHaveAttribute('data-scrolling');
+
+      await fireEvent.pointerEnter(viewport);
+      await fireEvent.scroll(viewport, {
+        target: {
+          scrollTop: 1,
+        },
+      });
+
+      expect(verticalScrollbar).toHaveAttribute('data-scrolling', '');
+      expect(horizontalScrollbar).not.toHaveAttribute('data-scrolling', '');
+
+      await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT - 1);
+      await flushMicrotasks();
+
+      expect(verticalScrollbar).toHaveAttribute('data-scrolling', '');
+      expect(horizontalScrollbar).not.toHaveAttribute('data-scrolling', '');
+
+      await fireEvent.pointerEnter(viewport);
+      await fireEvent.scroll(viewport, {
+        target: {
+          scrollLeft: 1,
+        },
+      });
+
+      await vi.advanceTimersByTimeAsync(1); // vertical just finished
+      await flushMicrotasks();
+
+      expect(verticalScrollbar).not.toHaveAttribute('data-scrolling');
+      expect(horizontalScrollbar).toHaveAttribute('data-scrolling');
+
+      await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT - 2); // already ticked 1ms above
+      await flushMicrotasks();
+
+      expect(verticalScrollbar).not.toHaveAttribute('data-scrolling');
+      expect(horizontalScrollbar).toHaveAttribute('data-scrolling');
+
+      await vi.advanceTimersByTimeAsync(1);
+      await flushMicrotasks();
+
+      expect(verticalScrollbar).not.toHaveAttribute('data-scrolling');
+      expect(horizontalScrollbar).not.toHaveAttribute('data-scrolling');
+    });
   });
 
   describe('data-hovering attribute', () => {

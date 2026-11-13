@@ -1,0 +1,1088 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/*",
+    "packages/react/src/utils/popups/floating-root/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
+    "packages/react/src/utils/popups/CommonTriggerDataAttributes.ts",
+    "packages/react/src/utils/popups/InternalBackdrop.tsx",
+    "packages/react/src/utils/popups/NullStore.ts",
+    "packages/react/src/utils/popups/constants.ts",
+    "packages/react/src/utils/popups/createAttribute.ts",
+    "packages/react/src/utils/popups/createEventEmitter.ts",
+    "packages/react/src/utils/popups/element.ts",
+    "packages/react/src/utils/popups/event.ts",
+    "packages/react/src/utils/popups/floating-root/FloatingRootStore.ts",
+    "packages/react/src/utils/popups/floating-root/dispatchOpenChange.ts",
+    "packages/react/src/utils/popups/floating-root/getEmptyRootStore.ts",
+    "packages/react/src/utils/popups/floating-root/useFloatingRootStore.ts",
+    "packages/react/src/utils/popups/inlineRect.ts",
+    "packages/react/src/utils/popups/popupHandle.ts",
+    "packages/react/src/utils/popups/popupPositioner.ts",
+    "packages/react/src/utils/popups/popupRoot.tsx",
+    "packages/react/src/utils/popups/popupStateMapping.ts",
+    "packages/react/src/utils/popups/popupStoreUtils.ts",
+    "packages/react/src/utils/popups/popupTriggerMap.ts",
+    "packages/react/src/utils/popups/store.ts",
+    "packages/react/src/utils/popups/types.ts",
+    "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
+    "packages/react/src/utils/popups/usePopupHandleStore.ts",
+    "packages/react/src/utils/popups/useTriggerFocusGuards.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/utils/popups/popupStoreUtils.spec.ts",
+    "packages/react/src/utils/popups/store.spec.ts"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/element.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "isEventTargetWithin"
+          ],
+          "title": "treats a shadow-contained target as within when the event lacks composedPath"
+        },
+        {
+          "describe": [
+            "isEventTargetWithin"
+          ],
+          "title": "returns false for an outside target when the event lacks composedPath"
+        },
+        {
+          "describe": [
+            "isEventTargetWithin"
+          ],
+          "title": "returns true for a light-DOM child when the event lacks composedPath"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/event.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "recognizes a pressureless 1x1 mouse pointerdown as a screen reader press"
+        },
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "ignores a pressed mouse"
+        },
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "recognizes a TalkBack press with a pressed button on Android"
+        },
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "ignores the same shape on other pointer types"
+        },
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "ignores the same shape on events other than pointerdown"
+        },
+        {
+          "describe": [
+            "isVirtualPointerEvent"
+          ],
+          "title": "recognizes an iOS VoiceOver touch"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/floating-root/useFloatingRootStore.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useFloatingRootStore"
+          ],
+          "title": "follows the anchor when it changes after the first render"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/inlineRect.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "clears stored coords on focus"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "stores undefined when the trigger does not wrap"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "updates stored coords on mouse move while closed"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "does not update stored coords on mouse move while open"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "does not update stored coords on mouse enter while open"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "updates stored coords from a native mouse event while open"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "creates inline middleware rects from the hovered line"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "reuses the captured line index if client coordinates become stale"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "uses the edge-aligned rect for right placements"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "uses the edge-aligned rect for left placements"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "uses the fallback rect for disjoint two-line rects when coords miss"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "does not create inline rects when the reference does not wrap"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "does not run when the reference has no client rects"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "does not reset when the inline rect matches the current reference rect"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "ignores stored coords from a different element"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "accepts stored coords from a virtual reference context element"
+        },
+        {
+          "describe": [
+            "inlineRect"
+          ],
+          "title": "converts client-space inline rects through the positioning platform"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/popupHandle.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "BasePopupHandle",
+            "store attachment"
+          ],
+          "title": "exposes the fallback store until a root store attaches, and again after it detaches"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "store attachment"
+          ],
+          "title": "notifies subscribers only when the exposed store changes"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "store attachment"
+          ],
+          "title": "restores control to the most recently attached root that is still attached"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "store attachment"
+          ],
+          "title": "stays attached when the same root store detaches and reattaches (Strict Mode replay)"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "overlapping roots warning"
+          ],
+          "title": "warns when more than one root is still attached a frame later"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "overlapping roots warning"
+          ],
+          "title": "does not warn when $name before the next frame"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "overlapping roots warning"
+          ],
+          "title": "does not warn for a single attached root"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "imperative methods while no root is attached"
+          ],
+          "title": "ignores open() and close() with a warning before a root attaches and after it detaches"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "opens the attached root with the trigger registered in its store"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "resolves a trigger that is still registered in $location"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "prefers the newest attached store when several register the same id"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "opens without a trigger when the id is $triggerId"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "throws for an unregistered trigger id by default and does not open"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "open()"
+          ],
+          "title": "opens unassociated with a warning for an unregistered trigger id when throwing is disabled"
+        },
+        {
+          "describe": [
+            "BasePopupHandle",
+            "close()"
+          ],
+          "title": "closes the attached root"
+        },
+        {
+          "describe": [
+            "concrete popup handles"
+          ],
+          "title": "$component handle is closed and names itself in warnings while no root is attached"
+        },
+        {
+          "describe": [
+            "concrete popup handles"
+          ],
+          "title": "$component handle ignores openWithPayload() with a warning while detached"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/popupRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "claims the only registered trigger when a closed popup opens"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "does not claim the only registered trigger when the popup opened without a trigger"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "claims the only registered trigger again after a trigger-less open is closed by a controlled prop"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "does not let a trigger registering into an open trigger-less popup claim it"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "lets a trigger registering into a popup opened by a controlled prop claim it"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "closes when an implicitly claimed trigger unmounts during the claim commit"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "closes when the active trigger unregisters while open"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "keeps the popup open when ownership returns to a pending trigger after %s"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "closes when the active trigger unmounts after registering in a count-neutral commit"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "keeps the popup open when the active trigger is replaced with the same id"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "keeps the popup open when the active trigger element is registered with another id"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "reassociates the active trigger when ownership moves to another rendered-id trigger while open"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "preserves active trigger ownership without closing by default"
+        },
+        {
+          "describe": [
+            "useImplicitActiveTrigger"
+          ],
+          "title": "resets triggerCount when the popup closes"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/popupStateMapping.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "popupStateMapping"
+          ],
+          "title": "emits the open and closed data attributes"
+        },
+        {
+          "describe": [
+            "popupStateMapping"
+          ],
+          "title": "emits the anchor-hidden data attribute only when the anchor is hidden"
+        },
+        {
+          "describe": [
+            "popupStateMapping"
+          ],
+          "title": "emits the trigger data attributes only while open"
+        },
+        {
+          "describe": [
+            "popupStateMapping"
+          ],
+          "title": "emits the pressed data attribute on pressable triggers only while open"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/popupStoreUtils.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "stores and retrieves elements by id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "replaces a registered element when the id is reused"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "deletes an element and no longer matches it"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration"
+          ],
+          "title": "registers and unregisters closed triggers through the context map without notifying the store"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration"
+          ],
+          "title": "re-registers closed triggers when the trigger id changes without notifying the store"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration"
+          ],
+          "title": "returns a stable callback that unregisters from the store it registered in"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration",
+            "callers that pass the callback straight into a ref"
+          ],
+          "title": "registers once the id resolves after the first commit"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration",
+            "callers that pass the callback straight into a ref"
+          ],
+          "title": "follows an id change"
+        },
+        {
+          "describe": [
+            "useTriggerRegistration"
+          ],
+          "title": "keeps triggerCount reactive while the popup is open"
+        },
+        {
+          "describe": [
+            "popupId selector"
+          ],
+          "title": "uses the default popup id as the popup id"
+        },
+        {
+          "describe": [
+            "popupId selector"
+          ],
+          "title": "omits the popup id when the default popup id is empty"
+        },
+        {
+          "describe": [
+            "popupId selector"
+          ],
+          "title": "prefers an explicit popup element id over the default popup id"
+        },
+        {
+          "describe": [
+            "popupId selector"
+          ],
+          "title": "associates a lone trigger with the popup id unless the popup opened without a trigger"
+        },
+        {
+          "describe": [
+            "usePopupInteractionProps"
+          ],
+          "title": "clears stored interaction props when unmounting"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "adds and retrieves elements by id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "replaces an existing element when the id is reused"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "deletes elements by id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "does not duplicate when the same element is added twice with the same id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "throws in non-production when the same element is registered under multiple ids"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "allows re-registering an element under a new id after it was deleted"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "keeps an unrelated element claim when another id is deleted"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "allows an element evicted by id reuse to register under a new id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "still throws when a re-added element is registered under a second id"
+        },
+        {
+          "describe": [
+            "PopupTriggerMap"
+          ],
+          "title": "does not throw in production when the same element is registered under multiple ids",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/store.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "isOpenedByTrigger"
+          ],
+          "title": "uses the controlled open state when present"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "isOpenedByTrigger"
+          ],
+          "title": "uses the internal open state when uncontrolled"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "isOpenedByTrigger"
+          ],
+          "title": "requires the trigger to be active"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "transitionStatus"
+          ],
+          "title": "reports the starting phase while the popup is open but not yet mounted"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "transitionStatus"
+          ],
+          "title": "uses the controlled open state to detect the starting phase"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "transitionStatus"
+          ],
+          "title": "keeps the stored status once the opening cycle is mounted"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "transitionStatus"
+          ],
+          "title": "does not start a new enter phase when an exit is reversed"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors",
+            "transitionStatus"
+          ],
+          "title": "keeps the stored status while the popup is closed"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "positionerElement"
+          ],
+          "title": "reports the positioner while the popup is mounted"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "positionerElement"
+          ],
+          "title": "withholds the positioner while an opening popup is not mounted yet"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "positionerElement"
+          ],
+          "title": "reports a keepMounted positioner while the popup is closed"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "anchor"
+          ],
+          "title": "returns the anchor override when one is set"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "anchor"
+          ],
+          "title": "falls back to the active trigger while the popup is mounted"
+        },
+        {
+          "describe": [
+            "popupStoreSelectors elements",
+            "anchor"
+          ],
+          "title": "is null without an anchor override while the popup is unmounted"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "calls onOpenChange, notifies interactions, prepares and commits once, in that order"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "commits the open state, the reason and the extra state together"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "stops a cancelled change before it is prepared, notified or committed"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "does not call onOpenChange for an ignored change"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "drops a close request while $name, reporting only that it was dropped"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "runs a close request $name"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports the active trigger for a close request that carries none by default"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports no trigger when the active trigger has left the document"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports the registered element of the active trigger over a stale one"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports no trigger for a close request that carries none while no trigger is active"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports the close trigger the store names for a close request that carries none"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "reports no trigger when the close trigger the store names has left the document"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps the popup mounted when onOpenChange prevents unmounting on close"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a request to keep the popup mounted from a cancelled close"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a request to keep the popup mounted from an open change"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a late request to keep the popup mounted from a cancelled close"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps the popup mounted when the close asks for it after it is committed"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps a controlled popup mounted when the close asks for it before the prop closes it"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps an earlier close's request to stay mounted when a later close commits before the prop closes the popup"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "applies a late request from a close after a later close commits under a lagging prop"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "lets the next open clear a late request made after the popup unmounted"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps a late request from a close when an open request arrives while the prop still shows the popup"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps a late request from a close when a later close is dropped"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "keeps a late request from a close when an open request arrives that the prop does not apply"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a late request to keep the popup mounted from an open change"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a late request to keep the popup mounted once the open prop reopens it"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "setOpen"
+          ],
+          "title": "ignores a late request to keep the popup mounted once a later change is committed"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "interaction notification"
+          ],
+          "title": "reports the change, the trigger named for the close and whether the popup is nested"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "interaction notification"
+          ],
+          "title": "keeps the event of a click open when a hover open follows"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "interaction notification"
+          ],
+          "title": "replaces the event of a hover open with a click that follows"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "interaction notification"
+          ],
+          "title": "clears the open event on close"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "anchor sync"
+          ],
+          "title": "keeps the DOM reference once the popup unmounts and the active trigger is gone"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "anchor sync"
+          ],
+          "title": "moves an anchor override that followed the previous trigger to the new one"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "anchor sync"
+          ],
+          "title": "keeps a virtual anchor override when the trigger switches"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "resetOnUnmount"
+          ],
+          "title": "clears the trigger and applies the store's own unmount state once closed"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "resetOnUnmount"
+          ],
+          "title": "keeps the trigger of a request made after the close while open is true"
+        },
+        {
+          "describe": [
+            "BasePopupStore",
+            "clearPositioning"
+          ],
+          "title": "clears the anchor element and the anchor override in one update, keeping the positioner"
+        },
+        {
+          "describe": [
+            "getHoverPopupInstantType"
+          ],
+          "title": "maps $name"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "clears a previous unmount-prevention request when opening"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "sets the unmount-prevention request when closing"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "preserves the active trigger when closing without a trigger"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "keeps the active trigger id when a close names the active trigger"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "keeps the trigger id a controlled `triggerId` resolves to when a close names the active trigger"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "makes a different trigger that a close names the active one"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "records whether an open request carried a trigger"
+        },
+        {
+          "describe": [
+            "createPopupOpenState"
+          ],
+          "title": "keeps the trigger-less open flag through a close request"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useTriggerFocusGuards",
+            "$name",
+            "tabbing %s"
+          ],
+          "title": "preserves the tab destination after the exit transition with finalFocus as a %s and trigger tabIndex=%s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useTriggerFocusGuards",
+            "$name",
+            "tabbing %s"
+          ],
+          "title": "uses the current tab order when an adjacent control is %s during close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useTriggerFocusGuards",
+            "$name",
+            "tabbing %s"
+          ],
+          "title": "preserves the surrounding modal dialog focus trap",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useTriggerFocusGuards",
+            "$name",
+            "tabbing %s"
+          ],
+          "title": "returns focus to the trigger when no outside element is tabbable and trigger tabIndex=%s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}
