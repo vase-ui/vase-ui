@@ -348,6 +348,7 @@ Rules:
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
+- A trigger part of a popup family, such as `Popover.Trigger`, is such a part. Its `payload` thus has the type `unknown` in a template and in TSX, and the part does not check `payload` against `handle`.
 
 ### State and `v-model`
 
@@ -616,6 +617,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
 - `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
 - A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
+- A family store keeps a timer of its own in `context` as a `Timeout`. Its root clears the timer in `onScopeDispose`.
 - `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
 - A function that works with the store of any family types its parameter as `PopupTriggerDataStore<State>`, or as a `ReactiveStore<State, PopupStoreContext<never>, PopupStoreSelectors>` plus the members that it calls. A parameter of the type `BasePopupStore<…>` refuses a family store with other change event details. It also refuses a family store with a step that returns only keys that the family adds.
 - A part with no popup store calls `useFloatingRootStore` in `setup` and gives it `open`, because `setOpen` of the store only calls `onOpenChange`.
@@ -640,7 +642,8 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
-- `popupRoot.ts` has `usePopupRoot` and `useImplicitActiveTrigger`. The pull request that first needs `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot` or `usePopupRootSync` adds it with its cases.
+- `popupRoot.ts` has `usePopupRoot` and `useImplicitActiveTrigger`. The pull request that first needs `usePopupRootWithPopupId` or `useSingleAnchorPopupRoot` adds it with its cases.
+- `popupRoot.ts` also has `usePopupRootSync(store, open)`. A root whose store keeps `openMethod` calls it. It clears `openMethod` when the popup closes and when the root unmounts. A root that `KeepAlive` holds keeps `openMethod`.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -652,6 +655,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
+- A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.

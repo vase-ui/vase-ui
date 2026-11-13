@@ -1,0 +1,2718 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/popover/**",
+    "docs/src/app/(docs)/react/components/popover/**"
+  ],
+  "sources": [
+    "packages/react/src/popover/arrow/PopoverArrow.tsx",
+    "packages/react/src/popover/arrow/PopoverArrowDataAttributes.ts",
+    "packages/react/src/popover/backdrop/PopoverBackdrop.tsx",
+    "packages/react/src/popover/backdrop/PopoverBackdropDataAttributes.ts",
+    "packages/react/src/popover/close/PopoverClose.tsx",
+    "packages/react/src/popover/description/PopoverDescription.tsx",
+    "packages/react/src/popover/index.parts.ts",
+    "packages/react/src/popover/index.ts",
+    "packages/react/src/popover/popup/PopoverPopup.tsx",
+    "packages/react/src/popover/popup/PopoverPopupCssVars.ts",
+    "packages/react/src/popover/popup/PopoverPopupDataAttributes.ts",
+    "packages/react/src/popover/portal/PopoverPortal.tsx",
+    "packages/react/src/popover/portal/PopoverPortalContext.ts",
+    "packages/react/src/popover/positioner/PopoverPositioner.tsx",
+    "packages/react/src/popover/positioner/PopoverPositionerContext.ts",
+    "packages/react/src/popover/positioner/PopoverPositionerCssVars.ts",
+    "packages/react/src/popover/positioner/PopoverPositionerDataAttributes.ts",
+    "packages/react/src/popover/root/PopoverRoot.tsx",
+    "packages/react/src/popover/root/PopoverRootContext.ts",
+    "packages/react/src/popover/store/PopoverHandle.ts",
+    "packages/react/src/popover/store/PopoverStore.ts",
+    "packages/react/src/popover/title/PopoverTitle.tsx",
+    "packages/react/src/popover/trigger/PopoverTrigger.tsx",
+    "packages/react/src/popover/trigger/PopoverTriggerDataAttributes.ts",
+    "packages/react/src/popover/utils/closePart.tsx",
+    "packages/react/src/popover/utils/constants.ts",
+    "packages/react/src/popover/viewport/PopoverViewport.tsx",
+    "packages/react/src/popover/viewport/PopoverViewportCssVars.ts",
+    "packages/react/src/popover/viewport/PopoverViewportDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/popover/positioner/PopoverPositioner.spec.tsx",
+    "packages/react/src/popover/root/PopoverRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/popover/arrow/PopoverArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Arrow />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/backdrop/PopoverBackdrop.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Backdrop />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Backdrop />"
+          ],
+          "title": "does not start an entry phase when initially open (controlled=%s)"
+        },
+        {
+          "describe": [
+            "<Popover.Backdrop />"
+          ],
+          "title": "sets `pointer-events: none` style on backdrop if opened by hover"
+        },
+        {
+          "describe": [
+            "<Popover.Backdrop />"
+          ],
+          "title": "does not set `pointer-events: none` style on backdrop if opened by click"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/close/PopoverClose.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "renders when popover is closed"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "should close popover when clicked"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "keeps the trigger when closing with a tooltip trigger close button"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "falls back to the active trigger element when the active trigger id is unregistered"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "reports no trigger when the active trigger id has no mounted trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "enables modal focus management when `modal=%s` and close is rendered"
+        },
+        {
+          "describe": [
+            "<Popover.Close />"
+          ],
+          "title": "does not enable modal focus management when close is not rendered"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/description/PopoverDescription.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Description />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Description />"
+          ],
+          "title": "describes the popup element with its id"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Popover.Root>"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Popover.Positioner>"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "title": "should render the children"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "suite": "popupFocusPropsTests"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />"
+          ],
+          "title": "focuses the popup when the active element becomes display:none",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Popup />",
+            "openOnHover: delay + click"
+          ],
+          "title": "returns focus to the trigger if opened by click before the hover delay completes"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />",
+            "inside a toolbar"
+          ],
+          "title": "does not relay composite keys from the popup to the toolbar"
+        },
+        {
+          "describe": [
+            "<Popover.Popup />",
+            "inside a toolbar"
+          ],
+          "title": "keeps composite keys working inside the popup content"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/popup/PopoverPopupTransitionState.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Popover popup transition state"
+          ],
+          "title": "starts each opening once when the popup is kept mounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/portal/PopoverPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Portal />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/positioner/PopoverPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Popover.Portal>"
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "suite": "positionerConformanceTests"
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "remains anchored if keepMounted=false",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "remains anchored if keepMounted=true",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "does not follow the anchor when its ancestor scrolls",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "observes a custom anchor for keepMounted auto-updates",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />"
+          ],
+          "title": "remains anchored to the trigger when closing from a tooltip trigger close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the anchor center for center alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the popup start edge for start alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the popup logical start edge for start alignment in RTL",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "uses the floating element direction for RTL alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the popup end edge for end alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the popup logical end edge for end alignment in RTL",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "places the side coordinate first for horizontal sides",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the popup end edge for horizontal end alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "accounts for sideOffset",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "accounts for sideOffset on top side",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "keeps the popup start edge as the origin with alignOffset",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "does not let the virtual arrow displace the popup on a narrow anchor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the flipped edge when the alignment flips",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "keeps the popup start edge as the origin for a 1px cross-axis shift",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the anchor center when start alignment is shifted on the cross axis",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the anchor center when end alignment is shifted on the cross axis",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the anchor center when horizontal alignment is shifted on the cross axis",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the arrow when present regardless of alignment",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Positioner />",
+            "transform origin"
+          ],
+          "title": "points to the anchor center when the popup is shifted to overlap the anchor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "opens by trigger from a descendant layout effect on initial mount"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "hands off hover between detached triggers when the rendered component retains a stale ref"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "keeps registration on the attached store when a stale-ref component swaps its host node"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "does not detach the consumer ref when the handle attaches to a root"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "suite": "detachedTriggersConformanceTests"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when a click opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when a touch press opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when a modal popup closes from Popover.Close"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when the popup moves to another trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers",
+            "with openOnHover"
+          ],
+          "title": "when a hover opens the popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "does not re-render inactive triggers",
+            "with openOnHover"
+          ],
+          "title": "when a press takes over a hover-opened popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "after a prop-only reopen"
+          ],
+          "title": "keeps the popup open when the last hovered trigger is pressed"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "dismisses a keyboard-reopened popup on a virtual outside click after a touch session"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "returns focus to the active trigger when opening programmatically from body focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "returns focus to the previous element when the trigger unmounts while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not apply the trigger-change instant to a hover close after switching triggers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not apply the trigger-change instant to a non-hover close after switching triggers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not apply the trigger-change instant after switching back to the original trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not restore the trigger-change instant after a reopen on the same trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not apply the trigger-change instant to a prop-driven close after a switch",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not restore the trigger-change instant when a controlled close commits late",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "does not restore the trigger-change instant after a hover close has started",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "renders focus guards around the active detached trigger and reports it on close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "keeps positioning correct when conditional triggers unmount and the tree remounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/root/PopoverRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Root />",
+            "closing before the popup attaches"
+          ],
+          "title": "waits for the closing animation once the popup attaches",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "closing before the popup attaches"
+          ],
+          "title": "unmounts the popup when a layout effect closes it on mount"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "closing before the popup attaches"
+          ],
+          "title": "unmounts the popup when a layout effect closes it right after a press opens it"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "hover intent across opens"
+          ],
+          "title": "closes a later hover open on leave after a press inside an earlier one"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name"
+          ],
+          "title": "should render the children"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should close when the anchor is clicked twice"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "rewires dismiss interactions after closing and reopening"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "should call onChange when the open state changes"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "unmounts on a normal close after preventUnmountOnClose and external reopen"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "does not close after hovering out of a popup opened externally"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "closes after hovering out of a popup opened by its trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "cleans up the safe polygon handler after a hover-opened popup becomes click-sticky"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested menu interactions"
+          ],
+          "title": "keeps the popover open when a nested menu opens via Enter using a shared container"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested menu interactions"
+          ],
+          "title": "keeps the popover open when a nested menu opens via pointer using a shared container"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: defaultOpen"
+          ],
+          "title": "remains uncontrolled, so a trigger click closes it"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: defaultOpen"
+          ],
+          "title": "does not close after hovering out of a popup opened without trigger hover"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: delay"
+          ],
+          "title": "should open after delay with rest type by default"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: closeDelay"
+          ],
+          "title": "should close after delay"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "hover close transitions"
+          ],
+          "title": "reopens immediately when re-hovering the trigger during a hover close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "onOpenChange cancel() prevents closing from a close press without changing the trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "unmounts on a later normal close after a preventUnmountOnClose cycle and reopen"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management"
+          ],
+          "title": "focuses the trigger after the popover is closed but not unmounted"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management"
+          ],
+          "title": "restores temporarily disabled focus before focusing a reopened keepMounted popover"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management"
+          ],
+          "title": "does not move focus to the popover when opened with hover"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management"
+          ],
+          "title": "does not change focus when opened with hover and closed"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup following immediately the only trigger"
+          ],
+          "title": "moves focus to the element following the trigger, excluding the popup, when tabbing forward from the open popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup following immediately the only trigger"
+          ],
+          "title": "closes a nested combobox popup when tabbing out of the popover"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup following immediately the only trigger"
+          ],
+          "title": "closes a nested combobox popup when tabbing backward to the trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup following immediately the only trigger"
+          ],
+          "title": "moves focus to the trigger when tabbing backward from the open popup then to the popup when tabbing forward",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with focusable elements between the trigger and the popup"
+          ],
+          "title": "closes and moves focus before the trigger when tabbing backward from the focused trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with focusable elements between the trigger and the popup"
+          ],
+          "title": "moves focus to the element following the trigger when tabbing forward from the open popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with focusable elements between the trigger and the popup"
+          ],
+          "title": "moves focus to the trigger when tabbing backward from the open popup then to the popup when tabbing forward",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with focusable elements between the trigger and the popup"
+          ],
+          "title": "moves focus to the element preceding the trigger when tabbing backward from the trigger while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup preceding immediately the only trigger"
+          ],
+          "title": "moves focus to the element following the trigger, excluding the popup, when tabbing forward from the open popup"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "focus management",
+            "with the popup preceding immediately the only trigger"
+          ],
+          "title": "moves focus to the trigger when tabbing backward from the open popup then to the popup when tabbing forward",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "uses intentional outside press with user backdrop (mouse): closes on click, not on mousedown"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "uses intentional outside press with internal backdrop (modal=true): closes on click, not on mousedown"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via outside press: works when clicking another element inside the same shadow root"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "outside press event with backdrops"
+          ],
+          "title": "closing via outside press: works when clicking outside the shadow root"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "non-modal focus transitions"
+          ],
+          "title": "closes as soon as focus leaves the popup on pointer down outside"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "non-modal focus transitions"
+          ],
+          "title": "moves focus to the next element when tabbing out of a nested menu inside the popover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "non-modal focus transitions",
+            "during the exit animation"
+          ],
+          "title": "moves focus to the element following the trigger when tabbing forward from the trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "non-modal focus transitions",
+            "with no other tabbable element on the page"
+          ],
+          "title": "does not loop focus between guards when tabbing out of the popup",
+          "conditions": [
+            "skipIf(isJSDOM || multiTrigger)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "non-modal focus transitions",
+            "with no other tabbable element on the page"
+          ],
+          "title": "does not loop focus between guards when shift-tabbing out of the trigger",
+          "conditions": [
+            "skipIf(isJSDOM || multiTrigger)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "pointerdown removal"
+          ],
+          "title": "moves focus to the popup when a focused child is removed on pointerdown and outside press still dismisses",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts the popover when the `unmount` method is called"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "does not repeat closing completion when `unmount` is called after the automatic unmount"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "keeps the opt-out when a controlled close is applied in a transition"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "ignores `unmount` while the popup is open"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts when `close` and `unmount` are called in one batch"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts when `close` and `unmount` are called in one batch while controlled"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "still unmounts on a later close after `unmount` was called while open"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "still unmounts on a later close after `unmount` and a reopen in one batch"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "completes closing once when `unmount` is called twice in one batch"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "closes the popover when the `close` method is called"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "clears the active trigger when `unmount` is called right after a controlled close"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "clears the active trigger when a popup part calls `unmount` as a controlled close renders"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should render an internal backdrop when `true`"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should only render focus guards inside the popup when `true`"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should keep trigger focus guards when `true` without a close part"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal"
+          ],
+          "title": "should not render an internal backdrop when `false`"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal",
+            "with openOnHover"
+          ],
+          "title": "enables modal behavior after a hover-open is clicked"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "prop: modal",
+            "with openOnHover"
+          ],
+          "title": "reopens on hover after an impatient click is followed by a close button press"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "scroll locking",
+            "touch scroll lock"
+          ],
+          "title": "applies scroll lock when a touch-opened popup $name covers the viewport width",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "scroll locking",
+            "touch scroll lock"
+          ],
+          "title": "does not apply scroll lock when a touch-opened popup $name is narrower than the viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested popup interactions"
+          ],
+          "title": "returns focus through nested programmatic popovers in close order"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested popup interactions"
+          ],
+          "title": "keeps the parent popover open when press starts in nested popover and ends outside"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested popup interactions"
+          ],
+          "title": "should not close popover when scrolling nested popup on touch",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "when using $name",
+            "nested popup interactions"
+          ],
+          "title": "should close child popover when clicking parent popover"
+        },
+        {
+          "describe": [
+            "<Popover.Root />"
+          ],
+          "title": "keeps the popover open when Escape closes a nested dialog after a backdrop press"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "preventUnmountOnClose()"
+          ],
+          "title": "does not leak from a canceled close into a synchronous second close"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "preventUnmountOnClose()"
+          ],
+          "title": "unmounts on a normal close after a prevented close and initially open remount"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "close requests"
+          ],
+          "title": "reports the active trigger for an outside press close"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "close requests"
+          ],
+          "title": "marks a close without a reason as a dismissal"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "hover open after a dismissal"
+          ],
+          "title": "renders the open popup without the dismissal instant type"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "hover open after a dismissal"
+          ],
+          "title": "cancels a pending hover open when the `close` action is called"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "after a close from a trigger"
+          ],
+          "title": "closes when that trigger is pressed after a controlled open without a trigger"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "after a close from a trigger"
+          ],
+          "title": "returns focus to that trigger when a later open started from the body"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/title/PopoverTitle.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Title />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Title />"
+          ],
+          "title": "labels the popup element with its id"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />"
+          ],
+          "title": "throws a descriptive error when rendered without a root or a handle"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "disables the popover"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "custom element"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "does not open on hover when disabled"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "openOnHover opened by touch"
+          ],
+          "title": "keeps ownership on the tapped trigger when a sibling trigger is hovered"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "openOnHover opened by touch"
+          ],
+          "title": "hands ownership to a hovered sibling trigger when opened by mouse"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "style hooks"
+          ],
+          "title": "should have the data-popup-open and data-pressed attributes when open by clicking"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "style hooks"
+          ],
+          "title": "should have the data-popup-open but not the data-pressed attribute when open by hover"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "style hooks"
+          ],
+          "title": "should not have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true` and `delay=0`"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "style hooks"
+          ],
+          "title": "should have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true`"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "impatient clicks with `openOnHover=true`"
+          ],
+          "title": "closes the popover if the user clicks patiently"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "impatient clicks with `openOnHover=true`"
+          ],
+          "title": "sticks if the user clicks impatiently"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "impatient clicks with `openOnHover=true`"
+          ],
+          "title": "sticks when clicked before the hover delay completes"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "impatient clicks with `openOnHover=true`"
+          ],
+          "title": "should keep the popover open when re-hovered and clicked within the patient threshold"
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "opened by hover"
+          ],
+          "title": "tabs $direction from the trigger in native order",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />",
+            "opened by hover"
+          ],
+          "title": "tabs $result",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Popover.Trigger />"
+          ],
+          "title": "should toggle closed with Enter or Space when rendering a <div>",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/popover/viewport/PopoverViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Popover.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Popover.Viewport />"
+          ],
+          "suite": "viewportConformanceTests"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/popover/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Popover.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Popover.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Popover.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean | 'trap-focus'",
+              "default": "false"
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverRootState",
+            "fields": [],
+            "code": "type PopoverRootState = {};"
+          },
+          "actions": {
+            "name": "PopoverRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type PopoverRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "PopoverRootChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "close-press",
+              "focus-out",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type PopoverRootChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'escape-key' | 'close-press' | 'focus-out' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "PopoverRootChangeEventDetails",
+            "code": "type PopoverRootChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Popover.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "openOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "300"
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverTriggerState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type PopoverTriggerState = {\n    disabled: boolean;\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverPortalState",
+            "fields": [],
+            "code": "type PopoverPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type PopoverBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type PopoverPositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    instant: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-height",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "initialFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'click' | 'focus' | 'trigger-change' | undefined"
+              }
+            ],
+            "code": "type PopoverPopupState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    transitionStatus: TransitionStatus;\n    instant: 'dismiss' | 'click' | 'focus' | 'trigger-change' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-instant",
+              "type": "'click' | 'dismiss' | 'focus' | 'trigger-change'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--popup-height",
+              "type": "``"
+            },
+            {
+              "name": "--popup-width",
+              "type": "``"
+            }
+          ]
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type PopoverArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Title",
+          "tag": "h2",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Title.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Title.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Title.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverTitleState",
+            "fields": [],
+            "code": "type PopoverTitleState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverDescriptionState",
+            "fields": [],
+            "code": "type PopoverDescriptionState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Close",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Close.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Close.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Close.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverCloseState",
+            "fields": [],
+            "code": "type PopoverCloseState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Popover.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Popover.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Popover.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PopoverViewportState",
+            "fields": [
+              {
+                "name": "activationDirection",
+                "optional": false,
+                "type": "string | undefined"
+              },
+              {
+                "name": "transitioning",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'click' | 'focus' | 'trigger-change' | undefined"
+              }
+            ],
+            "code": "type PopoverViewportState = {\n    activationDirection: string | undefined;\n    transitioning: boolean;\n    instant: 'dismiss' | 'click' | 'focus' | 'trigger-change' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-activation-direction",
+              "type": "`${'left' | 'right' | ''} ${'down' | 'up' | ''}`"
+            },
+            {
+              "name": "data-current",
+              "type": null
+            },
+            {
+              "name": "data-instant",
+              "type": "'click' | 'dismiss' | 'focus' | 'trigger-change'"
+            },
+            {
+              "name": "data-previous",
+              "type": null
+            },
+            {
+              "name": "data-transitioning",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--popup-height",
+              "type": "``"
+            },
+            {
+              "name": "--popup-width",
+              "type": "``"
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = Popover.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "PopoverArrowDataAttributes",
+          "code": "declare namespace PopoverArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "PopoverBackdropDataAttributes",
+          "code": "declare namespace PopoverBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "PopoverPopupCssVariables",
+          "code": "declare namespace PopoverPopupCssVariables {\n    const popupWidth: '--popup-width';\n    const popupHeight: '--popup-height';\n}",
+          "constants": [
+            {
+              "name": "popupWidth",
+              "value": "--popup-width"
+            },
+            {
+              "name": "popupHeight",
+              "value": "--popup-height"
+            }
+          ]
+        },
+        {
+          "name": "PopoverPopupDataAttributes",
+          "code": "declare namespace PopoverPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        },
+        {
+          "name": "PopoverPositionerCssVariables",
+          "code": "declare namespace PopoverPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n    const positionerWidth: '--positioner-width';\n    const positionerHeight: '--positioner-height';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            },
+            {
+              "name": "positionerWidth",
+              "value": "--positioner-width"
+            },
+            {
+              "name": "positionerHeight",
+              "value": "--positioner-height"
+            }
+          ]
+        },
+        {
+          "name": "PopoverPositionerDataAttributes",
+          "code": "declare namespace PopoverPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "PopoverTriggerDataAttributes",
+          "code": "declare namespace PopoverTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "PopoverViewportCssVariables",
+          "code": "declare namespace PopoverViewportCssVariables {\n    const popupWidth: '--popup-width';\n    const popupHeight: '--popup-height';\n}",
+          "constants": [
+            {
+              "name": "popupWidth",
+              "value": "--popup-width"
+            },
+            {
+              "name": "popupHeight",
+              "value": "--popup-height"
+            }
+          ]
+        },
+        {
+          "name": "PopoverViewportDataAttributes",
+          "code": "declare namespace PopoverViewportDataAttributes {\n    const current: 'data-current';\n    const previous: 'data-previous';\n    const activationDirection: 'data-activation-direction';\n    const transitioning: 'data-transitioning';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "current",
+              "value": "data-current"
+            },
+            {
+              "name": "previous",
+              "value": "data-previous"
+            },
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "transitioning",
+              "value": "data-transitioning"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        },
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        },
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/popover/page.mdx",
+      "referenceTags": [
+        "TypesPopover.Root",
+        "TypesPopover.Trigger",
+        "TypesPopover.Backdrop",
+        "TypesPopover.Portal",
+        "TypesPopover.Positioner",
+        "TypesPopover.Popup",
+        "TypesPopover.Arrow",
+        "TypesPopover.Title",
+        "TypesPopover.Description",
+        "TypesPopover.Close",
+        "TypesPopover.Viewport",
+        "TypesPopover.createHandle",
+        "TypesPopover.Handle"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
+import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import {
   createRenderer,
   createTransitionRunCounter,
@@ -16,12 +17,19 @@ import type { PopupFixtureStore } from '../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
-import { useImplicitActiveTrigger } from './popupRoot';
+import { useImplicitActiveTrigger, usePopupRootSync } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { REASONS } from '../../internals/reasons';
-import { createPopupOpenState } from './store';
+import { ReactiveStore } from './ReactiveStore';
+import {
+  createInitialPopupStoreState,
+  createPopupOpenState,
+  createPopupStoreContext,
+  popupStoreSelectors,
+} from './store';
+import type { PopupStoreContext, PopupStoreSelectors, PopupStoreState } from './store';
 import { provideFloatingNode } from './tree/FloatingTree';
 import {
   createTestPopupStore,
@@ -1595,5 +1603,80 @@ describe('usePopupRoot', () => {
       const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
       expect(popups).toEqual(controls ? [controls, controls] : []);
     });
+  });
+});
+
+type OpenMethodStore = ReactiveStore<
+  Readonly<PopupStoreState<unknown> & { openMethod: InteractionType | null }>,
+  PopupStoreContext<never>,
+  PopupStoreSelectors
+>;
+
+function createOpenMethodStore(open: boolean, openMethod: InteractionType | null) {
+  return new ReactiveStore(
+    { ...createInitialPopupStoreState(), open, openMethod },
+    createPopupStoreContext(),
+    popupStoreSelectors,
+  ) as OpenMethodStore;
+}
+
+const PopupRootSyncTest = defineComponent({
+  props: { store: { type: Object as PropType<OpenMethodStore>, required: true } },
+  setup(props) {
+    usePopupRootSync(props.store, () => props.store.select('open'));
+    return () => null;
+  },
+});
+
+describe('usePopupRootSync', () => {
+  const { render } = createRenderer();
+
+  it('clears openMethod when the popup closes', async () => {
+    const store = createOpenMethodStore(true, 'touch');
+    await render(<PopupRootSyncTest store={store} />);
+
+    store.set('open', false);
+    await flushMicrotasks();
+
+    expect(store.state.openMethod).toBe(null);
+  });
+
+  it('keeps openMethod while the popup is open', async () => {
+    const store = createOpenMethodStore(true, 'touch');
+    await render(<PopupRootSyncTest store={store} />);
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+
+    store.set('openMethod', 'mouse');
+    await flushMicrotasks();
+
+    expect(store.state.openMethod).toBe('mouse');
+  });
+
+  it('clears openMethod when the root unmounts', async () => {
+    const store = createOpenMethodStore(true, 'touch');
+    const { unmount } = await render(<PopupRootSyncTest store={store} />);
+
+    unmount();
+
+    expect(store.state.openMethod).toBe(null);
+  });
+
+  it('keeps openMethod while KeepAlive holds the root', async () => {
+    const store = createOpenMethodStore(true, 'touch');
+    const visible = shallowRef(true);
+    await render(() => (
+      <KeepAlive>
+        {visible.value ? <PopupRootSyncTest key="root" store={store} /> : <Other key="other" />}
+      </KeepAlive>
+    ));
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+
+    visible.value = true;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
   });
 });
