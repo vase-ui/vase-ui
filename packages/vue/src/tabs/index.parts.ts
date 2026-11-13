@@ -1,5 +1,7 @@
 import TabsList from './list/TabsList.vue';
 import type { TabsListProps, TabsListState } from './list/TabsList.vue';
+import TabsPanel from './panel/TabsPanel.vue';
+import type { TabsPanelMetadata, TabsPanelProps, TabsPanelState } from './panel/TabsPanel.vue';
 import TabsRoot from './root/TabsRoot.vue';
 import type {
   TabsRootChangeEventDetails,
@@ -45,6 +47,17 @@ export namespace Tab {
   export type Metadata = TabsTabMetadata;
   export type State = TabsTabState;
   export type Props = TabsTabProps;
+}
+
+/**
+ * A panel displayed when the corresponding tab is active.
+ * Renders a `<div>` element.
+ */
+export const Panel: typeof TabsPanel = TabsPanel;
+export namespace Panel {
+  export type Metadata = TabsPanelMetadata;
+  export type State = TabsPanelState;
+  export type Props = TabsPanelProps;
 }
 
 /**
