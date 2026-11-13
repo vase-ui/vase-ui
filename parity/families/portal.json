@@ -27,14 +27,6 @@
     {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
       "describe": ["$name container resolution"],
-      "title": "keeps content connected when an indicator exit removes the container in the same checkpoint",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/indicator/CheckboxIndicator.tsx",
-      "reason": "The case renders `Checkbox.Root` and `Checkbox.Indicator`, which Vase UI does not have. The pull request that adds `CheckboxIndicator.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
-      "describe": ["$name container resolution"],
       "title": "mounts children once in a connected container when a later update replaces its ref",
       "kind": "replaced",
       "test": "packages/vue/src/utils/popups/portal/FloatingPortalLite.test.tsx",

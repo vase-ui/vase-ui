@@ -13,11 +13,6 @@
       "reason": "The pull request that adds the list navigation ports the file."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the hover intent ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useClick.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the click interaction ports the file."
@@ -35,12 +30,7 @@
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
       "kind": "waits-on",
-      "reason": "The pull request that adds the hover intent ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the hover intent ports the file."
+      "reason": "The pull request that adds the hover interaction of a popup ports the file."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
@@ -94,9 +84,10 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
+      "describe": ["useHoverTriggerInteraction", "hover semantics"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
-      "reason": "The file tests `useHoverTriggerInteraction.ts`."
+      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+      "reason": "The component `App` of the block calls `useHoverPopupInteraction`, which Vase UI does not have. The pull request that adds that file ports the block."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",

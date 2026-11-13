@@ -1,0 +1,10 @@
+{
+  "id": "VUE-26",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/keep-alive.html",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts#L100-L108",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/hoverIntent.ts#L528-L534"
+  ],
+  "behavior": "When `KeepAlive` deactivates a trigger, the trigger stops its timers and its safe polygon. A popup that hover opened and that the trigger anchors then closes with the reason `trigger-hover`. This is the exception to the open state that a popup keeps under `KeepAlive`. `KeepAlive` sends no leave event, so the popup would stay open after the activation with no pointer on its trigger. Base UI has no counterpart of `KeepAlive`.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts"
+}
