@@ -236,8 +236,7 @@ The template of each such part has two lines and no wrapper component:
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
 
 - Each such part has one internal SFC, `<Part>Children.vue`.
-- That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`.
-- A part that is not a root provides these values itself. `Field.Error` provides its message in `FieldErrorContext`.
+- That SFC reads the values that its nodes need with `inject`. `ProgressRootChildren.vue` needs none, so it calls no `inject`. A part that is not a root provides these values itself: `Field.Error` provides its message in `FieldErrorContext`.
 - It renders the nodes around its default slot, in upstream's order.
 - The `#render` slot of the part gets a third slot prop, `children`, which is that component.
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.

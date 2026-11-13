@@ -36,7 +36,7 @@
       "title": "does not submit if an unnamed registered field control is invalid",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root` and `Field.Error`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
+      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -44,7 +44,7 @@
       "title": "clears invalid state for an unnamed registered field control on change",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root` and `Field.Error`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
+      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -52,7 +52,7 @@
       "title": "keeps same-name field validity scoped on submit",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root` and `Field.Error`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
+      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -60,7 +60,7 @@
       "title": "removes the previous registered field id when another control takes over",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root` and `Field.Error`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
+      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -68,7 +68,7 @@
       "title": "removes errors for every field that changes within a single commit",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch.Root` and `Field.Error`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
+      "reason": "The case renders `Switch.Root`, which Vase UI does not have. The pull request that adds `SwitchRoot.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
