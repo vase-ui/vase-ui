@@ -8,30 +8,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "keeps focusing the first invalid field after a control value changes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `Checkbox.Root`, which Vase UI does not have. The pull request that adds `CheckboxRoot.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "keeps the registration-order focus fallback stable across disconnected trees",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `Checkbox.Root`, which Vase UI does not have. The pull request that adds `CheckboxRoot.tsx` ports the case. The case \"keeps the order of the registrations for two controls in two shadow roots\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "focuses the first invalid field in document order when keyed fields are reordered",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `Checkbox.Root`, which Vase UI does not have. The pull request that adds `CheckboxRoot.tsx` ports the case. The case \"focuses the first invalid control in the order of the document, and selects an input\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
       "describe": ["<Form />", "prop: onFormSubmit"],
       "title": "runs when the form is submitted",
       "kind": "waits-on",
