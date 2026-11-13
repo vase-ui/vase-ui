@@ -1,6 +1,6 @@
 ---
 order: 1
-description: An unstyled Vue tabs component for toggling between related panels on the same page.
+description: An unstyled Vue tabs component that toggles between related panels on the same page.
 ---
 
 <script setup lang="ts">
@@ -12,7 +12,7 @@ import DemoTabsHero from '../demos/tabs/hero/css-modules/index.vue';
 
 # Tabs
 
-A component for toggling between related panels on the same page.
+A component that toggles between related panels on the same page.
 
 <DemoFrame>
   <DemoTabsHero />
