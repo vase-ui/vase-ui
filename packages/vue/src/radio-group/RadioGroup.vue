@@ -129,8 +129,8 @@ const fieldset = useFieldsetRootContext(true);
 useDeferredServerRender();
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
-const name = computed(() => fieldName.value ?? props.name);
-const id = useVaseUiId(() => props.id);
+const inputName = computed(() => fieldName.value ?? props.name);
+const controlId = useVaseUiId(() => props.id);
 
 const [checkedValue, setCheckedValueState] = useControlled<Value>({
   controlled: () => props.value,
@@ -208,7 +208,7 @@ function getFormValue() {
 
 useRegisterFieldControl(
   () => validation.getInputControl(),
-  id,
+  controlId,
   () => checkedValue.value ?? null,
   getFormValue,
   () => !isDisabled.value,
@@ -216,7 +216,7 @@ useRegisterFieldControl(
 );
 
 useValueChanged(checkedValue, () => {
-  clearErrors(name.value);
+  clearErrors(inputName.value);
 
   setDirty(checkedValue.value !== validityData.value.initialValue);
   setFilled(checkedValue.value != null);
@@ -241,7 +241,7 @@ provide(RadioGroupContext, {
   disabled: isDisabled,
   form: computed(() => props.form),
   validation,
-  name,
+  name: inputName,
   readOnly: computed(() => props.readOnly),
   registerInputRef,
   required: computed(() => props.required),
