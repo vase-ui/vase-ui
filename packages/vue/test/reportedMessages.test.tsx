@@ -18,6 +18,12 @@ const WarningOnUnmountPart = defineComponent({
   },
 });
 
+const ThrowingPart = defineComponent({
+  setup() {
+    throw new Error('error raised in the setup');
+  },
+});
+
 describe('reported messages', () => {
   const { render } = createRenderer();
 
@@ -79,5 +85,14 @@ describe('reported messages', () => {
     console.warn('text');
 
     expect(takeReportedMessages()).toEqual(['console.warn: text']);
+  });
+
+  // In Vue 3.5.0, a `setup` that throws leaves the current instance set, so this case is last.
+  it('gives one warning when a part throws in setup', async () => {
+    await expect(render(<ThrowingPart />)).rejects.toThrow('error raised in the setup');
+
+    expect(takeReportedMessages()).toEqual([
+      expect.stringMatching(/^Vue warning: Unhandled error during execution of setup function/),
+    ]);
   });
 });
