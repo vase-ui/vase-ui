@@ -48,17 +48,6 @@
       "reason": "Each case of the block renders `Popover.Trigger` and the other parts of Popover, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": [
-        "<Toolbar.Button />",
-        "rendering other Base UI components",
-        "Toggle and ToggleGroup"
-      ],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toggle-group/ToggleGroup.tsx",
-      "reason": "Each case of the block renders `Toggle` and `ToggleGroup`, which Vase UI does not have. Toggle Group comes after Toggle, so the row names its file."
-    },
-    {
       "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
       "describe": ["<Toolbar.Input />", "rendering NumberField"],
       "kind": "waits-on",

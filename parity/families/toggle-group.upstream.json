@@ -1,0 +1,364 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/toggle-group/**",
+    "docs/src/app/(docs)/react/components/toggle-group/**"
+  ],
+  "sources": [
+    "packages/react/src/toggle-group/ToggleGroup.tsx",
+    "packages/react/src/toggle-group/ToggleGroupContext.ts",
+    "packages/react/src/toggle-group/ToggleGroupDataAttributes.ts",
+    "packages/react/src/toggle-group/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/toggle-group/ToggleGroup.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/toggle-group/ToggleGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ToggleGroup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />"
+          ],
+          "title": "renders a `group`"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "uncontrolled"
+          ],
+          "title": "pressed state"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "uncontrolled"
+          ],
+          "title": "prop: defaultValue"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "uncontrolled"
+          ],
+          "title": "when Toggles omit value"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "uncontrolled"
+          ],
+          "title": "should warn if Toggle value is not set and ToggleGroup value is defined"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "controlled"
+          ],
+          "title": "pressed state"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "controlled"
+          ],
+          "title": "prop: value"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: disabled"
+          ],
+          "title": "can disable the whole group"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: disabled"
+          ],
+          "title": "can disable individual items"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: orientation"
+          ],
+          "title": "vertical"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: orientation"
+          ],
+          "title": "does not render aria-orientation on role=\"group\""
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: multiple"
+          ],
+          "title": "sets data-multiple only when true"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: multiple"
+          ],
+          "title": "multiple items can be pressed when true"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: multiple"
+          ],
+          "title": "only one item can be pressed when false"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: multiple"
+          ],
+          "title": "when Toggles omit value"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: multiple transitions"
+          ],
+          "title": "preserves selection and roving focus when %s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "keyboard interactions"
+          ],
+          "title": "$direction, orientation: $orientation moves focus with arrow keys",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "keyboard interactions"
+          ],
+          "title": "Home key moves focus to the first item",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "keyboard interactions"
+          ],
+          "title": "End key moves focus to the last item",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "keyboard interactions"
+          ],
+          "title": "key: $key toggles the pressed state",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "fires when an Item is clicked"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "does not change the value when the event is canceled"
+        },
+        {
+          "describe": [
+            "<ToggleGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "fires when the $key is pressed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toggle-group/types.md",
+      "parts": [
+        {
+          "name": "ToggleGroup",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string[]",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((groupValue: string[], eventDetails: ToggleGroup.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "multiple",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ToggleGroup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ToggleGroup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ToggleGroup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToggleGroupState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "multiple",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type ToggleGroupState = {\n    disabled: boolean;\n    multiple: boolean;\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "ToggleGroupChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type ToggleGroupChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ToggleGroupChangeEventDetails",
+            "code": "type ToggleGroupChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-multiple",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "ToggleGroupDataAttributes",
+          "code": "declare namespace ToggleGroupDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n    const multiple: 'data-multiple';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "multiple",
+              "value": "data-multiple"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toggle-group/page.mdx",
+      "referenceTags": [
+        "TypesToggleGroup"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/scroll-area/demos",
+  "files": {
+    "both/css-modules/index.module.css": "99ac86fb778b1194691b5dd6e6040ad2441977b28e72cf5e9090e63739e6fd4c",
+    "both/css-modules/index.tsx": "aa9f5beabbba445c6f7c87b0697dc12e51c9b423d4381ece8f36eff7c09b7958",
+    "hero/css-modules/index.module.css": "043e6e95b37bbae6e4e3014f886da531b0ddaba7c3ba1539b4ca474670b14a3d",
+    "hero/css-modules/index.tsx": "af83e43982dcca4cd17317f59535aec87cf9d8dee9447de23ae50d1f107141a0",
+    "scroll-fade/css-modules/index.module.css": "18b0f57404b118b2fdff5f0ceeb5122e1237d5b8b5938ad3e8cbf8a97034f4ba",
+    "scroll-fade/css-modules/index.tsx": "abf780f99fdc833b7ae9e4aae9927a9a781a311410057013f301532dc3f28c95"
+  }
+}
