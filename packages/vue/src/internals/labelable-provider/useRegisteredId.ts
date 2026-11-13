@@ -9,7 +9,7 @@ import { onActivated, onDeactivated, onScopeDispose, shallowRef } from 'vue';
  * The call in `setup` puts the id in the server HTML of each part that renders after this part.
  * It also gives the part its place in the order of the registrations, and the part keeps that place
  * in a deactivation. `KeepAlive` runs the `onActivated` hooks of one branch from its last part to
- * its first part, so a registration in `onActivated` would reverse the order of the parts.
+ * its first part. A registration in `onActivated` would then reverse the order of the parts.
  *
  * Do not replace the call with a `watch` that has `immediate` and `onCleanup`. A server render
  * stops that watcher after its first run, and the stop runs the cleanup.

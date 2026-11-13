@@ -1,5 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import type { VNode } from 'vue';
 import { createRenderer, flushMicrotasks, hydrate, renderOnServer, screen } from '#test-utils';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
@@ -417,6 +418,18 @@ describe('labelable provider', () => {
       expect(screen.getByTestId('label')).toHaveAttribute('for', screen.getByTestId('control').id);
     });
 
+    it('restores `for` when `KeepAlive` shows a control with no id again', async () => {
+      const { rerender } = await render(<ControlInKeepAlive swapped={false} firstId={null} />);
+
+      await rerender(<ControlInKeepAlive swapped firstId={null} />);
+      await rerender(<ControlInKeepAlive swapped={false} firstId={null} />);
+      expect(screen.getByTestId('label')).not.toHaveAttribute('for');
+
+      await rerender(<ControlInKeepAlive swapped firstId={null} />);
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', screen.getByTestId('control').id);
+    });
+
     it('ignores a change of the id of a deactivated control until `KeepAlive` activates the control', async () => {
       const firstId = shallowRef('a');
       const First = defineComponent(() => () => <LabelableControl id={firstId.value} />);
@@ -590,6 +603,28 @@ describe('labelable provider', () => {
       expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
     });
 
+    it('keeps the selected control when `KeepAlive` shows a control that comes before it', async () => {
+      const Shown = defineComponent(
+        (props: { shown: boolean }) => () => (
+          <LabelableScope>
+            <LabelableLabel data-testid="label">Label</LabelableLabel>
+            <KeepAlive>{props.shown ? <LabelableControl id="a" /> : null}</KeepAlive>
+            <LabelableControl id="b" />
+          </LabelableScope>
+        ),
+        { props: ['shown'] },
+      );
+      const { rerender } = await render(<Shown shown />);
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await rerender(<Shown shown={false} />);
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+
+      await rerender(<Shown shown />);
+
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+    });
+
     it('names the control with the last of two labels that `KeepAlive` hides and shows again', async () => {
       const Labels = defineComponent(() => () => (
         <>
@@ -615,6 +650,123 @@ describe('labelable provider', () => {
       await rerender(<Shown shown />);
 
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'second-label');
+    });
+
+    describe('controls that `KeepAlive` hides and shows again', () => {
+      // `KeepAlive` hides the controls while `shown` is false. The label stays.
+      function defineField(renderControls: () => VNode) {
+        const Controls = defineComponent(() => renderControls);
+        return defineComponent(
+          (props: { shown: boolean }) => () => (
+            <LabelableScope>
+              <LabelableLabel data-testid="label">Label</LabelableLabel>
+              <KeepAlive>{props.shown ? <Controls /> : null}</KeepAlive>
+            </LabelableScope>
+          ),
+          { props: ['shown'] },
+        );
+      }
+
+      it('follows a change of the id of the selected control', async () => {
+        const firstId = shallowRef('a');
+        const Field = defineField(() => (
+          <>
+            <LabelableControl id={firstId.value} />
+            <LabelableControl id="b" />
+          </>
+        ));
+        const { rerender } = await render(<Field shown />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<Field shown={false} />);
+        await rerender(<Field shown />);
+        firstId.value = 'c';
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'c');
+      });
+
+      it('selects the first control when the selected control loses its `id`', async () => {
+        const firstId = shallowRef<string | undefined>('a');
+        const Field = defineField(() => (
+          <>
+            <LabelableControl id={firstId.value} data-testid="first" />
+            <LabelableControl id="b" />
+          </>
+        ));
+        const { rerender } = await render(<Field shown />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<Field shown={false} />);
+        await rerender(<Field shown />);
+        firstId.value = undefined;
+        await flushMicrotasks();
+
+        const first = screen.getByTestId('first');
+        expect(first.id).not.toBe('a');
+        expect(first.id).not.toBe('b');
+        expect(screen.getByTestId('label')).toHaveAttribute('for', first.id);
+      });
+
+      it('selects the next control in the order of the mount when the selected control goes away', async () => {
+        const hasFirst = shallowRef(true);
+        const Field = defineField(() => (
+          <>
+            {hasFirst.value && <LabelableControl id="a" />}
+            <LabelableControl id="b" />
+            <LabelableControl id="c" />
+          </>
+        ));
+        const { rerender } = await render(<Field shown />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<Field shown={false} />);
+        await rerender(<Field shown />);
+        hasFirst.value = false;
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+      });
+
+      it('keeps the order of a control and the control inside it', async () => {
+        const childId = shallowRef('child');
+        const Child = defineComponent(() => () => <LabelableControl id={childId.value} />);
+        const Field = defineField(() => (
+          <LabelableControl id="parent">
+            <Child />
+          </LabelableControl>
+        ));
+        const { rerender } = await render(<Field shown />);
+        // The inner control registers first, as in Base UI, so it is the selected control.
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'child');
+
+        await rerender(<Field shown={false} />);
+        await rerender(<Field shown />);
+        childId.value = 'child-2';
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'child-2');
+      });
+
+      it('selects the first control when the controls get their ids while hidden', async () => {
+        const firstId = shallowRef<string | undefined>();
+        const secondId = shallowRef<string | undefined>();
+        const Field = defineField(() => (
+          <>
+            <LabelableControl id={firstId.value} />
+            <LabelableControl id={secondId.value} />
+          </>
+        ));
+        const { rerender } = await render(<Field shown />);
+
+        await rerender(<Field shown={false} />);
+        firstId.value = 'a';
+        secondId.value = 'b';
+        await flushMicrotasks();
+        await rerender(<Field shown />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+      });
     });
   });
 

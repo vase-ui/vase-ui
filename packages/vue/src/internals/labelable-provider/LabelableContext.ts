@@ -6,10 +6,13 @@ import { NOOP } from '../noop';
 /**
  * Registers the `id` of a part with the provider, or removes the registration of the source when
  * `getId` is `undefined`. The provider calls the getter each time it needs the `id`, so the part
- * registers one time. The getter returns `undefined` for a part that has no `id` now, such as a
- * part that `KeepAlive` has deactivated.
+ * registers one time and keeps its place in the order of the registrations. The getter returns
+ * `undefined` for a part that has no `id` now, such as a part that `KeepAlive` has deactivated.
  */
-export type RegisterId = (source: symbol, getId: (() => string | undefined) | undefined) => void;
+export type RegisterId<Id = string> = (
+  source: symbol,
+  getId: (() => Id | undefined) | undefined,
+) => void;
 
 export interface LabelableContext {
   /**
@@ -18,7 +21,7 @@ export interface LabelableContext {
    * because the control takes its name from `aria-labelledby`.
    */
   controlId: ComputedRef<string | null | undefined>;
-  registerControlId: (source: symbol, id: string | null | undefined) => void;
+  registerControlId: RegisterId<string | null>;
   resetControlId: () => void;
   /**
    * The `id` of the last label that has one.

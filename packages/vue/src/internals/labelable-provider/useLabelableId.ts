@@ -4,6 +4,7 @@ import {
   onDeactivated,
   onMounted,
   onScopeDispose,
+  shallowRef,
   toValue,
   watch,
 } from 'vue';
@@ -28,9 +29,18 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   let hasRegistered = false;
   let hadExplicitId = false;
   let isMounted = false;
-  // `KeepAlive` removes the DOM of a deactivated control from the document, so the provider must
-  // not keep its registration.
-  let isDeactivated = false;
+  // `KeepAlive` removes the DOM of a deactivated control from the document, so the control gives no
+  // id then. Its entry stays. `KeepAlive` runs the `onActivated` hooks of one branch from the last
+  // part to the first part. A new entry in that hook would reverse the order of the controls.
+  const isDeactivated = shallowRef(false);
+
+  function getRegisteredId() {
+    if (isDeactivated.value) {
+      return undefined;
+    }
+    const explicitId = id();
+    return explicitId === undefined ? defaultId.value : explicitId;
+  }
 
   function unregister() {
     if (!hasRegistered || registerControlId === NOOP) {
@@ -42,33 +52,30 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   }
 
   function register() {
-    if (isDeactivated || !isEnabled() || registerControlId === NOOP) {
+    if (!isEnabled() || registerControlId === NOOP) {
       unregister();
       return;
     }
 
-    const explicitId = id();
-    let nextId: string | null;
-
-    if (explicitId !== undefined) {
+    if (id() !== undefined) {
       hadExplicitId = true;
-      nextId = explicitId;
-    } else if (hadExplicitId) {
-      nextId = defaultId.value;
-    } else {
+    }
+
+    if (!hadExplicitId) {
       // A control with no id must claim the default id of the provider. Else the id of a control
       // that is gone stays selected.
       resetControlId();
       return;
     }
 
-    hasRegistered = true;
-    registerControlId(source, nextId);
+    if (!hasRegistered) {
+      hasRegistered = true;
+      registerControlId(source, getRegisteredId);
+    }
   }
 
-  // The registration waits for the mount. The `setup` of a control that replaces another control can
-  // run before Vue removes or deactivates the old control, and the old registration is still there
-  // then.
+  // The registration waits for the mount. The `setup` of a replacement can run before Vue removes or
+  // deactivates the old control. The old registration is still there then.
   onMounted(() => {
     isMounted = true;
     register();
@@ -82,20 +89,18 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   });
 
   onDeactivated(() => {
-    isDeactivated = true;
-    unregister();
+    isDeactivated.value = true;
   });
 
   onActivated(() => {
     // `onActivated` also runs at the first mount inside `KeepAlive`, where `onMounted` registered.
-    if (!isDeactivated) {
+    if (!isDeactivated.value) {
       return;
     }
 
-    isDeactivated = false;
-    if (isMounted) {
-      register();
-    }
+    isDeactivated.value = false;
+    // A control with no id claims the default id again. A control that has an id has its entry.
+    register();
   });
 
   // `onScopeDispose` runs while Vue unmounts the control. The `onMounted` of a control that
