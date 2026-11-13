@@ -85,6 +85,44 @@ describe('ReactiveStore', () => {
     expect(output.textContent).toBe('changed');
   });
 
+  interface ElementState {
+    element: Element | null;
+    other: number;
+  }
+
+  // Vue calls a function ref during the render of the part. A read of the state in the callback would
+  // make that render depend on the state.
+  it.each([
+    {
+      name: 'set',
+      write: (store: ReactiveStore<ElementState>, element: Element | null) =>
+        store.set('element', element),
+    },
+    {
+      name: 'update',
+      write: (store: ReactiveStore<ElementState>, element: Element | null) =>
+        store.update({ element }),
+    },
+  ])(
+    'adds no dependency to the render of a part when its ref callback calls $name',
+    async ({ write }) => {
+      const store = new ReactiveStore<ElementState>({ element: null, other: 0 });
+      let renders = 0;
+      const Part = defineComponent(() => () => {
+        renders += 1;
+        return <div ref={(element) => write(store, element as Element | null)} />;
+      });
+
+      const { container } = await render(<Part />);
+      expect(store.state.element).toBe(container.firstElementChild);
+      expect(renders).toBe(1);
+
+      store.set('other', 1);
+      await nextTick();
+      expect(renders).toBe(1);
+    },
+  );
+
   it('keeps the value that a sync watcher writes to another key during an update', () => {
     const store = new ReactiveStore({ a: 0, b: 0, c: 0 });
     const stop = watch(
@@ -99,6 +137,30 @@ describe('ReactiveStore', () => {
     stop();
 
     expect({ ...store.state }).toEqual({ a: 1, b: 0, c: 9 });
+  });
+
+  it('sends each write of set and update to an override of setState with the full state', () => {
+    interface State {
+      a: number;
+      b: number;
+    }
+    class RecordingStore extends ReactiveStore<State> {
+      readonly writes: State[] = [];
+
+      setState(newState: State) {
+        this.writes.push(newState);
+        super.setState(newState);
+      }
+    }
+    const store = new RecordingStore({ a: 0, b: 0 });
+
+    store.set('a', 1);
+    store.update({ b: 2 });
+
+    expect(store.writes).toEqual([
+      { a: 1, b: 0 },
+      { a: 1, b: 2 },
+    ]);
   });
 
   it('keeps the identity of an object, an element and a ref', () => {
