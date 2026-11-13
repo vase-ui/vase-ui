@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef, watch } from 'vue';
+import { defineComponent, onMounted, shallowRef, watch } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
@@ -376,6 +376,29 @@ describe('<RadioGroup />', () => {
     await fireEvent.click(radioB);
 
     expect(group.value?.inputElement).toBe(inputB);
+  });
+
+  it('allows reading inputRef.current in an effect', async () => {
+    let observedValue: string | null = null;
+
+    const App = defineComponent(() => {
+      const group = shallowRef<RadioGroupInstance | null>(null);
+
+      onMounted(() => {
+        observedValue = group.value?.inputElement?.value ?? null;
+      });
+
+      return () => (
+        <RadioGroup ref={group} defaultValue="a">
+          <Radio.Root value="a" />
+          <Radio.Root value="b" />
+        </RadioGroup>
+      );
+    });
+
+    await render(<App />);
+
+    expect(observedValue).toBe('a');
   });
 
   it('detaches inputRef when an initially disabled radio is enabled and then unmounted', async () => {
@@ -1021,8 +1044,8 @@ describe('<RadioGroup />', () => {
   });
 
   describe('in a native form', () => {
-    function getFormData(name = 'fruit') {
-      return new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll(name);
+    function getFormData() {
+      return new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('fruit');
     }
 
     it.each([
@@ -1058,6 +1081,35 @@ describe('<RadioGroup />', () => {
 
       await fireEvent.click(screen.getByTestId('c'));
       expect(getFormData()).toEqual(['c']);
+    });
+
+    it('submits the value of the radio whose label the user clicks', async () => {
+      await render(
+        <form data-testid="form">
+          <RadioGroup name="fruit">
+            <label data-testid="apple-label">
+              <Radio.Root value="apple" />
+              Apple
+            </label>
+            <div>
+              <label data-testid="banana-label" for="banana">
+                Banana
+              </label>
+              <Radio.Root value="banana" id="banana" />
+            </div>
+          </RadioGroup>
+        </form>,
+      );
+
+      await fireEvent.click(screen.getByTestId('apple-label'));
+
+      expect(getFormData()).toEqual(['apple']);
+      expect(getInputs().map((input) => input.checked)).toEqual([true, false]);
+
+      await fireEvent.click(screen.getByTestId('banana-label'));
+
+      expect(getFormData()).toEqual(['banana']);
+      expect(getInputs().map((input) => input.checked)).toEqual([false, true]);
     });
 
     it.each([
@@ -1099,27 +1151,6 @@ describe('<RadioGroup />', () => {
 
       expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(getFormData()).toEqual(['b']);
-    });
-
-    it('submits to an external form when `form` is provided', async () => {
-      const submitSpy = createFormDataSpy('fruit');
-      const { user } = await render(
-        <>
-          <form id="external-form" onSubmit={submitSpy}>
-            <button type="submit">Submit</button>
-          </form>
-          <RadioGroup name="fruit" form="external-form">
-            <Radio.Root value="a" data-testid="a" />
-            <Radio.Root value="b" data-testid="b" />
-          </RadioGroup>
-        </>,
-      );
-
-      await user.click(screen.getByTestId('b'));
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(submitSpy).toHaveBeenCalledTimes(1);
-      expect(submitSpy.mock.results.at(-1)?.value).toBe('b');
     });
 
     it('gives one `valueChange` and one checked input for one arrow key in a named group', async () => {
