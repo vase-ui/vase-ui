@@ -538,11 +538,31 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `set` and `update` call `setState` with the full state, so a subclass that overrides `setState` sees each write.
 - Vue has no public batch for writes. A watcher with the default flush runs one time for an update of many keys. A watcher with `flush: 'sync'` runs after the write of each key, so it can read a state that is not complete.
 - `setState` finds the changed keys before it writes the first key. A sync watcher can write the store during an update, and that write stays.
+- `BasePopupStore` writes `open` and `openProp` after the other keys. A sync watcher of the open state then reads the trigger and the reason of the change.
 - A function that a render function or a ref callback calls reads `toRaw(store.state)`. That read adds no dependency. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
+- A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
+- `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
+- A function that works with the store of any family types its parameter as `PopupTriggerDataStore<State>`, or as a `ReactiveStore<State, PopupStoreContext<never>, PopupStoreSelectors>` plus the members that it calls. A parameter of the type `BasePopupStore<…>` refuses a family store with other change event details. It also refuses a family store with a step that returns only keys that the family adds.
 - Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
+
+### Popup tree
+
+A popup tree holds one node for each popup below one root. The code is in `src/utils/popups/tree`.
+
+- `provideFloatingTree()` makes a `FloatingTreeStore`, provides it and returns it. `provideFloatingNode(id)` provides the id of a node. Base UI has the components `FloatingTree` and `FloatingNode` for this.
+- `useFloatingNodeId()` registers a node in the tree and returns its id. `useFloatingParentNodeId()` gives the id of the node above the part, or `null`. `useFloatingTree()` gives the tree above the part, or `null`.
+- `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
+- `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
+- Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
+- A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
+- The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
+- The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
+- `nodesRef` is a `shallowRef`. The tree gives it a new array for each node that it adds or removes.
+- `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
+- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
 
 ### Composite
 
