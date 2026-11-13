@@ -11,8 +11,8 @@ import type { FloatingRootState } from './FloatingRootStore';
  */
 export interface UseFloatingRootStoreOptions {
   /**
-   * Whether the popup is open. Positioning clears the anchor while the popup is not mounted. It
-   * gives the anchor back only when `open` or `elements.anchor` changes, so `open` must follow
+   * Whether the popup is open. Positioning clears the anchor while the popup is not mounted. The
+   * store gets the anchor back only when `open` or an element changes, so `open` must follow
    * `mounted`.
    * @default false
    */
@@ -41,9 +41,9 @@ export interface UseFloatingRootStoreOptions {
 }
 
 /**
- * Makes a `FloatingRootStore` for a part that manages its open state without a popup store. A
+ * Makes a `FloatingRootStore` for a part that manages its open state without a popup store. One
  * `watch` copies the open state, the anchor and the positioner element into the store when a source
- * changes. The same `watch` updates the nesting flag.
+ * changes. A second `watch` updates the nesting flag.
  *
  * Call it in `setup`.
  */
@@ -68,11 +68,8 @@ export function useFloatingRootStore(options: UseFloatingRootStoreOptions): Floa
       () => toValue(open) ?? false,
       () => toValue(elements.anchor),
       () => toValue(elements.positionerElement),
-      () => parentNodeId.value !== null,
     ],
-    ([nextOpen, anchorElement, positionerElement, nested]) => {
-      store.context.nested = nested;
-
+    ([nextOpen, anchorElement, positionerElement]) => {
       // Each run writes all the values. `clearPositioning` can have cleared the anchor and the
       // elements since the last run, and a change of `open` must give them back.
       const values = { open: nextOpen } as Pick<
@@ -86,6 +83,15 @@ export function useFloatingRootStore(options: UseFloatingRootStoreOptions): Floa
         values.positionerElement = positionerElement;
       }
       store.update(values);
+    },
+  );
+
+  // A change of the parent node must not write the elements again after `clearPositioning` cleared
+  // them, so it has its own `watch`.
+  watch(
+    () => parentNodeId.value !== null,
+    (nested) => {
+      store.context.nested = nested;
     },
   );
 

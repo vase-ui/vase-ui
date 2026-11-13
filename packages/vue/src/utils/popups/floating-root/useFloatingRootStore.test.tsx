@@ -97,19 +97,25 @@ describe('useFloatingRootStore', () => {
     await setProps({ open: true });
     expect(store.select('open')).toBe(true);
 
+    await setProps({ open: undefined });
+    expect(store.select('open')).toBe(false);
+
     await setProps({ positionerElement });
     expect(store.select('positionerElement')).toBe(positionerElement);
   });
 
   it('keeps the element whose source gives undefined, and clears it for null', async () => {
     const anchor = document.createElement('button');
-    const { store, setProps } = await renderStore({ anchor });
+    const positionerElement = document.createElement('div');
+    const { store, setProps } = await renderStore({ anchor, positionerElement });
 
-    await setProps({ anchor: undefined });
+    await setProps({ anchor: undefined, positionerElement: undefined });
     expect(store.select('anchorElement')).toBe(anchor);
+    expect(store.select('positionerElement')).toBe(positionerElement);
 
-    await setProps({ anchor: null });
+    await setProps({ anchor: null, positionerElement: null });
     expect(store.select('anchorElement')).toBe(null);
+    expect(store.select('positionerElement')).toBe(null);
   });
 
   it('gives the elements back when open changes after clearPositioning', async () => {
@@ -139,7 +145,7 @@ describe('useFloatingRootStore', () => {
   });
 
   describe('nested', () => {
-    async function renderBelowNode() {
+    async function renderBelowNode(props: Omit<TestProps, 'onStore'> = {}) {
       const parentId = shallowRef<string | undefined>('parent');
       const Parent = defineComponent((_, { slots }) => {
         provideFloatingNode(parentId);
@@ -149,6 +155,7 @@ describe('useFloatingRootStore', () => {
       await render(
         <Parent>
           <Test
+            {...props}
             onStore={(value) => {
               store = value;
             }}
@@ -171,6 +178,20 @@ describe('useFloatingRootStore', () => {
       await nextTick();
 
       expect(store.context.nested).toBe(false);
+    });
+
+    it('leaves the elements cleared when the parent node changes after clearPositioning', async () => {
+      const anchor = document.createElement('button');
+      const positionerElement = document.createElement('div');
+      const { store, parentId } = await renderBelowNode({ open: false, anchor, positionerElement });
+
+      store.clearPositioning();
+      parentId.value = undefined;
+      await nextTick();
+
+      expect(store.context.nested).toBe(false);
+      expect(store.select('anchorElement')).toBe(null);
+      expect(store.select('positionerElement')).toBe(null);
     });
   });
 });
