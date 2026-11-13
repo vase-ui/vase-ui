@@ -333,9 +333,14 @@ const { element, elementProps } = useRenderElement('input', props, {
   ref: [listItemRef],
   stateAttributesMapping: inputStateAttributesMapping,
   props: (attrs) => {
+    // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string `off`
+    // then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute in each version, and
+    // a server writes it in lower case. The value of the consumer moves to that key, because two
+    // keys for one attribute give two attributes on a server.
     const {
       'aria-label': externalAriaLabel,
       'aria-labelledby': externalAriaLabelledBy,
+      autocorrect,
       ...elementAttrs
     } = attrs;
     const slotIndex = index.value;
@@ -350,10 +355,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         type: mask.value ? 'password' : 'text',
         inputmode: inputMode.value,
         autocomplete: slotIndex === 0 ? autoComplete.value : 'off',
-        // Vue before 3.5.14 sets the key `autocorrect` as a boolean DOM property, and the string
-        // `off` then turns autocorrect on. Vue sets the key `autoCorrect` as an attribute. The
-        // merge is by key, so the part gives the key only when the consumer has no `autocorrect`.
-        autoCorrect: 'autocorrect' in attrs ? undefined : 'off',
+        autoCorrect: autocorrect === undefined ? 'off' : autocorrect,
         spellcheck: 'false',
         enterkeyhint: slotIndex === length.value - 1 ? 'done' : 'next',
         // Only the first slot has a maximum length, so that a password manager shows no bubble at a

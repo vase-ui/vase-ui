@@ -1099,6 +1099,19 @@ describe('<OTPField.Input />', () => {
       });
     });
 
+    it.each([
+      { name: 'the value `on`', value: 'on' },
+      { name: 'the value `off`', value: 'off' },
+    ])('has the `autocorrect` of the consumer: $name', async ({ value }) => {
+      await render(
+        <OTPField.Root length={1}>
+          <OTPField.Input autocorrect={value} />
+        </OTPField.Root>,
+      );
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('autocorrect', value);
+    });
+
     it('warns when the first slot gets an `aria-label` after the first render', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const label = shallowRef<string | undefined>(undefined);
