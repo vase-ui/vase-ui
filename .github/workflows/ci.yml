@@ -145,46 +145,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arm: overlay, run: 1 }
-          - { arm: overlay, run: 2 }
-          - { arm: overlay, run: 3 }
-          - { arm: overlay, run: 4 }
-          - { arm: overlay, run: 5 }
-          - { arm: overlay, run: 6 }
-          - { arm: overlay, run: 7 }
-          - { arm: overlay, run: 8 }
-          - { arm: overlay, run: 9 }
-          - { arm: overlay, run: 10 }
-          - { arm: overlay, run: 11 }
-          - { arm: overlay, run: 12 }
-          - { arm: overlay, run: 13 }
-          - { arm: overlay, run: 14 }
-          - { arm: overlay, run: 15 }
-          - { arm: overlay, run: 16 }
-          - { arm: overlay, run: 17 }
-          - { arm: overlay, run: 18 }
-          - { arm: overlay, run: 19 }
-          - { arm: overlay, run: 20 }
-          - { arm: overlay, run: 21 }
-          - { arm: overlay, run: 22 }
-          - { arm: overlay, run: 23 }
-          - { arm: overlay, run: 24 }
-          - { arm: overlay, run: 25 }
-          - { arm: overlay, run: 26 }
-          - { arm: overlay, run: 27 }
-          - { arm: overlay, run: 28 }
-          - { arm: overlay, run: 29 }
-          - { arm: overlay, run: 30 }
-          - { arm: overlay, run: 31 }
-          - { arm: overlay, run: 32 }
-          - { arm: overlay, run: 33 }
-          - { arm: overlay, run: 34 }
-          - { arm: overlay, run: 35 }
-          - { arm: overlay, run: 36 }
-          - { arm: overlay, run: 37 }
-          - { arm: overlay, run: 38 }
-          - { arm: overlay, run: 39 }
-          - { arm: overlay, run: 40 }
           - { arm: loaded, run: 1 }
           - { arm: loaded, run: 2 }
           - { arm: loaded, run: 3 }
@@ -225,6 +185,86 @@ jobs:
           - { arm: loaded, run: 38 }
           - { arm: loaded, run: 39 }
           - { arm: loaded, run: 40 }
+          - { arm: loaded, run: 41 }
+          - { arm: loaded, run: 42 }
+          - { arm: loaded, run: 43 }
+          - { arm: loaded, run: 44 }
+          - { arm: loaded, run: 45 }
+          - { arm: loaded, run: 46 }
+          - { arm: loaded, run: 47 }
+          - { arm: loaded, run: 48 }
+          - { arm: loaded, run: 49 }
+          - { arm: loaded, run: 50 }
+          - { arm: loaded, run: 51 }
+          - { arm: loaded, run: 52 }
+          - { arm: loaded, run: 53 }
+          - { arm: loaded, run: 54 }
+          - { arm: loaded, run: 55 }
+          - { arm: loaded, run: 56 }
+          - { arm: loaded, run: 57 }
+          - { arm: loaded, run: 58 }
+          - { arm: loaded, run: 59 }
+          - { arm: loaded, run: 60 }
+          - { arm: loaded, run: 61 }
+          - { arm: loaded, run: 62 }
+          - { arm: loaded, run: 63 }
+          - { arm: loaded, run: 64 }
+          - { arm: loaded, run: 65 }
+          - { arm: loaded, run: 66 }
+          - { arm: loaded, run: 67 }
+          - { arm: loaded, run: 68 }
+          - { arm: loaded, run: 69 }
+          - { arm: loaded, run: 70 }
+          - { arm: loaded, run: 71 }
+          - { arm: loaded, run: 72 }
+          - { arm: loaded, run: 73 }
+          - { arm: loaded, run: 74 }
+          - { arm: loaded, run: 75 }
+          - { arm: loaded, run: 76 }
+          - { arm: loaded, run: 77 }
+          - { arm: loaded, run: 78 }
+          - { arm: loaded, run: 79 }
+          - { arm: loaded, run: 80 }
+          - { arm: loaded, run: 81 }
+          - { arm: loaded, run: 82 }
+          - { arm: loaded, run: 83 }
+          - { arm: loaded, run: 84 }
+          - { arm: loaded, run: 85 }
+          - { arm: loaded, run: 86 }
+          - { arm: loaded, run: 87 }
+          - { arm: loaded, run: 88 }
+          - { arm: loaded, run: 89 }
+          - { arm: loaded, run: 90 }
+          - { arm: loaded, run: 91 }
+          - { arm: loaded, run: 92 }
+          - { arm: loaded, run: 93 }
+          - { arm: loaded, run: 94 }
+          - { arm: loaded, run: 95 }
+          - { arm: loaded, run: 96 }
+          - { arm: loaded, run: 97 }
+          - { arm: loaded, run: 98 }
+          - { arm: loaded, run: 99 }
+          - { arm: loaded, run: 100 }
+          - { arm: loaded, run: 101 }
+          - { arm: loaded, run: 102 }
+          - { arm: loaded, run: 103 }
+          - { arm: loaded, run: 104 }
+          - { arm: loaded, run: 105 }
+          - { arm: loaded, run: 106 }
+          - { arm: loaded, run: 107 }
+          - { arm: loaded, run: 108 }
+          - { arm: loaded, run: 109 }
+          - { arm: loaded, run: 110 }
+          - { arm: loaded, run: 111 }
+          - { arm: loaded, run: 112 }
+          - { arm: loaded, run: 113 }
+          - { arm: loaded, run: 114 }
+          - { arm: loaded, run: 115 }
+          - { arm: loaded, run: 116 }
+          - { arm: loaded, run: 117 }
+          - { arm: loaded, run: 118 }
+          - { arm: loaded, run: 119 }
+          - { arm: loaded, run: 120 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -233,11 +273,9 @@ jobs:
         env:
           ARM: ${{ matrix.arm }}
         run: |
-          git fetch --depth=1 origin aad8ddf9cc2ae4fcc2a36a21a91b582f05d3d16b
-          git checkout FETCH_HEAD -- docs
-          if [ "$ARM" = plain ]; then
-            git fetch --depth=1 origin bb92cd7f9a517c5c7eedb92054fab8fa238dc486
-            git checkout FETCH_HEAD -- packages/vue/src/collapsible/panel packages/vue/test/fixtures
+          if [ "$ARM" != main ]; then
+            git fetch --depth=1 origin aad8ddf9cc2ae4fcc2a36a21a91b582f05d3d16b
+            git checkout FETCH_HEAD -- docs
           fi
           echo "TREE arm=$ARM head=$(git rev-parse HEAD) demos=$(ls docs/demos/*/*/css-modules/index.vue | wc -l)"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
