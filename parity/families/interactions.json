@@ -18,11 +18,6 @@
       "reason": "The pull request that adds the cursor anchor ports the file."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the focus interaction ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the list navigation ports the file."
@@ -48,12 +43,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
       "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that adds `useFloating` ports the cases."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useFocus.ts",
-      "reason": "The file tests `useFocus.ts`."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
