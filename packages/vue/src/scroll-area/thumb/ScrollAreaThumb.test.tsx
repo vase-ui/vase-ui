@@ -32,6 +32,13 @@ function readAttributes(element: HTMLElement) {
 describe('<ScrollArea.Thumb />', () => {
   const { render } = createRenderer();
 
+  let rootContext!: ScrollAreaRootContext;
+  // The holders are in the context of the root. Nothing else shows them.
+  const Probe = defineComponent(() => {
+    rootContext = useScrollAreaRootContext();
+    return () => null;
+  });
+
   describeConformance(<ScrollArea.Thumb />, () => ({
     refInstanceof: window.HTMLDivElement,
     render(node) {
@@ -76,11 +83,6 @@ describe('<ScrollArea.Thumb />', () => {
   });
 
   it('handles the scrollbar unmounting from a user pointer-move callback', async () => {
-    let rootContext!: ScrollAreaRootContext;
-    const Probe = defineComponent(() => {
-      rootContext = useScrollAreaRootContext();
-      return () => null;
-    });
     await render(
       <ScrollArea.Root>
         <ScrollArea.Viewport data-testid="viewport" />
@@ -650,13 +652,6 @@ describe('<ScrollArea.Thumb />', () => {
   });
 
   describe('orientation of the scrollbar', () => {
-    let rootContext!: ScrollAreaRootContext;
-    // The holders are in the context of the root. Nothing else shows them.
-    const Probe = defineComponent(() => {
-      rootContext = useScrollAreaRootContext();
-      return () => null;
-    });
-
     it('moves its element to the holder of the new orientation', async () => {
       const orientation = shallowRef<'vertical' | 'horizontal'>('vertical');
       const App = defineComponent(() => () => (

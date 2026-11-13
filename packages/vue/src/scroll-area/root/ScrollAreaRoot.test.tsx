@@ -165,12 +165,9 @@ describe('<ScrollArea.Root />', () => {
 
       const verticalThumb = await screen.findByTestId('vertical-thumb');
 
-      await waitFor(() => {
-        // `0px` is the start value, so this assertion cannot pass before the thumb gets its size.
-        expect(
-          getComputedStyle(verticalThumb).getPropertyValue('--scroll-area-thumb-height'),
-        ).not.toBe('0px');
-      });
+      expect(
+        getComputedStyle(verticalThumb).getPropertyValue('--scroll-area-thumb-height'),
+      ).not.toBe('0px');
     });
 
     it('shows scrollbars after mount compute before the first ResizeObserver measurement', async () => {
