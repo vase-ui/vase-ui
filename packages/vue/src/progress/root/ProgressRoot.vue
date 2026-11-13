@@ -74,7 +74,7 @@ defineSlots<{
 }>();
 
 const formatLocale = useFormatLocale(() => props.locale);
-const { labelId, defaultLabelId, setLabelId } = useLabelId();
+const { defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
 
 // A `null` or non-finite value keeps the progress indeterminate.
 // Otherwise one clamped value and one percentage feed every output: the status, `aria-valuenow`,
@@ -133,7 +133,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [
     {
-      'aria-labelledby': labelId.value,
+      'aria-labelledby': getAriaLabelledBy(attrs),
       'aria-valuemax': props.max,
       'aria-valuemin': props.min,
       'aria-valuenow': clampedValue.value ?? undefined,

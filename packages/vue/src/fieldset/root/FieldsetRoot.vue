@@ -41,7 +41,7 @@ const parentDisabled = useFieldsetRootContext(true)?.disabled;
 const isDisabled = computed(() => (parentDisabled?.value ?? false) || props.disabled);
 const state = computed<FieldsetRootState>(() => ({ disabled: isDisabled.value }));
 
-const { labelId, defaultLabelId, setLabelId } = useLabelId();
+const { labelId, defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
 
 provide(FieldsetRootContext, {
   legendId: labelId,
@@ -54,7 +54,7 @@ const { element, elementProps } = useRenderElement('fieldset', props, {
   state,
   props: (attrs) => [
     {
-      'aria-labelledby': labelId.value,
+      'aria-labelledby': getAriaLabelledBy(attrs),
       // Vue writes `false` as `disabled="false"` on an element that has no `disabled` property.
       disabled: isDisabled.value ? true : undefined,
     },

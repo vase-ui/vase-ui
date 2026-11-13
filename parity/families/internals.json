@@ -178,7 +178,7 @@
       "title": "preserves native label activation inside a shadow root",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
-      "reason": "The case renders `Field.Root`, `Field.Label` and `Field.Control`, which Vase UI does not have. The case \"gives a native label `for` with the id of the control and moves no focus itself\" tests the part of this behavior that `useLabel` owns."
+      "reason": "The case renders `Field.Label`, which Vase UI does not have. The case \"gives a native label `for` with the id of the control and moves no focus itself\" tests the part of this behavior that `useLabel` owns."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
@@ -202,7 +202,7 @@
       "title": "does not throw when a label is clicked in a detached React root",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/trigger/SelectTrigger.tsx",
-      "reason": "The case renders `Field.Root`, `Field.Label`, `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
+      "reason": "The case renders `Field.Label`, `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
     },
     {
       "upstream": "packages/react/src/internals/composite/index.ts",

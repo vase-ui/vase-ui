@@ -9,6 +9,7 @@ import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import LabelableHydration from './LabelableHydration.test.vue';
 import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
 import LabelableMessagePosition from './LabelableMessagePosition.test.vue';
+import LabelableOrder from './LabelableOrder.test.vue';
 
 describe('labelable provider', () => {
   const { render } = createRenderer();
@@ -239,6 +240,23 @@ describe('labelable provider', () => {
       expect(label.id).not.toBe('');
       expect(label.id).toBe(labelId ?? label.id);
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', label.id);
+    });
+
+    it('gives two labels with no `id` two ids', async () => {
+      await render(
+        <LabelableScope>
+          <LabelableLabel data-testid="first" />
+          <LabelableLabel data-testid="second" />
+          <LabelableControl data-testid="control" />
+        </LabelableScope>,
+      );
+
+      const first = screen.getByTestId('first');
+      const second = screen.getByTestId('second');
+      expect(first.id).not.toBe('');
+      expect(second.id).not.toBe('');
+      expect(second.id).not.toBe(first.id);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', second.id);
     });
 
     it('follows a change of the id of the label', async () => {
@@ -839,6 +857,7 @@ describe('labelable provider', () => {
 
   describe('server HTML and hydration', () => {
     const FILE = 'src/internals/labelable-provider/LabelableHydration.test.vue';
+    const ORDER_FILE = 'src/internals/labelable-provider/LabelableOrder.test.vue';
 
     // A `<template>` element parses the HTML with no side effect.
     function parse(html: string) {
@@ -862,6 +881,15 @@ describe('labelable provider', () => {
       };
     }
 
+    function readOrder(root: ParentNode) {
+      const control = root.querySelector('[data-testid="control"]');
+      return {
+        labelledBy: control?.getAttribute('aria-labelledby'),
+        describedBy: control?.getAttribute('aria-describedby'),
+        ids: Array.from(root.querySelectorAll('[id]'), (element) => element.id),
+      };
+    }
+
     it('links a label, a message and a control that comes last', async () => {
       const props = { order: 'label-message-control' } as const;
       const serverHtml = await renderOnServer(FILE, props);
@@ -877,7 +905,7 @@ describe('labelable provider', () => {
       expect(read(container)).toEqual(server);
     });
 
-    it('links a control that comes first to its label, and to its message after the page hydrates', async () => {
+    it('links a control that comes first to its label and to its message', async () => {
       const props = { order: 'control-label-message' } as const;
       const serverHtml = await renderOnServer(FILE, props);
 
@@ -885,20 +913,19 @@ describe('labelable provider', () => {
       expect(server.controlId).toBeTruthy();
       expect(server.labelFor).toBe(server.controlId);
       expect(server.labelledBy).toBe(server.labelId);
-      expect(server.describedBy).toBeNull();
+      expect(server.describedBy).toBe(server.messageId);
 
       const { container } = await hydrate(LabelableHydration, { serverHtml, props });
 
-      expect(read(container)).toEqual({ ...server, describedBy: server.messageId });
+      expect(read(container)).toEqual(server);
     });
 
-    it('points `aria-labelledby` of a control with no label at no element until the page hydrates', async () => {
+    it('gives a control with no label no `aria-labelledby`', async () => {
       const props = { order: 'control-only' } as const;
       const serverHtml = await renderOnServer(FILE, props);
 
       const server = read(parse(serverHtml));
-      expect(server.labelledBy).toBeTruthy();
-      expect(server.ids).not.toContain(server.labelledBy);
+      expect(server.labelledBy).toBeNull();
 
       const { container } = await hydrate(LabelableHydration, { serverHtml, props });
 
@@ -921,18 +948,44 @@ describe('labelable provider', () => {
       expect(hydrated.labelFor).toBe('email');
     });
 
-    it('names a control with the `id` prop of a label that comes after it once the page hydrates', async () => {
+    it('names a control with the `id` prop of a label that comes after it', async () => {
       const props = { order: 'control-label-message', labelId: 'own-label' } as const;
       const serverHtml = await renderOnServer(FILE, props);
 
       const server = read(parse(serverHtml));
       expect(server.labelId).toBe('own-label');
-      expect(server.labelledBy).toBeTruthy();
-      expect(server.labelledBy).not.toBe('own-label');
+      expect(server.labelledBy).toBe('own-label');
 
       const { container } = await hydrate(LabelableHydration, { serverHtml, props });
 
       expect(read(container).labelledBy).toBe('own-label');
+    });
+
+    // The message `inside` of the fixture has an id from the `useId` boundary of the control. A
+    // browser that does not defer the control gives that message another id than the server did.
+    it.each([
+      {
+        name: 'the label and the messages first',
+        parts: ['label', 'description', 'error', 'control'],
+      },
+      {
+        name: 'the label first, the messages last',
+        parts: ['label', 'control', 'description', 'error'],
+      },
+      { name: 'the control first', parts: ['control', 'label', 'description', 'error'] },
+      {
+        name: 'the messages first, the label last',
+        parts: ['description', 'error', 'control', 'label'],
+      },
+      { name: 'a labelable control', parts: ['input', 'description'] },
+    ] as const)('hydrates $name with the ids of the server', async ({ parts }) => {
+      const props = { parts: [...parts] };
+      const serverHtml = await renderOnServer(ORDER_FILE, props);
+
+      const server = readOrder(parse(serverHtml));
+      const { container } = await hydrate(LabelableOrder, { serverHtml, props });
+
+      expect(readOrder(container)).toEqual(server);
     });
   });
 });

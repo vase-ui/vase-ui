@@ -1,46 +1,26 @@
-import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
-import { createRenderer, flushMicrotasks, hydrate, renderOnServer, waitFor } from '#test-utils';
+import {
+  closeInTimerTask,
+  createRenderer,
+  createTransitionRunCounter,
+  flushMicrotasks,
+  hydrate,
+  nextEvent,
+  openInTimerTask,
+  probeFrameAfterExit,
+  renderOnServer,
+  waitFor,
+} from '#test-utils';
+import type { FrameProbeResult } from '#test-utils';
 import AnimatedPanel from './AnimatedPanel.vue';
 import {
   ANIMATION,
   TRANSITION,
-  closeInTimerTask,
   countTransitions,
   createCompletionLog,
-  nextEvent,
-  openInTimerTask,
 } from './animatedPanelHarness';
 import type { TransitionRow } from './animatedPanelHarness';
-
-interface FrameProbeResult {
-  /** The panel was `hidden` or not connected in the callback of the frame. */
-  isGone: boolean;
-  /** The callback of the frame has the time of the frame in which the animation ended. */
-  isSameFrame: boolean;
-}
-
-/**
- * Tells if a frame paints between the end of the exit animation and the removal of the panel.
- * The reaction to the end reads the time of the timeline and requests one frame. If the removal
- * is done in that frame callback, no frame ran between the end and the removal. The time of the
- * callback shows that it belongs to the frame of the end.
- */
-function probeFrameAfterExit(panel: HTMLElement, isGone: () => boolean) {
-  return new Promise<FrameProbeResult>((resolve, reject) => {
-    const animations = panel.getAnimations();
-    if (animations.length === 0) {
-      reject(new Error('The panel has no animation to wait for.'));
-      return;
-    }
-    Promise.all(animations.map((animation) => animation.finished)).then(() => {
-      const endTime = Number(document.timeline.currentTime);
-      requestAnimationFrame((frameTime) => {
-        resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
-      });
-    }, reject);
-  });
-}
 
 describe('<AnimatedPanel />', () => {
   const { render } = createRenderer();
@@ -224,34 +204,30 @@ describe('<AnimatedPanel />', () => {
     );
 
     it('runs one enter transition each time a panel mounts open with animateInitialOpen', async () => {
-      let enters = 0;
-      const handleTransitionRun = (event: Event) => {
-        if ((event.target as Element).matches('[data-testid="panel"]')) {
-          enters += 1;
-        }
-      };
-      document.addEventListener('transitionrun', handleTransitionRun, true);
-      onTestFinished(() =>
-        document.removeEventListener('transitionrun', handleTransitionRun, true),
-      );
+      const counter = createTransitionRunCounter(() => true);
 
       for (let cycle = 0; cycle < 6; cycle += 1) {
         const log = createCompletionLog();
         const entered = log.next(true);
-        const { unmount } = await render(() => (
+        const { container, unmount } = await render(() => (
           <AnimatedPanel
             open
             animateInitialOpen
             class={TRANSITION}
             data-testid="panel"
             onOpenChangeComplete={log.onOpenChangeComplete}
+            onTransitionrun={counter.onTransitionrun}
           />
         ));
+        // A late frame can make the completion come before `transitionrun`. The wait for the end
+        // event makes sure that the event of the start came before the assertion.
+        const ended = nextEvent(container, 'transitionend');
         await entered;
+        await ended;
         unmount();
       }
 
-      expect(enters).toBe(6);
+      expect(counter.counts.enter).toBe(6);
     }, 20_000);
   });
 
@@ -259,23 +235,36 @@ describe('<AnimatedPanel />', () => {
     it('comes after the enter transition and not before it', async () => {
       const open = shallowRef(false);
       const log = createCompletionLog();
+      const counter = createTransitionRunCounter(() => open.value);
+      // A late frame can make the browser send `transitionrun` after the completion. So the test
+      // reads the panel in the completion. The part made its own reads by then, so these reads
+      // start no transition.
+      let atCompletion: { hasStartingStyle: boolean; animations: number } | undefined;
       const { container } = await render(() => (
         <AnimatedPanel
           open={open.value}
           class={TRANSITION}
           data-testid="panel"
-          onOpenChangeComplete={log.onOpenChangeComplete}
+          onOpenChangeComplete={(isOpen: boolean) => {
+            const panel = container.querySelector<HTMLElement>('[data-testid="panel"]')!;
+            atCompletion = {
+              hasStartingStyle: panel.hasAttribute('data-starting-style'),
+              animations: panel.getAnimations().length,
+            };
+            log.onOpenChangeComplete(isOpen);
+          }}
+          onTransitionrun={counter.onTransitionrun}
         />
       ));
 
-      const started = nextEvent(container, 'transitionrun');
+      const ended = nextEvent(container, 'transitionend');
       openInTimerTask(open);
-      await started;
-      expect(log.calls).not.toContain(true);
-
-      await nextEvent(container, 'transitionend');
+      await ended;
       await flushMicrotasks();
+
+      expect(atCompletion).toEqual({ hasStartingStyle: false, animations: 0 });
       expect(log.calls).toEqual([true]);
+      expect(counter.counts).toEqual({ enter: 1, exit: 0 });
     });
   });
 

@@ -117,6 +117,7 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
+  expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
 async function expectFieldsetPage(page: Page) {
@@ -124,6 +125,7 @@ async function expectFieldsetPage(page: Page) {
 
   expect(legendId).toBeTruthy();
   expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
+  expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
 // The server HTML has the form with `novalidate` and the input with its value.
@@ -293,6 +295,28 @@ async function expectHydratedScrollAreaPage(page: Page) {
   expect(await page.getByTestId('viewport').getAttribute('tabindex')).toBe('0');
 }
 
+async function expectFieldPage(page: Page) {
+  const control = await readAttributes(page.getByTestId('control'), [
+    'id',
+    'name',
+    'value',
+    'data-filled',
+  ]);
+
+  expect(control.id).toBeTruthy();
+  expect(control).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
+  expect(
+    await readAttributes(page.getByTestId('invalid-control'), ['data-invalid', 'aria-invalid']),
+  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+}
+
+// The root of the field gets `data-filled` in the first render of the browser. The server HTML has
+// it only on the control and on the parts after it.
+async function expectHydratedFieldPage(page: Page) {
+  await expectFieldPage(page);
+  expect(await page.getByTestId('root').getAttribute('data-filled')).toBe('');
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -420,6 +444,7 @@ const PAGES: PageCase[] = [
     expectPage: expectScrollAreaPage,
     expectHydratedPage: expectHydratedScrollAreaPage,
   },
+  { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },

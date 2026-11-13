@@ -349,13 +349,27 @@ describe('<ScrollArea.Viewport />', () => {
     it('keeps ignoring programmatic scrolls in mouse modality', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
-          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+          <ScrollArea.Viewport
+            data-testid="viewport"
+            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+          >
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
       );
 
       const viewport = screen.getByTestId('viewport');
+
+      // `pointer-events: none` isolates this from the browser's real pointer. A real pointer event
+      // marks the next scroll as a user scroll. The browser sends its own `scroll` event for the
+      // scroll below in a later frame, so the part can set `data-scrolling` after the timers ran.
+      // The observer also records a `data-scrolling` that a timer removes before the assertion.
+      const changes: (string | null)[] = [];
+      const observer = new MutationObserver((records) => {
+        changes.push(...records.map((record) => record.attributeName));
+      });
+      observer.observe(viewport, { attributes: true, attributeFilter: ['data-scrolling'] });
+      onTestFinished(() => observer.disconnect());
 
       await fireEvent.pointerDown(viewport, { pointerType: 'mouse' });
 
@@ -366,6 +380,7 @@ describe('<ScrollArea.Viewport />', () => {
       await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT);
       await flushMicrotasks();
 
+      expect(changes).toEqual([]);
       expect(viewport).not.toHaveAttribute('data-scrolling');
     });
 
