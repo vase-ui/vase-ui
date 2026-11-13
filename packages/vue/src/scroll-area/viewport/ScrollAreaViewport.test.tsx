@@ -543,7 +543,7 @@ describe('<ScrollArea.Viewport />', () => {
       // The count after the mount holds the animation wait timer of the viewport. It can also hold
       // a timer of Vue: the first app of a page starts one in a development build. So the test
       // compares counts. The scroll adds the scroll end timer. The deactivation must remove the
-      // two timers of the viewport.
+      // two timers of the viewport. The activation must start the animation wait timer again.
       const timersAfterMount = vi.getTimerCount();
 
       await fireEvent.scroll(viewport, { target: { scrollTop: 100 } });
@@ -568,6 +568,7 @@ describe('<ScrollArea.Viewport />', () => {
       await nextTick();
 
       expect(observe).toHaveBeenCalledTimes(2);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
       // The browser reset the scroll position while the element was out of the document.
       expect(viewport.scrollTop).toBe(0);
       expect(viewport).not.toHaveAttribute('data-overflow-y-start');
