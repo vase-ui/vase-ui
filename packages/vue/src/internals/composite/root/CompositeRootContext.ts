@@ -1,9 +1,10 @@
-import type { InjectionKey } from 'vue';
+import { inject } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 
 export interface CompositeRootContext {
-  highlightedIndex: number;
+  highlightedIndex: ComputedRef<number>;
   onHighlightedIndexChange: (index: number, shouldScrollIntoView?: boolean) => void;
-  highlightItemOnHover: boolean;
+  highlightItemOnHover: ComputedRef<boolean>;
   /**
    * Lets a composite component get events that do not come from its children.
    * For example, a Menubar with detached triggers can define its Menu.Root outside of CompositeRoot.
@@ -14,3 +15,18 @@ export interface CompositeRootContext {
 }
 
 export const CompositeRootContext: InjectionKey<CompositeRootContext> = Symbol();
+
+export function useCompositeRootContext(optional: true): CompositeRootContext | undefined;
+export function useCompositeRootContext(optional?: false): CompositeRootContext;
+export function useCompositeRootContext(optional = false) {
+  // With one argument, Vue shows a warning when there is no provider. The default `undefined`
+  // stops that warning, and the error below says more.
+  const context = inject(CompositeRootContext, undefined);
+  if (context === undefined && !optional) {
+    throw new Error(
+      'Vase UI: A composite item must be inside a composite root. Without a root the item has no highlighted index and no tab stop. Put the item part inside its root part.',
+    );
+  }
+
+  return context;
+}
