@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { shallowRef, useAttrs } from 'vue';
+import { useRegisterFieldControl } from '../../src/internals/field-register-control';
 import { useFieldRootContext } from '../../src/internals/field-root-context';
 import { useSetFieldFocused } from '../../src/internals/field-root-context/useSetFieldFocused';
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
+  id?: string | undefined;
+  name?: string | undefined;
   value?: string | undefined;
   disabled?: boolean | undefined;
 }>();
@@ -24,6 +27,15 @@ const setFocused = useSetFieldFocused(
   (focused) => emit('focusedChange', focused),
 );
 
+useRegisterFieldControl(
+  inputElement,
+  () => props.id,
+  () => props.value,
+  undefined,
+  () => !props.disabled,
+  () => props.name,
+);
+
 if (props.value !== undefined) {
   setFilled(props.value !== '');
 }
@@ -36,6 +48,7 @@ function setInputElement(element: unknown) {
 function elementProps() {
   return {
     ...attrs,
+    id: props.id,
     value: props.value,
     'aria-disabled': props.disabled || undefined,
     onFocusin() {

@@ -368,6 +368,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
+- Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
 
 ### Vapor mode
@@ -445,6 +446,14 @@ The label, the control and the messages of a field:
 - When the field has no label, that `aria-labelledby` has no target until the control is mounted. A label with an `id` prop that comes after the control also does not name the control in the server HTML.
 - A control makes no assumption for a message. A message that comes after the control is in `aria-describedby` after the first flush on the client, before a paint.
 
+The state of a field:
+
+- The root of a field holds `touched`, `dirty`, `filled`, `focused` and the validity data in `shallowRef` values. A part changes one only through a function of the field context.
+- A control can call such a function in `setup` with a value that it knows from its props, such as `setFilled`. The server HTML of the control and of each part after it then has the attribute. The root and the parts before the control get it in the first flush on the client. Vue does not compare `data-*`.
+- A value that can add or remove an element does not come from `setup`. A lazy component runs its `setup` later in a browser than on a server, and Vue reports the difference as a hydration mismatch.
+- `focused`, `touched`, the validity and the initial value come after the mount. A control that has focus before the hydration gets `data-focused` when it is mounted.
+- The name of a control comes with its registration, after the mount. A form error for a `name` that only the control has thus shows after the mount. A field with the `name` on its root has the error in the server HTML.
+
 ### What Vue replaces
 
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
@@ -455,9 +464,13 @@ The label, the control and the messages of a field:
 - Only three registries are shared between copies, on `Symbol.for` keys: the scroll-lock count, the modal marks and the Escape stack.
 - Each shared registry is a plain object with a `version` field. Fields are only added.
 - Direction and CSP stay as `DirectionProvider` and `CSPProvider`. There is no global configuration provider.
-- A React ref object that functions share (`React.RefObject`, read as `.current`) becomes a Vue ref, read as `.value`. An example is the list of the elements of a composite.
+- A React ref object that leaves the function that makes it (`React.RefObject`, read as `.current`) becomes a Vue ref, read as `.value`. It can be a member of a context, a member of a registration or a parameter. An example is the list of the elements of a composite.
 - A function that only reads such a ref takes `Readonly<Ref<T>>`. The owner makes the ref with `shallowRef` and gives it a new value on each change. It does not change an array in place, because a `shallowRef` does not see that change.
+- Base UI sometimes gives a ref object that computes its value on each read, or that it selects at render. A function that only reads such a ref takes `MaybeRefOrGetter<T>` and reads it with `toValue` in a handler or a hook. A function that gives the ref to such a reader takes the same type. Examples are `focusTargetRef` of `useSetFieldFocused` and `controlRef` of `useRegisterFieldControl`, which the form reads.
+- A ref that parts write with no function of the context is a `Ref<T>`, made with `shallowRef`. `focusOwnerRef` of the field context is an example.
+- A ref that only handlers, lifecycle hooks and `watch` callbacks read costs no render. They read it with no effect active, so a write wakes nothing. Do not read such a ref in a template.
 - A value that Base UI keeps in a React ref and reads during render is also a `shallowRef`. Only a reactive value renders the part when it changes. `useCollapsiblePanel` has examples.
+- A React ref that stays in one function becomes a `let`.
 - A React synthetic event becomes the DOM event. `isReactEvent` of Base UI has no counterpart.
 
 ### Context of a root
@@ -473,9 +486,12 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - `use<Root>Context()` calls `inject(key, undefined)`. With one argument, Vue gives a warning of its own when there is no provider.
 - When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
 - A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`.
-- A context that Base UI creates with a default value has one default object in its file. `use<Name>Context()` then calls `inject(key, DEFAULT_<NAME>_CONTEXT)`, and a part works with no provider. `useLabelableContext()` does this.
-- Each value of such a default is a `computed` with a constant. Each function does nothing, except `getDescriptionProps`, which returns its argument. The default holds no state, because all apps and all server requests share it.
-- To find out if a provider is there, compare a function of the context with `NOOP`, as Base UI does: `registerControlId === NOOP`.
+- A context that Base UI creates with a default value has one default object in its file. `use<Name>Context()` then calls `inject(key, DEFAULT_<NAME>_CONTEXT)`, and a part works with no provider. `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` do this.
+- The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does.
+- `DEFAULT_FIELD_ROOT_CONTEXT` has three more forms. A ref that parts write drops each write: `validation.inputRef` is a `customRef` that reads `null`. A member that only a provider can have is `null`: `focusOwnerRef`. A collection is empty and read-only: `registeredInputs`.
+- Base UI keeps three things in its default field and form contexts: the fields of the page that have no form, one focus owner and one input. Vase UI keeps none. With no form, `fields` is empty. With no field, `useSetFieldFocused` keeps the owner of its control.
+- To find out if a provider is there, compare a function of the context with `NOOP`, as Base UI does: `registerControlId === NOOP`, `setValidityData === NOOP`. `useFieldRootContext(false)` throws when there is no field.
+- Where Base UI types a member as a React state setter, the function takes a value. A Vue write is immediate, so a caller that needs the last value reads the ref.
 - A component cannot `inject` a value that it provides. A root that needs its own context uses the object that the composable returns: `const labelable = provideLabelableContext()`.
 - The context of a provider has another form. `DirectionContext` and `CSPContext` are each one `ComputedRef` of an object, and one composable reads the whole object.
 - A context with one value that can change is one `ComputedRef` of that value. `scroll-area/scrollbar/ScrollAreaScrollbarContext.ts` is the model.
@@ -606,10 +622,10 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
 - A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` and `useRegisteredMessageId` do this.
 - Do not register with a `watch` that has `immediate` and a cleanup. A server render stops that watcher directly after its first run, and the stop runs the cleanup.
-- A registration from which a provider picks one value among many parts runs in `onMounted`, with a `watch` for a later change. A control that replaces another control then registers after the old control left the registrations. `useLabelableId` does this for the id of a control.
+- A registration from which a provider picks one value among many parts runs in `onMounted`. A control that replaces another control then registers after the old control left the registrations. `useLabelableId` does this for the id of a control, with a `watch` for a later change. `useRegisterFieldControl` does it for the control of a field. It registers one getter for all the values of the control, so it needs no `watch`.
 - Where Base UI removes a registration in the cleanup of a layout effect, use `onScopeDispose`. It runs while Vue unmounts the component. The `onMounted` of a part that replaces it runs after that.
 - A compiled template can mount a new part before it unmounts the part that it replaces. A removal by value then removes the value of the new part.
-- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the controls, the labels and the messages.
+- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the controls, the labels and the messages, and for the controls of a field.
 - A `#render` slot can give an element with attributes that no prop of the part shows. An effect that depends on such an attribute runs in `onMounted` and `onUpdated`. It compares the values that it reads with the values of its last run, and it stops when they are equal. `AvatarImage.vue` reads the rendered image in this way.
 - The transition status runs on a `flush: 'sync'` watcher. It replaces a state write during render.
 - A composable that drives `useTransitionStatus` writes its state one time in each run. React batches the writes of an effect, but the sync watcher sees each write. In `useImageLoadingStatus`, a `'loading'` write before a `'loaded'` write would give a loaded image `data-ending-style`.
@@ -642,10 +658,14 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `onActivated` also runs at the first mount in a `KeepAlive`. Keep a flag that `onDeactivated` sets. Do nothing in `onActivated` while the flag is not set.
 - Where the effect is a `watch` with `onCleanup`, the flag is a `shallowRef` in the sources of that `watch`. The callback returns while the flag is set. `ScrollAreaViewport.vue` does this for its observer.
 - `KeepAlive` takes the DOM of a deactivated part out of the document. The id of that part then must not stay in a `for`, an `aria-labelledby` or an `aria-describedby`.
-- A registration of an id with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while the part is deactivated. `useRegisteredId` does this for a label and a message, and `useLabelableId` does it for a control.
+- A registration with a provider registers a getter one time and keeps its entry and its place. The getter gives no value while the part is deactivated. `useRegisteredId` does this for a label and a message, `useLabelableId` does it for the id of a control, and `useRegisterFieldControl` does it for the control of a field.
 - The two hooks of such a registration only set a flag that the getter reads. `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A new entry in that hook would reverse the order of the parts.
 - A pick of one value from many registrations, such as the control id of a provider, runs in a `watch` with the default flush. The pick runs one time for each flush, against all registrations, as the state updater of Base UI does. It then does not depend on the order of the hooks.
 - An action of a part that needs the registrations of other parts runs in a `watch` of the flag, when the flag becomes `false`. In its own hook, the parts before it are still deactivated and give no value. `useLabelableId` does this for a control with no id: it takes the default id of the provider again.
+- The field of a deactivated control gives no value to its form. `fields` of the form context then does not list the field, so a form does not validate it, submit its value or focus its control.
+- `fields` has the order of the registrations, which is the order in which the roots of the fields mount. A field that mounts later than its siblings is last, as in Base UI. A field keeps its place when its control is replaced, when the id of its control changes and when `KeepAlive` shows it again.
+- Thus a form finds the first invalid control by the position of the controls in the document, as Base UI does. An entry of `fields` has the name and the validity of the moment of the read, so a form reads `fields.value` again after a call of `validate`.
+- A part that mounts in a branch that `KeepAlive` has already deactivated gets no `onDeactivated` call, and Vue has no public API for the state of the branch. The getter of such a part gives a value until the next deactivation of the branch.
 - The registry of a composite is different: it holds elements and sorts them by their position in the document. See [Composite](#composite).
 - Do not use the Vue `<Transition>` component. CSS drives animation through `data-starting-style`, `data-ending-style` and `getAnimations()`, as upstream.
 
@@ -809,6 +829,7 @@ The hydration helpers:
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
 - `test/fixtures/HydrationFixture.vue` is an exception. It is the fixture of `test/hydration.test.tsx`, which tests the hydration helpers. It has no `.test.vue` name, and it is not in the folder of its test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
+- The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.
 - To assert on the server HTML before the hydration, parse it in a `<template>` element. That parse has no side effect.
 - `hydrate(component, { serverHtml, props })` hydrates that HTML. The rules below are its contract.
 - It inserts the HTML with `Range.createContextualFragment`, because `innerHTML` does not run an inline script.
