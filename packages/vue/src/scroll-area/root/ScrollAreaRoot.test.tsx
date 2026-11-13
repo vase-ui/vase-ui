@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createApp, nextTick } from 'vue';
+import { createApp, defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
@@ -8,6 +8,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   waitSingleFrame,
@@ -15,6 +16,11 @@ import {
 import { styleDisableScrollbar } from '../../utils/styles';
 import { SCROLL_TIMEOUT } from '../constants';
 import ScrollAreaRootHydration from './ScrollAreaRootHydration.test.vue';
+
+const VIEWPORT_SIZE = 200;
+const SCROLLABLE_CONTENT_SIZE = 1000;
+const SCROLLBAR_WIDTH = 10;
+const SCROLLBAR_HEIGHT = 10;
 
 function queryDisableScrollbarStyles(root: ParentNode) {
   return Array.from(root.querySelectorAll('style')).filter((element) =>
@@ -73,6 +79,95 @@ describe('<ScrollArea.Root />', () => {
 
       await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT);
       await flushMicrotasks();
+
+      expect(root).not.toHaveAttribute('data-scrolling');
+    });
+  });
+
+  describe.skipIf(isJSDOM)('sizing', () => {
+    it('should not add padding for overlay scrollbars', async () => {
+      await render(
+        <ScrollArea.Root style={{ width: `${VIEWPORT_SIZE}px`, height: `${VIEWPORT_SIZE}px` }}>
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+            <div
+              style={{
+                width: `${SCROLLABLE_CONTENT_SIZE}px`,
+                height: `${SCROLLABLE_CONTENT_SIZE}px`,
+              }}
+            />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation="vertical"
+            style={{ width: `${SCROLLBAR_WIDTH}px`, height: '100%' }}
+          />
+          <ScrollArea.Scrollbar
+            orientation="horizontal"
+            style={{ height: `${SCROLLBAR_HEIGHT}px`, width: '100%' }}
+          />
+        </ScrollArea.Root>,
+      );
+
+      const contentWrapper = screen.getByTestId('viewport').firstElementChild!;
+      const style = getComputedStyle(contentWrapper);
+
+      expect(style.paddingLeft).toBe('0px');
+      expect(style.paddingRight).toBe('0px');
+      expect(style.paddingBottom).toBe('0px');
+    });
+  });
+
+  describe('KeepAlive', () => {
+    const { render: renderWithFakeTimers } = createRenderer();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('ends the scrolling state and clears its timers on deactivation', async () => {
+      const visible = shallowRef(true);
+      const App = defineComponent(() => () => (
+        <KeepAlive>
+          {visible.value ? (
+            <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
+              {/* `pointer-events: none` isolates this from the browser's real pointer. A real
+                  pointer that enters the viewport makes the next scroll a user scroll. */}
+              <ScrollArea.Viewport
+                data-testid="viewport"
+                style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+              >
+                <div style={{ width: '1000px', height: '1000px' }} />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+
+      await renderWithFakeTimers(<App />);
+      const root = screen.getByTestId('root');
+      const viewport = screen.getByTestId('viewport');
+      // The count can hold a timer of Vue: the first app of a page starts one in a development
+      // build. So the test compares counts. The scroll adds the scroll timer of the root and the
+      // scroll end timer of the viewport. The deactivation must remove both of them, and the
+      // animation wait timer of the viewport.
+      const timersAfterMount = vi.getTimerCount();
+
+      await fireEvent.pointerEnter(viewport);
+      await fireEvent.scroll(viewport, { target: { scrollTop: 100 } });
+
+      expect(root).toHaveAttribute('data-scrolling', '');
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 2);
+
+      visible.value = false;
+      await nextTick();
+
+      expect(vi.getTimerCount()).toBe(timersAfterMount - 1);
+
+      visible.value = true;
+      await nextTick();
 
       expect(root).not.toHaveAttribute('data-scrolling');
     });
