@@ -1,5 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, h, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
+import {
+  defineComponent,
+  h,
+  KeepAlive,
+  nextTick,
+  onMounted,
+  onUpdated,
+  shallowRef,
+  useAttrs,
+} from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
@@ -1430,6 +1439,48 @@ describe('<Slider.Thumb />', () => {
       expect(handleKeyDown).toHaveBeenCalledTimes(1);
       expect(onValueChange).not.toHaveBeenCalled();
       expect(slider).toHaveAttribute('aria-valuenow', '50');
+    });
+  });
+
+  describe('KeepAlive', () => {
+    it('disconnects the observer of an inset thumb at the deactivation, and observes again at the activation', async () => {
+      const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
+      const disconnect = vi.spyOn(ResizeObserver.prototype, 'disconnect');
+      onTestFinished(() => {
+        observe.mockRestore();
+        disconnect.mockRestore();
+      });
+
+      const visible = shallowRef(true);
+      const App = defineComponent(() => () => (
+        <KeepAlive>
+          {visible.value ? (
+            <Slider.Root defaultValue={50} thumbAlignment="edge">
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+
+      await render(<App />);
+
+      // The observer watches the control and the thumb.
+      expect(observe).toHaveBeenCalledTimes(2);
+      expect(disconnect).not.toHaveBeenCalled();
+
+      visible.value = false;
+      await nextTick();
+
+      expect(disconnect).toHaveBeenCalledTimes(1);
+      expect(observe).toHaveBeenCalledTimes(2);
+
+      visible.value = true;
+      await nextTick();
+
+      expect(observe).toHaveBeenCalledTimes(4);
+      expect(disconnect).toHaveBeenCalledTimes(1);
     });
   });
 
