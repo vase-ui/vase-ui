@@ -360,6 +360,26 @@ async function expectHydratedScrollAreaPage(page: Page) {
   expect(await page.getByTestId('viewport').getAttribute('tabindex')).toBe('0');
 }
 
+// The label and the messages name the control in the server HTML, in each order of the parts.
+async function expectLabelledField(page: Page, name: string) {
+  const readId = (part: string) => page.getByTestId(`${name}-${part}`).getAttribute('id');
+  const controlId = await readId('control');
+  const labelId = await readId('label');
+
+  expect(controlId).toBeTruthy();
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId(`${name}-label`).getAttribute('for')).toBe(controlId);
+  expect(
+    await readAttributes(page.getByTestId(`${name}-control`), [
+      'aria-labelledby',
+      'aria-describedby',
+    ]),
+  ).toEqual({
+    'aria-labelledby': labelId,
+    'aria-describedby': `${await readId('description')} ${await readId('error')}`,
+  });
+}
+
 async function expectFieldPage(page: Page) {
   const control = await readAttributes(page.getByTestId('control'), [
     'id',
@@ -373,6 +393,8 @@ async function expectFieldPage(page: Page) {
   expect(
     await readAttributes(page.getByTestId('invalid-control'), ['data-invalid', 'aria-invalid']),
   ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+  await expectLabelledField(page, 'label-first');
+  await expectLabelledField(page, 'label-last');
 }
 
 // The root of the field gets `data-filled` in the first render of the browser. The server HTML has
@@ -753,6 +775,31 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await page.getByTestId('output').textContent()).toBe('a@b.c');
     expect(page.url()).toBe(url('/form'));
+    expect(messages).toEqual([]);
+  });
+
+  it('blocks the submit of /field while the required control is empty and sends it after hydration', async () => {
+    const page = await createPage('/field');
+    const messages = collectMessages(page);
+    const control = page.getByTestId('required-control');
+    const error = page.getByTestId('required-error');
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('submit').click();
+    await error.waitFor();
+
+    expect(await page.getByTestId('output').textContent()).toBe('');
+    expect(await control.getAttribute('aria-invalid')).toBe('true');
+    expect(await control.getAttribute('aria-describedby')).toBe(await error.getAttribute('id'));
+    expect(await readFocusedTestId()).toBe('required-control');
+
+    await control.fill('a@b.c');
+    await page.getByTestId('submit').click();
+
+    expect(await page.getByTestId('output').textContent()).toBe('a@b.c');
+    expect(await error.count()).toBe(0);
+    expect(page.url()).toBe(url('/field'));
     expect(messages).toEqual([]);
   });
 

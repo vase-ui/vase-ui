@@ -68,8 +68,10 @@ function readAttribute(html: string, testId: string, name: string) {
 function read(html: string) {
   return {
     labelId: readAttribute(html, 'label', 'id'),
+    labelFor: readAttribute(html, 'label', 'for'),
     descriptionId: readAttribute(html, 'description', 'id'),
     errorId: readAttribute(html, 'error', 'id'),
+    controlId: readAttribute(html, 'control', 'id'),
     labelledBy: readAttribute(html, 'control', 'aria-labelledby'),
     describedBy: readAttribute(html, 'control', 'aria-describedby'),
   };
@@ -95,6 +97,7 @@ describe('VUE-17: <Field.Control /> on a server, with a label and messages', () 
 
     expect(server.labelId).toMatch(/^vase-ui-./);
     expect(server.labelledBy).toBe(server.labelId);
+    expect(server.labelFor).toBe(server.controlId);
     expect(server.describedBy).toBe(`${server.descriptionId} ${server.errorId}`);
   });
 
@@ -103,6 +106,7 @@ describe('VUE-17: <Field.Control /> on a server, with a label and messages', () 
       await renderToString(<FieldPartOrder parts={['control', 'label']} labelId="own-label" />),
     );
 
+    expect(server.labelId).toBe('own-label');
     expect(server.labelledBy).toBe('own-label');
   });
 
@@ -111,5 +115,52 @@ describe('VUE-17: <Field.Control /> on a server, with a label and messages', () 
 
     expect(server.labelledBy).toBeUndefined();
     expect(server.describedBy).toBe(server.errorId);
+  });
+});
+
+describe('<Field.Label /> and <Field.Item /> on a server', () => {
+  it('renders a label that is not native with its id and no `for`', async () => {
+    const server = read(
+      await renderToString(
+        <Field.Root>
+          <Field.Label nativeLabel={false} as="div" data-testid="label">
+            Label
+          </Field.Label>
+          <Field.Control data-testid="control" />
+        </Field.Root>,
+      ),
+    );
+
+    expect(server.labelId).toMatch(/^vase-ui-./);
+    expect(server.labelFor).toBeUndefined();
+    expect(server.labelledBy).toBe(server.labelId);
+  });
+
+  it('gives the label and the control of each item their own ids', async () => {
+    const html = await renderToString(
+      <Field.Root>
+        <Field.Item>
+          <Field.Label data-testid="first-label">First</Field.Label>
+          <Field.Control data-testid="first-control" />
+        </Field.Item>
+        <Field.Item>
+          <Field.Control data-testid="second-control" />
+          <Field.Label data-testid="second-label">Second</Field.Label>
+        </Field.Item>
+      </Field.Root>,
+    );
+    const firstControl = readAttribute(html, 'first-control', 'id');
+    const secondControl = readAttribute(html, 'second-control', 'id');
+
+    expect(firstControl).toMatch(/^vase-ui-./);
+    expect(secondControl).not.toBe(firstControl);
+    expect(readAttribute(html, 'first-label', 'for')).toBe(firstControl);
+    expect(readAttribute(html, 'second-label', 'for')).toBe(secondControl);
+    expect(readAttribute(html, 'first-control', 'aria-labelledby')).toBe(
+      readAttribute(html, 'first-label', 'id'),
+    );
+    expect(readAttribute(html, 'second-control', 'aria-labelledby')).toBe(
+      readAttribute(html, 'second-label', 'id'),
+    );
   });
 });

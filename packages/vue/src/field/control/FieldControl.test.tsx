@@ -17,13 +17,31 @@ import {
   waitFor,
   within,
 } from '#test-utils';
-import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import FieldPartOrder from '../root/FieldPartOrder.test.vue';
 import FieldControlHydration from './FieldControlHydration.test.vue';
 import FieldControlReplace from './FieldControlReplace.test.vue';
 
 const HYDRATION_FIXTURE = 'src/field/control/FieldControlHydration.test.vue';
 const ORDER_FIXTURE = 'src/field/root/FieldPartOrder.test.vue';
+
+// A case that acts between the server HTML and the hydration puts the HTML in the document and
+// mounts the app by hand.
+async function insertServerHtml(props: Record<string, unknown>) {
+  const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+  const container = document.createElement('div');
+  document.body.append(container);
+  container.innerHTML = serverHtml;
+  onTestFinished(() => container.remove());
+  return container;
+}
+
+async function mountByHand(container: HTMLElement, props: Record<string, unknown>) {
+  const app = createSSRApp(FieldControlHydration, props);
+  onTestFinished(() => app.unmount());
+  app.mount(container);
+  await nextTick();
+  await nextTick();
+}
 
 describe('<Field.Control />', () => {
   const { render } = createRenderer();
@@ -643,6 +661,39 @@ describe('<Field.Control />', () => {
   });
 
   describe('[data-focused]', () => {
+    const Controls = defineComponent(
+      (props: { firstMounted?: boolean; firstDisabled?: boolean }) => () => {
+        const { firstMounted = true, firstDisabled = false } = props;
+        return (
+          <>
+            <Field.Root data-testid="root">
+              <Field.Label data-testid="label">Name</Field.Label>
+              {firstMounted && <Field.Control data-testid="first" disabled={firstDisabled} />}
+            </Field.Root>
+            <button type="button" data-testid="outside" />
+          </>
+        );
+      },
+      { props: ['firstMounted', 'firstDisabled'] },
+    );
+
+    it('is removed when the focused control becomes disabled', async () => {
+      const { setProps } = await render(<Controls />);
+
+      const control = screen.getByTestId('first');
+      control.focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+      expect(control).toHaveAttribute('data-focused', '');
+
+      await setProps({ firstDisabled: true });
+
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+      expect(control).not.toHaveAttribute('data-focused');
+      expect(screen.getByTestId('label')).not.toHaveAttribute('data-focused');
+    });
+
     it('is removed when the field root becomes disabled', async () => {
       function TestCase(props: { disabled?: boolean }) {
         const { disabled = false } = props;
@@ -662,6 +713,95 @@ describe('<Field.Control />', () => {
       await setProps({ disabled: true });
 
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+    });
+
+    it('can be re-acquired after the control is re-enabled', async () => {
+      const { setProps } = await render(<Controls />);
+
+      const control = screen.getByTestId('first');
+      control.focus();
+      await flushMicrotasks();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+
+      await setProps({ firstDisabled: true });
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+
+      // The control must not be the active element, so that the later `focus()` is a new focus.
+      screen.getByTestId('outside').focus();
+      await flushMicrotasks();
+
+      await setProps({ firstDisabled: false });
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+
+      control.focus();
+      await flushMicrotasks();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+    });
+
+    it('is removed when the focused control unmounts', async () => {
+      const { setProps } = await render(<Controls />);
+
+      screen.getByTestId('first').focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('root')).toHaveAttribute('data-focused', '');
+
+      await setProps({ firstMounted: false });
+
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-focused');
+      expect(screen.getByTestId('label')).not.toHaveAttribute('data-focused');
+    });
+  });
+
+  it.skipIf(isJSDOM)('should sync focused state when autoFocus is used with SSR', async () => {
+    const props = { autofocus: true };
+    const container = await insertServerHtml(props);
+    const input = within(container).getByRole('textbox');
+
+    expect(input).toHaveAttribute('autofocus');
+
+    // The browser focuses the control before the hydration.
+    input.focus();
+    expect(input).toBe(document.activeElement);
+
+    await mountByHand(container, props);
+
+    expect(within(container).getByTestId('root')).toHaveAttribute('data-focused', '');
+    expect(input).toHaveAttribute('data-focused', '');
+    expect(within(container).getByText('Name')).toHaveAttribute('data-focused', '');
+  });
+
+  describe('id', () => {
+    it('updates the label association when the control is swapped', async () => {
+      const App = defineComponent(() => {
+        const controlKey = shallowRef('a');
+        return () => (
+          <>
+            <Field.Root>
+              <Field.Label data-testid="label">Label</Field.Label>
+              <Field.Control key={controlKey.value} id={controlKey.value} />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                controlKey.value = 'b';
+              }}
+            >
+              swap
+            </button>
+          </>
+        );
+      });
+
+      await render(<App />);
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('id', 'a');
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+      await fireEvent.click(screen.getByRole('button'));
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('id', 'b');
+      expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
     });
   });
 
@@ -1189,7 +1329,7 @@ describe('<Field.Control />', () => {
     it('has the id of the provider and the id of a registered label in aria-labelledby', async () => {
       await render(
         <Field.Root>
-          <LabelableLabel data-testid="label">Name</LabelableLabel>
+          <Field.Label data-testid="label">Name</Field.Label>
           <Field.Control data-testid="control" />
         </Field.Root>,
       );
@@ -1301,24 +1441,14 @@ describe('<Field.Control />', () => {
 
     it('keeps the text that the user typed before the hydration, and the focus', async () => {
       const props = { defaultValue: 'foo', autofocus: true };
-      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
-      const container = document.createElement('div');
-      document.body.append(container);
-      container.innerHTML = serverHtml;
+      const container = await insertServerHtml(props);
       const input = within(container).getByTestId('control') as HTMLInputElement;
 
       // The page is interactive before the hydration.
       input.focus();
       input.value = 'typed before';
 
-      const app = createSSRApp(FieldControlHydration, props);
-      onTestFinished(() => {
-        app.unmount();
-        container.remove();
-      });
-      app.mount(container);
-      await nextTick();
-      await nextTick();
+      await mountByHand(container, props);
 
       expect(input).toHaveValue('typed before');
       expect(within(container).getByTestId('control')).toBe(input);

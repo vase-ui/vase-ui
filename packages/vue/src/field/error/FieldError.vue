@@ -1,6 +1,9 @@
 <script lang="ts">
 import type { HTMLAttributes } from 'vue';
-import type { FieldRootState } from '../../internals/field-root-context/FieldRootContext';
+import type {
+  FieldRootState,
+  FieldValidityData,
+} from '../../internals/field-root-context/FieldRootContext';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 
@@ -25,7 +28,7 @@ export interface FieldErrorProps
    * Specifying `true` will always show the error message, and lets external libraries
    * control the visibility.
    */
-  match?: boolean | keyof ValidityState | undefined;
+  match?: boolean | keyof FieldValidityData['state'] | undefined;
 }
 </script>
 

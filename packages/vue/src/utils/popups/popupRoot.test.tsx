@@ -6,7 +6,9 @@ import {
   createTransitionRunCounter,
   fireEvent,
   flushMicrotasks,
+  hydrate,
   randomStringValue,
+  renderOnServer,
   waitFor,
 } from '#test-utils';
 import { createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
@@ -15,6 +17,7 @@ import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { useImplicitActiveTrigger } from './popupRoot';
+import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { REASONS } from '../../internals/reasons';
@@ -26,6 +29,8 @@ import {
   TestTrigger,
 } from '../../../test/popupStoreTestUtils';
 import type { TestPopupStore } from '../../../test/popupStoreTestUtils';
+
+const HYDRATION_FILE = 'src/utils/popups/PopupRootHydration.test.vue';
 
 const storeProp = { type: Object as PropType<TestPopupStore>, required: true } as const;
 
@@ -1476,5 +1481,119 @@ describe('usePopupRoot', () => {
         expect(queryByRole('dialog')).toHaveTextContent('payload: from first');
       },
     );
+  });
+
+  describe('hydration', () => {
+    interface TriggerValues {
+      expanded: string | null;
+      controls: string | null;
+      open: boolean;
+    }
+
+    // The triggers, in the order of the document.
+    function readTriggers(root: ParentNode): TriggerValues[] {
+      return Array.from(root.querySelectorAll('button'), (trigger) => ({
+        expanded: trigger.getAttribute('aria-expanded'),
+        controls: trigger.getAttribute('aria-controls'),
+        open: trigger.hasAttribute('data-popup-open'),
+      }));
+    }
+
+    const closed: TriggerValues = { expanded: 'false', controls: null, open: false };
+    const open: TriggerValues = {
+      expanded: 'true',
+      controls: expect.stringMatching(/^vase-ui-/) as string,
+      open: true,
+    };
+
+    // A server registers no trigger and attaches no store to a handle. A trigger that the root has
+    // not named gets its values in the first flush after the mount. Vue does not patch an attribute
+    // when it hydrates, so the first render of each trigger must have the values of the server HTML.
+    it.each<{
+      name: string;
+      props: Record<string, unknown>;
+      server: TriggerValues[];
+      client: TriggerValues[];
+    }>([
+      {
+        name: 'closed with a trigger id',
+        props: { defaultTriggerId: 'first', triggers: ['first', 'second'] },
+        server: [closed, closed],
+        client: [closed, closed],
+      },
+      {
+        name: 'open with defaultTriggerId',
+        props: { defaultOpen: true, defaultTriggerId: 'first', triggers: ['first', 'second'] },
+        server: [open, closed],
+        client: [open, closed],
+      },
+      {
+        name: 'open with the triggerId prop',
+        props: { open: true, triggerId: 'second', triggers: ['first', 'second'] },
+        server: [closed, open],
+        client: [closed, open],
+      },
+      {
+        name: 'one trigger, no trigger id',
+        props: { defaultOpen: true, triggers: ['first'] },
+        server: [closed],
+        client: [open],
+      },
+      {
+        name: 'one trigger with a generated id',
+        props: { defaultOpen: true, triggers: [null] },
+        server: [closed],
+        client: [open],
+      },
+      {
+        name: 'two triggers, no trigger id',
+        props: { defaultOpen: true, triggers: ['first', 'second'] },
+        server: [closed, closed],
+        client: [open, closed],
+      },
+      {
+        name: 'a trigger with a handle after the root',
+        props: {
+          defaultOpen: true,
+          defaultTriggerId: 'after',
+          triggers: ['first'],
+          detachedAfter: 'after',
+        },
+        server: [closed, closed],
+        client: [closed, open],
+      },
+      {
+        name: 'a trigger with a handle before the root',
+        props: {
+          defaultOpen: true,
+          defaultTriggerId: 'before',
+          triggers: ['first'],
+          detachedBefore: 'before',
+        },
+        server: [closed, closed],
+        client: [open, closed],
+      },
+      {
+        name: 'a popup with an id of its own',
+        props: { defaultOpen: true, defaultTriggerId: 'first', popupId: 'my-popup' },
+        server: [open],
+        client: [{ expanded: 'true', controls: 'my-popup', open: true }],
+      },
+    ])('hydrates the server HTML of a root: $name', async ({ props, server, client }) => {
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(readTriggers(template.content)).toEqual(server);
+
+      const { container } = await hydrate(PopupRootHydration, { serverHtml, props });
+
+      const triggers = readTriggers(container);
+      expect(triggers).toEqual(client);
+      // `hydrate` mounts two apps, so an open popup is in the document two times. The portal puts
+      // the popup into the document after the mount, and `aria-controls` names it.
+      const controls = triggers.find((trigger) => trigger.open)?.controls;
+      const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
+      expect(popups).toEqual(controls ? [controls, controls] : []);
+    });
   });
 });
