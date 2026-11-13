@@ -14,6 +14,9 @@
     "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
     "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
     "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
+    "packages/react/src/utils/popups/positioning/useFloating.ts",
+    "packages/react/src/utils/popups/positioning/usePositioner.tsx",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
@@ -40,6 +43,8 @@
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
     "packages/react/src/utils/popups/positioning/arrow.ts",
     "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/useFloating.ts",
+    "packages/react/src/utils/popups/positioning/usePositioner.tsx",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.ts",
@@ -80,6 +85,15 @@
             "hideMiddleware"
           ],
           "title": "treats an all-zero reference rect as hidden"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
+      "rows": [
+        {
+          "describe": [],
+          "title": "uses the supplied root store while preserving DOM and position references"
         }
       ]
     },

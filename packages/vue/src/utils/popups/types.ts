@@ -1,4 +1,5 @@
-import type { VirtualElement } from '@floating-ui/vue';
+import type { Placement, VirtualElement } from '@floating-ui/vue';
+import type { HTMLAttributes } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
@@ -68,6 +69,17 @@ export interface PopupInteractionContext {
    */
   orientation?: 'vertical' | 'horizontal' | 'both' | undefined;
   /**
+   * What the popup gives to the other popups of its tree. The positioning composable writes it.
+   */
+  positioning?: PopupPositioningContext | undefined;
+  /**
+   * Whether the current event went through the popup element, or through the element of a popup
+   * below it in the component tree, such as a popup that `Teleport` moved. A document listener that
+   * sees the event as outside then ignores it. `useDismiss` and the focus manager set it, and it
+   * is cleared in the next task.
+   */
+  insideComponentTree?: boolean | undefined;
+  /**
    * Whether an Escape key press bubbles to the parent popup. `useDismiss` writes it and never
    * clears it.
    */
@@ -105,10 +117,21 @@ export interface PositioningInteractionStore extends PopupInteractionStore {
 }
 
 /**
- * What the popup of a node gives to the other popups of its tree.
+ * What the positioner of a popup gives to the interaction composables of the popup and to the other
+ * popups of its tree. `open` is a plain value. Each other member that can change is a getter, so a
+ * read gives the current value.
  */
 export interface PopupPositioningContext {
+  /**
+   * Whether the popup was open at the last DOM update. A popup above reads it in the event in which
+   * this popup closes. Thus the writer sets it in a `watch` with `flush: 'post'`, not in the write
+   * that closes the popup.
+   */
   open: boolean;
+  /**
+   * The placement that the popup has now, after a flip.
+   */
+  placement?: Placement | undefined;
   nodeId: string | undefined;
   elements: ExtendedElements;
   rootStore: PopupInteractionStore;
@@ -121,3 +144,28 @@ export interface FloatingNodeType {
 }
 
 export type FloatingTreeType = FloatingTreeStore;
+
+type CaptureListeners = {
+  [name: `on${string}Capture` | `on${string}CapturePassive`]: ((event: any) => void) | undefined;
+};
+
+/**
+ * The attributes and listeners that an interaction composable gives to one element. Vue declares
+ * no listener with the `Capture` suffix, and it reads the suffix when it adds the listener.
+ */
+export type InteractionProps = HTMLAttributes & CaptureListeners;
+
+export interface ElementProps {
+  reference?: InteractionProps | undefined;
+  floating?: InteractionProps | undefined;
+  item?: InteractionProps | undefined;
+  trigger?: InteractionProps | undefined;
+}
+
+/**
+ * The props that `useDismiss` returns. Each handler does nothing while the composable is not
+ * enabled, so the object always has the three members.
+ */
+export type DismissElementProps = Required<
+  Pick<ElementProps, 'reference' | 'floating' | 'trigger'>
+>;

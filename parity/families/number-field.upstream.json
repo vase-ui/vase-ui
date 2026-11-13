@@ -1,0 +1,4979 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/number-field/**",
+    "docs/src/app/(docs)/react/components/number-field/**"
+  ],
+  "sources": [
+    "packages/react/src/number-field/decrement/NumberFieldDecrement.tsx",
+    "packages/react/src/number-field/decrement/NumberFieldDecrementDataAttributes.ts",
+    "packages/react/src/number-field/group/NumberFieldGroup.tsx",
+    "packages/react/src/number-field/group/NumberFieldGroupDataAttributes.ts",
+    "packages/react/src/number-field/increment/NumberFieldIncrement.tsx",
+    "packages/react/src/number-field/increment/NumberFieldIncrementDataAttributes.ts",
+    "packages/react/src/number-field/index.parts.ts",
+    "packages/react/src/number-field/index.ts",
+    "packages/react/src/number-field/input/NumberFieldInput.tsx",
+    "packages/react/src/number-field/input/NumberFieldInputDataAttributes.ts",
+    "packages/react/src/number-field/root/NumberFieldRoot.tsx",
+    "packages/react/src/number-field/root/NumberFieldRootContext.ts",
+    "packages/react/src/number-field/root/NumberFieldRootDataAttributes.ts",
+    "packages/react/src/number-field/root/useNumberFieldStepperButton.ts",
+    "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
+    "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursorDataAttributes.ts",
+    "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
+    "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
+    "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaDataAttributes.ts",
+    "packages/react/src/number-field/utils/constants.ts",
+    "packages/react/src/number-field/utils/getViewportRect.ts",
+    "packages/react/src/number-field/utils/parse.ts",
+    "packages/react/src/number-field/utils/stateAttributesMapping.ts",
+    "packages/react/src/number-field/utils/types.ts",
+    "packages/react/src/number-field/utils/validate.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/number-field/input/NumberFieldInput.spec.tsx",
+    "packages/react/src/number-field/root/NumberFieldRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/number-field/decrement/NumberFieldDecrement.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.Decrement />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField.Decrement />",
+            "prop: snapOnStep"
+          ],
+          "title": "should decrement by exact step without rounding when snapOnStep is false"
+        },
+        {
+          "describe": [
+            "<NumberField.Decrement />",
+            "prop: snapOnStep"
+          ],
+          "title": "should snap on decrement when snapOnStep is true"
+        },
+        {
+          "describe": [
+            "<NumberField.Decrement />",
+            "prop: snapOnStep"
+          ],
+          "title": "should decrement with respect to the min value"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/group/NumberFieldGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.Group />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField.Group />"
+          ],
+          "title": "has role prop"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/increment/NumberFieldIncrement.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.Increment />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "press and hold"
+          ],
+          "title": "stops the hold on release when an ancestor stops pointerup propagation"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "press and hold"
+          ],
+          "title": "starts the hold once a touch press settles and ignores the compatibility click"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "press and hold"
+          ],
+          "title": "does not start the hold when the touch moves like a scroll"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "press and hold"
+          ],
+          "title": "treats a touch press with several small moves as a tap"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />"
+          ],
+          "title": "places the caret at the end of the input when a mouse press focuses it"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "prop: snapOnStep"
+          ],
+          "title": "should increment by exact step without rounding when snapOnStep is false"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "prop: snapOnStep"
+          ],
+          "title": "should snap on increment when snapOnStep is true"
+        },
+        {
+          "describe": [
+            "<NumberField.Increment />",
+            "prop: snapOnStep"
+          ],
+          "title": "should increment with respect to the min value"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NumberField.Root>"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "has textbox role"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "allows overriding the form provided by the root"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not allow non-numeric characters on change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not allow non-numeric characters on keydown"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should allow numeric characters on change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should increment on keydown ArrowUp"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should decrement on keydown ArrowDown"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should set the value to min on keydown Home"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should set the value to max on keydown End"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "uses smallStep and snapOnStep when holding Alt with ArrowUp/ArrowDown"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "advances by a smallStep finer than 3 fraction digits"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "increments with keyboard from numeric state, not rounded display text"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "decrements with keyboard from numeric state, not rounded display text"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "increments with keyboard from numeric state after a no-edit blur cycle"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "steps keyboard from dirty input text when the controlled value lags onValueChange"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "does not commit a stale value when a synced keyboard step is canceled after an external change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "keeps dirty-input authority after a non-mutating key so the next keyboard step uses dirty text"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "keeps dirty-input authority after a non-mutating key so a button step uses dirty text"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits dirty text on blur after a cursor key when the controlled value does not mirror it"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "allows unicode plus/minus, permille and fullwidth digits on keydown when formatted as percent"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "blocks percent and permille symbols on keydown when not formatted as percent"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "allows parentheses on keydown only for accounting formats that accept negatives ($name)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "accepts a typed negative exponent when negatives are not allowed"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "applies locale-aware decimal/group gating (de-DE)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "allows space key when locale uses space-like grouping (pl-PL)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits formatted value only on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit validated number on blur (min)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit validated number on blur (max)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not snap number to step on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit validated number on blur (step and min)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve default formatting on first blur after external value change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should update input value after increment/decrement followed by external value change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should update input value after decrement followed by external value change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should allow typing after default formatting on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should format to default canonical representation on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should handle multiple blur cycles with default formatting"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should handle edge case where parsed value equals current value but input differs"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should apply default formatting after external change during typing"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should round to explicit maximumFractionDigits on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should respect roundingMode when rounding to explicit maximumFractionDigits on blur in %s"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not throw on blur when format uses roundingIncrement with fixed fraction digits"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit roundingIncrement values on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit significant digit rounded values on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve tiny percent significant digit rounded values on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit roundingMode values on blur without explicit precision"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should format controlled values with rounding options after external value changes"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should round %s values on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should parse locale prefix percent values on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve exact percent precision boundaries with directional roundingMode on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve high-precision percent boundaries with directional roundingMode on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should commit the clamped value when blur rounding crosses a boundary"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should round currency values on blur without percent scaling"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not commit values that overflow while parsing on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should not commit a canceled blur change"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve default numeric precision while formatting display on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "should preserve values typed with more than 15 significant digits"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "keeps full numeric precision across no-edit focus/blur cycles and subsequent stepping"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits parsed value on blur and normalizes display for fr-FR"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits an edited negative pt-BR currency value on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits an edited value whose unit label contains a period (pl-PL)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "accepts typed digits of the numbering system ($name)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "rounds the stored value, not the compact text, on blur ($name)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits an edited grouped compact value (de-DE)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "keeps the stored value on blur after a rejected edit to compact text"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "accepts edits to a label that changes with the plural form ($name)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "does not report a change when blurring a NaN value"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "reformats text left unparsed by an earlier blur on the next blur ($name)"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "commits an edited accounting negative on blur"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "reads an accounting negative as negative after its closing parenthesis is deleted"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "warns in development when clipboard text cannot be read during paste handling"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "warns without an owner stack when React cannot provide one",
+          "conditions": [
+            "skipIf(!hasCaptureOwnerStack)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.Input />"
+          ],
+          "title": "reports an unchanged value once when a paste event carries no clipboard data"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "single sign character"
+          ],
+          "title": "blocks a second minus sign when the existing one is not selected"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "single sign character"
+          ],
+          "title": "allows a minus sign that replaces the selected existing sign"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "single sign character"
+          ],
+          "title": "allows a minus sign when the whole value is selected"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "focus selection"
+          ],
+          "title": "keeps the selection the browser set when focus moves into the input"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "consumer-prevented defaults"
+          ],
+          "title": "does not mark the field focused when the focus default is prevented"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "consumer-prevented defaults"
+          ],
+          "title": "does not reformat, touch, or commit on blur when the blur default is prevented"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "consumer-prevented defaults"
+          ],
+          "title": "ignores a change whose native default was already prevented"
+        },
+        {
+          "describe": [
+            "<NumberField.Input />",
+            "consumer-prevented defaults"
+          ],
+          "title": "does not step when the keydown default is prevented"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/root/NumberFieldRoot.iOS.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.Root /> iOS"
+          ],
+          "title": "uses the decimal keyboard when negative values are impossible"
+        },
+        {
+          "describe": [
+            "<NumberField.Root /> iOS"
+          ],
+          "title": "uses the text keyboard when negative values are allowed"
+        },
+        {
+          "describe": [
+            "<NumberField.Root /> iOS"
+          ],
+          "title": "uses the text keyboard when no minimum is set"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/root/NumberFieldRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: defaultValue"
+          ],
+          "title": "should accept a number value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: defaultValue"
+          ],
+          "title": "should accept an `undefined` value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: value"
+          ],
+          "title": "should accept a number value that can change over time"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: value"
+          ],
+          "title": "should accept an `undefined` value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: value"
+          ],
+          "title": "should accept a `null` value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: value"
+          ],
+          "title": "should be `null` when the input is empty but not trimmed"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "blocks submission when step mismatch occurs"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "blocks submission when step mismatch occurs with default step",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "does not block submission when step=\"any\""
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "should be called when the value changes"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "should be called with a number when transitioning from `null`"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "should be called with `null` when empty and transitioning from a number"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason for parseable typing"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason when clearing the value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason for keyboard increments"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason for increment button presses"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason for decrement button presses"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueChange"
+          ],
+          "title": "includes the reason for wheel scrubbing"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "fires onValueChange for each parseable change while typing"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "does not fire onValueChange for non-numeric composition/partial input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "handles sign and decimal partials vs. parseable numbers"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "allows typing a decimal while replacing a selection"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "accepts grouping while typing and parses progressively"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "respects locale decimal separator while typing (de-DE)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "parses percent while typing and commits canonical percent value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "parses an interleaved percent sign while typing (1%2 -> 12%)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "accepts currency symbol while typing and parses numeric value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "accepts multi-character currency symbols while typing (e.g. pt-BR BRL)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "accepts multi-character unit symbols while typing (e.g. km/h)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "accepts exponent separators while typing (scientific notation)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "ignores bidi/format control characters in the value (e.g. RTL exponent signs)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "allows deleting trailing currency symbols with locale literals"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "allows backspace to remove trailing currency symbol that follows a locale literal"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "typing behavior (parseable changes)"
+          ],
+          "title": "does not commit on blur for invalid input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "fires on blur with committed numeric value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "fires null on blur when input is cleared"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "reports and displays the clamped value on blur, not the raw input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "reports and displays the min-clamped value on blur, not the raw input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "fires on keyboard interactions (ArrowUp/Down/Home/End)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "fires when using increment/decrement buttons"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "includes the correct reason for increment and decrement button presses"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not fire when blurring an untouched empty field"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not fire on keyboard steps that do not change the value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "fires once per press-release even after mouseleave/mouseenter during a hold"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit a canceled keyboard change"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit a canceled clear on blur"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: disabled"
+          ],
+          "title": "should disable the input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: readOnly"
+          ],
+          "title": "should mark the input as readOnly"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: readOnly"
+          ],
+          "title": "keeps focus state in sync on a readOnly field"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: readOnly"
+          ],
+          "title": "does not render aria-readonly on stepper buttons"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: required"
+          ],
+          "title": "should mark the input as required"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: name"
+          ],
+          "title": "should set the name attribute on the hidden input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: name"
+          ],
+          "title": "marks the hidden input readOnly when the field is readOnly"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: min"
+          ],
+          "title": "prevents the raw value from going below the `min` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: min"
+          ],
+          "title": "allows the value to go above the `min` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: max"
+          ],
+          "title": "prevents the value from going above the `max` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: max"
+          ],
+          "title": "allows the value to go below the `max` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowOutOfRange"
+          ],
+          "title": "allows typing a negative value via keyboard when min is 0"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowOutOfRange"
+          ],
+          "title": "allows range overflow validation when true"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowOutOfRange"
+          ],
+          "title": "still clamps step interactions when true"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowOutOfRange"
+          ],
+          "title": "clamps to range when false"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "defaults to 1"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "should increment the value by the `step` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "should snap when incrementing to the nearest multiple of the `step` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "should decrement the value by the `step` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "should snap when decrementing to the nearest multiple of the `step` prop"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "advances by a step finer than 3 fraction digits"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "cleans binary floating point noise introduced by stepping"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: step"
+          ],
+          "title": "preserves large fractional values when stepping cleanup would be too coarse"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: largeStep"
+          ],
+          "title": "should increment the value by the default `largeStep` prop of 10 while holding the shift key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: largeStep"
+          ],
+          "title": "should decrement the value by the default `largeStep` prop of 10 while holding the shift key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: largeStep"
+          ],
+          "title": "should use explicit `largeStep` value if provided while holding the shift key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: largeStep"
+          ],
+          "title": "should not use the `largeStep` prop if no longer holding the shift key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: smallStep"
+          ],
+          "title": "should increment the value by the default `smallStep` prop of 0.1 while holding the alt key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: smallStep"
+          ],
+          "title": "should decrement the value by the default `smallStep` prop of 0.1 while holding the alt key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: smallStep"
+          ],
+          "title": "should use explicit `smallStep` value if provided while holding the alt key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: smallStep"
+          ],
+          "title": "should not use the `smallStep` prop if no longer holding the alt key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: format"
+          ],
+          "title": "reformats the visible text when the format prop changes at the same value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: format"
+          ],
+          "title": "should format the value using the provided options"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: format"
+          ],
+          "title": "reflects controlled value changes in the textbox"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not scrub on wheel when disabled"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not scrub on wheel when readOnly"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "should allow the user to scrub the input value with the mouse wheel"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "should not allow the user to scrub the input value with the mouse wheel if `allowWheelScrub` is `false`"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not scrub on wheel while pinch-zooming (ctrlKey)"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not scrub on wheel when the input is not focused"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not scrub on a horizontal wheel event, and lets it scroll the page"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "scrubs on a vertical wheel event that carries horizontal noise"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "uses largeStep when shift is held and the browser swaps the wheel axis"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "uses largeStep when shift is held during wheel"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "calls onValueChange and onValueCommitted on wheel"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "does not commit when a wheel step is a no-op at the boundary"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: allowWheelScrub"
+          ],
+          "title": "syncs the visible input value when using the mouse wheel after pasting"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "should include the input value in the form submission"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "should not include formatting in the submitted value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "only validates the form specified by `form`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "updates both input form owners when `form` changes or is removed"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "triggers native HTML validation on submit"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "focuses the input when the field receives an error from Form"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "revalidates immediately after form submission errors using increment button"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "should handle browser autofill"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "validates the parsed number when handling browser autofill"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "ignores hidden-input autofill when $lockState inside Field"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Form"
+          ],
+          "title": "ignores hidden-input autofill when $lockState outside Field"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when filled"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "has [data-filled] attribute when already filled"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "[data-filled]"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "adds [data-focused] attribute on every focus"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused input becomes disabled"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused input unmounts"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "prop: validate"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "onSubmit"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "onChange"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "revalidates when the controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "onBlur"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "prevents form submission when the value does not match the step",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "prevents Form/Field submission when the value does not match the step"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "disables the input when disabled=true"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "does not disable the input when disabled=false"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "is validated with latest value when validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "is validated with clamped value when validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "revalidates an external change after a blur that normalizes back to the current value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "Field.Label"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: inputMode"
+          ],
+          "title": "should set the inputMode to numeric"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "forwards focus to the visible input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "places the caret at the end of the visible input when forwarding focus"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "keeps a selection the consumer sets in onFocus when forwarding focus"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "clears the value when autofill empties the hidden input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "applies an autofilled value to the visible input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "hidden input"
+          ],
+          "title": "validates the autofilled value even when the change is canceled"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "accepts Persian digit keyboard input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "pastes %s numerals through the input contract"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "rejects invalid pasted characters without changing the value contract"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "parses Persian digits and separators via change events"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "parses Persian digits with Arabic group/decimal separators"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "parses fullwidth digits and punctuation"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "parses percent and permille signs in exotic forms when formatted as percent"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "ignores percent and permille symbols when not formatted as percent"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "parses trailing unicode minus"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "treats parentheses negatives as invalid input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "collapses extra dots from mixed-locale inputs"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "integration: exotic inputs and IME"
+          ],
+          "title": "allows composition key events (IME) without preventing default"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting"
+          ],
+          "title": "should allow pasting a valid number",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting"
+          ],
+          "title": "should not allow pasting an invalid number",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting at the caret"
+          ],
+          "title": "ignores a paste that does not parse to a number"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting at the caret"
+          ],
+          "title": "does not paste into a readOnly field"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting at the caret"
+          ],
+          "title": "inserts pasted text at the caret instead of replacing the whole value"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting at the caret"
+          ],
+          "title": "replaces the selected range when pasting over a selection"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "pasting at the caret"
+          ],
+          "title": "keeps the caret just after the pasted text"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "should allow navigation keys and not prevent their default behavior"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "does not prevent native caret movement for Home/End without min/max"
+        },
+        {
+          "describe": [
+            "<NumberField />"
+          ],
+          "title": "does not swallow non-printing keys it does not handle"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: locale"
+          ],
+          "title": "should set the locale of the input"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: locale"
+          ],
+          "title": "should use the default locale if no locale is provided"
+        },
+        {
+          "describe": [
+            "<NumberField />",
+            "prop: locale"
+          ],
+          "title": "should handle locales using space as the thousands separator"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/root/useNumberFieldStepperButton.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "ARIA attributes"
+          ],
+          "title": "`has the ${label} label`"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "ARIA attributes"
+          ],
+          "title": "exposes aria-controls on the stepper"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "seeds an empty field with 0"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "steps once from defaultValue=0"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "seeds an empty fully-negative range in range on the first step"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "seeds an empty field in range without directional snapping"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "only calls onValueChange once per step"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "steps from the value set by an external controlled update"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "steps uncontrolled defaultValue from numeric state, not rounded display text"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "steps from numeric state after typed precision is formatted on blur"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "click"
+          ],
+          "title": "does not commit a stale value when a synced step is canceled after an external change"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "dirty input"
+          ],
+          "title": "steps when input is dirty but not blurred (click)"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "dirty input"
+          ],
+          "title": "steps when input is dirty but not blurred (pointerdown)"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "dirty input"
+          ],
+          "title": "ignores non-primary pointer buttons"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "dirty input"
+          ],
+          "title": "does not step or commit when the dirty-input sync is canceled"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "dirty input"
+          ],
+          "title": "does not emit a snapped intermediate when committing dirty text before a step"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "touch"
+          ],
+          "title": "treats pen pointer as touch-like"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "touch"
+          ],
+          "title": "always steps on quick touch ($order, before TOUCH_TIMEOUT)"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "touch"
+          ],
+          "title": "fires onValueCommitted once on first soft tap (touch)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "steps continuously when holding pointerdown"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "does not step twice with pointerdown and click"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "stops calling onValueChange once the boundary is reached"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "commits on release after a hold reaches the boundary"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "does not commit a stale value when the first hold tick is canceled after dirty input"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "stops stepping after mouseleave"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "starts stepping again after mouseleave then mouseenter"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "does not start stepping again after mouseleave then mouseenter after pointerup"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "cancels an active mouse press-and-hold interaction when disabled"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "cancels the compatibility click from a touch press when disabled"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "press and hold"
+          ],
+          "title": "removes the global release listener when unmounted during a hold"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "disabled and read-only states"
+          ],
+          "title": "does not step when readOnly"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "disabled and read-only states"
+          ],
+          "title": "does not step when root is disabled"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "disabled and read-only states"
+          ],
+          "title": "does not step when the button is disabled"
+        },
+        {
+          "describe": [
+            "useNumberFieldStepperButton",
+            "<$name />",
+            "disabled and read-only states"
+          ],
+          "title": "passes disabled state to className when $scenario"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "suite": "describeConformance",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "has presentation role",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NumberField.ScrubArea>",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "renders when using mouse input",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "only renders a cursor for the active scrub area",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "does not render when using touch input",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "handles pointer lock denial through requestPointerLock API",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubAreaCursor />"
+          ],
+          "title": "does not render after a quick tap when pointer lock resolves later",
+          "conditions": [
+            "skipIf(isWebKit)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.gecko.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.ScrubArea /> on Gecko"
+          ],
+          "title": "delays releasing the pointer lock so soft clicks are not swallowed",
+          "conditions": [
+            "skipIf(isJSDOM || platform.engine.webkit)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "has presentation role"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "touch input"
+          ],
+          "title": "blocks scrolling for a single-touch scrub"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "touch input"
+          ],
+          "title": "leaves multi-touch gestures such as pinch-zoom to the browser"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "pointerdown guards"
+          ],
+          "title": "ignores non-primary pointer buttons"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "pointerdown guards"
+          ],
+          "title": "does not start scrubbing when the field is read-only"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "pointerdown guards"
+          ],
+          "title": "keeps a selection the consumer sets in onFocus when a mouse press focuses the input"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "should increment or decrement the value when scrubbing with the pointer"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "tracks visual viewport scale and removes scrub listeners after pointer lock exits"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "clears the root scrubbing state when the scrub area unmounts mid-scrub"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "syncs the visible input value when scrubbing after pasting"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "calls onValueChange while scrubbing and onValueCommitted on pointerup"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "ignores pointer movement once the scrub has ended",
+          "conditions": [
+            "skipIf(platform.engine.gecko)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "React.Activity"
+          ],
+          "title": "does not resume scrubbing when a hidden scrub area is revealed again",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "prop: pixelSensitivity"
+          ],
+          "title": "does not change the value for a zero-distance move when sensitivity is 0"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "prop: pixelSensitivity"
+          ],
+          "title": "should only increment if the pointer movement was greater than or equal to the value"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "prop: teleportDistance"
+          ],
+          "title": "wraps the virtual cursor around the allowed bounds"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "prop: direction"
+          ],
+          "title": "scrubs on vertical movement when direction is vertical"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />",
+            "prop: direction"
+          ],
+          "title": "should only scrub if the pointer moved in the given direction"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "should fire onClick once when clicked without scrubbing"
+        },
+        {
+          "describe": [
+            "<NumberField.ScrubArea />"
+          ],
+          "title": "should fire onClick on child elements"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/utils/getViewportRect.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getViewportRect"
+          ],
+          "title": "pads the element rect by half the teleport distance"
+        },
+        {
+          "describe": [
+            "getViewportRect"
+          ],
+          "title": "collapses to the element rect for a zero teleport distance"
+        },
+        {
+          "describe": [
+            "getViewportRect"
+          ],
+          "title": "uses the visual viewport when no teleport distance is set",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "getViewportRect"
+          ],
+          "title": "falls back to the document element without a visual viewport",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/utils/parse.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "NumberField parse",
+            "getNumberLocaleDetails"
+          ],
+          "title": "returns the number locale details"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses a number"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses percentages by default"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses a number with Arabic numerals"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses a number with Han numerals"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses percentages with Arabic numerals"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses percentages with Han numerals"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null for an invalid number"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles percentages with style: \"percent\""
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses prefix percentages"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses scientific notation percentages"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles percentages with style: \"unit\" and unit: \"percent\""
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "strips an interleaved percent sign (1%2)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses fullwidth digits and punctuation"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses Persian digits"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses Persian digits with Arabic thousands and decimal characters"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses permille values"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "strips bidi/control characters"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles unicode minus and plus signs"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses french formatted numbers with narrow no-break space grouping"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses currency when options specify currency style"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses scientific notation with currency codes"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses localized scientific notation for %s"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses localized percent scientific notation with a negative exponent for %s"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses localized tiny percent scientific notation for %s"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses a localized exponent separator typed with ASCII digits"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses scientific notation permille values"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses units when options specify unit style"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null for Infinity-like inputs"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null when parsing overflows to Infinity"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "collapses extra dots from mixed-locale inputs"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses number with mixed separators (FR)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses number with mixed separators (US)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null for empty and whitespace-only input"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null for just a sign"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles ASCII leading and trailing signs"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "supports multiple unicode minus variants"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "supports additional unicode plus variants"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles additional percent symbol variants"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses Arabic punctuation with ASCII digits"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "removes various Unicode space groupings (fr-FR)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "handles Swiss grouping apostrophe"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses de-DE formatted numbers"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses currency prefix/suffix across locales"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses a prefix symbol followed by a space ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses typed negatives with a spaced prefix symbol"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses an abbreviated unit label ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses typed values with a period in the unit label"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses the digits of the locale numbering system ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses ASCII digits in a locale with non-Latin digits"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses digits from the numberingSystem option"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses accounting negatives ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses typed accounting negatives"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "reads an accounting negative without its closing parenthesis as negative"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "does not read parentheses as a negative without the accounting format"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "does not read a hyphen inside a unit label as a minus sign",
+          "conditions": [
+            "skipIf(!gaAcre.includes('-'))"
+          ]
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "strips a label that contains a shorter label of the same format",
+          "conditions": [
+            "skipIf(!akGram.format(1).startsWith('grame'))"
+          ]
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "strips a label that contains a format control character",
+          "conditions": [
+            "skipIf(!/\\p{Cf}/u.test(siFormatted))"
+          ]
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "reads the group separator of locales that only group from six digits"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "reads the decimal separator of the numberingSystem option"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "reads group separators of compact values below the abbreviation ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "reads a trailing minus after a complete label or Han numerals"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "does not read the hyphen of an unfinished exponent as a minus sign"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "does not read a hyphen left by a partly deleted label as a minus sign"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "keeps a dot typed before a separator or percent sign as the decimal"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "does not rescale a unit whose label contains a percent sign"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "scales percent style even when a unit option is also set"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "keeps only the last of many dots"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "parses units with different formats"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "treats bidi/format controls as ignorable in the middle of input"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "returns null for Infinity with explicit sign and surrounding spaces"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "collapses multiple consecutive dots keeping only the last as decimal"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "maps the full Persian digit range"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "maps the full fullwidth digit range"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "maps the full Arabic-Indic digit range",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "maps the full Han digit range"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "parseNumber"
+          ],
+          "title": "maps both Han zero forms to 0"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "formatter round trip"
+          ],
+          "title": "reads back formatted values with and without a typed minus sign ($name)"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "isNumeralChar"
+          ],
+          "title": "accepts a digit from every supported numeral system"
+        },
+        {
+          "describe": [
+            "NumberField parse",
+            "isNumeralChar"
+          ],
+          "title": "rejects non-digit characters"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/number-field/utils/validate.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "returns 0.3 for 0.2 + 0.1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "cleans negative floating point noise without a format"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves precision finer than 3 fraction digits without a format"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves safe integers exactly without a format"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "cleans 16-digit noise patterns from arithmetic"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "leaves large-magnitude noise uncleaned once one ULP exceeds the absolute cap"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "returns non-finite values untouched"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds compact notation against its standard equivalent"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "returns 0.3 for 0.2 + 0.1 with maximumFractionDigits"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects roundingMode when maximumFractionDigits is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects half-even rounding at ties"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects rounding mode differences for negative values"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds percent values at display scale when maximumFractionDigits is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves exact percent precision boundaries with roundingMode: %s"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds percent values at display scale when only minimumFractionDigits is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds values with significant digit precision"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds percent values at display scale when significant digits are provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds percent significant digit values without reintroducing binary noise"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves tiny percent significant digit values after scaling back"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves meaningful percent precision above directional rounding boundaries"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves high-precision percent fraction digits"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves high-precision percent boundaries with directional rounding"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves tiny values when Intl supports more than 20 fraction digits"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "uses percent fraction defaults when significant digits use roundingPriority"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects roundingPriority when fraction and significant digits are provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "does not scale unit percent values when maximumFractionDigits is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds currency values without percent scaling"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds scientific currency code values"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves negative values when signDisplay hides the sign"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds negative accounting currency values"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects roundingMode when no precision is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "respects roundingIncrement when maximumFractionDigits is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "keeps the original finite value when percent scaling overflows before Intl rounding"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds scientific notation values at their formatted scale"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "preserves non-invertible scientific rounded zero buckets"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "rounds invertible scientific zero buckets"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "returns 1000 for 1000, ignoring grouping"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "ignores formatting style"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "removeFloatingPointErrors"
+          ],
+          "title": "uses resolved maximumFractionDigits when only minimum is provided"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "returns null when value is null"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "skips clamping when clamp is false"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "preserves parsed input beyond 15 significant digits when step is undefined"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "cleans arithmetic noise when stepping"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "preserves large fractional values when stepping cleanup would be too coarse"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber"
+          ],
+          "title": "preserves high-significance step values"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "snaps 5 to 5 when step is 1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "snaps 5.5 to 5 when step is 1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "snaps -0.3 to -1 when step is 1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "be same value when step is undefined and within bounds"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "snaps 9 to 5 when step is 5 and within bounds"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "snaps 12 to 10 when step is 5 and within bounds"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "incrementing"
+          ],
+          "title": "preserves exact value when snapOnStep is false"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "snaps 5 to 5 when step is -1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "snaps 5.5 to 6 when step is -1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "snaps -0.3 to 0 when step is -1"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "be same value when step is undefined and within bounds"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "snaps 9 to 10 when step is -5"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "snaps 12 to 15 when step is -5"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "toValidatedNumber",
+            "decrementing"
+          ],
+          "title": "preserves exact value when snapOnStep is false"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "applies roundingMode after step validation"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "clamps the final value after percent rounding crosses max"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "clamps the final value after directional percent rounding crosses min"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "removes floating point errors when stepping"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "clamps before rounding for non-integer bounds"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "handles increment with step 0.1 without getting stuck"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "handles decrement with step -0.1 without getting stuck"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "handles multiple increments with step 0.01"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "handles fractional step when a minimum is set"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "rounds to the nearest value when using small step"
+        },
+        {
+          "describe": [
+            "NumberField validate",
+            "fractional step with snapOnStep"
+          ],
+          "title": "rounds negative small steps to the nearest value"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "keeps rounded out-of-range values when clamping is disabled"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "clamps to a non-step-aligned max after snapping so the boundary is reachable"
+        },
+        {
+          "describe": [
+            "NumberField validate"
+          ],
+          "title": "clamps to a non-step-aligned min after snapping so the boundary is reachable"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/number-field/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "number | null",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: number | null, eventDetails: NumberField.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onValueCommitted",
+              "required": false,
+              "type": "((value: number | null, eventDetails: NumberField.Root.CommitEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "allowOutOfRange",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "locale",
+              "required": false,
+              "type": "Intl.LocalesArgument",
+              "default": null
+            },
+            {
+              "name": "snapOnStep",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "step",
+              "required": false,
+              "type": "number | 'any'",
+              "default": "1"
+            },
+            {
+              "name": "smallStep",
+              "required": false,
+              "type": "number",
+              "default": "0.1"
+            },
+            {
+              "name": "largeStep",
+              "required": false,
+              "type": "number",
+              "default": "10"
+            },
+            {
+              "name": "min",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "max",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "allowWheelScrub",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "format",
+              "required": false,
+              "type": "Intl.NumberFormatOptions",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldRootState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldRootState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "NumberFieldRootChangeEventReason",
+            "values": [
+              "input-change",
+              "input-clear",
+              "input-blur",
+              "input-paste",
+              "keyboard",
+              "increment-press",
+              "decrement-press",
+              "wheel",
+              "scrub",
+              "none"
+            ],
+            "code": "type NumberFieldRootChangeEventReason = 'input-change' | 'input-clear' | 'input-blur' | 'input-paste' | 'keyboard' | 'increment-press' | 'decrement-press' | 'wheel' | 'scrub' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "NumberFieldRootChangeEventDetails",
+            "code": "type NumberFieldRootChangeEventDetails = ({\n    reason: 'input-change';\n    event: InputEvent | Event;\n} | {\n    reason: 'input-clear';\n    event: InputEvent | Event | FocusEvent;\n} | {\n    reason: 'input-blur';\n    event: FocusEvent;\n} | {\n    reason: 'input-paste';\n    event: ClipboardEvent;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n} | {\n    reason: 'increment-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'decrement-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'wheel';\n    event: WheelEvent;\n} | {\n    reason: 'scrub';\n    event: PointerEvent;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    direction?: Direction;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Input",
+          "tag": "input",
+          "props": [
+            {
+              "name": "aria-roledescription",
+              "required": false,
+              "type": "string",
+              "default": "'Number field'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.Input.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.Input.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, state: NumberField.Input.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldInputState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldInputState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Group",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.Group.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.Group.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.Group.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldGroupState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldGroupState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "ScrubArea",
+          "tag": "span",
+          "props": [
+            {
+              "name": "direction",
+              "required": false,
+              "type": "'horizontal' | 'vertical'",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "pixelSensitivity",
+              "required": false,
+              "type": "number",
+              "default": "2"
+            },
+            {
+              "name": "teleportDistance",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.ScrubArea.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.ScrubArea.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.ScrubArea.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldScrubAreaState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldScrubAreaState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "ScrubAreaCursor",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.ScrubAreaCursor.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.ScrubAreaCursor.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.ScrubAreaCursor.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldScrubAreaCursorState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldScrubAreaCursorState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Decrement",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.Decrement.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.Decrement.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.Decrement.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldDecrementState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldDecrementState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Increment",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NumberField.Increment.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NumberField.Increment.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NumberField.Increment.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NumberFieldIncrementState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "number | null"
+              },
+              {
+                "name": "inputValue",
+                "optional": false,
+                "type": "string"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "scrubbing",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NumberFieldIncrementState = {\n    value: number | null;\n    inputValue: string;\n    required: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    scrubbing: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-scrubbing",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.CommitEventReason",
+          "code": "type NumberFieldRootCommitEventReason = 'input-blur' | 'input-clear' | 'keyboard' | 'increment-press' | 'decrement-press' | 'wheel' | 'scrub' | 'none';"
+        },
+        {
+          "name": "Root.CommitEventDetails",
+          "code": "type NumberFieldRootCommitEventDetails = {\n    reason: 'input-clear';\n    event: InputEvent | Event | FocusEvent;\n} | {\n    reason: 'input-blur';\n    event: FocusEvent;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n} | {\n    reason: 'increment-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'decrement-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'wheel';\n    event: WheelEvent;\n} | {\n    reason: 'scrub';\n    event: PointerEvent;\n} | {\n    reason: 'none';\n    event: Event;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "NumberFieldDecrementDataAttributes",
+          "code": "declare namespace NumberFieldDecrementDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldGroupDataAttributes",
+          "code": "declare namespace NumberFieldGroupDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldIncrementDataAttributes",
+          "code": "declare namespace NumberFieldIncrementDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldInputDataAttributes",
+          "code": "declare namespace NumberFieldInputDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldRootDataAttributes",
+          "code": "declare namespace NumberFieldRootDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldScrubAreaCursorDataAttributes",
+          "code": "declare namespace NumberFieldScrubAreaCursorDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "NumberFieldScrubAreaDataAttributes",
+          "code": "declare namespace NumberFieldScrubAreaDataAttributes {\n    const scrubbing: 'data-scrubbing';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "scrubbing",
+              "value": "data-scrubbing"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Direction",
+          "code": "type Direction = -1 | 1;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/number-field/page.mdx",
+      "referenceTags": [
+        "TypesNumberField.Root",
+        "TypesNumberField.ScrubArea",
+        "TypesNumberField.ScrubAreaCursor",
+        "TypesNumberField.Group",
+        "TypesNumberField.Decrement",
+        "TypesNumberField.Input",
+        "TypesNumberField.Increment"
+      ]
+    }
+  ]
+}

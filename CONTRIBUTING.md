@@ -338,7 +338,7 @@ Rules:
 - Upstream types some Boolean props with a generic parameter, such as `multiple?: Multiple | undefined`. Declare such a prop as `multiple?: (Multiple & boolean) | undefined`.
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
-- The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone, and Vue warns in a development build of the consumer for any other value. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
+- The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
 - Do not give a constant of `setup` the name of a prop. The SFC compiler then reports that name as a constant, and `pnpm parity:check` does not find the prop. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
@@ -419,7 +419,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
 - Keep the range of `@floating-ui/utils` at the release that Base UI resolves at the tracked commit. Choose the range of `@floating-ui/vue` so that it uses the `@floating-ui/dom` of the `@floating-ui/react-dom` that Base UI resolves. The middleware is then the same: `@floating-ui/vue` 2.0 and `@floating-ui/react-dom` 2.1 depend on `@floating-ui/dom` 1.8.
 - Do not add a `minimumReleaseAgeExclude` line or an `allowBuilds` entry to `pnpm-workspace.yaml` without a comment that gives the reason.
-- `useAnchorPositioning` of `src/internals` is the only caller of `useFloating` of `@floating-ui/vue`. A positioner part calls `useAnchorPositioning` in `setup`. `test/fixtures/PositionerPart.vue` is the model.
+- `useAnchorPositioning` of `src/internals` is the only caller of `useFloating` of `@floating-ui/vue`. A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
@@ -652,6 +652,26 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
 - `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
 
+### Popup positioning
+
+The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in `src/utils/popups/positioning`.
+
+- A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
+- `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
+- The part calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node.
+- `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
+- A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
+- The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
+- The context is one plain object with five members: `open`, `placement`, `nodeId`, `elements` and `rootStore`. `elements` has `reference`, `floating` and `domReference`.
+- `useVaseUIFloating` sets `open` in a `watch` with `flush: 'post'`, so it is the open state of the last DOM update. [Popup dismissal](#popup-dismissal) gives the reason.
+- Each other member that can change is a getter, so a read gives the current value. The readers are handlers and the helpers of the tree, such as `getNodeChildren`, so they need no `.value`. A spread of the object gives the values of that moment.
+- `floating` and `domReference` come from the store: its positioner element and its `anchorElement`. `reference` is the element that the popup is positioned against. It is the `anchor` of the positioner, or else the anchor of the store.
+- The context has no position (`x`, `y`, `isPositioned`, `update`) and no `refs`. A reader that needs the position uses the return value of `useAnchorPositioning`.
+- `useVaseUIFloating` writes the context in `onBeforeMount`. A server render thus writes nothing, and each part below the positioner finds the context in `setup`.
+- The composable removes its context from the store when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree hides the context of a deactivated node by itself.
+- While the popup is not mounted, the composable calls `clearPositioning()` of the store. A kept popup then forgets its anchor override, and a `FloatingRootStore` forgets its anchor and its positioner element.
+- `rootStore` can be a getter. A part that gets its store after it has mounted gives a getter, and the context moves to the new store.
+
 ### Focus helpers
 
 The focus helpers of a popup are in `src/utils/popups/focus`.
@@ -685,6 +705,32 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The `id` attribute and the `#render` slot can replace the generated `id`. The portal thus reads the `id` after each DOM update.
 - Unless the popup is modal, the portal listens to `focusin` and `focusout` in the capture phase. When the focus moves from the portal to an element outside it, the portal sets `tabindex="-1"` on each tabbable element in the portal.
 - The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
+
+### Popup dismissal
+
+`useDismiss(store, options)` closes a popup for an Escape press, for a press outside it and for a press of its reference. The code is in `src/utils/popups/interactions/useDismiss.ts`.
+
+- A root calls it one time in `setup`. Base UI mounts a component for the hook only while the popup is open or mounted. The composable needs no such rule. While the popup is closed, it holds no listener and no timer.
+- The result is one plain object with `reference`, `floating` and `trigger`. `trigger` is `reference`. Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state, so the object is made one time. The root gives the members to `usePopupInteractionProps`.
+- `enabled`, `escapeKey`, `outsidePressEvent`, `bubbles` and `externalTree` are a value, a ref or a getter, because a caller of Base UI changes each of them between renders.
+- `outsidePress` and `referencePress` are plain members, because `toValue` calls a function. `referencePress` is a function. `outsidePress` is a Boolean that the composable reads one time, or a function that it calls for each press. A caller of Base UI gives a function or nothing, so no caller needs a Boolean that changes.
+- The document listeners exist only while the popup is open, enabled and not held by `KeepAlive`. A server render adds none.
+- One function, `update()`, removes the listeners of the last run and adds the listeners of the new state. It follows the rule of [What differs from the React source](#what-differs-from-the-react-source) for an effect that reads the DOM: `onMounted` plus a `watch` with `flush: 'post'`. A server calls no `onMounted` and runs no such `watch`.
+- The two `KeepAlive` hooks call `update()` themselves. A plain flag, not a ref, tells it that `KeepAlive` holds the popup. The popup keeps its open state. While `KeepAlive` holds it, the composable resets its session state and clears its timers.
+- A shallow ref in the source list of a `watch` makes Vue call the callback for each trigger of a source, also when no value changed. Give the list a getter, or call the function in the hook.
+- React gives an event of a portal child to the handlers of the popup around the component. Vue does not: an event of content that `Teleport` moved does not reach the popup element. Thus each `useDismiss` call provides two functions with a plain `Symbol()` key, and it injects the two functions of the call above it.
+- `markInsideComponentTree()` sets `context.insideComponentTree`, and a 0 ms timer clears it. The check for an outside press ignores a press while the marker is set. The capture listeners of the popup element call the function, and it calls the function of the popup above. They are DOM listeners, so they also work in a closed shadow root. There they are the only signal.
+- `handleKeydown()` gives a `keydown` that no handler stopped to the popup above. The popup above does nothing when its popup element holds the target, because the DOM gives it the event. Without this function, `details.allowPropagation()` in a teleported child popup does not reach the popup above, as it does in React.
+- The popup tree stays as in Base UI. It cannot replace the marker, because Dialog, Select, Combobox and Tooltip register no node, and a Select in a Popover must not close the Popover.
+- Three differences from Base UI follow from this form:
+  - The boundary is the root that calls `useDismiss`, not the popup element. A popup root below the root of another popup counts as inside it, also when it is not in the popup element. Base UI counts only the React children of the popup element.
+  - Content that a `Teleport` of the consumer moves out of a popup is outside it, and so is content in a portal that has no popup of its own. In React that content is inside. A child Vase UI popup is inside, also when its portal moves it.
+  - A component calls `useDismiss` one time. A second call in the same component replaces the two functions that the first call provides.
+- `onTouchmoveCapturePassive` is the key of the `touchmove` listener of the popup element. Vue reads the suffixes `Capture` and `Passive` of a key. React adds its `touchmove` listener as passive. A listener that is not passive makes the browser wait for it before each scroll step.
+- Each open popup has a number, and an Escape press that reaches the document closes the newest popup first. The counter and the record of each event are in one registry on `globalThis[Symbol.for('vase-ui.escape-layers')]`. Two copies of the library share it.
+- A popup takes its number in `onBeforeMount` when it is open at the mount, and in a `watch` of `open` with the default flush when it opens later. `onBeforeMount` runs for a parent before its child, and `onMounted` does not. A server does not call `onBeforeMount`, so a server render takes no number.
+- `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
+- Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
 
 ### Composite
 
@@ -888,7 +934,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The listener ignores an event whose target is not the form of the input. The callback runs in a 0 ms timeout, because the browser resets the controls after the listeners of the event. It does not run when a listener prevented the event.
 - Base UI can decide in a microtask that runs after the handlers of the ancestors. React runs all its handlers in one native listener, so its microtask comes after them. For a real key press, the browser runs the microtasks after each listener. Use a 0 ms timeout. `Checkbox.Root` does this for Enter. Its handler keeps the default prevented, and it gives the event own properties `defaultPrevented` and `preventDefault` until the timeout. A listener of an ancestor then reads `false`, and it can still prevent the submit.
 - After a reset the error of the field is out of date. The function that `useClearFieldError` returns cancels the pending validation and removes the message that the field put on the input. It also clears the validity of the field, and the error of the form for the name of the field.
-- The popup tree is the only link between a teleported child popup and its parent.
+- A teleported child popup has two links to its parent: the popup tree and the `provide` chain of `useDismiss`. See [Popup dismissal](#popup-dismissal).
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
@@ -1065,6 +1111,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - Vue puts empty text nodes around a fragment. `childNodes` has them. `children` does not.
 - A case under `skipIf(isJSDOM)` runs.
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
+- A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
 - ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 - `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
@@ -1246,6 +1293,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 - A due row needs a test. The title of that test or of its `describe` block must hold the id as a whole word: `VUE-1: the controlled Boolean prop`.
 - `pnpm parity:check` fails on a due row that has no such title.
+- An upstream case can assert the behavior that a row corrects. Give that case a `replaced` exception row. Its `test` is the file of the case that tests the corrected behavior, and its reason names the id of the row.
 
 ## Documentation site
 
