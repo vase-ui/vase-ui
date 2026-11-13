@@ -123,7 +123,6 @@ const scrollingX = shallowRef(false);
 const scrollingY = shallowRef(false);
 const touchModality = shallowRef(false);
 const hasMeasuredScrollbar = shallowRef(false);
-const viewportSnapDisabled = shallowRef(false);
 const cornerSize = shallowRef<Size>(DEFAULT_SIZE);
 const thumbSize = shallowRef<Size>(DEFAULT_SIZE);
 const overflowEdges = shallowRef<OverflowEdges>(DEFAULT_OVERFLOW_EDGES);
@@ -188,14 +187,13 @@ onDeactivated(() => {
 // The restored value snaps the viewport again.
 // Save the value one time. A second pointer in the drag would save `none`.
 // A track press scrolls right after this call, so the function writes to the element at once.
-// Vue writes each key of the rendered style again on each render. The flag makes the viewport
-// render `none` last. Without it, the next render would put the saved value back in the drag.
+// The value goes to the element and not to the rendered style. A rendered declaration would make
+// Vue remove a value that the consumer wrote in script.
 function disableViewportSnap() {
   const viewport = viewportElement.value;
   if (viewport && savedSnapType === null) {
     savedSnapType = viewport.style.scrollSnapType;
     viewport.style.scrollSnapType = 'none';
-    viewportSnapDisabled.value = true;
   }
 }
 
@@ -204,7 +202,12 @@ function restoreViewportSnap() {
     viewportElement.value.style.scrollSnapType = savedSnapType;
   }
   savedSnapType = null;
-  viewportSnapDisabled.value = false;
+}
+
+function reapplyViewportSnapNone() {
+  if (viewportElement.value && savedSnapType !== null) {
+    viewportElement.value.style.scrollSnapType = 'none';
+  }
 }
 
 function handlePointerDown(event: PointerEvent) {
@@ -365,7 +368,7 @@ provide(ScrollAreaRootContext, {
   handlePointerUp,
   handleScroll,
   disableViewportSnap,
-  viewportSnapDisabled,
+  reapplyViewportSnapNone,
   rootId,
   hiddenState,
   setHiddenState(next) {
