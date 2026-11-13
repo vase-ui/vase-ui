@@ -805,6 +805,20 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 
+### Toast store
+
+The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+
+- `ToastStore` is a `ReactiveStore`. Code can make one with no component.
+- A reader calls a selector of the store in a `computed`. `useToastManager()` does this for `toasts`, so it returns `toasts` as a `ComputedRef`. Its four methods are plain functions.
+- The store derives the place of each toast from `toasts`, so one write changes the list and the places.
+- `ToastStore` writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the interaction state of the same change.
+- A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
+- `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
+- A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
+- `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
+- `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
@@ -1151,6 +1165,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `clock.tick(n)`                                                                                            | `vi.advanceTimersByTime(n)`, then `await flushMicrotasks()`                                                                                                                                                                                               |
 | `clock.tickAsync(n)`                                                                                       | `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`                                                                                                                                                                                    |
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
+| `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]`                              | `toasts.value`, because the composable returns a ref                                                                                                                                                                                                      |
 | A function component that calls a hook and spreads the rest of its props                                   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`.                                                                                            |
 | `useTestInteractions([useX(…), …])` in a test component                                                    | The same call in `setup`. In the render function, call the functions of the result that the upstream test component calls. A call of these functions in `setup` reads the props only one time.                                                            |
 | `useTestInteractions([useX(…)])`, where `useX` returns listeners with no `reference`, such as `useFocus`   | Call `useX(…)` in `setup`, and spread the object that it returns on the trigger: `<button {...props} />`. The object has the listeners and no `reference` member.                                                                                         |
