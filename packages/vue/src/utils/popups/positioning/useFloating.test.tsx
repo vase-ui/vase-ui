@@ -1,5 +1,5 @@
 import { describe, expect, it, test, vi } from 'vitest';
-import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, onMounted, shallowRef, watch } from 'vue';
 import type { PropType, ShallowRef } from 'vue';
 import type { Placement, VirtualElement } from '@floating-ui/vue';
 import { createRenderer, flushMicrotasks } from '#test-utils';
@@ -123,15 +123,44 @@ describe('useVaseUIFloating', () => {
 
     const otherPositioner = document.createElement('div');
     const other = document.createElement('span');
-    store.update({ open: false, positionerElement: otherPositioner });
+    store.update({ positionerElement: otherPositioner });
     placement.value = 'top-start';
     reference.value = other;
 
-    expect(context.open).toBe(false);
     expect(context.placement).toBe('top-start');
     expect(context.elements.floating).toBe(otherPositioner);
     expect(context.elements.floating).not.toBe(positionerElement);
     expect(context.elements.reference).toBe(other);
+  });
+
+  it('gives the open state of the last DOM update', async () => {
+    const { store } = createStore();
+    const { positioning } = createPositioning();
+    const seenBeforeUpdate: boolean[] = [];
+    let context!: PopupPositioningContext;
+    const Positioner = createPositioner(
+      { rootStore: store, mounted: true, positioning },
+      (value) => {
+        context = value;
+        // A watcher with the default flush runs before the DOM update.
+        watch(
+          () => store.select('open'),
+          () => {
+            seenBeforeUpdate.push(context.open);
+          },
+        );
+      },
+    );
+    await render(<Positioner />);
+    expect(context.open).toBe(true);
+
+    // The popup above reads the context in the event in which this popup closes.
+    store.update({ open: false });
+    expect(context.open).toBe(true);
+
+    await flushMicrotasks();
+    expect(seenBeforeUpdate).toEqual([true]);
+    expect(context.open).toBe(false);
   });
 
   it('gives the context to the store and to its node before the parts below are mounted', async () => {

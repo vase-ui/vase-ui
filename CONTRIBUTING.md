@@ -661,7 +661,8 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
 - The context is one plain object with five members: `open`, `placement`, `nodeId`, `elements` and `rootStore`. `elements` has `reference`, `floating` and `domReference`.
-- Each member that can change is a getter, so a read gives the current value. The readers are handlers and the helpers of the tree, such as `getNodeChildren`, so they need no `.value`. A spread of the object gives the values of that moment.
+- `useVaseUIFloating` sets `open` in a `watch` with `flush: 'post'`, so it is the open state of the last DOM update. [Popup dismissal](#popup-dismissal) gives the reason.
+- Each other member that can change is a getter, so a read gives the current value. The readers are handlers and the helpers of the tree, such as `getNodeChildren`, so they need no `.value`. A spread of the object gives the values of that moment.
 - `floating` and `domReference` come from the store: its positioner element and its `anchorElement`. `reference` is the element that the popup is positioned against. It is the `anchor` of the positioner, or else the anchor of the store.
 - The context has no position (`x`, `y`, `isPositioned`, `update`) and no `refs`. A reader that needs the position uses the return value of `useAnchorPositioning`.
 - `useVaseUIFloating` writes the context in `onBeforeMount`. A server render thus writes nothing, and each part below the positioner finds the context in `setup`.

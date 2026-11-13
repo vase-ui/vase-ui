@@ -45,7 +45,8 @@ export interface UseFloatingOptions {
  * Makes the positioning context of a popup. It gives the context to the store and to the node of
  * the popup in the popup tree, where the interaction composables and the other popups read it.
  *
- * The context is one plain object that holds getters. A read gives the current value.
+ * The context is one plain object. `open` is the state of the last DOM update. Each other member
+ * that can change is a getter, so a read gives the current value.
  *
  * Call it in `setup`, after `useAnchorPositioning`.
  * @see https://floating-ui.com/docs/useFloating
@@ -68,9 +69,7 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
     },
   };
   const context: PopupPositioningContext = {
-    get open() {
-      return rootStore.value.select('open');
-    },
+    open: rootStore.value.select('open'),
     get placement() {
       return positioning.placement.value;
     },
@@ -80,6 +79,16 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
       return rootStore.value;
     },
   };
+
+  // A popup above reads `open` in the event in which this popup closes, and it must still see this
+  // popup as open. A getter that reads the store would give `false` there.
+  watch(
+    () => rootStore.value.select('open'),
+    (open) => {
+      context.open = open;
+    },
+    { flush: 'post' },
+  );
 
   let published: PositioningInteractionStore | null = null;
   let deactivated = false;

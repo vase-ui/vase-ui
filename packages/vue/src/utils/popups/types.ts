@@ -118,7 +118,8 @@ export interface PositioningInteractionStore extends PopupInteractionStore {
 
 /**
  * What the positioner of a popup gives to the interaction composables of the popup and to the other
- * popups of its tree. Each member that can change is a getter, so a read gives the current value.
+ * popups of its tree. `open` is a plain value. Each other member that can change is a getter, so a
+ * read gives the current value.
  */
 export interface PopupPositioningContext {
   /**
