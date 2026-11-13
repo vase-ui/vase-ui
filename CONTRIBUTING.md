@@ -770,6 +770,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - `ToastStore` is a `ReactiveStore`. Code can make one with no component.
 - A reader calls a selector of the store in a `computed`. `useToastManager()` does this for `toasts`, so it returns `toasts` as a `ComputedRef`. Its four methods are plain functions.
 - The store derives the place of each toast from `toasts`, so one write changes the list and the places.
+- `ToastStore` writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the interaction state of the same change.
 - A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
 - `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
 - The `title` and the `description` of a toast are `VNodeChild` values: a text, a number, a vnode, or an array of them.

@@ -99,6 +99,72 @@ describe('ToastStore with no DOM', () => {
     stop();
   });
 
+  it('starts the timer of a toast that a sync watcher adds as the last toast closes during a hover', () => {
+    vi.useFakeTimers();
+    const store = createStore();
+    store.addToast({ id: 'a' });
+    store.set('hovering', true);
+    let added = false;
+    const stop = watch(
+      () => store.select('toasts'),
+      (toasts) => {
+        if (!added && toasts.every((toast) => toast.transitionStatus === 'ending')) {
+          added = true;
+          store.addToast({ id: 'next', timeout: 100 });
+        }
+      },
+      { flush: 'sync' },
+    );
+
+    store.closeToast('a');
+    vi.advanceTimersByTime(100);
+
+    expect(selectors.toast(store.state, 'next')?.transitionStatus).toBe('ending');
+    stop();
+  });
+
+  it('applies the new limit to a toast that a sync watcher adds while the limit changes', () => {
+    const store = createStore();
+    store.addToast({ id: 'a' });
+    store.addToast({ id: 'b' });
+    store.addToast({ id: 'c' });
+    let added = false;
+    const stop = watch(
+      () => store.select('toasts'),
+      () => {
+        if (!added) {
+          added = true;
+          store.addToast({ id: 'd' });
+        }
+      },
+      { flush: 'sync' },
+    );
+
+    store.syncProviderProps(0, 1);
+
+    expect(store.state.toasts.map((toast) => [toast.id, toast.limited])).toEqual([
+      ['d', false],
+      ['c', true],
+      ['b', true],
+      ['a', true],
+    ]);
+    stop();
+  });
+
+  it('keeps what a sync watcher writes to another key while the first keys are written', () => {
+    const store = createStore();
+    const stop = watch(
+      () => store.select('expanded'),
+      () => store.set('isWindowFocused', false),
+      { flush: 'sync' },
+    );
+
+    store.set('hovering', true);
+
+    expect(store.state.isWindowFocused).toBe(false);
+    stop();
+  });
+
   it.each([
     { name: 'addToast', call: (store: ToastStore) => store.addToast({ id: 'effect' }) },
     {

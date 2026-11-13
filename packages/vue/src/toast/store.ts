@@ -65,9 +65,8 @@ function createToastMetadata(toasts: StoredToast[]) {
   return metadata;
 }
 
-// The metadata comes from the list, not from a second key of the state. `ReactiveStore` writes one
-// key after another, so a second key lets a `flush: 'sync'` watcher read a list and metadata that
-// disagree.
+// The metadata comes from the list, not from a second key of the state. A second key is a second
+// write, so a `flush: 'sync'` watcher could read a list and metadata that disagree.
 const metadataOfToasts = new WeakMap<StoredToast[], Map<string, ToastMetadata>>();
 
 function getToastMetadata(toasts: StoredToast[]) {
@@ -131,6 +130,17 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
    */
   private get current(): State {
     return toRaw(this.state);
+  }
+
+  /**
+   * Writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the
+   * interaction state of the same change.
+   */
+  override setState(newState: State): void {
+    super.setState({ ...newState, toasts: this.current.toasts });
+    // A sync watcher can write the other keys in the first pass. This pass starts from the state of
+    // now, so that it keeps those writes.
+    super.setState({ ...this.current, toasts: newState.toasts });
   }
 
   setViewport = (viewport: HTMLElement | null) => {
