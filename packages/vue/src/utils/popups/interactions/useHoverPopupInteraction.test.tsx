@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
@@ -337,6 +337,24 @@ describe('useHoverPopupInteraction', () => {
         expect(read()).toEqual(RELEASED);
       });
 
+      it('keeps them blocked when enabled keeps its value', async () => {
+        // `enabled` reads two refs. A change of `first` leaves it `true`.
+        const first = shallowRef(true);
+        const second = shallowRef(true);
+        const { read } = await renderOpenPopup({ enabled: () => first.value || second.value });
+        expect(read()).toEqual(BLOCKED);
+        const records: MutationRecord[] = [];
+        const observer = new MutationObserver((list) => records.push(...list));
+        observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+        onTestFinished(() => observer.disconnect());
+
+        first.value = false;
+        await flushMicrotasks();
+
+        expect(records.concat(observer.takeRecords())).toHaveLength(0);
+        expect(read()).toEqual(BLOCKED);
+      });
+
       it('gives them back while KeepAlive holds the popup, and blocks them at the activation', async () => {
         const { read, toggle } = await renderOpenPopup();
 
@@ -379,14 +397,96 @@ describe('useHoverPopupInteraction', () => {
       expect(getStore().select('open')).toBe(false);
     });
 
+    describe('a change of the store', () => {
+      // A popup part that moves from the first store to the second store when `moved` is `true`.
+      // The two stores have the same trigger and the same positioner element, so the store is the
+      // only source of the part that changes.
+      function createStoreChangeApp() {
+        const moved = shallowRef(false);
+        const stores = {} as Record<'first' | 'second', FloatingRootStore>;
+
+        const StoreChangeApp = defineComponent({
+          setup() {
+            function useStore(name: 'first' | 'second') {
+              const open = shallowRef(false);
+              const { refs, context } = useFloating({
+                open,
+                onOpenChange(nextOpen) {
+                  open.value = nextOpen;
+                },
+              });
+              stores[name] = context.rootStore;
+              return refs;
+            }
+            const first = useStore('first');
+            const second = useStore('second');
+            useHoverPopupInteraction(() => (moved.value ? stores.second : stores.first));
+
+            return () => (
+              <div style={NO_POINTER_EVENTS}>
+                <button
+                  data-testid="trigger"
+                  ref={(node) => {
+                    first.setReference(node);
+                    second.setReference(node);
+                  }}
+                />
+                <div
+                  data-testid="popup"
+                  ref={(node) => {
+                    first.setFloating(node);
+                    second.setFloating(node);
+                  }}
+                />
+              </div>
+            );
+          },
+        });
+
+        return { StoreChangeApp, moved, stores };
+      }
+
+      it('listens to the popup for the new store', async () => {
+        const { StoreChangeApp, moved, stores } = createStoreChangeApp();
+        await render(<StoreChangeApp />);
+        await openByHover(stores.second);
+
+        moved.value = true;
+        await flushMicrotasks();
+        await fireEvent.mouseLeave(screen.getByTestId('popup'));
+
+        expect(stores.second.select('open')).toBe(false);
+      });
+
+      it('gives back the pointer events that the old store blocked', async () => {
+        const { StoreChangeApp, moved, stores } = createStoreChangeApp();
+        await render(<StoreChangeApp />);
+        getHoverIntent(stores.first).handleCloseOptions = { blockPointerEvents: true };
+        await openByHover(stores.first);
+        await openByHover(stores.second);
+        expect(document.body.style.pointerEvents).toBe('none');
+
+        moved.value = true;
+        await flushMicrotasks();
+
+        expect(document.body.style.pointerEvents).toBe('');
+      });
+    });
+
     describe('the popup tree', () => {
       const stores: Record<string, FloatingRootStore> = {};
 
       // The popup part. A family puts it below the node of its popup.
       const LayerPopup = defineComponent({
-        props: { store: { type: Object as PropType<FloatingRootStore>, required: true } },
+        props: {
+          store: { type: Object as PropType<FloatingRootStore>, required: true },
+          options: {
+            type: Object as PropType<UseHoverPopupInteractionProps>,
+            default: () => ({}),
+          },
+        },
         setup(props) {
-          useHoverPopupInteraction(props.store);
+          useHoverPopupInteraction(props.store, props.options);
           return () => null;
         },
       });
@@ -394,7 +494,10 @@ describe('useHoverPopupInteraction', () => {
       // A popup that has a node in the popup tree. The popup below it renders in its slot. Its
       // element is in `<body>`, so it is not in the element of this popup.
       const Layer = defineComponent({
-        props: { name: { type: String, required: true } },
+        props: {
+          name: { type: String, required: true },
+          options: { type: Object as PropType<UseHoverPopupInteractionProps>, default: undefined },
+        },
         setup(props, { slots }) {
           const nodeId = useFloatingNodeId();
           const open = shallowRef(false);
@@ -412,7 +515,7 @@ describe('useHoverPopupInteraction', () => {
             open.value && (
               <Teleport to="body">
                 <div data-testid={props.name} ref={refs.setFloating}>
-                  <LayerPopup store={context.rootStore} />
+                  <LayerPopup store={context.rootStore} options={props.options} />
                   {slots.default?.()}
                 </div>
               </Teleport>
@@ -427,9 +530,12 @@ describe('useHoverPopupInteraction', () => {
         },
       });
 
-      async function renderLayers(withTree = true) {
+      async function renderLayers({
+        withTree = true,
+        parentOptions,
+      }: { withTree?: boolean; parentOptions?: UseHoverPopupInteractionProps } = {}) {
         const layers = (
-          <Layer name="parent">
+          <Layer name="parent" options={parentOptions}>
             <Layer name="child" />
           </Layer>
         );
@@ -443,7 +549,7 @@ describe('useHoverPopupInteraction', () => {
         { name: 'a tree', withTree: true, open: true },
         { name: 'no tree', withTree: false, open: false },
       ])('a leave into the popup below it with $name keeps it open: $open', async (row) => {
-        const { parent, child } = await renderLayers(row.withTree);
+        const { parent, child } = await renderLayers({ withTree: row.withTree });
 
         await fireEvent.mouseLeave(parent, { relatedTarget: child });
         await tick(1000);
@@ -470,12 +576,74 @@ describe('useHoverPopupInteraction', () => {
       it('stays open when the pointer enters it before the popup below it closes', async () => {
         const { parent, child } = await renderLayers();
         await fireEvent.mouseLeave(parent);
+
+        await fireEvent.mouseEnter(parent);
+        await fireEvent.mouseLeave(child);
+        await tick(1000);
+
+        expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({
+          parent: true,
+          child: false,
+        });
+      });
+
+      it('stays open when the pointer enters it after the popup below it closes, before the 0 ms timer', async () => {
+        const { parent, child } = await renderLayers();
+        await fireEvent.mouseLeave(parent);
         await fireEvent.mouseLeave(child);
 
         await fireEvent.mouseEnter(parent);
         await tick(1000);
 
         expect(isOpen('parent')).toBe(true);
+      });
+
+      it('closes each popup above it when the popup below it closes, up to the top', async () => {
+        await render(
+          <Tree>
+            <Layer name="top">
+              <Layer name="middle">
+                <Layer name="lowest" />
+              </Layer>
+            </Layer>
+          </Tree>,
+        );
+        await openByHover(stores.top);
+        await openByHover(stores.middle);
+        await openByHover(stores.lowest);
+
+        await fireEvent.mouseLeave(screen.getByTestId('top'));
+        await fireEvent.mouseLeave(screen.getByTestId('middle'));
+        await fireEvent.mouseLeave(screen.getByTestId('lowest'));
+        // Each timer runs in its own task, as in a browser. A node gets its new `open` in a flush
+        // between two tasks.
+        await vi.advanceTimersByTimeAsync(1000);
+
+        expect({
+          top: isOpen('top'),
+          middle: isOpen('middle'),
+          lowest: isOpen('lowest'),
+        }).toEqual({ top: false, middle: false, lowest: false });
+      });
+
+      it('closes after the popup below it closes when enabled keeps its value', async () => {
+        // `enabled` reads two refs. A change of `first` leaves it `true`.
+        const first = shallowRef(true);
+        const second = shallowRef(true);
+        const { parent, child } = await renderLayers({
+          parentOptions: { enabled: () => first.value || second.value },
+        });
+        await fireEvent.mouseLeave(parent);
+
+        first.value = false;
+        await flushMicrotasks();
+        await fireEvent.mouseLeave(child);
+        await tick(0);
+
+        expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({
+          parent: false,
+          child: false,
+        });
       });
 
       it('stops the close that waits for the popup below it when KeepAlive deactivates it', async () => {

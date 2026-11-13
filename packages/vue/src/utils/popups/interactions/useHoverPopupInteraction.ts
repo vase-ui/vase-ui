@@ -19,6 +19,7 @@ import { useFloatingParentNodeId, useFloatingTree } from '../tree/FloatingTree';
 import type { PopupInteractionStore } from '../types';
 import { getNodeChildren } from '../tree/nodes';
 import { getHoverIntent } from './hoverIntent';
+import type { HoverIntent } from './hoverIntent';
 
 export interface UseHoverPopupInteractionProps {
   /**
@@ -56,29 +57,33 @@ function useDomEffect(sources: WatchSource[], run: () => (() => void) | void) {
 }
 
 /**
- * Adds the hover interactions of a popup to its positioner element. Call it in `setup`.
+ * Adds the hover interactions of a popup to its positioner element. Call it in `setup`. The store
+ * can be a ref or a getter, because a part can get its store after `setup`.
  */
 export function useHoverPopupInteraction(
-  store: PopupInteractionStore,
+  store: MaybeRefOrGetter<PopupInteractionStore>,
   parameters: UseHoverPopupInteractionProps = {},
 ): void {
   const enabled = () => toValue(parameters.enabled) ?? true;
   const closeDelay = () => toValue(parameters.closeDelay) ?? 0;
 
-  const open = computed(() => store.select('open'));
-  const positionerElement = computed(() => store.select('positionerElement'));
-  const anchorElement = computed(() => store.select('anchorElement'));
+  const open = computed(() => toValue(store).select('open'));
+  const positionerElement = computed(() => toValue(store).select('positionerElement'));
+  const anchorElement = computed(() => toValue(store).select('anchorElement'));
 
   const tree = useFloatingTree();
   const parentId = useFloatingParentNodeId();
   // A server render reads the intent in no hook, so it makes none.
-  const intent = computed(() => getHoverIntent(store));
+  const intent = computed(() => getHoverIntent(toValue(store)));
 
   const childClosedTimeout = useTimeout();
 
   // `KeepAlive` takes the popup out of the document and sends it no leave event. While it holds the
   // popup, the popup blocks no pointer events and has no listener on its positioner element.
   const deactivated = shallowRef(false);
+  // A source list gets this getter, not the ref: a shallow ref in the list makes `watch` call its
+  // callback also when no value of a source changed.
+  const isDeactivated = () => deactivated.value;
   onDeactivated(() => {
     deactivated.value = true;
   });
@@ -86,19 +91,27 @@ export function useHoverPopupInteraction(
     deactivated.value = false;
   });
 
-  useDomEffect([open], () => {
+  // A change of the store gives each effect a new intent. The cleanup then stops the old intent,
+  // and the effect runs for the new intent.
+  function useIntentEffect(
+    sources: WatchSource[],
+    run: (hoverIntent: HoverIntent) => (() => void) | void,
+  ) {
+    useDomEffect([intent, ...sources], () => run(intent.value));
+  }
+
+  useIntentEffect([open], (hoverIntent) => {
     if (!open.value) {
-      intent.value.reset();
+      hoverIntent.reset();
     }
   });
 
   // The store owns the intent, and the triggers use it too. While this part is active, it stops
-  // what is in flight when it unmounts and when `KeepAlive` deactivates it.
-  useDomEffect([deactivated], () => {
-    if (deactivated.value) {
+  // what is in flight when it unmounts, when its store changes and when `KeepAlive` deactivates it.
+  useIntentEffect([isDeactivated], (hoverIntent) => {
+    if (isDeactivated()) {
       return undefined;
     }
-    const hoverIntent = intent.value;
     return () => {
       childClosedTimeout.clear();
       hoverIntent.cancelPendingOpen();
@@ -106,14 +119,13 @@ export function useHoverPopupInteraction(
     };
   });
 
-  useDomEffect(
-    [enabled, open, anchorElement, positionerElement, tree, parentId, deactivated],
-    () => {
-      if (!enabled() || deactivated.value) {
+  useIntentEffect(
+    [enabled, open, anchorElement, positionerElement, tree, parentId, isDeactivated],
+    (hoverIntent) => {
+      if (!enabled() || isDeactivated()) {
         return undefined;
       }
 
-      const hoverIntent = intent.value;
       const anchor = anchorElement.value;
       const positioner = positionerElement.value;
       if (
@@ -135,12 +147,12 @@ export function useHoverPopupInteraction(
 
   // The positioner element belongs to another part than the popup part that calls this composable,
   // so its listeners cannot be props.
-  useDomEffect([enabled, positionerElement, tree, parentId, deactivated], () => {
-    if (!enabled() || deactivated.value) {
+  useIntentEffect([enabled, positionerElement, tree, parentId, isDeactivated], (hoverIntent) => {
+    if (!enabled() || isDeactivated()) {
       return undefined;
     }
 
-    const hoverIntent = intent.value;
+    const currentStore = toValue(store);
     const currentTree = tree.value;
     const currentParentId = parentId.value;
     const floating = positionerElement.value;
@@ -188,7 +200,7 @@ export function useHoverPopupInteraction(
           return;
         }
         currentTree.events.off('floating.closed', onNodeClosed);
-        store.setOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
+        currentStore.setOpen(false, createChangeEventDetails(REASONS.triggerHover, event));
         currentTree.events.emit('floating.closed', event);
       });
     }
