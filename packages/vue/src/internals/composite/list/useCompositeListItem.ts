@@ -20,8 +20,9 @@ export function useCompositeListItem<Metadata>(
   // The first index can be wrong until the sort that follows the mount, in five cases.
   // (1) The list has an item with an explicit index. The counter does not know the slot that
   //     the explicit index takes.
-  // (2) The list has an item in an async component that is not loaded yet. The `setup` of that
-  //     item runs after the `setup` of the items that follow it.
+  // (2) The list has an item in an async component that is not loaded yet, or the item is a
+  //     descendant of a component with an async `setup`. The `setup` of that item runs after the
+  //     `setup` of the items that follow it. An async `setup` causes this on each server render.
   // (3) The list has an item in a `Teleport`. The element of that item is in the target, but its
   //     `setup` runs in the order of the template.
   // (4) An item whose `setup` ran before registers no element of its own. It renders no element,
