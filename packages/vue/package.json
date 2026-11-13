@@ -49,7 +49,8 @@
     "prepack": "pnpm build && cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ../../README.md ."
   },
   "dependencies": {
-    "@floating-ui/utils": "^0.2.12"
+    "@floating-ui/utils": "^0.2.12",
+    "@floating-ui/vue": "^2.0.1"
   },
   "peerDependencies": {
     "vue": "^3.5.0 || ^3.6.0-0"

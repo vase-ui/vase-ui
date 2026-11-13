@@ -188,6 +188,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@vue/language-core@3.3.14': b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48
   vue-component-meta@3.3.14: bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d
 
 importers:
@@ -285,6 +286,9 @@ importers:
       '@floating-ui/utils':
         specifier: ^0.2.12
         version: 0.2.12
+      '@floating-ui/vue':
+        specifier: ^2.0.1
+        version: 2.0.1(vue@3.5.45(typescript@6.0.3))
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: 0.18.5
@@ -321,7 +325,7 @@ importers:
         version: 0.3.25
       tsdown:
         specifier: 0.23.7
-        version: 0.23.7(@arethetypeswrong/core@0.18.5)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(publint@0.3.25)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
+        version: 0.23.7(@arethetypeswrong/core@0.18.5)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48))(publint@0.3.25)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
       typescript:
         specifier: 6.0.3
         version: 6.0.3
@@ -758,8 +762,19 @@ packages:
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
+  '@floating-ui/core@1.8.0':
+    resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
+
+  '@floating-ui/dom@1.8.0':
+    resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
+
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@floating-ui/vue@2.0.1':
+    resolution: {integrity: sha512-043dyEKD9TDSfz080YH2vobubgg+NIo/9Fw4RAl7sEMpD8Am1DNrrSTl/GpMBjyGHoD/FbJY2QLawY+HSQsEIA==}
+    peerDependencies:
+      vue: '>=3.3.0'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -5039,7 +5054,22 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
+  '@floating-ui/core@1.8.0':
+    dependencies:
+      '@floating-ui/utils': 0.2.12
+
+  '@floating-ui/dom@1.8.0':
+    dependencies:
+      '@floating-ui/core': 1.8.0
+      '@floating-ui/utils': 0.2.12
+
   '@floating-ui/utils@0.2.12': {}
+
+  '@floating-ui/vue@2.0.1(vue@3.5.45(typescript@6.0.3))':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@floating-ui/utils': 0.2.12
+      vue: 3.5.45(typescript@6.0.3)
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -6307,7 +6337,7 @@ snapshots:
 
   '@vue/devtools-shared@8.2.1': {}
 
-  '@vue/language-core@3.3.14':
+  '@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48)':
     dependencies:
       '@volar/language-core': 2.4.30
       '@vue/compiler-dom': 3.5.45
@@ -8135,7 +8165,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-plugin-dts@0.30.1(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(rolldown@1.3.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
+  rolldown-plugin-dts@0.30.1(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48))(rolldown@1.3.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
     dependencies:
       dts-resolver: 3.0.0
       get-tsconfig: 5.0.0-beta.6
@@ -8144,7 +8174,7 @@ snapshots:
       yuku: 0.27.0
     optionalDependencies:
       '@volar/typescript': 2.4.30(typescript@6.0.3)
-      '@vue/language-core': 3.3.14
+      '@vue/language-core': 3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48)
       typescript: 6.0.3
       vue-tsc: 3.3.14(typescript@6.0.3)
     transitivePeerDependencies:
@@ -8523,7 +8553,7 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  tsdown@0.23.7(@arethetypeswrong/core@0.18.5)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(publint@0.3.25)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
+  tsdown@0.23.7(@arethetypeswrong/core@0.18.5)(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48))(publint@0.3.25)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3)):
     dependencies:
       cac: 7.1.0
       defu: 6.1.7
@@ -8533,7 +8563,7 @@ snapshots:
       obug: 3.0.0
       picomatch: 4.0.7
       rolldown: 1.3.1
-      rolldown-plugin-dts: 0.30.1(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14)(rolldown@1.3.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
+      rolldown-plugin-dts: 0.30.1(@volar/typescript@2.4.30(typescript@6.0.3))(@vue/language-core@3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48))(rolldown@1.3.1)(typescript@6.0.3)(vue-tsc@3.3.14(typescript@6.0.3))
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       tinyps: 0.5.2
@@ -9028,7 +9058,7 @@ snapshots:
   vue-component-meta@3.3.14(patch_hash=bd0e33f045984d61a55ca71d28d763fc7d62b9d8af52876b8acdd2a3986c302d)(typescript@6.0.3):
     dependencies:
       '@volar/typescript': 2.4.30(typescript@6.0.3)
-      '@vue/language-core': 3.3.14
+      '@vue/language-core': 3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48)
       path-browserify: 1.0.1
     optionalDependencies:
       typescript: 6.0.3
@@ -9085,7 +9115,7 @@ snapshots:
   vue-tsc@3.3.14(typescript@6.0.3):
     dependencies:
       '@volar/typescript': 2.4.30(typescript@6.0.3)
-      '@vue/language-core': 3.3.14
+      '@vue/language-core': 3.3.14(patch_hash=b0600b610df34c0755af5559e7235d0c942a659d0a7401de99303091f7e27d48)
       typescript: 6.0.3
 
   vue@3.5.45(typescript@6.0.3):

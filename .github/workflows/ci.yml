@@ -113,6 +113,8 @@ jobs:
       - run: pnpm build
       - run: pnpm test:nuxt
 
+  # A prerelease of a dependency must not block a merge, so `required` does not need this job.
+  # The version is the dist-tag `rc` of `vue` on npm.
   test-vue-rc:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -129,7 +131,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.14
+      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm test:chromium
 
