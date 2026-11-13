@@ -1,0 +1,251 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/slider/**",
+    "docs/src/app/(docs)/react/components/slider/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/slider/control/SliderControl.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Control`."
+    },
+    {
+      "upstream": "packages/react/src/slider/control/SliderControlDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Control`."
+    },
+    {
+      "upstream": "packages/react/src/slider/index.parts.ts",
+      "kind": "waits-on",
+      "reason": "The file exports the parts of Slider, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Slider. It exports the parts, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/indicator/SliderIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/slider/indicator/SliderIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/slider/label/SliderLabel.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Label`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Root`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRootContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Root`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRootDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Root`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/stateAttributesMapping.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Root`."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/SliderThumb.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Thumb`."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/SliderThumbDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Thumb`."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/prehydrationScript.min.ts",
+      "kind": "waits-on",
+      "reason": "`Slider.Thumb` renders this script. Vase UI does not have `Slider.Thumb`."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/prehydrationScript.template.js",
+      "kind": "not-applicable",
+      "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. No component imports the template. Vase UI has no minifier."
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrack.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Track`."
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrackDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Track`."
+    },
+    {
+      "upstream": "packages/react/src/slider/utils/test-utils.ts",
+      "kind": "waits-on",
+      "reason": "The file has the helpers of the pointer cases and the touch cases of the parts. Vase UI does not have the parts."
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValue.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Value`."
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValueDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Slider.Value`."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/root/SliderRoot.tsx",
+      "reason": "The type test renders `Slider.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/control/SliderControl.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/control/SliderControl.tsx",
+      "reason": "Each case of the file renders `Slider.Control`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
+      "reason": "Each case of the file renders `Slider.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/label/SliderLabel.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
+      "reason": "Each case of the file renders `Slider.Label`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/root/SliderRoot.tsx",
+      "reason": "Each case of the file renders `Slider.Root`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/thumb/SliderThumb.tsx",
+      "reason": "Each case of the file renders `Slider.Thumb`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
+      "reason": "Each case of the file renders `Slider.Track`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/slider/value/SliderValue.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
+      "reason": "Each case of the file renders `Slider.Value`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Label",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Label`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Value",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Value`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Control",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Control`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Track",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Track`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Indicator`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Thumb",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports `Slider.Thumb`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderControlDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Control`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Indicator`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderRootDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderThumbDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Thumb`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderTrackDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Track`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "SliderValueDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/slider/index.ts",
+      "reason": "The entry point of Slider exports the attribute names of `Slider.Value`. Vase UI does not have that entry point."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
