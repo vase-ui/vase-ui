@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
-import { NumberField } from '@vase-ui/vue/number-field';
+import { NumberField as NumberFieldBase } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
   describeConformance,
@@ -20,7 +20,7 @@ import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
 import NumberFieldRootReplace from './NumberFieldRootReplace.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
-type NumberFieldRootInstance = InstanceType<typeof NumberField.Root>;
+type NumberFieldRootInstance = InstanceType<typeof NumberFieldBase.Root>;
 
 function getHiddenInput() {
   const hiddenInput = document.querySelector<HTMLInputElement>('input[aria-hidden][type=number]');
@@ -60,7 +60,7 @@ async function settleReset() {
 describe('<NumberField />', () => {
   const { render } = createRenderer();
 
-  describeConformance(<NumberField.Root />, () => ({
+  describeConformance(<NumberFieldBase.Root />, () => ({
     refInstanceof: window.HTMLDivElement,
     render,
   }));
@@ -68,15 +68,15 @@ describe('<NumberField />', () => {
   hiddenInputSizeTests({
     render,
     createComponent: (props) => (
-      <NumberField.Root {...props}>
-        <NumberField.Input />
-      </NumberField.Root>
+      <NumberFieldBase.Root {...props}>
+        <NumberFieldBase.Input />
+      </NumberFieldBase.Root>
     ),
   });
 
   describe('hidden input size', () => {
     it('keeps the 1px size in the next render of the root', async () => {
-      const { container } = await render(<NumberField.Root required />);
+      const { container } = await render(<NumberFieldBase.Root required />);
       const input = container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
       input.reportValidity();
 
@@ -90,7 +90,7 @@ describe('<NumberField />', () => {
 
   describe('the hidden input', () => {
     it('is a number input that no assistive technology and no tab key reaches', async () => {
-      await render(<NumberField.Root />);
+      await render(<NumberFieldBase.Root />);
       const input = getHiddenInput();
 
       expect(input).toHaveAttribute('aria-hidden', 'true');
@@ -117,7 +117,7 @@ describe('<NumberField />', () => {
       { name: '`readOnly`', props: { readOnly: true }, attributes: { readonly: '' } },
       { name: '`disabled`', props: { disabled: true }, attributes: { disabled: '' } },
     ])('has the attributes of $name', async ({ props, attributes }) => {
-      await render(<NumberField.Root {...props} />);
+      await render(<NumberFieldBase.Root {...props} />);
 
       for (const [name, value] of Object.entries(attributes)) {
         expect(getHiddenInput()).toHaveAttribute(name, value);
@@ -131,7 +131,7 @@ describe('<NumberField />', () => {
       { name: '`value`', props: { value: 7 }, text: '7' },
       { name: 'a `value` of `null`', props: { value: null }, text: '' },
     ])('has the number of $name', async ({ props, text }) => {
-      await render(<NumberField.Root {...props} />);
+      await render(<NumberFieldBase.Root {...props} />);
 
       expect(getHiddenInput().value).toBe(text);
       expect(getHiddenInput().getAttribute('value')).toBe(text);
@@ -140,7 +140,7 @@ describe('<NumberField />', () => {
     it('is the `inputElement` that the root exposes', async () => {
       let root = null as NumberFieldRootInstance | null;
       await render(() => (
-        <NumberField.Root
+        <NumberFieldBase.Root
           ref={(instance) => {
             root = instance as NumberFieldRootInstance | null;
           }}
@@ -151,7 +151,7 @@ describe('<NumberField />', () => {
     });
 
     it('follows a controlled value', async () => {
-      const { setProps } = await render(<NumberField.Root value={1} />);
+      const { setProps } = await render(<NumberFieldBase.Root value={1} />);
 
       await setProps({ value: 2.5 });
       expect(getHiddenInput().value).toBe('2.5');
@@ -165,7 +165,7 @@ describe('<NumberField />', () => {
     it('emits `valueChange` and then `update:value`, before the listener of the event returns', async () => {
       const order: string[] = [];
       await render(
-        <NumberField.Root
+        <NumberFieldBase.Root
           onValueChange={(value: number | null) => order.push(`valueChange ${value}`)}
           {...{ 'onUpdate:value': (value: number | null) => order.push(`update:value ${value}`) }}
         />,
@@ -181,7 +181,7 @@ describe('<NumberField />', () => {
 
     it('gives `valueChange` the reason `none` and the event of the hidden input', async () => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root onValueChange={handleChange} />);
+      await render(<NumberFieldBase.Root onValueChange={handleChange} />);
 
       await autofill('7');
 
@@ -195,11 +195,12 @@ describe('<NumberField />', () => {
     it('does not emit `update:value`, and keeps the value, for a change that a listener cancels', async () => {
       const handleUpdate = vi.fn();
       await render(
-        <NumberField.Root
+        <NumberFieldBase.Root
           defaultValue={5}
-          onValueChange={(_value: number | null, details: NumberField.Root.ChangeEventDetails) =>
-            details.cancel()
-          }
+          onValueChange={(
+            _value: number | null,
+            details: NumberFieldBase.Root.ChangeEventDetails,
+          ) => details.cancel()}
           {...{ 'onUpdate:value': handleUpdate }}
         />,
       );
@@ -214,7 +215,7 @@ describe('<NumberField />', () => {
   describe('autofill', () => {
     it('changes the value one time for `input` and `change`', async () => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root onValueChange={handleChange} />);
+      await render(<NumberFieldBase.Root onValueChange={handleChange} />);
 
       await autofill('42');
 
@@ -224,7 +225,7 @@ describe('<NumberField />', () => {
 
     it('changes the value for a `change` event that has no `input` event', async () => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root onValueChange={handleChange} />);
+      await render(<NumberFieldBase.Root onValueChange={handleChange} />);
 
       await fireEvent.change(getHiddenInput(), { target: { value: '42' } });
 
@@ -239,7 +240,7 @@ describe('<NumberField />', () => {
         renderField: (handleChange: (value: number | null) => void) => {
           const value = shallowRef<number | null>(null);
           return () => (
-            <NumberField.Root
+            <NumberFieldBase.Root
               value={value.value}
               onValueChange={handleChange}
               {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
@@ -253,7 +254,7 @@ describe('<NumberField />', () => {
       {
         name: 'a fill above `max`',
         renderField: (handleChange: (value: number | null) => void) => () => (
-          <NumberField.Root max={10} onValueChange={handleChange} />
+          <NumberFieldBase.Root max={10} onValueChange={handleChange} />
         ),
         filled: '70',
         changes: [10],
@@ -262,8 +263,11 @@ describe('<NumberField />', () => {
       {
         name: 'a change that a listener cancels',
         renderField: (handleChange: (value: number | null) => void) => () => (
-          <NumberField.Root
-            onValueChange={(value: number | null, details: NumberField.Root.ChangeEventDetails) => {
+          <NumberFieldBase.Root
+            onValueChange={(
+              value: number | null,
+              details: NumberFieldBase.Root.ChangeEventDetails,
+            ) => {
               handleChange(value);
               details.cancel();
             }}
@@ -291,7 +295,7 @@ describe('<NumberField />', () => {
       const handleChange = vi.fn();
       const value = shallowRef<number | null>(null);
       await render(() => (
-        <NumberField.Root
+        <NumberFieldBase.Root
           value={value.value}
           onValueChange={handleChange}
           {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
@@ -311,7 +315,7 @@ describe('<NumberField />', () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
         <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberField.Root defaultValue={5} />
+          <NumberFieldBase.Root defaultValue={5} />
         </Field.Root>,
       );
 
@@ -322,7 +326,7 @@ describe('<NumberField />', () => {
 
     it('empties the value when the hidden input gets no value', async () => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root defaultValue={5} onValueChange={handleChange} />);
+      await render(<NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />);
 
       await fireEvent.change(getHiddenInput(), { target: { value: '' } });
 
@@ -333,7 +337,7 @@ describe('<NumberField />', () => {
     it('ignores an autofill that a listener prevented', async () => {
       const handleChange = vi.fn();
       const { container } = await render(
-        <NumberField.Root defaultValue={1} onValueChange={handleChange} />,
+        <NumberFieldBase.Root defaultValue={1} onValueChange={handleChange} />,
       );
       container.addEventListener('input', (event) => event.preventDefault(), { capture: true });
       const input = getHiddenInput();
@@ -351,7 +355,9 @@ describe('<NumberField />', () => {
       { name: 'a disabled field', props: { disabled: true } },
     ])('ignores the autofill of $name', async ({ props }) => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root defaultValue={1} onValueChange={handleChange} {...props} />);
+      await render(
+        <NumberFieldBase.Root defaultValue={1} onValueChange={handleChange} {...props} />,
+      );
 
       await autofill('42');
 
@@ -377,7 +383,7 @@ describe('<NumberField />', () => {
       },
     ])('gives the field the value for a fill $name', async ({ props, filled, value, invalid }) => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root onValueChange={handleChange} {...props} />);
+      await render(<NumberFieldBase.Root onValueChange={handleChange} {...props} />);
 
       await autofill(filled);
 
@@ -392,7 +398,7 @@ describe('<NumberField />', () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
         <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberField.Root />
+          <NumberFieldBase.Root />
         </Field.Root>,
       );
 
@@ -405,7 +411,7 @@ describe('<NumberField />', () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
         <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberField.Root max={10} />
+          <NumberFieldBase.Root max={10} />
         </Field.Root>,
       );
 
@@ -418,10 +424,11 @@ describe('<NumberField />', () => {
       const validate = vi.fn((_value: unknown) => null);
       await render(
         <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberField.Root
-            onValueChange={(_value: number | null, details: NumberField.Root.ChangeEventDetails) =>
-              details.cancel()
-            }
+          <NumberFieldBase.Root
+            onValueChange={(
+              _value: number | null,
+              details: NumberFieldBase.Root.ChangeEventDetails,
+            ) => details.cancel()}
           />
         </Field.Root>,
       );
@@ -436,7 +443,7 @@ describe('<NumberField />', () => {
       await render(
         <Form errors={{ quantity: 'Server error' }}>
           <Field.Root name="quantity" data-testid="field">
-            <NumberField.Root />
+            <NumberFieldBase.Root />
             <Field.Error data-testid="error" />
           </Field.Root>
         </Form>,
@@ -453,11 +460,12 @@ describe('<NumberField />', () => {
   describe('the hidden input has the value of the field', () => {
     it('after an autofill that a listener cancels', async () => {
       await render(
-        <NumberField.Root
+        <NumberFieldBase.Root
           defaultValue={5}
-          onValueChange={(_value: number | null, details: NumberField.Root.ChangeEventDetails) =>
-            details.cancel()
-          }
+          onValueChange={(
+            _value: number | null,
+            details: NumberFieldBase.Root.ChangeEventDetails,
+          ) => details.cancel()}
         />,
       );
 
@@ -468,7 +476,7 @@ describe('<NumberField />', () => {
 
     it('after an autofill that the parent of a controlled field does not accept', async () => {
       const handleUpdate = vi.fn();
-      await render(<NumberField.Root value={5} {...{ 'onUpdate:value': handleUpdate }} />);
+      await render(<NumberFieldBase.Root value={5} {...{ 'onUpdate:value': handleUpdate }} />);
 
       await autofill('7');
 
@@ -478,7 +486,7 @@ describe('<NumberField />', () => {
 
     it('after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
       const handleChange = vi.fn();
-      await render(<NumberField.Root defaultValue={5} onValueChange={handleChange} />);
+      await render(<NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />);
       getHiddenInput().value = '9';
 
       window.dispatchEvent(new PageTransitionEvent('pageshow'));
@@ -508,7 +516,7 @@ describe('<NumberField />', () => {
     ])('submits the value of $name', async ({ props, data }) => {
       await render(
         <form data-testid="form">
-          <NumberField.Root name="quantity" {...props} />
+          <NumberFieldBase.Root name="quantity" {...props} />
         </form>,
       );
 
@@ -521,7 +529,7 @@ describe('<NumberField />', () => {
     ])('submits nothing for $name', async ({ props }) => {
       await render(
         <form data-testid="form">
-          <NumberField.Root name="quantity" defaultValue={3} {...props} />
+          <NumberFieldBase.Root name="quantity" defaultValue={3} {...props} />
         </form>,
       );
 
@@ -533,7 +541,7 @@ describe('<NumberField />', () => {
         <div>
           <form data-testid="form" id="external" />
           <form data-testid="parent">
-            <NumberField.Root name="quantity" form="external" defaultValue={54.5} />
+            <NumberFieldBase.Root name="quantity" form="external" defaultValue={54.5} />
           </form>
         </div>,
       );
@@ -549,9 +557,9 @@ describe('<NumberField />', () => {
       const handleSubmit = vi.fn((event: Event) => event.preventDefault());
       const { user } = await render(
         <form data-testid="form" onSubmit={handleSubmit}>
-          <NumberField.Root name="quantity" required>
+          <NumberFieldBase.Root name="quantity" required>
             <Probe />
-          </NumberField.Root>
+          </NumberFieldBase.Root>
           <button type="submit">Submit</button>
         </form>,
       );
@@ -573,7 +581,7 @@ describe('<NumberField />', () => {
       const handleSubmit = vi.fn((event: Event) => event.preventDefault());
       const { user } = await render(
         <form data-testid="form" onSubmit={handleSubmit}>
-          <NumberField.Root name="quantity" required readOnly />
+          <NumberFieldBase.Root name="quantity" required readOnly />
           <button type="submit">Submit</button>
         </form>,
       );
@@ -602,7 +610,7 @@ describe('<NumberField />', () => {
           const handleChange = vi.fn();
           await render(
             <form data-testid="form">
-              <NumberField.Root
+              <NumberFieldBase.Root
                 name="quantity"
                 defaultValue={defaultValue}
                 onValueChange={handleChange}
@@ -633,7 +641,7 @@ describe('<NumberField />', () => {
         const handleChange = vi.fn();
         await render(
           <form data-testid="form">
-            <NumberField.Root defaultValue={5} onValueChange={handleChange} />
+            <NumberFieldBase.Root defaultValue={5} onValueChange={handleChange} />
           </form>,
         );
         await autofill('9');
@@ -653,7 +661,7 @@ describe('<NumberField />', () => {
             const value = shallowRef<number | null>(1);
             return () => (
               <form data-testid="form">
-                <NumberField.Root
+                <NumberFieldBase.Root
                   name="quantity"
                   value={value.value}
                   {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
@@ -666,12 +674,12 @@ describe('<NumberField />', () => {
           name: 'a field whose listener cancels',
           renderForm: () => () => (
             <form data-testid="form">
-              <NumberField.Root
+              <NumberFieldBase.Root
                 name="quantity"
                 defaultValue={1}
                 onValueChange={(
                   _value: number | null,
-                  details: NumberField.Root.ChangeEventDetails,
+                  details: NumberFieldBase.Root.ChangeEventDetails,
                 ) => {
                   if (details.event.type === 'reset') {
                     details.cancel();
@@ -685,7 +693,7 @@ describe('<NumberField />', () => {
           name: 'a field whose form cancels the reset',
           renderForm: () => () => (
             <form data-testid="form" onReset={(event: Event) => event.preventDefault()}>
-              <NumberField.Root name="quantity" defaultValue={1} />
+              <NumberFieldBase.Root name="quantity" defaultValue={1} />
             </form>
           ),
         },
@@ -698,7 +706,7 @@ describe('<NumberField />', () => {
             onTestFinished(() => window.removeEventListener('reset', cancelReset));
             return () => (
               <form data-testid="form">
-                <NumberField.Root name="quantity" defaultValue={1} />
+                <NumberFieldBase.Root name="quantity" defaultValue={1} />
               </form>
             );
           },
@@ -709,7 +717,7 @@ describe('<NumberField />', () => {
             <div>
               <form data-testid="form" />
               <form id="other" />
-              <NumberField.Root name="quantity" form="other" defaultValue={1} />
+              <NumberFieldBase.Root name="quantity" form="other" defaultValue={1} />
             </div>
           ),
         },
@@ -728,7 +736,7 @@ describe('<NumberField />', () => {
         await render(
           <div>
             <form data-testid="form" id="external" />
-            <NumberField.Root name="quantity" form="external" defaultValue={2} />
+            <NumberFieldBase.Root name="quantity" form="external" defaultValue={2} />
           </div>,
         );
         await autofill('9');
@@ -745,9 +753,9 @@ describe('<NumberField />', () => {
         const { Probe, getContext } = defineNumberFieldContextProbe();
         await render(
           <form data-testid="form">
-            <NumberField.Root name="quantity" defaultValue={1234.5}>
+            <NumberFieldBase.Root name="quantity" defaultValue={1234.5}>
               <Probe />
-            </NumberField.Root>
+            </NumberFieldBase.Root>
           </form>,
         );
         expect(getText().value).toBe(formattedDefault);
@@ -767,9 +775,9 @@ describe('<NumberField />', () => {
         const { Probe, getContext } = defineNumberFieldContextProbe();
         await render(
           <form data-testid="form">
-            <NumberField.Root defaultValue={5}>
+            <NumberFieldBase.Root defaultValue={5}>
               <Probe />
-            </NumberField.Root>
+            </NumberFieldBase.Root>
           </form>,
         );
         await autofill('9');
@@ -788,9 +796,9 @@ describe('<NumberField />', () => {
         );
         await render(
           <form data-testid="form">
-            <NumberField.Root defaultValue={5}>
+            <NumberFieldBase.Root defaultValue={5}>
               <Probe />
-            </NumberField.Root>
+            </NumberFieldBase.Root>
           </form>,
         );
         await autofill('9');
@@ -809,7 +817,7 @@ describe('<NumberField />', () => {
     it('takes `name` and `disabled` from the field', async () => {
       await render(
         <Field.Root name="field" disabled>
-          <NumberField.Root name="own" data-testid="root" />
+          <NumberFieldBase.Root name="own" data-testid="root" />
         </Field.Root>,
       );
 
@@ -821,7 +829,7 @@ describe('<NumberField />', () => {
     it('gives `filled` and `dirty` to the field, and takes them back', async () => {
       await render(
         <Field.Root data-testid="field">
-          <NumberField.Root data-testid="root" />
+          <NumberFieldBase.Root data-testid="root" />
         </Field.Root>,
       );
       for (const testId of ['root', 'field']) {
@@ -853,7 +861,7 @@ describe('<NumberField />', () => {
           }}
           name="quantity"
         >
-          <NumberField.Root required />
+          <NumberFieldBase.Root required />
           <Field.Error match="valueMissing" data-testid="error">
             Enter a number
           </Field.Error>
@@ -891,8 +899,8 @@ describe('<NumberField />', () => {
             field = instance as FieldRootInstance | null;
           }}
         >
-          <NumberField.Root step={step.value} />
-          {showSecond.value ? <NumberField.Root required /> : null}
+          <NumberFieldBase.Root step={step.value} />
+          {showSecond.value ? <NumberFieldBase.Root required /> : null}
           <Field.Error match="valueMissing" data-testid="error">
             Enter a number
           </Field.Error>
@@ -947,7 +955,7 @@ describe('<NumberField />', () => {
           renderForm: () => () => (
             <Form data-testid="form" errors={errors}>
               <Field.Root data-testid="root" name="quantity">
-                <NumberField.Root />
+                <NumberFieldBase.Root />
                 <Field.Error data-testid="error" />
               </Field.Root>
             </Form>
@@ -960,7 +968,7 @@ describe('<NumberField />', () => {
             return () => (
               <Form data-testid="form" errors={errors}>
                 <Field.Root data-testid="root" name="quantity">
-                  <NumberField.Root
+                  <NumberFieldBase.Root
                     value={value.value}
                     {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
                   />
@@ -988,7 +996,7 @@ describe('<NumberField />', () => {
               validate={validate}
               validationMode="onChange"
             >
-              <NumberField.Root defaultValue={1} />
+              <NumberFieldBase.Root defaultValue={1} />
               <Field.Error data-testid="error" />
             </Field.Root>
           </Form>,
@@ -1018,10 +1026,10 @@ describe('<NumberField />', () => {
               validate={validate}
               validationMode="onChange"
             >
-              <NumberField.Root
+              <NumberFieldBase.Root
                 onValueChange={(
                   _value: number | null,
-                  details: NumberField.Root.ChangeEventDetails,
+                  details: NumberFieldBase.Root.ChangeEventDetails,
                 ) => {
                   if (details.event.type === 'reset') {
                     details.cancel();
@@ -1058,7 +1066,7 @@ describe('<NumberField />', () => {
                 validate={validate}
                 validationMode="onChange"
               >
-                <NumberField.Root
+                <NumberFieldBase.Root
                   value={value.value}
                   {...{ 'onUpdate:value': (next: number | null) => (value.value = next) }}
                 />
@@ -1147,7 +1155,7 @@ describe('<NumberField />', () => {
             <form data-testid="form">
               <KeepAlive>
                 {props.shown ? (
-                  <NumberField.Root key="field" name="quantity" defaultValue={1} />
+                  <NumberFieldBase.Root key="field" name="quantity" defaultValue={1} />
                 ) : null}
               </KeepAlive>
             </form>
@@ -1179,11 +1187,11 @@ describe('<NumberField />', () => {
   it('blocks submission when step mismatch occurs', async () => {
     await render(
       <form data-testid="form">
-        <NumberField.Root name="quantity" min={0} step={0.1}>
-          <NumberField.Group>
-            <NumberField.Input />
-          </NumberField.Group>
-        </NumberField.Root>
+        <NumberFieldBase.Root name="quantity" min={0} step={0.1}>
+          <NumberFieldBase.Group>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Group>
+        </NumberFieldBase.Root>
         <button type="submit">Submit</button>
       </form>,
     );
@@ -1204,11 +1212,11 @@ describe('<NumberField />', () => {
   it.skipIf(isJSDOM)('blocks submission when step mismatch occurs with default step', async () => {
     await render(
       <form data-testid="form">
-        <NumberField.Root name="quantity" min={0}>
-          <NumberField.Group>
-            <NumberField.Input />
-          </NumberField.Group>
-        </NumberField.Root>
+        <NumberFieldBase.Root name="quantity" min={0}>
+          <NumberFieldBase.Group>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Group>
+        </NumberFieldBase.Root>
         <button type="submit">Submit</button>
       </form>,
     );
@@ -1229,11 +1237,11 @@ describe('<NumberField />', () => {
   it('does not block submission when step="any"', async () => {
     await render(
       <form data-testid="form">
-        <NumberField.Root name="quantity" min={0} step="any">
-          <NumberField.Group>
-            <NumberField.Input />
-          </NumberField.Group>
-        </NumberField.Root>
+        <NumberFieldBase.Root name="quantity" min={0} step="any">
+          <NumberFieldBase.Group>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Group>
+        </NumberFieldBase.Root>
         <button type="submit">Submit</button>
       </form>,
     );
@@ -1255,9 +1263,9 @@ describe('<NumberField />', () => {
     it('keeps focus state in sync on a readOnly field', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root readOnly>
-            <NumberField.Input data-testid="input" />
-          </NumberField.Root>
+          <NumberFieldBase.Root readOnly>
+            <NumberFieldBase.Input data-testid="input" />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
       const input = screen.getByTestId('input');
@@ -1274,11 +1282,11 @@ describe('<NumberField />', () => {
     it('allows range overflow validation when true', async () => {
       await render(
         <form data-testid="form">
-          <NumberField.Root name="quantity" max={5} allowOutOfRange>
-            <NumberField.Group>
-              <NumberField.Input />
-            </NumberField.Group>
-          </NumberField.Root>
+          <NumberFieldBase.Root name="quantity" max={5} allowOutOfRange>
+            <NumberFieldBase.Group>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Group>
+          </NumberFieldBase.Root>
           <button type="submit">Submit</button>
         </form>,
       );
@@ -1301,11 +1309,11 @@ describe('<NumberField />', () => {
     it('clamps to range when false', async () => {
       await render(
         <form data-testid="form">
-          <NumberField.Root name="quantity" max={5} allowOutOfRange={false}>
-            <NumberField.Group>
-              <NumberField.Input />
-            </NumberField.Group>
-          </NumberField.Root>
+          <NumberFieldBase.Root name="quantity" max={5} allowOutOfRange={false}>
+            <NumberFieldBase.Group>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Group>
+          </NumberFieldBase.Root>
           <button type="submit">Submit</button>
         </form>,
       );
@@ -1339,9 +1347,9 @@ describe('<NumberField />', () => {
           }}
         >
           <Field.Root name="test">
-            <NumberField.Root defaultValue={undefined}>
-              <NumberField.Input />
-            </NumberField.Root>
+            <NumberFieldBase.Root defaultValue={undefined}>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
             <button type="submit">Submit</button>
           </Field.Root>
         </Form>,
@@ -1377,9 +1385,9 @@ describe('<NumberField />', () => {
           }}
         >
           <Field.Root name="test">
-            <NumberField.Root defaultValue={54.5} format={format} locale="de-DE">
-              <NumberField.Input />
-            </NumberField.Root>
+            <NumberFieldBase.Root defaultValue={54.5} format={format} locale="de-DE">
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
             <button type="submit">Submit</button>
           </Field.Root>
         </Form>,
@@ -1412,9 +1420,9 @@ describe('<NumberField />', () => {
           >
             <button type="submit">Submit</button>
           </form>
-          <NumberField.Root name="test" form="external-form" defaultValue={54.5}>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root name="test" form="external-form" defaultValue={54.5}>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </>,
       );
 
@@ -1438,9 +1446,9 @@ describe('<NumberField />', () => {
             <button type="submit">Submit external</button>
           </form>
           <form onSubmit={onParentSubmit}>
-            <NumberField.Root name="quantity" form="external-form" required>
-              <NumberField.Input />
-            </NumberField.Root>
+            <NumberFieldBase.Root name="quantity" form="external-form" required>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
             <button type="submit">Submit parent</button>
           </form>
         </>,
@@ -1468,14 +1476,14 @@ describe('<NumberField />', () => {
               <form id="first-form" data-testid="first-form" />
               <form id="second-form" data-testid="second-form" />
               <form data-testid="parent-form">
-                <NumberField.Root
+                <NumberFieldBase.Root
                   form={props.form}
                   ref={(instance) => {
                     root = instance as { inputElement: HTMLInputElement | null } | null;
                   }}
                 >
-                  <NumberField.Input />
-                </NumberField.Root>
+                  <NumberFieldBase.Input />
+                </NumberFieldBase.Root>
               </form>
             </>
           );
@@ -1501,9 +1509,9 @@ describe('<NumberField />', () => {
 
       await render(
         <Field.Root name="quantity">
-          <NumberField.Root onValueChange={onValueChange}>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root onValueChange={onValueChange}>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1523,9 +1531,9 @@ describe('<NumberField />', () => {
 
       await render(
         <Field.Root name="quantity" validationMode="onChange" validate={validate}>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1550,14 +1558,14 @@ describe('<NumberField />', () => {
         await render(
           <Form errors={{ quantity: 'test' }}>
             <Field.Root name="quantity">
-              <NumberField.Root
+              <NumberFieldBase.Root
                 defaultValue={1}
                 readOnly={lockState === 'readOnly'}
                 disabled={lockState === 'disabled'}
                 onValueChange={onValueChange}
               >
-                <NumberField.Input />
-              </NumberField.Root>
+                <NumberFieldBase.Input />
+              </NumberFieldBase.Root>
               <Field.Error data-testid="error" />
             </Field.Root>
           </Form>,
@@ -1587,15 +1595,15 @@ describe('<NumberField />', () => {
         const onValueChange = vi.fn();
 
         await render(
-          <NumberField.Root
+          <NumberFieldBase.Root
             name="quantity"
             defaultValue={1}
             readOnly={lockState === 'readOnly'}
             disabled={lockState === 'disabled'}
             onValueChange={onValueChange}
           >
-            <NumberField.Input />
-          </NumberField.Root>,
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>,
         );
 
         const input = screen.getByRole('textbox');
@@ -1617,9 +1625,9 @@ describe('<NumberField />', () => {
     it('[data-touched]', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1634,9 +1642,9 @@ describe('<NumberField />', () => {
     it('[data-dirty]', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1653,9 +1661,9 @@ describe('<NumberField />', () => {
       it('adds [data-filled] attribute when filled', async () => {
         await render(
           <Field.Root>
-            <NumberField.Root>
-              <NumberField.Input data-testid="input" />
-            </NumberField.Root>
+            <NumberFieldBase.Root>
+              <NumberFieldBase.Input data-testid="input" />
+            </NumberFieldBase.Root>
           </Field.Root>,
         );
 
@@ -1675,9 +1683,9 @@ describe('<NumberField />', () => {
       it('has [data-filled] attribute when already filled', async () => {
         await render(
           <Field.Root>
-            <NumberField.Root defaultValue={1}>
-              <NumberField.Input data-testid="input" />
-            </NumberField.Root>
+            <NumberFieldBase.Root defaultValue={1}>
+              <NumberFieldBase.Input data-testid="input" />
+            </NumberFieldBase.Root>
           </Field.Root>,
         );
 
@@ -1694,9 +1702,9 @@ describe('<NumberField />', () => {
     it('[data-filled]', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input data-testid="input" />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input data-testid="input" />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1716,9 +1724,9 @@ describe('<NumberField />', () => {
     it('adds [data-focused] attribute on every focus', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input data-testid="input" />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input data-testid="input" />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -1740,9 +1748,9 @@ describe('<NumberField />', () => {
         return (
           <Field.Root data-testid="root">
             {firstMounted && (
-              <NumberField.Root disabled={firstDisabled}>
-                <NumberField.Input data-testid="first" />
-              </NumberField.Root>
+              <NumberFieldBase.Root disabled={firstDisabled}>
+                <NumberFieldBase.Input data-testid="first" />
+              </NumberFieldBase.Root>
             )}
           </Field.Root>
         );
@@ -1780,9 +1788,9 @@ describe('<NumberField />', () => {
     it('prop: validate', async () => {
       await render(
         <Field.Root validationMode="onBlur" validate={() => 'error'}>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
           <Field.Error data-testid="error" />
         </Field.Root>,
       );
@@ -1802,9 +1810,9 @@ describe('<NumberField />', () => {
         await render(
           <Form>
             <Field.Root validate={(value) => (value === 1 ? 'custom error' : null)}>
-              <NumberField.Root required data-testid="root">
-                <NumberField.Input data-testid="input" />
-              </NumberField.Root>
+              <NumberFieldBase.Root required data-testid="root">
+                <NumberFieldBase.Input data-testid="input" />
+              </NumberFieldBase.Root>
               <Field.Error data-testid="error" match="valueMissing">
                 valueMissing error
               </Field.Error>
@@ -1862,9 +1870,9 @@ describe('<NumberField />', () => {
               return value === 1 ? 'error' : null;
             }}
           >
-            <NumberField.Root>
-              <NumberField.Input data-testid="input" />
-            </NumberField.Root>
+            <NumberFieldBase.Root>
+              <NumberFieldBase.Input data-testid="input" />
+            </NumberFieldBase.Root>
           </Field.Root>,
         );
 
@@ -1888,14 +1896,14 @@ describe('<NumberField />', () => {
           return () => (
             <>
               <Field.Root validationMode="onChange" validate={validateSpy} name="quantity">
-                <NumberField.Root
+                <NumberFieldBase.Root
                   value={value.value}
                   onValueChange={(next) => {
                     value.value = next;
                   }}
                 >
-                  <NumberField.Input data-testid="input" />
-                </NumberField.Root>
+                  <NumberFieldBase.Input data-testid="input" />
+                </NumberFieldBase.Root>
               </Field.Root>
               <button
                 type="button"
@@ -1932,9 +1940,9 @@ describe('<NumberField />', () => {
               return value === 1 ? 'error' : null;
             }}
           >
-            <NumberField.Root required>
-              <NumberField.Input data-testid="input" />
-            </NumberField.Root>
+            <NumberFieldBase.Root required>
+              <NumberFieldBase.Input data-testid="input" />
+            </NumberFieldBase.Root>
             <Field.Error data-testid="error" />
           </Field.Root>,
         );
@@ -1957,9 +1965,9 @@ describe('<NumberField />', () => {
       const handleSubmit = vi.fn((event: Event) => event.preventDefault());
       await render(
         <form onSubmit={handleSubmit}>
-          <NumberField.Root name="quantity" defaultValue={0} min={0} step={0.1}>
-            <NumberField.Input data-testid="input" />
-          </NumberField.Root>
+          <NumberFieldBase.Root name="quantity" defaultValue={0} min={0} step={0.1}>
+            <NumberFieldBase.Input data-testid="input" />
+          </NumberFieldBase.Root>
           <button type="submit">submit</button>
         </form>,
       );
@@ -1988,9 +1996,9 @@ describe('<NumberField />', () => {
       await render(
         <Form onFormSubmit={handleSubmit}>
           <Field.Root name="quantity">
-            <NumberField.Root defaultValue={0} min={0} step={0.1}>
-              <NumberField.Input data-testid="input" />
-            </NumberField.Root>
+            <NumberFieldBase.Root defaultValue={0} min={0} step={0.1}>
+              <NumberFieldBase.Input data-testid="input" />
+            </NumberFieldBase.Root>
             <Field.Error match="stepMismatch" data-testid="error">
               step mismatch
             </Field.Error>
@@ -2022,9 +2030,9 @@ describe('<NumberField />', () => {
     it('disables the input when disabled=true', async () => {
       await render(
         <Field.Root disabled>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -2036,9 +2044,9 @@ describe('<NumberField />', () => {
     it('does not disable the input when disabled=false', async () => {
       await render(
         <Field.Root disabled={false}>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
         </Field.Root>,
       );
 
@@ -2053,9 +2061,9 @@ describe('<NumberField />', () => {
       await render(
         <Form>
           <Field.Root validationMode="onBlur" validate={validate} name="quantity">
-            <NumberField.Root defaultValue={undefined}>
-              <NumberField.Input />
-            </NumberField.Root>
+            <NumberFieldBase.Root defaultValue={undefined}>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
           </Field.Root>
         </Form>,
       );
@@ -2076,9 +2084,9 @@ describe('<NumberField />', () => {
       await render(
         <Form>
           <Field.Root validationMode="onBlur" validate={validate} name="quantity">
-            <NumberField.Root max={10}>
-              <NumberField.Input />
-            </NumberField.Root>
+            <NumberFieldBase.Root max={10}>
+              <NumberFieldBase.Input />
+            </NumberFieldBase.Root>
           </Field.Root>
         </Form>,
       );
@@ -2102,15 +2110,15 @@ describe('<NumberField />', () => {
         return () => (
           <Form>
             <Field.Root validationMode="onBlur" validate={validate} name="quantity">
-              <NumberField.Root
+              <NumberFieldBase.Root
                 value={value.value}
                 onValueChange={(next) => {
                   value.value = next;
                 }}
                 max={5}
               >
-                <NumberField.Input />
-              </NumberField.Root>
+                <NumberFieldBase.Input />
+              </NumberFieldBase.Root>
             </Field.Root>
             <button
               type="button"
@@ -2145,9 +2153,9 @@ describe('<NumberField />', () => {
     it('Field.Label', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input />
+          </NumberFieldBase.Root>
           <Field.Label data-testid="label" />
         </Field.Root>,
       );
@@ -2158,9 +2166,9 @@ describe('<NumberField />', () => {
     it('Field.Description', async () => {
       await render(
         <Field.Root>
-          <NumberField.Root>
-            <NumberField.Input aria-describedby="external-description" />
-          </NumberField.Root>
+          <NumberFieldBase.Root>
+            <NumberFieldBase.Input aria-describedby="external-description" />
+          </NumberFieldBase.Root>
           <Field.Description data-testid="description" />
         </Field.Root>,
       );
@@ -2175,11 +2183,11 @@ describe('<NumberField />', () => {
   describe('hidden input', () => {
     it('keeps a selection the consumer sets in onFocus when forwarding focus', async () => {
       await render(
-        <NumberField.Root defaultValue={100}>
-          <NumberField.Input
+        <NumberFieldBase.Root defaultValue={100}>
+          <NumberFieldBase.Input
             onFocusin={(event) => (event.currentTarget as HTMLInputElement).select()}
           />
-        </NumberField.Root>,
+        </NumberFieldBase.Root>,
       );
 
       const input = screen.getByRole<HTMLInputElement>('textbox');
