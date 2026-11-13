@@ -701,7 +701,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It is a `span` with `tabindex="0"`. It exposes its element as `element`. It gives the attributes and listeners of a consumer to the `span`: `<FocusGuard data-type="inside" @focusin="…" />`. Its own attributes win over the same attributes of a consumer, as in Base UI.
 - The guard has `aria-hidden="true"`. In WebKit on an Apple system, it has `role="button"` and `aria-label="Focus guard"` instead. VoiceOver moves the focus with its cursor, but in WebKit only onto a focusable element that has `role="button"`. Without a name, axe reports a button with no name.
 - The guard reads `platform` in `onMounted`, as [Server render](#server-render) says for a value of the browser. The server HTML thus has `aria-hidden="true"` and no role. The mount adds the role and the label.
-- `FloatingFocusManager.vue` moves the focus into a popup when it opens, and it keeps the Tab key in a modal popup. A popup part renders it around its popup element, in the portal.
+- `FloatingFocusManager.vue` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part renders it around its popup element, in the portal.
 - It renders no element. It reads the popup element from `positionerElement` of the store with `getFloatingFocusElement`, and the reference from `anchorElement`.
 - It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
 - A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
@@ -711,13 +711,24 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `initialFocus` is `true`, `false`, an element, a component, a ref of one of them, or a function of the interaction type. `false`, and a function that returns `false` or nothing, move no focus.
 - `true`, `null` and an empty ref use the default: the first tabbable element, or else the popup element. A ref is empty when it holds `null` or `undefined`.
 - A template gives the value of a ref, so `:initial-focus="field"` gives `null` first and then the element. The part reads the prop in a microtask after the DOM update, and thus gets the element.
+- `returnFocus` takes the same forms as `initialFocus`, and the rule for a template is the same. `false`, and a function that returns `false` or nothing, return no focus.
+- The default target is the first of these that can take the focus: the reference, the element that had the focus before the open, the popup element of the focus manager above, and the newest element in a list. The list holds one element for each earlier open: the element that had the focus, or the reference when the body had it. When `openInteractionType` is `null`, the element that had the focus comes before the reference.
+- An element can take the focus when it is in the document, and neither it nor an ancestor has the `hidden` attribute. When a target of the consumer cannot take the focus, the default target applies.
+- The part focuses the target if it is tabbable, otherwise its first tabbable descendant, otherwise the target itself.
+- The popup element above comes from `provide` and `inject`, because a dialog registers no node in the popup tree.
+- The part reads the target in a microtask after the cleanup of the effect. Vue runs that cleanup before it removes the reference, so the reference is still in the document in the cleanup.
+- A function of `returnFocus` gets the type of the interaction that closed the popup: `mouse`, `touch`, `pen` or `keyboard`. The type is an empty string when no event of the user closed the popup. After a close with the keyboard, the part calls `focus()` with `focusVisible`.
+- A focus that the user moved outside the popup before the close stays there, unless the target is explicit. A `returnFocus` that is not a boolean is explicit. `explicitReturnFocus` can set the value.
+- After a press outside the popup, the part returns the focus only when the browser supports the `preventScroll` option of `focus()`. A virtual press, a nested popup and an explicit target do not need that support.
+- The part returns no focus after a close that a focus guard caused, and after a `mouseleave` event that closed a hover popup.
 - When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
 - `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.
 - The part keeps its effects in one list. `update` runs each effect whose sources changed, in the sequence of the list: first its last cleanup, then its setup. `onMounted` and one `watch` with `flush: 'post'` call `update`.
 - Two `watch` calls of one component with `flush: 'post'` run in the sequence of the writes to their sources. They do not run in the sequence of the calls. The list gives the sequence of the effects of Base UI.
 - A server calls no `onMounted` and runs no `watch` with `flush: 'post'`, so no effect runs there.
-- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the `keydown` listener of the document, and takes it back.
+- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document, and takes them back.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
+- The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
 - The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
 
 ### Popup portal

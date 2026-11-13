@@ -5,5 +5,5 @@
     "https://github.com/mui/base-ui/issues/6161"
   ],
   "behavior": "When a popup closes, focus goes to the first of these that can take it. The list is `finalFocus`, the trigger, and the nearest focusable element in the parent popup. This applies when the trigger is removed and after a press on the backdrop.",
-  "dueWith": "packages/react/src/dialog/popup/DialogPopup.tsx"
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx"
 }

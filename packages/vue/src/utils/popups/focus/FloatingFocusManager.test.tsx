@@ -4,12 +4,16 @@ import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, Teleport }
 import type { PropType, ShallowRef } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { platform } from '../../../common/platform';
+import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import { usePortalContext } from '../portal/FloatingPortalContext';
 import type { PortalContextValue } from '../portal/FloatingPortalContext';
 import FloatingPortal from '../portal/FloatingPortal.vue';
+import { provideFloatingTree } from '../tree/FloatingTree';
+import { FloatingTreeStore } from '../tree/FloatingTreeStore';
+import type { PopupPositioningContext } from '../types';
 import FloatingFocusManager from './FloatingFocusManager.vue';
 import type { FloatingFocusManagerProps } from './FloatingFocusManager.vue';
 import FocusGuard from './FocusGuard.vue';
@@ -32,35 +36,56 @@ function setWebKit(webkit: boolean) {
 }
 
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
+type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
 // A popup with a reference field. The reference opens the popup for a click, and for a
 // `mousedown` as a trigger of a popup part does. With `keepMounted`, the popup element stays and
-// the focus manager is disabled while the popup is closed.
+// the focus manager is disabled while the popup is closed. The default content has a button that
+// closes the popup, and the slot of the content gets the same function as `close`. `name` is the
+// prefix of each test id, so that a popup can hold another popup.
 const Popup = defineComponent({
   props: {
     manager: { type: Object as PropType<ManagerProps>, default: () => ({}) },
+    name: { type: String, default: '' },
     portal: Boolean,
     keepMounted: Boolean,
     role: { type: String, default: undefined },
     popupTabindex: { type: String, default: undefined },
     referenceRole: { type: String, default: undefined },
+    // The reference is not in the document.
+    referenceRemoved: Boolean,
+    // The reference has the attribute `hidden`.
+    referenceHidden: Boolean,
+    // The reference comes after the popup, so Vue removes the popup first.
+    referenceAfter: Boolean,
+    // The popup stays open when it should close for one of these reasons.
+    keepOpenFor: { type: Array as PropType<string[]>, default: () => [] },
     onOpenChange: {
       type: Function as PropType<(open: boolean, reason: string) => void>,
       default: undefined,
     },
+    onStore: { type: Function as PropType<(store: PopupStore) => void>, default: undefined },
   },
   setup(props, { slots }) {
     const open = shallowRef(false);
     const reference = shallowRef<HTMLElement | null>(null);
     const floating = shallowRef<HTMLElement | null>(null);
+    const testId = (id: string) => `${props.name}${id}`;
     const store = useFloatingRootStore({
       open,
       onOpenChange(nextOpen, eventDetails) {
         props.onOpenChange?.(nextOpen, eventDetails.reason);
-        open.value = nextOpen;
+        if (nextOpen || !props.keepOpenFor.includes(eventDetails.reason)) {
+          open.value = nextOpen;
+        }
       },
       elements: { anchor: reference, positionerElement: floating },
     });
+    props.onStore?.(store);
+
+    function close(event?: MouseEvent) {
+      store.setOpen(false, createChangeEventDetails(REASONS.closePress, event));
+    }
 
     return () => {
       const content =
@@ -73,49 +98,44 @@ const Popup = defineComponent({
             <div
               role={props.role}
               tabindex={props.popupTabindex}
-              data-testid="floating"
+              data-testid={testId('floating')}
               ref={(el) => {
                 floating.value = el as HTMLElement | null;
               }}
             >
-              {slots.default?.() ?? [
-                <input data-testid="one" />,
-                <input data-testid="two" />,
-                <button
-                  data-testid="close"
-                  onClick={() => {
-                    open.value = false;
-                  }}
-                />,
+              {slots.default?.({ close }) ?? [
+                <input data-testid={testId('one')} />,
+                <input data-testid={testId('two')} />,
+                <button data-testid={testId('close')} onClick={close} />,
               ]}
             </div>
           </FloatingFocusManager>
         ) : null;
-
-      return (
-        <>
-          <input
-            data-testid="reference"
-            role={props.referenceRole}
-            ref={(el) => {
-              reference.value = el as HTMLElement | null;
-            }}
-            onClick={() => {
-              open.value = !open.value;
-            }}
-            onMousedown={(event: MouseEvent) => {
-              store.setOpen(true, createChangeEventDetails(REASONS.triggerPress, event));
-            }}
-          />
-          {props.portal ? <FloatingPortal>{content}</FloatingPortal> : content}
-        </>
+      const popup = props.portal ? <FloatingPortal>{content}</FloatingPortal> : content;
+      const referenceElement = props.referenceRemoved ? null : (
+        <input
+          data-testid={testId('reference')}
+          role={props.referenceRole}
+          hidden={props.referenceHidden ? true : undefined}
+          ref={(el) => {
+            reference.value = el as HTMLElement | null;
+          }}
+          onClick={() => {
+            open.value = !open.value;
+          }}
+          onMousedown={(event: MouseEvent) => {
+            store.setOpen(true, createChangeEventDetails(REASONS.triggerPress, event));
+          }}
+        />
       );
+
+      return <>{props.referenceAfter ? [popup, referenceElement] : [referenceElement, popup]}</>;
     };
   },
 });
 
-async function openPopup(root: ParentNode = document) {
-  const reference = root.querySelector<HTMLElement>('[data-testid="reference"]')!;
+async function openPopup(root: ParentNode = document, name = '') {
+  const reference = root.querySelector<HTMLElement>(`[data-testid="${name}reference"]`)!;
   reference.focus();
   await fireEvent.click(reference);
   await flushMicrotasks();
@@ -140,6 +160,24 @@ function holdAnimationFrames() {
 
 function getInsideGuards(root: ParentNode = document) {
   return Array.from(root.querySelectorAll<HTMLElement>('[data-type="inside"]'));
+}
+
+type TargetRef = ShallowRef<HTMLElement | null>;
+
+// Gives a case the store of a popup, and a close that no event of the user causes.
+function captureStore() {
+  let store: PopupStore | undefined;
+  return {
+    onStore(value: PopupStore) {
+      store = value;
+    },
+    get store() {
+      return store!;
+    },
+    close() {
+      store!.setOpen(false, createChangeEventDetails(REASONS.imperativeAction));
+    },
+  };
 }
 
 describe('FloatingFocusManager', () => {
@@ -566,8 +604,9 @@ describe('FloatingFocusManager', () => {
   });
 
   describe('text field of a popup that closes and stays mounted', () => {
+    // The return of the focus is off, so that only the blur can take the focus from the field.
     async function closeWithFocusInField() {
-      await render(<Popup keepMounted />);
+      await render(<Popup keepMounted manager={{ returnFocus: false }} />);
       await openPopup();
       await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
 
@@ -589,12 +628,949 @@ describe('FloatingFocusManager', () => {
     });
   });
 
-  it('releases its document listener while KeepAlive holds the popup, and takes it back', async () => {
+  describe('return of the focus', () => {
+    type ReturnFocus = ManagerProps['returnFocus'];
+
+    // A field outside the popup is the target of the rows. A click on the close button does not
+    // move the focus.
+    async function closeWithTarget(returnFocus: (target: TargetRef) => ReturnFocus) {
+      const target: TargetRef = shallowRef(null);
+      await render(() => (
+        <div>
+          <input data-testid="target" ref={target} />
+          <Popup manager={{ returnFocus: returnFocus(target) }} />
+        </div>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+      await flushMicrotasks();
+    }
+
+    it('returns the focus to the reference when the popup closes', async () => {
+      await render(<Popup />);
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+    });
+
+    it('returns the focus to the reference when a popup that stays mounted closes', async () => {
+      await render(<Popup keepMounted />);
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+    });
+
+    it.each<{ name: string; returnFocus: (target: TargetRef) => ReturnFocus }>([
+      { name: 'an element', returnFocus: (target) => target.value },
+      { name: 'a ref of an element', returnFocus: (target) => target },
+      { name: 'a function that gives an element', returnFocus: (target) => () => target.value },
+    ])('moves the focus to the target when returnFocus is $name', async ({ returnFocus }) => {
+      await closeWithTarget(returnFocus);
+
+      expect(screen.getByTestId('target')).toHaveFocus();
+    });
+
+    it.each<{ name: string; markup: string; focused: string }>([
+      {
+        name: 'is focusable and not tabbable',
+        markup: '<div tabindex="-1" data-testid="target"></div>',
+        focused: 'target',
+      },
+      {
+        name: 'has a tabbable child',
+        markup: '<div data-testid="target"><input data-testid="child" /></div>',
+        focused: 'child',
+      },
+      {
+        name: 'is tabbable and has a tabbable child',
+        markup: '<button data-testid="target"><input data-testid="child" /></button>',
+        focused: 'target',
+      },
+    ])('moves the focus to $focused when the target $name', async ({ markup, focused }) => {
+      const container = document.createElement('div');
+      container.innerHTML = markup;
+      document.body.append(container);
+      onTestFinished(() => container.remove());
+      await render(
+        <Popup manager={{ returnFocus: () => container.firstElementChild as Element }} />,
+      );
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId(focused)).toHaveFocus());
+    });
+
+    it.each<{ name: string; returnFocus: () => ReturnFocus }>([
+      { name: 'true', returnFocus: () => true },
+      { name: 'null', returnFocus: () => null },
+      { name: 'an empty ref', returnFocus: () => shallowRef(null) },
+      { name: 'a function that gives true', returnFocus: () => () => true },
+      { name: 'a function that gives null', returnFocus: () => () => null },
+    ])('moves the focus to the reference when returnFocus is $name', async ({ returnFocus }) => {
+      await closeWithTarget(returnFocus);
+
+      expect(screen.getByTestId('reference')).toHaveFocus();
+    });
+
+    it.each<{ name: string; returnFocus: () => ReturnFocus }>([
+      { name: 'false', returnFocus: () => false },
+      { name: 'a function that gives false', returnFocus: () => () => false },
+      { name: 'a function that gives nothing', returnFocus: () => () => undefined },
+    ])('moves no focus when returnFocus is $name', async ({ returnFocus }) => {
+      await closeWithTarget(returnFocus);
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it.each<{ name: string; manager: ManagerProps; focusBefore: boolean; focused: string }>([
+      {
+        name: 'the open interaction type is empty',
+        manager: {},
+        focusBefore: true,
+        focused: 'reference',
+      },
+      {
+        name: 'the open interaction type is null',
+        manager: { openInteractionType: null },
+        focusBefore: true,
+        focused: 'before',
+      },
+      {
+        name: 'null type, and the body had the focus',
+        manager: { openInteractionType: null },
+        focusBefore: false,
+        focused: 'reference',
+      },
+    ])('moves the focus to the $focused when $name', async ({ manager, focusBefore, focused }) => {
+      await render(
+        <div>
+          <input data-testid="before" />
+          <Popup manager={manager} />
+        </div>,
+      );
+      if (focusBefore) {
+        screen.getByTestId('before').focus();
+      }
+      await fireEvent.click(screen.getByTestId('reference'));
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId(focused)).toHaveFocus());
+    });
+
+    // A focus guard moves the focus itself, and a hover popup closes when the pointer leaves it.
+    it.each<{
+      name: string;
+      reason: string;
+      event: () => Event;
+      trigger?: () => Element;
+      focused: string;
+    }>([
+      {
+        name: 'a focus guard closes the popup',
+        reason: REASONS.focusOut,
+        event: () => new FocusEvent('focusin'),
+        trigger() {
+          const guard = document.createElement('span');
+          guard.setAttribute('data-vase-ui-focus-guard', '');
+          return guard;
+        },
+        focused: 'body',
+      },
+      {
+        name: 'the pointer leaves a hover popup',
+        reason: REASONS.triggerHover,
+        event: () => new MouseEvent('mouseleave'),
+        focused: 'body',
+      },
+      {
+        name: 'the focus leaves to a plain element',
+        reason: REASONS.focusOut,
+        event: () => new FocusEvent('focusout'),
+        trigger: () => document.createElement('span'),
+        focused: 'reference',
+      },
+      {
+        name: 'the pointer moves in a hover popup',
+        reason: REASONS.triggerHover,
+        event: () => new MouseEvent('mousemove'),
+        focused: 'reference',
+      },
+    ])(
+      'moves the focus to the $focused when $name',
+      async ({ reason, event, trigger, focused }) => {
+        const popup = captureStore();
+        await render(<Popup onStore={popup.onStore} />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        popup.store.setOpen(false, createChangeEventDetails(reason, event(), trigger?.()));
+        await flushMicrotasks();
+
+        expect(focused === 'body' ? document.body : screen.getByTestId(focused)).toHaveFocus();
+      },
+    );
+
+    describe('type of the close', () => {
+      // The press before the close is the last interaction that the focus manager saw.
+      it.each<{
+        name: string;
+        interact?: () => Promise<unknown>;
+        event: () => Event;
+        type: InteractionType;
+      }>([
+        {
+          name: 'a key press',
+          event: () => new KeyboardEvent('keydown', { key: 'Escape' }),
+          type: 'keyboard',
+        },
+        {
+          name: 'a pen click',
+          event: () => new PointerEvent('click', { pointerType: 'pen' }),
+          type: 'pen',
+        },
+        {
+          name: 'a click of a screen reader',
+          event: () => new PointerEvent('click', { pointerType: '', detail: 0 }),
+          type: 'keyboard',
+        },
+        {
+          name: 'a click that has no pointer type',
+          event: () => new PointerEvent('click', { pointerType: '', detail: 1 }),
+          type: 'mouse',
+        },
+        {
+          name: 'a click after a touch press',
+          interact: () => fireEvent.pointerDown(document.body, { pointerType: 'touch' }),
+          event: () => new PointerEvent('click', { pointerType: '', detail: 1 }),
+          type: 'touch',
+        },
+        {
+          name: 'a mouse event that has no detail',
+          event: () => new MouseEvent('click', { detail: 0 }),
+          type: 'keyboard',
+        },
+        {
+          name: 'a mouse event after a pen press',
+          interact: () => fireEvent.pointerDown(document.body, { pointerType: 'pen' }),
+          event: () => new MouseEvent('click', { detail: 1 }),
+          type: 'pen',
+        },
+        {
+          name: 'a focus event after a touch press',
+          interact: () => fireEvent.pointerDown(document.body, { pointerType: 'touch' }),
+          event: () => new FocusEvent('focusout'),
+          type: 'touch',
+        },
+        {
+          name: 'a mouse event after a key press',
+          interact: () => fireEvent.keyDown(document.body, { key: 'a' }),
+          event: () => new MouseEvent('click', { detail: 1 }),
+          type: 'keyboard',
+        },
+        {
+          name: 'a mouse event after an untyped press',
+          interact: () => fireEvent.pointerDown(document.body),
+          event: () => new MouseEvent('click', { detail: 1 }),
+          type: 'keyboard',
+        },
+        {
+          name: 'a touch event',
+          event: () => Object.assign(new Event('touchstart'), { touches: [] }),
+          type: 'touch',
+        },
+        { name: 'a focus event', event: () => new FocusEvent('focusout'), type: 'keyboard' },
+        { name: 'an event that has no input type', event: () => new Event('close'), type: '' },
+      ])('gives $type to returnFocus after $name', async ({ interact, event, type }) => {
+        const returnFocus = vi.fn((_type: InteractionType) => true);
+        const popup = captureStore();
+        await render(<Popup manager={{ returnFocus }} onStore={popup.onStore} />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        await interact?.();
+
+        popup.store.setOpen(false, createChangeEventDetails(REASONS.none, event()));
+
+        await waitFor(() => expect(returnFocus).toHaveBeenCalledWith(type));
+      });
+
+      it('gives keyboard to returnFocus after a key event of a frame', async () => {
+        const frame = document.createElement('iframe');
+        document.body.append(frame);
+        onTestFinished(() => frame.remove());
+        const frameDocument = frame.contentDocument!;
+        const target = frameDocument.createElement('button');
+        frameDocument.body.append(target);
+        const frameWindow = frame.contentWindow as Window & typeof globalThis;
+        const event = new frameWindow.KeyboardEvent('keydown', { key: 'Escape' });
+        target.dispatchEvent(event);
+        const returnFocus = vi.fn((_type: InteractionType) => true);
+        const popup = captureStore();
+        await render(<Popup manager={{ returnFocus }} onStore={popup.onStore} />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        popup.store.setOpen(false, createChangeEventDetails(REASONS.none, event));
+
+        await waitFor(() => expect(returnFocus).toHaveBeenCalledWith('keyboard'));
+      });
+
+      it.each<{
+        name: string;
+        close: () => Promise<unknown>;
+        options: Record<string, boolean>;
+      }>([
+        {
+          name: 'a press of the mouse',
+          close: () => userEvent.click(screen.getByTestId('close')),
+          options: { preventScroll: true },
+        },
+        {
+          name: 'a key press',
+          close: async () => {
+            screen.getByTestId('close').focus();
+            await userEvent.keyboard('{Enter}');
+          },
+          options: { preventScroll: true, focusVisible: true },
+        },
+      ])('calls focus on the reference after $name', async ({ close, options }) => {
+        await render(<Popup />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        const focus = vi.spyOn(screen.getByTestId('reference'), 'focus');
+
+        await close();
+
+        await waitFor(() => expect(focus).toHaveBeenCalledWith(options));
+      });
+
+      it('forgets the close of an earlier open when a popup that stays mounted opens again', async () => {
+        const returnFocus = vi.fn((_type: InteractionType) => true);
+        await render(<Popup keepMounted manager={{ returnFocus }} />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        screen.getByTestId('close').focus();
+        await userEvent.keyboard('{Enter}');
+        await waitFor(() => expect(returnFocus).toHaveBeenLastCalledWith('keyboard'));
+
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        await fireEvent.click(screen.getByTestId('reference'));
+
+        await waitFor(() => expect(returnFocus).toHaveBeenCalledTimes(2));
+        expect(returnFocus).toHaveBeenLastCalledWith('');
+      });
+
+      it('forgets the press of an earlier open when a popup that stays mounted opens again', async () => {
+        const returnFocus = vi.fn((_type: InteractionType) => true);
+        const popup = captureStore();
+        await render(<Popup keepMounted manager={{ returnFocus }} onStore={popup.onStore} />);
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        await fireEvent.pointerDown(document.body, { pointerType: 'touch' });
+        popup.close();
+        await waitFor(() => expect(returnFocus).toHaveBeenCalledTimes(1));
+
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        popup.store.setOpen(
+          false,
+          createChangeEventDetails(REASONS.none, new MouseEvent('click', { detail: 1 })),
+        );
+
+        await waitFor(() => expect(returnFocus).toHaveBeenCalledTimes(2));
+        expect(returnFocus).toHaveBeenLastCalledWith('mouse');
+      });
+    });
+
+    describe('focus that moved outside the popup', () => {
+      async function closeAfterMovingFocusOutside(manager: ManagerProps) {
+        const popup = captureStore();
+        await render(
+          <div>
+            <Popup manager={manager} onStore={popup.onStore} />
+            <input data-testid="outside" />
+          </div>,
+        );
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        screen.getByTestId('outside').focus();
+
+        popup.close();
+        await flushMicrotasks();
+      }
+
+      it.each<{ name: string; manager: ManagerProps }>([
+        { name: 'returnFocus is true', manager: {} },
+        {
+          name: 'explicitReturnFocus is false',
+          manager: { returnFocus: () => true, explicitReturnFocus: false },
+        },
+      ])('stays where it is when $name', async ({ manager }) => {
+        await closeAfterMovingFocusOutside(manager);
+
+        expect(screen.getByTestId('outside')).toHaveFocus();
+      });
+
+      it.each<{ name: string; manager: ManagerProps }>([
+        { name: 'returnFocus is a function', manager: { returnFocus: () => true } },
+        { name: 'explicitReturnFocus is true', manager: { explicitReturnFocus: true } },
+      ])('goes to the reference when $name', async ({ manager }) => {
+        await closeAfterMovingFocusOutside(manager);
+
+        expect(screen.getByTestId('reference')).toHaveFocus();
+      });
+
+      it('uses the latest explicitReturnFocus at the close, and moves no focus while the popup is open', async () => {
+        const explicit = shallowRef(true);
+        const popup = captureStore();
+        await render(() => (
+          <div>
+            <Popup manager={{ explicitReturnFocus: explicit.value }} onStore={popup.onStore} />
+            <input data-testid="outside" />
+          </div>
+        ));
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        explicit.value = false;
+        await flushMicrotasks();
+        expect(screen.getByTestId('one')).toHaveFocus();
+
+        screen.getByTestId('outside').focus();
+        popup.close();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outside')).toHaveFocus();
+      });
+
+      it('returns the focus when it is in the popup of a node below, in the popup tree', async () => {
+        const tree = new FloatingTreeStore();
+        const Tree = defineComponent({
+          setup(_, { slots }) {
+            provideFloatingTree(tree);
+            return () => slots.default?.();
+          },
+        });
+        const popup = captureStore();
+        await render(() => (
+          <Tree>
+            <Popup
+              onStore={(store) => {
+                popup.onStore(store);
+                store.context.positioning = {
+                  open: true,
+                  nodeId: 'parent',
+                  elements: { reference: null, floating: null, domReference: null },
+                  rootStore: store,
+                };
+              }}
+            />
+            <div data-testid="child-popup">
+              <input data-testid="child-field" />
+            </div>
+          </Tree>
+        ));
+        tree.addNode({
+          id: 'child',
+          parentId: 'parent',
+          context: {
+            open: true,
+            nodeId: 'child',
+            elements: {
+              reference: null,
+              floating: screen.getByTestId('child-popup'),
+              domReference: null,
+            },
+          } as PopupPositioningContext,
+        });
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        screen.getByTestId('child-field').focus();
+
+        popup.close();
+
+        await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      });
+    });
+
+    it('moves no focus when the reference changes while the popup is open', async () => {
+      const popup = captureStore();
+      await render(
+        <div>
+          <Popup onStore={popup.onStore} />
+          <input data-testid="other" />
+        </div>,
+      );
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      screen.getByTestId('two').focus();
+
+      popup.store.set('anchorElement', screen.getByTestId('other'));
+      await flushMicrotasks();
+      expect(screen.getByTestId('two')).toHaveFocus();
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId('other')).toHaveFocus());
+    });
+
+    describe('Tab key that leaves a popup that is not modal', () => {
+      async function renderPopup(props: {
+        keepOpen?: boolean;
+        keepMounted?: boolean;
+        manager?: ManagerProps;
+      }) {
+        const popup = captureStore();
+        await render(
+          <div>
+            <input data-testid="before" />
+            <Popup
+              portal
+              keepMounted={props.keepMounted}
+              keepOpenFor={props.keepOpen ? ['focus-out'] : []}
+              manager={{ modal: false, ...props.manager }}
+              onStore={popup.onStore}
+            >
+              {{ default: () => [<input data-testid="one" />, <input data-testid="two" />] }}
+            </Popup>
+            <input data-testid="after" />
+          </div>,
+        );
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        return popup;
+      }
+
+      it('returns no focus after the Tab key closes the popup, also for an explicit target', async () => {
+        await renderPopup({ manager: { explicitReturnFocus: true } });
+        screen.getByTestId('two').focus();
+
+        await userEvent.tab();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('after')).toHaveFocus();
+      });
+
+      it('returns the focus when the popup that the Tab key closed closes again', async () => {
+        const popup = await renderPopup({ keepMounted: true });
+        screen.getByTestId('two').focus();
+        await userEvent.tab();
+        await flushMicrotasks();
+        expect(screen.getByTestId('after')).toHaveFocus();
+
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        popup.close();
+
+        await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      });
+
+      it('returns the focus when the popup closes after the Tab key came back in through the first guard', async () => {
+        const popup = await renderPopup({ keepOpen: true });
+        screen.getByTestId('two').focus();
+        await userEvent.tab();
+        expect(screen.getByTestId('after')).toHaveFocus();
+        screen.getByTestId('reference').focus();
+        await userEvent.tab();
+        expect(screen.getByTestId('one')).toHaveFocus();
+
+        popup.close();
+
+        await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      });
+    });
+
+    it('does not record the body in the list', async () => {
+      const removed = shallowRef(false);
+      const popup = captureStore();
+      await render(() => (
+        <div>
+          <input data-testid="before" />
+          <Popup
+            manager={{ openInteractionType: null }}
+            referenceRemoved={removed.value}
+            onStore={popup.onStore}
+          />
+        </div>
+      ));
+      await fireEvent.click(screen.getByTestId('reference'));
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      removed.value = true;
+      popup.close();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it('removes its listener from the store when the popup closes', async () => {
+      const popup = captureStore();
+      await render(<Popup onStore={popup.onStore} />);
+      const on = vi.spyOn(popup.store.context.events, 'on');
+      const off = vi.spyOn(popup.store.context.events, 'off');
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      expect(on).toHaveBeenCalledWith('openchange', expect.any(Function));
+
+      await fireEvent.click(screen.getByTestId('close'));
+      await flushMicrotasks();
+
+      expect(off.mock.calls).toEqual(on.mock.calls);
+    });
+
+    it('keeps only the newest 20 elements in the list', async () => {
+      const removed = shallowRef(false);
+      const popup = captureStore();
+      await render(() => (
+        <div>
+          {Array.from({ length: 21 }, (_, index) => (
+            <input data-testid={`field-${index}`} />
+          ))}
+          <Popup referenceRemoved={removed.value} onStore={popup.onStore} />
+        </div>
+      ));
+      // Each open records the field that has the focus.
+      for (let index = 0; index < 21; index += 1) {
+        screen.getByTestId(`field-${index}`).focus();
+        await fireEvent.click(screen.getByTestId('reference'));
+        popup.close();
+        await flushMicrotasks();
+      }
+      for (let index = 1; index < 21; index += 1) {
+        screen.getByTestId(`field-${index}`).hidden = true;
+      }
+      (document.activeElement as HTMLElement).blur();
+      await fireEvent.click(screen.getByTestId('reference'));
+
+      removed.value = true;
+      popup.close();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+
+    it('moves no focus when KeepAlive deactivates the popup', async () => {
+      const shown = shallowRef(true);
+      const Page = defineComponent({
+        setup: () => () => (
+          <Popup portal role="dialog">
+            {{ default: () => <input data-testid="one" /> }}
+          </Popup>
+        ),
+      });
+      await render(() => (
+        <div>
+          <input data-testid="outside" />
+          <KeepAlive>{shown.value ? <Page /> : null}</KeepAlive>
+        </div>
+      ));
+      screen.getByTestId('outside').focus();
+      await fireEvent.click(screen.getByTestId('reference'));
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      shown.value = false;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+  });
+
+  describe('BUG-6037: the element that takes the focus when a popup closes', () => {
+    // A button that closes the popup, and runs `change` in the same update.
+    function changeAndClose(change: () => void) {
+      return ({ close }: { close: () => void }) => (
+        <button
+          data-testid="change"
+          onClick={() => {
+            change();
+            close();
+          }}
+        />
+      );
+    }
+
+    async function openFrom(before: string) {
+      screen.getByTestId(before).focus();
+      await fireEvent.click(screen.getByTestId('reference'));
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+    }
+
+    it('skips a target of returnFocus that is not in the document', async () => {
+      await render(<Popup manager={{ returnFocus: document.createElement('input') }} />);
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+    });
+
+    it('skips a reference that is hidden', async () => {
+      const hidden = shallowRef(false);
+      await render(() => (
+        <div>
+          <input data-testid="before" />
+          <Popup referenceHidden={hidden.value}>
+            {{ default: changeAndClose(() => (hidden.value = true)) }}
+          </Popup>
+        </div>
+      ));
+      await openFrom('before');
+
+      await fireEvent.click(screen.getByTestId('change'));
+
+      await waitFor(() => expect(screen.getByTestId('before')).toHaveFocus());
+    });
+
+    it('keeps the focus that the closing update moved, when the reference is hidden', async () => {
+      const Autofocus = defineComponent({
+        setup() {
+          const field = shallowRef<HTMLElement | null>(null);
+          onMounted(() => field.value?.focus());
+          return () => <input data-testid="moved" ref={field} />;
+        },
+      });
+      const changed = shallowRef(false);
+      await render(() => (
+        <div>
+          <input data-testid="before" />
+          <Popup referenceHidden={changed.value}>
+            {{ default: changeAndClose(() => (changed.value = true)) }}
+          </Popup>
+          {changed.value && <Autofocus />}
+        </div>
+      ));
+      await openFrom('before');
+
+      await fireEvent.click(screen.getByTestId('change'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('moved')).toHaveFocus();
+    });
+
+    it('moves the focus to the element that had it before the open, when Vue removes the reference with the popup', async () => {
+      const removed = shallowRef(false);
+      await render(() => (
+        <div>
+          <input data-testid="before" />
+          <Popup referenceAfter referenceRemoved={removed.value}>
+            {{ default: changeAndClose(() => (removed.value = true)) }}
+          </Popup>
+        </div>
+      ));
+      await openFrom('before');
+
+      await fireEvent.click(screen.getByTestId('change'));
+
+      await waitFor(() => expect(screen.getByTestId('before')).toHaveFocus());
+    });
+
+    it('moves the focus into the popup above when no element that had the focus can take it', async () => {
+      const removed = shallowRef(false);
+      await render(() => (
+        <Popup>
+          {{
+            default: () => [
+              <input data-testid="parent-field" />,
+              <Popup name="child-" referenceRemoved={removed.value}>
+                {{
+                  default: ({ close }: { close: () => void }) => (
+                    <button
+                      data-testid="child-change"
+                      onClick={() => {
+                        removed.value = true;
+                        close();
+                      }}
+                    />
+                  ),
+                }}
+              </Popup>,
+            ],
+          }}
+        </Popup>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
+      await openPopup(document, 'child-');
+      await waitFor(() => expect(screen.getByTestId('child-change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('child-change'));
+
+      await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
+    });
+
+    // The focus is on the body at each open, so the focus manager records the reference.
+    async function openAndClose(name: string) {
+      await fireEvent.click(screen.getByTestId(`${name}reference`));
+      await waitFor(() => expect(screen.getByTestId(`${name}one`)).toHaveFocus());
+      await fireEvent.click(screen.getByTestId(`${name}close`));
+      await waitFor(() => expect(screen.getByTestId(`${name}reference`)).toHaveFocus());
+      screen.getByTestId(`${name}reference`).blur();
+    }
+
+    it.each<{ name: string; attribute: string | null; focused: string }>([
+      { name: 'an element in the document', attribute: null, focused: 'first-reference' },
+      { name: 'a hidden element is skipped', attribute: 'hidden', focused: 'zero-reference' },
+      {
+        name: 'a marked element is skipped',
+        attribute: 'data-vase-ui-inert',
+        focused: 'zero-reference',
+      },
+    ])(
+      'moves the focus to the newest element of the list: $name',
+      async ({ attribute, focused }) => {
+        const removed = shallowRef(false);
+        await render(() => (
+          <div>
+            <Popup name="zero-" />
+            <Popup name="first-" />
+            <Popup name="second-" referenceRemoved={removed.value}>
+              {{
+                default: ({ close }: { close: () => void }) => (
+                  <button
+                    data-testid="second-change"
+                    onClick={() => {
+                      removed.value = true;
+                      close();
+                    }}
+                  />
+                ),
+              }}
+            </Popup>
+          </div>
+        ));
+        await openAndClose('zero-');
+        await openAndClose('first-');
+        if (attribute) {
+          screen.getByTestId('first-reference').setAttribute(attribute, '');
+        }
+        await fireEvent.click(screen.getByTestId('second-reference'));
+        await waitFor(() => expect(screen.getByTestId('second-change')).toHaveFocus());
+
+        await fireEvent.click(screen.getByTestId('second-change'));
+
+        await waitFor(() => expect(screen.getByTestId(focused)).toHaveFocus());
+      },
+    );
+
+    describe('press outside the popup, in a browser that gives no preventScroll option', () => {
+      // A browser without the option does not read the options of `focus`. This function does not
+      // read them either.
+      function ignoreFocusOptions() {
+        const focus = HTMLElement.prototype.focus;
+        const spy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+          this: HTMLElement,
+        ) {
+          focus.call(this);
+        });
+        onTestFinished(() => spy.mockRestore());
+      }
+
+      const mousePress = () =>
+        new PointerEvent('pointerdown', { pointerType: 'mouse', buttons: 1, pressure: 0.5 });
+      // Chromium gives a press of a screen reader as a mouse event of 1 by 1 pixel with no pressure.
+      const screenReaderPress = () =>
+        new PointerEvent('pointerdown', { pointerType: 'mouse', width: 1, height: 1, pressure: 0 });
+
+      it.each<{
+        name: string;
+        ignoreOptions: boolean;
+        press: () => PointerEvent;
+        manager: (target: TargetRef) => ManagerProps;
+        nested?: boolean;
+        focused: string;
+      }>([
+        {
+          name: 'a mouse press, preventScroll works',
+          ignoreOptions: false,
+          press: mousePress,
+          manager: () => ({}),
+          focused: 'reference',
+        },
+        {
+          name: 'a mouse press',
+          ignoreOptions: true,
+          press: mousePress,
+          manager: () => ({}),
+          focused: 'body',
+        },
+        {
+          name: 'a mouse press, and a target',
+          ignoreOptions: true,
+          press: mousePress,
+          manager: (target) => ({ returnFocus: target }),
+          focused: 'target',
+        },
+        {
+          name: 'a screen reader press',
+          ignoreOptions: true,
+          press: screenReaderPress,
+          manager: () => ({}),
+          focused: 'reference',
+        },
+        {
+          name: 'a mouse press on a nested popup',
+          ignoreOptions: true,
+          press: mousePress,
+          manager: () => ({}),
+          nested: true,
+          focused: 'reference',
+        },
+      ])(
+        'puts the focus on the $focused after $name',
+        async ({ ignoreOptions, press, manager, nested, focused }) => {
+          const target: TargetRef = shallowRef(null);
+          const popup = captureStore();
+          await render(() => (
+            <div>
+              <input data-testid="target" ref={target} />
+              <Popup manager={manager(target)} onStore={popup.onStore} />
+            </div>
+          ));
+          await openPopup();
+          await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+          if (ignoreOptions) {
+            ignoreFocusOptions();
+          }
+          if (nested) {
+            popup.store.context.nested = true;
+          }
+
+          popup.store.setOpen(false, createChangeEventDetails(REASONS.outsidePress, press()));
+          await flushMicrotasks();
+
+          expect(focused === 'body' ? document.body : screen.getByTestId(focused)).toHaveFocus();
+        },
+      );
+    });
+  });
+
+  it('releases its document listeners while KeepAlive holds the popup, and takes them back', async () => {
     const added = vi.spyOn(document, 'addEventListener');
     const removed = vi.spyOn(document, 'removeEventListener');
-    const countKeydown = () =>
-      added.mock.calls.filter(([type]) => type === 'keydown').length -
-      removed.mock.calls.filter(([type]) => type === 'keydown').length;
+    const count = (type: string) =>
+      added.mock.calls.filter(([name]) => name === type).length -
+      removed.mock.calls.filter(([name]) => name === type).length;
+    const before = { keydown: count('keydown'), pointerdown: count('pointerdown') };
+    // The Tab stop and the record of the last interaction each hold a `keydown` listener. The
+    // record holds the `pointerdown` listener.
+    const listeners = () => ({
+      keydown: count('keydown') - before.keydown,
+      pointerdown: count('pointerdown') - before.pointerdown,
+    });
     const shown = shallowRef(true);
     const Page = defineComponent({
       setup: () => () => (
@@ -604,20 +1580,19 @@ describe('FloatingFocusManager', () => {
       ),
     });
     await render(() => <KeepAlive>{shown.value ? <Page /> : null}</KeepAlive>);
-    const before = countKeydown();
     await openPopup();
     await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
     const guards = getInsideGuards();
-    expect(countKeydown() - before).toBe(1);
+    expect(listeners()).toEqual({ keydown: 2, pointerdown: 1 });
 
     shown.value = false;
     await nextTick();
-    expect(countKeydown() - before).toBe(0);
+    expect(listeners()).toEqual({ keydown: 0, pointerdown: 0 });
     expect(screen.queryByTestId('floating')).toBe(null);
 
     shown.value = true;
     await nextTick();
-    expect(countKeydown() - before).toBe(1);
+    expect(listeners()).toEqual({ keydown: 2, pointerdown: 1 });
     expect(getInsideGuards().map((guard, index) => guard === guards[index])).toEqual([true, true]);
     await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
   });
@@ -661,6 +1636,7 @@ describe('FloatingFocusManager', () => {
     await waitFor(() =>
       expect(frameDocument.activeElement).toBe(frameDocument.querySelector('[data-testid="one"]')),
     );
-    expect(added.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(1);
+    expect(added.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(2);
+    expect(added.mock.calls.filter(([type]) => type === 'pointerdown')).toHaveLength(1);
   });
 });
