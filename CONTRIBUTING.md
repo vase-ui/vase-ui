@@ -282,6 +282,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - A control whose field can have more than one input registers its input with `validation.registerInput` in the `ref` setter. It keeps the function that `registerInput` returns, and calls it when the input changes or goes away. It does not write `validation.inputRef`.
+- `KeepAlive` takes the input out of the document and calls no `ref` setter. The control calls the function that `registerInput` returns in `onDeactivated`. The field then does not validate an input that the user cannot reach.
+- The control registers the input again in a `watch` of a flag that `onDeactivated` and `onActivated` set. A registration in `onActivated` would reverse the order of the inputs, because `KeepAlive` runs those hooks from the last part to the first part. `Radio.Root` is the model.
 - The part calls `useFormReset(input, onReset)` of `src/internals` in `setup`. The composable listens to `reset` on the root node of the input, because the form of the input can change. It ignores an event whose target is not the form of the input when the event arrives. It calls `onReset` in a 0 ms timeout, after the listeners of the event. It does not call `onReset` when a listener prevented the event. In `onReset`, an uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change. After each reset that the part follows, the part clears the error of its field with `useClearFieldError`, also when its value does not change. The change of a reset starts no validation.
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
 
@@ -1349,6 +1351,7 @@ The thing that a row names decides which kinds the row can have:
 
 - A row that names a source file also covers the cases in that file.
 - A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
+- A `types.md` can repeat an entry of another family. Give that entry a `not-applicable` row. The reason names the family that ports the entry. An example is the `types.md` of Radio Group, which repeats the entries of Radio.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
 - A row for a test file that imports the entry point of its family can name that entry point in `waitsOn`. A pull request that ports some cases of the file keeps the row. The row goes when each case of the file has a counterpart.
 - `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
