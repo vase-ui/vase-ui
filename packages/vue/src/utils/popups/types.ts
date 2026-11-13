@@ -1,0 +1,95 @@
+import type { VirtualElement } from '@floating-ui/vue';
+import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import type { PopupTriggerMap } from './popupTriggerMap';
+
+export type ReferenceType = Element | VirtualElement;
+
+export interface PopupEvents {
+  emit<T extends string>(event: T, data?: any): void;
+  on(event: string, handler: (data: any) => void): void;
+  off(event: string, handler: (data: any) => void): void;
+}
+
+/**
+ * Reads the interaction state of a popup by key.
+ */
+export interface PopupInteractionReader {
+  (key: 'open'): boolean;
+  (key: 'transitionStatus'): TransitionStatus | undefined;
+  /**
+   * The element of the active trigger. A popup store keeps it after the popup unmounts.
+   * `FloatingRootStore` clears it while the popup is not mounted.
+   */
+  (key: 'anchorElement'): Element | null;
+  /**
+   * The anchor that the interaction composables see. It is the anchor override, such as the cursor
+   * position from `useClientPoint`, or else the anchor of the owner, usually the active trigger.
+   * It does not include the `anchor` prop of a positioner, because positioning applies that prop
+   * itself.
+   */
+  (key: 'anchor'): ReferenceType | null;
+  /**
+   * The positioner element of the popup, or the popup itself when it has no positioner.
+   */
+  (key: 'positionerElement'): HTMLElement | null;
+  /**
+   * The id of the popup, unless its element sets one.
+   */
+  (key: 'defaultPopupId'): string | undefined;
+}
+
+/**
+ * Plain values that the interaction composables of one popup share.
+ * A detached trigger uses an inert store before a root attaches. That store freezes its context, so
+ * code that can run against it only reads these fields.
+ */
+export interface PopupInteractionContext {
+  readonly events: PopupEvents;
+  nested: boolean;
+  readonly triggerElements: PopupTriggerMap;
+  /**
+   * The event that opened the popup. `dispatchOpenChange` writes it. Navigation Menu clears it.
+   */
+  openEvent?: Event | undefined;
+  /**
+   * The orientation of the list navigation of the popup. A nested list reads it from its parent.
+   * `useListNavigation` writes it.
+   */
+  orientation?: 'vertical' | 'horizontal' | 'both' | undefined;
+  /**
+   * Whether an Escape key press bubbles to the parent popup. `useDismiss` writes it and never
+   * clears it.
+   */
+  escapeKeyBubbles?: boolean | undefined;
+  /**
+   * Whether an outside press bubbles to the parent popup. `useDismiss` writes it and never clears
+   * it.
+   */
+  outsidePressBubbles?: boolean | undefined;
+}
+
+/**
+ * The store that the interaction composables, the focus manager and positioning read and write.
+ * A popup store implements it directly. Navigation Menu and Toast keep their open state outside a
+ * store, so they use `FloatingRootStore`.
+ */
+export interface PopupInteractionStore {
+  select: PopupInteractionReader;
+  set(key: 'anchorOverride', value: ReferenceType | null): void;
+  set(key: 'anchorElement', value: Element | null): void;
+  setOpen(open: boolean, eventDetails: VaseUIChangeEventDetails<string>): void;
+  readonly context: PopupInteractionContext;
+}
+
+/**
+ * The store that anchor positioning reads and clears. A popup store and `FloatingRootStore`
+ * implement it. The narrower handle stores that triggers use do not need to.
+ */
+export interface PositioningInteractionStore extends PopupInteractionStore {
+  /**
+   * Forgets the elements that positioning reads while the popup is not mounted. Positioning then
+   * does not run for a closed `keepMounted` popup.
+   */
+  clearPositioning(): void;
+}
