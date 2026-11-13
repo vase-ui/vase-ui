@@ -1,12 +1,14 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, h, nextTick, onMounted, ref, warn } from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
+import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
 import PlainPart from './fixtures/PlainPart.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
 const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
+const CLASSED_ELEMENT = 'test/fixtures/ClassedElement.vue';
 
 describe('hydrate', () => {
   it('passes for the clean fixture', async () => {
@@ -89,6 +91,15 @@ describe('hydrate', () => {
     // When Vue changes its format, this assertion fails.
     expect(serverHtml).toContain(serverText);
     await hydrate(StyledElement, { serverHtml, props: { elementStyle } });
+  });
+
+  it('passes for a root element with an undefined class', async () => {
+    const serverHtml = await renderOnServer(CLASSED_ELEMENT);
+
+    // The case tests the helper only while the server HTML has no `class`.
+    // When Vue changes its format, this assertion fails.
+    expect(serverHtml).toBe('<div></div>');
+    await hydrate(ClassedElement, { serverHtml });
   });
 
   it.each([

@@ -1,0 +1,110 @@
+{
+  "upstreamPaths": ["packages/react/src/tabs/**", "docs/src/app/(docs)/react/components/tabs/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicatorCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/prehydrationScript.min.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/prehydrationScript.template.js",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/tabs/indicator/TabsIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "reason": "Each case of the file renders `Tabs.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "activation direction"],
+      "title": "resets `data-activation-direction` when the selection is cleared and restored",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "reason": "The case renders `Tabs.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "popups"],
+      "title": "works inside Popover",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/root/PopoverRoot.tsx",
+      "reason": "The case renders `Popover`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tabs/root/TabsRoot.test.tsx",
+      "describe": ["<Tabs.Root />", "popups"],
+      "title": "works inside Dialog",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/dialog/root/DialogRoot.tsx",
+      "reason": "The case renders `Dialog`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/tabs/panel/TabsPanel.test.tsx",
+      "describe": ["<Tabs.Panel />", "Suspense integration"],
+      "title": "renders a panel that suspends when opened with the boundary outside the root",
+      "kind": "not-applicable",
+      "reason": "React hides the mounted tree and shows the fallback when a panel suspends after the mount. A mounted Vue component cannot suspend again."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "Root",
+      "prop": "defaultValue",
+      "kind": "not-applicable",
+      "reason": "The part must tell an absent `defaultValue` from `defaultValue={0}`. Only the absent prop makes the root emit the initial change and fall back from a disabled tab. A Vue prop with a default cannot tell the two apart, so the prop has no default. The part uses `0` for an absent prop, which is the default that Base UI documents."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "Indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "reason": "Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsIndicatorCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `Tabs.Indicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/tabs/types.md",
+      "entry": "TabsIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/tabs/indicator/TabsIndicator.tsx",
+      "reason": "The entry point exports the names of a part with the part. Vase UI does not have `Tabs.Indicator`."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Tab",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for the `aria-labelledby` of the panel, so it is a declared prop. Base UI reads it from the native attributes of the tab, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Panel",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the root for the `aria-controls` of the tab, so it is a declared prop. `types.md` has no row for a native attribute. Base UI gives the root a generated id, and an `id` of the consumer replaces only the id of the element."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

@@ -1,0 +1,10 @@
+{
+  "id": "VUE-14",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tabs/panel/TabsPanel.tsx#L45",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tabs/panel/TabsPanel.tsx#L101",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+  ],
+  "behavior": "A tab names the `id` of its panel in `aria-controls`, also when the panel has an `id` of its own. Base UI registers the generated id of the panel, so `aria-controls` names no element when the consumer gives the panel an `id`.",
+  "dueWith": "packages/react/src/tabs/panel/TabsPanel.tsx"
+}
