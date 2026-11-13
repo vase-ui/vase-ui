@@ -273,6 +273,12 @@ describe('useHoverTriggerInteraction', () => {
     // The trigger is at 0, 0 and the popup is at 200, 0. Each one is 100 by 100.
     const BOX: CSSProperties = { position: 'fixed', top: '0px', width: '100px', height: '100px' };
 
+    // The browser keeps its real pointer where an earlier test left it. A trigger under that pointer
+    // gets a trusted `mouseenter` in a later frame, and the popup opens. Each app of this block
+    // renders in a wrapper with this style. A dispatched event still reaches the listeners. The
+    // style is not on the trigger, because the hover intent removes it from the trigger.
+    const NO_POINTER_EVENTS: CSSProperties = { pointerEvents: 'none' };
+
     // A trigger that opens a popup on hover. `calls` lists the open changes that the owner hears.
     // As a popup root does, the app moves the anchor to the trigger that opens the popup.
     function createHoverApp({
@@ -308,7 +314,7 @@ describe('useHoverTriggerInteraction', () => {
           };
 
           return () => (
-            <>
+            <div style={NO_POINTER_EVENTS}>
               <button
                 id="trigger"
                 data-testid="trigger"
@@ -331,7 +337,7 @@ describe('useHoverTriggerInteraction', () => {
               {open.value && (
                 <div data-testid="popup" style={{ ...BOX, left: '200px' }} ref={refs.setFloating} />
               )}
-            </>
+            </div>
           );
         },
       });
@@ -411,13 +417,16 @@ describe('useHoverTriggerInteraction', () => {
       const enabled = shallowRef(true);
       const { App, calls } = createHoverApp({ delay: 500, enabled });
       await render(<App />);
+      // The count can hold a timer of Vue: the first app of a page starts one in a development
+      // build. So each case that counts timers compares with the count after the mount.
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
       await tick(100);
-      expect(vi.getTimerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       enabled.value = false;
       await flushMicrotasks();
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
 
       await tick(1000);
       expect(calls).toEqual([]);
@@ -472,11 +481,12 @@ describe('useHoverTriggerInteraction', () => {
     it('stops the open delay when the trigger unmounts', async () => {
       const { App, calls } = createHoverApp({ delay: 500 });
       const { unmount } = await render(<App />);
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
-      expect(vi.getTimerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       unmount();
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
 
       await tick(1000);
       expect(calls).toEqual([]);
@@ -485,11 +495,12 @@ describe('useHoverTriggerInteraction', () => {
     it('stops the open delay when KeepAlive deactivates the trigger', async () => {
       const { App, calls } = createHoverApp({ delay: 500 });
       const view = await renderInKeepAlive(App);
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
-      expect(vi.getTimerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       await view.toggle(false);
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
 
       await tick(1000);
       await view.toggle(true);
@@ -503,13 +514,14 @@ describe('useHoverTriggerInteraction', () => {
       ])('closes $name', async ({ delay, leave }) => {
         const { App, calls } = createHoverApp({ delay: { close: delay } });
         const view = await renderInKeepAlive(App);
+        const timersAfterMount = vi.getTimerCount();
         await enter(getTrigger());
         if (leave) {
           await fireEvent.mouseLeave(getTrigger());
         }
 
         await view.toggle(false);
-        expect(vi.getTimerCount()).toBe(0);
+        expect(vi.getTimerCount()).toBe(timersAfterMount);
         await view.toggle(true);
 
         expect(isOpen()).toBe(false);
@@ -699,11 +711,13 @@ describe('useHoverTriggerInteraction', () => {
             context.rootStore.context.triggerElements.add('inner', inner.value!);
           });
           return () => (
-            <button id="outer" {...hoverProps} ref={outer}>
-              <span id="inner" ref={inner}>
-                <b data-testid="content" />
-              </span>
-            </button>
+            <div style={NO_POINTER_EVENTS}>
+              <button id="outer" {...hoverProps} ref={outer}>
+                <span id="inner" ref={inner}>
+                  <b data-testid="content" />
+                </span>
+              </button>
+            </div>
           );
         },
       });
@@ -721,11 +735,12 @@ describe('useHoverTriggerInteraction', () => {
     ])('a mouseout that $name leaves $timers open delays', async (row) => {
       const { App } = createHoverApp({ delay: 500, guardStaleOpen: row.guard });
       await render(<App />);
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
 
       await fireEvent.mouseOut(getTrigger(), { relatedTarget: row.to() });
 
-      expect(vi.getTimerCount()).toBe(row.timers);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + row.timers);
     });
 
     it.each([
@@ -754,16 +769,21 @@ describe('useHoverTriggerInteraction', () => {
           };
           const store = computed(() => (second.value ? stores.second : stores.first));
           const hoverProps = useHoverTriggerInteraction(store, { delay: 500 });
-          return () => <button data-testid="trigger" {...hoverProps} />;
+          return () => (
+            <div style={NO_POINTER_EVENTS}>
+              <button data-testid="trigger" {...hoverProps} />
+            </div>
+          );
         },
       });
       await render(<App />);
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
-      expect(vi.getTimerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       second.value = true;
       await flushMicrotasks();
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
 
       await tick(1000);
       expect(opened).toEqual([]);
@@ -774,16 +794,21 @@ describe('useHoverTriggerInteraction', () => {
       const App = defineComponent({
         setup() {
           const hoverProps = useHoverTriggerInteraction(store, { delay: 500 });
-          return () => <button data-testid="trigger" {...hoverProps} />;
+          return () => (
+            <div style={NO_POINTER_EVENTS}>
+              <button data-testid="trigger" {...hoverProps} />
+            </div>
+          );
         },
       });
       await render(<App />);
+      const timersAfterMount = vi.getTimerCount();
       await enter(getTrigger());
-      expect(vi.getTimerCount()).toBe(1);
+      expect(vi.getTimerCount()).toBe(timersAfterMount + 1);
 
       // The popup is closed, so the store drops the request and tells the hover interaction.
       store.setOpen(false, createChangeEventDetails(REASONS.escapeKey));
-      expect(vi.getTimerCount()).toBe(0);
+      expect(vi.getTimerCount()).toBe(timersAfterMount);
 
       await tick(1000);
       expect(store.select('open')).toBe(false);
