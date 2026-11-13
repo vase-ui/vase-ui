@@ -13,6 +13,8 @@
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
+    "packages/react/src/internals/PrehydrationScript.tsx",
+    "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
@@ -40,6 +42,7 @@
     "packages/react/test/wait.ts"
   ],
   "sources": [
+    "packages/react/src/internals/PrehydrationScript.tsx",
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/constants.ts",
@@ -74,6 +77,7 @@
     "packages/react/src/internals/labelable-provider/useLabel.ts",
     "packages/react/src/internals/labelable-provider/useLabelableId.ts",
     "packages/react/src/internals/noop.ts",
+    "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",

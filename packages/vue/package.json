@@ -32,6 +32,13 @@
     },
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#test-utils": "./test/index.ts",
+    "#prehydration/*": {
+      "browser": "./dist/internals/prehydrationScript.stub.js",
+      "default": "./dist/*/prehydrationScript.min.js"
+    }
+  },
   "publishConfig": {
     "access": "public",
     "tag": "next"

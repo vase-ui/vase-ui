@@ -12,6 +12,8 @@
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/labelable-provider/**",
     "packages/react/src/internals/noop.ts",
+    "packages/react/src/internals/PrehydrationScript.tsx",
+    "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
