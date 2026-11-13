@@ -171,15 +171,7 @@
       "describe": ["useLabel", "%s"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The cases render `Select.Label`, `Combobox.Label` and `Field.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
-    },
-    {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "preserves native label activation inside a shadow root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
-      "reason": "The case renders `Field.Label`, which Vase UI does not have. The case \"gives a native label `for` with the id of the control and moves no focus itself\" tests the part of this behavior that `useLabel` owns."
+      "reason": "The cases render `Select.Label` and `Combobox.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
@@ -203,7 +195,7 @@
       "title": "does not throw when a label is clicked in a detached React root",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/trigger/SelectTrigger.tsx",
-      "reason": "The case renders `Field.Label`, `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
+      "reason": "The case renders `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
     },
     {
       "upstream": "packages/react/src/internals/composite/index.ts",
