@@ -50,10 +50,7 @@ export interface RadioRootProps<Value = any>
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<RadioRootState>,
-    /* @vue-ignore */ Omit<
-      WithVaseUIEvent<HTMLAttributes>,
-      'id' | 'aria-label' | 'aria-labelledby'
-    > {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
   /**
    * The unique identifying value of the radio in a group.
    */
