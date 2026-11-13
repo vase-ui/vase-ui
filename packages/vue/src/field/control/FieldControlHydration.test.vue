@@ -13,6 +13,7 @@ defineProps<{
 
 <template>
   <Field.Root name="name" :disabled="disabled" :invalid="invalid" data-testid="root">
+    <Field.Label data-testid="label">Name</Field.Label>
     <Field.Control
       :as="as"
       :value="value"

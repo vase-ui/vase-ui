@@ -85,6 +85,21 @@ describe('<Input />', () => {
     expect(textarea).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('is named by the label of its field and described by the description of its field', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label>Name</Field.Label>
+        <Input />
+        <Field.Description>Your full name</Field.Description>
+      </Field.Root>,
+    );
+
+    const input = screen.getByRole('textbox', { name: 'Name' });
+
+    expect(screen.getByText('Name')).toHaveAttribute('for', input.id);
+    expect(input).toHaveAccessibleDescription('Your full name');
+  });
+
   it('leaves a disabled input out of the data of its form', async () => {
     await render(
       <form data-testid="form">

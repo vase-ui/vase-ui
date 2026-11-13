@@ -1,6 +1,7 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
 import { Teleport, defineComponent } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
+import { Field } from '@vase-ui/vue/field';
 import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
@@ -63,6 +64,23 @@ describe('useLabel', () => {
     await flushMicrotasks();
 
     expect(control).not.toHaveFocus();
+  });
+
+  it('preserves native label activation inside a shadow root', async () => {
+    const { shadowRoot, container } = createShadowContainer();
+    const { user } = await render(
+      <Teleport to={container}>
+        <Field.Root>
+          <Field.Label>Name</Field.Label>
+          <Field.Control />
+        </Field.Root>
+      </Teleport>,
+    );
+    const control = within(container).getByRole('textbox', { name: 'Name' });
+
+    await user.click(within(container).getByText('Name'));
+
+    expect(shadowRoot.activeElement).toBe(control);
   });
 
   describe('with a fixture label and control', () => {
