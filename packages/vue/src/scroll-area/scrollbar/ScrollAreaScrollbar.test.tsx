@@ -181,14 +181,28 @@ describe('<ScrollArea.Scrollbar />', () => {
   });
 
   describe('prop: orientation', () => {
+    let rootContext!: ScrollAreaRootContext;
+    // The holders are in the context of the root. Nothing else shows them until the thumb exists.
+    const Probe = defineComponent(() => {
+      rootContext = useScrollAreaRootContext();
+      return () => null;
+    });
+
+    it('puts the element of each scrollbar in the holder of its orientation on mount', async () => {
+      await render(
+        <ScrollArea.Root>
+          <Probe />
+          <ScrollArea.Scrollbar data-testid="vertical" keepMounted />
+          <ScrollArea.Scrollbar data-testid="horizontal" orientation="horizontal" keepMounted />
+        </ScrollArea.Root>,
+      );
+
+      expect(rootContext.scrollbarYElement.value).toBe(screen.getByTestId('vertical'));
+      expect(rootContext.scrollbarXElement.value).toBe(screen.getByTestId('horizontal'));
+    });
+
     it('moves its element to the holder of the new orientation', async () => {
       const orientation = shallowRef<'vertical' | 'horizontal'>('vertical');
-      let rootContext!: ScrollAreaRootContext;
-      // The holders are in the context of the root. Nothing else shows them until the thumb exists.
-      const Probe = defineComponent(() => {
-        rootContext = useScrollAreaRootContext();
-        return () => null;
-      });
       const App = defineComponent(() => () => (
         <ScrollArea.Root>
           <Probe />

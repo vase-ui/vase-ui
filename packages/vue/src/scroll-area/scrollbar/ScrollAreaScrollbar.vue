@@ -231,8 +231,8 @@ const { element, elementProps } = useRenderElement('div', props, {
       // When the browser cancels a gesture on the track, no thumb has the pointer capture.
       // The track clears the drag state then, as `pointerup` does.
       onPointercancel: handlePointerUp,
-      // A browser makes a `wheel` listener passive by default only on the window, the document and
-      // the body. A listener on this element can call `preventDefault`.
+      // A browser makes a `wheel` listener passive by default only on the window, the document, the
+      // root element and the body. A listener on this element can call `preventDefault`.
       onWheel: handleWheel,
       style: {
         position: 'absolute',
