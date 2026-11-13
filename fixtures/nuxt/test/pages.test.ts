@@ -317,7 +317,7 @@ async function expectHydratedFieldPage(page: Page) {
   expect(await page.getByTestId('root').getAttribute('data-filled')).toBe('');
 }
 
-const ACTIVE_TAB_SIDES = ['left', 'right', 'top', 'bottom', 'width', 'height'];
+const ACTIVE_TAB_VARIABLE_SUFFIXES = ['left', 'right', 'top', 'bottom', 'width', 'height'];
 
 function readTabsRoot(page: Page, testId: string) {
   return page.getByTestId(testId).evaluate((root) => ({
@@ -337,11 +337,14 @@ function readActiveTabVariables(page: Page) {
   return page
     .getByTestId('indicator')
     .evaluate(
-      (indicator, sides) =>
+      (indicator, suffixes) =>
         Object.fromEntries(
-          sides.map((side) => [side, indicator.style.getPropertyValue(`--active-tab-${side}`)]),
+          suffixes.map((suffix) => [
+            suffix,
+            indicator.style.getPropertyValue(`--active-tab-${suffix}`),
+          ]),
         ),
-      ACTIVE_TAB_SIDES,
+      ACTIVE_TAB_VARIABLE_SUFFIXES,
     );
 }
 
@@ -406,7 +409,7 @@ async function expectTabsPage(page: Page) {
     role: 'presentation',
   });
   expect(await readActiveTabVariables(page)).toEqual(
-    Object.fromEntries(ACTIVE_TAB_SIDES.map((side) => [side, ''])),
+    Object.fromEntries(ACTIVE_TAB_VARIABLE_SUFFIXES.map((suffix) => [suffix, ''])),
   );
 }
 
