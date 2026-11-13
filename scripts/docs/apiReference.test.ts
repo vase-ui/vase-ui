@@ -5,12 +5,18 @@ import { test } from 'node:test';
 import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
-import { buildApiParts, createApiReferenceReader } from './apiReference.ts';
+import {
+  buildApiFunctions,
+  buildApiParts,
+  buildApiTypes,
+  createApiReferenceReader,
+} from './apiReference.ts';
 import { listFamilyPages } from './familyPages.ts';
 
 const FIXTURES = join(import.meta.dirname, '..', 'parity', 'fixtures');
 const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
 const ENTRY = join(SAMPLE, 'index.ts');
+const PARTS = join(SAMPLE, 'index.parts.ts');
 const POPUP = join(SAMPLE, 'popup/SamplePopup.vue');
 const DATA_ATTRIBUTES = join(SAMPLE, 'popup/SamplePopupDataAttributes.ts');
 const CSS_VARIABLES = join(SAMPLE, 'popup/SamplePopupCssVariables.ts');
@@ -199,14 +205,78 @@ test('the parts follow the types.md, and a part with no export or no component i
   );
 });
 
+const CREATE_HANDLE = 'export function createHandle(): Handle {';
+
+test('the functions are the parts and then the functions of the types.md that have a call signature, with the path of the export as name', () => {
+  const [root, popup] = types.parts;
+  const [createHandle] = types.functions;
+  const file = {
+    ...types,
+    parts: [{ ...root, name: 'closeHandle' }, root, { ...root, name: 'Ghost' }, popup],
+    functions: [{ ...createHandle, name: 'Handle' }, createHandle],
+  };
+  const names = withTexts(
+    [[PARTS, CREATE_HANDLE, `export function closeHandle(): void {}\n\n${CREATE_HANDLE}`]],
+    () => buildApiFunctions(project, ENTRY, file).map(({ name }) => name),
+  );
+  assert.deepEqual(names, ['Sample.closeHandle', 'Sample.createHandle']);
+});
+
+test('the types are the types of the types.md that have one property or more, with the path of the export as name', () => {
+  const file = {
+    ...types,
+    types: [
+      { name: 'SampleRootState', code: '' },
+      { name: 'Ghost', code: '' },
+      { name: 'SampleRootChangeEventReason', code: '' },
+      { name: 'Ghost.Handle', code: '' },
+      { name: 'Sample.Handle', code: '' },
+    ],
+  };
+  assert.deepEqual(
+    buildApiTypes(project, ENTRY, file).map(({ name, properties }) => [
+      name,
+      properties.map((property) => property.name),
+    ]),
+    [['Sample.Handle', ['open', 'close']]],
+  );
+});
+
 const read = createApiReferenceReader(REPOSITORY_ROOT);
 
-test('each family page has an API reference with one part or more', () => {
+test('each family page has an API reference with one part, function or type or more', () => {
   const pages = listFamilyPages(join(REPOSITORY_ROOT, 'docs'));
   assert.notEqual(pages.length, 0);
   for (const { family } of pages) {
-    assert.notEqual(read(family).parts.length, 0, `The API reference of ${family} has no part.`);
+    const { parts, functions, types } = read(family);
+    assert.notEqual(
+      parts.length + functions.length + types.length,
+      0,
+      `The API reference of ${family} has no part, function or type.`,
+    );
   }
+});
+
+test('the reference of merge-props has mergeProps with a and b required, and c, d and e optional', () => {
+  const mergeProps = read('merge-props').functions.find(({ name }) => name === 'mergeProps');
+  assert.deepEqual(
+    mergeProps?.parameters.map(({ name, optional }) => [name, optional]),
+    [
+      ['a', false],
+      ['b', false],
+      ['c', true],
+      ['d', true],
+      ['e', true],
+    ],
+  );
+});
+
+test('the reference of use-render has useRender.Parameters with defaultTagName and its default', () => {
+  const parameters = read('use-render').types.find(({ name }) => name === 'useRender.Parameters');
+  assert.equal(
+    parameters?.properties.find(({ name }) => name === 'defaultTagName')?.default,
+    "'div'",
+  );
 });
 
 test('the reference of button has the prop disabled and the attribute data-disabled', () => {

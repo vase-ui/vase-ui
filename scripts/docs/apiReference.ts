@@ -11,7 +11,13 @@ import {
 import type { FamilyFiles } from '../parity/repository.ts';
 import type { SurfaceFile } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
-import type { ComponentSurface, MemberSurface, VaseProject } from '../parity/vaseSurface.ts';
+import type {
+  ComponentSurface,
+  FunctionSurface,
+  MemberSurface,
+  PropertySurface,
+  VaseProject,
+} from '../parity/vaseSurface.ts';
 import { docsFolderGlobs } from './upstreamDocs.ts';
 
 export interface ApiProp {
@@ -56,8 +62,21 @@ export interface ApiPart {
   cssVariables: ApiConstant[];
 }
 
+export interface ApiFunction extends FunctionSurface {
+  /** `mergeProps`, or `Dialog.createHandle` for a member of a namespace. */
+  name: string;
+}
+
+export interface ApiType {
+  /** `useRender.Parameters`. */
+  name: string;
+  properties: PropertySurface[];
+}
+
 export interface ApiReference {
   parts: ApiPart[];
+  functions: ApiFunction[];
+  types: ApiType[];
 }
 
 // Base UI puts `className`, `style` and `render` last. These are their Vue names.
@@ -114,6 +133,41 @@ export function buildApiParts(
   });
 }
 
+/**
+ * The functions of a `types.md`: the names of its parts, then of its functions, in their sequence.
+ * A name with no export in the entry file is left out. So is an export that is a component or has
+ * no call signature.
+ */
+export function buildApiFunctions(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiFunction[] {
+  return [...file.parts, ...file.functions].flatMap(({ name: title }) => {
+    const [match] = project.findExports(entryFile, title);
+    const surface = match && !project.readComponent(match) && project.readFunction(match);
+    return match && surface ? [{ name: match.path, ...surface }] : [];
+  });
+}
+
+/**
+ * The types of a `types.md` that have one property or more, in its sequence. A name with no export
+ * in the entry file is left out.
+ */
+export function buildApiTypes(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiType[] {
+  return file.types.flatMap(({ name }) => {
+    const match = project
+      .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
+      .find(({ path }) => path === name);
+    const properties = match && project.readProperties(match);
+    return properties && properties.length > 0 ? [{ name, properties }] : [];
+  });
+}
+
 /** Returns a function from a family name to the API reference of the family. The first call makes the project. */
 export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: string) => ApiReference {
   let project: VaseProject | undefined;
@@ -142,14 +196,16 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
       );
     }
     const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
+    const build = <T>(
+      read: (project: VaseProject, entryFile: string, file: SurfaceFile) => T[],
+    ): T[] =>
+      typesFiles.flatMap((file) =>
+        read(vaseProject, join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'), file),
+      );
     return {
-      parts: typesFiles.flatMap((file) =>
-        buildApiParts(
-          vaseProject,
-          join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'),
-          file,
-        ),
-      ),
+      parts: build(buildApiParts),
+      functions: build(buildApiFunctions),
+      types: build(buildApiTypes),
     };
   };
 }

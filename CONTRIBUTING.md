@@ -792,16 +792,24 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 
 A component page is `docs/components/<family>.md`. Use `docs/components/button.md` as the model.
 
+A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `merge-props`, has a utility page: `docs/utils/<family>.md`. A utility page follows the rules of this section and counts as a component page in this file. Its folder is the sidebar group Utils.
+
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
+- A demo can import another entry point of Base UI, such as `@base-ui/react/toggle`. The record then has the key `entryPoints`. It has one row for each such demo: the folder of the demo and the sorted names of the entry points, as `"hero": ["slider"]`. A demo with no such import has no row.
 - Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
-- `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file. It also fails when a demo folder has a style sheet that Base UI does not have.
+- `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file and each entry point that the demo imports exists in Vase UI. It also fails when a demo folder has a style sheet that Base UI does not have.
+- A demo with no Vue file waits while one of its entry points does not exist in Vase UI. The page then has no such demo. When the last entry point exists, `pnpm test:docs` fails until the demo has its Vue file. The pull request that adds that entry point ports the demo.
 - On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet below it in one `code-group`.
-- A code sample that is not a demo is `docs/components/<family>/<Name>.vue`. The page shows its source and does not render it.
+- A demo declares its props itself, in a type literal: `defineProps<{ as?: string | Component | undefined }>()`. It does not extend a type of `@vase-ui/vue`. The SFC compiler then reads the props from the demo file, and not from a type of the built package.
+- A code sample that is not a demo is `docs/components/<family>/<Name>.vue`, or `docs/utils/<family>/<Name>.vue` on a utility page. The page shows its source and does not render it. `pnpm docs:typecheck` checks it.
+- A page can show a part of a sample. Mark the part with `// #region <name>` and `// #endregion <name>` in the script of the sample. Show it with `<<< ./<family>/<Name>.vue#<name>{ts}`. The `ts` gives it the colors of TypeScript.
 - Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. Do not write a table by hand. To change a text of the reference, change the JSDoc.
+- `<ApiReference name="<name>" />` shows one function or one type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps` or `useRender.Parameters`. The page writes the heading and the text. The build fails when the reference has no function or type with that name.
+- For a function, the component shows a table of its parameters (`c?` is an optional parameter) and then its return value. For a type, it shows one table of its properties, with a column Default when a property has a default.
 - Each demo is a test fixture. `packages/vue/test/demos.test.tsx` mounts each demo, checks it with axe and hydrates its server render, in each engine. A new demo needs no new test.
 
 ### Thanks page
