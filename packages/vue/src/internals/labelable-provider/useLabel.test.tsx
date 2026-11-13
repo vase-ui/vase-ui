@@ -5,6 +5,8 @@ import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#tes
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
+import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
+import { createLabelIdRegistry } from './createLabelIdRegistry';
 import { useLabel } from './useLabel';
 
 // A container for `<Teleport>` in a shadow root. The shadow root is in the document, or in another
@@ -261,67 +263,93 @@ describe('useLabel', () => {
       });
     });
 
-    it('gives setLabelId the id of the label, and `undefined` when the label goes away', async () => {
-      let labelId: string | undefined;
-      const Probe = defineComponent(() => {
-        const labelProps = useLabel({
-          setLabelId(next) {
-            labelId = next;
-          },
-        });
-        return () => <div data-testid="label" {...labelProps.value} />;
+    describe('param: registerLabelId', () => {
+      it('registers the id of the label, and removes it when the label goes away', async () => {
+        const { labelId, registerLabelId } = createLabelIdRegistry();
+        const Test = defineComponent(
+          (props: { show: boolean }) => () =>
+            props.show ? (
+              <LabelableLabel registerLabelId={registerLabelId} data-testid="label" />
+            ) : null,
+          { props: ['show'] },
+        );
+
+        const { rerender } = await render(<Test show />);
+
+        expect(labelId.value).toBeTruthy();
+        expect(labelId.value).toBe(screen.getByTestId('label').id);
+
+        await rerender(<Test show={false} />);
+
+        expect(labelId.value).toBeUndefined();
       });
-      const Test = defineComponent(
-        (props: { show: boolean }) => () => (props.show ? <Probe /> : null),
-        {
-          props: ['show'],
-        },
-      );
 
-      const { rerender } = await render(<Test show />);
+      it('keeps the id of the label that is left, and has no id when no label is left', async () => {
+        const { labelId, registerLabelId } = createLabelIdRegistry();
+        const Test = defineComponent(
+          (props: { first: boolean; second: boolean }) => () => (
+            <>
+              {props.first && <LabelableLabel id="first-label" registerLabelId={registerLabelId} />}
+              {props.second && (
+                <LabelableLabel id="second-label" registerLabelId={registerLabelId} />
+              )}
+            </>
+          ),
+          { props: ['first', 'second'] },
+        );
 
-      expect(labelId).toBeTruthy();
-      expect(labelId).toBe(screen.getByTestId('label').id);
+        const { rerender } = await render(<Test first second />);
+        expect(labelId.value).toBe('second-label');
 
-      await rerender(<Test show={false} />);
+        await rerender(<Test first second={false} />);
 
-      expect(labelId).toBeUndefined();
-    });
+        expect(labelId.value).toBe('first-label');
 
-    it('gives setLabelId the id of the label that is left, and `undefined` when no label is left', async () => {
-      const labelIds: Record<string, string | undefined> = {};
-      const Probe = defineComponent(
-        (props: { name: string }) => {
-          const labelProps = useLabel({
-            id: () => `${props.name}-label`,
-            setLabelId(next) {
-              labelIds[props.name] = next;
-            },
-          });
-          return () => <div {...labelProps.value} />;
-        },
-        { props: ['name'] },
-      );
-      const Test = defineComponent(
-        (props: { first: boolean; second: boolean }) => () => (
-          <LabelableScope>
-            {props.first && <Probe name="first" />}
-            {props.second && <Probe name="second" />}
-          </LabelableScope>
-        ),
-        { props: ['first', 'second'] },
-      );
+        await rerender(<Test first={false} second={false} />);
 
-      const { rerender } = await render(<Test first second />);
-      expect(labelIds).toEqual({ first: 'first-label', second: 'second-label' });
+        expect(labelId.value).toBeUndefined();
+      });
 
-      await rerender(<Test first second={false} />);
+      // The compiled template of the fixture mounts the new label before it unmounts the old label.
+      // A render function in TSX reuses the label component, so it does not show this order.
+      it('keeps the id of the label when a label before the control replaces a label after it', async () => {
+        const { labelId, registerLabelId } = createLabelIdRegistry();
+        const tree = (labelBeforeControl: boolean) => (
+          <LabelableLabelPosition
+            labelBeforeControl={labelBeforeControl}
+            labelId="part-label"
+            registerLabelId={registerLabelId}
+          />
+        );
+        const { rerender } = await render(tree(false));
+        expect(labelId.value).toBe('part-label');
 
-      expect(labelIds.second).toBe('first-label');
+        await rerender(tree(true));
 
-      await rerender(<Test first={false} second={false} />);
+        expect(labelId.value).toBe('part-label');
+      });
 
-      expect(labelIds.first).toBeUndefined();
+      it('keeps a label that the part does not own out of the registry of the part', async () => {
+        const { labelId, registerLabelId } = createLabelIdRegistry();
+        const Test = defineComponent(
+          (props: { ownLabel: boolean }) => () => (
+            <LabelableScope>
+              <LabelableLabel id="field-label" />
+              {props.ownLabel && (
+                <LabelableLabel id="own-label" registerLabelId={registerLabelId} />
+              )}
+            </LabelableScope>
+          ),
+          { props: ['ownLabel'] },
+        );
+
+        const { rerender } = await render(<Test ownLabel />);
+        expect(labelId.value).toBe('own-label');
+
+        await rerender(<Test ownLabel={false} />);
+
+        expect(labelId.value).toBeUndefined();
+      });
     });
   });
 });

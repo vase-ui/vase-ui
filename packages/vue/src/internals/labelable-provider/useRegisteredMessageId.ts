@@ -19,8 +19,17 @@ export function useRegisteredMessageId(id: MaybeRefOrGetter<string | undefined>)
 
     registeredId = nextId;
     setMessageIds((ids) => {
-      const rest = previousId ? ids.filter((item) => item !== previousId) : ids;
-      return nextId ? rest.concat(nextId) : rest;
+      const next = ids.slice();
+      // Remove one entry, not each entry with this value. Another part can have the same id, and
+      // Vue can mount that part before it unmounts this part.
+      const index = previousId === undefined ? -1 : next.indexOf(previousId);
+      if (index !== -1) {
+        next.splice(index, 1);
+      }
+      if (nextId !== undefined) {
+        next.push(nextId);
+      }
+      return next;
     });
   }
 

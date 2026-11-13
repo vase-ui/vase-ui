@@ -7,6 +7,7 @@ import LabelableMessage from '../../../test/fixtures/LabelableMessage.vue';
 import LabelableScope from '../../../test/fixtures/LabelableScope.vue';
 import LabelableHydration from './LabelableHydration.test.vue';
 import LabelableLabelPosition from './LabelableLabelPosition.test.vue';
+import LabelableMessagePosition from './LabelableMessagePosition.test.vue';
 
 describe('labelable provider', () => {
   const { render } = createRenderer();
@@ -59,14 +60,14 @@ describe('labelable provider', () => {
 
     describe('two controls', () => {
       const TwoControls = defineComponent(
-        (props: { first: boolean; second: boolean }) => () => (
+        (props: { first: boolean; second: boolean; firstEnabled?: boolean | undefined }) => () => (
           <LabelableScope>
-            {props.first && <LabelableControl id="a" />}
+            {props.first && <LabelableControl id="a" enabled={props.firstEnabled} />}
             {props.second && <LabelableControl id="b" />}
             <LabelableLabel data-testid="label">Label</LabelableLabel>
           </LabelableScope>
         ),
-        { props: ['first', 'second'] },
+        { props: ['first', 'second', 'firstEnabled'] },
       );
 
       it('keeps the selected id when the other control goes away', async () => {
@@ -83,6 +84,15 @@ describe('labelable provider', () => {
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
 
         await rerender(<TwoControls first={false} second />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
+      });
+
+      it('selects the other control when the selected control gets `enabled` false', async () => {
+        const { rerender } = await render(<TwoControls first second />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<TwoControls first second firstEnabled={false} />);
 
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
       });
@@ -181,6 +191,15 @@ describe('labelable provider', () => {
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', label.id);
     });
 
+    it('follows a change of the id of the label', async () => {
+      const { rerender } = await render(<LabelAndControl showLabel labelId="label-a" />);
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'label-a');
+
+      await rerender(<LabelAndControl showLabel labelId="label-b" />);
+
+      expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby', 'label-b');
+    });
+
     it('removes the name of the control when the label goes away', async () => {
       const { rerender } = await render(<LabelAndControl showLabel />);
       expect(screen.getByTestId('control')).toHaveAttribute('aria-labelledby');
@@ -212,11 +231,16 @@ describe('labelable provider', () => {
     // The compiled template of the fixture mounts the new label before it unmounts the old label.
     // A render function in TSX reuses the label component, so it does not show this order.
     it('keeps the name of the control when a label before it replaces a label after it', async () => {
-      const { rerender } = await render(<LabelableLabelPosition labelBeforeControl={false} />);
+      const tree = (labelBeforeControl: boolean) => (
+        <LabelableScope>
+          <LabelableLabelPosition labelBeforeControl={labelBeforeControl} />
+        </LabelableScope>
+      );
+      const { rerender } = await render(tree(false));
       const control = screen.getByTestId('control');
       expect(control).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
 
-      await rerender(<LabelableLabelPosition labelBeforeControl />);
+      await rerender(tree(true));
 
       expect(control).toHaveAttribute('aria-labelledby', screen.getByTestId('label').id);
     });
@@ -267,6 +291,26 @@ describe('labelable provider', () => {
       await render(<DescribedControl messageIds={['']} />);
 
       expect(screen.getByTestId('control')).not.toHaveAttribute('aria-describedby');
+    });
+
+    // The compiled template of the fixture mounts a message that comes before the control, and then
+    // unmounts a message that comes after it. A render function in TSX reuses the message
+    // component, so it does not show this order.
+    it('keeps the description of the control when a message replaces a message with the same id', async () => {
+      const tree = (messageBeforeControl: boolean) => (
+        <LabelableScope>
+          <LabelableMessagePosition messageBeforeControl={messageBeforeControl} />
+        </LabelableScope>
+      );
+      const { rerender } = await render(tree(false));
+      const control = screen.getByTestId('control');
+      expect(control).toHaveAttribute('aria-describedby', 'error');
+
+      await rerender(tree(true));
+      expect(control).toHaveAttribute('aria-describedby', 'error');
+
+      await rerender(tree(false));
+      expect(control).toHaveAttribute('aria-describedby', 'error');
     });
 
     it('puts the message ids of the outer provider first', async () => {

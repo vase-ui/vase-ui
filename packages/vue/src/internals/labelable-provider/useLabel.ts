@@ -13,8 +13,7 @@ import { useLabelableContext } from './LabelableContext';
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
   const {
     controlId: contextControlId,
-    labelId: contextLabelId,
-    registerLabelId,
+    registerLabelId: registerContextLabelId,
     defaultLabelId,
   } = useLabelableContext();
 
@@ -27,8 +26,8 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
   // label.
   const source = Symbol();
   function register(nextId: string | undefined) {
-    registerLabelId(source, nextId);
-    params.setLabelId?.(nextId ?? contextLabelId.value);
+    registerContextLabelId(source, nextId);
+    params.registerLabelId?.(source, nextId);
   }
 
   register(id.value);
@@ -109,11 +108,11 @@ export interface UseLabelParameters {
    */
   native?: MaybeRefOrGetter<boolean | undefined> | undefined;
   /**
-   * Gives the id of the label to the state of the part.
-   * When the label goes away, the part gets the id of the label that is left in the provider.
-   * It gets `undefined` when no label is left.
+   * Registers the label with the root that owns it, as the labelable context does.
+   * A root that has labels of its own makes the function with `createLabelIdRegistry()`.
+   * The id is `undefined` when the label goes away.
    */
-  setLabelId?: ((labelId: string | undefined) => void) | undefined;
+  registerLabelId?: ((source: symbol, labelId: string | undefined) => void) | undefined;
   /**
    * A focus handler for a label that is not native.
    * If it is omitted, the click focuses the control that has the resolved id.

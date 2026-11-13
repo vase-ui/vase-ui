@@ -2,6 +2,7 @@ import { computed, provide, shallowRef } from 'vue';
 import { useVaseUiId } from '../useBaseUiId';
 import { LabelableContext, useLabelableContext } from './LabelableContext';
 import type { MessageIdsSetter } from './LabelableContext';
+import { createLabelIdRegistry } from './createLabelIdRegistry';
 
 /**
  * Makes the labelable context of a field and provides it to the parts below.
@@ -17,10 +18,9 @@ export function provideLabelableContext(): LabelableContext {
   const defaultLabelId = useVaseUiId();
 
   const controlIdState = shallowRef<string | null>(defaultControlId.value);
-  const registeredLabelId = shallowRef<string | undefined>();
   const messageIdsState = shallowRef<string[]>([]);
   const controlRegistrations = new Map<symbol, string | null>();
-  const labelRegistrations = new Map<symbol, string>();
+  const { labelId, registerLabelId } = createLabelIdRegistry();
 
   function registerControlId(source: symbol, nextId: string | null | undefined) {
     if (nextId === undefined) {
@@ -48,19 +48,6 @@ export function provideLabelableContext(): LabelableContext {
     }
   }
 
-  // A label registers by source, as a control does. Two labels in one provider can have the same id,
-  // and a label can mount before the label that it replaces unmounts. A removal by id value would
-  // then remove the id of the new label.
-  function registerLabelId(source: symbol, nextId: string | undefined) {
-    if (nextId === undefined) {
-      labelRegistrations.delete(source);
-    } else {
-      labelRegistrations.set(source, nextId);
-    }
-
-    registeredLabelId.value = Array.from(labelRegistrations.values()).at(-1);
-  }
-
   const setMessageIds: MessageIdsSetter = (next) => {
     messageIdsState.value = typeof next === 'function' ? next(messageIdsState.value) : next;
   };
@@ -81,7 +68,7 @@ export function provideLabelableContext(): LabelableContext {
     controlId: computed(() => controlIdState.value),
     registerControlId,
     resetControlId,
-    labelId: computed(() => registeredLabelId.value),
+    labelId,
     registerLabelId,
     defaultLabelId,
     messageIds: computed(() => messageIdsState.value),

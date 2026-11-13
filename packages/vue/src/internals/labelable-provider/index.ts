@@ -1,5 +1,6 @@
 export * from './LabelableProvider';
 export { useLabelableContext } from './LabelableContext';
+export { createLabelIdRegistry } from './createLabelIdRegistry';
 export { useLabelableId } from './useLabelableId';
 export { useLabel } from './useLabel';
 export type { UseLabelParameters, UseLabelReturnValue } from './useLabel';
