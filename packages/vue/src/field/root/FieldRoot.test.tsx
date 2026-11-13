@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
@@ -8,11 +8,18 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isJSDOM,
   screen,
+  waitFor,
 } from '#test-utils';
+import { useFieldRootContext } from '../../internals/field-root-context';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type FieldControlInstance = InstanceType<typeof Field.Control>;
+
+function preventDefault(event: Event) {
+  event.preventDefault();
+}
 
 describe('<Field.Root />', () => {
   const { render } = createRenderer();
@@ -67,6 +74,398 @@ describe('<Field.Root />', () => {
   });
 
   describe('prop: validate', () => {
+    it('when not in <Form> the function does not run by default', async () => {
+      const validateSpy = vi.fn(() => 'error');
+      await render(
+        <Field.Root validate={validateSpy}>
+          <Field.Control />
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole('textbox');
+      const message = screen.queryByText('error');
+
+      expect(message).toBe(null);
+
+      await fireEvent.focusIn(control);
+      await fireEvent.input(control, { target: { value: 'abc' } });
+      expect(validateSpy.mock.calls.length).toBe(0);
+      expect(screen.queryByText('error')).toBe(null);
+
+      await fireEvent.focusOut(control);
+      expect(validateSpy.mock.calls.length).toBe(0);
+      expect(screen.queryByText('error')).toBe(null);
+    });
+
+    it('runs after native validations', async () => {
+      await render(
+        <Form>
+          <Field.Root validate={(val) => (val === 'ab' ? 'custom error' : null)}>
+            <Field.Control required />
+            <Field.Error match="valueMissing">value missing</Field.Error>
+            <Field.Error match="customError" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      expect(screen.queryByText('value missing')).toBe(null);
+      expect(screen.queryByText('custom error')).toBe(null);
+
+      const input = screen.getByRole<HTMLInputElement>('textbox');
+
+      // submit
+      await fireEvent.click(screen.getByText('submit'));
+      expect(screen.queryByText('value missing')).not.toBe(null);
+      expect(screen.queryByText('custom error')).toBe(null);
+
+      await fireEvent.focusIn(input);
+      // revalidate
+      await fireEvent.input(input, { target: { value: 'ab' } });
+      expect(screen.queryByText('value missing')).toBe(null);
+      expect(screen.queryByText('custom error')).not.toBe(null);
+
+      await fireEvent.input(input, { target: { value: '' } });
+      expect(screen.queryByText('value missing')).not.toBe(null);
+      // expect(screen.queryByText('custom error')).toBe(null);
+    });
+
+    it.each([
+      { label: 'an empty array', validate: () => [] },
+      { label: 'an undefined', validate: () => undefined },
+      { label: 'an empty string', validate: () => '' },
+      { label: 'an array of empty strings', validate: () => ['', ''] },
+    ])('treats $label result as valid', async ({ validate }) => {
+      const onSubmit = vi.fn(preventDefault);
+
+      await render(
+        <Form onSubmit={onSubmit}>
+          <Field.Root name="field" validationMode="onChange" validate={validate}>
+            <Field.Control data-testid="control" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const control = screen.getByTestId('control');
+
+      await fireEvent.input(control, { target: { value: 'abc' } });
+
+      expect(control).not.toHaveAttribute('aria-invalid');
+      expect(control).not.toHaveAttribute('data-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(control).toHaveProperty('validationMessage', '');
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    describe('async validation pending state', () => {
+      it.each(['onSubmit', 'onChange', 'onBlur'] as const)(
+        'publishes neutral validity while a validator is in flight in %s mode',
+        async (validationMode) => {
+          let resolveValidate: ((value: string | null) => void) | undefined;
+          const validate = vi.fn(
+            () =>
+              new Promise<string | null>((resolve) => {
+                resolveValidate = resolve;
+              }),
+          );
+
+          await render(
+            <Form onSubmit={preventDefault}>
+              <Field.Root
+                data-testid="root"
+                name="username"
+                validationMode={validationMode}
+                validate={validate}
+              >
+                <Field.Control data-testid="control" />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+              <button type="submit">submit</button>
+            </Form>,
+          );
+
+          const root = screen.getByTestId('root');
+          const control = screen.getByTestId('control');
+
+          await fireEvent.input(control, { target: { value: 'taken' } });
+          if (validationMode === 'onBlur') {
+            await fireEvent.focusOut(control);
+          } else if (validationMode === 'onSubmit') {
+            await fireEvent.click(screen.getByText('submit'));
+          }
+
+          expect(validate).toHaveBeenCalledTimes(1);
+          expect(root).not.toHaveAttribute('data-valid');
+          expect(root).not.toHaveAttribute('data-invalid');
+          expect(control).not.toHaveAttribute('aria-invalid');
+          expect(screen.queryByTestId('error')).toBe(null);
+
+          resolveValidate?.('Username is taken');
+          await flushMicrotasks();
+
+          expect(root).toHaveAttribute('data-invalid', '');
+          expect(control).toHaveAttribute('aria-invalid', 'true');
+          expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+        },
+      );
+
+      it.each(['onChange', 'onBlur'] as const)(
+        'retires a previously valid result to neutral while revalidating in %s mode',
+        async (validationMode) => {
+          const resolvers: Array<(value: string | null) => void> = [];
+          const validate = vi.fn(
+            () =>
+              new Promise<string | null>((resolve) => {
+                resolvers.push(resolve);
+              }),
+          );
+
+          await render(
+            <Field.Root data-testid="root" validationMode={validationMode} validate={validate}>
+              <Field.Control data-testid="control" />
+              <Field.Error data-testid="error" />
+            </Field.Root>,
+          );
+
+          const root = screen.getByTestId('root');
+          const control = screen.getByTestId('control');
+
+          await fireEvent.input(control, { target: { value: 'good' } });
+          if (validationMode === 'onBlur') {
+            await fireEvent.focusOut(control);
+          }
+
+          resolvers[0](null);
+          await flushMicrotasks();
+
+          expect(root).toHaveAttribute('data-valid', '');
+
+          if (validationMode === 'onBlur') {
+            await fireEvent.focusIn(control);
+            await fireEvent.focusOut(control);
+          } else {
+            await fireEvent.input(control, { target: { value: 'taken' } });
+          }
+
+          // A valid result never blocks submission, so it retires to neutral mid-flight.
+          expect(root).not.toHaveAttribute('data-valid');
+          expect(root).not.toHaveAttribute('data-invalid');
+
+          resolvers[1]('Username is taken');
+          await flushMicrotasks();
+
+          expect(root).toHaveAttribute('data-invalid', '');
+          expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+        },
+      );
+
+      it.each(['onChange', 'onBlur'] as const)(
+        'keeps a previously resolved error while revalidating in %s mode',
+        async (validationMode) => {
+          const resolvers: Array<(value: string | null) => void> = [];
+          const validate = vi.fn(
+            () =>
+              new Promise<string | null>((resolve) => {
+                resolvers.push(resolve);
+              }),
+          );
+
+          const onSubmit = vi.fn(preventDefault);
+
+          await render(
+            <Form onSubmit={onSubmit}>
+              <Field.Root
+                data-testid="root"
+                name="username"
+                validationMode={validationMode}
+                validate={validate}
+              >
+                <Field.Control data-testid="control" />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+              <button type="submit">submit</button>
+            </Form>,
+          );
+
+          const root = screen.getByTestId('root');
+          const control = screen.getByTestId('control');
+
+          await fireEvent.input(control, { target: { value: 'taken' } });
+          if (validationMode === 'onBlur') {
+            await fireEvent.focusOut(control);
+          }
+
+          resolvers[0]('Username is taken');
+          await flushMicrotasks();
+
+          expect(root).toHaveAttribute('data-invalid', '');
+
+          // A keystroke would optimistically clear the error through the revalidate path, so
+          // re-trigger validation without changing the value.
+          if (validationMode === 'onBlur') {
+            await fireEvent.focusIn(control);
+            await fireEvent.focusOut(control);
+          } else {
+            await fireEvent.input(control, { target: { value: 'taken2' } });
+          }
+
+          // The resolved error stays published mid-flight so it keeps blocking submission.
+          expect(root).toHaveAttribute('data-invalid', '');
+          expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+
+          await fireEvent.click(screen.getByText('submit'));
+
+          expect(onSubmit).not.toHaveBeenCalled();
+
+          resolvers[resolvers.length - 1](null);
+          await flushMicrotasks();
+
+          expect(root).not.toHaveAttribute('data-invalid');
+          expect(screen.queryByTestId('error')).toBe(null);
+        },
+      );
+
+      it('retires a stale native error to neutral once the constraint passes again', async () => {
+        const onSubmit = vi.fn(preventDefault);
+        const resolvers: Array<(value: string | null) => void> = [];
+        const validate = vi.fn(
+          () =>
+            new Promise<string | null>((resolve) => {
+              resolvers.push(resolve);
+            }),
+        );
+
+        await render(
+          <Form onSubmit={onSubmit}>
+            <Field.Root
+              data-testid="root"
+              name="email"
+              validationMode="onChange"
+              validate={validate}
+            >
+              <Field.Control data-testid="control" type="email" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+
+        await fireEvent.input(control, { target: { value: 'nope' } });
+
+        resolvers[resolvers.length - 1](null);
+        await flushMicrotasks();
+
+        expect(root).toHaveAttribute('data-invalid', '');
+
+        await fireEvent.input(control, { target: { value: 'name@example.com' } });
+
+        // `nextState` already carries the fresh native verdict, so the previous native error must
+        // not survive the pending window and keep blocking submission.
+        expect(root).not.toHaveAttribute('data-invalid');
+        expect(root).not.toHaveAttribute('data-valid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.click(screen.getByText('submit'));
+
+        expect(onSubmit).toHaveBeenCalledTimes(1);
+
+        resolvers[resolvers.length - 1](null);
+        await flushMicrotasks();
+
+        expect(root).toHaveAttribute('data-valid', '');
+      });
+
+      it.each(['onSubmit', 'onChange', 'onBlur'] as const)(
+        'keeps a native constraint failure published while the validator is in flight in %s mode',
+        async (validationMode) => {
+          const onSubmit = vi.fn(preventDefault);
+          const validate = vi.fn(() => new Promise<string | null>(() => {}));
+
+          await render(
+            <Form onSubmit={onSubmit}>
+              <Field.Root
+                data-testid="root"
+                name="username"
+                validationMode={validationMode}
+                validate={validate}
+              >
+                <Field.Control data-testid="control" required />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+              <button type="submit">submit</button>
+            </Form>,
+          );
+
+          await fireEvent.click(screen.getByText('submit'));
+
+          // In `onBlur` mode a native failure short-circuits the validator, so nothing is in
+          // flight and the failure is published by the regular end-of-commit path instead.
+          expect(validate).toHaveBeenCalledTimes(validationMode === 'onBlur' ? 0 : 1);
+          expect(onSubmit).not.toHaveBeenCalled();
+          expect(screen.getByTestId('root')).toHaveAttribute('data-invalid', '');
+          expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+
+          await flushMicrotasks();
+        },
+      );
+
+      it('retires a resolved async error to neutral while revalidating in onSubmit mode', async () => {
+        const onSubmit = vi.fn(preventDefault);
+        const resolvers: Array<(value: string | null) => void> = [];
+        const validate = vi.fn(
+          () =>
+            new Promise<string | null>((resolve) => {
+              resolvers.push(resolve);
+            }),
+        );
+
+        await render(
+          <Form onSubmit={onSubmit}>
+            <Field.Root data-testid="root" name="username" validate={validate}>
+              <Field.Control data-testid="control" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+
+        await fireEvent.click(screen.getByText('submit'));
+
+        resolvers[0]('Username is taken');
+        await flushMicrotasks();
+
+        expect(root).toHaveAttribute('data-invalid', '');
+
+        await fireEvent.click(screen.getByText('submit'));
+
+        // An async result can't block submission in `onSubmit` mode, so the neutral state lets
+        // the second submit through.
+        expect(onSubmit).toHaveBeenCalledTimes(2);
+        expect(root).not.toHaveAttribute('data-valid');
+        expect(root).not.toHaveAttribute('data-invalid');
+        expect(control).not.toHaveAttribute('aria-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        resolvers[1](null);
+        await flushMicrotasks();
+
+        expect(root).toHaveAttribute('data-valid', '');
+        expect(screen.queryByTestId('error')).toBe(null);
+      });
+    });
+
     it('accepts synchronous and async validators with no return value', async () => {
       await render(
         <>
@@ -77,6 +476,24 @@ describe('<Field.Root />', () => {
 
       expect(screen.getByTestId('sync')).toBeInTheDocument();
       expect(screen.getByTestId('async')).toBeInTheDocument();
+    });
+
+    it('should apply aria-invalid prop to control once validation finishes', async () => {
+      await render(
+        <Form>
+          <Field.Root validate={() => 'error'}>
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const control = screen.getByRole('textbox');
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await fireEvent.click(screen.getByText('submit'));
+      expect(control).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('unmounted fields are excluded from the validate fn', async () => {
@@ -202,10 +619,143 @@ describe('<Field.Root />', () => {
       await fireEvent.click(screen.getByText('submit'));
       expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
     });
+
+    it('uses the Field.Control name fallback when the Field.Root name is removed', async () => {
+      const App = defineComponent(() => {
+        const rootName = shallowRef<string | undefined>('rootEmail');
+
+        return () => (
+          <Form errors={{ email: 'Email is already taken' }}>
+            <Field.Root name={rootName.value}>
+              <Field.Control name="email" />
+              <Field.Error data-testid="default-error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                rootName.value = undefined;
+              }}
+            >
+              Clear root name
+            </button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      expect(screen.getByRole('textbox')).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('default-error')).toBe(null);
+
+      await fireEvent.click(screen.getByText('Clear root name'));
+
+      expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('default-error')).toHaveTextContent('Email is already taken');
+    });
   });
 
   describe('prop: validationMode', () => {
+    describe('onSubmit', () => {
+      it('should validate the field on submit', async () => {
+        await render(
+          <Form>
+            <Field.Root validate={() => 'error'}>
+              <Field.Control />
+              <Field.Error />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const message = screen.queryByText('error');
+
+        expect(message).toBe(null);
+
+        await fireEvent.click(screen.getByText('submit'));
+
+        expect(screen.queryByText('error')).not.toBe(null);
+      });
+
+      it('revalidates on change', async () => {
+        await render(
+          <Form>
+            <Field.Root>
+              <Field.Control type="url" required defaultValue="" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const control = screen.getByRole<HTMLInputElement>('textbox');
+
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.click(screen.getByText('submit'));
+        expect(screen.queryByTestId('error')).not.toBe(null);
+
+        await fireEvent.input(control, { target: { value: 'http://example' } });
+        expect(screen.queryByTestId('error')).toBe(null);
+      });
+    });
+
+    describe('onChange', () => {
+      it('validates the field on change', async () => {
+        await render(
+          <Field.Root
+            validationMode="onChange"
+            validate={(value) => {
+              const str = value as string;
+              return str.length < 3 ? 'error' : null;
+            }}
+          >
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>,
+        );
+
+        const control = screen.getByRole<HTMLInputElement>('textbox');
+        const message = screen.queryByText('error');
+
+        expect(message).toBe(null);
+
+        await fireEvent.input(control, { target: { value: 't' } });
+
+        expect(control).toHaveAttribute('data-invalid', '');
+        expect(control).toHaveAttribute('aria-invalid', 'true');
+      });
+    });
+
     describe('onBlur', () => {
+      it('validates the field on blur', async () => {
+        await render(
+          <Field.Root
+            validationMode="onBlur"
+            validate={(value) => {
+              const str = value as string;
+              return str.length < 3 ? 'error' : null;
+            }}
+          >
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>,
+        );
+
+        const control = screen.getByRole<HTMLInputElement>('textbox');
+        const message = screen.queryByText('error');
+
+        expect(message).toBe(null);
+
+        await fireEvent.input(control, { target: { value: 't' } });
+
+        expect(control).not.toHaveAttribute('data-invalid');
+
+        await fireEvent.focusOut(control);
+
+        expect(control).toHaveAttribute('data-invalid', '');
+        expect(control).toHaveAttribute('aria-invalid', 'true');
+      });
+
       it('should not mark invalid if `valueMissing` is the only error and not yet dirtied', async () => {
         await render(
           <Field.Root validationMode="onBlur">
@@ -220,6 +770,33 @@ describe('<Field.Root />', () => {
 
         expect(control).not.toHaveAttribute('data-invalid');
         expect(control).not.toHaveAttribute('aria-invalid');
+      });
+
+      it('does not publish errors while `valueMissing` is suppressed', async () => {
+        let latestValidity = null as Field.Validity.State | null;
+
+        await render(
+          <Field.Root validationMode="onBlur">
+            <Field.Control data-testid="control" required />
+            <Field.Validity
+              v-slots={{
+                default: (validity: Field.Validity.State) => {
+                  latestValidity = validity;
+                  return null;
+                },
+              }}
+            />
+          </Field.Root>,
+        );
+
+        const control = screen.getByTestId('control');
+
+        await fireEvent.focusIn(control);
+        await fireEvent.focusOut(control);
+
+        expect(latestValidity!.validity.valid).toBe(true);
+        expect(latestValidity!.errors).toEqual([]);
+        expect(latestValidity!.error).toBe('');
       });
 
       it('should mark invalid if `valueMissing` is the only error and dirtied', async () => {
@@ -238,6 +815,205 @@ describe('<Field.Root />', () => {
 
         expect(control).toHaveAttribute('data-invalid', '');
         expect(control).toHaveAttribute('aria-invalid', 'true');
+      });
+
+      it('supports async validation', async () => {
+        await render(
+          <Field.Root validationMode="onBlur" validate={() => Promise.resolve('error')}>
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>,
+        );
+
+        const control = screen.getByRole('textbox');
+        const message = screen.queryByText('error');
+
+        expect(message).toBe(null);
+
+        await fireEvent.focusIn(control);
+        await fireEvent.focusOut(control);
+
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByText('error')).not.toBe(null);
+        });
+      });
+
+      it('ignores stale async validation results', async () => {
+        const resolvers: Record<string, (value: string | null) => void> = {};
+        const validate = vi.fn((value) => {
+          return new Promise<string | null>((resolve) => {
+            resolvers[value as string] = resolve;
+          });
+        });
+
+        await render(
+          <Field.Root validationMode="onChange" validate={validate}>
+            <Field.Control />
+            <Field.Error />
+          </Field.Root>,
+        );
+
+        const control = screen.getByRole<HTMLInputElement>('textbox');
+
+        await fireEvent.input(control, { target: { value: 'old' } });
+        await fireEvent.input(control, { target: { value: 'new' } });
+
+        resolvers.new(null);
+        await flushMicrotasks();
+
+        expect(screen.queryByText('old error')).toBe(null);
+        expect(control).not.toHaveAttribute('aria-invalid');
+
+        resolvers.old('old error');
+        await flushMicrotasks();
+
+        expect(screen.queryByText('old error')).toBe(null);
+        expect(control).not.toHaveAttribute('aria-invalid');
+      });
+
+      describe('revalidation', () => {
+        it('revalidates on change for `valueMissing`', async () => {
+          await render(
+            <Field.Root validationMode="onBlur">
+              <Field.Control required />
+              <Field.Error />
+            </Field.Root>,
+          );
+
+          const control = screen.getByRole('textbox');
+          const message = screen.queryByText('error');
+
+          expect(message).toBe(null);
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 't' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).not.toHaveAttribute('aria-invalid', 'true');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: '' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).toHaveAttribute('aria-invalid');
+        });
+
+        it('handles both `required` and `typeMismatch`', async () => {
+          await render(
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required />
+              <Field.Error data-testid="error" />
+            </Field.Root>,
+          );
+
+          const control = screen.getByRole('textbox');
+          const message = screen.queryByTestId('error');
+
+          expect(message).toBe(null);
+
+          await fireEvent.focusIn(control);
+          await fireEvent.focusOut(control);
+
+          expect(control).not.toHaveAttribute('aria-invalid');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 'tt' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).toHaveAttribute('aria-invalid', 'true');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: '' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).toHaveAttribute('aria-invalid', 'true');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 'email@email.com' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).not.toHaveAttribute('aria-invalid');
+        });
+
+        it('revalidates on change when clearing a type mismatch leaves only `valueMissing`', async () => {
+          await render(
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required data-testid="control" />
+              <Field.Error match="typeMismatch" data-testid="type-error">
+                Invalid email
+              </Field.Error>
+              <Field.Error match="valueMissing" data-testid="required-error">
+                Required
+              </Field.Error>
+            </Field.Root>,
+          );
+
+          const control = screen.getByTestId('control');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 'invalid' } });
+          await fireEvent.focusOut(control);
+
+          expect(screen.getByTestId('type-error')).not.toBe(null);
+          expect(screen.queryByTestId('required-error')).toBe(null);
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: '' } });
+
+          expect(screen.queryByTestId('type-error')).toBe(null);
+          expect(screen.getByTestId('required-error')).not.toBe(null);
+        });
+
+        it('clears valueMissing on change but defers other native errors like typeMismatch until blur when both are active', async () => {
+          await render(
+            <Field.Root validationMode="onBlur">
+              <Field.Control type="email" required data-testid="control" />
+              <Field.Error data-testid="error" />
+            </Field.Root>,
+          );
+
+          const control = screen.getByTestId('control');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.focusOut(control);
+          expect(control).not.toHaveAttribute('aria-invalid', 'true');
+          expect(screen.queryByTestId('error')).toBe(null);
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 'a' } });
+          await fireEvent.input(control, { target: { value: '' } });
+          await fireEvent.focusOut(control);
+
+          expect(control).toHaveAttribute('aria-invalid', 'true');
+          expect(screen.getByTestId('error')).not.toBe(null);
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 't' } });
+
+          // The field becomes temporarily valid because only 'valueMissing' is checked for immediate clearing.
+          // Other errors like 'typeMismatch' are deferred to the next blur/submit.
+          expect(control).not.toHaveAttribute('aria-invalid', 'true');
+          expect(screen.queryByTestId('error')).toBe(null);
+
+          await fireEvent.focusOut(control);
+
+          expect(control).toHaveAttribute('aria-invalid', 'true');
+          expect(screen.getByTestId('error')).not.toBe(null);
+          expect(screen.getByTestId('error').textContent).not.toBe('');
+
+          await fireEvent.focusIn(control);
+          await fireEvent.input(control, { target: { value: 'test@example.com' } });
+
+          expect(control).not.toHaveAttribute('aria-invalid', 'true');
+          expect(screen.queryByTestId('error')).toBe(null);
+
+          await fireEvent.focusOut(control);
+
+          expect(control).not.toHaveAttribute('aria-invalid', 'true');
+          expect(screen.queryByTestId('error')).toBe(null);
+        });
       });
 
       describe('computed validity state', () => {
@@ -298,7 +1074,428 @@ describe('<Field.Root />', () => {
     });
   });
 
+  describe('prop: validateDebounceTime', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function tick(milliseconds: number) {
+      vi.advanceTimersByTime(milliseconds);
+      await flushMicrotasks();
+    }
+
+    it('should debounce validation', async () => {
+      await render(
+        <Field.Root
+          validationDebounceTime={100}
+          validationMode="onChange"
+          validate={(value) => {
+            const str = value as string;
+            return str.length < 3 ? 'error' : null;
+          }}
+        >
+          <Field.Control />
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole<HTMLInputElement>('textbox');
+      const message = screen.queryByText('error');
+
+      expect(message).toBe(null);
+
+      await fireEvent.input(control, { target: { value: 't' } });
+
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(99);
+
+      await fireEvent.input(control, { target: { value: 'te' } });
+
+      await tick(99);
+
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(1);
+
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByText('error')).not.toBe(null);
+    });
+
+    it('drops a pending debounced validation when the control unmounts', async () => {
+      const validate = vi.fn(() => 'error');
+
+      const App = defineComponent(() => {
+        const mounted = shallowRef(true);
+
+        return () => (
+          <div>
+            <Field.Root
+              data-testid="root"
+              validationDebounceTime={100}
+              validationMode="onChange"
+              validate={validate}
+            >
+              {mounted.value && <Field.Control data-testid="control" />}
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                mounted.value = false;
+              }}
+            >
+              unmount
+            </button>
+          </div>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.input(screen.getByTestId('control'), { target: { value: 'abc' } });
+
+      await tick(99);
+
+      await fireEvent.click(screen.getByText('unmount'));
+
+      await tick(100);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+    });
+
+    it('ignores async validation results superseded during debounce', async () => {
+      const resolvers: Record<string, (value: string | null) => void> = {};
+      const validate = vi.fn((value) => {
+        return new Promise<string | null>((resolve) => {
+          resolvers[value as string] = resolve;
+        });
+      });
+
+      await render(
+        <Field.Root validationDebounceTime={100} validationMode="onChange" validate={validate}>
+          <Field.Control />
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole<HTMLInputElement>('textbox');
+
+      await fireEvent.input(control, { target: { value: 'old' } });
+      await tick(100);
+
+      expect(validate.mock.lastCall?.[0]).toBe('old');
+
+      await fireEvent.input(control, { target: { value: 'new' } });
+
+      resolvers.old('old error');
+      await flushMicrotasks();
+
+      expect(screen.queryByText('old error')).toBe(null);
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(100);
+
+      resolvers.new(null);
+      await flushMicrotasks();
+
+      expect(validate.mock.lastCall?.[0]).toBe('new');
+      expect(screen.queryByText('old error')).toBe(null);
+      expect(control).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('drops an in-flight async validation when the control unmounts', async () => {
+      let resolveValidate: ((value: string | null) => void) | undefined;
+      const validate = vi.fn(
+        () =>
+          new Promise<string | null>((resolve) => {
+            resolveValidate = resolve;
+          }),
+      );
+
+      const App = defineComponent(() => {
+        const mounted = shallowRef(true);
+
+        return () => (
+          <div>
+            <Field.Root data-testid="root" validationMode="onChange" validate={validate}>
+              {mounted.value && <Field.Control data-testid="control" />}
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                mounted.value = false;
+              }}
+            >
+              unmount
+            </button>
+          </div>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.input(screen.getByTestId('control'), { target: { value: 'abc' } });
+      expect(validate).toHaveBeenCalledTimes(1);
+
+      await fireEvent.click(screen.getByText('unmount'));
+
+      resolveValidate?.('error');
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+    });
+
+    it('keeps the published error when async validation rejects', async () => {
+      const onSubmit = vi.fn(preventDefault);
+      let commit: ((value: unknown) => Promise<void>) | undefined;
+
+      const ReadCommit = defineComponent(() => {
+        commit = useFieldRootContext().validation.commit;
+        return () => null;
+      });
+
+      let calls = 0;
+      const validate = async () => {
+        calls += 1;
+        if (calls === 2) {
+          throw new Error('network');
+        }
+        return 'Username is taken';
+      };
+
+      await render(
+        <Form onSubmit={onSubmit}>
+          <Field.Root name="username" validationMode="onBlur" validate={validate}>
+            <Field.Control data-testid="control" />
+            <Field.Error data-testid="error" />
+            <ReadCommit />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const control = screen.getByTestId('control');
+
+      await fireEvent.focusIn(control);
+      await fireEvent.input(control, { target: { value: 'taken' } });
+      await fireEvent.focusOut(control);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+
+      await expect(commit?.('taken')).rejects.toThrow('network');
+
+      expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+
+      await fireEvent.click(screen.getByText('submit'));
+      await flushMicrotasks();
+
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('keeps a pending debounce armed across the first registration', async () => {
+      const validate = vi.fn(() => 'error');
+
+      await render(
+        <Field.Root
+          data-testid="root"
+          validationDebounceTime={100}
+          validationMode="onChange"
+          validate={validate}
+        >
+          <Field.Control data-testid="control" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      await fireEvent.input(screen.getByTestId('control'), { target: { value: 'abc' } });
+
+      await tick(100);
+
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('error')).toHaveTextContent('error');
+    });
+  });
+
   describe('custom validity ownership', () => {
+    it('keeps a message set outside the field when submitting', async () => {
+      const onFormSubmit = vi.fn();
+
+      await render(
+        <Form onFormSubmit={onFormSubmit}>
+          <Field.Root name="external">
+            <Field.Control data-testid="control" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+      control.setCustomValidity('external error');
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(onFormSubmit).not.toHaveBeenCalled();
+      expect(control.validationMessage).toBe('external error');
+      expect(screen.getByTestId('error')).toHaveTextContent('external error');
+    });
+
+    it('keeps a message set outside the field when validating on change', async () => {
+      await render(
+        <Field.Root validationMode="onChange">
+          <Field.Control data-testid="control" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+      control.setCustomValidity('external error');
+
+      await fireEvent.input(control, { target: { value: 'abc' } });
+
+      expect(control.validationMessage).toBe('external error');
+      expect(control).toHaveAttribute('data-invalid', '');
+      expect(screen.getByTestId('error')).toHaveTextContent('external error');
+    });
+
+    it('keeps a message set outside the field when revalidating on change', async () => {
+      await render(
+        <Field.Root validationMode="onBlur">
+          <Field.Control data-testid="control" required />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+
+      await fireEvent.focusIn(control);
+      await fireEvent.input(control, { target: { value: 'a' } });
+      await fireEvent.input(control, { target: { value: '' } });
+      await fireEvent.focusOut(control);
+      expect(control).toHaveAttribute('data-invalid', '');
+
+      control.setCustomValidity('external error');
+      await fireEvent.input(control, { target: { value: 'abc' } });
+
+      expect(control.validationMessage).toBe('external error');
+      expect(control).toHaveAttribute('data-invalid', '');
+      expect(screen.getByTestId('error')).toHaveTextContent('external error');
+    });
+
+    it('keeps other native errors deferred while a message set outside the field survives', async () => {
+      const handleValidity = vi.fn();
+      await render(
+        <Field.Root name="field" validationMode="onBlur">
+          <Field.Control type="email" required />
+          <Field.Error match="typeMismatch" data-testid="type-mismatch">
+            invalid email
+          </Field.Error>
+          <Field.Validity v-slots={{ default: handleValidity }} />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole<HTMLInputElement>('textbox');
+
+      await fireEvent.focusIn(control);
+      await fireEvent.input(control, { target: { value: 'a' } });
+      await fireEvent.input(control, { target: { value: '' } });
+      await fireEvent.focusOut(control);
+      expect(control).toHaveAttribute('data-invalid', '');
+
+      control.setCustomValidity('external error');
+      await fireEvent.input(control, { target: { value: 'abc' } });
+
+      expect(screen.queryByTestId('type-mismatch')).toBe(null);
+      expect(handleValidity.mock.lastCall?.[0].validity.typeMismatch).toBe(false);
+      expect(handleValidity.mock.lastCall?.[0].validity.customError).toBe(true);
+      expect(handleValidity.mock.lastCall?.[0].validity.valid).toBe(false);
+      expect(handleValidity.mock.lastCall?.[0].errors).toEqual(['external error']);
+    });
+
+    it('clears the message it set itself', async () => {
+      await render(
+        <Field.Root
+          validationMode="onChange"
+          validate={(value) => (value === 'bad' ? 'custom error\r\nmore' : null)}
+        >
+          <Field.Control data-testid="control" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+
+      expect(control.validationMessage).toBe('custom error\nmore');
+
+      await fireEvent.input(control, { target: { value: 'good' } });
+
+      expect(control.validationMessage).toBe('');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
+
+    it('restores a message its own one displaced', async () => {
+      await render(
+        <Field.Root
+          validationMode="onChange"
+          validate={(value) => (value === 'bad' ? 'custom error' : null)}
+        >
+          <Field.Control data-testid="control" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+      control.setCustomValidity('external error');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+
+      expect(control.validationMessage).toBe('custom error');
+
+      await fireEvent.input(control, { target: { value: 'good' } });
+
+      expect(control.validationMessage).toBe('external error');
+      expect(screen.getByTestId('error')).toHaveTextContent('external error');
+    });
+
+    it('does not restore a message that was withdrawn while its own one was installed', async () => {
+      await render(
+        <Field.Root
+          validationMode="onChange"
+          validate={(value) => (value === 'bad' ? 'custom error' : null)}
+        >
+          <Field.Control data-testid="control" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+      control.setCustomValidity('external error');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+
+      expect(control.validationMessage).toBe('custom error');
+
+      control.setCustomValidity('');
+
+      await fireEvent.input(control, { target: { value: 'good' } });
+
+      expect(control.validationMessage).toBe('');
+      expect(screen.queryByTestId('error')).toBe(null);
+    });
+
     it('clears its own message on an input that became disabled', async () => {
       let root = null as FieldRootInstance | null;
 
@@ -374,6 +1571,72 @@ describe('<Field.Root />', () => {
 
       expect(control.validity.customError).toBe(false);
       expect(control.validationMessage).toBe('');
+    });
+
+    it.skipIf(isJSDOM)(
+      'ignores a message set outside the field on a control barred from validation',
+      async () => {
+        const onFormSubmit = vi.fn();
+
+        await render(
+          <Form onFormSubmit={onFormSubmit}>
+            <Field.Root name="field" validationMode="onChange">
+              <Field.Control data-testid="control" readonly />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button type="submit">submit</button>
+          </Form>,
+        );
+
+        const control = screen.getByTestId<HTMLInputElement>('control');
+        expect(control.willValidate).toBe(false);
+        control.setCustomValidity('external error');
+
+        await fireEvent.input(control, { target: { value: 'abc' } });
+
+        expect(control).not.toHaveAttribute('data-invalid');
+        expect(screen.queryByTestId('error')).toBe(null);
+
+        await fireEvent.click(screen.getByText('submit'));
+
+        expect(onFormSubmit).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it.skipIf(isJSDOM)('does not write its own message to a barred control', async () => {
+      const App = defineComponent(() => {
+        const readOnly = shallowRef(true);
+
+        return () => (
+          <div>
+            <Field.Root validationMode="onChange" validate={() => 'custom error'}>
+              <Field.Control data-testid="control" readonly={readOnly.value} />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                readOnly.value = false;
+              }}
+            >
+              make editable
+            </button>
+          </div>
+        );
+      });
+
+      await render(<App />);
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+      control.setCustomValidity('external error');
+
+      await fireEvent.input(control, { target: { value: 'abc' } });
+
+      expect(screen.getByTestId('error')).toHaveTextContent('custom error');
+
+      await fireEvent.click(screen.getByText('make editable'));
+
+      expect(control.validationMessage).toBe('external error');
     });
   });
 
@@ -553,6 +1816,23 @@ describe('<Field.Root />', () => {
   });
 
   describe('prop: dirty', () => {
+    it('uses the controlled dirty state for required validation', async () => {
+      await render(
+        <Field.Root dirty validationMode="onBlur">
+          <Field.Control data-testid="control" required />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+
+      await fireEvent.focusIn(control);
+      await fireEvent.focusOut(control);
+
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('error')).not.toBe(null);
+    });
+
     it('does not update controlled dirty state from user input', async () => {
       await render(
         <Field.Root data-testid="root" dirty={false}>
@@ -581,27 +1861,85 @@ describe('<Field.Root />', () => {
     });
   });
 
-  describe('exposed validate method', () => {
-    it('validates the control when the method of a template ref is called', async () => {
+  describe('prop: actionsRef', () => {
+    it('validates the field when the `validate` method is called', async () => {
       let root = null as FieldRootInstance | null;
 
-      await render(() => (
-        <Field.Root
-          ref={(instance) => {
-            root = instance as FieldRootInstance | null;
-          }}
-        >
-          <Field.Control data-testid="control" required />
-        </Field.Root>
+      const { user } = await render(() => (
+        <div>
+          <Field.Root
+            name="username"
+            ref={(instance) => {
+              root = instance as FieldRootInstance | null;
+            }}
+          >
+            <Field.Control defaultValue="" required />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="button" onClick={() => root?.validate()}>
+            validate
+          </button>
+        </div>
       ));
 
-      const control = screen.getByTestId('control');
-      expect(control).not.toHaveAttribute('aria-invalid');
+      expect(screen.queryByTestId('error')).toBe(null);
 
-      root!.validate();
-      await flushMicrotasks();
+      await user.click(screen.getByText('validate'));
 
-      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByTestId('error')).not.toBe(null);
+    });
+
+    it('validates a logical field without a mounted control', async () => {
+      let root = null as FieldRootInstance | null;
+
+      const { user } = await render(() => (
+        <div>
+          <Field.Root
+            ref={(instance) => {
+              root = instance as FieldRootInstance | null;
+            }}
+            validate={() => 'Logical field error'}
+          >
+            <Field.Error />
+          </Field.Root>
+          <button type="button" onClick={() => root?.validate()}>
+            validate
+          </button>
+        </div>
+      ));
+
+      await user.click(screen.getByRole('button', { name: 'validate' }));
+
+      expect(screen.getByText('Logical field error')).toBeVisible();
+    });
+
+    it('validates the current control value when the `validate` method is called', async () => {
+      const validate = vi.fn((value) => (value === 'valid' ? null : 'error'));
+      let root = null as FieldRootInstance | null;
+
+      const { user } = await render(() => (
+        <div>
+          <Field.Root
+            ref={(instance) => {
+              root = instance as FieldRootInstance | null;
+            }}
+            validate={validate}
+          >
+            <Field.Control />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="button" onClick={() => root?.validate()}>
+            validate
+          </button>
+        </div>
+      ));
+      const control = screen.getByRole('textbox');
+
+      await fireEvent.input(control, { target: { value: 'valid' } });
+      await user.click(screen.getByText('validate'));
+
+      expect(validate.mock.lastCall?.[0]).toBe('valid');
+      expect(screen.queryByTestId('error')).toBe(null);
     });
   });
 

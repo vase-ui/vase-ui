@@ -4,46 +4,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "validates the final controlled value when it is normalized on blur",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "keeps the final async validation when a controlled value is normalized on blur",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "does not validate when a controlled value is reset to the initial value on blur",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "does not clear errors or validate when change is prevented",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
-      "describe": ["<Field.Control />"],
-      "title": "shows a required error when a prefilled value is cleared",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/control/FieldControl.test.tsx",
       "describe": ["<Field.Control />", "[data-focused]"],
       "title": "is removed when the focused control becomes disabled",
       "kind": "waits-on",
@@ -89,12 +49,6 @@
       "reason": "Each case of the file renders `Field.Description`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/field/error/FieldError.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "Each case of the file renders `Field.Error`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/field/item/FieldItem.tsx",
@@ -110,12 +64,6 @@
       "upstream": "packages/react/src/field/root/FieldRoot.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "The file tests the paths for React 17. It mocks `SafeReact`, so that React has no `useId` and no `captureOwnerStack`. Vue `useId` gives the ids, and Vue has no owner stack."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "Each case of the file that has no counterpart and no row of its own renders `Field.Error`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -263,14 +211,6 @@
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validationMode", "onBlur"],
-      "title": "does not publish errors while `valueMissing` is suppressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/validity/FieldValidity.tsx",
-      "reason": "The case renders `Field.Validity`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "custom validity ownership"],
       "title": "keeps a message set outside the field on another input of the same field",
       "kind": "waits-on",
@@ -318,12 +258,6 @@
       "reason": "The case renders `NumberField`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/field/validity/FieldValidity.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/validity/FieldValidity.tsx",
-      "reason": "Each case of the file renders `Field.Validity`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/field/label/FieldLabel.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Field.Label`."
@@ -357,21 +291,6 @@
       "upstream": "packages/react/src/field/item/FieldItemDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Field.Item`."
-    },
-    {
-      "upstream": "packages/react/src/field/error/FieldError.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Field.Error`."
-    },
-    {
-      "upstream": "packages/react/src/field/error/FieldErrorDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Field.Error`."
-    },
-    {
-      "upstream": "packages/react/src/field/validity/FieldValidity.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Field.Validity`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
@@ -417,31 +336,10 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
-      "entry": "Error",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "Vase UI does not have `Field.Error`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
-      "entry": "FieldErrorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "Vase UI does not have `Field.Error`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
-      "entry": "Validity",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/validity/FieldValidity.tsx",
-      "reason": "Vase UI does not have `Field.Validity`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/field/types.md",
       "entry": "Root",
       "prop": "actionsRef",
       "kind": "not-applicable",
-      "reason": "A React ref prop. The part exposes `validate()`, and the case \"validates the control when the method of a template ref is called\" tests it. `pnpm parity:check` cannot read that member, because vue-component-meta leaves out an exposed member that has the name of a prop, and `validate` is also a prop."
+      "reason": "A React ref prop. The part exposes `validate()`, and the case \"validates the field when the `validate` method is called\" tests it. `pnpm parity:check` cannot read that member, because vue-component-meta leaves out an exposed member that has the name of a prop, and `validate` is also a prop."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
@@ -449,6 +347,86 @@
       "prop": "validationMode",
       "kind": "not-applicable",
       "reason": "The row gives the default `'onSubmit'`. The part has no Vue default: a prop that is absent takes the `validationMode` of the form, and `'onSubmit'` with no form, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: validationMode", "onBlur"],
+      "title": "should apply [data-field] style hooks to field components",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
+      "title": "should debounce validation for field-aware controls",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
+      "reason": "The case renders `Checkbox`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
+      "title": "should debounce validation for radio groups",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
+      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
+      "title": "drops a pending validation when another field-aware control takes ownership",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
+      "reason": "The case renders `Switch`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "style hooks", "touched"],
+      "title": "should apply [data-touched] style hook to all components when touched",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "style hooks", "dirty"],
+      "title": "should apply [data-dirty] style hook to all components when dirty",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "style hooks", "filled"],
+      "title": "should apply [data-filled] style hook to all components when filled",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "style hooks", "focused"],
+      "title": "should apply [data-focused] style hook to all components when focused",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: dirty"],
+      "title": "controls the dirty state",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
+      "describe": ["<Field.Root />", "prop: touched"],
+      "title": "controls the touched state",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/field/label/FieldLabel.tsx",
+      "reason": "The case renders `Field.Description` and `Field.Label`, which Vase UI does not have. `Field.Label` comes last, so the row names its file."
     }
   ],
   "surfaceAdditions": [
@@ -476,6 +454,11 @@
       "entry": "Control",
       "prop": "disabled",
       "reason": "The part reads `disabled` for the state and for the registration, so it is a declared prop. Base UI reads it from the native attributes of the input."
+    },
+    {
+      "entry": "Error",
+      "prop": "id",
+      "reason": "The part gives `id` to the labelable provider as the id of a message and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the div."
     }
   ],
   "returnTypeDifferences": [],

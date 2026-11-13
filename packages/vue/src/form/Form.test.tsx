@@ -90,6 +90,27 @@ describe('<Form />', () => {
     render,
   }));
 
+  it('does not submit if there are errors', async () => {
+    const onSubmit = vi.fn();
+
+    const { user } = await render(
+      <Form onSubmit={onSubmit}>
+        <Field.Root>
+          <Field.Control required />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button>Submit</button>
+      </Form>,
+    );
+
+    const submit = screen.getByRole('button');
+
+    await user.click(submit);
+
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+    expect(onSubmit.mock.calls.length > 0).toBe(false);
+  });
+
   it('blocks submit and focuses the first invalid field across custom and native validation', async () => {
     const onFormSubmit = vi.fn();
     const select = vi.spyOn(HTMLInputElement.prototype, 'select');
@@ -137,6 +158,121 @@ describe('<Form />', () => {
     expect(validate).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
+
+  it('re-runs an onBlur cross-field validator on submit', async () => {
+    const onFormSubmit = vi.fn();
+    const validate = vi.fn((value: unknown, formValues: Form.Values) =>
+      value !== formValues.password ? 'Passwords do not match' : null,
+    );
+
+    await render(
+      <Form onFormSubmit={onFormSubmit}>
+        <Field.Root name="password" validationMode="onBlur">
+          <Field.Control data-testid="password" />
+        </Field.Root>
+        <Field.Root name="confirmPassword" validationMode="onBlur" validate={validate}>
+          <Field.Control data-testid="confirm" />
+          <Field.Error data-testid="confirm-error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    const password = screen.getByTestId('password');
+    const confirm = screen.getByTestId('confirm');
+
+    await fireEvent.input(password, { target: { value: 'secret' } });
+    await fireEvent.input(confirm, { target: { value: 'typo' } });
+    await fireEvent.focusOut(confirm);
+
+    expect(validate).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('confirm-error')).toHaveTextContent('Passwords do not match');
+
+    await fireEvent.input(password, { target: { value: 'typo' } });
+    await fireEvent.focusOut(password);
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId('confirm-error')).toBe(null);
+    expect(onFormSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('retires a stale async validation result on the next submit', async () => {
+    const onFormSubmit = vi.fn();
+    const validate = vi.fn((value: unknown) =>
+      Promise.resolve(value === 'bad' ? 'async error' : null),
+    );
+
+    await render(
+      <Form onFormSubmit={onFormSubmit}>
+        <Field.Root name="field" validationMode="onSubmit" validate={validate}>
+          <Field.Control data-testid="control" defaultValue="bad" />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    const control = screen.getByTestId('control');
+    const submit = screen.getByRole('button', { name: 'Submit' });
+
+    await fireEvent.click(submit);
+
+    expect(onFormSubmit).toHaveBeenCalledTimes(1);
+
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent('async error');
+    });
+
+    await fireEvent.input(control, { target: { value: 'good' } });
+    await fireEvent.click(submit);
+
+    expect(onFormSubmit).toHaveBeenCalledTimes(2);
+
+    expect(screen.queryByTestId('error')).toBe(null);
+
+    await flushMicrotasks();
+  });
+
+  it.each([{ validationMode: 'onBlur' as const }, { validationMode: 'onChange' as const }])(
+    'blocks submission on a resolved async error in $validationMode mode',
+    async ({ validationMode }) => {
+      const onFormSubmit = vi.fn();
+      const validate = vi.fn((value: unknown) =>
+        Promise.resolve(value === 'taken' ? 'Username is taken' : null),
+      );
+
+      await render(
+        <Form onFormSubmit={onFormSubmit}>
+          <Field.Root name="username" validationMode={validationMode} validate={validate}>
+            <Field.Control data-testid="control" />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      const control = screen.getByTestId('control');
+
+      await fireEvent.input(control, { target: { value: 'taken' } });
+      await fireEvent.focusOut(control);
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+      });
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(onFormSubmit).not.toHaveBeenCalled();
+      expect(screen.getByTestId('error')).toHaveTextContent('Username is taken');
+
+      await flushMicrotasks();
+    },
+  );
 
   it('unmounted fields should be removed from the form', async () => {
     const submitSpy = vi.fn((event: SubmitEvent) => event.preventDefault());
@@ -204,6 +340,68 @@ describe('<Form />', () => {
     expect(handleSubmit).toHaveBeenCalledTimes(1);
     expect(handleSubmit.mock.lastCall?.[0]).toEqual({ enabled: 'sent' });
     expect(screen.getByTestId('disabled')).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('clears invalid UI when a fieldset field becomes disabled', async () => {
+    const handleSubmit = vi.fn();
+
+    const App = defineComponent(() => {
+      const disabled = shallowRef(false);
+
+      return () => (
+        <Form onFormSubmit={handleSubmit}>
+          <Fieldset.Root disabled={disabled.value}>
+            <Field.Root name="disabled">
+              <Field.Control required data-testid="control" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Fieldset.Root>
+          <button
+            type="button"
+            onClick={() => {
+              disabled.value = true;
+            }}
+          >
+            Disable
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              disabled.value = false;
+            }}
+          >
+            Enable
+          </button>
+          <button type="submit">Submit</button>
+        </Form>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Disable' }));
+
+    expect(screen.getByTestId('control')).toBeDisabled();
+    expect(screen.getByTestId('control')).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByTestId('error')).toBe(null);
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
+
+    await user.click(screen.getByRole('button', { name: 'Enable' }));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('control')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
   });
 
   it('clears invalid attributes when a field control becomes disabled', async () => {
@@ -304,6 +502,318 @@ describe('<Form />', () => {
 
     expect(handleSubmit).toHaveBeenCalledTimes(2);
     expect(handleSubmit.mock.lastCall?.[0]).toEqual({ control: 'sent' });
+  });
+
+  describe('prop: errors', () => {
+    it('should mark <Field.Control> as invalid and populate <Field.Error>', async () => {
+      await render(
+        <Form errors={{ foo: 'bar' }}>
+          <Field.Root name="foo">
+            <Field.Control />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      expect(screen.getByTestId('error')).toHaveTextContent('bar');
+      expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('should not mark <Field.Control> as invalid if no error is provided', async () => {
+      await render(
+        <Form>
+          <Field.Root name="foo">
+            <Field.Control />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByRole('textbox')).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('focuses asynchronously replaced external errors and clears only the changed own property', async () => {
+      const App = defineComponent(() => {
+        const errors = shallowRef<Errors>();
+
+        return () => (
+          <Form
+            errors={errors.value}
+            onFormSubmit={() => {
+              const nextErrors = Object.create(null) as Errors;
+              nextErrors.first = 'First error';
+              nextErrors.second = 'Second error';
+              Promise.resolve().then(() => {
+                errors.value = nextErrors;
+              });
+            }}
+          >
+            <Field.Root name="first">
+              <Field.Control data-testid="first" />
+              <Field.Error data-testid="first-error" />
+            </Field.Root>
+            <Field.Root name="second">
+              <Field.Control data-testid="second" />
+              <Field.Error data-testid="second-error" />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      await waitFor(() => expect(screen.getByTestId('first')).toHaveFocus());
+      expect(screen.getByTestId('first-error')).toHaveTextContent('First error');
+      expect(screen.getByTestId('second-error')).toHaveTextContent('Second error');
+
+      await user.type(screen.getByTestId('first'), 'a');
+
+      expect(screen.queryByTestId('first-error')).toBe(null);
+      expect(screen.getByTestId('second-error')).toHaveTextContent('Second error');
+    });
+
+    const NameAndAge = defineComponent(() => {
+      const errors = shallowRef<Errors>({});
+
+      return () => (
+        <Form
+          errors={errors.value}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget as HTMLFormElement);
+            const name = formData.get('name') as string;
+            const age = formData.get('age') as string;
+
+            errors.value = {
+              ...(name === '' && { name: 'Name is required' }),
+              ...(age === '' && { age: 'Age is required' }),
+            };
+          }}
+        >
+          <Field.Root name="name">
+            <Field.Control data-testid="name" />
+            <Field.Error data-testid="name-error" />
+          </Field.Root>
+          <Field.Root name="age">
+            <Field.Control data-testid="age" />
+            <Field.Error data-testid="age-error" />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      );
+    });
+
+    it('focuses the first invalid field only on submit', async () => {
+      const { user } = await render(<NameAndAge />);
+
+      const submit = screen.getByRole('button');
+      const name = screen.getByTestId('name');
+      const age = screen.getByTestId('age');
+
+      await user.click(submit);
+
+      expect(name).toHaveFocus();
+
+      await fireEvent.input(name, { target: { value: 'John' } });
+
+      expect(age).not.toHaveFocus();
+
+      await user.click(submit);
+
+      expect(age).toHaveFocus();
+
+      await fireEvent.input(age, { target: { value: '42' } });
+
+      await user.click(submit);
+
+      expect(age).not.toHaveFocus();
+    });
+
+    it('does not swap focus immediately on change after two submissions', async () => {
+      const { user } = await render(<NameAndAge />);
+
+      const submit = screen.getByRole('button');
+      const name = screen.getByTestId('name');
+      const age = screen.getByTestId('age');
+
+      await user.click(submit);
+
+      expect(name).toHaveFocus();
+
+      await user.click(submit);
+
+      await fireEvent.input(name, { target: { value: 'John' } });
+
+      expect(age).not.toHaveFocus();
+    });
+
+    it('removes errors upon change', async () => {
+      await render(<NameAndAge />);
+
+      const name = screen.getByTestId('name');
+      const age = screen.getByTestId('age');
+
+      await fireEvent.click(screen.getByText('Submit'));
+
+      expect(screen.queryByTestId('name-error')).not.toBe(null);
+      expect(screen.queryByTestId('age-error')).not.toBe(null);
+
+      await fireEvent.input(name, { target: { value: 'John' } });
+      await fireEvent.input(age, { target: { value: '42' } });
+      expect(screen.queryByTestId('name-error')).toBe(null);
+      expect(screen.queryByTestId('age-error')).toBe(null);
+    });
+
+    it('runs field validation on first change after Form error is set', async () => {
+      const validateSpy = vi.fn((value: unknown) => {
+        if (value === 'abcd') {
+          return 'field error';
+        }
+        return null;
+      });
+
+      const Test = defineComponent(() => {
+        const errors = shallowRef<Errors>({});
+
+        return () => (
+          <Form
+            errors={errors.value}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const formData = new FormData(event.currentTarget as HTMLFormElement);
+              const name = formData.get('name') as string;
+
+              if (name === 'abcde') {
+                errors.value = { name: 'submit error' };
+              } else {
+                errors.value = {};
+              }
+            }}
+          >
+            <Field.Root name="name" validate={validateSpy}>
+              <Field.Control data-testid="name" />
+              <Field.Error data-testid="name-error" />
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        );
+      });
+
+      const { user } = await render(<Test />);
+
+      const input = screen.getByTestId('name');
+      await user.click(input);
+      await user.keyboard('abcde');
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+      expect(screen.queryByTestId('name-error')).not.toBe(null);
+      expect(screen.getByTestId('name-error')).toHaveTextContent('submit error');
+
+      validateSpy.mockClear();
+
+      await user.click(input);
+      // value changes from 'abcde' to 'abcd'
+      await user.keyboard('{Backspace}');
+      expect(validateSpy.mock.calls.length).toBe(1);
+      expect(screen.queryByTestId('name-error')).not.toBe(null);
+      expect(screen.getByTestId('name-error')).toHaveTextContent('field error');
+    });
+
+    it('runs field validation on change when invalid prop is true and validationMode is onChange', async () => {
+      const validateSpy = vi.fn(() => 'field error');
+
+      const { user } = await render(
+        <Form errors={{ name: 'server error' }}>
+          <Field.Root name="name" invalid validate={validateSpy} validationMode="onChange">
+            <Field.Control data-testid="name" />
+            <Field.Error data-testid="name-error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('name');
+      expect(screen.getByTestId('name-error')).toHaveTextContent('server error');
+
+      await user.click(input);
+      await user.keyboard('a');
+
+      expect(validateSpy.mock.calls.length).toBe(1);
+      expect(screen.getByTestId('name-error')).toHaveTextContent('field error');
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('does not run field validation on change for onBlur mode when invalid prop is true', async () => {
+      const validateSpy = vi.fn(() => 'field error');
+
+      const { user } = await render(
+        <Form errors={{ name: 'server error' }}>
+          <Field.Root name="name" invalid validate={validateSpy} validationMode="onBlur">
+            <Field.Control data-testid="name" />
+            <Field.Error data-testid="name-error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('name');
+      expect(screen.getByTestId('name-error')).toHaveTextContent('server error');
+
+      await user.click(input);
+      await user.keyboard('a');
+      expect(validateSpy.mock.calls.length).toBe(0);
+      expect(screen.queryByTestId('name-error')).toBe(null);
+
+      await user.tab();
+      expect(validateSpy.mock.calls.length).toBe(1);
+      expect(screen.getByTestId('name-error')).toHaveTextContent('field error');
+    });
+  });
+
+  describe('prop: onFormSubmit', () => {
+    it('does not run when the form is invalid', async () => {
+      const submitSpy = vi.fn();
+
+      await render(
+        <Form onFormSubmit={submitSpy}>
+          <Field.Root name="username">
+            <Field.Control defaultValue="" required />
+            <Field.Error data-testid="error" />
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+      expect(screen.queryByTestId('error')).toBe(null);
+      await fireEvent.click(screen.getByText('submit'));
+      expect(submitSpy.mock.calls.length).toBe(0);
+      expect(screen.queryByTestId('error')).not.toBe(null);
+    });
+  });
+
+  it('does not submit when invalid prop remains true even if validate returns null', async () => {
+    const submitSpy = vi.fn();
+    const validateSpy = vi.fn(() => null);
+
+    const { user } = await render(
+      <Form onSubmit={submitSpy}>
+        <Field.Root name="name" invalid validate={validateSpy} validationMode="onChange">
+          <Field.Control data-testid="name" />
+          <Field.Error data-testid="name-error" />
+        </Field.Root>
+        <button type="submit">submit</button>
+      </Form>,
+    );
+
+    const input = screen.getByTestId('name');
+    await user.click(input);
+    await user.keyboard('o');
+
+    expect(validateSpy.mock.calls.length).toBe(1);
+
+    await user.click(screen.getByText('submit'));
+
+    expect(submitSpy.mock.calls.length).toBe(0);
+    expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
   describe('prop: actionsRef', () => {

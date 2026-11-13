@@ -9,14 +9,6 @@
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
       "describe": ["<Form />"],
-      "title": "does not submit if there are errors",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case. The case \"validates each field, emits nothing and prevents the default when a field is invalid\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
       "title": "keeps focusing the first invalid field after a control value changes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
@@ -37,30 +29,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
       "reason": "The case renders `Checkbox.Root`, which Vase UI does not have. The pull request that adds `CheckboxRoot.tsx` ports the case. The case \"focuses the first invalid control in the order of the document, and selects an input\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "re-runs an onBlur cross-field validator on submit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "retires a stale async validation result on the next submit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "blocks submission on a resolved async error in $validationMode mode",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
@@ -96,86 +64,6 @@
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "clears invalid UI when a fieldset field becomes disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "should mark <Field.Control> as invalid and populate <Field.Error>",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "should not mark <Field.Control> as invalid if no error is provided",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "focuses asynchronously replaced external errors and clears only the changed own property",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case. The cases \"focuses the first invalid control when new errors follow a valid submit\" and \"removes only that own key with clearErrors, and keeps the object of the consumer\" test the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "focuses the first invalid field only on submit",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case. The cases \"focuses the first invalid control when new errors follow a valid submit\" and \"moves no focus when new errors come with no submit before them\" test the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "does not swap focus immediately on change after two submissions",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case. The case \"moves no focus when clearErrors follows the focus of a submit\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "removes errors upon change",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "runs field validation on first change after Form error is set",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "runs field validation on change when invalid prop is true and validationMode is onChange",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: errors"],
-      "title": "does not run field validation on change for onBlur mode when invalid prop is true",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
       "describe": ["<Form />", "prop: errors"],
       "title": "removes errors for every field that changes within a single commit",
       "kind": "waits-on",
@@ -189,22 +77,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
       "reason": "The case renders `NumberField.Root` and `NumberField.Input`, which Vase UI does not have. The pull request that adds `NumberFieldInput.tsx` ports the case. The case \"emits submit and then formSubmit with the values of the named fields, and prevents the default\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />", "prop: onFormSubmit"],
-      "title": "does not run when the form is invalid",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case. The case \"validates each field, emits nothing and prevents the default when a field is invalid\" tests the same behavior of Form with the fixture field."
-    },
-    {
-      "upstream": "packages/react/src/form/Form.test.tsx",
-      "describe": ["<Form />"],
-      "title": "does not submit when invalid prop remains true even if validate returns null",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/error/FieldError.tsx",
-      "reason": "The case renders `Field.Error`, which Vase UI does not have. The pull request that adds `FieldError.tsx` ports the case."
     },
     {
       "upstream": "packages/react/src/form/Form.test.tsx",

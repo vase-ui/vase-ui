@@ -122,6 +122,23 @@ export function useFieldValidation(
     return (element && toValue(registeredInputs.get(element)?.controlRef)) || null;
   }
 
+  function setCustomValidity(element: HTMLInputElement, message: string) {
+    // Never reinstall a native constraint message as custom validity.
+    const displaced = element.validity.customError ? element.validationMessage : '';
+    const ownedMessage = message.replace(/\r\n?/g, '\n');
+    element.setCustomValidity(ownedMessage);
+    customValidity = [element, ownedMessage, displaced];
+  }
+
+  function clearCustomValidity() {
+    const record = customValidity;
+    customValidity = null;
+    // Replacement transfers ownership; barred controls hide `validationMessage`.
+    if (record && (!record[0].willValidate || record[0].validationMessage === record[1])) {
+      record[0].setCustomValidity(record[2]);
+    }
+  }
+
   async function commit(value: unknown, revalidate = false) {
     validationCommitId += 1;
     const commitId = validationCommitId;
@@ -139,23 +156,6 @@ export function useFieldValidation(
         errors,
         initialValue: validityData.value.initialValue,
       };
-    }
-
-    function setCustomValidity(element: HTMLInputElement, message: string) {
-      // Never reinstall a native constraint message as custom validity.
-      const displaced = element.validity.customError ? element.validationMessage : '';
-      const ownedMessage = message.replace(/\r\n?/g, '\n');
-      element.setCustomValidity(ownedMessage);
-      customValidity = [element, ownedMessage, displaced];
-    }
-
-    function clearCustomValidity() {
-      const record = customValidity;
-      customValidity = null;
-      // Replacement transfers ownership; barred controls hide `validationMessage`.
-      if (record && (!record[0].willValidate || record[0].validationMessage === record[1])) {
-        record[0].setCustomValidity(record[2]);
-      }
     }
 
     function publish(validityState: FieldValidityData['state'], errorMessages: string[]) {
@@ -321,6 +321,8 @@ export function useFieldValidation(
     timeout.clear();
     validationCommitId += 1;
     if (cancelPending) {
+      // A cancel also removes the message that the field put on the input.
+      clearCustomValidity();
       return;
     }
 

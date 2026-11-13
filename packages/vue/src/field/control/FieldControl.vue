@@ -56,12 +56,16 @@ export interface FieldControlProps
 import { computed, nextTick, onMounted, watch } from 'vue';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { fieldValidityMapping } from '../../internals/field-constants';
+import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
-import { useLabelableContext, useLabelableId } from '../../internals/labelable-provider';
+import {
+  useDeferredServerRender,
+  useLabelableContext,
+  useLabelableId,
+} from '../../internals/labelable-provider';
 import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -94,12 +98,17 @@ const {
   setTouched,
   setDirty,
   validityData,
+  setValidityData,
   setFilled,
   validationMode,
   validation,
 } = useFieldRootContext();
 const { clearErrors, elementRef: formElementRef, submitCountRef } = useFormContext();
 const { labelId } = useLabelableContext();
+
+// The control binds `aria-labelledby` and `aria-describedby`, and a label or a message can come
+// after it.
+useDeferredServerRender();
 
 const isDisabled = computed(() => (fieldDisabled.value ?? false) || props.disabled);
 const controlName = computed(() => fieldName.value ?? props.name);
@@ -335,6 +344,18 @@ watch(
         handledValue = value;
         setFilled(value !== '');
         setDirty(value !== (validityData.value.initialValue ?? ''));
+
+        // After the reset the error of the field is out of date: the validation that is pending,
+        // the message on the input and the error of the form must go.
+        validation.change(undefined, true);
+        setValidityData({
+          ...validityData.value,
+          state: DEFAULT_VALIDITY_STATE,
+          error: '',
+          errors: [],
+          value,
+        });
+        clearErrors(controlName.value);
       });
     };
     root.addEventListener('reset', handleReset);
