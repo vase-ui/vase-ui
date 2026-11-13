@@ -282,6 +282,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
 - In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - A control whose field can have more than one input registers its input with `validation.registerInput` in the `ref` setter. It keeps the function that `registerInput` returns, and calls it when the input changes or goes away. It does not write `validation.inputRef`.
+- `KeepAlive` takes the input out of the document and calls no `ref` setter. The control calls the function that `registerInput` returns in `onDeactivated`. The field then does not validate an input that the user cannot reach.
+- The control registers the input again in a `watch` of a flag that `onDeactivated` and `onActivated` set. A registration in `onActivated` would reverse the order of the inputs, because `KeepAlive` runs those hooks from the last part to the first part. `Radio.Root` is the model.
 - The part calls `useFormReset(input, onReset)` of `src/internals` in `setup`. The composable listens to `reset` on the root node of the input, because the form of the input can change. It ignores an event whose target is not the form of the input when the event arrives. It calls `onReset` in a 0 ms timeout, after the listeners of the event. It does not call `onReset` when a listener prevented the event. In `onReset`, an uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change. After each reset that the part follows, the part clears the error of its field with `useClearFieldError`, also when its value does not change. The change of a reset starts no validation.
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
 
@@ -350,6 +352,12 @@ Rules:
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
+- Base UI takes a `React.ReactNode` as the label of an item. A label comes from an `items` record, from an `items` list, or from an object value that has a `label`. Vase UI takes an `ItemLabel`, which `src/internals/resolveValueLabel.ts` exports.
+- An `ItemLabel` is a string, a number, `null`, `undefined`, or a function that returns the content of the label. It is not a vnode. A vnode must be unique in the tree, and a label shows in the value part and in its item at the same time. See [Vnodes Must Be Unique](https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique).
+- On a page that Vue hydrated, a component in a vnode that mounts a second time renders nothing.
+- `resolveSelectedLabel` and `resolveMultipleLabels` give a function label as it is. A part renders it with `<component :is="label" />`, and it renders each other label as text.
+- Do not call a label function in `setup` or in a `computed`. The result is a vnode, and the next render uses it again.
+- The text of an item with a function label is the result of `itemToStringLabel`, or the text of its value. `stringifyAsLabel` gives it.
 
 ### State and `v-model`
 
@@ -747,6 +755,9 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
 - Chromium sends `focusout` when Vue removes the focused trigger, after the scope of the part stopped. A handler that starts a timer thus starts none after the scope stopped.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
+- `useClientPoint` writes a virtual element at the pointer to `anchorOverride` for each move, and `null` when the part unmounts. A positioner reads it through `store.select('anchor')`.
+- While it is enabled, `useClientPoint` adds one `mousemove` listener to the window of the positioner element. A mouse-like pointer keeps the listener while the store has that element, so the popup follows the pointer while it closes. A touch pointer keeps it only while the popup is open. The listener removes itself when the pointer moves over the positioner element. A `mouseenter` or `mousemove` event of the trigger adds it again while the popup is open. A popup that a non-mouse event opened, such as a focus or a key press, gets no listener and keeps the anchor of its trigger. While it is not enabled, `useClientPoint` has no listener. It writes the anchor element of the store to `anchorOverride`.
+- `store` of `useClientPoint` is a store, a ref or a getter. When the store changes, the composable removes its window listener. It writes `null` to `anchorOverride` of the old store. It then applies the rules above to the new store.
 
 ### Popup dismissal
 
@@ -803,6 +814,20 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+
+### Toast store
+
+The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+
+- `ToastStore` is a `ReactiveStore`. Code can make one with no component.
+- A reader calls a selector of the store in a `computed`. `useToastManager()` does this for `toasts`, so it returns `toasts` as a `ComputedRef`. Its four methods are plain functions.
+- The store derives the place of each toast from `toasts`, so one write changes the list and the places.
+- `ToastStore` writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the interaction state of the same change.
+- A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
+- `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
+- A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
+- `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
+- `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
 
 ### Composite
 
@@ -1150,6 +1175,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `clock.tick(n)`                                                                                            | `vi.advanceTimersByTime(n)`, then `await flushMicrotasks()`                                                                                                                                                                                               |
 | `clock.tickAsync(n)`                                                                                       | `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`                                                                                                                                                                                    |
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
+| `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]`                              | `toasts.value`, because the composable returns a ref                                                                                                                                                                                                      |
 | A function component that calls a hook and spreads the rest of its props                                   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`.                                                                                            |
 | `useTestInteractions([useX(…), …])` in a test component                                                    | The same call in `setup`. In the render function, call the functions of the result that the upstream test component calls. A call of these functions in `setup` reads the props only one time.                                                            |
 | `useTestInteractions([useX(…)])`, where `useX` returns listeners with no `reference`, such as `useFocus`   | Call `useX(…)` in `setup`, and spread the object that it returns on the trigger: `<button {...props} />`. The object has the listeners and no `reference` member.                                                                                         |
@@ -1363,6 +1389,7 @@ The thing that a row names decides which kinds the row can have:
 
 - A row that names a source file also covers the cases in that file.
 - A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
+- A `types.md` can repeat an entry of another family. Give that entry a `not-applicable` row. The reason names the family that ports the entry. An example is the `types.md` of Radio Group, which repeats the entries of Radio.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
 - A row for a test file that imports the entry point of its family can name that entry point in `waitsOn`. A pull request that ports some cases of the file keeps the row. The row goes when each case of the file has a counterpart.
 - `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.

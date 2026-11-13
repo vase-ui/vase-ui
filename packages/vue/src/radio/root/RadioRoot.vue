@@ -88,7 +88,7 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, provide, shallowRef, watch } from 'vue';
+import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerWindow } from '../../common/owner';
@@ -158,6 +158,20 @@ const checked = computed(() =>
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 let releaseInput: (() => void) | undefined;
 
+function registerInput(input: HTMLInputElement) {
+  if (!group) {
+    return;
+  }
+
+  releaseInput = mergeCleanups(
+    group.registerInputRef(input),
+    group.validation.registerInput(input, {
+      controlRef: () => element.value,
+      value: undefined,
+    }) || undefined,
+  );
+}
+
 function setInputElement(value: unknown) {
   const input = value as HTMLInputElement | null;
   // Vue calls a function ref again on each patch, with the same element.
@@ -169,14 +183,8 @@ function setInputElement(value: unknown) {
   releaseInput = undefined;
   inputElement.value = input;
 
-  if (input && group) {
-    releaseInput = mergeCleanups(
-      group.registerInputRef(input),
-      group.validation.registerInput(input, {
-        controlRef: () => element.value,
-        value: undefined,
-      }) || undefined,
-    );
+  if (input) {
+    registerInput(input);
   }
 }
 
@@ -239,13 +247,37 @@ if (group) {
   // that controls the group can keep the old value, and then no radio renders again.
   watch(group.inputSyncRequest, writeCheckedToInput, { flush: 'post' });
 
+  // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
+  // stay in the group and in the field: the field would validate an input that the user cannot reach.
+  const isDeactivated = shallowRef(false);
+
+  onDeactivated(() => {
+    isDeactivated.value = true;
+    releaseInput?.();
+    releaseInput = undefined;
+  });
+
+  onActivated(() => {
+    isDeactivated.value = false;
+  });
+
+  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
+  // the hook would reverse the order of the inputs in the field, and the first radio would lose its
+  // place. A watcher runs in the order of the radios.
+  watch(isDeactivated, (deactivated) => {
+    const input = inputElement.value;
+    if (!deactivated && input) {
+      registerInput(input);
+    }
+  });
+
   // The group follows the checked input and the first enabled input. A radio that is disabled and
   // checked keeps the input that the group has.
   watch(
     [checked, isDisabled],
     () => {
       const input = inputElement.value;
-      if (input && !(isDisabled.value && checked.value)) {
+      if (input && !isDeactivated.value && !(isDisabled.value && checked.value)) {
         group.registerInputRef(input);
       }
     },

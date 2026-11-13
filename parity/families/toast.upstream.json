@@ -1,0 +1,3079 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/toast/**",
+    "docs/src/app/(docs)/react/components/toast/**"
+  ],
+  "sources": [
+    "packages/react/src/toast/action/ToastAction.tsx",
+    "packages/react/src/toast/action/ToastActionDataAttributes.ts",
+    "packages/react/src/toast/arrow/ToastArrow.tsx",
+    "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
+    "packages/react/src/toast/close/ToastClose.tsx",
+    "packages/react/src/toast/close/ToastCloseDataAttributes.ts",
+    "packages/react/src/toast/content/ToastContent.tsx",
+    "packages/react/src/toast/content/ToastContentDataAttributes.ts",
+    "packages/react/src/toast/createToastManager.ts",
+    "packages/react/src/toast/description/ToastDescription.tsx",
+    "packages/react/src/toast/description/ToastDescriptionDataAttributes.ts",
+    "packages/react/src/toast/index.parts.ts",
+    "packages/react/src/toast/index.ts",
+    "packages/react/src/toast/portal/ToastPortal.tsx",
+    "packages/react/src/toast/positioner/ToastPositioner.tsx",
+    "packages/react/src/toast/positioner/ToastPositionerContext.ts",
+    "packages/react/src/toast/positioner/ToastPositionerCssVars.ts",
+    "packages/react/src/toast/positioner/ToastPositionerDataAttributes.ts",
+    "packages/react/src/toast/provider/ToastProvider.tsx",
+    "packages/react/src/toast/provider/ToastProviderContext.ts",
+    "packages/react/src/toast/root/ToastRoot.tsx",
+    "packages/react/src/toast/root/ToastRootContext.ts",
+    "packages/react/src/toast/root/ToastRootCssVars.ts",
+    "packages/react/src/toast/root/ToastRootDataAttributes.ts",
+    "packages/react/src/toast/store.ts",
+    "packages/react/src/toast/title/ToastTitle.tsx",
+    "packages/react/src/toast/title/ToastTitleDataAttributes.ts",
+    "packages/react/src/toast/useToastManager.ts",
+    "packages/react/src/toast/utils/focusVisible.ts",
+    "packages/react/src/toast/utils/isRenderableNode.ts",
+    "packages/react/src/toast/utils/resolvePromiseOptions.ts",
+    "packages/react/src/toast/utils/test-utils.tsx",
+    "packages/react/src/toast/utils/useToastLabelPart.ts",
+    "packages/react/src/toast/viewport/ToastViewport.tsx",
+    "packages/react/src/toast/viewport/ToastViewportCssVars.ts",
+    "packages/react/src/toast/viewport/ToastViewportDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/toast/createToastManager.spec.tsx",
+    "packages/react/src/toast/useToastManager.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "performs an action when clicked"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "forwards actionProps to the button"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "does not render if it has no children"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "renders content passed through the render prop"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "does not render a childless render prop when there is no action content"
+        },
+        {
+          "describe": [
+            "<Toast.Action />"
+          ],
+          "title": "renders the toast action content through a childless render prop"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/arrow/ToastArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Arrow />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Arrow />"
+          ],
+          "title": "mirrors the resolved side of its positioner",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Arrow />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Toast.Positioner>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/close/ToastClose.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Close />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Close />"
+          ],
+          "title": "closes the toast when clicked"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/content/ToastContent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Content />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Content />"
+          ],
+          "title": "marks content behind the frontmost toast with data-behind"
+        },
+        {
+          "describe": [
+            "<Toast.Content />"
+          ],
+          "title": "reflects the expanded state when the viewport is hovered"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/createToastManager.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "createToastManager",
+            "add"
+          ],
+          "title": "adds a toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "add"
+          ],
+          "title": "returns a toast id",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "add"
+          ],
+          "title": "upserts a toast when adding with an existing id",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "promise"
+          ],
+          "title": "adds a toast with the loading state that is updated with the success state",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "promise"
+          ],
+          "title": "does not inherit a loading timeout when success does not specify one",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "promise"
+          ],
+          "title": "adds a toast with the loading state that is updated with the error state",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "promise"
+          ],
+          "title": "does not reopen a dismissed promise toast when it resolves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "updates a toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "derives the update from the current toast when given a function",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "resets the auto-dismiss timer when updating with the same timeout value",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "resets the auto-dismiss timer when updating from 0 to a timeout, then updating with the same timeout again",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "auto-dismisses when updating timeout from 0 to a positive value",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "schedules a timer when updating a loading toast to a non-loading type",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "update"
+          ],
+          "title": "does not clear the auto-dismiss timer when updated twice before a re-render",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "close"
+          ],
+          "title": "closes a toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "close"
+          ],
+          "title": "closes all toasts",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "createToastManager",
+            "close"
+          ],
+          "title": "does not call onClose when closing toasts that are already ending",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/description/ToastDescription.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Description />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/portal/ToastPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Portal />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/positioner/ToastPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Positioner />"
+          ],
+          "title": "positions an anchored toast against its anchor element",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Positioner />"
+          ],
+          "title": "falls back to the viewport when no anchor is provided"
+        },
+        {
+          "describe": [
+            "<Toast.Positioner />"
+          ],
+          "title": "lets positioner props override the ones carried on the toast"
+        },
+        {
+          "describe": [
+            "<Toast.Positioner />",
+            "--toast-index"
+          ],
+          "title": "keeps the DOM index while a toast animates out"
+        },
+        {
+          "describe": [
+            "<Toast.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Toast.Provider>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/provider/ToastProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Provider />"
+          ],
+          "title": "syncs a changed timeout before descendant layout effects"
+        },
+        {
+          "describe": [
+            "<Toast.Provider />"
+          ],
+          "title": "syncs a changed limit before descendant layout effects"
+        },
+        {
+          "describe": [
+            "<Toast.Provider />"
+          ],
+          "title": "does not sync provider props from an abandoned render"
+        },
+        {
+          "describe": [
+            "<Toast.Provider />",
+            "React.Activity"
+          ],
+          "title": "pauses the auto-dismiss timer while hidden and resumes it with the remaining time once revealed",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Provider />",
+            "React.Activity"
+          ],
+          "title": "keeps the timer paused after reveal while the viewport is still hovered",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Provider />",
+            "React.Activity"
+          ],
+          "title": "does not start the timer of a toast updated while hidden until it is revealed",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/root/ToastRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "maps the active swipe direction to its data attribute"
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "sets the vertical offset CSS variable"
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "keeps dynamic title and description ids synchronized with mounted label parts"
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "recalculates height when content mutates",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "clears the starting state and restores the height when re-adding an ending toast",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "registers an active toast after its root remounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "keeps stacking intact when re-adding an ending toast among other toasts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "clears swipe state when re-adding a swipe-dismissed toast",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "clears swipe state when a retained root is reused for another toast",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "moves focus to the next toast when closing in an index-keyed list",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "closes when pressing escape",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />"
+          ],
+          "title": "ignores Escape when focus is in portaled content"
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "dismisses with a real %s pointer swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "closes toast when swiping in the specified direction beyond threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "locks to a single axis on the first move of a two-axis swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not close toast when swiping in the specified direction below threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not close toast when swiping in a non-specified direction",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior",
+            "supports multiple swipe directions"
+          ],
+          "title": "up + right",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior",
+            "supports multiple swipe directions"
+          ],
+          "title": "right + left",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior",
+            "supports multiple swipe directions"
+          ],
+          "title": "up + down",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "cancels a vertical swipe when the pointer changes its mind",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "cancels a horizontal swipe when the pointer changes its mind",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "locks the gesture to the horizontal axis when it starts sideways",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "locks the gesture to the vertical axis when it starts upright",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not start a swipe from a non-primary pointer button",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "applies [data-swiping] attribute when swiping",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "dismisses toast when swiped down with downward swipe direction",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "dismisses toast when swiped left with leftward swipe direction",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "dismisses toast when swiped right with rightward swipe direction",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "allows swiping in multiple directions when specified",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not dismiss when swiped in non-specified direction",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not dismiss when swipe distance is below threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "prevents native touchmove only during an active touch swipe",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not start swiping from elements with the data-base-ui-swipe-ignore attribute",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "does not start swiping from elements with the legacy data-swipe-ignore attribute",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "swipe behavior"
+          ],
+          "title": "ignores swipe gestures when toast is anchored",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "drag behavior regression"
+          ],
+          "title": "resets drag state after releasing a far swipe even when the release lands on the document"
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "drag behavior regression"
+          ],
+          "title": "resets drag state after a document pointercancel"
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "object identity"
+          ],
+          "title": "works correctly when toast objects are recreated (not referentially equal)"
+        },
+        {
+          "describe": [
+            "<Toast.Root />",
+            "object identity"
+          ],
+          "title": "correctly calculates indices for multiple toasts with recreated objects"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/store.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "keeps toast metadata synchronized after mutations"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "ignores height recalculations while a toast is transitioning out"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "ignores mutations that target an unknown toast"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "replaces custom data wholesale when updating a toast"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "derives the update from the current toast when given a function"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "passes a toast without custom data to the updater"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "stores a function passed as custom data instead of calling it"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "does not call the updater for a missing or ending toast"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "keeps a toast added from inside an updater"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "keeps a toast closed from inside its updater closed"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "stores a function as the value when re-adding a toast under an existing id"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "replaces custom data when re-adding a toast under an existing id"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "uses the loading id to update an existing toast while the promise is pending"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "stores a function passed as custom data on a promise toast"
+        },
+        {
+          "describe": [
+            "ToastStore"
+          ],
+          "title": "does not invoke onRemove for a toast that is no longer in the store"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "limit"
+          ],
+          "title": "recomputes limited flags when the limit changes"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "re-pauses timers after the last toast is closed and a new one is added"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "re-pauses timers after all toasts are closed and a new one is added"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "re-pauses timers after the last active toast closes while ending toasts remain"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "re-pauses timers after the last timed toast closes while untimed toasts remain"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "keeps a rescheduled timer paused while expanded, and runs it once collapsed"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "does not extend the remaining time across repeated pause/resume cycles"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "restarts the full delay when the clock jumped past the timeout before pausing"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "re-pauses timers after the last timed toast becomes untimed"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "does not consume the remaining time twice when paused while the provider effect is torn down"
+        },
+        {
+          "describe": [
+            "ToastStore",
+            "timer pausing"
+          ],
+          "title": "accumulates active time across hover cycles so the toast still dismisses"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/title/ToastTitle.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Title />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/useToastManager.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "adds a toast to the viewport that auto-dismisses after 5s by default",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "keeps multiple providers isolated when one provider updates",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "replaces a closing toast when adding again with the same id",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "does not call onRemove when replacing an ending toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "calls onRemove once after replacing an ending toast and later removing the replacement",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "ignores transitionStatus when upserting an existing toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add"
+          ],
+          "title": "increments updateKey when adding again with the same id",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: timeout"
+          ],
+          "title": "dismisses the toast after the specified timeout",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: title"
+          ],
+          "title": "renders the title",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: description"
+          ],
+          "title": "renders the description",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: type"
+          ],
+          "title": "renders the type",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: onClose"
+          ],
+          "title": "calls onClose when the toast is closed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: onClose"
+          ],
+          "title": "calls onClose when the toast auto-dismisses",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: onRemove"
+          ],
+          "title": "calls onRemove when the toast is removed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "add",
+            "option: priority"
+          ],
+          "title": "applies correct ARIA attributes for high priority toasts",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "displays success state as description after promise resolves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "displays error state as description after promise rejects",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "passes data when success is a function",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "accepts a function that returns full options for the success state",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "passes data when error is a function",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "supports custom options",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise"
+          ],
+          "title": "does not reopen a dismissed promise toast when it resolves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "auto-dismisses success toast after default timeout when promise resolves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "auto-dismisses error toast after default timeout when promise rejects",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "uses custom timeout from success options when promise resolves",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "uses custom timeout from error options when promise rejects",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "uses provider timeout when no custom timeout is specified",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "does not inherit a loading timeout when success does not specify one",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "does not auto-dismiss when timeout is set to 0",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "promise",
+            "timeout handling"
+          ],
+          "title": "pauses timers when hovering over toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "update"
+          ],
+          "title": "updates the toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "update"
+          ],
+          "title": "increments updateKey when updating a toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "update"
+          ],
+          "title": "auto-dismisses when timeout changes from 0 to a positive value",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "update"
+          ],
+          "title": "schedules a timer when updating a loading toast to a non-loading type",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "close"
+          ],
+          "title": "closes a toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "close"
+          ],
+          "title": "closes all toasts",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "prop: timeout"
+          ],
+          "title": "applies a changed timeout to toasts added afterwards",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "prop: limit"
+          ],
+          "title": "marks toasts as limited when the limit is exceeded",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "prop: limit"
+          ],
+          "title": "unmarks toasts as limited when the limit is not exceeded",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "prop: limit"
+          ],
+          "title": "preserves limited state when upserting a limited toast",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "prop: limit"
+          ],
+          "title": "recomputes limited toasts when the limit prop changes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "in dialog"
+          ],
+          "title": "toasts in dialogs are accessible and not aria-hidden",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useToast",
+            "in dialog"
+          ],
+          "title": "high priority toasts in dialogs have correct accessibility structure",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/utils/isRenderableNode.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "isRenderableNode"
+          ],
+          "title": "treats renderable primitives as content"
+        },
+        {
+          "describe": [
+            "isRenderableNode"
+          ],
+          "title": "treats non-rendering values as empty"
+        },
+        {
+          "describe": [
+            "isRenderableNode"
+          ],
+          "title": "recurses into arrays"
+        },
+        {
+          "describe": [
+            "hasRenderableChildren"
+          ],
+          "title": "requires an element whose children are renderable"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Toast.Root>"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "`renders the toast ${field} by default`"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "`adds ${attribute} to the root element`"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "does not render if it has no children"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "renders a numeric zero child"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "renders content passed through the render prop"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "renders content passed through a render function"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "`wires ${attribute} to a part rendered through the render prop`"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "`renders the toast ${field} through a childless render prop`"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "does not render a childless render prop when there is no content"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />",
+            "prop: render"
+          ],
+          "title": "does not render when a render function returns no element"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "`clears ${attribute} from the root when the content is removed`"
+        },
+        {
+          "describe": [
+            "useToastLabelPart",
+            "<$name />"
+          ],
+          "title": "does not let an older part cleanup clear a newer part"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "sets the measured frontmost toast height CSS variable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "rebinds owner-document listeners once across empty store cycles",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Toast.Provider>"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "gets focused when F6 is pressed"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "focuses first toast upon tab after viewport is focused"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to previous element when pressing shift+Tab on first toast"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to previous element when pressing shift+Tab on last toast"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to previous element when F6 is pressed from inside the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "keeps focus where the viewport moves it on F6 and returns it to the F6 origin"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to the F6 origin when focusing the viewport closes the last toast"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "does not restore focus on an F6 press prevented by the consumer"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "leaves F6 to the browser when the viewport was entered without F6"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "leaves F6 to the browser when the viewport was entered without F6 after an earlier F6 visit"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "leaves F6 to the browser when the element focused before F6 was removed"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "ignores F6 while the viewport is empty"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "handles F6 in the focused viewport $name before other providers"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to the body on F6 when nothing had focus before entering"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "leaves shift+Tab to the browser on a viewport focused without F6 after an earlier F6 visit"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "returns focus to the page on $name after F6 with two providers"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "removes expanded on mouseleave when focus-visible not inside"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "collapses when the pointer moves away after the hovered toast was closed"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "keeps expanded on mouseleave when focus-visible is inside"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "keeps expanded during an active touch swipe even if mouseleave fires"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "keeps expanded when a touch swipe is canceled without leaving the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />"
+          ],
+          "title": "collapses after a touch swipe is canceled if mouseleave already fired"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "pauses timers when hovering"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "resumes timers when not hovering"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "pauses timers when the viewport is focused"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "runs timers when onFocus redirects focus outside the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "runs new toast timers after onFocus closes the last toast"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps timers paused while still %s after the other interaction ends"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "restores focus and resumes timers on shift+Tab out of the focused viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps the viewport focused when Tab is pressed without shift"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "collapses and resumes timers on a touch outside the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "stays expanded on a touch inside the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "ignores a mouse pointerdown outside the viewport"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps a toast added while the window is blurred paused until the window regains focus"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps timers paused when the window blurs again before its focus settles"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "runs the timer of a toast added after the window regained focus while empty"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "runs the timer of a toast added by a window focus listener after the window blurred while empty"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "resumes timers when the viewport is blurred",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps timers paused on F6 after the outer focus guard returned focus to the page"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "resumes timers after tabbing past the last toast when the F6 origin was disabled"
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "resumes timers when the window regains focus",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps timers paused on mouseleave while the window is blurred",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "keeps timers paused on viewport blur while the window is blurred",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "timers"
+          ],
+          "title": "collapses a deferred mouseleave after a closing toast is removed while blurred",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "focus management"
+          ],
+          "title": "skips toasts animating out when tabbing into the viewport",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "focus management"
+          ],
+          "title": "returns focus when no toast can receive focus",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "focus management"
+          ],
+          "title": "returns focus to the trigger when every toast is closed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "focus management"
+          ],
+          "title": "moves focus past toasts animating out when one is closed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "focus management"
+          ],
+          "title": "leaves focus alone when it is outside the viewport",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "returns focus to the origin when onClose adds an unmounted replacement toast",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "leaves F6 to the browser when its origin becomes $name",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "keeps timers paused when a hovered toast is clicked while nothing had focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "keeps timers paused when the window regains focus while a toast is hovered",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "moves focus to a visible toast when the next one was limited",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "moves focus to a toast that stays open when onClose closes another",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toast.Viewport />",
+            "real browser input"
+          ],
+          "title": "moves focus to the next toast when the closed toast adds one in onClose",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toast/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "swipeDirection",
+              "required": false,
+              "type": "'up' | 'down' | 'left' | 'right' | ('left' | 'right' | 'up' | 'down')[]",
+              "default": "['down', 'right']"
+            },
+            {
+              "name": "toast",
+              "required": true,
+              "type": "Toast.Root.ToastObject",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastRootState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "expanded",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "limited",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "type",
+                "optional": false,
+                "type": "string | undefined"
+              },
+              {
+                "name": "swiping",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "swipeDirection",
+                "optional": false,
+                "type": "'up' | 'down' | 'left' | 'right' | undefined"
+              }
+            ],
+            "code": "type ToastRootState = {\n    transitionStatus: TransitionStatus;\n    expanded: boolean;\n    limited: boolean;\n    type: string | undefined;\n    swiping: boolean;\n    swipeDirection: 'up' | 'down' | 'left' | 'right' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-expanded",
+              "type": "boolean"
+            },
+            {
+              "name": "data-limited",
+              "type": "boolean"
+            },
+            {
+              "name": "data-swipe-direction",
+              "type": "'up' | 'down' | 'left' | 'right'"
+            },
+            {
+              "name": "data-swiping",
+              "type": "boolean"
+            },
+            {
+              "name": "data-type",
+              "type": "string"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--toast-height",
+              "type": "number"
+            },
+            {
+              "name": "--toast-index",
+              "type": "number"
+            },
+            {
+              "name": "--toast-offset-y",
+              "type": "number"
+            },
+            {
+              "name": "--toast-swipe-movement-x",
+              "type": "number"
+            },
+            {
+              "name": "--toast-swipe-movement-y",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Provider",
+          "tag": null,
+          "props": [
+            {
+              "name": "limit",
+              "required": false,
+              "type": "number",
+              "default": "3"
+            },
+            {
+              "name": "toastManager",
+              "required": false,
+              "type": "ToastManager",
+              "default": null
+            },
+            {
+              "name": "timeout",
+              "required": false,
+              "type": "number",
+              "default": "5000"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastProviderState",
+            "fields": [],
+            "code": "type ToastProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastPortalState",
+            "fields": [],
+            "code": "type ToastPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "toast",
+              "required": true,
+              "type": "ToastObject<any>",
+              "default": null
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'top'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastPositionerState",
+            "fields": [
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ToastPositionerState = {\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastArrowState",
+            "fields": [
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ToastArrowState = {\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Content",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Content.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Content.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Content.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastContentState",
+            "fields": [
+              {
+                "name": "expanded",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "behind",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ToastContentState = {\n    expanded: boolean;\n    behind: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-behind",
+              "type": "boolean"
+            },
+            {
+              "name": "data-expanded",
+              "type": "boolean"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Title",
+          "tag": "h2",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Title.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Title.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Title.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastTitleState",
+            "fields": [
+              {
+                "name": "type",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type ToastTitleState = {\n    type: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-type",
+              "type": "string"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastDescriptionState",
+            "fields": [
+              {
+                "name": "type",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type ToastDescriptionState = {\n    type: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-type",
+              "type": "string"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Close",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Close.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Close.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Close.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastCloseState",
+            "fields": [
+              {
+                "name": "type",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type ToastCloseState = {\n    type: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-type",
+              "type": "string"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Action",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Action.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Action.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Action.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastActionState",
+            "fields": [
+              {
+                "name": "type",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type ToastActionState = {\n    type: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-type",
+              "type": "string"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toast.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toast.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toast.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToastViewportState",
+            "fields": [
+              {
+                "name": "expanded",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ToastViewportState = {\n    expanded: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-expanded",
+              "type": "boolean"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--toast-frontmost-height",
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "createToastManager",
+          "tables": [],
+          "code": [
+            "type ReturnValue = ToastManager<{}>;"
+          ]
+        },
+        {
+          "name": "useToastManager",
+          "tables": [],
+          "code": [
+            "type ReturnValue = UseToastManagerReturnValue<{}>;"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "Root.ToastObject",
+          "code": "type ToastRootToastObject<Data extends {} = any> = {\n    id: string;\n    ref?: React.RefObject<HTMLElement | null>;\n    title?: React.ReactNode;\n    type?: string;\n    description?: React.ReactNode;\n    timeout?: number;\n    priority?: 'low' | 'high';\n    transitionStatus?: 'starting' | 'ending';\n    updateKey?: number;\n    limited?: boolean;\n    height?: number;\n    onClose?: () => void;\n    onRemove?: () => void;\n    actionProps?: Omit<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'>;\n    positionerProps?: ToastManagerPositionerProps;\n    data?: Data;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "ToastObject",
+          "code": "type ToastObject<Data extends {}> = {\n    id: string;\n    ref?: React.RefObject<HTMLElement | null>;\n    title?: React.ReactNode;\n    type?: string;\n    description?: React.ReactNode;\n    timeout?: number;\n    priority?: 'low' | 'high';\n    transitionStatus?: 'starting' | 'ending';\n    updateKey?: number;\n    limited?: boolean;\n    height?: number;\n    onClose?: () => void;\n    onRemove?: () => void;\n    actionProps?: Omit<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'>;\n    positionerProps?: ToastManagerPositionerProps;\n    data?: Data;\n};"
+        },
+        {
+          "name": "ToastActionDataAttributes",
+          "code": "declare namespace ToastActionDataAttributes {\n    const type: 'data-type';\n}",
+          "constants": [
+            {
+              "name": "type",
+              "value": "data-type"
+            }
+          ]
+        },
+        {
+          "name": "ToastArrowDataAttributes",
+          "code": "declare namespace ToastArrowDataAttributes {\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "ToastCloseDataAttributes",
+          "code": "declare namespace ToastCloseDataAttributes {\n    const type: 'data-type';\n}",
+          "constants": [
+            {
+              "name": "type",
+              "value": "data-type"
+            }
+          ]
+        },
+        {
+          "name": "ToastContentDataAttributes",
+          "code": "declare namespace ToastContentDataAttributes {\n    const expanded: 'data-expanded';\n    const behind: 'data-behind';\n}",
+          "constants": [
+            {
+              "name": "expanded",
+              "value": "data-expanded"
+            },
+            {
+              "name": "behind",
+              "value": "data-behind"
+            }
+          ]
+        },
+        {
+          "name": "ToastDescriptionDataAttributes",
+          "code": "declare namespace ToastDescriptionDataAttributes {\n    const type: 'data-type';\n}",
+          "constants": [
+            {
+              "name": "type",
+              "value": "data-type"
+            }
+          ]
+        },
+        {
+          "name": "ToastManager",
+          "code": "type ToastManager<Data extends {} = any> = {\n    ' subscribe': (listener: (data: ToastManagerEvent) => void) => () => void;\n    add: <T extends Data = Data>(options: ToastManagerAddOptions<T>) => string;\n    close: (id?: string) => void;\n    update: <T extends Data = Data>(id: string, updates: ToastManagerUpdateOptions<T> | ((prevToast: ToastObject<T>) => ToastManagerUpdateOptions<T>)) => void;\n    promise: <Value, T extends Data = Data>(promiseValue: Promise<Value>, options: ToastManagerPromiseOptions<Value, T>) => Promise<Value>;\n};"
+        },
+        {
+          "name": "ToastManagerAddOptions",
+          "code": "type ToastManagerAddOptions<Data extends {}> = {\n    id?: string;\n    title?: React.ReactNode;\n    type?: string;\n    description?: React.ReactNode;\n    timeout?: number;\n    priority?: 'low' | 'high';\n    transitionStatus?: 'starting' | 'ending';\n    onClose?: () => void;\n    onRemove?: () => void;\n    actionProps?: Omit<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'>;\n    positionerProps?: ToastManagerPositionerProps;\n    data?: Data;\n};"
+        },
+        {
+          "name": "ToastManagerEvent",
+          "code": "type ToastManagerEvent = {\n    action: 'add' | 'close' | 'update' | 'promise';\n    options: any;\n};"
+        },
+        {
+          "name": "ToastManagerPositionerProps",
+          "code": "type ToastManagerPositionerProps = {\n    anchor?: Element | null;\n    style?: React.CSSProperties | ((state: Toast.Positioner.State) => React.CSSProperties | undefined);\n    className?: string | ((state: Toast.Positioner.State) => string | undefined);\n    side?: Side;\n    positionMethod?: 'absolute' | 'fixed';\n    sideOffset?: number | OffsetFunction;\n    align?: Align;\n    alignOffset?: number | OffsetFunction;\n    collisionBoundary?: Boundary;\n    collisionPadding?: Padding;\n    sticky?: boolean;\n    arrowPadding?: number;\n    disableAnchorTracking?: boolean;\n    collisionAvoidance?: CollisionAvoidance;\n    render?: ReactElement | ((props: HTMLProps, state: Toast.Positioner.State) => ReactElement);\n};"
+        },
+        {
+          "name": "ToastManagerPromiseOptions",
+          "code": "type ToastManagerPromiseOptions<Value, Data extends {}> = {\n    loading: string | ToastManagerAddOptions<Data>;\n    success: string | ToastManagerUpdateOptions<Data> | ((result: Value) => string | ToastManagerUpdateOptions<Data>);\n    error: string | ToastManagerUpdateOptions<Data> | ((error: any) => string | ToastManagerUpdateOptions<Data>);\n};"
+        },
+        {
+          "name": "ToastManagerUpdateOptions",
+          "code": "type ToastManagerUpdateOptions<Data extends {}> = {\n    title?: React.ReactNode;\n    type?: string;\n    description?: React.ReactNode;\n    timeout?: number;\n    priority?: 'low' | 'high';\n    onClose?: () => void;\n    onRemove?: () => void;\n    actionProps?: Omit<React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'>;\n    positionerProps?: ToastManagerPositionerProps;\n    data?: Data;\n};"
+        },
+        {
+          "name": "ToastPositionerCssVariables",
+          "code": "declare namespace ToastPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            }
+          ]
+        },
+        {
+          "name": "ToastPositionerDataAttributes",
+          "code": "declare namespace ToastPositionerDataAttributes {\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "ToastRootCssVariables",
+          "code": "declare namespace ToastRootCssVariables {\n    const index: '--toast-index';\n    const offsetY: '--toast-offset-y';\n    const height: '--toast-height';\n    const swipeMovementX: '--toast-swipe-movement-x';\n    const swipeMovementY: '--toast-swipe-movement-y';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "--toast-index"
+            },
+            {
+              "name": "offsetY",
+              "value": "--toast-offset-y"
+            },
+            {
+              "name": "height",
+              "value": "--toast-height"
+            },
+            {
+              "name": "swipeMovementX",
+              "value": "--toast-swipe-movement-x"
+            },
+            {
+              "name": "swipeMovementY",
+              "value": "--toast-swipe-movement-y"
+            }
+          ]
+        },
+        {
+          "name": "ToastRootDataAttributes",
+          "code": "declare namespace ToastRootDataAttributes {\n    const expanded: 'data-expanded';\n    const limited: 'data-limited';\n    const type: 'data-type';\n    const swiping: 'data-swiping';\n    const swipeDirection: 'data-swipe-direction';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "expanded",
+              "value": "data-expanded"
+            },
+            {
+              "name": "limited",
+              "value": "data-limited"
+            },
+            {
+              "name": "type",
+              "value": "data-type"
+            },
+            {
+              "name": "swiping",
+              "value": "data-swiping"
+            },
+            {
+              "name": "swipeDirection",
+              "value": "data-swipe-direction"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "ToastTitleDataAttributes",
+          "code": "declare namespace ToastTitleDataAttributes {\n    const type: 'data-type';\n}",
+          "constants": [
+            {
+              "name": "type",
+              "value": "data-type"
+            }
+          ]
+        },
+        {
+          "name": "ToastViewportCssVariables",
+          "code": "declare namespace ToastViewportCssVariables {\n    const frontmostHeight: '--toast-frontmost-height';\n}",
+          "constants": [
+            {
+              "name": "frontmostHeight",
+              "value": "--toast-frontmost-height"
+            }
+          ]
+        },
+        {
+          "name": "ToastViewportDataAttributes",
+          "code": "declare namespace ToastViewportDataAttributes {\n    const expanded: 'data-expanded';\n}",
+          "constants": [
+            {
+              "name": "expanded",
+              "value": "data-expanded"
+            }
+          ]
+        },
+        {
+          "name": "UseToastManagerReturnValue",
+          "code": "type UseToastManagerReturnValue<Data extends {} = any> = {\n    toasts: ToastObject<Data>[];\n    add: <T extends Data = Data>(options: ToastManagerAddOptions<T>) => string;\n    close: (toastId?: string) => void;\n    update: <T extends Data = Data>(toastId: string, options: ToastManagerUpdateOptions<T> | ((prevToast: ToastObject<T>) => ToastManagerUpdateOptions<T>)) => void;\n    promise: <Value, T extends Data = Data>(promise: Promise<Value>, options: ToastManagerPromiseOptions<Value, T>) => Promise<Value>;\n};"
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toast/page.mdx",
+      "referenceTags": [
+        "TypesToast.Provider",
+        "TypesToast.Portal",
+        "TypesToast.Viewport",
+        "TypesToast.Root",
+        "TypesToast.Content",
+        "TypesToast.Title",
+        "TypesToast.Description",
+        "TypesToast.Action",
+        "TypesToast.Close",
+        "TypesToast.Positioner",
+        "TypesToast.Arrow",
+        "TypesToast.useToastManager",
+        "TypesToastAdditional"
+      ]
+    }
+  ]
+}
