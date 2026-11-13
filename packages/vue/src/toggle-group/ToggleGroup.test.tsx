@@ -332,11 +332,10 @@ describe('<ToggleGroup />', () => {
   });
 
   describe.skipIf(isJSDOM)('prop: multiple transitions', () => {
-    // Base UI has the rows `standalone` and `nested in Toolbar.Group`, with `%s` in the title.
     it.each([
-      { name: 'standalone', inToolbar: false },
-      { name: 'in Toolbar.Root', inToolbar: true },
-    ])('keeps the selection and the roving focus when $name', async ({ inToolbar }) => {
+      ['standalone', false],
+      ['nested in Toolbar.Group', true],
+    ] as const)('preserves selection and roving focus when %s', async (_label, inToolbar) => {
       const TestToggleGroup = defineComponent(
         (props: { multiple: boolean }) => () => {
           const group = (
@@ -350,7 +349,13 @@ describe('<ToggleGroup />', () => {
             </ToggleGroup>
           );
 
-          return inToolbar ? <Toolbar.Root>{group}</Toolbar.Root> : group;
+          return inToolbar ? (
+            <Toolbar.Root>
+              <Toolbar.Group>{group}</Toolbar.Group>
+            </Toolbar.Root>
+          ) : (
+            group
+          );
         },
         { props: ['multiple'] },
       );

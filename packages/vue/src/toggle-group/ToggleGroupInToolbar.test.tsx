@@ -259,6 +259,43 @@ describe('<Toolbar.Button />', () => {
         expect(one).toHaveAttribute('aria-pressed', 'true');
       });
 
+      it('disables direct ToggleGroup children when Toolbar.Group is disabled', async () => {
+        const { user } = await render(
+          <Toolbar.Root>
+            <Toolbar.Button data-testid="before" />
+            <Toolbar.Group disabled>
+              <ToggleGroup>
+                <Toggle value="one" data-testid="one" />
+                <Toggle value="two" data-testid="two" />
+              </ToggleGroup>
+            </Toolbar.Group>
+            <Toolbar.Button data-testid="after" />
+          </Toolbar.Root>,
+        );
+
+        const before = screen.getByTestId('before');
+        const one = screen.getByTestId('one');
+        const two = screen.getByTestId('two');
+        const after = screen.getByTestId('after');
+
+        [one, two].forEach((toggle) => {
+          expect(toggle).toBeDisabled();
+          expect(toggle).toHaveAttribute('data-disabled');
+        });
+
+        await user.keyboard('[Tab]');
+        await waitFor(() => {
+          expect(before).toHaveFocus();
+        });
+
+        await user.keyboard('[ArrowRight]');
+        await waitFor(() => {
+          expect(after).toHaveFocus();
+        });
+        expect(one).not.toHaveAttribute('tabindex', '0');
+        expect(two).not.toHaveAttribute('tabindex', '0');
+      });
+
       it.skipIf(isJSDOM)('skips a direct Toggle that becomes disabled at runtime', async () => {
         const App = defineComponent(
           (props: { twoDisabled?: boolean }) => () => (

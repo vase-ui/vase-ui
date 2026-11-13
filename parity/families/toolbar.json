@@ -54,9 +54,82 @@
         "rendering other Base UI components",
         "Toggle and ToggleGroup"
       ],
+      "title": "renders toggle and toggle group",
       "kind": "replaced",
       "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
-      "reason": "The cases render `Toggle` and `ToggleGroup` in a toolbar. They are in a test file of Toggle Group, with the same titles."
+      "reason": "The case renders `Toggle` and `ToggleGroup` in a toolbar. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "handles interactions",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case presses a `Toggle` and the `Toggle` parts of a `ToggleGroup` with the keyboard, in a toolbar. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "disabled state",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case disables each `Toolbar.Button` that renders a `Toggle`, with and without a `ToggleGroup`. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "navigates and selects direct ToggleGroup > Toggle children",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case moves the focus through a `ToggleGroup` in a toolbar and presses a `Toggle`. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "skips disabled direct ToggleGroup > Toggle children",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case moves the focus past a disabled `Toggle` of a `ToggleGroup` in a toolbar. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "supports multiple selection for direct ToggleGroup > Toggle children",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case presses two `Toggle` parts of a `ToggleGroup` that has `multiple`, in a toolbar. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "supports a controlled ToggleGroup value",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case gives a controlled `value` to a `ToggleGroup` in a toolbar. The case is in a test file of Toggle Group, with the same title."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
@@ -66,9 +139,21 @@
         "Toggle and ToggleGroup"
       ],
       "title": "disables direct ToggleGroup children when Toolbar.Group is disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toolbar/group/ToolbarGroup.tsx",
-      "reason": "The case renders `Toolbar.Group`, which Vase UI does not have."
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case disables the `Toggle` parts of a `ToggleGroup` with a disabled `Toolbar.Group`. The case is in a test file of Toggle Group, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "skips a direct Toggle that becomes disabled at runtime",
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The case disables a `Toggle` of a `ToggleGroup` in a toolbar after the first render. The case is in a test file of Toggle Group, with the same title."
     },
     {
       "upstream": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
