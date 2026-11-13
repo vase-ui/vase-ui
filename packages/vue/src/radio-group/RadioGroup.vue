@@ -139,6 +139,12 @@ const [checkedValue, setCheckedValueState] = useControlled<Value>({
   state: 'value',
 });
 
+// A server writes the parts that come after the group before it runs the `setup` of a radio,
+// because the group defers its render. The group thus sets the first `filled` state itself.
+if (checkedValue.value != null) {
+  setFilled(true);
+}
+
 const touched = shallowRef(false);
 const inputSyncRequest = shallowRef(0);
 

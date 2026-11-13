@@ -36,22 +36,22 @@ describe('<RadioGroup />', () => {
         tabindexes: ['-1', '0', '-1'],
       },
       {
-        name: 'the first radio when the group has no value',
+        name: 'the first radio, with no value',
         props: {},
         tabindexes: ['0', '-1', '-1'],
       },
       {
-        name: 'the first radio that is not disabled when the group has no value',
+        name: 'the first enabled radio, with no value',
         props: { firstDisabled: true },
         tabindexes: ['-1', '0', '-1'],
       },
       {
-        name: 'the checked radio, also when it is disabled',
+        name: 'the checked radio that is disabled',
         props: { defaultValue: 'a', firstDisabled: true },
         tabindexes: ['0', '-1', '-1'],
       },
       {
-        name: 'no radio when the value belongs to no radio',
+        name: 'no radio for a value that no radio has',
         props: { defaultValue: 'z' },
         tabindexes: ['-1', '-1', '-1'],
       },
