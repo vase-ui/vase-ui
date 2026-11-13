@@ -609,8 +609,8 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
-// The value that the hidden input had after the last event that the root handled, and after the
-// last write of the root.
+// The value that the hidden input had after the last event that the root handled, after the last
+// write of the root and after the last write of Vue.
 let handledHiddenValue: string | undefined;
 
 // Vue writes `value` to an input only when the root renders. The root does not render when a

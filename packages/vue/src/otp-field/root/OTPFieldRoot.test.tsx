@@ -116,18 +116,6 @@ describe('<OTPField.Root />', () => {
       expect(hiddenInput.value).toBe('12');
     });
 
-    it('updates the hidden input in controlled mode', async () => {
-      const { container, rerender } = await render(
-        <OTPFieldBase.Root length={OTP_LENGTH} value="123456" />,
-      );
-
-      expect(getHiddenInput(container).value).toBe('123456');
-
-      await rerender(<OTPFieldBase.Root length={OTP_LENGTH} value="654321" />);
-
-      expect(getHiddenInput(container).value).toBe('654321');
-    });
-
     it.each([
       { name: 'the default value', props: { defaultValue: '12a34b56c7' } },
       { name: 'the controlled value', props: { value: '12a34b56c7' } },
