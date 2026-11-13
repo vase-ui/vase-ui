@@ -382,6 +382,109 @@ async function expectHydratedFieldPage(page: Page) {
   expect(await page.getByTestId('root').getAttribute('data-filled')).toBe('');
 }
 
+const ACTIVE_TAB_VARIABLE_SUFFIXES = ['left', 'right', 'top', 'bottom', 'width', 'height'];
+
+function readTabsRoot(page: Page, testId: string) {
+  return page.getByTestId(testId).evaluate((root) => ({
+    tabs: Array.from(root.querySelectorAll('[role="tab"]'), (tab) => ({
+      id: tab.id,
+      tabindex: tab.getAttribute('tabindex'),
+      controls: tab.getAttribute('aria-controls'),
+    })),
+    panels: Array.from(root.querySelectorAll('[role="tabpanel"]'), (panel) => ({
+      id: panel.id,
+      labelledby: panel.getAttribute('aria-labelledby'),
+    })),
+  }));
+}
+
+function readActiveTabVariables(page: Page) {
+  return page
+    .getByTestId('indicator')
+    .evaluate(
+      (indicator, suffixes) =>
+        Object.fromEntries(
+          suffixes.map((suffix) => [
+            suffix,
+            indicator.style.getPropertyValue(`--active-tab-${suffix}`),
+          ]),
+        ),
+      ACTIVE_TAB_VARIABLE_SUFFIXES,
+    );
+}
+
+// Before hydration the inline script sets the variables. After it, the part sets them.
+async function expectIndicatorUnderTab(
+  page: Page,
+  tabTestId: string,
+  { left, right }: { left: string; right: string },
+) {
+  expect(await readActiveTabVariables(page)).toEqual({
+    left,
+    right,
+    top: '0px',
+    bottom: '0px',
+    width: '100px',
+    height: '40px',
+  });
+  expect(await page.getByTestId('indicator').boundingBox()).toEqual(
+    await page.getByTestId(tabTestId).boundingBox(),
+  );
+}
+
+// The server writes a part before it registers the parts that come after it. The part that comes
+// first then has no id of the other part in the server HTML. It gets the id in the first flush on
+// the client. Panel `a` is not mounted, so no tab names it.
+async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
+  const after = await readTabsRoot(page, 'panels-after');
+  const before = await readTabsRoot(page, 'panels-before');
+
+  expect(after.tabs[1].id).toBeTruthy();
+  expect(after.tabs.map((tab) => tab.tabindex)).toEqual(['-1', '0', '-1']);
+  expect(before.tabs.map((tab) => tab.tabindex)).toEqual(['-1', '0']);
+  expect(after.panels.map((panel) => panel.labelledby)).toEqual([
+    after.tabs[1].id,
+    after.tabs[2].id,
+  ]);
+  expect(after.tabs.map((tab) => tab.controls)).toEqual(
+    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
+  );
+  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
+    hydrated ? before.tabs[1].id : null,
+  ]);
+}
+
+// The server cannot measure the layout, so the indicator is hidden and has no variable. The script
+// after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
+async function expectTabsPage(page: Page) {
+  await expectTabIds(page, { hydrated: false });
+
+  expect(
+    await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
+      scripts.map((script) => ({
+        nonce: script.getAttribute('nonce'),
+        follows: script.previousElementSibling?.getAttribute('data-testid'),
+        hasText: script.textContent?.includes('currentScript'),
+      })),
+    ),
+  ).toEqual([{ nonce: 'test-nonce', follows: 'indicator', hasText: true }]);
+  expect(await readAttributes(page.getByTestId('indicator'), ['hidden', 'role'])).toEqual({
+    hidden: '',
+    role: 'presentation',
+  });
+  expect(await readActiveTabVariables(page)).toEqual(
+    Object.fromEntries(ACTIVE_TAB_VARIABLE_SUFFIXES.map((suffix) => [suffix, ''])),
+  );
+}
+
+async function expectHydratedTabsPage(page: Page) {
+  await expectTabIds(page, { hydrated: true });
+
+  expect(await page.locator('[role="tablist"] script').count()).toBe(0);
+  await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -458,6 +561,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedScrollAreaPage,
   },
   { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
+  { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -565,6 +669,32 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       /^translate3d\(0px, ([\d.]+)px, 0px\)$/.exec(await readTransform())?.[1],
     );
     expect(offsetY).toBeGreaterThan(0);
+  });
+
+  it('positions the indicator of /tabs with its inline script when the files of the app do not load', async () => {
+    const page = await createPage();
+    await page.route('**/_nuxt/**', (route) => route.abort());
+
+    await page.goto(url('/tabs'));
+
+    // Vue removes the script when it hydrates, so the script shows that nothing hydrated.
+    expect(await page.locator('[role="tablist"] script').count()).toBe(1);
+    await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
+  });
+
+  it('selects a tab of /tabs on a click and moves the indicator after hydration', async () => {
+    const page = await createPage('/tabs');
+    const messages = collectMessages(page);
+    const readTab = (testId: string) =>
+      readAttributes(page.getByTestId(testId), ['aria-selected', 'tabindex']);
+
+    await page.getByTestId('tab-c').click();
+
+    expect(await readTab('tab-c')).toEqual({ 'aria-selected': 'true', tabindex: '0' });
+    expect(await readTab('tab-b')).toEqual({ 'aria-selected': 'false', tabindex: '-1' });
+    expect(await page.getByTestId('panel-c').getAttribute('hidden')).toBeNull();
+    await expectIndicatorUnderTab(page, 'tab-c', { left: '200px', right: '0px' });
+    expect(messages).toEqual([]);
   });
 
   it('opens a collapsible panel on a click on its trigger after hydration', async () => {
