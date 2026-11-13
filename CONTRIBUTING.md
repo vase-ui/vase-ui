@@ -581,6 +581,12 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
 - `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
 
+### Focus helpers
+
+The focus helpers of a popup are in `src/utils/popups/focus`.
+
+- `tabbable()` keeps the order of the document for an element with a positive `tabindex`, as Base UI does. A browser visits that element first.
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
