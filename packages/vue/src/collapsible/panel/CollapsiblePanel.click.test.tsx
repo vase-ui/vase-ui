@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import { createRenderer, waitFor } from '#test-utils';
 import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
+import { mark, timed } from '../../../test/fixtures/timeline';
 
 // A real pointer event makes Chromium compute style before the next frame callback. A later case
 // in the same file then passes without the layout read of the panel. This file has the cases that
@@ -19,7 +20,7 @@ describe('<Collapsible.Panel /> opened by a click', () => {
     { name: 'keep-mounted', keepMounted: true },
   ])(
     'runs one transition for each enter and each exit: $name',
-    async ({ keepMounted }) => {
+    timed(async ({ keepMounted }: { name: string; keepMounted: boolean }) => {
       const { container } = await render(() => (
         <>
           <style>{`
@@ -62,15 +63,21 @@ describe('<Collapsible.Panel /> opened by a click', () => {
       for (let cycle = 0; cycle < 6; cycle += 1) {
         phase = 'enter';
         const started = nextEvent(container, 'transitionrun');
+        mark(`cycle ${cycle} enter: click`);
         await userEvent.click(trigger);
+        mark(`cycle ${cycle} enter: click resolved`);
         await started;
+        mark(`cycle ${cycle} enter: transitionrun awaited`);
         await nextEvent(container, 'transitionend');
+        mark(`cycle ${cycle} enter: transitionend awaited`);
         await waitFor(() => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });
 
         phase = 'exit';
+        mark(`cycle ${cycle} exit: click`);
         await userEvent.click(trigger);
+        mark(`cycle ${cycle} exit: click resolved`);
         await waitFor(
           () => {
             const panel = getPanel();
@@ -78,11 +85,12 @@ describe('<Collapsible.Panel /> opened by a click', () => {
           },
           { timeout: 3000 },
         );
+        mark(`cycle ${cycle} exit: gone`);
         phase = undefined;
       }
 
       expect(counts).toEqual({ enter: 6, exit: 6 });
-    },
+    }),
     30_000,
   );
 });
