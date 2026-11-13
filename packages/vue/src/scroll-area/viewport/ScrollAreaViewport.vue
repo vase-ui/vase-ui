@@ -117,15 +117,7 @@ function applyOverscrollThumb(
 </script>
 
 <script setup lang="ts">
-import {
-  normalizeStyle,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  provide,
-  shallowRef,
-  watch,
-} from 'vue';
+import { onActivated, onDeactivated, onMounted, onUpdated, provide, shallowRef, watch } from 'vue';
 import { NOOP } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
@@ -170,7 +162,7 @@ const {
   setHovering,
   touchModality,
   handleScroll,
-  viewportSnapDisabled,
+  reapplyViewportSnapNone,
   viewportState: state,
 } = useScrollAreaRootContext();
 
@@ -371,7 +363,7 @@ function handleViewportScroll() {
   });
 }
 
-const { element, elementProps: renderElementProps } = useRenderElement('div', props, {
+const { element, elementProps } = useRenderElement('div', props, {
   ref: (viewport) => {
     viewportElement.value = viewport;
   },
@@ -395,18 +387,8 @@ const { element, elementProps: renderElementProps } = useRenderElement('div', pr
   stateAttributesMapping: scrollAreaStateAttributesMapping,
 });
 
-// `useRenderElement` merges the `style` attribute and `stateStyle` of the consumer after the props
-// of the part. The temporary `scroll-snap-type: none` of a thumb drag must win over them, so the
-// part merges it last.
-function elementProps() {
-  const outProps = renderElementProps();
-
-  if (viewportSnapDisabled.value) {
-    outProps.style = normalizeStyle([outProps.style, { scrollSnapType: 'none' }]);
-  }
-
-  return outProps;
-}
+// A patch writes the rendered `style` again, and that can replace the `none` of a press.
+onUpdated(reapplyViewportSnapNone);
 
 onMounted(removeCSSVariableInheritance);
 

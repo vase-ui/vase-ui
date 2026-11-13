@@ -30,7 +30,7 @@ export interface FormContext {
   elementRef: Readonly<Ref<HTMLFormElement | null>>;
   /**
    * The fields that have a control now, in the order of their registrations.
-   * A field whose control `KeepAlive` has deactivated is not in the list.
+   * A field is not in the list while `KeepAlive` has each of its controls deactivated.
    */
   fields: ComputedRef<FormField[]>;
   /**
