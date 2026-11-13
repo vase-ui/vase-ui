@@ -323,6 +323,23 @@ describe('useDismiss', () => {
       expect(isOpen('popup')).toBe(false);
     });
 
+    it('adds the Escape listeners when `escapeKey` becomes true', async () => {
+      const count = countListeners();
+      const escapeKey = shallowRef(false);
+      await render(<Popup name="popup" dismiss={{ escapeKey }} />);
+      expect(count()).toBe(9);
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(isOpen('popup')).toBe(true);
+
+      escapeKey.value = true;
+      await nextTick();
+      expect(count()).toBe(12);
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(isOpen('popup')).toBe(false);
+    });
+
     it('releases the listeners while KeepAlive holds the popup, and takes them back', async () => {
       const count = countListeners();
       const page = shallowRef('popup');
