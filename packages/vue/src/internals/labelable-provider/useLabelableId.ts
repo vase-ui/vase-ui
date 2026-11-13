@@ -97,8 +97,8 @@ export function useLabelableId(params: UseLabelableIdParameters = {}): ComputedR
   });
 
   // A control with no id claims the default id of the provider again when `KeepAlive` activates it.
-  // The claim waits for the flush after the hooks. In the hook of this control, the controls before
-  // it in the branch are still deactivated and give no id. The claim then resets the selected id.
+  // The claim waits for the flush after the hooks. In its own hook, the controls before it in the
+  // branch are still deactivated and give no id, so the claim would reset the selected id.
   watch(isDeactivated, (deactivated) => {
     if (!deactivated) {
       register();
