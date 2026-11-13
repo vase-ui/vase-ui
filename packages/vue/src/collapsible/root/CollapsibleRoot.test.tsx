@@ -143,7 +143,7 @@ describe('<Collapsible.Root />', () => {
       expect(trigger).toHaveAttribute('aria-controls', panel.id);
     });
 
-    it('names the last of two panels in aria-controls, then the first panel when the last panel unmounts', async () => {
+    it('VUE-12: names the last of two panels in aria-controls, then the first panel when the last panel unmounts', async () => {
       function App({ secondPanelMounted }: { secondPanelMounted: boolean }) {
         return (
           <Collapsible.Root defaultOpen>
