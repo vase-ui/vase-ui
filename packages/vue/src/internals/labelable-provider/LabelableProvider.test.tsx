@@ -289,12 +289,15 @@ describe('labelable provider', () => {
 
     it('puts the ids of the messages in `aria-describedby` in the order of the parts, after the ids of the consumer, with no duplicate', async () => {
       await render(
-        <DescribedControl messageIds={['message-b', 'message-a']} describedBy="given message-b" />,
+        <DescribedControl
+          messageIds={['message-b', 'message-c', 'message-a']}
+          describedBy="given message-b"
+        />,
       );
 
       expect(screen.getByTestId('control')).toHaveAttribute(
         'aria-describedby',
-        'given message-b message-a',
+        'given message-b message-c message-a',
       );
     });
 
