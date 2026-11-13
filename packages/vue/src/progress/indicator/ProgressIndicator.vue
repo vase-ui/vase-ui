@@ -28,8 +28,6 @@ defineSlots<{
 
 const { percentageValue, state } = useProgressRootContext();
 
-// An empty `style` key gives `style=""` in the server HTML and no attribute in a browser, so the
-// indeterminate state has no `style` key.
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   props: (attrs) => [

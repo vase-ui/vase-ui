@@ -42,6 +42,8 @@ export interface FormProps<FormValues extends Record<string, any> = Record<strin
    * This should be an object where keys correspond to the `name` attribute on `<Field.Root>`,
    * and values correspond to error(s) related to that field.
    * The form also follows a change that the consumer makes in place to a reactive object.
+   * After a change of a field clears its error, a write of the same value for that field does not show the error again, because Vue reports no change for an equal value.
+   * Give a new object or a changed value. A delete and then a set also works.
    */
   errors?: Errors | undefined;
   /**
