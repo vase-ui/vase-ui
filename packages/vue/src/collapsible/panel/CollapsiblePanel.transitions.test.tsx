@@ -1,8 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
-import { createRenderer, waitFor } from '#test-utils';
-import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
+import {
+  closeInTimerTask,
+  createRenderer,
+  createTransitionRunCounter,
+  nextEvent,
+  openInTimerTask,
+  probeFrameAfterExit,
+  waitFor,
+} from '#test-utils';
+import type { FrameProbeResult } from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -59,47 +67,6 @@ interface PanelRow {
   hiddenUntilFound?: boolean;
 }
 
-interface FrameProbeResult {
-  /** The panel was `hidden` or not connected in the callback of the frame. */
-  isGone: boolean;
-  /** The callback of the frame has the time of the frame in which the animation ended. */
-  isSameFrame: boolean;
-}
-
-/**
- * Tells if a frame paints between the end of the exit animation and the removal of the panel.
- * The reaction to the end reads the time of the timeline and requests one frame. If the removal
- * is done in that frame callback, no frame ran between the end and the removal. The time of the
- * callback shows that it belongs to the frame of the end.
- */
-function probeFrameAfterExit(panel: HTMLElement, isGone: () => boolean) {
-  return new Promise<FrameProbeResult>((resolve, reject) => {
-    const animations = panel.getAnimations();
-    if (animations.length === 0) {
-      reject(new Error('The panel has no animation to wait for.'));
-      return;
-    }
-    Promise.all(animations.map((animation) => animation.finished)).then(() => {
-      const endTime = Number(document.timeline.currentTime);
-      requestAnimationFrame((frameTime) => {
-        resolve({ isGone: isGone(), isSameFrame: Math.abs(frameTime - endTime) < 0.5 });
-      });
-    }, reject);
-  });
-}
-
-function openInTimerTask(open: { value: boolean }) {
-  setTimeout(() => {
-    open.value = true;
-  });
-}
-
-function closeInTimerTask(open: { value: boolean }) {
-  setTimeout(() => {
-    open.value = false;
-  });
-}
-
 // A test that counts transitions reads no style and no layout. A read starts the transition that the
 // part must start, and the count is then right with a broken part.
 describe('<Collapsible.Panel /> transitions', () => {
@@ -109,7 +76,12 @@ describe('<Collapsible.Panel /> transitions', () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
   });
 
-  async function renderPanel(open: { value: boolean }, className: string, row: PanelRow) {
+  async function renderPanel(
+    open: { value: boolean },
+    className: string,
+    row: PanelRow,
+    onTransitionrun?: (event: Event) => void,
+  ) {
     const { container } = await render(() => (
       <>
         <style>{STYLE}</style>
@@ -119,6 +91,7 @@ describe('<Collapsible.Panel /> transitions', () => {
             data-testid="panel"
             keepMounted={row.keepMounted}
             hiddenUntilFound={row.hiddenUntilFound}
+            onTransitionrun={onTransitionrun}
           >
             {PANEL_CONTENT}
           </Collapsible.Panel>
@@ -144,27 +117,22 @@ describe('<Collapsible.Panel /> transitions', () => {
       'runs one transition for each enter and each exit when a timer task opens the panel: $name',
       async (row) => {
         const open = shallowRef(false);
-        const { container, getPanel, isGone } = await renderPanel(open, TRANSITION, row);
-
-        const counts = { enter: 0, exit: 0 };
-        let phase: keyof typeof counts | undefined;
-        container.addEventListener('transitionrun', (event) => {
-          if (phase && (event.target as Element).matches('[data-testid="panel"]')) {
-            counts[phase] += 1;
-          }
-        });
+        const counter = createTransitionRunCounter(() => open.value);
+        const { container, getPanel, isGone } = await renderPanel(
+          open,
+          TRANSITION,
+          row,
+          counter.onTransitionrun,
+        );
 
         for (let cycle = 0; cycle < 6; cycle += 1) {
-          phase = 'enter';
-          const started = nextEvent(container, 'transitionrun');
+          const entered = nextEvent(container, 'transitionend', { after: 'transitionrun' });
           openInTimerTask(open);
-          await started;
-          await nextEvent(container, 'transitionend');
+          await entered;
           await waitFor(() => {
             expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
           });
 
-          phase = 'exit';
           closeInTimerTask(open);
           await waitFor(
             () => {
@@ -172,10 +140,13 @@ describe('<Collapsible.Panel /> transitions', () => {
             },
             { timeout: 3000 },
           );
-          phase = undefined;
         }
 
-        expect(counts).toEqual({ enter: 6, exit: 6 });
+        // The browser can send the `transitionrun` of the last exit after the panel is hidden.
+        await waitFor(() => {
+          expect(counter.counts.exit).toBe(6);
+        });
+        expect(counter.counts).toEqual({ enter: 6, exit: 6 });
       },
       30_000,
     );
@@ -191,16 +162,15 @@ describe('<Collapsible.Panel /> transitions', () => {
       const open = shallowRef(false);
       const { container, getPanel, isGone } = await renderPanel(open, className, row);
 
-      // The end event of an exit can come after the removal of the panel. A wait for the start of
-      // the next enter cannot take it for the end of that enter.
+      // The end event of an exit can come after the removal of the panel. The wait for the end of an
+      // enter ignores each end event that comes before the start of that enter.
       const startEvent = className === TRANSITION ? 'transitionrun' : 'animationstart';
       const endEvent = className === TRANSITION ? 'transitionend' : 'animationend';
       const results: FrameProbeResult[] = [];
       for (let cycle = 0; cycle < 3; cycle += 1) {
-        const started = nextEvent(container, startEvent);
+        const entered = nextEvent(container, endEvent, { after: startEvent });
         openInTimerTask(open);
-        await started;
-        await nextEvent(container, endEvent);
+        await entered;
         await waitFor(() => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });

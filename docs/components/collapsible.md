@@ -41,6 +41,8 @@ A browser that does not support `hidden="until-found"` keeps the panel hidden un
 
 <<< ./collapsible/HiddenUntilFound.vue{8}
 
+See the [Accordion example](/components/accordion#hidden-until-found) for an interactive demo.
+
 ## API reference
 
 <ApiReference />

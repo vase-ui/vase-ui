@@ -1,0 +1,11 @@
+{
+  "id": "VUE-17",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/useRegisteredLabelId.ts#L12-L17",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/description/FieldDescription.tsx#L36-L46",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/root/FieldRoot.test.tsx#L309-L318",
+    "https://vuejs.org/api/composition-api-lifecycle.html#onserverprefetch"
+  ],
+  "behavior": "The server HTML of a control in a field has the id of the label in `aria-labelledby` and the ids of the messages in `aria-describedby`, in each order of the parts. A control with no label has no `aria-labelledby`. Base UI adds these attributes after the page hydrates.",
+  "dueWith": "packages/react/src/internals/labelable-provider/LabelableProvider.tsx"
+}
