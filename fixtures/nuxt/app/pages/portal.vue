@@ -6,8 +6,8 @@ import FloatingPortalLite from '../../../../packages/vue/src/utils/popups/portal
 // Vue unwraps a template ref in a template. The `container` prop is `null` until the mount.
 const page = useTemplateRef<HTMLElement>('page');
 
-// Nuxt renders the element `#teleports` for its own `Teleport`. A server has no such element in
-// the page, so the page reads it after the mount.
+// Nuxt renders the element `#teleports` outside the page. `setup` has no `document` on a server,
+// so the page reads the element after the mount.
 const teleports = shallowRef<HTMLElement | null>(null);
 onMounted(() => {
   teleports.value = document.getElementById('teleports');
