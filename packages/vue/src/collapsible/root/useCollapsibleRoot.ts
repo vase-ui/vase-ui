@@ -2,13 +2,13 @@ import { computed, shallowRef, toValue } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
+import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { CollapsibleRootChangeEventDetails } from './CollapsibleRoot.vue';
-
-type PanelIdState = string | null | undefined;
 
 export function useCollapsibleRoot(
   parameters: UseCollapsibleRootParameters,
@@ -33,17 +33,19 @@ export function useCollapsibleRoot(
   );
 
   const defaultPanelId = useVaseUiId();
-  // `undefined` uses the initial generated fallback; `null` means the panel unmounted.
-  const registeredPanelId = shallowRef<PanelIdState>();
-  const panelId = computed(() =>
-    registeredPanelId.value === null
-      ? undefined
-      : (registeredPanelId.value ?? defaultPanelId.value),
+  const { ids: panelIds, registerId } = createIdRegistry();
+  // A trigger renders before its panel registers. Until then, the root assumes the generated id.
+  const hasRegisteredPanel = shallowRef(false);
+  const panelId = computed(
+    () => panelIds.value.at(-1) ?? (hasRegisteredPanel.value ? undefined : defaultPanelId.value),
   );
 
-  function setPanelIdState(next: PanelIdState | ((current: PanelIdState) => PanelIdState)) {
-    registeredPanelId.value = typeof next === 'function' ? next(registeredPanelId.value) : next;
-  }
+  const registerPanelId: RegisterId = (source, getId) => {
+    if (getId) {
+      hasRegisteredPanel.value = true;
+    }
+    registerId(source, getId);
+  };
 
   function handleTrigger(event: MouseEvent | KeyboardEvent) {
     const nextOpen = !open.value;
@@ -65,9 +67,9 @@ export function useCollapsibleRoot(
     mounted,
     open,
     panelId,
+    registerPanelId,
     setMounted,
     setOpen,
-    setPanelIdState,
     transitionStatus,
   };
 }
@@ -120,8 +122,8 @@ export interface UseCollapsibleRootReturnValue {
    */
   open: ComputedRef<boolean>;
   panelId: ComputedRef<string | undefined>;
+  registerPanelId: RegisterId;
   setMounted: (nextMounted: boolean) => void;
   setOpen: (open: boolean) => void;
-  setPanelIdState: (next: PanelIdState | ((current: PanelIdState) => PanelIdState)) => void;
   transitionStatus: Readonly<Ref<TransitionStatus>>;
 }

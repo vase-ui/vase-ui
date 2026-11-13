@@ -3,6 +3,7 @@ import { h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import * as vaseUi from '@vase-ui/vue';
 import { MultiPart } from '@vase-ui/vue/multi-part';
+import { ScriptedPart } from '@vase-ui/vue/scripted-part';
 import { SinglePart } from '@vase-ui/vue/single-part';
 
 assert.equal(vaseUi.SinglePart, SinglePart);
@@ -12,3 +13,6 @@ const html = await renderToString(h(SinglePart, { orientation: 'vertical' }, () 
 assert.equal(html, '<div data-single-part data-orientation="vertical"><!--[-->text<!--]--></div>');
 
 await assert.rejects(import('@vase-ui/vue/internals/part-marker'));
+
+const scriptedHtml = await renderToString(h(ScriptedPart));
+assert.ok(scriptedHtml.includes('data-scripted-part-ran'), scriptedHtml);

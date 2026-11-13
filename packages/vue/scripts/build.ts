@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import type { UserConfig } from 'tsdown';
+import { dirname, join, relative, resolve } from 'node:path';
+import type { Rolldown, UserConfig } from 'tsdown';
 import Vue from 'unplugin-vue/rolldown';
 
 const NOT_ENTRY_FOLDERS = new Set(['internals', 'utils', 'common']);
+const PREHYDRATION_SCRIPT = 'prehydrationScript.min';
 
 function entryNames(sourceRoot: string): string[] {
   if (!existsSync(sourceRoot)) {
@@ -44,14 +45,55 @@ export function writeBarrel(barrelFile: string, sourceRoots: string[]): void {
   );
 }
 
-export function buildOptions(entry: Record<string, string>, outDir: string): UserConfig {
+// Each script is an entry, so that `dist` has one file for each `#prehydration/*` import.
+// The stub is the file that the `browser` condition of that import gives.
+function prehydrationEntries(sourceRoots: string[]): Record<string, string> {
+  const entries: Record<string, string> = {
+    'internals/prehydrationScript.stub': 'src/internals/prehydrationScript.stub.ts',
+  };
+  for (const sourceRoot of sourceRoots.filter((root) => existsSync(root))) {
+    for (const file of readdirSync(sourceRoot, { encoding: 'utf8', recursive: true })) {
+      if (file.endsWith(`${PREHYDRATION_SCRIPT}.ts`)) {
+        entries[file.slice(0, -'.ts'.length)] = join(sourceRoot, file);
+      }
+    }
+  }
+  return entries;
+}
+
+// A part imports the text of its script by a relative path. The plugin changes that import into
+// `#prehydration/<folder of the part>`, which `imports` in `package.json` resolves. The `browser`
+// condition there gives an empty text, so a client bundle of a consumer does not hold the script.
+function prehydrationScripts(sourceRoots: string[]): Rolldown.Plugin {
+  const roots = sourceRoots.map((root) => resolve(root));
   return {
-    entry,
+    name: 'vase-ui:prehydration-scripts',
+    async resolveId(source, importer) {
+      if (!importer || !source.endsWith(`/${PREHYDRATION_SCRIPT}`)) {
+        return null;
+      }
+      const resolved = await this.resolve(source, importer, { skipSelf: true });
+      const root = resolved && roots.find((candidate) => resolved.id.startsWith(`${candidate}/`));
+      if (!resolved || !root) {
+        return null;
+      }
+      return { id: `#prehydration/${relative(root, dirname(resolved.id))}`, external: true };
+    },
+  };
+}
+
+export function buildOptions(
+  entry: Record<string, string>,
+  outDir: string,
+  sourceRoots: string[] = ['src'],
+): UserConfig {
+  return {
+    entry: { ...entry, ...prehydrationEntries(sourceRoots) },
     outDir,
     format: 'esm',
     platform: 'neutral',
     target: 'baseline-widely-available',
-    plugins: [Vue({ isProduction: true })],
+    plugins: [prehydrationScripts(sourceRoots), Vue({ isProduction: true })],
     dts: { generator: 'tsc', tsc: { vue: true } },
     deps: { onlyBundle: [] },
   };

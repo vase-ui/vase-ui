@@ -1,0 +1,45 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/tree/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/tree/FloatingTree.tsx",
+    "packages/react/src/utils/popups/tree/FloatingTreeStore.ts",
+    "packages/react/src/utils/popups/tree/nodes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/tree/nodes.test.ts",
+      "rows": [
+        {
+          "describe": [],
+          "title": "getNodeChildren returns an array of children, ignoring closed ones when onlyOpenChildren=true"
+        },
+        {
+          "describe": [],
+          "title": "getNodeChildren returns an array of children, including closed ones when onlyOpenChildren=false"
+        },
+        {
+          "describe": [],
+          "title": "getNodeChildren handles deep parent structures correctly (onlyOpenChildren=true)"
+        },
+        {
+          "describe": [],
+          "title": "getNodeChildren includes open descendants behind contextless intermediary nodes"
+        },
+        {
+          "describe": [],
+          "title": "getNodeChildren handles deep parent structures correctly (onlyOpenChildren=false)"
+        },
+        {
+          "describe": [],
+          "title": "getNodeAncestors returns an array of ancestors"
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}

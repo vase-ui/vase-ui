@@ -58,12 +58,23 @@ function getElementHolder(thumbOrientation: 'vertical' | 'horizontal') {
   return thumbOrientation === 'vertical' ? thumbYElement : thumbXElement;
 }
 
+// `useRenderElement` sets `element` before it calls the callback, so the callback keeps the element.
+let mountedElement: HTMLElement | null = null;
+
 const { element, elementProps } = useRenderElement('div', props, {
-  // `useRenderElement` calls this callback only when the element changes. The callback reads the
-  // orientation when it runs. A change of the orientation of the scrollbar does not change the
-  // element, so the `watch` below moves the element to the other holder.
+  // A change of the orientation can remove the scrollbar and this thumb together. The `watch`
+  // below does not run then, so the callback clears each holder of the element that left.
   ref: (thumb) => {
-    getElementHolder(orientation.value).value = thumb;
+    if (thumb) {
+      getElementHolder(orientation.value).value = thumb;
+    } else {
+      for (const holder of [thumbYElement, thumbXElement]) {
+        if (holder.value === mountedElement) {
+          holder.value = null;
+        }
+      }
+    }
+    mountedElement = thumb;
   },
   state,
   props: (attrs) => [

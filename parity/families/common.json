@@ -5,27 +5,27 @@
     {
       "upstream": "packages/utils/src/fastHooks.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+      "reason": "The file joins the store subscriptions of one React component. A Vue component tracks each reactive read, so it needs no such wrapper."
     },
     {
       "upstream": "packages/utils/src/store/ReactStore.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+      "reason": "The methods of the class call React hooks. `ReactiveStore` of `packages/vue/src/utils/popups/ReactiveStore.ts` holds the state, the context and the selectors on Vue reactivity."
     },
     {
       "upstream": "packages/utils/src/store/Store.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+      "reason": "The class keeps a list of subscribers and gives each one the new state object. A write to `shallowReactive` state tells the readers, so `ReactiveStore` of `packages/vue/src/utils/popups/ReactiveStore.ts` has no such list."
     },
     {
       "upstream": "packages/utils/src/store/index.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+      "reason": "The file exports the store classes and hooks for React. The store of Vase UI is in `packages/vue/src/utils/popups/ReactiveStore.ts`."
     },
     {
       "upstream": "packages/utils/src/store/useStore.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the store, its React hooks and the component wrapper that joins their subscriptions."
+      "reason": "The hook subscribes a React component to a store through `useSyncExternalStore`. A Vue `computed` that calls `select` of the store does this work."
     },
     {
       "upstream": "packages/utils/src/lruMemoize.ts",
@@ -155,22 +155,22 @@
     {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the `Store` class."
+      "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/ReactiveStore.test.tsx` tests the writes of the Vue store."
     },
     {
       "upstream": "packages/utils/src/store/Store.spec.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces the `Store` class."
+      "reason": "It tests the type of `Store.create`, which the Vue store does not have."
     },
     {
       "upstream": "packages/utils/src/store/ReactStore.test.tsx",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces `ReactStore` and its hooks."
+      "reason": "The cases test the React hooks of `ReactStore` and its `observe` method. A Vue `computed` and a `watch` do this work."
     },
     {
       "upstream": "packages/utils/src/store/ReactStore.spec.ts",
       "kind": "not-applicable",
-      "reason": "Vue reactivity replaces `ReactStore` and its hooks."
+      "reason": "It tests the types of the React hooks of `ReactStore`. `packages/vue/src/utils/popups/ReactiveStore.spec.ts` tests the types of `select`, `set` and `update`."
     },
     {
       "upstream": "packages/utils/src/store/createSelector.test.ts",
