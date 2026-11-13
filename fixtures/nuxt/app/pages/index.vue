@@ -6,6 +6,8 @@
       <li><NuxtLink to="/progress">Progress</NuxtLink></li>
       <li><NuxtLink to="/meter">Meter</NuxtLink></li>
       <li><NuxtLink to="/fieldset">Fieldset</NuxtLink></li>
+      <li><NuxtLink to="/collapsible">Collapsible</NuxtLink></li>
+      <li><NuxtLink to="/avatar">Avatar</NuxtLink></li>
       <li><NuxtLink to="/providers">Providers</NuxtLink></li>
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
       <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>

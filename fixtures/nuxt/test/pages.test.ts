@@ -126,6 +126,61 @@ async function expectFieldsetPage(page: Page) {
   expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
 }
 
+async function expectCollapsiblePage(page: Page) {
+  const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open'];
+  const panelAttributeNames = ['hidden', 'data-open', 'data-closed'];
+  const readTrigger = (testId: string) =>
+    readAttributes(page.getByTestId(testId), triggerAttributeNames);
+  const readPanel = (testId: string) =>
+    readAttributes(page.getByTestId(testId), panelAttributeNames);
+  // The trigger names the panel only while the panel is open.
+  const closedTrigger = {
+    'aria-expanded': 'false',
+    'aria-controls': null,
+    'data-panel-open': null,
+  };
+
+  expect(await readTrigger('closed-trigger')).toEqual(closedTrigger);
+  expect(await page.getByTestId('closed-panel').count()).toBe(0);
+
+  const openPanelId = await page.getByTestId('open-panel').getAttribute('id');
+  expect(openPanelId).toBeTruthy();
+  expect(await readTrigger('open-trigger')).toEqual({
+    'aria-expanded': 'true',
+    'aria-controls': openPanelId,
+    'data-panel-open': '',
+  });
+  expect(await readPanel('open-panel')).toEqual({
+    hidden: null,
+    'data-open': '',
+    'data-closed': null,
+  });
+
+  const untilFoundPanel = page.getByTestId('until-found-panel');
+  expect(await readTrigger('until-found-trigger')).toEqual(closedTrigger);
+  expect(await readPanel('until-found-panel')).toEqual({
+    hidden: 'until-found',
+    'data-open': null,
+    'data-closed': '',
+  });
+  expect((await untilFoundPanel.textContent())?.trim()).toBe('Until found panel');
+
+  const untilFoundPanelId = await untilFoundPanel.getAttribute('id');
+  expect(untilFoundPanelId).toBeTruthy();
+  expect(untilFoundPanelId).not.toBe(openPanelId);
+}
+
+// The server cannot know whether the image loads, so it renders the fallback and no image.
+async function expectAvatarPageWithFallback(page: Page) {
+  expect(await page.getByTestId('fallback').textContent()).toBe('LT');
+  expect(await page.getByTestId('image').count()).toBe(0);
+}
+
+async function expectAvatarPageWithImage(page: Page) {
+  await page.getByTestId('image').waitFor();
+  expect(await page.getByTestId('fallback').count()).toBe(0);
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -167,7 +222,14 @@ async function expectMediaQueryPage(page: Page) {
   expect(await page.getByTestId('wide').textContent()).toBe('true');
 }
 
-const PAGES = [
+interface PageCase {
+  path: string;
+  expectPage: (page: Page) => Promise<void>;
+  // For a page that changes after the mount. `expectPage` then holds for the server HTML only.
+  expectHydratedPage?: (page: Page) => Promise<void>;
+}
+
+const PAGES: PageCase[] = [
   { path: '/button', expectPage: expectButtonPage },
   { path: '/separator', expectPage: expectSeparatorPage },
   ...RANGE_PAGES.map(({ path, rootAttributes }) => ({
@@ -175,6 +237,12 @@ const PAGES = [
     expectPage: (page: Page) => expectRangePage(page, rootAttributes),
   })),
   { path: '/fieldset', expectPage: expectFieldsetPage },
+  { path: '/collapsible', expectPage: expectCollapsiblePage },
+  {
+    path: '/avatar',
+    expectPage: expectAvatarPageWithFallback,
+    expectHydratedPage: expectAvatarPageWithImage,
+  },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -227,16 +295,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(getServerLogs().filter((line) => /\[Vue warn\]|Vase UI:/.test(line))).toEqual([]);
   });
 
-  it.each(PAGES)('hydrates $path with no message', async ({ path, expectPage }) => {
-    const page = await createPage();
-    const messages = collectMessages(page);
+  it.each(PAGES)(
+    'hydrates $path with no message',
+    async ({ path, expectPage, expectHydratedPage = expectPage }) => {
+      const page = await createPage();
+      const messages = collectMessages(page);
 
-    await page.goto(url(path), { waitUntil: 'hydration' });
-    await waitForTwoFrames(page);
+      await page.goto(url(path), { waitUntil: 'hydration' });
+      await waitForTwoFrames(page);
 
-    expect(messages).toEqual([]);
-    await expectPage(page);
-  });
+      expect(messages).toEqual([]);
+      await expectHydratedPage(page);
+    },
+  );
 
   it('counts the clicks on a button after hydration', async () => {
     const page = await createPage('/button');
@@ -245,6 +316,24 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await counter.textContent()).toBe('Count 0');
     await counter.click();
     expect(await counter.textContent()).toBe('Count 1');
+  });
+
+  it('opens a collapsible panel on a click on its trigger after hydration', async () => {
+    const page = await createPage('/collapsible');
+    const trigger = page.getByTestId('closed-trigger');
+    const panel = page.getByTestId('closed-panel');
+
+    expect(await panel.count()).toBe(0);
+    await trigger.click();
+    await panel.waitFor();
+
+    const panelId = await panel.getAttribute('id');
+    expect(panelId).toBeTruthy();
+    expect(await readAttributes(trigger, ['aria-expanded', 'aria-controls'])).toEqual({
+      'aria-expanded': 'true',
+      'aria-controls': panelId,
+    });
+    expect(await panel.getAttribute('hidden')).toBeNull();
   });
 
   it.each(RANGE_PAGES)(

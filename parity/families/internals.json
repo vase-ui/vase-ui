@@ -3,6 +3,10 @@
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/composite.test.ts",
     "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/list/CompositeList.tsx",
+    "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+    "packages/react/src/internals/composite/list/CompositeListContext.ts",
+    "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/composite/listIndex.test.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
@@ -156,6 +160,24 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/internals/field-constants/constants.ts",
       "reason": "The cases test `fieldValidityMapping` of the field constants, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.tsx",
+      "kind": "not-applicable",
+      "reason": "The file is a React component that gives the list context to its children. A Vue part calls `useCompositeList` of `list/useCompositeList.ts` in `setup`, which holds the registry of this file, and renders its own element."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+      "describe": ["<CompositeList />", "prop: elementsRef"],
+      "title": "syncs replacement refs without publishing an unchanged map",
+      "kind": "not-applicable",
+      "reason": "The case replaces the ref objects of a mounted list. A Vue part gives `elementsRef` and `labelsRef` one time, in `setup`. The new case `does not publish an unchanged map when a label changes` covers the half that applies."
+    },
+    {
+      "upstream": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+      "describe": ["<CompositeList />", "Suspense integration"],
+      "kind": "not-applicable",
+      "reason": "React hides a mounted tree and detaches its refs when a component in it suspends again. A mounted Vue component cannot suspend again."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useAriaLabelledBy.ts",

@@ -8,8 +8,17 @@
     "packages/react/src/utils/popups/constants.ts",
     "packages/react/src/utils/popups/event.ts",
     "packages/react/src/utils/popups/event.test.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/arrow.ts",
+    "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
+    "packages/react/src/utils/scrollEdges.test.ts",
+    "packages/react/src/utils/scrollEdges.ts",
+    "packages/react/src/utils/styles.tsx",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.test.tsx",
     "packages/react/src/utils/useFormatLocale.ts",
@@ -26,8 +35,15 @@
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/popups/constants.ts",
     "packages/react/src/utils/popups/event.ts",
+    "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
+    "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
+    "packages/react/src/utils/popups/positioning/arrow.ts",
+    "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
+    "packages/react/src/utils/scrollEdges.ts",
+    "packages/react/src/utils/styles.tsx",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.ts",
     "packages/react/src/utils/useIsHydrating.ts",
@@ -74,6 +90,58 @@
             "isVirtualPointerEvent"
           ],
           "title": "recognizes an iOS VoiceOver touch"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "hideMiddleware"
+          ],
+          "title": "matches Floating UI hide() for reference overflow %#"
+        },
+        {
+          "describe": [
+            "hideMiddleware"
+          ],
+          "title": "treats an all-zero reference rect as hidden"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/scrollEdges.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "returns 0 when max is non-positive"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "snaps to the start edge within the tolerance"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "snaps to the end edge within the tolerance"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "keeps values away from edges unchanged"
+        },
+        {
+          "describe": [
+            "normalizeScrollOffset"
+          ],
+          "title": "chooses the closest edge when tolerances overlap"
         }
       ]
     },

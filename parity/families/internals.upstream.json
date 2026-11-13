@@ -4,6 +4,10 @@
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/composite.test.ts",
     "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/list/CompositeList.tsx",
+    "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+    "packages/react/src/internals/composite/list/CompositeListContext.ts",
+    "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/composite/listIndex.test.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
@@ -43,6 +47,9 @@
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/composite/composite.ts",
     "packages/react/src/internals/composite/constants.ts",
+    "packages/react/src/internals/composite/list/CompositeList.tsx",
+    "packages/react/src/internals/composite/list/CompositeListContext.ts",
+    "packages/react/src/internals/composite/list/useCompositeListItem.ts",
     "packages/react/src/internals/composite/listIndex.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
@@ -92,6 +99,242 @@
             "scrollIntoViewIfNeeded"
           ],
           "title": "uses the left scroll margin when checking left overflow in RTL"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/composite/list/CompositeList.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "cleans up refs on unmount"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "keeps refs populated for items whose guessed index is already correct"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "only publishes maps that are aligned with the element registry"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "registers explicitly indexed items in their index-addressed slots"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "reserves explicit slots when assigning automatic indexes"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "does not consume an index guess for an explicitly indexed item"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "syncs replacement refs without publishing an unchanged map"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "registers a replacement render target"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "does not register negative explicit indexes"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates refs when an item mounts from a nested state update"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates refs when an item unmounts from a nested state update"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "keeps syncing refs after replacing items under Strict Mode"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "assigns correct guessed indexes during the first render"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "re-registers an item when its explicit index changes or is removed"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "resolves an automatic index when the equivalent explicit index is removed"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "does not detach item refs when an index shifts"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "excludes items detached outside React from the registry"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "skips detached items while verifying order after a move"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates the registry when a mounted item stops rendering an element"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates indexes when a leaf item moves outside React"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "observes each shared mutation root once"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates indexes when keyed groups reorder"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "observes reorders after the list grows from one item"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "updates indexes when grouped items reorder alongside unrelated mutations"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "ignores mutations for unrelated leaf nodes"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: elementsRef"
+          ],
+          "title": "registers items that sit across a shadow boundary"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: labelsRef"
+          ],
+          "title": "resolves each label source"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: labelsRef"
+          ],
+          "title": "drops label slots for items that unmount"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: labelsRef"
+          ],
+          "title": "updates the label of a mounted item"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "prop: onMapChange"
+          ],
+          "title": "publishes item metadata alongside the index"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "Suspense integration"
+          ],
+          "title": "does not publish an empty registry when an outer boundary repeatedly suspends"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "server-side rendering"
+          ],
+          "title": "hydrates a server-rendered list without a mismatch under Strict Mode"
+        },
+        {
+          "describe": [
+            "<CompositeList />",
+            "without a parent list"
+          ],
+          "title": "renders an item that is not wrapped in a list"
         }
       ]
     },
