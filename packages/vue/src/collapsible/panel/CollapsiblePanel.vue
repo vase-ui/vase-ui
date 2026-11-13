@@ -42,8 +42,9 @@ export interface CollapsiblePanelProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { warn } from '../../common/warn';
+import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
@@ -84,23 +85,21 @@ const {
   mounted,
   onOpenChange,
   open,
+  registerPanelId,
   setMounted,
-  setPanelIdState,
   setOpen,
   state,
   transitionStatus,
 } = useCollapsibleRootContext();
 
-const registeredId = computed(() => props.id || undefined);
+const panelId = computed(() => props.id || defaultPanelId.value);
 
-setPanelIdState((currentId) => registeredId.value ?? (currentId === null ? undefined : currentId));
-watch(registeredId, (nextId, previousId) => {
-  setPanelIdState((currentId) => (currentId === previousId ? null : currentId));
-  setPanelIdState((currentId) => nextId ?? (currentId === null ? undefined : currentId));
-});
-onScopeDispose(() => {
-  setPanelIdState((currentId) => (currentId === registeredId.value ? null : currentId));
-});
+const source = Symbol();
+
+useRegisteredId(
+  () => panelId.value,
+  (getId) => registerPanelId(source, getId),
+);
 
 const {
   height,
@@ -113,7 +112,7 @@ const {
   width,
 } = useCollapsiblePanel({
   hiddenUntilFound: () => props.hiddenUntilFound,
-  id: () => registeredId.value ?? defaultPanelId.value,
+  id: () => panelId.value,
   keepMounted: () => props.keepMounted ?? false,
   mounted,
   onOpenChange,

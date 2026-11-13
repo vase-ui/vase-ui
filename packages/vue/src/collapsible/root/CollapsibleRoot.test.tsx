@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, shallowRef, watch } from 'vue';
+import { defineComponent, KeepAlive, shallowRef, watch } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import {
   createRenderer,
@@ -9,8 +9,10 @@ import {
   flushMicrotasks,
   isJSDOM,
   screen,
+  waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import CollapsiblePanelReplacement from './CollapsiblePanelReplacement.test.vue';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -98,6 +100,103 @@ describe('<Collapsible.Root />', () => {
       expect(panel.id).not.toBe('');
       expect(panel.id).not.toBe('second-panel-id');
       expect(trigger).toHaveAttribute('aria-controls', panel.id);
+    });
+
+    // The compiled template of the fixture mounts the new panel before it unmounts the old panel.
+    // A render function in TSX reuses the panel component, so it does not show this order.
+    it('keeps aria-controls when a template replaces the panel', async () => {
+      const { setProps } = await render(<CollapsiblePanelReplacement first />);
+      const trigger = screen.getByRole('button');
+
+      await setProps({ first: false });
+      await waitFor(() => {
+        expect(screen.getByText('Panel 2')).toBeInTheDocument();
+      });
+
+      expect(trigger).toHaveAttribute('aria-controls', screen.getByText('Panel 2').id);
+    });
+
+    it('names the panel in aria-controls only while KeepAlive shows it', async () => {
+      const visible = shallowRef(true);
+      const App = defineComponent(() => () => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <KeepAlive>{visible.value ? <Collapsible.Panel data-testid="panel" /> : null}</KeepAlive>
+        </Collapsible.Root>
+      ));
+
+      await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
+
+      expect(trigger).toHaveAttribute('aria-controls', panel.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('panel')).toBe(panel);
+      expect(trigger).toHaveAttribute('aria-controls', panel.id);
+    });
+
+    it('VUE-12: names the last of two panels in aria-controls, then the first panel when the last panel unmounts', async () => {
+      function App({ secondPanelMounted }: { secondPanelMounted: boolean }) {
+        return (
+          <Collapsible.Root defaultOpen>
+            <Collapsible.Trigger />
+            <Collapsible.Panel id="first-panel-id" />
+            {secondPanelMounted && <Collapsible.Panel id="second-panel-id" />}
+          </Collapsible.Root>
+        );
+      }
+
+      const { rerender } = await render(<App secondPanelMounted />);
+      const trigger = screen.getByRole('button');
+
+      expect(trigger).toHaveAttribute('aria-controls', 'second-panel-id');
+
+      await rerender(<App secondPanelMounted={false} />);
+      expect(trigger).toHaveAttribute('aria-controls', 'first-panel-id');
+    });
+
+    // `KeepAlive` runs the `onActivated` hooks of one branch from its last part to its first part.
+    // The panels must keep their order when `KeepAlive` shows the branch again.
+    it('names the last of three panels in aria-controls when KeepAlive hides them and shows them again', async () => {
+      const visible = shallowRef(true);
+      const Panels = defineComponent(() => () => (
+        <>
+          <Collapsible.Panel id="first-panel-id" />
+          <Collapsible.Panel id="middle-panel-id" />
+          <Collapsible.Panel id="last-panel-id" data-testid="last-panel" />
+        </>
+      ));
+      const App = defineComponent(() => () => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <KeepAlive>{visible.value ? <Panels /> : null}</KeepAlive>
+        </Collapsible.Root>
+      ));
+
+      await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const lastPanel = screen.getByTestId('last-panel');
+
+      expect(trigger).toHaveAttribute('aria-controls', 'last-panel-id');
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('last-panel')).toBe(lastPanel);
+      expect(trigger).toHaveAttribute('aria-controls', 'last-panel-id');
     });
   });
 

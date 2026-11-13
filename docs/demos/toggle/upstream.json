@@ -1,0 +1,8 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/toggle/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "0b8051abd69efc231031993b5ee3e66147829066fff9ccbe6e7941a412dcf286",
+    "hero/css-modules/index.tsx": "b84c0263e9c762761e802569341b95b4a8f980bb0534da047956343768b1ddd7"
+  }
+}
