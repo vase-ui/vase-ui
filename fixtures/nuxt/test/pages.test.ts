@@ -770,6 +770,40 @@ async function expectRadioGroupPage(page: Page) {
   expect(await readRadios(page, 'empty', 'tabindex')).toEqual(['-1', '0', '-1']);
 }
 
+const QUANTITY_FORMAT = { minimumFractionDigits: 2 };
+const PRICE_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(
+  54.5,
+);
+
+// The server cannot know the locale of the visitor, so it formats a value with `en-US` where the
+// field has no `locale`.
+function formatQuantity(value: number, locale = 'en-US') {
+  return new Intl.NumberFormat(locale, QUANTITY_FORMAT).format(value);
+}
+
+async function expectNumberFieldPage(page: Page) {
+  expect(await page.getByTestId('quantity').inputValue()).toBe(formatQuantity(1234.5));
+  expect(await page.getByTestId('price').inputValue()).toBe(PRICE_TEXT);
+  expect(
+    await readAttributes(page.getByTestId('quantity'), [
+      'inputmode',
+      'autocorrect',
+      'aria-roledescription',
+      'aria-label',
+    ]),
+  ).toEqual({
+    inputmode: 'numeric',
+    autocorrect: 'off',
+    'aria-roledescription': 'Number field',
+    'aria-label': 'Quantity',
+  });
+  // The hidden input of a field has the number and not the text.
+  expect(await readFormData(page)).toEqual(['quantity=1234.5', 'price=54.5']);
+  expect(await page.getByTestId('quantity-value').textContent()).toBe('1234.5');
+  await expectLabelledField(page, 'label-first');
+  await expectLabelledField(page, 'label-last');
+}
+
 // The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
@@ -830,6 +864,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedCheckboxPage,
   },
   { path: '/radio-group', expectPage: expectRadioGroupPage },
+  { path: '/number-field', expectPage: expectNumberFieldPage },
   {
     path: '/scroll-area',
     expectPage: expectScrollAreaPage,
@@ -967,6 +1002,40 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('value').textContent()).toBe('banana');
     expect(await readFormData(page)).toEqual(['fruit=banana']);
     expect(messages).toEqual([]);
+  });
+
+  it('changes the number of a number field with typing and with an arrow key after hydration, and formats its text', async () => {
+    const page = await createPage('/number-field');
+    const messages = collectMessages(page);
+    const input = page.getByTestId('quantity');
+
+    await input.fill('2000.5');
+    await page.keyboard.press('Tab');
+
+    expect(await input.inputValue()).toBe(formatQuantity(2000.5));
+    expect(await page.getByTestId('quantity-value').textContent()).toBe('2000.5');
+    expect(await readFormData(page)).toEqual(['quantity=2000.5', 'price=54.5']);
+
+    await input.press('ArrowUp');
+
+    expect(await input.inputValue()).toBe(formatQuantity(2001.5));
+    expect(await page.getByTestId('quantity-value').textContent()).toBe('2001.5');
+    expect(await readFormData(page)).toEqual(['quantity=2001.5', 'price=54.5']);
+    expect(messages).toEqual([]);
+  });
+
+  it('formats the text of a number field in the locale of the visitor after hydration', async () => {
+    const page = await createPage(undefined, { locale: 'de-DE' });
+    const messages = collectMessages(page);
+
+    await page.goto(url('/number-field'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    expect(messages).toEqual([]);
+    expect(await page.getByTestId('quantity').inputValue()).toBe(formatQuantity(1234.5, 'de-DE'));
+    // A field with a `locale` keeps it.
+    expect(await page.getByTestId('price').inputValue()).toBe(PRICE_TEXT);
+    expect(await readFormData(page)).toEqual(['quantity=1234.5', 'price=54.5']);
   });
 
   it('counts the clicks on a button after hydration', async () => {
