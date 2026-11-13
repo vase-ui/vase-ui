@@ -13,7 +13,7 @@ import {
 import { FloatingTreeStore } from './FloatingTreeStore';
 import { getNodeChildren } from './nodes';
 
-const OPEN = { open: true } as PopupPositioningContext;
+const OPEN_CONTEXT = { open: true } as PopupPositioningContext;
 
 const ids: Record<string, string> = {};
 
@@ -53,7 +53,7 @@ const NodePart = defineComponent({
     onMounted(() => {
       const node = tree.value?.nodesRef.value.find((item) => item.id === id);
       if (node) {
-        node.context = OPEN;
+        node.context = OPEN_CONTEXT;
       }
     });
     return () => <div data-testid={props.name}>{slots.default?.()}</div>;
@@ -244,7 +244,7 @@ describe('FloatingTree', () => {
       </TreeScope>,
     );
     const [node] = first.nodesRef.value;
-    node.context = OPEN;
+    node.context = OPEN_CONTEXT;
     expect(contextTree.nodesRef.value).toEqual([]);
 
     externalTree.value = second;
@@ -252,7 +252,7 @@ describe('FloatingTree', () => {
 
     expect(first.nodesRef.value).toEqual([]);
     expect(second.nodesRef.value).toEqual([node]);
-    expect(node.context).toBe(OPEN);
+    expect(node.context).toBe(OPEN_CONTEXT);
 
     externalTree.value = undefined;
     await nextTick();
