@@ -16,6 +16,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
+import { mark, timed } from '../../../test/fixtures/timeline';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
 
@@ -765,13 +766,15 @@ describe('<Collapsible.Panel />', () => {
       expect(panel.getAnimations()).toHaveLength(1);
     });
 
-    it('still animates on close and reopen after being initially open', async () => {
-      // With the animations of the part off, the part hides the panel one frame after the ending
-      // style, and the browser cancels the animation.
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { user } = await render(
-        <>
-          <style>{`
+    it(
+      'still animates on close and reopen after being initially open',
+      timed(async () => {
+        // With the animations of the part off, the part hides the panel one frame after the ending
+        // style, and the browser cancels the animation.
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const { user } = await render(
+          <>
+            <style>{`
             @keyframes panel-slide-down {
               from {
                 height: 0;
@@ -803,48 +806,62 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-          <Collapsible.Root defaultOpen>
-            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-            <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
-              {PANEL_CONTENT}
-            </Collapsible.Panel>
-          </Collapsible.Root>
-        </>,
-      );
+            <Collapsible.Root defaultOpen>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel class="animation-test-panel" data-testid="panel" keepMounted>
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          </>,
+        );
 
-      const trigger = screen.getByRole('button', { name: 'Trigger' });
-      const panel = screen.getByTestId('panel');
+        const trigger = screen.getByRole('button', { name: 'Trigger' });
+        const panel = screen.getByTestId('panel');
 
-      expect(panel.getAnimations().length).toBe(0);
+        expect(panel.getAnimations().length).toBe(0);
 
-      // The animation lasts 100 milliseconds, and the click can resolve after it. The listener
-      // exists before the click, so the test reads the state when the animation starts.
-      const closing = nextEvent(panel, 'animationstart').then(() => ({
-        closed: panel.hasAttribute('data-closed'),
-        animations: panel.getAnimations().length,
-      }));
-      const [closingState] = await Promise.all([closing, user.click(trigger)]);
-      expect(closingState).toEqual({ closed: true, animations: 1 });
+        // The animation lasts 100 milliseconds, and the click can resolve after it. The listener
+        // exists before the click, so the test reads the state when the animation starts.
+        const closing = nextEvent(panel, 'animationstart').then(() => ({
+          closed: panel.hasAttribute('data-closed'),
+          animations: panel.getAnimations().length,
+        }));
+        mark('click 1');
+        const [closingState] = await Promise.all([
+          closing,
+          user.click(trigger).then(() => mark('click 1 resolved')),
+        ]);
+        mark(`closing state ${JSON.stringify(closingState)}`);
+        expect(closingState).toEqual({ closed: true, animations: 1 });
 
-      await waitFor(() => {
-        expect(panel).toHaveAttribute('hidden');
-      });
+        await waitFor(() => {
+          expect(panel).toHaveAttribute('hidden');
+        });
+        mark('hidden');
 
-      const opening = nextEvent(panel, 'animationstart').then(() => ({
-        open: panel.hasAttribute('data-open'),
-        animations: panel.getAnimations().length,
-      }));
-      const [openingState] = await Promise.all([opening, user.click(trigger)]);
-      expect(openingState).toEqual({ open: true, animations: 1 });
-    });
+        const opening = nextEvent(panel, 'animationstart').then(() => ({
+          open: panel.hasAttribute('data-open'),
+          animations: panel.getAnimations().length,
+        }));
+        mark('click 2');
+        const [openingState] = await Promise.all([
+          opening,
+          user.click(trigger).then(() => mark('click 2 resolved')),
+        ]);
+        mark(`opening state ${JSON.stringify(openingState)}`);
+        expect(openingState).toEqual({ open: true, animations: 1 });
+      }),
+    );
 
-    it('restores measured dimensions before applying a closing keyframe animation', async () => {
-      // With the animations of the part off, the part removes the panel one frame after the ending
-      // style, and the browser cancels the animation before it ends.
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { user } = await render(
-        <>
-          <style>{`
+    it(
+      'restores measured dimensions before applying a closing keyframe animation',
+      timed(async () => {
+        // With the animations of the part off, the part removes the panel one frame after the ending
+        // style, and the browser cancels the animation before it ends.
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const { user } = await render(
+          <>
+            <style>{`
             @keyframes panel-slide-up {
               from {
                 height: var(--collapsible-panel-height);
@@ -861,49 +878,53 @@ describe('<Collapsible.Panel />', () => {
             }
           `}</style>
 
-          <Collapsible.Root defaultOpen>
-            <Collapsible.Trigger>Trigger</Collapsible.Trigger>
-            <Collapsible.Panel class="closing-animation-panel" data-testid="panel">
-              {PANEL_CONTENT}
-            </Collapsible.Panel>
-          </Collapsible.Root>
-        </>,
-      );
+            <Collapsible.Root defaultOpen>
+              <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+              <Collapsible.Panel class="closing-animation-panel" data-testid="panel">
+                {PANEL_CONTENT}
+              </Collapsible.Panel>
+            </Collapsible.Root>
+          </>,
+        );
 
-      const trigger = screen.getByRole('button', { name: 'Trigger' });
-      const panel = screen.getByTestId('panel');
+        const trigger = screen.getByRole('button', { name: 'Trigger' });
+        const panel = screen.getByTestId('panel');
 
-      await waitFor(() => {
-        expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
-      });
+        await waitFor(() => {
+          expect(panel.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
+        });
 
-      // The size must be in pixels when the animation starts, when the ending style comes and when
-      // the animation ends. Each moment lasts a few milliseconds, and the click can resolve after
-      // it. The listeners exist before the click, and the test asserts on what they recorded.
-      const heights: Record<string, string> = {};
-      const recordHeight = (moment: string) => {
-        heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
-      };
-      panel.addEventListener('animationstart', () => recordHeight('animationstart'));
-      panel.addEventListener('animationend', () => recordHeight('animationend'));
-      new MutationObserver(() => {
-        if (panel.hasAttribute('data-ending-style')) {
-          recordHeight('data-ending-style');
-        }
-      }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
+        // The size must be in pixels when the animation starts, when the ending style comes and when
+        // the animation ends. Each moment lasts a few milliseconds, and the click can resolve after
+        // it. The listeners exist before the click, and the test asserts on what they recorded.
+        const heights: Record<string, string> = {};
+        const recordHeight = (moment: string) => {
+          heights[moment] = panel.style.getPropertyValue('--collapsible-panel-height');
+        };
+        panel.addEventListener('animationstart', () => recordHeight('animationstart'));
+        panel.addEventListener('animationend', () => recordHeight('animationend'));
+        new MutationObserver(() => {
+          if (panel.hasAttribute('data-ending-style')) {
+            recordHeight('data-ending-style');
+          }
+        }).observe(panel, { attributes: true, attributeFilter: ['data-ending-style'] });
 
-      await user.click(trigger);
+        mark('click');
+        await user.click(trigger);
+        mark('click resolved');
 
-      await waitFor(() => {
-        expect(Object.keys(heights)).toHaveLength(3);
-      });
+        await waitFor(() => {
+          expect(Object.keys(heights)).toHaveLength(3);
+        });
+        mark(`heights ${JSON.stringify(heights)}`);
 
-      expect(heights).toEqual({
-        animationstart: expect.stringMatching(/px$/),
-        'data-ending-style': expect.stringMatching(/px$/),
-        animationend: expect.stringMatching(/px$/),
-      });
-    });
+        expect(heights).toEqual({
+          animationstart: expect.stringMatching(/px$/),
+          'data-ending-style': expect.stringMatching(/px$/),
+          animationend: expect.stringMatching(/px$/),
+        });
+      }),
+    );
 
     it('still animates on reopen after being initially open when only open keyframes are defined', async () => {
       const { user } = await render(
