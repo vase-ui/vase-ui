@@ -139,8 +139,8 @@ export function usePopupRoot<Store extends PopupRootStore>(
   store.context.onOpenChange = options.onOpenChange;
   store.context.onOpenChangeComplete = options.onOpenChangeComplete;
 
-  // The store holds the state. These calls only warn about a change between controlled and
-  // uncontrolled.
+  // The store holds the state. These calls only give two warnings: a change between controlled and
+  // uncontrolled, and a change of the default of an uncontrolled root.
   useControlled({
     controlled: () => props.open,
     default: () => props.defaultOpen,

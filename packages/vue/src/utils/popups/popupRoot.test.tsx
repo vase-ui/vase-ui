@@ -501,7 +501,7 @@ describe('useImplicitActiveTrigger', () => {
     expect(store.state.activeTriggerElement).toBe(first);
   });
 
-  it('picks the first trigger that is in the document when triggers join an open popup that has no active trigger', async () => {
+  it('VUE-22: picks the first trigger that is in the document when triggers join an open popup that has no active trigger', async () => {
     const store = createTestPopupStore();
     const outside = document.createElement('button');
     const inside = document.createElement('button');
@@ -885,6 +885,27 @@ describe('usePopupRoot', () => {
         errorSpy.mockRestore();
       },
     );
+
+    it.each([
+      { name: 'open', prop: 'defaultOpen', props: { defaultOpen: true } },
+      { name: 'triggerId', prop: 'defaultTriggerId', props: { defaultTriggerId: 'trigger' } },
+    ])('warns when the $prop prop of an uncontrolled root changes', async ({ name, props }) => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { setProps } = await render(
+        <PopupRootPart>
+          <TriggerAndPopup />
+        </PopupRootPart>,
+      );
+      expect(errorSpy).not.toHaveBeenCalled();
+
+      await setProps(props);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.mock.calls[0][0]).toContain(
+        `Vase UI: A component is changing the default ${name} state of an uncontrolled PopupRootPart after being initialized.`,
+      );
+      errorSpy.mockRestore();
+    });
   });
 
   describe('unmount and close actions', () => {
@@ -1139,6 +1160,26 @@ describe('usePopupRoot', () => {
       expect(getByText('b')).toHaveAttribute('aria-expanded', 'false');
     });
 
+    it('takes no trigger when a closed popup opens with many triggers and no trigger id', async () => {
+      const open = shallowRef(false);
+      const root = createRootRef();
+      const { getByText } = await render(() => (
+        <PopupRootPart ref={root.ref} open={open.value}>
+          <PopupTriggerPart id="a">a</PopupTriggerPart>
+          <PopupTriggerPart id="b">b</PopupTriggerPart>
+          <PopupPart>popup</PopupPart>
+        </PopupRootPart>
+      ));
+
+      open.value = true;
+      await flushMicrotasks();
+
+      expect(root.current.store.select('open')).toBe(true);
+      expect(root.current.store.state.activeTriggerId).toBe(null);
+      expect(getByText('a')).toHaveAttribute('aria-expanded', 'false');
+      expect(getByText('b')).toHaveAttribute('aria-expanded', 'false');
+    });
+
     it('closes with the reason none when the active trigger unmounts while the popup is open', async () => {
       const showTrigger = shallowRef(true);
       const changes: unknown[] = [];
@@ -1243,6 +1284,36 @@ describe('usePopupRoot', () => {
       expect(getByText('trigger')).toHaveAttribute('aria-expanded', 'true');
     });
 
+    it('gives a new handle its store at the activation when the handle prop changes while KeepAlive holds the root', async () => {
+      const first = createPopupFixtureHandle<string>();
+      const second = createPopupFixtureHandle<string>();
+      const handle = shallowRef(first);
+      const show = shallowRef(true);
+      const root = createRootRef();
+      const Branch = defineComponent({
+        name: 'Branch',
+        setup: () => () => <PopupRootPart ref={root.ref} handle={handle.value} />,
+      });
+      await render(() => (
+        <KeepAlive>{show.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+      ));
+      expect(first.store).toBe(root.current.store);
+
+      show.value = false;
+      await flushMicrotasks();
+      handle.value = second;
+      await flushMicrotasks();
+
+      expect(first.store).toBe(first.serverStore);
+      expect(second.store).toBe(second.serverStore);
+
+      show.value = true;
+      await flushMicrotasks();
+
+      expect(second.store).toBe(root.current.store);
+      expect(first.store).toBe(first.serverStore);
+    });
+
     it('closes with the reason none when KeepAlive deactivates the active trigger and the root stays', async () => {
       const show = shallowRef(true);
       const changes: unknown[] = [];
@@ -1268,6 +1339,42 @@ describe('usePopupRoot', () => {
         [true, 'trigger-press'],
         [false, 'none'],
       ]);
+    });
+
+    it('takes no trigger when it opens with many triggers after the popup closed while KeepAlive held the root', async () => {
+      const show = shallowRef(true);
+      const open = shallowRef(false);
+      const root = createRootRef();
+      const Branch = defineComponent({
+        name: 'Branch',
+        setup: () => () => (
+          <PopupRootPart ref={root.ref} open={open.value}>
+            <PopupTriggerPart id="first">first</PopupTriggerPart>
+            <PopupTriggerPart id="second">second</PopupTriggerPart>
+            <PopupPart>popup</PopupPart>
+          </PopupRootPart>
+        ),
+      });
+      await render(() => (
+        <KeepAlive>{show.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+      ));
+      open.value = true;
+      await flushMicrotasks();
+      expect(root.current.store.state.activeTriggerId).toBe(null);
+
+      show.value = false;
+      await flushMicrotasks();
+      open.value = false;
+      await flushMicrotasks();
+      show.value = true;
+      await flushMicrotasks();
+      expect(root.current.store.select('open')).toBe(false);
+
+      open.value = true;
+      await flushMicrotasks();
+
+      expect(root.current.store.select('open')).toBe(true);
+      expect(root.current.store.state.activeTriggerId).toBe(null);
     });
 
     // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A claim by

@@ -621,12 +621,13 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
 - `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
 - `options.onOpenChange` is a function of the part. It emits `openChange`, and then `update:open` when `details.isCanceled` is `false`. The composable puts it in `context.onOpenChange`. `options.onOpenChangeComplete` emits `openChangeComplete`.
-- The composable calls `useControlled` for `open` and for `triggerId` only to give the warning for a change between controlled and uncontrolled. The store holds the state.
+- The composable calls `useControlled` for `open` and for `triggerId` only to give two warnings. One is for a change between controlled and uncontrolled. The other is for a change of the default of an uncontrolled root. The store holds the state.
 - `useUnmountAfterClose` runs the transition. A `watch` with `flush: 'sync'` copies `mounted` and `transitionStatus` to the store in the write that changes them. A caller that reads the store after a write of `open` thus reads the new values.
 - `context.nested` is `true` when `useFloatingParentNodeId()` gives an id.
 - `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
+- `popupRoot.ts` has `usePopupRoot` and `useImplicitActiveTrigger`. The pull request that first needs `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot` or `usePopupRootSync` adds it with its cases.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
