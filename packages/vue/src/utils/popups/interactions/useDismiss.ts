@@ -87,7 +87,6 @@ export function normalizeProp(normalizable?: Bubbles) {
   };
 }
 
-// The documents of the frames below `doc`, at each depth. A cross-origin frame is not one of them.
 function getFrameDocuments(doc: Document): Document[] {
   const view = doc.defaultView;
   const frameDocuments: Document[] = [];
@@ -174,7 +173,8 @@ export interface UseDismissProps {
  * is outside it.
  *
  * A press in a same-origin frame below the document of the popup counts as a press on the frame
- * element. A press in a cross-origin frame closes nothing.
+ * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
+ * a shadow tree.
  * @see https://floating-ui.com/docs/useDismiss
  */
 export function useDismiss(

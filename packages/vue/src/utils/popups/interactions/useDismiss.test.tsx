@@ -939,6 +939,21 @@ describe('useDismiss', () => {
       expect(isOpen('popup')).toBe(true);
     });
 
+    it('keeps the popup open for a press in an iframe in an iframe in the popup', async () => {
+      releasePointerAfterTest();
+      await render(<Popup name="popup" />);
+      const outer = addFrame({ parent: screen.getByTestId('popup') });
+      outer.frame.style.position = 'static';
+      await outer.loaded;
+      // The inner frame loads in the outer frame, which is not the document of the popup.
+      const inner = addFrame({ parent: outer.frame.contentDocument!.body, top: 0 });
+      await inner.loaded;
+
+      await pressInFrame(outer.frame, { x: 40, y: 20 });
+
+      expect(isOpen('popup')).toBe(true);
+    });
+
     it.each([{ mode: 'sloppy' }, { mode: 'intentional' }] as const)(
       'keeps the popup open in the $mode form for a press in an iframe in a popup that Teleport moved',
       async ({ mode }) => {
