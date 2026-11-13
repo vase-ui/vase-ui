@@ -6,8 +6,8 @@ import FloatingFocusManager from './FloatingFocusManager.vue';
 
 describe('FloatingFocusManager on a server', () => {
   it.each([
-    { name: 'the two guards around the content of a modal popup', modal: true, guards: 2 },
-    { name: 'only the content of a popup that is not modal', modal: false, guards: 0 },
+    { name: 'two guards for a modal popup', modal: true, guards: 2 },
+    { name: 'no guard for a non-modal popup', modal: false, guards: 0 },
   ])('renders $name with no DOM', async ({ modal, guards }) => {
     const App = defineComponent({
       setup() {

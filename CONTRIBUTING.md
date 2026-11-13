@@ -690,9 +690,10 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
 - A modal popup has no guards when `initialFocus` is `false` and its reference is a typeable element with `role="combobox"`. The focus stays in the reference then.
 - A `keydown` listener on the document stops the Tab key while the focus is in a modal popup that has no tabbable element. The guards have nothing to focus then.
+- `previousFocusableElement` and `nextFocusableElement` take an element, a ref or a getter. They name the element that gets the focus when the Tab key leaves a popup that is not modal. When the value is `null`, or the ref or the getter gives no element, the focus goes to the outside guard of the portal.
 - The initial focus moves one animation frame after the DOM update of the open. For a virtual `mousedown`, such as the press of a screen reader, it moves in the same task.
 - `initialFocus` is `true`, `false`, an element, a component, a ref of one of them, or a function of the interaction type. `false`, and a function that returns `false` or nothing, move no focus.
-- `true`, `null` and an empty ref use the default: the first tabbable element, or else the popup element.
+- `true`, `null` and an empty ref use the default: the first tabbable element, or else the popup element. A ref is empty when it holds `null` or `undefined`.
 - A template gives the value of a ref, so `:initial-focus="field"` gives `null` first and then the element. The part reads the prop in a microtask after the DOM update, and thus gets the element.
 - When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
 - `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.
@@ -1017,7 +1018,6 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 ### What stays from Base UI
 
 - Use the ports of upstream's `useTimeout` and `useAnimationFrame`. Do not call `setTimeout` or `requestAnimationFrame` directly.
-- `enqueueFocus` is the exception. It calls `requestAnimationFrame` and `cancelAnimationFrame` itself, as Base UI does. The cases of Base UI install a `requestAnimationFrame` that calls back at once. `useAnimationFrame` then runs the first callback and never the second.
 - Use the shadow DOM-safe helpers for DOM traversal and event targets: `closest`, `contains`, `getTarget` and `activeElement`.
 - Write development checks as `process.env.NODE_ENV !== 'production'`.
 

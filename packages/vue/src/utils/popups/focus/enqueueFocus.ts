@@ -1,4 +1,5 @@
 import { NOOP } from '../../../common/empty';
+import { AnimationFrame } from '../../../common/useAnimationFrame';
 import type { FocusableElement } from './tabbable';
 
 interface Options {
@@ -8,11 +9,12 @@ interface Options {
   shouldFocus?: (() => boolean) | undefined;
 }
 
-let rafId = 0;
+// `AnimationFrame` gives ids from 1, so `0` is no frame.
+let frameId = 0;
 export function enqueueFocus(el: FocusableElement | null, options: Options = {}) {
   const { preventScroll = false, sync = false, shouldFocus } = options;
 
-  cancelAnimationFrame(rafId);
+  AnimationFrame.cancel(frameId);
 
   function exec() {
     if (shouldFocus && !shouldFocus()) {
@@ -26,12 +28,12 @@ export function enqueueFocus(el: FocusableElement | null, options: Options = {})
     return NOOP;
   }
 
-  const currentRafId = requestAnimationFrame(exec);
-  rafId = currentRafId;
+  const currentFrameId = AnimationFrame.request(exec);
+  frameId = currentFrameId;
   return () => {
-    if (rafId === currentRafId) {
-      cancelAnimationFrame(currentRafId);
-      rafId = 0;
+    if (frameId === currentFrameId) {
+      AnimationFrame.cancel(currentFrameId);
+      frameId = 0;
     }
   };
 }

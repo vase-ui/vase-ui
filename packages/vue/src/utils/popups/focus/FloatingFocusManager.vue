@@ -12,7 +12,7 @@ type FocusTarget = Element | ComponentPublicInstance | null;
  * - `true`: Move the focus based on the default behavior.
  * - An element, a component, or a ref of one: Move the focus to that element. A template gives the
  *   value of a ref, so `:initial-focus="field"` gives `null` first and then the element. `null` and
- *   an empty ref use the default behavior.
+ *   an empty ref use the default behavior. A ref is empty when it holds `null` or `undefined`.
  * - A function: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
  *   Return an element to focus, `true` or `null` to use the default behavior, or `false` or
  *   `undefined` to do nothing.
@@ -63,11 +63,15 @@ export interface FloatingFocusManagerProps {
    */
   closeOnFocusOut?: boolean | undefined;
   /**
-   * Overrides the element to focus when tabbing forward out of the floating element.
+   * Overrides the element to focus when tabbing forward out of the floating element. A ref or a
+   * getter that gives no element is the same as `null`: the outside guard of the portal gets the
+   * focus.
    */
   nextFocusableElement?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   /**
-   * Overrides the element to focus when tabbing backward out of the floating element.
+   * Overrides the element to focus when tabbing backward out of the floating element. A ref or a
+   * getter that gives no element is the same as `null`: the outside guard of the portal gets the
+   * focus.
    */
   previousFocusableElement?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   /**
@@ -184,8 +188,11 @@ const afterGuard = useTemplateRef('afterGuard');
 const beforeGuardElement = computed(() => beforeGuard.value?.element ?? null);
 const afterGuardElement = computed(() => afterGuard.value?.element ?? null);
 
+// An empty ref holds `null`, or `undefined` when it has no initial value. Both use the default
+// behavior, so this function gives `null` for both. Only a function can give `undefined`, which
+// moves no focus.
 function resolveFocusOption(option: FocusOption, interactionType: InteractionType) {
-  const value = typeof option === 'function' ? option(interactionType) : unref(option);
+  const value = typeof option === 'function' ? option(interactionType) : (unref(option) ?? null);
   if (typeof value === 'boolean' || value == null) {
     return value;
   }
@@ -250,8 +257,7 @@ effect(
         props.openInteractionType || '',
       );
 
-      // An empty ref gives `null`. This check does not include `null`, because `null` uses the
-      // default behavior.
+      // This check does not include `null`, because `null` uses the default behavior.
       if (resolvedInitialFocus === undefined || resolvedInitialFocus === false) {
         return;
       }
@@ -459,6 +465,9 @@ const shouldRenderGuards = computed(
     (portalContext != null || props.modal),
 );
 
+// The two handlers fall back to the outside guard of the portal when the ref or the getter gives no
+// element. Base UI falls back only when the prop itself is empty, so an empty ref object moves no
+// focus there.
 function handleBeforeGuardFocusin(event: FocusEvent) {
   const portalNode = portalContext?.portalNode.value;
   if (props.modal) {

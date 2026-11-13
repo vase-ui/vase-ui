@@ -18,9 +18,6 @@ function holdAnimationFrames() {
     frames.push(callback);
     return frames.length;
   });
-  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
-    frames[id - 1] = () => {};
-  });
   return () => frames.splice(0).forEach((callback) => callback(0));
 }
 
@@ -79,18 +76,5 @@ describe('enqueueFocus', () => {
     runFrames();
 
     expect(first).not.toHaveFocus();
-  });
-
-  it('runs each call under a requestAnimationFrame that calls back at once', () => {
-    const [first, second] = appendButtons();
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      callback(0);
-      return 0;
-    });
-
-    enqueueFocus(first);
-    expect(first).toHaveFocus();
-    enqueueFocus(second);
-    expect(second).toHaveFocus();
   });
 });

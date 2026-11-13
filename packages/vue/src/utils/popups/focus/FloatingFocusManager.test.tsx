@@ -7,10 +7,29 @@ import { platform } from '../../../common/platform';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
+import { usePortalContext } from '../portal/FloatingPortalContext';
+import type { PortalContextValue } from '../portal/FloatingPortalContext';
 import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingFocusManager from './FloatingFocusManager.vue';
 import type { FloatingFocusManagerProps } from './FloatingFocusManager.vue';
 import FocusGuard from './FocusGuard.vue';
+
+// A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set the
+// flag.
+vi.mock('../../../common/platform', async () => {
+  const actual = await vi.importActual<typeof import('../../../common/platform')>(
+    '../../../common/platform',
+  );
+  return { platform: { ...actual.platform, engine: { ...actual.platform.engine } } };
+});
+
+function setWebKit(webkit: boolean) {
+  const actual = platform.engine.webkit;
+  Object.defineProperty(platform.engine, 'webkit', { value: webkit, configurable: true });
+  onTestFinished(() => {
+    Object.defineProperty(platform.engine, 'webkit', { value: actual, configurable: true });
+  });
+}
 
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 
@@ -168,6 +187,7 @@ describe('FloatingFocusManager', () => {
       { name: 'a function that returns true', initialFocus: () => true, focused: 'one' },
       { name: 'a function that returns null', initialFocus: () => null, focused: 'one' },
       { name: 'an empty ref', initialFocus: shallowRef(null), focused: 'one' },
+      { name: 'a ref with no value', initialFocus: shallowRef(), focused: 'one' },
       { name: 'false', initialFocus: false, focused: 'reference' },
       {
         name: 'a function that returns nothing',
@@ -414,6 +434,29 @@ describe('FloatingFocusManager', () => {
       expect(screen.getByTestId('next')).toHaveFocus();
     });
 
+    describe('VUE-33: a ref or a getter that gives no element', () => {
+      it('sends Shift+Tab to the guard of the portal for previousFocusableElement', async () => {
+        const handleOpenChange = await renderPortalPopup({
+          previousFocusableElement: shallowRef(),
+        });
+
+        await userEvent.tab({ shift: true });
+
+        expect(screen.getByTestId('reference')).toHaveFocus();
+        expect(handleOpenChange).not.toHaveBeenCalled();
+      });
+
+      it('sends Tab to the guard of the portal for nextFocusableElement', async () => {
+        const handleOpenChange = await renderPortalPopup({ nextFocusableElement: () => null });
+        screen.getByTestId('two').focus();
+
+        await userEvent.tab();
+
+        expect(screen.getByTestId('after')).toHaveFocus();
+        expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
+      });
+    });
+
     it('writes the first guard to beforeContentFocusGuardRef, and clears it at the unmount', async () => {
       const guardRef: ShallowRef<HTMLSpanElement | null> = shallowRef(null);
       await renderPortalPopup({ beforeContentFocusGuardRef: guardRef });
@@ -422,6 +465,55 @@ describe('FloatingFocusManager', () => {
 
       await fireEvent.click(screen.getByTestId('reference'));
       expect(guardRef.value).toBe(null);
+    });
+  });
+
+  describe('two focus managers in one portal', () => {
+    it('keeps the guards of a focus manager that mounted later when an earlier one unmounts', async () => {
+      let portalContext: PortalContextValue | undefined;
+      const Probe = defineComponent({
+        setup() {
+          portalContext = usePortalContext();
+          return () => null;
+        },
+      });
+      const guardRef: ShallowRef<HTMLSpanElement | null> = shallowRef(null);
+      const Manager = defineComponent({
+        setup() {
+          const store = useFloatingRootStore({ open: true });
+          return () => (
+            <FloatingFocusManager store={store} modal={false} beforeContentFocusGuardRef={guardRef}>
+              <input />
+            </FloatingFocusManager>
+          );
+        },
+      });
+      const hasFirst = shallowRef(true);
+      const hasSecond = shallowRef(false);
+      await render(() => (
+        <FloatingPortal>
+          <Probe />
+          {hasFirst.value ? <Manager key="first" /> : null}
+          {hasSecond.value ? <Manager key="second" /> : null}
+        </FloatingPortal>
+      ));
+
+      // The unmount of the first manager also clears the state for the portal, so the portal has no
+      // outside guard to send the Tab key through. The case reads the refs instead.
+      hasSecond.value = true;
+      await nextTick();
+      const [secondBefore, secondAfter] = getInsideGuards().slice(2);
+      expect(guardRef.value).toBe(secondBefore);
+      expect(portalContext!.beforeInsideRef.value).toBe(secondBefore);
+      expect(portalContext!.afterInsideRef.value).toBe(secondAfter);
+
+      hasFirst.value = false;
+      await nextTick();
+
+      expect(getInsideGuards()).toHaveLength(2);
+      expect(guardRef.value).toBe(secondBefore);
+      expect(portalContext!.beforeInsideRef.value).toBe(secondBefore);
+      expect(portalContext!.afterInsideRef.value).toBe(secondAfter);
     });
   });
 
@@ -481,13 +573,15 @@ describe('FloatingFocusManager', () => {
       await fireEvent.click(screen.getByTestId('reference'));
     }
 
-    it.runIf(platform.engine.webkit)('loses the focus in WebKit', async () => {
+    it('loses the focus in WebKit', async () => {
+      setWebKit(true);
       await closeWithFocusInField();
 
       expect(screen.getByTestId('one')).not.toHaveFocus();
     });
 
-    it.runIf(!platform.engine.webkit)('keeps the focus in the other engines', async () => {
+    it('keeps the focus in the other engines', async () => {
+      setWebKit(false);
       await closeWithFocusInField();
 
       expect(screen.getByTestId('one')).toHaveFocus();
@@ -523,7 +617,7 @@ describe('FloatingFocusManager', () => {
     shown.value = true;
     await nextTick();
     expect(countKeydown() - before).toBe(1);
-    expect(getInsideGuards()).toEqual(guards);
+    expect(getInsideGuards().map((guard, index) => guard === guards[index])).toEqual([true, true]);
     await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
   });
 
