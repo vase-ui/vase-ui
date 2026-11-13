@@ -1174,6 +1174,98 @@ describe('<ScrollArea.Root />', () => {
     });
   });
 
+  describe('scroll snap of the viewport', () => {
+    const snap = { scrollSnapType: 'y mandatory' };
+
+    it.each([
+      { name: 'style, thumb drag', source: 'style', gesture: 'thumb drag' },
+      { name: 'style, track press', source: 'style', gesture: 'track press' },
+      { name: 'stateStyle, thumb drag', source: 'stateStyle', gesture: 'thumb drag' },
+      { name: 'stateStyle, track press', source: 'stateStyle', gesture: 'track press' },
+      { name: 'style sheet, thumb drag', source: 'style sheet', gesture: 'thumb drag' },
+      { name: 'style sheet, track press', source: 'style sheet', gesture: 'track press' },
+      { name: 'script write, thumb drag', source: 'script write', gesture: 'thumb drag' },
+      { name: 'script write, track press', source: 'script write', gesture: 'track press' },
+    ])('restores the scroll snap that the consumer wrote: $name', async ({ source, gesture }) => {
+      const renderCount = shallowRef(0);
+      const App = defineComponent(() => () => (
+        <>
+          <style>{'.snap-viewport { scroll-snap-type: y mandatory; }'}</style>
+          <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
+            <ScrollArea.Viewport
+              data-testid="viewport"
+              data-render={renderCount.value}
+              class={source === 'style sheet' ? 'snap-viewport' : undefined}
+              style={{
+                width: '100%',
+                height: '100%',
+                ...(source === 'style' ? snap : undefined),
+              }}
+              stateStyle={source === 'stateStyle' ? () => snap : undefined}
+            >
+              {Array.from({ length: 5 }, (_, index) => (
+                <div key={index} style={{ height: '200px', scrollSnapAlign: 'start' }} />
+              ))}
+            </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar data-testid="scrollbar" keepMounted style={{ width: '10px' }}>
+              <ScrollArea.Thumb data-testid="thumb" />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root>
+        </>
+      ));
+
+      await render(<App />);
+      const viewport = screen.getByTestId('viewport');
+      const scrollbar = screen.getByTestId('scrollbar');
+      const thumb = screen.getByTestId('thumb');
+      await waitFor(() => expect(thumb.offsetHeight).toBeGreaterThan(0));
+      if (source === 'script write') {
+        viewport.style.scrollSnapType = snap.scrollSnapType;
+      }
+      Object.defineProperty(thumb, 'setPointerCapture', { configurable: true, value: () => {} });
+
+      const inlineBefore = viewport.style.scrollSnapType;
+      const computedBefore = getComputedStyle(viewport).scrollSnapType;
+
+      expect(inlineBefore).toBe(source === 'style sheet' ? '' : snap.scrollSnapType);
+      expect(computedBefore).toBe(snap.scrollSnapType);
+
+      // The press of the track is 20 px past the center of the thumb. It scrolls to a position
+      // between two snap points.
+      const pressY =
+        gesture === 'thumb drag'
+          ? 0
+          : scrollbar.getBoundingClientRect().top + thumb.offsetHeight / 2 + 20;
+      await fireEvent.pointerDown(gesture === 'thumb drag' ? thumb : scrollbar, {
+        button: 0,
+        clientY: pressY,
+        pointerId: 1,
+      });
+      await fireEvent.pointerMove(thumb, { clientY: pressY + 10, pointerId: 1, buttons: 1 });
+
+      const scrollTopBefore = viewport.scrollTop;
+      renderCount.value += 1;
+      await nextTick();
+
+      expect(viewport).toHaveAttribute('data-render', '1');
+      expect(viewport.style.scrollSnapType).toBe('none');
+      expect(viewport.scrollTop).toBe(scrollTopBefore);
+      // A position on a snap point does not move in a snap, so the check above needs a position
+      // between two snap points.
+      expect(scrollTopBefore % 200).not.toBe(0);
+
+      // The listener of the release runs in the dispatch, before the render that the release causes.
+      const release = fireEvent.pointerUp(thumb, { pointerId: 1 });
+
+      expect(viewport.style.scrollSnapType).toBe(inlineBefore);
+
+      await release;
+
+      expect(viewport.style.scrollSnapType).toBe(inlineBefore);
+      expect(getComputedStyle(viewport).scrollSnapType).toBe(computedBefore);
+    });
+  });
+
   describe('KeepAlive', () => {
     const { render: renderWithFakeTimers } = createRenderer();
 
