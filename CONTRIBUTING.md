@@ -622,6 +622,10 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 The focus helpers of a popup are in `src/utils/popups/focus`.
 
 - `tabbable()` keeps the order of the document for an element with a positive `tabindex`, as Base UI does. A browser visits that element first.
+- `tabbable()` gives a `details`, `audio[controls]`, `video[controls]` or `contenteditable` element the tab index 0 only while it has no integer `tabindex`. A browser can give such an element the default `tabIndex` -1, but the Tab key reaches it. With `tabindex="-1"`, the Tab key skips the element, and so does `tabbable()`. Base UI lists it.
+- `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It is a `span` with `tabindex="0"`. It exposes its element as `element`. It gives the attributes and listeners of a consumer to the `span`: `<FocusGuard data-type="inside" @focusin="…" />`. Its own attributes win over the same attributes of a consumer, as in Base UI.
+- The guard has `aria-hidden="true"`. In WebKit on an Apple system, it has `role="button"` and `aria-label="Focus guard"` instead. VoiceOver moves the focus with its cursor, but in WebKit only onto a focusable element that has `role="button"`. Without a name, axe reports a button with no name.
+- The guard reads `platform` in `onMounted`, as [Server render](#server-render) says for a value of the browser. The server HTML thus has `aria-hidden="true"` and no role. The mount adds the role and the label.
 
 ### Composite
 
