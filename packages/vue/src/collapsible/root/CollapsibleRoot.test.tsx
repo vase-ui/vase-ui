@@ -162,6 +162,42 @@ describe('<Collapsible.Root />', () => {
       await rerender(<App secondPanelMounted={false} />);
       expect(trigger).toHaveAttribute('aria-controls', 'first-panel-id');
     });
+
+    // `KeepAlive` runs the `onActivated` hooks of one branch from its last part to its first part.
+    // The panels must keep their order when `KeepAlive` shows the branch again.
+    it('names the last of three panels in aria-controls when KeepAlive hides them and shows them again', async () => {
+      const visible = shallowRef(true);
+      const Panels = defineComponent(() => () => (
+        <>
+          <Collapsible.Panel id="first-panel-id" />
+          <Collapsible.Panel id="middle-panel-id" />
+          <Collapsible.Panel id="last-panel-id" data-testid="last-panel" />
+        </>
+      ));
+      const App = defineComponent(() => () => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <KeepAlive>{visible.value ? <Panels /> : null}</KeepAlive>
+        </Collapsible.Root>
+      ));
+
+      await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const lastPanel = screen.getByTestId('last-panel');
+
+      expect(trigger).toHaveAttribute('aria-controls', 'last-panel-id');
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('last-panel')).toBe(lastPanel);
+      expect(trigger).toHaveAttribute('aria-controls', 'last-panel-id');
+    });
   });
 
   describe('collapsible status', () => {
