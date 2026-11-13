@@ -441,8 +441,8 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - A style element of the library must be in the server HTML, so that its rule applies before the page hydrates. The internal SFC `utils/StyleDisableScrollbar.vue` renders that element in the element of the part, only while the part hydrates.
 - The SFC writes `<component :is="'style'">`, because the Vue compiler removes a `<style>` tag from a template. It binds the nonce of `CSPProvider` with `:nonce.attr`. Without `.attr`, a client render sets the DOM property, and the element has no `nonce` attribute.
 - After the mount, `useStyleDisableScrollbar(element)` keeps one shared style element for each document or shadow root. The last part that uses the element removes it. With `disableStyleElements` of `CSPProvider`, no such element exists, and the consumer writes the rule of the class `vase-ui-disable-scrollbar` in a style sheet.
-- A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set.
-- The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`.
+- A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
+- The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does.
 
 The hydration state:
 
@@ -513,7 +513,7 @@ The state of a field:
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
 - A popup store is `shallowReactive` state, selector functions and a plain `context`. Each root makes one. See [Popup store](#popup-store).
 - `useId` gives the ids.
-- `Teleport` puts a popup into a container node that the portal makes in `onMounted`. It has no `defer`, because the node exists before the `Teleport` renders.
+- `Teleport` puts the portal element, with the popup in it, into the container. It has no `defer`, because the portal renders the `Teleport` after the mount, when the container exists. See [Popup portal](#popup-portal).
 - Each context has a plain `Symbol()` key for `provide` and `inject`. Each copy of the library then has its own contexts.
 - Only three registries are shared between copies, on `Symbol.for` keys: the scroll-lock count, the modal marks and the Escape stack.
 - Each shared registry is a plain object with a `version` field. Fields are only added.
@@ -616,6 +616,21 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `FocusGuard.vue` is the guard that a focus trap puts at the edge of its content. It is a `span` with `tabindex="0"`. It exposes its element as `element`. It gives the attributes and listeners of a consumer to the `span`: `<FocusGuard data-type="inside" @focusin="…" />`. Its own attributes win over the same attributes of a consumer, as in Base UI.
 - The guard has `aria-hidden="true"`. In WebKit on an Apple system, it has `role="button"` and `aria-label="Focus guard"` instead. VoiceOver moves the focus with its cursor, but in WebKit only onto a focusable element that has `role="button"`. Without a name, axe reports a button with no name.
 - The guard reads `platform` in `onMounted`, as [Server render](#server-render) says for a value of the browser. The server HTML thus has `aria-hidden="true"` and no role. The mount adds the role and the label.
+
+### Popup portal
+
+The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()` makes the portal element and finds its container. `FloatingPortalLite` is the portal of a popup that takes no focus.
+
+- One `Teleport` to the container holds the portal element, and the popup is in that element. Base UI makes two `createPortal` calls for this.
+- The part renders its `Teleport` after the mount, so the server HTML has one comment in its place. This is true for each `container` value, and the hydration reports nothing.
+- Do not render the `Teleport` on a server. With an element of the page as the target, the server HTML has no popup, and Vue reports a hydration mismatch.
+- `container` is an element, a shadow root, a component, or a ref or a getter for one of them. With no `container`, the portal element goes into the portal element that `PortalContext` gives, or else into `<body>`.
+- `null` renders no `Teleport` until the container is not `null`, because a `Teleport` with a `null` target fails. A ref or a getter that gives `null` gives the fallback. An empty ref object of Base UI does the same.
+- The portal reads its container in a `watch` with `flush: 'post'`, so it follows a ref or a getter. It moves the portal element and does not mount the children again.
+- Base UI retries the check of a ref that is empty at first. The Vue portal does not, because Vue sets the ref of an ancestor or a later sibling before it runs that `watch`.
+- Updates in the flush of the mount can replace the container. The children then mount in the first container. That container is out of the document when the `onMounted` hooks of the children run. A child that focuses or measures in `onMounted` thus works on an element that is not in the document. Vue then moves the children to the new container. Base UI mounts them one time, in the new container.
+- `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
+- `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 
 ### Composite
 
@@ -957,7 +972,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `<style dangerouslySetInnerHTML={{ __html: style }} />`                                                    | `<style>{style}</style>`                                                                                                                                                                                                                                  |
 | `toHaveComputedStyle(obj)`                                                                                 | `toHaveStyle(obj)`, which also reads the computed style                                                                                                                                                                                                   |
 | `toHaveComputedStyle({})`                                                                                  | `not.toHaveAttribute('style')`, because `toHaveStyle({})` fails for an empty object                                                                                                                                                                       |
-| `toBeEmptyDOMElement` on a part with an empty default slot                                                 | `expect(element.innerHTML).toBe('')`, because the slot leaves empty text nodes.                                                                                                                                                                           |
+| `toBeEmptyDOMElement` on a part with an empty default slot, or on the old target of a `Teleport`           | `expect(element.innerHTML).toBe('')`, because the slot leaves empty text nodes. Vue 3.5.12 leaves an empty text node in the old target of a `Teleport`.                                                                                                   |
 | An event                                                                                                   | Add `await`                                                                                                                                                                                                                                               |
 | `expect(() => fireEvent.x()).not.toThrow()`                                                                | `await fireEvent.x()`. A listener that throws fails the test.                                                                                                                                                                                             |
 | `fireEvent.click(element, { button: 2 })`                                                                  | `await user.pointer({ keys: '[MouseRight]', target: element })`, a real press of the right button. React drops that click, and a browser sends none.                                                                                                      |
