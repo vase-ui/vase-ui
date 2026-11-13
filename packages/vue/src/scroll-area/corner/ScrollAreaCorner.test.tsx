@@ -1,6 +1,5 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { createApp, createSSRApp } from 'vue';
-import type { VNode } from 'vue';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import {
   createRenderer,
@@ -35,6 +34,11 @@ function mockViewportMetrics(viewport: HTMLElement | null) {
   }
 }
 
+// A ref on a part gives its component, which exposes `element`.
+function mockViewportMetricsRef(viewport: unknown) {
+  mockViewportMetrics((viewport as { element: HTMLElement | null } | null)?.element ?? null);
+}
+
 function readAttributes(element: HTMLElement) {
   return Object.fromEntries(
     Array.from(element.attributes).map(({ name, value }) => [
@@ -47,46 +51,65 @@ function readAttributes(element: HTMLElement) {
 describe('<ScrollArea.Corner />', () => {
   const { render } = createRenderer();
 
-  // A ref on a part gives its component, which exposes `element`.
-  const renderArea = (corner?: VNode) => () => (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport
-        ref={(viewport) =>
-          mockViewportMetrics((viewport as { element: HTMLElement | null } | null)?.element ?? null)
-        }
-        style={{ width: '100px', height: '100px' }}
-      >
-        <div style={{ width: '1000px', height: '1000px' }} />
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation="vertical" keepMounted style={{ width: '10px' }}>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Scrollbar orientation="horizontal" keepMounted style={{ height: '10px' }}>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-      {corner}
-    </ScrollArea.Root>
-  );
-
   describeConformance(<ScrollArea.Corner />, () => ({
     refInstanceof: window.HTMLDivElement,
     async render(node) {
       // The corner has no element until the first measurement shows both scrollbars.
-      const result = await render(renderArea(node));
+      const result = await render(() => (
+        <ScrollArea.Root>
+          <ScrollArea.Viewport
+            ref={mockViewportMetricsRef}
+            style={{ width: '100px', height: '100px' }}
+          >
+            <div style={{ width: '1000px', height: '1000px' }} />
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation="vertical" keepMounted style={{ width: '10px' }}>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+          <ScrollArea.Scrollbar orientation="horizontal" keepMounted style={{ height: '10px' }}>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+          {node}
+        </ScrollArea.Root>
+      ));
       await flushMicrotasks();
       return result;
     },
   }));
 
   it('is hidden from the accessibility tree by default', async () => {
-    await render(renderArea(<ScrollArea.Corner data-testid="corner" />));
+    await render(() => (
+      <ScrollArea.Root>
+        <ScrollArea.Viewport
+          ref={mockViewportMetricsRef}
+          style={{ width: '100px', height: '100px' }}
+        >
+          <div style={{ width: '1000px', height: '1000px' }} />
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation="vertical" keepMounted style={{ width: '10px' }} />
+        <ScrollArea.Scrollbar orientation="horizontal" keepMounted style={{ height: '10px' }} />
+        <ScrollArea.Corner data-testid="corner" />
+      </ScrollArea.Root>
+    ));
     await flushMicrotasks();
 
     expect(screen.getByTestId('corner')).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('allows overriding aria-hidden', async () => {
-    await render(renderArea(<ScrollArea.Corner data-testid="corner" aria-hidden={undefined} />));
+    await render(() => (
+      <ScrollArea.Root>
+        <ScrollArea.Viewport
+          ref={mockViewportMetricsRef}
+          style={{ width: '100px', height: '100px' }}
+        >
+          <div style={{ width: '1000px', height: '1000px' }} />
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar orientation="vertical" keepMounted style={{ width: '10px' }} />
+        <ScrollArea.Scrollbar orientation="horizontal" keepMounted style={{ height: '10px' }} />
+        <ScrollArea.Corner data-testid="corner" aria-hidden={undefined} />
+      </ScrollArea.Root>
+    ));
     await flushMicrotasks();
 
     expect(screen.getByTestId('corner')).not.toHaveAttribute('aria-hidden');
