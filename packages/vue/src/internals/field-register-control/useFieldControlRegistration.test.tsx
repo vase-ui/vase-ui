@@ -1,5 +1,13 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
-import { computed, createSSRApp, defineComponent, KeepAlive, provide, shallowRef } from 'vue';
+import {
+  computed,
+  createSSRApp,
+  defineComponent,
+  KeepAlive,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import {
   createRenderer,
   flushMicrotasks,
@@ -13,11 +21,13 @@ import {
 import FieldControlPart from '../../../test/fixtures/FieldControlPart.vue';
 import FieldScope from '../../../test/fixtures/FieldScope.vue';
 import FormScope from '../../../test/fixtures/FormScope.vue';
+import { useFieldRootContext } from '../field-root-context/FieldRootContext';
 import { FormContext } from '../form-context/FormContext';
 import type { Errors } from '../form-context/FormContext';
 import FieldControlSwap from './FieldControlSwap.test.vue';
 import FieldRegistrationHydration from './FieldRegistrationHydration.test.vue';
 import LazyFieldControlHydration from './LazyFieldControlHydration.test.vue';
+import TwoFieldControlsHydration from './TwoFieldControlsHydration.test.vue';
 import { useRegisterFieldControl } from './useRegisterFieldControl';
 
 interface SubmittedField {
@@ -78,6 +88,33 @@ describe('useFieldControlRegistration', () => {
     ),
     { props: ['fields', 'onSubmit'] },
   );
+
+  // A user and a developer get the active control of a field in three ways. The field commits its
+  // value, the form submits its entry, and the form lists its name.
+  function createActiveControlReader() {
+    const field = shallowRef<FieldScopeInstance | null>(null);
+    const onValidationCommit = vi.fn();
+    const onSubmit = createSubmitSpy();
+
+    function read() {
+      field.value!.validate();
+      return {
+        committed: onValidationCommit.mock.lastCall?.[0],
+        submitted: submit(onSubmit),
+        fields: screen.getByTestId('form').getAttribute('data-fields'),
+      };
+    }
+
+    return { field, onValidationCommit, onSubmit, read };
+  }
+
+  function active(name: string, value = name) {
+    return { committed: value, submitted: [{ name, value, valid: true }], fields: name };
+  }
+
+  // `validate` commits the last value of the validity data when the field has no control. The read
+  // of that state does not include the commit.
+  const NO_ACTIVE = { submitted: [], fields: '' };
 
   describe('the name of the control', () => {
     it('gives the field the name of its control, so a form error for that name makes the field invalid', async () => {
@@ -327,33 +364,174 @@ describe('useFieldControlRegistration', () => {
       expect(onValidationChange).toHaveBeenCalledTimes(1);
       expect(onValidationChange).toHaveBeenCalledWith(undefined, true);
     });
+
+    it('is dropped before the control that becomes active starts its work', async () => {
+      const onValidationChange = vi.fn();
+      // The control starts its work after the DOM update of its change.
+      const ControlWithWork = defineComponent(
+        (props: { id: string; value: string }) => {
+          const { validation } = useFieldRootContext();
+          const element = shallowRef<HTMLElement | null>(null);
+          useRegisterFieldControl(
+            element,
+            () => props.id,
+            () => props.value,
+          );
+          watch(
+            () => props.value,
+            (value) => validation.change(value),
+            { flush: 'post' },
+          );
+          return () => <input ref={element} />;
+        },
+        { props: ['id', 'value'] },
+      );
+      const Test = defineComponent(
+        (props: { first: string }) => () => (
+          <FieldScope onValidationChange={onValidationChange}>
+            <ControlWithWork id="first" value={props.first} />
+            <ControlWithWork id="second" value="second" />
+          </FieldScope>
+        ),
+        { props: ['first'] },
+      );
+      const { rerender } = await render(<Test first="first" />);
+      expect(onValidationChange).not.toHaveBeenCalled();
+
+      await rerender(<Test first="first changed" />);
+
+      expect(onValidationChange.mock.calls).toEqual([
+        [undefined, true],
+        ['first changed', false],
+      ]);
+    });
   });
 
-  describe('two controls in one field', () => {
-    it('has the last control as the active control, and the first control when the last is disabled or goes away', async () => {
-      const state = shallowRef({ shown: true, disabled: false });
-      const onValidationCommit = vi.fn();
-      const field = shallowRef<FieldScopeInstance | null>(null);
+  describe('more than one control in one field', () => {
+    interface ControlState {
+      value: string;
+      disabled: boolean;
+      shown: boolean;
+    }
+
+    // The field has no name, so it takes the name of its active control. Each control has its `id`
+    // as its name and as its first value.
+    function setup(ids: string[], initial: Record<string, Partial<ControlState>> = {}) {
+      const state = shallowRef<Record<string, ControlState>>(
+        Object.fromEntries(
+          ids.map((id) => [id, { value: id, disabled: false, shown: true, ...initial[id] }]),
+        ),
+      );
+      const { field, onValidationCommit, onSubmit, read } = createActiveControlReader();
       const Test = defineComponent(() => () => (
-        <FieldScope ref={field} onValidationCommit={onValidationCommit}>
-          <FieldControlPart id="first" value="first" />
-          {state.value.shown && (
-            <FieldControlPart id="last" value="last" disabled={state.value.disabled} />
-          )}
-        </FieldScope>
+        <FormScope data-testid="form" onSubmit={onSubmit}>
+          <FieldScope ref={field} onValidationCommit={onValidationCommit}>
+            {ids.map(
+              (id) =>
+                state.value[id].shown && (
+                  <FieldControlPart
+                    key={id}
+                    id={id}
+                    name={id}
+                    value={state.value[id].value}
+                    disabled={state.value[id].disabled}
+                  />
+                ),
+            )}
+          </FieldScope>
+        </FormScope>
       ));
-      await render(<Test />);
-      async function readActiveValue(change: Partial<typeof state.value>) {
-        state.value = { ...state.value, ...change };
+
+      async function update(id: string, change: Partial<ControlState>) {
+        state.value = { ...state.value, [id]: { ...state.value[id], ...change } };
         await flushMicrotasks();
-        field.value!.validate();
-        return onValidationCommit.mock.lastCall?.[0];
       }
 
-      expect(await readActiveValue({})).toBe('last');
-      expect(await readActiveValue({ disabled: true })).toBe('first');
-      expect(await readActiveValue({ disabled: false })).toBe('last');
-      expect(await readActiveValue({ shown: false })).toBe('first');
+      return { Test, update, read };
+    }
+
+    it('has the control that mounts last as the active control', async () => {
+      const { Test, read } = setup(['first', 'second']);
+
+      await render(<Test />);
+
+      expect(read()).toEqual(active('second'));
+    });
+
+    it('has the control that changes last as the active control', async () => {
+      const { Test, update, read } = setup(['first', 'second']);
+      await render(<Test />);
+
+      await update('first', { value: 'first changed' });
+      expect(read()).toEqual(active('first', 'first changed'));
+
+      await update('second', { value: 'second changed' });
+      expect(read()).toEqual(active('second', 'second changed'));
+    });
+
+    it('does not use a disabled control, and uses it again when it is enabled', async () => {
+      const { Test, update, read } = setup(['first', 'second']);
+      await render(<Test />);
+
+      await update('second', { disabled: true });
+      expect(read()).toEqual(active('first'));
+
+      // The change of `first` shows that the change of `enabled` makes `second` active again.
+      await update('first', { value: 'first changed' });
+      await update('second', { disabled: false });
+      expect(read()).toEqual(active('second'));
+    });
+
+    it('does not use a control that mounts disabled', async () => {
+      const { Test, read } = setup(['first', 'second'], { second: { disabled: true } });
+
+      await render(<Test />);
+
+      expect(read()).toEqual(active('first'));
+    });
+
+    describe('VUE-11: the control that was active before', () => {
+      it.each([
+        { name: 'goes away', change: { shown: false } },
+        { name: 'gets `enabled` false', change: { disabled: true } },
+      ])(
+        'uses the control that was active before when the active control $name',
+        async ({ change }) => {
+          const { Test, update, read } = setup(['first', 'second']);
+          await render(<Test />);
+          expect(read()).toEqual(active('second'));
+
+          await update('second', change);
+          expect(read()).toEqual(active('first'));
+
+          await update('first', change);
+          expect(read()).toMatchObject(NO_ACTIVE);
+        },
+      );
+
+      it('uses the control that registered last among the controls that are there, with three controls', async () => {
+        const { Test, update, read } = setup(['a', 'b', 'c']);
+        await render(<Test />);
+        expect(read()).toEqual(active('c'));
+
+        await update('a', { value: 'a changed' });
+        expect(read()).toEqual(active('a', 'a changed'));
+
+        await update('b', { value: 'b changed' });
+        expect(read()).toEqual(active('b', 'b changed'));
+
+        await update('b', { shown: false });
+        expect(read()).toEqual(active('a', 'a changed'));
+
+        await update('a', { disabled: true });
+        expect(read()).toEqual(active('c'));
+
+        await update('c', { shown: false });
+        expect(read()).toMatchObject(NO_ACTIVE);
+
+        await update('a', { disabled: false });
+        expect(read()).toEqual(active('a', 'a changed'));
+      });
     });
   });
 
@@ -544,33 +722,94 @@ describe('useFieldControlRegistration', () => {
       expect(screen.getByTestId('form')).toHaveAttribute('data-fields', 'a b c d');
     });
 
-    it('keeps the same active control when `KeepAlive` hides the two controls of a field and shows them again', async () => {
-      const onSubmit = createSubmitSpy();
-      const Controls = defineComponent(() => () => (
-        <>
-          <FieldControlPart id="first" value="first" />
-          <FieldControlPart id="second" value="second" />
-        </>
-      ));
+    function setupFirstControlInKeepAlive() {
+      const { field, onValidationCommit, onSubmit, read } = createActiveControlReader();
       const Test = defineComponent(
-        (props: { shown: boolean }) => () => (
+        (props: { shown: boolean; first: string; second: string }) => () => (
           <FormScope data-testid="form" onSubmit={onSubmit}>
-            <FieldScope name="a">
-              <KeepAlive>{props.shown ? <Controls /> : null}</KeepAlive>
+            <FieldScope ref={field} onValidationCommit={onValidationCommit}>
+              <KeepAlive>
+                {props.shown ? (
+                  <FieldControlPart key="first" id="first" name="first" value={props.first} />
+                ) : null}
+              </KeepAlive>
+              <FieldControlPart id="second" name="second" value={props.second} />
             </FieldScope>
           </FormScope>
         ),
-        { props: ['shown'] },
+        { props: ['shown', 'first', 'second'] },
       );
-      const { rerender } = await render(<Test shown />);
-      expect(submit(onSubmit)?.[0].value).toBe('second');
+      return { Test, read };
+    }
 
-      await rerender(<Test shown={false} />);
-      expect(screen.getByTestId('form')).toHaveAttribute('data-fields', '');
-      await rerender(<Test shown />);
+    it('VUE-11: uses the other control while `KeepAlive` has the active control, and the same control again when it comes back', async () => {
+      const { Test, read } = setupFirstControlInKeepAlive();
+      const { rerender } = await render(<Test shown first="first" second="second" />);
 
-      expect(submit(onSubmit)?.[0].value).toBe('second');
+      await rerender(<Test shown first="first changed" second="second" />);
+      expect(read()).toEqual(active('first', 'first changed'));
+
+      await rerender(<Test shown={false} first="first changed" second="second" />);
+      expect(read()).toEqual(active('second'));
+
+      await rerender(<Test shown first="first changed" second="second" />);
+      expect(read()).toEqual(active('first', 'first changed'));
     });
+
+    it('keeps the other control active when it changes while `KeepAlive` has the control that was active', async () => {
+      const { Test, read } = setupFirstControlInKeepAlive();
+      const { rerender } = await render(<Test shown first="first" second="second" />);
+      await rerender(<Test shown first="first changed" second="second" />);
+      await rerender(<Test shown={false} first="first changed" second="second" />);
+
+      await rerender(<Test shown={false} first="first changed" second="second changed" />);
+      expect(read()).toEqual(active('second', 'second changed'));
+
+      await rerender(<Test shown first="first changed" second="second changed" />);
+      expect(read()).toEqual(active('second', 'second changed'));
+    });
+
+    it.each([
+      {
+        name: 'the first control',
+        firstValue: 'first changed',
+        expected: active('first', 'first changed'),
+      },
+      { name: 'the second control', firstValue: 'first', expected: active('second') },
+    ])(
+      'keeps $name active when `KeepAlive` hides the two controls of a field and shows them again',
+      async ({ firstValue, expected }) => {
+        const { field, onValidationCommit, onSubmit, read } = createActiveControlReader();
+        const Controls = defineComponent(
+          (props: { first: string }) => () => (
+            <>
+              <FieldControlPart id="first" name="first" value={props.first} />
+              <FieldControlPart id="second" name="second" value="second" />
+            </>
+          ),
+          { props: ['first'] },
+        );
+        const Test = defineComponent(
+          (props: { shown: boolean; first: string }) => () => (
+            <FormScope data-testid="form" onSubmit={onSubmit}>
+              <FieldScope ref={field} onValidationCommit={onValidationCommit}>
+                <KeepAlive>{props.shown ? <Controls first={props.first} /> : null}</KeepAlive>
+              </FieldScope>
+            </FormScope>
+          ),
+          { props: ['shown', 'first'] },
+        );
+        const { rerender } = await render(<Test shown first="first" />);
+        await rerender(<Test shown first={firstValue} />);
+        expect(read()).toEqual(expected);
+
+        await rerender(<Test shown={false} first={firstValue} />);
+        expect(read()).toMatchObject(NO_ACTIVE);
+
+        await rerender(<Test shown first={firstValue} />);
+        expect(read()).toEqual(expected);
+      },
+    );
 
     it('has the control that `KeepAlive` shows as the active control, and the first control again after the swap back', async () => {
       const onSubmit = createSubmitSpy();
@@ -659,6 +898,8 @@ describe('useFieldControlRegistration', () => {
   describe('server HTML and hydration', () => {
     const FILE = 'src/internals/field-register-control/FieldRegistrationHydration.test.vue';
     const LAZY_FILE = 'src/internals/field-register-control/LazyFieldControlHydration.test.vue';
+    const TWO_CONTROLS_FILE =
+      'src/internals/field-register-control/TwoFieldControlsHydration.test.vue';
     const ALL_INVALID = { root: true, before: true, after: true };
     const NONE_INVALID = { root: false, before: false, after: false };
 
@@ -706,6 +947,35 @@ describe('useFieldControlRegistration', () => {
         const { container } = await hydrate(FieldRegistrationHydration, { serverHtml, props });
 
         expect(read(container)).toEqual(hydrated);
+      },
+    );
+
+    it.each([
+      {
+        name: 'an error for the name of the second control',
+        errors: { b: 'taken' },
+        hydrated: { invalid: { root: true }, error: true, fields: 'b' },
+      },
+      {
+        name: 'an error for the name of the first control',
+        errors: { a: 'taken' },
+        hydrated: { invalid: { root: false }, error: false, fields: 'b' },
+      },
+    ])(
+      'has no active control in the server HTML, and the control that mounts last after the hydration: $name',
+      async ({ errors, hydrated }) => {
+        const props = { errors };
+        const serverHtml = await renderOnServer(TWO_CONTROLS_FILE, props);
+
+        expect(read(parse(serverHtml))).toMatchObject({
+          invalid: { root: false },
+          error: false,
+          fields: '',
+        });
+
+        const { container } = await hydrate(TwoFieldControlsHydration, { serverHtml, props });
+
+        expect(read(container)).toMatchObject(hydrated);
       },
     );
 
