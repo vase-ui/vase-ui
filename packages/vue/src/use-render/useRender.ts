@@ -49,7 +49,7 @@ export function useRender<
   const getDefaultTag = () => toValue(defaultTagName) ?? 'div';
 
   const { element, elementProps } = useRenderElement<State, RenderedElementType>(
-    getDefaultTag(),
+    getDefaultTag,
     componentProps,
     elementParams,
   );
@@ -109,8 +109,6 @@ export interface UseRenderParameters<State, RenderedElementType extends Element 
   /**
    * The tag of the element when the `as` prop is not set.
    * It takes a value, a ref or a getter.
-   * A change of the tag does not change the defaults of the first tag:
-   * `type="button"` for `button` and `alt=""` for `img`.
    * @default 'div'
    */
   defaultTagName?: MaybeRefOrGetter<string | undefined> | undefined;

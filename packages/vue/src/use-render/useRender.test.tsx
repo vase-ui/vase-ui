@@ -133,6 +133,23 @@ describe('useRender', () => {
       expect(screen.getByTestId('default')).toHaveAttribute('type', 'button');
       expect(screen.getByTestId('other')).not.toHaveAttribute('type');
     });
+
+    it('gives type="button" only while defaultTagName is button', async () => {
+      const TestComponent = defineTestComponent(
+        (props: { defaultTagName: string }) =>
+          useRender({}, { defaultTagName: () => props.defaultTagName }),
+        ['defaultTagName'],
+      );
+
+      const { container, setProps } = await render(<TestComponent defaultTagName="div" />);
+      expect(container.firstElementChild).not.toHaveAttribute('type');
+
+      await setProps({ defaultTagName: 'button' });
+      expect(container.firstElementChild).toHaveAttribute('type', 'button');
+
+      await setProps({ defaultTagName: 'div' });
+      expect(container.firstElementChild).not.toHaveAttribute('type');
+    });
   });
 
   describe('state to data attributes', () => {

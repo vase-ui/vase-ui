@@ -42,7 +42,7 @@ export interface CollapsiblePanelProps
 </script>
 
 <script setup lang="ts">
-import { computed, normalizeStyle, onMounted, onScopeDispose, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, watch } from 'vue';
 import { warn } from '../../common/warn';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -128,7 +128,7 @@ const panelState = computed<CollapsiblePanelState>(() => ({
   transitionStatus: panelTransitionStatus.value,
 }));
 
-const { element, elementProps: renderElementProps } = useRenderElement('div', props, {
+const { element, elementProps } = useRenderElement('div', props, {
   state: panelState,
   ref: panelRef,
   props: (attrs) => [
@@ -143,25 +143,14 @@ const { element, elementProps: renderElementProps } = useRenderElement('div', pr
     },
     attrs,
   ],
+  // The temporary `animation-name: none` and the temporary declarations must win over the style of
+  // the consumer.
+  overridingStyle: () =>
+    shouldPreventOpenAnimation.value
+      ? { animationName: 'none', ...temporaryStyle.value }
+      : temporaryStyle.value,
   stateAttributesMapping: collapsibleStateAttributesMapping,
 });
-
-// `useRenderElement` merges the `style` attribute and `stateStyle` of the consumer after the props
-// of the part. The temporary `animation-name: none` and the temporary declarations must win over
-// them, so the part merges them last.
-function elementProps() {
-  const outProps = renderElementProps();
-
-  if (shouldPreventOpenAnimation.value || temporaryStyle.value) {
-    outProps.style = normalizeStyle([
-      outProps.style,
-      shouldPreventOpenAnimation.value ? { animationName: 'none' } : undefined,
-      temporaryStyle.value,
-    ]);
-  }
-
-  return outProps;
-}
 
 defineExpose({ element });
 </script>

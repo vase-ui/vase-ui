@@ -68,4 +68,39 @@ describe('<ScrollArea.Root /> on a server', () => {
       `<div data-id="${dataId}" tabindex="-1" class="vase-ui-disable-scrollbar" style="overflow:scroll;">`,
     );
   });
+
+  it('renders a kept scrollbar, and no scrollbar that waits for the measurement', async () => {
+    const html = await renderToString(
+      <ScrollArea.Root>
+        <ScrollArea.Scrollbar keepMounted />
+        <ScrollArea.Scrollbar orientation="horizontal" />
+      </ScrollArea.Root>,
+    );
+
+    // No measurement exists on a server, so each axis is hidden.
+    expect(html.match(/data-id="[^"]*-scrollbar"/g)).toHaveLength(1);
+    const [startTag, dataId] = /<div [^>]*data-id="([^"]*-scrollbar)"[^>]*>/.exec(html) ?? [];
+    expect(startTag).toBe(
+      `<div data-orientation="vertical" data-id="${dataId}" aria-hidden="true" style="position:absolute;touch-action:none;-webkit-user-select:none;user-select:none;top:0;bottom:var(--scroll-area-corner-height);inset-inline-end:0;--scroll-area-thumb-height:0px;">`,
+    );
+  });
+
+  it('renders a thumb that is hidden until the first measurement', async () => {
+    const html = await renderToString(
+      <ScrollArea.Root>
+        <ScrollArea.Scrollbar keepMounted>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+        <ScrollArea.Scrollbar orientation="horizontal" keepMounted>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
+      </ScrollArea.Root>,
+    );
+
+    // The start tag of a scrollbar has a `data-id` between these two attributes.
+    expect(html.match(/<div data-orientation="[^"]*" style="[^"]*">/g)).toEqual([
+      '<div data-orientation="vertical" style="visibility:hidden;height:var(--scroll-area-thumb-height);">',
+      '<div data-orientation="horizontal" style="visibility:hidden;width:var(--scroll-area-thumb-width);">',
+    ]);
+  });
 });
