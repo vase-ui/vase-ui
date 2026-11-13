@@ -1,0 +1,1076 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/toolbar/**",
+    "docs/src/app/(docs)/react/components/toolbar/**"
+  ],
+  "sources": [
+    "packages/react/src/toolbar/button/ToolbarButton.tsx",
+    "packages/react/src/toolbar/button/ToolbarButtonDataAttributes.ts",
+    "packages/react/src/toolbar/group/ToolbarGroup.tsx",
+    "packages/react/src/toolbar/group/ToolbarGroupContext.ts",
+    "packages/react/src/toolbar/group/ToolbarGroupDataAttributes.ts",
+    "packages/react/src/toolbar/index.parts.ts",
+    "packages/react/src/toolbar/index.ts",
+    "packages/react/src/toolbar/input/ToolbarInput.tsx",
+    "packages/react/src/toolbar/input/ToolbarInputDataAttributes.ts",
+    "packages/react/src/toolbar/link/ToolbarLink.tsx",
+    "packages/react/src/toolbar/link/ToolbarLinkDataAttributes.ts",
+    "packages/react/src/toolbar/root/ToolbarRoot.tsx",
+    "packages/react/src/toolbar/root/ToolbarRootContext.ts",
+    "packages/react/src/toolbar/root/ToolbarRootDataAttributes.ts",
+    "packages/react/src/toolbar/separator/ToolbarSeparator.tsx",
+    "packages/react/src/toolbar/separator/ToolbarSeparatorDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/toolbar/link/ToolbarLink.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Button />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "prop: nativeButton"
+          ],
+          "title": "custom element: dispatches real clicks from Space keyboard activation"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "prop: nativeButton"
+          ],
+          "title": "custom element: dispatches real clicks from Enter keyboard activation"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "prop: disabled"
+          ],
+          "title": "disables the button"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "prop: disabled"
+          ],
+          "title": "uses the disabled attribute when focusableWhenDisabled is false"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "prop: disabled"
+          ],
+          "title": "allows hover handlers while blocking activation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Switch"
+          ],
+          "title": "renders a switch"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Switch"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Switch"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Menu"
+          ],
+          "title": "renders a menu trigger"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Menu"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Menu"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Select"
+          ],
+          "title": "renders a select trigger"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Select"
+          ],
+          "title": "handles interactions",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Select"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Dialog"
+          ],
+          "title": "renders a dialog trigger"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Dialog"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Dialog"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Dialog"
+          ],
+          "title": "prevents composite keydowns from escaping"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "AlertDialog"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "AlertDialog"
+          ],
+          "title": "prevents composite keydowns from escaping"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Popover"
+          ],
+          "title": "renders a popover trigger"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Popover"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Popover"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "renders toggle and toggle group"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "disabled state"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "navigates and selects direct ToggleGroup > Toggle children"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "skips disabled direct ToggleGroup > Toggle children",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "supports multiple selection for direct ToggleGroup > Toggle children"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "supports a controlled ToggleGroup value"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "disables direct ToggleGroup children when Toolbar.Group is disabled"
+        },
+        {
+          "describe": [
+            "<Toolbar.Button />",
+            "rendering other Base UI components",
+            "Toggle and ToggleGroup"
+          ],
+          "title": "skips a direct Toggle that becomes disabled at runtime",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toolbar/group/ToolbarGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Group />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Group />",
+            "ARIA attributes"
+          ],
+          "title": "renders a group"
+        },
+        {
+          "describe": [
+            "<Toolbar.Group />",
+            "prop: disabled"
+          ],
+          "title": "disables all toolbar items except links in the group"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toolbar/input/ToolbarInput.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Input />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "pointer interactions"
+          ],
+          "title": "does not steal focus while disabled and becomes pointer-focusable when enabled"
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "pointer interactions"
+          ],
+          "title": "prevents click default actions while disabled"
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "keyboard navigation"
+          ],
+          "title": "respects caret and selection boundaries in horizontal %s toolbars",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "keyboard navigation"
+          ],
+          "title": "orientation: $orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "disabled"
+          ],
+          "title": "does not trap keyboard focus when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "disabled"
+          ],
+          "title": "does not block vertical roving focus when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "rendering NumberField"
+          ],
+          "title": "renders NumberField.Input"
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "rendering NumberField"
+          ],
+          "title": "handles interactions"
+        },
+        {
+          "describe": [
+            "<Toolbar.Input />",
+            "rendering NumberField"
+          ],
+          "title": "disabled state"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toolbar/link/ToolbarLink.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Link />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Link />",
+            "ARIA attributes"
+          ],
+          "title": "renders an anchor"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toolbar/root/ToolbarRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "ARIA attributes"
+          ],
+          "title": "has role=\"toolbar\""
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "context"
+          ],
+          "title": "allows optional consumers both outside and inside a toolbar"
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "keyboard navigation"
+          ],
+          "title": "$direction, orientation: $orientation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "keyboard navigation"
+          ],
+          "title": "does not wrap focus when loopFocus is false",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: disabled"
+          ],
+          "title": "disables all toolbar items except links"
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "toolbar items can be focused when disabled by default",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "toolbar items can individually disable focusableWhenDisabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "moves the initial tab stop off a disabled, non-focusable first item",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "keeps an enabled item with focusableWhenDisabled={false} navigable",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Toolbar.Root />",
+            "prop: focusableWhenDisabled"
+          ],
+          "title": "skips a disabled Toolbar.Input with focusableWhenDisabled={false}",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/toolbar/separator/ToolbarSeparator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toolbar.Separator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toolbar.Separator />"
+          ],
+          "title": "uses a %s separator in a %s toolbar"
+        },
+        {
+          "describe": [
+            "<Toolbar.Separator />"
+          ],
+          "title": "allows its orientation to be overridden"
+        },
+        {
+          "describe": [
+            "<Toolbar.Separator />"
+          ],
+          "title": "throws a descriptive error when rendered outside Toolbar.Root"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toolbar/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Toolbar.Root.Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toolbar.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarRootState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Toolbar.Root.Orientation"
+              }
+            ],
+            "code": "type ToolbarRootState = {\n    disabled: boolean;\n    orientation: Toolbar.Root.Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Input",
+          "tag": "input",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string | number | string[]",
+              "default": null
+            },
+            {
+              "name": "focusableWhenDisabled",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Input.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Input.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toolbar.Input.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarInputState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focusable",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Toolbar.Root.Orientation"
+              }
+            ],
+            "code": "type ToolbarInputState = {\n    disabled: boolean;\n    focusable: boolean;\n    orientation: Toolbar.Root.Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-focusable",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Group",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Group.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Group.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toolbar.Group.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarGroupState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Toolbar.Root.Orientation"
+              }
+            ],
+            "code": "type ToolbarGroupState = {\n    disabled: boolean;\n    orientation: Toolbar.Root.Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Separator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Separator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toolbar.Separator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarSeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type ToolbarSeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Button",
+          "tag": "button",
+          "props": [
+            {
+              "name": "focusableWhenDisabled",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Button.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Button.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toolbar.Button.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarButtonState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focusable",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Toolbar.Root.Orientation"
+              }
+            ],
+            "code": "type ToolbarButtonState = {\n    disabled: boolean;\n    focusable: boolean;\n    orientation: Toolbar.Root.Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-focusable",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Link",
+          "tag": "a",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toolbar.Link.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toolbar.Link.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, state: Toolbar.Link.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToolbarLinkState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Toolbar.Root.Orientation"
+              }
+            ],
+            "code": "type ToolbarLinkState = {\n    orientation: Toolbar.Root.Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.Orientation",
+          "code": "type ToolbarRootOrientation = 'horizontal' | 'vertical';"
+        },
+        {
+          "name": "Root.ItemMetadata",
+          "code": "type ToolbarRootItemMetadata = {\n    disabled: boolean;\n    focusableWhenDisabled: boolean;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "Toolbar.Orientation",
+          "code": "type ToolbarOrientation = 'horizontal' | 'vertical';"
+        },
+        {
+          "name": "ToolbarButtonDataAttributes",
+          "code": "declare namespace ToolbarButtonDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n    const focusable: 'data-focusable';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "focusable",
+              "value": "data-focusable"
+            }
+          ]
+        },
+        {
+          "name": "ToolbarGroupDataAttributes",
+          "code": "declare namespace ToolbarGroupDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "ToolbarInputDataAttributes",
+          "code": "declare namespace ToolbarInputDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n    const focusable: 'data-focusable';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "focusable",
+              "value": "data-focusable"
+            }
+          ]
+        },
+        {
+          "name": "ToolbarLinkDataAttributes",
+          "code": "declare namespace ToolbarLinkDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "ToolbarRootDataAttributes",
+          "code": "declare namespace ToolbarRootDataAttributes {\n    const disabled: 'data-disabled';\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "ToolbarSeparatorDataAttributes",
+          "code": "declare namespace ToolbarSeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toolbar/page.mdx",
+      "referenceTags": [
+        "TypesToolbar.Root",
+        "TypesToolbar.Button",
+        "TypesToolbar.Link",
+        "TypesToolbar.Input",
+        "TypesToolbar.Group",
+        "TypesToolbar.Separator"
+      ]
+    }
+  ]
+}
