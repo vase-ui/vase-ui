@@ -268,7 +268,7 @@ function onInputClick(event: MouseEvent) {
     return;
   }
 
-  if (isReadOnly.value || props.value === undefined) {
+  if (isDisabled.value || isReadOnly.value || props.value === undefined) {
     event.preventDefault();
     return;
   }

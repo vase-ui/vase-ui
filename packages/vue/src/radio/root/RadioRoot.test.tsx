@@ -440,6 +440,20 @@ describe('<Radio.Root />', () => {
 
       expect(getInputs()[0].checked).toBe(false);
     });
+
+    it('after a click event that a script dispatches on the input of a disabled radio', async () => {
+      const handleChange = vi.fn();
+      await render(
+        <RadioGroup onValueChange={handleChange}>
+          <Radio.Root value="a" disabled />
+        </RadioGroup>,
+      );
+
+      await fireEvent.click(getInputs()[0]);
+
+      expect(handleChange).not.toHaveBeenCalled();
+      expect(getInputs()[0].checked).toBe(false);
+    });
   });
 
   describe('in a native label', () => {
