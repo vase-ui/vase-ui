@@ -1,0 +1,3470 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/slider/**",
+    "docs/src/app/(docs)/react/components/slider/**"
+  ],
+  "sources": [
+    "packages/react/src/slider/control/SliderControl.tsx",
+    "packages/react/src/slider/control/SliderControlDataAttributes.ts",
+    "packages/react/src/slider/index.parts.ts",
+    "packages/react/src/slider/index.ts",
+    "packages/react/src/slider/indicator/SliderIndicator.tsx",
+    "packages/react/src/slider/indicator/SliderIndicatorDataAttributes.ts",
+    "packages/react/src/slider/label/SliderLabel.tsx",
+    "packages/react/src/slider/root/SliderRoot.tsx",
+    "packages/react/src/slider/root/SliderRootContext.ts",
+    "packages/react/src/slider/root/SliderRootDataAttributes.ts",
+    "packages/react/src/slider/root/stateAttributesMapping.ts",
+    "packages/react/src/slider/thumb/SliderThumb.tsx",
+    "packages/react/src/slider/thumb/SliderThumbDataAttributes.ts",
+    "packages/react/src/slider/thumb/prehydrationScript.min.ts",
+    "packages/react/src/slider/thumb/prehydrationScript.template.js",
+    "packages/react/src/slider/track/SliderTrack.tsx",
+    "packages/react/src/slider/track/SliderTrackDataAttributes.ts",
+    "packages/react/src/slider/utils/asc.ts",
+    "packages/react/src/slider/utils/getMidpoint.ts",
+    "packages/react/src/slider/utils/getPushedThumbValues.ts",
+    "packages/react/src/slider/utils/getSliderValue.ts",
+    "packages/react/src/slider/utils/resolveThumbCollision.ts",
+    "packages/react/src/slider/utils/roundValueToStep.ts",
+    "packages/react/src/slider/utils/test-utils.ts",
+    "packages/react/src/slider/utils/validateMinimumDistance.ts",
+    "packages/react/src/slider/value/SliderValue.tsx",
+    "packages/react/src/slider/value/SliderValueDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/slider/root/SliderRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/slider/control/SliderControl.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "does not apply a tabIndex by default"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Slider.Root>"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "moves the first of several thumbs stacked at the maximum"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "clears the grabbed offset when swapping to a thumb that is not rendered"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "ignores a drag when collision behavior cannot satisfy the minimum distance"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "accounts for the thumb size when pressing an inset $name control"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "preserves single-element array values on track press"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "releases pointer capture when the interaction ends"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "degrades safely when a custom render function drops the control ref"
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "handles touch interactions that originate on a text node",
+          "conditions": [
+            "skipIf(isJSDOM || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "ignores touch interactions when no thumbs are composed",
+          "conditions": [
+            "skipIf(isJSDOM || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />",
+            "cancelled gestures"
+          ],
+          "title": "ignores %s from another finger during a touch drag",
+          "conditions": [
+            "skipIf(isJSDOM || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />",
+            "cancelled gestures"
+          ],
+          "title": "ends a cancelled %s drag after disabling and re-enabling during a touch drag",
+          "conditions": [
+            "skipIf(isJSDOM || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />",
+            "cancelled gestures"
+          ],
+          "title": "commits and ends a %s drag on pointercancel"
+        },
+        {
+          "describe": [
+            "<Slider.Control />",
+            "cancelled gestures"
+          ],
+          "title": "keeps a touch drag going after pointercancel and commits and ends it on touchcancel",
+          "conditions": [
+            "skipIf(isJSDOM || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "does not resurrect a removed thumb value when the range shrinks mid-drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "does not commit a stale value when the range shrinks mid-drag and the pressed thumb stays valid",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Control />"
+          ],
+          "title": "clears cached interaction state when the controlled range grows mid-drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Indicator />"
+          ],
+          "title": "preserves keyboard and indicator parity for $axis $alignment $valueShape sliders",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/label/SliderLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "title": "focuses the registered thumb when composed within a Field"
+        },
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "title": "focuses the thumb in its shadow root when the outer document has a matching ID"
+        },
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "title": "focuses a thumb in the light DOM from a label in a shadow root"
+        },
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "title": "does not throw when the label is clicked in a detached React root"
+        },
+        {
+          "describe": [
+            "<Slider.Label />"
+          ],
+          "title": "does nothing when a Field slider has no thumb to focus"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/root/SliderRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Root />"
+          ],
+          "title": "warns when max is not greater than min"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "server-side rendering"
+          ],
+          "title": "does not link Slider.Label before hydration"
+        },
+        {
+          "describe": [
+            "<Slider.Root />"
+          ],
+          "title": "should not break when initial value is out of range",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "ARIA attributes"
+          ],
+          "title": "has the correct aria attributes"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "ARIA attributes"
+          ],
+          "title": "should update aria-valuenow"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "ARIA attributes"
+          ],
+          "title": "should set default aria-valuetext on range slider thumbs"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "rtl"
+          ],
+          "title": "should handle RTL",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "should render data-disabled on all subcomponents"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "explicitly blurs the focused thumb when disabled",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "should not respond to drag events after becoming disabled",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "should not respond to drag events if disabled",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not drag a thumb disabled via the `disabled` prop"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not drag a disabled thumb with touch events",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not change a single disabled thumb when pressing the track"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not select a disabled thumb when pressing the track",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: orientation"
+          ],
+          "title": "sets the `aria-orientation` attribute"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: orientation"
+          ],
+          "title": "sets the data-orientation attribute"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: orientation"
+          ],
+          "title": "does not set the orientation via appearance for WebKit browsers",
+          "conditions": [
+            "skipIf(isJSDOM || !/WebKit/.test(window.navigator.userAgent))"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: orientation"
+          ],
+          "title": "should report the right position",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: step"
+          ],
+          "title": "supports non-integer values"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: step"
+          ],
+          "title": "should round value to step precision",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: step"
+          ],
+          "title": "should not fail to round value to step precision when step is very small",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: step"
+          ],
+          "title": "should not fail to round value to step precision when step is very small and negative",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: max"
+          ],
+          "title": "sets the max attribute on the input"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: max"
+          ],
+          "title": "should not go more than the max"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: max"
+          ],
+          "title": "should reach right edge value",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: min"
+          ],
+          "title": "sets the min attribute on the input"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: min"
+          ],
+          "title": "should use min as the step origin"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: min"
+          ],
+          "title": "should not go less than the min"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: min"
+          ],
+          "title": "clamps range values that fall outside the min and max bounds"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: minStepsBetweenValues"
+          ],
+          "title": "should enforce a minimum difference between range slider values"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "single value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "commits a %s track tap"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "commits a real touch track tap",
+          "conditions": [
+            "skipIf(isJSDOM || !isBlink)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "keeps tracking a touch drag with touch listeners after the browser cancels the pointer"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "handles a touch press normally after a cancelled %s gesture"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not change the value on a %s tap on the thumb"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "array value",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit a canceled change"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit when keyboard interaction leaves the value unchanged"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit when keyboard interaction leaves a range value unchanged"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit when thumb press leaves the value unchanged",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit a canceled track press",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "does not commit a canceled drag",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "commits the last applied value when a later move is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueCommitted"
+          ],
+          "title": "commits the last applied range value when a later move is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should call handlers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should support touch events",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should only listen to changes from the same touchpoint",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "does not call onValueCommitted on outside taps after a touch interaction",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "removes the document touchend listener after a touch interaction",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should hedge against a dropped mouseup event",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should focus the slider when touching",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should focus the slider when dragging"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should not override the event.target on touch events",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "events"
+          ],
+          "title": "should not override the event.target on mouse events"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "dragging state"
+          ],
+          "title": "should not apply data-dragging for click modality",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "dragging state"
+          ],
+          "title": "should apply data-dragging for dragging modality",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "is called when clicking on the control",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "is not called when clicking on the thumb"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should not react to right clicks"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "provides the change reason for input events"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "provides the change reason for keyboard interactions"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "shows :focus-visible after keyboard interaction following a pointer press",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "provides the change reason for track presses"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "drags the intended thumb when 3 thumbs are present",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "keeps focus and the active index on the logical thumb after a swap from a %s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "keeps the original pressed thumb after a canceled swap and commits the next accepted move",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should fire only when the value changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "is called even if the $name did not change",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should pass \"name\" and \"value\" as part of the event.target for onValueChange"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should not rely on the global event when cloning change events",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should handle keyboard changes inside a shadow root",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "onValueCommitted is called with the same value as the latest onValueChange when pointerUp occurs at a different location than onValueChange",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "decrements the value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "decrements the value by largeStep when Shift is pressed"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "stops at min when decrementing while Shift is pressed"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "increments the value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "rounds fractional values to the configured step"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "increments the value by largeStep when Shift is pressed"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: $key"
+          ],
+          "title": "stops at max when incrementing while Shift is pressed"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: End"
+          ],
+          "title": "sets value to max in a single value slider"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: End"
+          ],
+          "title": "sets value to the maximum possible value in a range slider"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: Home"
+          ],
+          "title": "sets value to min in a single value slider"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: Home"
+          ],
+          "title": "sets value to the minimum possible value in a range slider"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: PageUp"
+          ],
+          "title": "increments the value by largeStep"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: PageUp"
+          ],
+          "title": "preserves largeStep increments when step uses a different grid"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: PageUp"
+          ],
+          "title": "does not exceed max"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: PageDown"
+          ],
+          "title": "decrements the value by largeStep"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions",
+            "$direction, orientation: $orientation",
+            "key: PageDown"
+          ],
+          "title": "does not go below min"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "keyboard interactions"
+          ],
+          "title": "keypresses should correct invalid values"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: format"
+          ],
+          "title": "formats the value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: format"
+          ],
+          "title": "recomputes the thumb aria text when the format option changes"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: format"
+          ],
+          "title": "formats range values"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: locale"
+          ],
+          "title": "sets the locale when formatting a single value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "prop: locale"
+          ],
+          "title": "sets the locale when formatting a range value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form",
+            "form submission"
+          ],
+          "title": "should include the slider value",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form",
+            "form submission"
+          ],
+          "title": "should include range slider value",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form",
+            "form submission"
+          ],
+          "title": "submits clamped range slider values to onFormSubmit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form",
+            "form submission"
+          ],
+          "title": "submits a clamped single-thumb slider value to onFormSubmit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Form",
+            "form submission"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "should receive disabled prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "should receive name prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty] with a range value"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "[data-focused]"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused thumb becomes disabled"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused thumb unmounts"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is kept when focus moved to a sibling before the first thumb is disabled"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is kept when a sibling thumb is disabled or unmounted"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validationMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "moves focus to the range input on invalid submit"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validationMode=onBlur preserves single-element array values"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validationMode=onChange"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validates once when changed by the user"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "validates once with an array value for range sliders when changed by the user"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "revalidates when the controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "receives an array value for range sliders"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field",
+            "prop: validate"
+          ],
+          "title": "does not call validate on change when validationMode is omitted"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "Field.Label"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "Slider.Label"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "Slider.Label focuses slider on click"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "Slider.Label does not focus a thumb on click for range sliders"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "does not set aria-labelledby when getAriaLabel is provided"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "does not set fallback aria-labelledby when no label is rendered"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "updates Slider.Label linkage when root id changes"
+        },
+        {
+          "describe": [
+            "<Slider.Root />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Thumb />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />"
+          ],
+          "title": "adds data-disabled when only the thumb is disabled"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />"
+          ],
+          "title": "sets the thumb index data attribute"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />"
+          ],
+          "title": "settles when the rendered component recreates its merged ref"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "ARIA attributes"
+          ],
+          "title": "forwards $attr to the input"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "ARIA attributes"
+          ],
+          "title": "prefers getAriaValueText over a direct aria-valuetext prop"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "ARIA attributes"
+          ],
+          "title": "formats aria-valuetext with en-US until hydrated, then with the runtime locale"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: onKeyDown"
+          ],
+          "title": "forwards key events that the slider does not handle"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: onKeyDown"
+          ],
+          "title": "forwards handled $key key events"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: onKeyDown"
+          ],
+          "title": "allows preventing the internal key handling"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: onKeyDown"
+          ],
+          "title": "does not commit NaN when more thumbs are rendered than values"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "single thumb",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "multiple thumbs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "does not emit extra blur and focus events when restoring focus-visible",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "forwards focus and blur to the input so `currentTarget` is the input",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "does not commit field validation when moving focus between range thumbs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "focus and blur"
+          ],
+          "title": "commits field validation when focus moves from a thumb to an arbitrary Control child",
+          "conditions": [
+            "skipIf(isJSDOM)",
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "change"
+          ],
+          "title": "handles change events"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "change"
+          ],
+          "title": "does not change the value beyond min and max"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "events",
+            "change"
+          ],
+          "title": "handles non-integer values"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: tabIndex"
+          ],
+          "title": "does not apply tabIndex to the thumb element by default"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: tabIndex"
+          ],
+          "title": "can be removed from the tab sequence"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: children"
+          ],
+          "title": "renders the nested input as a sibling to children"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: children"
+          ],
+          "title": "renders the nested input when using the short form render prop"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: children"
+          ],
+          "title": "renders the nested input when using the long form render prop"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: inputRef"
+          ],
+          "title": "can focus the input element"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />"
+          ],
+          "title": "preserves the grab offset when dragging a vertical thumb"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "stacking order"
+          ],
+          "title": "relies on DOM order before any thumb is used"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "stacking order"
+          ],
+          "title": "keeps the most recently active thumb on top after focus moves away"
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "recomputes inset positions when the slider becomes visible (strict: $strict)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "recomputes range inset positions when the slider becomes visible (strict: $strict)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "recomputes inset positions when the control resizes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "recomputes inset positions when the value changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "hides the thumb when min and max become equal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "moves the indicator end to a thumb that becomes the last thumb ($name)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "moves the indicator start to a thumb that becomes the first thumb",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment"
+          ],
+          "title": "disconnects its ResizeObserver when the slider unmounts during the mount measurement",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment",
+            "updates inset positions before the next paint"
+          ],
+          "title": "after the control resizes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "prop: thumbAlignment",
+            "updates inset positions before the next paint"
+          ],
+          "title": "after the slider is shown again",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged"
+          ],
+          "title": "single thumb",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged"
+          ],
+          "title": "multiple thumbs",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged",
+            "prop: thumbCollisionBehavior"
+          ],
+          "title": "prevents thumbs from passing each other when set to \"none\"",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged",
+            "prop: thumbCollisionBehavior"
+          ],
+          "title": "pushes adjacent thumbs forward when set to \"push\"",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged",
+            "prop: thumbCollisionBehavior"
+          ],
+          "title": "allows thumbs to swap when set to \"swap\"",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when dragged",
+            "prop: thumbCollisionBehavior"
+          ],
+          "title": "maintains minimum steps between values when swapping",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when the controlled value changes externally"
+          ],
+          "title": "single thumb",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles",
+            "positions the thumb when the controlled value changes externally"
+          ],
+          "title": "multiple thumbs",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "positioning styles"
+          ],
+          "title": "thumb should not go out of bounds when the controlled value goes out of bounds",
+          "conditions": [
+            "skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "server-side rendering"
+          ],
+          "title": "single thumb",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "server-side rendering"
+          ],
+          "title": "renders the inline pre-hydration script for edge-aligned thumbs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "server-side rendering"
+          ],
+          "title": "renders a single pre-hydration script with the last thumb",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Slider.Thumb />",
+            "server-side rendering"
+          ],
+          "title": "multiple thumbs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/track/SliderTrack.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Track />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/utils/getPushedThumbValues.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "pushes the next thumb forward when moving past it"
+        },
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "ensures minimum distance between thumbs while pushing forward"
+        },
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "pushes previous thumbs backward when moving before them"
+        },
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "pushes multiple thumbs in sequence"
+        },
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "allows fractional minimum distances"
+        },
+        {
+          "describe": [
+            "getPushedThumbValues"
+          ],
+          "title": "restores pushed thumbs towards their initial value when space allows"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/utils/getSliderValue.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getSliderValue"
+          ],
+          "title": "clamps a single value to the min/max range"
+        },
+        {
+          "describe": [
+            "getSliderValue",
+            "range neighbours"
+          ],
+          "title": "does not let a thumb cross a neighbour whose value is 0"
+        },
+        {
+          "describe": [
+            "getSliderValue",
+            "range neighbours"
+          ],
+          "title": "bounds a thumb between its real neighbours"
+        },
+        {
+          "describe": [
+            "getSliderValue",
+            "range neighbours"
+          ],
+          "title": "leaves the outer edges unbounded by missing neighbours"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/utils/resolveThumbCollision.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "prevents thumbs from passing each other when behavior is \"none\""
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "pushes thumbs forward without cling when behavior is \"push\""
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "keeps pushed thumbs in place when moving backward in push mode"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "swaps thumbs when behavior is \"swap\""
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "maintains swap continuity with minimum steps when provided current and initial values"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "does not swap before reaching neighbour value with minimum steps"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "swaps once reaching the neighbour value with minimum steps"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "does not swap backward before reaching neighbour value with minimum steps"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "swaps backward once reaching the neighbour value with minimum steps"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "does not move the clamped neighbour when swapping across with minimum steps"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "uses current values when a controlled range grows during a swap interaction"
+        },
+        {
+          "describe": [
+            "resolveThumbCollision"
+          ],
+          "title": "returns a scalar when the live values shrink to one item during an interaction"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/utils/roundValueToStep.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "roundValueToStep"
+          ],
+          "title": "preserves precision from the step origin"
+        },
+        {
+          "describe": [
+            "roundValueToStep"
+          ],
+          "title": "preserves decimal precision for steps greater than one"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/slider/value/SliderValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "title": "renders a single value"
+        },
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "title": "renders a range"
+        },
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "title": "associates the output with every thumb input"
+        },
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "title": "renders all thumb values"
+        },
+        {
+          "describe": [
+            "<Slider.Value />"
+          ],
+          "title": "recomputes the formatted output when the format option changes"
+        },
+        {
+          "describe": [
+            "<Slider.Value />",
+            "prop: children"
+          ],
+          "title": "accepts a render function"
+        },
+        {
+          "describe": [
+            "<Slider.Value />",
+            "server-side rendering"
+          ],
+          "title": "hydrates directly inside Root without a mismatch, then uses the runtime locale"
+        },
+        {
+          "describe": [
+            "<Slider.Value />",
+            "server-side rendering"
+          ],
+          "title": "hydrates inside a Suspense boundary without a mismatch, then uses the runtime locale",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/slider/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "div",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "number | number[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "number | number[]",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: number | number[], eventDetails: Slider.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onValueCommitted",
+              "required": false,
+              "type": "((value: number | number[], eventDetails: Slider.Root.CommitEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "locale",
+              "required": false,
+              "type": "Intl.LocalesArgument",
+              "default": null
+            },
+            {
+              "name": "thumbAlignment",
+              "required": false,
+              "type": "'center' | 'edge' | 'edge-client-only'",
+              "default": "'center'"
+            },
+            {
+              "name": "thumbCollisionBehavior",
+              "required": false,
+              "type": "'push' | 'swap' | 'none'",
+              "default": "'push'"
+            },
+            {
+              "name": "step",
+              "required": false,
+              "type": "number",
+              "default": "1"
+            },
+            {
+              "name": "largeStep",
+              "required": false,
+              "type": "number",
+              "default": "10"
+            },
+            {
+              "name": "minStepsBetweenValues",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "min",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "max",
+              "required": false,
+              "type": "number",
+              "default": "100"
+            },
+            {
+              "name": "format",
+              "required": false,
+              "type": "Intl.NumberFormatOptions",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderRootState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderRootState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "SliderRootChangeEventReason",
+            "values": [
+              "input-change",
+              "track-press",
+              "drag",
+              "keyboard",
+              "none"
+            ],
+            "code": "type SliderRootChangeEventReason = 'input-change' | 'track-press' | 'drag' | 'keyboard' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "SliderRootChangeEventDetails",
+            "code": "type SliderRootChangeEventDetails = ({\n    reason: 'none';\n    event: Event;\n} | {\n    reason: 'input-change';\n    event: Event | InputEvent;\n} | {\n    reason: 'track-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'drag';\n    event: PointerEvent | TouchEvent;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    activeThumbIndex: number;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Value",
+          "tag": "output",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "((formattedValues: string[], values: number[]) => React.ReactNode) | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Value.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Value.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Value.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderValueState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderValueState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderIndicatorState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderIndicatorState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Track",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Track.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Track.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Track.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderTrackState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderTrackState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Thumb",
+          "tag": "div",
+          "props": [
+            {
+              "name": "aria-valuetext",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "getAriaLabel",
+              "required": false,
+              "type": "((index: number) => string) | null",
+              "default": null
+            },
+            {
+              "name": "getAriaValueText",
+              "required": false,
+              "type": "((formattedValue: string, value: number, index: number) => string) | null",
+              "default": null
+            },
+            {
+              "name": "index",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "onBlur",
+              "required": false,
+              "type": "React.FocusEventHandler<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "onFocus",
+              "required": false,
+              "type": "React.FocusEventHandler<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "onKeyDown",
+              "required": false,
+              "type": "React.KeyboardEventHandler<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "tabIndex",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Thumb.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Thumb.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Thumb.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderThumbState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderThumbState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-index",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Control",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Control.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Control.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Control.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderControlState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderControlState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-dragging",
+              "type": null
+            },
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Label",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Slider.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Slider.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Slider.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SliderLabelState",
+            "fields": [
+              {
+                "name": "activeThumbIndex",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dragging",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "max",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "min",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "minStepsBetweenValues",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              },
+              {
+                "name": "step",
+                "optional": false,
+                "type": "number"
+              },
+              {
+                "name": "values",
+                "optional": false,
+                "type": "number[]"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SliderLabelState = {\n    activeThumbIndex: number;\n    disabled: boolean;\n    dragging: boolean;\n    max: number;\n    min: number;\n    minStepsBetweenValues: number;\n    orientation: Orientation;\n    step: number;\n    values: number[];\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.CommitEventReason",
+          "code": "type SliderRootCommitEventReason = 'input-change' | 'track-press' | 'drag' | 'keyboard' | 'none';"
+        },
+        {
+          "name": "Root.CommitEventDetails",
+          "code": "type SliderRootCommitEventDetails = {\n    reason: 'none';\n    event: Event;\n} | {\n    reason: 'input-change';\n    event: Event | InputEvent;\n} | {\n    reason: 'track-press';\n    event: PointerEvent | MouseEvent | TouchEvent;\n} | {\n    reason: 'drag';\n    event: PointerEvent | TouchEvent;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "SliderControlDataAttributes",
+          "code": "declare namespace SliderControlDataAttributes {\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SliderIndicatorDataAttributes",
+          "code": "declare namespace SliderIndicatorDataAttributes {\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SliderRootChangeEventCustomProperties",
+          "code": "type SliderRootChangeEventCustomProperties = {\n    activeThumbIndex: number;\n};"
+        },
+        {
+          "name": "SliderRootDataAttributes",
+          "code": "declare namespace SliderRootDataAttributes {\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SliderThumbDataAttributes",
+          "code": "declare namespace SliderThumbDataAttributes {\n    const index: 'data-index';\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "index",
+              "value": "data-index"
+            },
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SliderTrackDataAttributes",
+          "code": "declare namespace SliderTrackDataAttributes {\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "SliderValueDataAttributes",
+          "code": "declare namespace SliderValueDataAttributes {\n    const dragging: 'data-dragging';\n    const orientation: 'data-orientation';\n    const disabled: 'data-disabled';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "dragging",
+              "value": "data-dragging"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "ThumbMetadata",
+          "code": "type ThumbMetadata = {\n    inputId: string | undefined;\n};"
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/slider/page.mdx",
+      "referenceTags": [
+        "TypesSlider.Root",
+        "TypesSlider.Label",
+        "TypesSlider.Value",
+        "TypesSlider.Control",
+        "TypesSlider.Track",
+        "TypesSlider.Indicator",
+        "TypesSlider.Thumb"
+      ]
+    }
+  ]
+}
