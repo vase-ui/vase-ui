@@ -3,8 +3,24 @@ import { renderToString } from 'vue/server-renderer';
 import { OTPField } from '@vase-ui/vue/otp-field';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 
+const OTP_LENGTH = 6;
+
+function OTPFieldWithInputs(props: Record<string, unknown>) {
+  return (
+    <OTPField.Root length={OTP_LENGTH} {...props}>
+      {Array.from({ length: OTP_LENGTH }, (_, index) => (
+        <OTPField.Input key={index} />
+      ))}
+    </OTPField.Root>
+  );
+}
+
 function tag(html: string, pattern: RegExp) {
   return html.match(pattern)?.[0] ?? '';
+}
+
+function tags(html: string, pattern: RegExp) {
+  return html.match(pattern) ?? [];
 }
 
 function attribute(element: string, name: string) {
@@ -19,7 +35,72 @@ const GROUP = /<div[^>]*role="group"[^>]*>/;
 const HIDDEN_INPUT = /<input[^>]*aria-hidden="true"[^>]*>/;
 
 describe('<OTPField.Root />', () => {
+  describe('value handling', () => {
+    describe('prop: validationType', () => {
+      describe('hidden validation input', () => {
+        it('renders the hidden validation input with an alphanumeric pattern during SSR', async () => {
+          expect(typeof document).toBe('undefined');
+
+          const html = await renderToString(
+            <OTPFieldWithInputs name="otp" required validationType="alphanumeric" />,
+          );
+          const hiddenInput = tag(html, HIDDEN_INPUT);
+
+          expect(hiddenInput).not.toBe('');
+          expect(attribute(hiddenInput, 'name')).toBe('otp');
+          expect(attribute(hiddenInput, 'pattern')).toBe('[a-zA-Z0-9]{6}');
+        });
+      });
+    });
+  });
+
+  describe('Form', () => {
+    describe('server-side rendering', () => {
+      it('renders visible inputs with unique IDs', async () => {
+        const html = await renderToString(<OTPFieldWithInputs id="verification-code" />);
+        const root = html.slice(0, html.indexOf('</div>'));
+        const inputs = tags(root, /<input[^>]*>/g);
+
+        expect(inputs.map((input) => attribute(input, 'id'))).toEqual([
+          'verification-code',
+          'verification-code-2',
+          'verification-code-3',
+          'verification-code-4',
+          'verification-code-5',
+          'verification-code-6',
+        ]);
+      });
+
+      it('renders a hidden validation input with the provided length', async () => {
+        const html = await renderToString(<OTPFieldWithInputs name="otp" required />);
+        const hiddenInput = tag(html, HIDDEN_INPUT);
+
+        expect(hiddenInput).not.toBe('');
+        expect(attribute(hiddenInput, 'name')).toBe('otp');
+        expect(attribute(hiddenInput, 'minlength')).toBe('6');
+        expect(attribute(hiddenInput, 'maxlength')).toBe('6');
+        expect(attribute(hiddenInput, 'pattern')).toBe('\\d{6}');
+      });
+    });
+  });
+
   describe('server-side rendering', () => {
+    it.each([
+      { name: 'no `autocorrect` of the consumer', props: {}, expected: ['off'] },
+      { name: 'an `autocorrect` of the consumer', props: { autocorrect: 'on' }, expected: ['on'] },
+    ])('renders one `autocorrect` attribute on a slot with $name', async ({ props, expected }) => {
+      const html = await renderToString(
+        <OTPField.Root length={1}>
+          <OTPField.Input {...props} />
+        </OTPField.Root>,
+      );
+      const slot = tag(html, /<input[^>]*enterkeyhint[^>]*>/);
+
+      expect(Array.from(slot.matchAll(/ autocorrect="([^"]*)"/g), (match) => match[1])).toEqual(
+        expected,
+      );
+    });
+
     it('renders the group and the hidden input with the attributes of the form', async () => {
       expect(typeof document).toBe('undefined');
 

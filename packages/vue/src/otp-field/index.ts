@@ -1,13 +1,16 @@
 export * as OTPField from './index.parts';
 
 export { default as OTPFieldRoot } from './root/OTPFieldRoot.vue';
+export { default as OTPFieldInput } from './input/OTPFieldInput.vue';
 export { default as OTPFieldSeparator } from '../separator/Separator.vue';
 
 export type * from './root/OTPFieldRoot.vue';
+export type * from './input/OTPFieldInput.vue';
 export type {
   SeparatorProps as OTPFieldSeparatorProps,
   SeparatorState as OTPFieldSeparatorState,
 } from '../separator/Separator.vue';
 
 export * as OTPFieldRootDataAttributes from './root/OTPFieldRootDataAttributes';
+export * as OTPFieldInputDataAttributes from './input/OTPFieldInputDataAttributes';
 export * as OTPFieldSeparatorDataAttributes from '../separator/SeparatorDataAttributes';
