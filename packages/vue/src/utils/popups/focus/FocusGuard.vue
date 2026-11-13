@@ -9,6 +9,9 @@ import { onMounted, shallowRef } from 'vue';
 import { platform } from '../../../common/platform';
 import { visuallyHidden } from '../../../common/visuallyHidden';
 
+// As in Base UI, the attributes of the guard win over those of a consumer. A `:style` binding
+// merges with the `style` of a consumer. A `style` key in the `v-bind` object replaces it.
+defineOptions({ inheritAttrs: false });
 defineProps<FocusGuardProps>();
 
 const element = shallowRef<HTMLSpanElement | null>(null);
@@ -30,12 +33,12 @@ defineExpose({ element });
 
 <template>
   <span
+    v-bind="{ ...$attrs, style: visuallyHidden }"
     ref="element"
     tabindex="0"
     :role="role"
     :aria-hidden="role ? undefined : true"
     :aria-label="role ? 'Focus guard' : undefined"
-    :style="visuallyHidden"
     data-vase-ui-focus-guard=""
   />
 </template>

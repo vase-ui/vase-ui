@@ -21,7 +21,7 @@ describe('FocusGuard on a server', () => {
     const html = await renderToString(<FocusGuard data-type="inside" />);
 
     expect(html).toBe(
-      '<span tabindex="0" aria-hidden="true" style="clip-path:inset(50%);overflow:hidden;white-space:nowrap;border:0;padding:0;width:1px;height:1px;margin:0;position:fixed;top:-1px;left:0;" data-vase-ui-focus-guard data-type="inside"></span>',
+      '<span data-type="inside" style="clip-path:inset(50%);overflow:hidden;white-space:nowrap;border:0;padding:0;width:1px;height:1px;margin:0;position:fixed;top:-1px;left:0;" tabindex="0" aria-hidden="true" data-vase-ui-focus-guard></span>',
     );
   });
 });

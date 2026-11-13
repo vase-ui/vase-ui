@@ -35,6 +35,12 @@ function setPlatform({ voiceOver, webkit }: { voiceOver: boolean; webkit: boolea
   onTestFinished(() => define({ voiceOver: false, webkit: false }));
 }
 
+function getVisuallyHiddenCssText() {
+  const reference = document.createElement('span');
+  Object.assign(reference.style, visuallyHidden);
+  return reference.style.cssText;
+}
+
 interface FocusGuardInstance {
   element: HTMLElement | null;
 }
@@ -45,12 +51,10 @@ describe('FocusGuard', () => {
   it('is a span with the focus guard attribute and the style of visuallyHidden', async () => {
     const { getByTestId } = await render(<FocusGuard data-testid="guard" />);
     const guard = getByTestId('guard');
-    const reference = document.createElement('span');
-    Object.assign(reference.style, visuallyHidden);
 
     expect(guard.tagName).toBe('SPAN');
     expect(guard).toHaveAttribute(createAttribute('focus-guard'), '');
-    expect(guard.style.cssText).toBe(reference.style.cssText);
+    expect(guard.style.cssText).toBe(getVisuallyHiddenCssText());
   });
 
   it('is a stop of the Tab key', async () => {
@@ -86,6 +90,26 @@ describe('FocusGuard', () => {
     expect(getByTestId('guard')).toHaveAttribute('data-type', 'outside');
     expect(handleFocusin).toHaveBeenCalledTimes(1);
     expect(handleFocusin.mock.lastCall?.[0].relatedTarget).toBe(before);
+  });
+
+  it('keeps its own attributes when a consumer gives the same attributes', async () => {
+    const { getByTestId } = await render(
+      <FocusGuard
+        data-testid="guard"
+        tabindex="-1"
+        role="presentation"
+        aria-hidden="false"
+        style="display: none"
+        data-vase-ui-focus-guard="consumer"
+      />,
+    );
+    const guard = getByTestId('guard');
+
+    expect(guard).toHaveAttribute('tabindex', '0');
+    expect(guard).toHaveAttribute('aria-hidden', 'true');
+    expect(guard).not.toHaveAttribute('role');
+    expect(guard).toHaveAttribute(createAttribute('focus-guard'), '');
+    expect(guard.style.cssText).toBe(getVisuallyHiddenCssText());
   });
 
   it('exposes its span as `element`', async () => {
