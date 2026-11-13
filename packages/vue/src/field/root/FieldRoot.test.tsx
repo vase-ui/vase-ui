@@ -1598,6 +1598,46 @@ describe('<Field.Root />', () => {
       expect(control.validationMessage).toBe('');
     });
 
+    it('keeps its own message on an input that was disabled and enabled again', async () => {
+      const App = defineComponent(() => {
+        const disabled = shallowRef(false);
+
+        return () => (
+          <form data-testid="form">
+            <Field.Root
+              validationMode="onChange"
+              validate={(value) => (value === 'bad' ? 'custom error' : null)}
+            >
+              <Field.Control data-testid="control" disabled={disabled.value} />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                disabled.value = !disabled.value;
+              }}
+            >
+              toggle disabled
+            </button>
+          </form>
+        );
+      });
+
+      await render(<App />);
+
+      const control = screen.getByTestId<HTMLInputElement>('control');
+
+      await fireEvent.input(control, { target: { value: 'bad' } });
+      expect(control.validationMessage).toBe('custom error');
+
+      await fireEvent.click(screen.getByText('toggle disabled'));
+      await fireEvent.click(screen.getByText('toggle disabled'));
+
+      expect(screen.getByTestId('error')).toHaveTextContent('custom error');
+      expect(control.validationMessage).toBe('custom error');
+      expect(screen.getByTestId<HTMLFormElement>('form').checkValidity()).toBe(false);
+    });
+
     it('does not adopt a native message as the message it displaced', async () => {
       await render(
         <Field.Root

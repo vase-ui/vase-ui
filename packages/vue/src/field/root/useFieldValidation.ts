@@ -321,8 +321,6 @@ export function useFieldValidation(
     timeout.clear();
     validationCommitId += 1;
     if (cancelPending) {
-      // A cancel also removes the message that the field put on the input.
-      clearCustomValidity();
       return;
     }
 
@@ -336,6 +334,14 @@ export function useFieldValidation(
     } else {
       commit(value, !validateOnChange);
     }
+  }
+
+  // A cancel in `change` keeps the message on the input, because the field still shows its error.
+  // A reset removes the error of the field, so it removes the message too.
+  function reset() {
+    timeout.clear();
+    validationCommitId += 1;
+    clearCustomValidity();
   }
 
   // The control calls it in each render, so it reads the current state and not `renderedValid`.
@@ -356,6 +362,7 @@ export function useFieldValidation(
     getInputControl,
     commit,
     change,
+    reset,
   };
 }
 

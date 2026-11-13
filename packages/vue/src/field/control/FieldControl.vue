@@ -347,7 +347,7 @@ watch(
 
         // After the reset the error of the field is out of date: the validation that is pending,
         // the message on the input and the error of the form must go.
-        validation.change(undefined, true);
+        validation.reset();
         setValidityData({
           ...validityData.value,
           state: DEFAULT_VALIDITY_STATE,
