@@ -1,0 +1,9 @@
+{
+  "id": "VUE-15",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/accordion/item/AccordionItem.tsx#L98-L102",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/accordion/trigger/AccordionTrigger.tsx#L50-L58"
+  ],
+  "behavior": "When two triggers of one item are mounted, the panel names the trigger that registered last in `aria-labelledby`. When that trigger unmounts, the panel names the trigger that stays. Base UI gives the panel no `aria-labelledby` then, because the trigger that stays does not register again.",
+  "dueWith": "packages/react/src/accordion/panel/AccordionPanel.tsx"
+}
