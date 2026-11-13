@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -56,7 +56,224 @@ describe('<Field.Root />', () => {
     render,
   }));
 
+  it('updates label association when replacing one control with another', async () => {
+    const TestCase = defineComponent(() => {
+      const showB = shallowRef(false);
+
+      return () => (
+        <>
+          <Field.Root>
+            <Field.Label>Label</Field.Label>
+            {showB.value ? (
+              <Field.Control key="b" id="control-b" />
+            ) : (
+              <Field.Control key="a" id="control-a" />
+            )}
+          </Field.Root>
+          <button
+            type="button"
+            onClick={() => {
+              showB.value = true;
+            }}
+          >
+            Toggle
+          </button>
+        </>
+      );
+    });
+
+    await render(<TestCase />);
+
+    const label = screen.getByText('Label');
+    expect(label).toHaveAttribute('for', 'control-a');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Toggle' }));
+
+    await waitFor(() => {
+      expect(label).toHaveAttribute('for', 'control-b');
+    });
+  });
+
+  it('drops a stale explicit id when an id-less control replaces the control that owned it', async () => {
+    const TestCase = defineComponent(
+      (props: { swapped: boolean }) => () => (
+        <Field.Root>
+          <Field.Label>Label</Field.Label>
+          {props.swapped ? (
+            <Field.Control key="b" data-testid="control" />
+          ) : (
+            <Field.Control key="a" id="control" data-testid="control" />
+          )}
+        </Field.Root>
+      ),
+      { props: ['swapped'] },
+    );
+
+    const { rerender } = await render(<TestCase swapped={false} />);
+
+    const label = screen.getByText('Label');
+    expect(label).toHaveAttribute('for', 'control');
+
+    await rerender(<TestCase swapped />);
+
+    const control = screen.getByTestId('control');
+    expect(control.id).not.toBe('control');
+    expect(label).toHaveAttribute('for', control.id);
+  });
+
+  it('updates label associations when the control id changes', async () => {
+    const TestCase = defineComponent(() => {
+      const controlId = shallowRef('control-a');
+
+      return () => (
+        <>
+          <Field.Root>
+            <Field.Label>Label</Field.Label>
+            <Field.Control id={controlId.value} />
+          </Field.Root>
+          <button
+            type="button"
+            onClick={() => {
+              controlId.value = 'control-b';
+            }}
+          >
+            Change
+          </button>
+        </>
+      );
+    });
+
+    await render(<TestCase />);
+
+    const label = screen.getByText('Label');
+
+    expect(label).toHaveAttribute('for', 'control-a');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+
+    await waitFor(() => {
+      expect(label).toHaveAttribute('for', 'control-b');
+    });
+  });
+
+  it('falls back to a generated id when the control id is removed', async () => {
+    const TestCase = defineComponent(() => {
+      const controlId = shallowRef<string | undefined>('control-a');
+
+      return () => (
+        <>
+          <Field.Root>
+            <Field.Label>Label</Field.Label>
+            <Field.Control id={controlId.value} />
+          </Field.Root>
+          <button
+            type="button"
+            onClick={() => {
+              controlId.value = undefined;
+            }}
+          >
+            Clear
+          </button>
+        </>
+      );
+    });
+
+    await render(<TestCase />);
+
+    const label = screen.getByText('Label');
+    const control = screen.getByRole('textbox');
+
+    expect(label).toHaveAttribute('for', 'control-a');
+    expect(control).toHaveAttribute('id', 'control-a');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    const updatedId = screen.getByRole('textbox').id;
+
+    expect(updatedId).not.toBe('');
+    expect(updatedId).not.toBe('control-a');
+    expect(label).toHaveAttribute('for', updatedId);
+  });
+
+  it('keeps an explicit control id while the subtree is hidden', async () => {
+    const visible = shallowRef(true);
+
+    await render(() => (
+      <>
+        <Field.Root>
+          <Field.Label data-testid="label">Email</Field.Label>
+          <KeepAlive>
+            {visible.value ? <Field.Control id="email" data-testid="control" /> : null}
+          </KeepAlive>
+        </Field.Root>
+        <button
+          type="button"
+          onClick={() => {
+            visible.value = false;
+          }}
+        >
+          hide
+        </button>
+      </>
+    ));
+
+    const control = screen.getByTestId('control');
+    expect(control).toHaveAttribute('id', 'email');
+    expect(screen.getByTestId('label')).toHaveAttribute('for', 'email');
+
+    await fireEvent.click(screen.getByRole('button', { name: 'hide' }));
+
+    // `KeepAlive` takes the control out of the document and keeps its DOM, so the association must
+    // hold.
+    expect(control.isConnected).toBe(false);
+    expect(control).toHaveAttribute('id', 'email');
+    expect(screen.getByTestId('label')).toHaveAttribute('for', 'email');
+  });
+
   describe('prop: disabled', () => {
+    it('should add data-disabled style hook to all components', async () => {
+      await render(
+        <Field.Root data-testid="field" disabled>
+          <Field.Control data-testid="control" />
+          <Field.Label data-testid="label" />
+          <Field.Description data-testid="message" />
+        </Field.Root>,
+      );
+
+      const field = screen.getByTestId('field');
+      const control = screen.getByTestId('control');
+      const label = screen.getByTestId('label');
+      const message = screen.getByTestId('message');
+
+      expect(field).toHaveAttribute('data-disabled', '');
+      expect(control).toHaveAttribute('data-disabled', '');
+      expect(label).toHaveAttribute('data-disabled', '');
+      expect(message).toHaveAttribute('data-disabled', '');
+    });
+
+    it('keeps an explicitly invalid field marked invalid while disabled', async () => {
+      await render(
+        <Field.Root data-testid="field" disabled invalid>
+          <Field.Control data-testid="control" />
+          <Field.Label data-testid="label" />
+          <Field.Description data-testid="description" />
+        </Field.Root>,
+      );
+
+      const field = screen.getByTestId('field');
+      const control = screen.getByTestId('control');
+      const label = screen.getByTestId('label');
+      const description = screen.getByTestId('description');
+
+      expect(field).toHaveAttribute('data-invalid', '');
+      expect(control).toHaveAttribute('data-invalid', '');
+      expect(label).toHaveAttribute('data-invalid', '');
+      expect(description).toHaveAttribute('data-invalid', '');
+
+      // It does not participate in native constraint validation.
+      expect(control).not.toHaveAttribute('aria-invalid');
+    });
+
     it('keeps a disabled field with form errors marked invalid', async () => {
       await render(
         <Form errors={{ name: 'Server error' }}>
@@ -872,6 +1089,51 @@ describe('<Field.Root />', () => {
 
         expect(screen.queryByText('old error')).toBe(null);
         expect(control).not.toHaveAttribute('aria-invalid');
+      });
+
+      it('should apply [data-field] style hooks to field components', async () => {
+        await render(
+          <Field.Root validationMode="onBlur">
+            <Field.Label data-testid="label">Label</Field.Label>
+            <Field.Description data-testid="description">Description</Field.Description>
+            <Field.Error data-testid="error" />
+            <Field.Control data-testid="control" required />
+          </Field.Root>,
+        );
+
+        const control = screen.getByTestId<HTMLInputElement>('control');
+        const label = screen.getByTestId('label');
+        const description = screen.getByTestId('description');
+        let error = screen.queryByTestId('error');
+
+        expect(control).not.toHaveAttribute('data-valid');
+        expect(label).not.toHaveAttribute('data-valid');
+        expect(description).not.toHaveAttribute('data-valid');
+        expect(error).toBe(null);
+
+        await fireEvent.focusIn(control);
+        await fireEvent.input(control, { target: { value: 'a' } });
+        await fireEvent.input(control, { target: { value: '' } });
+        await fireEvent.focusOut(control);
+
+        error = screen.getByTestId('error');
+
+        expect(control).toHaveAttribute('data-invalid', '');
+        expect(label).toHaveAttribute('data-invalid', '');
+        expect(description).toHaveAttribute('data-invalid', '');
+        expect(error).toHaveAttribute('data-invalid', '');
+
+        control.value = 'value';
+        control.focus();
+        control.blur();
+        await flushMicrotasks();
+
+        error = screen.queryByTestId('error');
+
+        expect(control).toHaveAttribute('data-valid', '');
+        expect(label).toHaveAttribute('data-valid', '');
+        expect(description).toHaveAttribute('data-valid', '');
+        expect(error).toBe(null);
       });
 
       describe('revalidation', () => {
@@ -1727,6 +1989,77 @@ describe('<Field.Root />', () => {
   });
 
   describe('style hooks', () => {
+    describe('touched', () => {
+      it('should apply [data-touched] style hook to all components when touched', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <Field.Control data-testid="control" />
+            <Field.Label data-testid="label" />
+            <Field.Description data-testid="description" />
+            <Field.Error data-testid="error" />
+          </Field.Root>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+        const label = screen.getByTestId('label');
+        const description = screen.getByTestId('description');
+        const error = screen.queryByTestId('error');
+
+        expect(root).not.toHaveAttribute('data-touched');
+        expect(control).not.toHaveAttribute('data-touched');
+        expect(label).not.toHaveAttribute('data-touched');
+        expect(description).not.toHaveAttribute('data-touched');
+        expect(error).toBe(null);
+
+        await fireEvent.focusIn(control);
+        await fireEvent.focusOut(control);
+
+        expect(root).toHaveAttribute('data-touched', '');
+        expect(control).toHaveAttribute('data-touched', '');
+        expect(label).toHaveAttribute('data-touched', '');
+        expect(description).toHaveAttribute('data-touched', '');
+        expect(error).toBe(null);
+      });
+    });
+
+    describe('dirty', () => {
+      it('should apply [data-dirty] style hook to all components when dirty', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <Field.Control data-testid="control" />
+            <Field.Label data-testid="label" />
+            <Field.Description data-testid="description" />
+            <Field.Error data-testid="error" />
+          </Field.Root>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+        const label = screen.getByTestId('label');
+        const description = screen.getByTestId('description');
+
+        expect(root).not.toHaveAttribute('data-dirty');
+        expect(control).not.toHaveAttribute('data-dirty');
+        expect(label).not.toHaveAttribute('data-dirty');
+        expect(description).not.toHaveAttribute('data-dirty');
+
+        await fireEvent.input(control, { target: { value: 'value' } });
+
+        expect(root).toHaveAttribute('data-dirty', '');
+        expect(control).toHaveAttribute('data-dirty', '');
+        expect(label).toHaveAttribute('data-dirty', '');
+        expect(description).toHaveAttribute('data-dirty', '');
+
+        await fireEvent.input(control, { target: { value: '' } });
+
+        expect(root).not.toHaveAttribute('data-dirty');
+        expect(control).not.toHaveAttribute('data-dirty');
+        expect(label).not.toHaveAttribute('data-dirty');
+        expect(description).not.toHaveAttribute('data-dirty');
+      });
+    });
+
     describe('control remount', () => {
       it('keeps the original baseline when a controlled control remounts', async () => {
         const App = defineComponent(() => {
@@ -1795,6 +2128,41 @@ describe('<Field.Root />', () => {
     });
 
     describe('filled', () => {
+      it('should apply [data-filled] style hook to all components when filled', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <Field.Control data-testid="control" />
+            <Field.Label data-testid="label" />
+            <Field.Description data-testid="description" />
+            <Field.Error data-testid="error" />
+          </Field.Root>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+        const label = screen.getByTestId('label');
+        const description = screen.getByTestId('description');
+
+        expect(root).not.toHaveAttribute('data-filled');
+        expect(control).not.toHaveAttribute('data-filled');
+        expect(label).not.toHaveAttribute('data-filled');
+        expect(description).not.toHaveAttribute('data-filled');
+
+        await fireEvent.input(control, { target: { value: 'value' } });
+
+        expect(root).toHaveAttribute('data-filled', '');
+        expect(control).toHaveAttribute('data-filled', '');
+        expect(label).toHaveAttribute('data-filled', '');
+        expect(description).toHaveAttribute('data-filled', '');
+
+        await fireEvent.input(control, { target: { value: '' } });
+
+        expect(root).not.toHaveAttribute('data-filled');
+        expect(control).not.toHaveAttribute('data-filled');
+        expect(label).not.toHaveAttribute('data-filled');
+        expect(description).not.toHaveAttribute('data-filled');
+      });
+
       it('changes [data-filled] when the value is changed externally', async () => {
         const App = defineComponent(() => {
           const value = shallowRef('');
@@ -1835,6 +2203,43 @@ describe('<Field.Root />', () => {
 
         await user.click(screen.getByRole('button', { name: 'reset' }));
         expect(screen.getByRole('textbox')).not.toHaveAttribute('data-filled', '');
+      });
+    });
+
+    describe('focused', () => {
+      it('should apply [data-focused] style hook to all components when focused', async () => {
+        await render(
+          <Field.Root data-testid="root">
+            <Field.Control data-testid="control" />
+            <Field.Label data-testid="label" />
+            <Field.Description data-testid="description" />
+            <Field.Error data-testid="error" />
+          </Field.Root>,
+        );
+
+        const root = screen.getByTestId('root');
+        const control = screen.getByTestId('control');
+        const label = screen.getByTestId('label');
+        const description = screen.getByTestId('description');
+
+        expect(root).not.toHaveAttribute('data-focused');
+        expect(control).not.toHaveAttribute('data-focused');
+        expect(label).not.toHaveAttribute('data-focused');
+        expect(description).not.toHaveAttribute('data-focused');
+
+        await fireEvent.focusIn(control);
+
+        expect(root).toHaveAttribute('data-focused', '');
+        expect(control).toHaveAttribute('data-focused', '');
+        expect(label).toHaveAttribute('data-focused', '');
+        expect(description).toHaveAttribute('data-focused', '');
+
+        await fireEvent.focusOut(control);
+
+        expect(root).not.toHaveAttribute('data-focused');
+        expect(control).not.toHaveAttribute('data-focused');
+        expect(label).not.toHaveAttribute('data-focused');
+        expect(description).not.toHaveAttribute('data-focused');
       });
     });
   });
@@ -1902,6 +2307,21 @@ describe('<Field.Root />', () => {
   });
 
   describe('prop: dirty', () => {
+    it('controls the dirty state', async () => {
+      await render(
+        <Field.Root data-testid="root" dirty>
+          <Field.Control data-testid="control" />
+          <Field.Label data-testid="label" />
+          <Field.Description data-testid="description" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      ['root', 'control', 'label', 'description'].forEach((part) => {
+        expect(screen.getByTestId(part)).toHaveAttribute('data-dirty');
+      });
+    });
+
     it('uses the controlled dirty state for required validation', async () => {
       await render(
         <Field.Root dirty validationMode="onBlur">
@@ -1933,6 +2353,21 @@ describe('<Field.Root />', () => {
   });
 
   describe('prop: touched', () => {
+    it('controls the touched state', async () => {
+      await render(
+        <Field.Root data-testid="root" touched>
+          <Field.Control data-testid="control" />
+          <Field.Label data-testid="label" />
+          <Field.Description data-testid="description" />
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      ['root', 'control', 'label', 'description'].forEach((part) => {
+        expect(screen.getByTestId(part)).toHaveAttribute('data-touched');
+      });
+    });
+
     it('does not update controlled touched state on blur', async () => {
       await render(
         <Field.Root data-testid="root" touched={false}>

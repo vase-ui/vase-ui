@@ -1,0 +1,10 @@
+{
+  "id": "VUE-23",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/field/label/FieldLabel.tsx#L44",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/useRegisteredLabelId.ts#L10-L17",
+    "https://html.spec.whatwg.org/multipage/dom.html#the-id-attribute"
+  ],
+  "behavior": "Each `Field.Label` has the id of its `id` prop, or an id of its own, and the id follows the prop. The control names the last label in `aria-labelledby`. Base UI gives each label the id of the last label that registered. Two labels of one field then have the same id, and a change of the `id` prop has no effect.",
+  "dueWith": "packages/react/src/field/label/FieldLabel.tsx"
+}
