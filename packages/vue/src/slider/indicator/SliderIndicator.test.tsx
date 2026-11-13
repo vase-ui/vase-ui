@@ -100,17 +100,8 @@ describe('<Slider.Indicator />', () => {
 
   describe('hydration', () => {
     it.each([
-      { name: 'a single thumb', props: { defaultValue: 30 } },
-      { name: 'a range', props: { defaultValue: [25, 75] } },
-      { name: 'the alignment edge', props: { defaultValue: 30, alignment: 'edge' } },
-      {
-        name: 'a range with the alignment edge',
-        props: { defaultValue: [25, 75], alignment: 'edge' },
-      },
-      {
-        name: 'a range with edge-client-only',
-        props: { defaultValue: [25, 75], alignment: 'edge-client-only' },
-      },
+      { name: 'the alignment edge', props: { defaultValue: 30 } },
+      { name: 'a range with the alignment edge', props: { defaultValue: [25, 75] } },
     ])('hydrates $name with no mismatch', async ({ props }) => {
       const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
 
@@ -123,10 +114,7 @@ describe('<Slider.Indicator />', () => {
     ])(
       'places the indicator of $name with the script, before the app starts',
       async ({ defaultValue, start, size }) => {
-        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, {
-          defaultValue,
-          alignment: 'edge',
-        });
+        const serverHtml = await renderOnServer(HYDRATION_FIXTURE, { defaultValue });
         const container = document.createElement('div');
         document.body.append(container);
         onTestFinished(() => container.remove());

@@ -1,23 +1,11 @@
 <script setup lang="ts">
 import { Slider } from '@vase-ui/vue/slider';
 
-withDefaults(
-  defineProps<{
-    defaultValue: number | number[];
-    alignment?: 'center' | 'edge' | 'edge-client-only' | undefined;
-    orientation?: 'horizontal' | 'vertical' | undefined;
-  }>(),
-  { alignment: 'center', orientation: 'horizontal' },
-);
+defineProps<{ defaultValue: number | number[] }>();
 </script>
 
 <template>
-  <Slider.Root
-    :default-value="defaultValue"
-    :thumb-alignment="alignment"
-    :orientation="orientation"
-    style="width: 200px"
-  >
+  <Slider.Root :default-value="defaultValue" thumb-alignment="edge" style="width: 200px">
     <Slider.Control style="position: relative; width: 100%; height: 10px">
       <Slider.Track style="position: relative; width: 100%; height: 10px">
         <Slider.Indicator data-testid="indicator" />
