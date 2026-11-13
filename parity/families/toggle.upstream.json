@@ -1,0 +1,208 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/toggle/**",
+    "docs/src/app/(docs)/react/components/toggle/**"
+  ],
+  "sources": [
+    "packages/react/src/toggle/Toggle.tsx",
+    "packages/react/src/toggle/ToggleDataAttributes.ts",
+    "packages/react/src/toggle/index.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/toggle/Toggle.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Toggle />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "pressed state"
+          ],
+          "title": "controlled"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "pressed state"
+          ],
+          "title": "uncontrolled"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "prop: onPressedChange"
+          ],
+          "title": "is called when the pressed state changes"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "prop: onPressedChange"
+          ],
+          "title": "does not change the pressed state when the event is canceled"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "prop: onPressedChange"
+          ],
+          "title": "canceling in a grouped Toggle prevents the group value from changing"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "prop: disabled"
+          ],
+          "title": "disables the component"
+        },
+        {
+          "describe": [
+            "<Toggle />",
+            "prop: render"
+          ],
+          "title": "should pass composite props"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toggle/types.md",
+      "parts": [
+        {
+          "name": "Toggle",
+          "tag": "button",
+          "props": [
+            {
+              "name": "value",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultPressed",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "pressed",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onPressedChange",
+              "required": false,
+              "type": "((pressed: boolean, eventDetails: Toggle.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Toggle.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Toggle.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Toggle.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ToggleState",
+            "fields": [
+              {
+                "name": "pressed",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ToggleState = {\n    pressed: boolean;\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "ToggleChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type ToggleChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ToggleChangeEventDetails",
+            "code": "type ToggleChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "ToggleDataAttributes",
+          "code": "declare namespace ToggleDataAttributes {\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/toggle/page.mdx",
+      "referenceTags": [
+        "TypesToggle"
+      ]
+    }
+  ]
+}
