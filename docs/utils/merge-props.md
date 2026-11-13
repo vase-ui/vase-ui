@@ -5,6 +5,8 @@ description: A utility to merge multiple sets of Vue props. It handles event han
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoMergePropsPreventBaseUiHandler from '../demos/merge-props/prevent-base-ui-handler/css-modules/index.vue';
 </script>
 
 # mergeProps
@@ -40,6 +42,20 @@ A utility to merge multiple sets of Vue props.
 ### Preventing Vase UI's default behavior
 
 When you use the `#render` slot, you bind `props` on your own element. To add listeners of your own to `props`, use `mergeProps`. Your handlers run first, and `event.preventVaseUIHandler()` stops the handlers of the part.
+
+In this demo, a click does not change the Toggle while `locked` is `true`:
+
+<DemoFrame>
+  <DemoMergePropsPreventBaseUiHandler />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/merge-props/prevent-base-ui-handler/css-modules/index.vue
+
+<<< ../demos/merge-props/prevent-base-ui-handler/css-modules/index.module.css
+
+:::
 
 In this sample, the keyboard handlers of Button do not run while `locked` is `true`:
 

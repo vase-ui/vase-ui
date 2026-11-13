@@ -372,7 +372,12 @@ describe('<ScrollArea.Viewport />', () => {
     it('restores programmatic scroll suppression after modality flips back to mouse', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
-          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
+          {/* `pointer-events: none` isolates this from the browser's real pointer. A real
+              pointer that enters the viewport makes the next scroll a user scroll. */}
+          <ScrollArea.Viewport
+            data-testid="viewport"
+            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+          >
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
