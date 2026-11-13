@@ -2,6 +2,9 @@ import { expect } from 'vitest';
 
 // TEMPORARY. Measures the timing fault of two Collapsible.Panel tests in Firefox.
 // This file is removed before the last push.
+//
+// The timeline only watches. It does not request frames of its own and it sets no timer, so a page
+// that was idle stays idle.
 
 const EVENT_TYPES = [
   'transitionrun',
@@ -20,7 +23,7 @@ const ATTRIBUTES = [
   'data-starting-style',
   'hidden',
 ];
-const SLOW_MS = 40;
+const CHUNK_LENGTH = 3000;
 
 type Entry = [t: number, what: string];
 
@@ -42,6 +45,15 @@ function describePage() {
   return `visibility=${document.visibilityState} focus=${document.hasFocus()} parent=${describeParent()}`;
 }
 
+function describeEvent(event: Event, origin: number) {
+  const name =
+    'propertyName' in event
+      ? (event as TransitionEvent).propertyName
+      : (event as AnimationEvent).animationName;
+  const elapsed = (event as TransitionEvent | AnimationEvent).elapsedTime;
+  return `${event.type} ${name} elapsed=${elapsed} stamp=${round(event.timeStamp - origin)}`;
+}
+
 class Timeline {
   readonly title = expect.getState().currentTestName ?? '';
 
@@ -49,23 +61,19 @@ class Timeline {
 
   private readonly entries: Entry[] = [];
 
-  private readonly frames: number[] = [];
-
   private readonly styles = new WeakMap<Element, string>();
 
   private readonly observer = new MutationObserver((records) => this.handleMutations(records));
 
-  private lastFrame = performance.now();
+  private readonly originalRequestAnimationFrame = window.requestAnimationFrame;
 
-  private lastBeat = performance.now();
+  private lastFrameRun: number | undefined;
 
   private maxFrameGap = 0;
 
-  private maxBeatGap = 0;
+  private maxFrameLatency = 0;
 
-  private frameId = 0;
-
-  private beatId = 0;
+  private frameCount = 0;
 
   constructor() {
     this.mark(`start ${describePage()}`);
@@ -78,35 +86,26 @@ class Timeline {
       attributes: true,
       attributeFilter: [...ATTRIBUTES, 'style'],
     });
-    this.frameId = requestAnimationFrame(this.handleFrame);
-    this.beatId = window.setInterval(this.handleBeat, 10);
+    const original = this.originalRequestAnimationFrame;
+    window.requestAnimationFrame = (callback) => {
+      const requested = performance.now();
+      return original.call(window, (time) => {
+        const ran = performance.now();
+        const latency = ran - requested;
+        const gap = this.lastFrameRun === undefined ? 0 : ran - this.lastFrameRun;
+        this.lastFrameRun = ran;
+        this.frameCount += 1;
+        this.maxFrameLatency = Math.max(this.maxFrameLatency, latency);
+        this.maxFrameGap = Math.max(this.maxFrameGap, gap);
+        this.mark(`frame latency=${round(latency)} gap=${round(gap)}`);
+        callback(time);
+      });
+    };
   }
 
   mark(what: string) {
     this.entries.push([round(performance.now() - this.origin), what]);
   }
-
-  private handleFrame = () => {
-    const now = performance.now();
-    const gap = now - this.lastFrame;
-    this.lastFrame = now;
-    this.maxFrameGap = Math.max(this.maxFrameGap, gap);
-    this.frames.push(round(now - this.origin));
-    if (gap > SLOW_MS) {
-      this.mark(`slow frame gap=${round(gap)}`);
-    }
-    this.frameId = requestAnimationFrame(this.handleFrame);
-  };
-
-  private handleBeat = () => {
-    const now = performance.now();
-    const gap = now - this.lastBeat;
-    this.lastBeat = now;
-    this.maxBeatGap = Math.max(this.maxBeatGap, gap);
-    if (gap > SLOW_MS) {
-      this.mark(`slow timer gap=${round(gap)}`);
-    }
-  };
 
   private handleEvent = (event: Event) => {
     const target = event.target as Element | null;
@@ -160,39 +159,40 @@ class Timeline {
 
   finish(result: 'pass' | 'fail') {
     this.mark(`end ${describePage()}`);
-    cancelAnimationFrame(this.frameId);
-    clearInterval(this.beatId);
+    window.requestAnimationFrame = this.originalRequestAnimationFrame;
     this.observer.disconnect();
     for (const type of EVENT_TYPES) {
       document.removeEventListener(type, this.handleEvent, true);
     }
-    return JSON.stringify({
+    return {
       title: this.title,
       result,
       maxFrameGap: round(this.maxFrameGap),
-      maxBeatGap: round(this.maxBeatGap),
+      maxFrameLatency: round(this.maxFrameLatency),
+      frameCount: this.frameCount,
       entries: this.entries,
-      frames: this.frames,
-    });
+    };
   }
-}
-
-function describeEvent(event: Event, origin: number) {
-  const name =
-    'propertyName' in event
-      ? (event as TransitionEvent).propertyName
-      : (event as AnimationEvent).animationName;
-  const elapsed = (event as TransitionEvent | AnimationEvent).elapsedTime;
-  return `${event.type} ${name} elapsed=${elapsed} stamp=${round(event.timeStamp - origin)}`;
 }
 
 export function mark(what: string) {
   current?.mark(what);
 }
 
+// Vitest cuts a long console line, so a timeline goes out in parts of 3000 characters.
+function print(summary: ReturnType<Timeline['finish']>) {
+  const json = JSON.stringify(summary);
+  const id = Math.random().toString(36).slice(2, 8);
+  const count = Math.ceil(json.length / CHUNK_LENGTH);
+  for (let index = 0; index < count; index += 1) {
+    const chunk = json.slice(index * CHUNK_LENGTH, (index + 1) * CHUNK_LENGTH);
+    console.log(`TIMELINE ${id} ${index + 1}/${count} ${chunk}`);
+  }
+}
+
 /**
- * Records a timeline while the test runs. It prints the timeline, and it adds the timeline to the
- * message of a failure.
+ * Records a timeline while the test runs. It prints the timeline, and it adds the end of the
+ * timeline to the message of a failure.
  */
 export function timed<Args extends unknown[]>(body: (...args: Args) => Promise<void>) {
   return async (...args: Args) => {
@@ -200,12 +200,13 @@ export function timed<Args extends unknown[]>(body: (...args: Args) => Promise<v
     current = timeline;
     try {
       await body(...args);
-      console.log(`TIMELINE ${timeline.finish('pass')}`);
+      print(timeline.finish('pass'));
     } catch (error) {
-      const json = timeline.finish('fail');
-      console.log(`TIMELINE ${json}`);
+      const summary = timeline.finish('fail');
+      print(summary);
       if (error instanceof Error) {
-        error.message += `\nTIMELINE ${json}`;
+        const tail = summary.entries.slice(-60).map(([t, what]) => `${t} ${what}`);
+        error.message += `\nTIMELINE (last ${tail.length} entries)\n${tail.join('\n')}`;
       }
       throw error;
     } finally {

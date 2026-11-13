@@ -144,28 +144,261 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arm: [pr51, overlay, main, panel]
-        run: ${{ fromJSON('[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60]') }}
+        include:
+          - { arm: overlay, run: 1 }
+          - { arm: overlay, run: 2 }
+          - { arm: overlay, run: 3 }
+          - { arm: overlay, run: 4 }
+          - { arm: overlay, run: 5 }
+          - { arm: overlay, run: 6 }
+          - { arm: overlay, run: 7 }
+          - { arm: overlay, run: 8 }
+          - { arm: overlay, run: 9 }
+          - { arm: overlay, run: 10 }
+          - { arm: overlay, run: 11 }
+          - { arm: overlay, run: 12 }
+          - { arm: overlay, run: 13 }
+          - { arm: overlay, run: 14 }
+          - { arm: overlay, run: 15 }
+          - { arm: overlay, run: 16 }
+          - { arm: overlay, run: 17 }
+          - { arm: overlay, run: 18 }
+          - { arm: overlay, run: 19 }
+          - { arm: overlay, run: 20 }
+          - { arm: overlay, run: 21 }
+          - { arm: overlay, run: 22 }
+          - { arm: overlay, run: 23 }
+          - { arm: overlay, run: 24 }
+          - { arm: overlay, run: 25 }
+          - { arm: overlay, run: 26 }
+          - { arm: overlay, run: 27 }
+          - { arm: overlay, run: 28 }
+          - { arm: overlay, run: 29 }
+          - { arm: overlay, run: 30 }
+          - { arm: overlay, run: 31 }
+          - { arm: overlay, run: 32 }
+          - { arm: overlay, run: 33 }
+          - { arm: overlay, run: 34 }
+          - { arm: overlay, run: 35 }
+          - { arm: overlay, run: 36 }
+          - { arm: overlay, run: 37 }
+          - { arm: overlay, run: 38 }
+          - { arm: overlay, run: 39 }
+          - { arm: overlay, run: 40 }
+          - { arm: overlay, run: 41 }
+          - { arm: overlay, run: 42 }
+          - { arm: overlay, run: 43 }
+          - { arm: overlay, run: 44 }
+          - { arm: overlay, run: 45 }
+          - { arm: overlay, run: 46 }
+          - { arm: overlay, run: 47 }
+          - { arm: overlay, run: 48 }
+          - { arm: overlay, run: 49 }
+          - { arm: overlay, run: 50 }
+          - { arm: overlay, run: 51 }
+          - { arm: overlay, run: 52 }
+          - { arm: overlay, run: 53 }
+          - { arm: overlay, run: 54 }
+          - { arm: overlay, run: 55 }
+          - { arm: overlay, run: 56 }
+          - { arm: overlay, run: 57 }
+          - { arm: overlay, run: 58 }
+          - { arm: overlay, run: 59 }
+          - { arm: overlay, run: 60 }
+          - { arm: overlay, run: 61 }
+          - { arm: overlay, run: 62 }
+          - { arm: overlay, run: 63 }
+          - { arm: overlay, run: 64 }
+          - { arm: overlay, run: 65 }
+          - { arm: overlay, run: 66 }
+          - { arm: overlay, run: 67 }
+          - { arm: overlay, run: 68 }
+          - { arm: overlay, run: 69 }
+          - { arm: overlay, run: 70 }
+          - { arm: overlay, run: 71 }
+          - { arm: overlay, run: 72 }
+          - { arm: overlay, run: 73 }
+          - { arm: overlay, run: 74 }
+          - { arm: overlay, run: 75 }
+          - { arm: overlay, run: 76 }
+          - { arm: overlay, run: 77 }
+          - { arm: overlay, run: 78 }
+          - { arm: overlay, run: 79 }
+          - { arm: overlay, run: 80 }
+          - { arm: one-page, run: 1 }
+          - { arm: one-page, run: 2 }
+          - { arm: one-page, run: 3 }
+          - { arm: one-page, run: 4 }
+          - { arm: one-page, run: 5 }
+          - { arm: one-page, run: 6 }
+          - { arm: one-page, run: 7 }
+          - { arm: one-page, run: 8 }
+          - { arm: one-page, run: 9 }
+          - { arm: one-page, run: 10 }
+          - { arm: one-page, run: 11 }
+          - { arm: one-page, run: 12 }
+          - { arm: one-page, run: 13 }
+          - { arm: one-page, run: 14 }
+          - { arm: one-page, run: 15 }
+          - { arm: one-page, run: 16 }
+          - { arm: one-page, run: 17 }
+          - { arm: one-page, run: 18 }
+          - { arm: one-page, run: 19 }
+          - { arm: one-page, run: 20 }
+          - { arm: one-page, run: 21 }
+          - { arm: one-page, run: 22 }
+          - { arm: one-page, run: 23 }
+          - { arm: one-page, run: 24 }
+          - { arm: one-page, run: 25 }
+          - { arm: one-page, run: 26 }
+          - { arm: one-page, run: 27 }
+          - { arm: one-page, run: 28 }
+          - { arm: one-page, run: 29 }
+          - { arm: one-page, run: 30 }
+          - { arm: one-page, run: 31 }
+          - { arm: one-page, run: 32 }
+          - { arm: one-page, run: 33 }
+          - { arm: one-page, run: 34 }
+          - { arm: one-page, run: 35 }
+          - { arm: one-page, run: 36 }
+          - { arm: one-page, run: 37 }
+          - { arm: one-page, run: 38 }
+          - { arm: one-page, run: 39 }
+          - { arm: one-page, run: 40 }
+          - { arm: one-page, run: 41 }
+          - { arm: one-page, run: 42 }
+          - { arm: one-page, run: 43 }
+          - { arm: one-page, run: 44 }
+          - { arm: one-page, run: 45 }
+          - { arm: one-page, run: 46 }
+          - { arm: one-page, run: 47 }
+          - { arm: one-page, run: 48 }
+          - { arm: one-page, run: 49 }
+          - { arm: one-page, run: 50 }
+          - { arm: loaded, run: 1 }
+          - { arm: loaded, run: 2 }
+          - { arm: loaded, run: 3 }
+          - { arm: loaded, run: 4 }
+          - { arm: loaded, run: 5 }
+          - { arm: loaded, run: 6 }
+          - { arm: loaded, run: 7 }
+          - { arm: loaded, run: 8 }
+          - { arm: loaded, run: 9 }
+          - { arm: loaded, run: 10 }
+          - { arm: loaded, run: 11 }
+          - { arm: loaded, run: 12 }
+          - { arm: loaded, run: 13 }
+          - { arm: loaded, run: 14 }
+          - { arm: loaded, run: 15 }
+          - { arm: loaded, run: 16 }
+          - { arm: loaded, run: 17 }
+          - { arm: loaded, run: 18 }
+          - { arm: loaded, run: 19 }
+          - { arm: loaded, run: 20 }
+          - { arm: loaded, run: 21 }
+          - { arm: loaded, run: 22 }
+          - { arm: loaded, run: 23 }
+          - { arm: loaded, run: 24 }
+          - { arm: loaded, run: 25 }
+          - { arm: loaded, run: 26 }
+          - { arm: loaded, run: 27 }
+          - { arm: loaded, run: 28 }
+          - { arm: loaded, run: 29 }
+          - { arm: loaded, run: 30 }
+          - { arm: loaded, run: 31 }
+          - { arm: loaded, run: 32 }
+          - { arm: loaded, run: 33 }
+          - { arm: loaded, run: 34 }
+          - { arm: loaded, run: 35 }
+          - { arm: loaded, run: 36 }
+          - { arm: loaded, run: 37 }
+          - { arm: loaded, run: 38 }
+          - { arm: loaded, run: 39 }
+          - { arm: loaded, run: 40 }
+          - { arm: plain, run: 1 }
+          - { arm: plain, run: 2 }
+          - { arm: plain, run: 3 }
+          - { arm: plain, run: 4 }
+          - { arm: plain, run: 5 }
+          - { arm: plain, run: 6 }
+          - { arm: plain, run: 7 }
+          - { arm: plain, run: 8 }
+          - { arm: plain, run: 9 }
+          - { arm: plain, run: 10 }
+          - { arm: plain, run: 11 }
+          - { arm: plain, run: 12 }
+          - { arm: plain, run: 13 }
+          - { arm: plain, run: 14 }
+          - { arm: plain, run: 15 }
+          - { arm: plain, run: 16 }
+          - { arm: plain, run: 17 }
+          - { arm: plain, run: 18 }
+          - { arm: plain, run: 19 }
+          - { arm: plain, run: 20 }
+          - { arm: plain, run: 21 }
+          - { arm: plain, run: 22 }
+          - { arm: plain, run: 23 }
+          - { arm: plain, run: 24 }
+          - { arm: plain, run: 25 }
+          - { arm: plain, run: 26 }
+          - { arm: plain, run: 27 }
+          - { arm: plain, run: 28 }
+          - { arm: plain, run: 29 }
+          - { arm: plain, run: 30 }
+          - { arm: plain, run: 31 }
+          - { arm: plain, run: 32 }
+          - { arm: plain, run: 33 }
+          - { arm: plain, run: 34 }
+          - { arm: plain, run: 35 }
+          - { arm: plain, run: 36 }
+          - { arm: plain, run: 37 }
+          - { arm: plain, run: 38 }
+          - { arm: plain, run: 39 }
+          - { arm: plain, run: 40 }
+          - { arm: plain, run: 41 }
+          - { arm: plain, run: 42 }
+          - { arm: plain, run: 43 }
+          - { arm: plain, run: 44 }
+          - { arm: plain, run: 45 }
+          - { arm: plain, run: 46 }
+          - { arm: plain, run: 47 }
+          - { arm: plain, run: 48 }
+          - { arm: plain, run: 49 }
+          - { arm: plain, run: 50 }
+          - { arm: plain, run: 51 }
+          - { arm: plain, run: 52 }
+          - { arm: plain, run: 53 }
+          - { arm: plain, run: 54 }
+          - { arm: plain, run: 55 }
+          - { arm: plain, run: 56 }
+          - { arm: plain, run: 57 }
+          - { arm: plain, run: 58 }
+          - { arm: plain, run: 59 }
+          - { arm: plain, run: 60 }
+          - { arm: plain, run: 61 }
+          - { arm: plain, run: 62 }
+          - { arm: plain, run: 63 }
+          - { arm: plain, run: 64 }
+          - { arm: plain, run: 65 }
+          - { arm: plain, run: 66 }
+          - { arm: plain, run: 67 }
+          - { arm: plain, run: 68 }
+          - { arm: plain, run: 69 }
+          - { arm: plain, run: 70 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ matrix.arm == 'pr51' && 'aad8ddf9cc2ae4fcc2a36a21a91b582f05d3d16b' || '' }}
       - name: Add the other tree
         env:
           ARM: ${{ matrix.arm }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          case "$ARM" in
-            pr51)
-              git fetch --depth=1 origin "$HEAD_SHA"
-              git checkout FETCH_HEAD -- packages/vue/src/collapsible/panel packages/vue/test/fixtures
-              ;;
-            overlay | one-page)
-              git fetch --depth=1 origin aad8ddf9cc2ae4fcc2a36a21a91b582f05d3d16b
-              git checkout FETCH_HEAD -- docs
-              ;;
-          esac
+          git fetch --depth=1 origin aad8ddf9cc2ae4fcc2a36a21a91b582f05d3d16b
+          git checkout FETCH_HEAD -- docs
+          if [ "$ARM" = plain ]; then
+            git fetch --depth=1 origin bb92cd7f9a517c5c7eedb92054fab8fa238dc486
+            git checkout FETCH_HEAD -- packages/vue/src/collapsible/panel packages/vue/test/fixtures
+          fi
           echo "TREE arm=$ARM head=$(git rev-parse HEAD) demos=$(ls docs/demos/*/*/css-modules/index.vue | wc -l)"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -180,13 +413,22 @@ jobs:
           RUN: ${{ matrix.run }}
         run: |
           nproc
+          echo "PSI before: $(tr '\n' ' ' < /proc/pressure/cpu 2>&1)"
           case "$ARM" in
-            panel) set -- pnpm --filter @vase-ui/vue exec vitest run --project firefox src/collapsible/panel ;;
             one-page) set -- pnpm --filter @vase-ui/vue exec vitest run --project firefox --max-workers=1 ;;
             *) set -- pnpm test:firefox ;;
           esac
+          hogs=()
+          if [ "$ARM" = loaded ]; then
+            for _ in $(seq 1 $(($(nproc) * 2))); do
+              (while :; do :; done) &
+              hogs+=("$!")
+            done
+          fi
           code=0
           "$@" > output.txt 2>&1 || code=$?
+          if [ "${#hogs[@]}" -gt 0 ]; then kill "${hogs[@]}" 2>/dev/null || true; fi
+          echo "PSI after: $(tr '\n' ' ' < /proc/pressure/cpu 2>&1)"
           cat output.txt
           failed=$(sed -E 's/\x1b\[[0-9;]*m//g' output.txt | sed -n 's/^ FAIL  *//p' | sort -u | paste -sd ';' -)
           if [ "$code" -eq 0 ]; then
