@@ -214,7 +214,7 @@ let unregisterInput: (() => void) | void;
 // and its value would stay in the values of the form.
 const isDeactivated = shallowRef(false);
 
-function registerHeldInput() {
+function updateInputRegistration() {
   unregisterInput?.();
   // A field can have more than one input, so the input goes to the registry of the field and not
   // to `validation.inputRef`. The group reads the value when the form needs it, so a change of the
@@ -238,7 +238,7 @@ function setInputElement(value: unknown) {
 
   heldInput = input;
   inputElement.value = input;
-  registerHeldInput();
+  updateInputRegistration();
 }
 
 onDeactivated(() => {
@@ -257,7 +257,7 @@ watch(isDeactivated, (deactivated) => {
     unregisterInput?.();
     unregisterInput = undefined;
   } else {
-    registerHeldInput();
+    updateInputRegistration();
   }
 });
 
