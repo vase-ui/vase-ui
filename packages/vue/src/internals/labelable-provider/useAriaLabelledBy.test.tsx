@@ -183,6 +183,22 @@ describe('useAriaLabelledBy', () => {
         labelledBy: 'with-for',
       },
       {
+        name: 'a label around it before one with for',
+        scene: () => (
+          <>
+            <label id="outer">
+              <div>
+                <HiddenInputControl id="a" data-testid="control" />
+              </div>
+            </label>
+            <label id="with-for" for="a">
+              Name
+            </label>
+          </>
+        ),
+        labelledBy: 'outer',
+      },
+      {
         name: 'no label of an earlier element',
         scene: () => (
           <>
