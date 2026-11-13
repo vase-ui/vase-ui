@@ -374,14 +374,6 @@
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
-      "title": "drops a pending validation when another field-aware control takes ownership",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/switch/root/SwitchRoot.tsx",
-      "reason": "The case renders `Switch`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "style hooks", "touched"],
       "title": "should apply [data-touched] style hook to all components when touched",
       "kind": "waits-on",

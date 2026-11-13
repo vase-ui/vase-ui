@@ -3,6 +3,7 @@ import { defineComponent, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
+import { Switch } from '@vase-ui/vue/switch';
 import {
   createRenderer,
   describeConformance,
@@ -1301,6 +1302,51 @@ describe('<Field.Root />', () => {
       await flushMicrotasks();
 
       expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('drops a pending validation when another field-aware control takes ownership', async () => {
+      const validate = vi.fn(() => 'error');
+
+      const App = defineComponent(() => {
+        const showSwitch = shallowRef(false);
+
+        return () => (
+          <div>
+            <Field.Root
+              data-testid="root"
+              validationDebounceTime={100}
+              validationMode="onChange"
+              validate={validate}
+            >
+              <Field.Control data-testid="control" />
+              {showSwitch.value && <Switch.Root />}
+              <Field.Error data-testid="error" />
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                showSwitch.value = true;
+              }}
+            >
+              add switch
+            </button>
+          </div>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.input(screen.getByTestId('control'), { target: { value: 'abc' } });
+
+      await tick(99);
+
+      await fireEvent.click(screen.getByText('add switch'));
+
+      await tick(100);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
     });
 
     it('keeps a pending debounce armed across the first registration', async () => {
