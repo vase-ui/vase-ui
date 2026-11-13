@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, ref, shallowRef, Teleport } from 'vue';
 import type { FormHTMLAttributes } from 'vue';
+import { Checkbox } from '@vase-ui/vue/checkbox';
 import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import { Form } from '@vase-ui/vue/form';
@@ -137,6 +138,121 @@ describe('<Form />', () => {
     } finally {
       select.mockRestore();
     }
+  });
+
+  it('keeps focusing the first invalid field after a control value changes', async () => {
+    const { user } = await render(
+      <Form>
+        <Field.Root name="a">
+          <Checkbox.Root required data-testid="a" />
+        </Field.Root>
+        <Field.Root name="b">
+          <Checkbox.Root required data-testid="b" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>,
+    );
+
+    const checkboxA = screen.getByTestId('a');
+    const submit = screen.getByRole('button', { name: 'Submit' });
+
+    await user.click(submit);
+    expect(checkboxA).toHaveFocus();
+
+    // Toggling the checkbox updates its field control registration.
+    await user.click(checkboxA);
+    await user.click(checkboxA);
+
+    await user.click(submit);
+    expect(checkboxA).toHaveFocus();
+  });
+
+  it('keeps the registration-order focus fallback stable across disconnected trees', async () => {
+    const firstHost = document.createElement('div');
+    const secondHost = document.createElement('div');
+    const firstContainer = document.createElement('div');
+    const secondContainer = document.createElement('div');
+    const firstRoot = firstHost.attachShadow({ mode: 'open' });
+    const secondRoot = secondHost.attachShadow({ mode: 'open' });
+    firstRoot.append(firstContainer);
+    secondRoot.append(secondContainer);
+    document.body.append(firstHost, secondHost);
+
+    try {
+      const { unmount } = await render(
+        <Form>
+          <Teleport to={firstContainer}>
+            <Field.Root name="a">
+              <Checkbox.Root required data-testid="a" />
+            </Field.Root>
+          </Teleport>
+          <Teleport to={secondContainer}>
+            <Field.Root name="b">
+              <Checkbox.Root required data-testid="b" />
+            </Field.Root>
+          </Teleport>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      try {
+        const checkboxA = within(firstContainer).getByTestId('a');
+        const submit = screen.getByRole('button', { name: 'Submit' });
+        const form = submit.closest('form');
+        if (!form) {
+          throw new Error('Expected submit button to be inside a form');
+        }
+
+        await fireEvent.submit(form);
+        expect(firstRoot.activeElement).toBe(checkboxA);
+
+        await fireEvent.click(checkboxA);
+        await fireEvent.click(checkboxA);
+        await fireEvent.submit(form);
+
+        expect(firstRoot.activeElement).toBe(checkboxA);
+      } finally {
+        unmount();
+      }
+    } finally {
+      firstHost.remove();
+      secondHost.remove();
+    }
+  });
+
+  it('focuses the first invalid field in document order when keyed fields are reordered', async () => {
+    const App = defineComponent(() => {
+      const names = shallowRef(['a', 'b']);
+      return () => (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              names.value = ['b', 'a'];
+            }}
+          >
+            Reorder
+          </button>
+          <Form>
+            {names.value.map((name) => (
+              <Field.Root key={name} name={name}>
+                <Checkbox.Root required data-testid={name} />
+              </Field.Root>
+            ))}
+            <button type="submit">Submit</button>
+          </Form>
+        </>
+      );
+    });
+
+    const { user } = await render(<App />);
+
+    // Keyed reorder moves the DOM nodes without remounting, so the internal
+    // registration Map keeps the original order while the DOM order flips.
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(screen.getByTestId('b')).toHaveFocus();
   });
 
   it('submits when a valid async validator is pending', async () => {

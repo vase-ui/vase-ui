@@ -4,10 +4,12 @@ import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Switch } from '@vase-ui/vue/switch';
 import {
+  createFormDataSpy,
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hiddenInputSizeTests,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -21,13 +23,6 @@ import FormScope from '../../../test/fixtures/FormScope.vue';
 import SwitchRootHydration from './SwitchRootHydration.test.vue';
 
 type User = VaseUIRenderResult['user'];
-
-function createFormDataSpy(name: string) {
-  return vi.fn((event: Event) => {
-    event.preventDefault();
-    return new FormData(event.currentTarget as HTMLFormElement).get(name);
-  });
-}
 
 // The part follows a reset in a timeout of 0 ms, after the listeners of the event.
 // The case that calls this function uses fake timers.
@@ -46,22 +41,12 @@ describe('<Switch.Root />', () => {
     render,
   }));
 
-  describe('hidden input size', () => {
-    it('grows from zero size to an on-screen 1px box when reported invalid', async () => {
-      const { container } = await render(<Switch.Root required />);
-      const input = container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
-      input.setCustomValidity('Invalid');
-      expect(input.validity.valid).toBe(false);
-      const rect = () => {
-        const { top, width, height } = input.getBoundingClientRect();
-        return { top, width, height };
-      };
-      expect(rect()).toEqual({ top: 0, width: 0, height: 0 });
-      input.reportValidity();
-      await flushMicrotasks();
-      expect(rect()).toEqual({ top: 0, width: 1, height: 1 });
-    });
+  hiddenInputSizeTests({
+    render,
+    createComponent: (props) => <Switch.Root {...props} />,
+  });
 
+  describe('hidden input size', () => {
     it('keeps the 1px size in the next render of the switch', async () => {
       const { container } = await render(<Switch.Root required />);
       const input = container.querySelector<HTMLInputElement>('input[aria-hidden]')!;
