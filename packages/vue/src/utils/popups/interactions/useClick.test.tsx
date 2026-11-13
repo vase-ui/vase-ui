@@ -412,34 +412,30 @@ describe('useClick in Vue', () => {
 
   describe('stickIfOpen', () => {
     it.each([
+      { name: 'true', stickIfOpen: true, outcome: 'keeps it open', states: [true, true, false] },
+      { name: 'false', stickIfOpen: false, outcome: 'closes it', states: [true, false, true] },
       {
-        name: 'keeps a popup that a hover opened for the first click when stickIfOpen is true',
-        stickIfOpen: true,
-        states: [true, true, false],
-      },
-      {
-        name: 'closes a popup that a hover opened for the first click when stickIfOpen is false',
-        stickIfOpen: false,
-        states: [true, false, true],
-      },
-      {
-        name: 'keeps a popup that a hover opened for the first click when stickIfOpen is not given',
+        name: 'not given',
         stickIfOpen: undefined,
+        outcome: 'keeps it open',
         states: [true, true, false],
       },
-    ])('$name', async ({ stickIfOpen, states }) => {
-      await render(<App hover stickIfOpen={stickIfOpen} />);
-      const button = screen.getByRole('button');
-      const isOpen = () => screen.queryByRole('tooltip') !== null;
+    ])(
+      'the first click on a popup that a hover opened $outcome when stickIfOpen is $name',
+      async ({ stickIfOpen, states }) => {
+        await render(<App hover stickIfOpen={stickIfOpen} />);
+        const button = screen.getByRole('button');
+        const isOpen = () => screen.queryByRole('tooltip') !== null;
 
-      await fireEvent.mouseEnter(button);
-      const afterHover = isOpen();
-      await click(button);
-      const afterFirstClick = isOpen();
-      await click(button);
+        await fireEvent.mouseEnter(button);
+        const afterHover = isOpen();
+        await click(button);
+        const afterFirstClick = isOpen();
+        await click(button);
 
-      expect([afterHover, afterFirstClick, isOpen()]).toEqual(states);
-    });
+        expect([afterHover, afterFirstClick, isOpen()]).toEqual(states);
+      },
+    );
 
     it('reads a getter at each press', async () => {
       const stickIfOpen = shallowRef(false);
