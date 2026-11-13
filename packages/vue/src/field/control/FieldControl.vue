@@ -68,6 +68,7 @@ import {
 } from '../../internals/labelable-provider';
 import { REASONS as REASON_VALUES } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 
@@ -173,7 +174,6 @@ useValueChanged(serializedValue, () => {
 
 const setFocused = useSetFieldFocused(isDisabled, () => element.value);
 const enterValidationTimeout = useTimeout();
-const resetTimeout = useTimeout();
 
 // A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
 // property `value` again on each render, and that replaces the text that the user typed. The DOM
@@ -321,40 +321,13 @@ const { element, elementProps } = useRenderElement('input', props, {
 });
 
 // A native reset of the form gives the control its default value and sends no `input` event.
-// The event does not leave a shadow root, so the listener is on the root node of the control.
-// The getter of a `watch` runs when Vue makes the watcher, so this `watch` comes after `element`.
-watch(
-  element,
-  (input, _previous, onCleanup) => {
-    if (!input) {
-      return;
-    }
-    const root = input.getRootNode();
-    const handleReset = (event: Event) => {
-      const form = (input as HTMLInputElement).form;
-      if (!form || event.target !== form) {
-        return;
-      }
-      // The browser resets the controls after the listeners of the event.
-      resetTimeout.start(0, () => {
-        if (event.defaultPrevented) {
-          return;
-        }
-        const value = (input as HTMLInputElement).value;
-        handledValue = value;
-        setFilled(value !== '');
-        setDirty(value !== (validityData.value.initialValue ?? ''));
-        clearFieldError(value);
-      });
-    };
-    root.addEventListener('reset', handleReset);
-    onCleanup(() => {
-      resetTimeout.clear();
-      root.removeEventListener('reset', handleReset);
-    });
-  },
-  { flush: 'post' },
-);
+useFormReset(element, () => {
+  const value = (element.value as HTMLInputElement).value;
+  handledValue = value;
+  setFilled(value !== '');
+  setDirty(value !== (validityData.value.initialValue ?? ''));
+  clearFieldError(value);
+});
 
 defineExpose({ element });
 </script>

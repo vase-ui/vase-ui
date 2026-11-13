@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
+import { Checkbox } from '@vase-ui/vue/checkbox';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
+import { Radio } from '@vase-ui/vue/radio';
+import { RadioGroup } from '@vase-ui/vue/radio-group';
 import { Switch } from '@vase-ui/vue/switch';
 import {
   createRenderer,
@@ -1389,6 +1392,68 @@ describe('<Field.Root />', () => {
       expect(screen.queryByText('error')).not.toBe(null);
     });
 
+    it('should debounce validation for field-aware controls', async () => {
+      const validate = vi.fn((value) => (value ? 'error' : null));
+
+      await render(
+        <Field.Root validationDebounceTime={100} validationMode="onChange" validate={validate}>
+          <Checkbox.Root />
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole('checkbox');
+
+      await fireEvent.click(control);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(99);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(1);
+
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByText('error')).not.toBe(null);
+    });
+
+    it('should debounce validation for radio groups', async () => {
+      const validate = vi.fn((value) => (value === 'b' ? 'error' : null));
+
+      await render(
+        <Field.Root validationDebounceTime={100} validationMode="onChange" validate={validate}>
+          <RadioGroup>
+            <Radio.Root value="a" data-testid="item-a" />
+            <Radio.Root value="b" data-testid="item-b" />
+          </RadioGroup>
+          <Field.Error />
+        </Field.Root>,
+      );
+
+      const control = screen.getByRole('radiogroup');
+
+      await fireEvent.click(screen.getByTestId('item-b'));
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(99);
+
+      expect(validate).not.toHaveBeenCalled();
+      expect(control).not.toHaveAttribute('aria-invalid');
+
+      await tick(1);
+
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(validate.mock.lastCall?.[0]).toBe('b');
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByText('error')).not.toBe(null);
+    });
+
     it('drops a pending debounced validation when the control unmounts', async () => {
       const validate = vi.fn(() => 'error');
 
@@ -1921,6 +1986,47 @@ describe('<Field.Root />', () => {
       expect(control.validationMessage).toBe('');
     });
 
+    it('keeps a message set outside the field on another input of the same field', async () => {
+      const handleValidity = vi.fn();
+      let root = null as FieldRootInstance | null;
+
+      const App = defineComponent(() => () => (
+        <div>
+          <Field.Root
+            ref={(instance) => {
+              root = instance as FieldRootInstance | null;
+            }}
+            validationMode="onBlur"
+            validate={(value) => (value === 'cats' ? 'custom error' : null)}
+          >
+            <RadioGroup defaultValue="cats">
+              <Radio.Root value="cats" data-testid="cats" />
+              <Radio.Root value="dogs" data-testid="dogs" />
+            </RadioGroup>
+            <Field.Validity v-slots={{ default: handleValidity }} />
+          </Field.Root>
+          <button type="button" onClick={() => root?.validate()}>
+            validate
+          </button>
+        </div>
+      ));
+
+      await render(<App />);
+
+      const [cats, dogs] = document.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+
+      await fireEvent.click(screen.getByText('validate'));
+      expect(cats.validationMessage).toBe('custom error');
+
+      dogs.setCustomValidity('external error');
+      await fireEvent.click(screen.getByTestId('dogs'));
+
+      expect(cats.validationMessage).toBe('');
+      expect(dogs.validationMessage).toBe('external error');
+      expect(handleValidity.mock.lastCall?.[0].validity.customError).toBe(true);
+      expect(handleValidity.mock.lastCall?.[0].errors).toEqual(['external error']);
+    });
+
     it.skipIf(isJSDOM)(
       'ignores a message set outside the field on a control barred from validation',
       async () => {
@@ -2057,6 +2163,60 @@ describe('<Field.Root />', () => {
         expect(control).not.toHaveAttribute('data-dirty');
         expect(label).not.toHaveAttribute('data-dirty');
         expect(description).not.toHaveAttribute('data-dirty');
+      });
+
+      it('keeps [data-dirty] on a RadioGroup when returning to the first picked value', async () => {
+        const App = defineComponent(() => {
+          const value = shallowRef<string | null>(null);
+          return () => (
+            <div>
+              <Field.Root data-testid="root">
+                <RadioGroup
+                  value={value.value}
+                  onValueChange={(next: string | null) => {
+                    value.value = next;
+                  }}
+                >
+                  <Radio.Root value="a" />
+                  <Radio.Root value="b" />
+                </RadioGroup>
+              </Field.Root>
+              <button
+                type="button"
+                onClick={() => {
+                  value.value = 'a';
+                }}
+              >
+                a
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  value.value = 'b';
+                }}
+              >
+                b
+              </button>
+            </div>
+          );
+        });
+
+        await render(<App />);
+        const root = screen.getByTestId('root');
+
+        expect(root).not.toHaveAttribute('data-dirty');
+
+        await fireEvent.click(screen.getByText('a'));
+        await waitFor(() => {
+          expect(root).toHaveAttribute('data-dirty', '');
+        });
+
+        await fireEvent.click(screen.getByText('b'));
+        await fireEvent.click(screen.getByText('a'));
+
+        await waitFor(() => {
+          expect(root).toHaveAttribute('data-dirty', '');
+        });
       });
     });
 

@@ -12,8 +12,8 @@
       "describe": ["<Field.Root />"],
       "title": "re-associates the label when a CheckboxGroup is replaced by another control",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues`, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -29,7 +29,7 @@
       "title": "keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Checkbox` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Select`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -45,7 +45,7 @@
       "title": "preserves label association without looping when a control is unmounted and remounted",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Checkbox` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Select`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -53,15 +53,15 @@
       "title": "preserves a non-native label association when a control is unmounted and remounted",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `Checkbox` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Select`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />"],
       "title": "keeps the group label suppressed while its subtree is hidden",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -69,7 +69,7 @@
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `CheckboxGroup`, `Checkbox`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `CheckboxGroup`, `NumberField`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -84,8 +84,8 @@
       "describe": ["<Field.Root />", "prop: validate"],
       "title": "excludes registration-gated controls from onFormSubmit when their field name is removed",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
+      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
+      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -94,14 +94,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/root/NumberFieldRoot.tsx",
       "reason": "The case renders `NumberField`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "custom validity ownership"],
-      "title": "keeps a message set outside the field on another input of the same field",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -118,14 +110,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
       "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "style hooks", "dirty"],
-      "title": "keeps [data-dirty] on a RadioGroup when returning to the first picked value",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -158,44 +142,20 @@
       "reason": "The row gives the default `'onSubmit'`. The part has no Vue default: a prop that is absent takes the `validationMode` of the form, and `'onSubmit'` with no form, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
-      "title": "should debounce validation for field-aware controls",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `Checkbox`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
-      "title": "should debounce validation for radio groups",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
-    },
-    {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
       "describe": ["<Field.Item />", "prop: disabled"],
       "title": "disables a wrapped checkbox",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
-      "describe": ["<Field.Item />", "prop: disabled"],
-      "title": "disables a wrapped radio",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
+      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
+      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
       "describe": ["<Field.Item />"],
       "title": "associates a Field.Item label with a parent checkbox",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
-      "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
+      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
+      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have. `useCheckboxGroupParent.ts` comes last, so the row names its file."
     }
   ],
   "surfaceAdditions": [

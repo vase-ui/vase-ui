@@ -191,11 +191,9 @@ import { addEventListener } from '../../common/addEventListener';
 import { areArraysEqual } from '../../common/areArraysEqual';
 import { clamp } from '../../common/clamp';
 import { useIsHydrating } from '../../common/hydration';
-import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerDocument, ownerWindow } from '../../common/owner';
 import { activeElement, contains } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
-import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { CompositeMetadata } from '../../internals/composite/list/useCompositeList';
@@ -209,6 +207,7 @@ import { useFormContext } from '../../internals/form-context';
 import { createLabelIdRegistry, useControlLabelId } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
+import { useFormReset } from '../../internals/useFormReset';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';
@@ -543,8 +542,6 @@ function writeValuesToInputs() {
   });
 }
 
-const resetTimeout = useTimeout();
-
 function resetToDefaultValue(event: Event) {
   const defaultValue = (props.defaultValue ?? props.min) as number | readonly number[];
   if (props.value !== undefined || areValuesEqual(defaultValue, valueUnwrapped.value)) {
@@ -565,28 +562,20 @@ function resetToDefaultValue(event: Event) {
   return applied;
 }
 
-function onReset(event: Event) {
-  if (!getThumbInputs().some((input) => input && input.form === event.target)) {
-    return;
+// Each thumb input has the same form. The reset thus follows only the first one.
+const firstThumbInput = computed(() => getThumbInputs().find((input) => input != null) ?? null);
+
+useFormReset(firstThumbInput, (event) => {
+  const previousValue = fieldValue.value;
+
+  // `useValueChanged` sees no change when the slider clamps the default value to the current
+  // value, and the field then clears here.
+  if (resetToDefaultValue(event) && fieldValue.value !== previousValue) {
+    isResetChangePending = true;
+  } else {
+    clearFieldError(fieldValue.value);
   }
-
-  // A listener that runs later can still prevent the event. The browser then resets nothing.
-  resetTimeout.start(0, () => {
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    const previousValue = fieldValue.value;
-
-    // `useValueChanged` sees no change when the slider clamps the default value to the current
-    // value, and the field then clears here.
-    if (resetToDefaultValue(event) && fieldValue.value !== previousValue) {
-      isResetChangePending = true;
-    } else {
-      clearFieldError(fieldValue.value);
-    }
-  });
-}
+});
 
 const state = computed<SliderRootState>(() => ({
   ...fieldState.value,
@@ -674,14 +663,7 @@ watch(
       return;
     }
 
-    onCleanup(
-      mergeCleanups(
-        addEventListener(ownerWindow(root), 'pageshow', writeValuesToInputs),
-        // The form of an input can change, so the listener is on the root node.
-        addEventListener(root.getRootNode(), 'reset', onReset),
-        resetTimeout.clear,
-      ),
-    );
+    onCleanup(addEventListener(ownerWindow(root), 'pageshow', writeValuesToInputs));
   },
   { flush: 'post' },
 );
