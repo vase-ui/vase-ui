@@ -538,6 +538,7 @@ The state of a field:
 
 - The root of a field holds `touched`, `dirty`, `filled`, `focused` and the validity data in `shallowRef` values. A part changes one only through a function of the field context.
 - A control can call such a function in `setup` with a value that it knows from its props, such as `setFilled`. The server HTML of the control and of each part after it then has the attribute. The root and the parts before the control get it in the first flush on the client. Vue does not compare `data-*`.
+- A part below a control that defers runs its `setup` after a server wrote the parts that come after the control. The control thus sets the first state itself, as `RadioGroup` does for `filled`.
 - A value that can add or remove an element does not come from `setup`. A lazy component runs its `setup` later in a browser than on a server, and Vue reports the difference as a hydration mismatch.
 - `focused`, `touched`, the validity and the initial value come after the mount. A control that has focus before the hydration gets `data-focused` when it is mounted.
 - The name of a control comes with its registration, after the mount. A form error for a `name` that only the control has thus shows after the mount. A field with the `name` on its root has the error in the server HTML.
