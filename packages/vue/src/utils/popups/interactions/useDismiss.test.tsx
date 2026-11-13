@@ -108,7 +108,6 @@ function useFloating(options: {
   const tree = useFloatingTree();
   const context: PopupPositioningContext = {
     open: options.open.value,
-    placement: 'bottom',
     nodeId: options.nodeId,
     elements: {
       get reference() {

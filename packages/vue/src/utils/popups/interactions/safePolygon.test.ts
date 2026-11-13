@@ -75,7 +75,6 @@ function createFloatingContext({
 }): PopupPositioningContext {
   return {
     open,
-    placement: 'right',
     nodeId: 'root',
     elements: { reference: domReference, domReference, floating },
     rootStore: getEmptyRootStore(),
