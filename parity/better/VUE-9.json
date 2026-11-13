@@ -1,0 +1,10 @@
+{
+  "id": "VUE-9",
+  "evidence": [
+    "https://github.com/mui/base-ui/issues/5597",
+    "https://vuejs.org/guide/components/async.html#lazy-hydration",
+    "https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex"
+  ],
+  "behavior": "Between the server HTML and the mount of its last item, a composite does not have two tab stops. While the server HTML has the tab stop on an item that is not mounted, the mounted items do not take it.",
+  "dueWith": "packages/react/src/internals/composite/item/useCompositeItem.ts"
+}

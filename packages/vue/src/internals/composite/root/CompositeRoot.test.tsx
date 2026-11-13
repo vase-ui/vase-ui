@@ -8,11 +8,64 @@ import { DirectionProvider } from '../../../direction-provider';
 import type { HTMLProps } from '../../types';
 import type { CompositeMetadata } from '../list/useCompositeList';
 import { useCompositeListItem } from '../list/useCompositeListItem';
+import { gridNavigation } from './gridNavigation';
+import type { CompositeGridNavigator } from './gridNavigation';
+import { useCompositeRoot } from './useCompositeRoot';
+
+const threeColsGrid = gridNavigation({ cols: 3 });
 
 // Vue types a template ref as an element, a component or `null`.
 function bindRef(ref: (node: HTMLElement | null) => void) {
   return (node: unknown) => ref(node as HTMLElement | null);
 }
+
+// The fixture part `CompositeRoot` has no `grid` prop, so the grid cases use this root. It gives
+// `grid` to `useCompositeRoot` and renders the element of the composite.
+const GridCompositeRoot = defineComponent(
+  (
+    props: {
+      grid?: CompositeGridNavigator | undefined;
+      orientation?: 'horizontal' | 'vertical' | 'both' | undefined;
+      loopFocus?: boolean | undefined;
+      onLoop?:
+        | ((
+            event: KeyboardEvent,
+            prevIndex: number,
+            nextIndex: number,
+            elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+          ) => number)
+        | undefined;
+      enableHomeAndEndKeys?: boolean | undefined;
+      disabledIndices?: number[] | undefined;
+    },
+    { slots },
+  ) => {
+    const { props: compositeProps, rootRef } = useCompositeRoot({
+      grid: props.grid,
+      orientation: () => props.orientation,
+      loopFocus: () => props.loopFocus,
+      onLoop: props.onLoop,
+      enableHomeAndEndKeys: () => props.enableHomeAndEndKeys,
+      disabledIndices: () => props.disabledIndices,
+    });
+
+    return () => (
+      <div {...compositeProps} ref={bindRef(rootRef)}>
+        {slots.default?.()}
+      </div>
+    );
+  },
+  {
+    props: [
+      'grid',
+      'orientation',
+      'loopFocus',
+      'onLoop',
+      'enableHomeAndEndKeys',
+      'disabledIndices',
+    ],
+  },
+);
 
 describe('Composite', () => {
   const { render } = createRenderer();
@@ -524,6 +577,433 @@ describe('Composite', () => {
 
         expect(item3).toHaveAttribute('tabindex', '0');
         expect(item3).toHaveFocus();
+      });
+    });
+  });
+
+  describe('grid', () => {
+    it('prevents default for grid navigation outside the configured orientation', async () => {
+      await render(
+        <GridCompositeRoot grid={threeColsGrid} orientation="horizontal">
+          <TestGridItems />
+        </GridCompositeRoot>,
+      );
+
+      const item1 = screen.getByTestId('1');
+      item1.focus();
+      await flushMicrotasks();
+
+      const allowed = await fireEvent.keyDown(item1, { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(allowed).toBe(false);
+    });
+
+    it('uniform 1x1 items', async () => {
+      function App() {
+        return (
+          <GridCompositeRoot grid={threeColsGrid} enableHomeAndEndKeys>
+            <TestGridItems />
+          </GridCompositeRoot>
+        );
+      }
+
+      await render(<App />);
+
+      screen.getByTestId('1').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('1'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('4')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('4')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('4'), { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('5')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('5')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('5'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('8')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('8')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('8'), { key: 'ArrowLeft' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('7')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('7')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('7'), { key: 'ArrowUp' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('4')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('4')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('4'), { key: 'ArrowLeft' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('6')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('6')).toHaveFocus();
+
+      screen.getByTestId('9').focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'Home' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('1')).toHaveAttribute('tabindex', '0');
+
+      await fireEvent.keyDown(screen.getByTestId('1'), { key: 'End' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+    });
+
+    it('calls onLoop while navigating through grid cells', async () => {
+      const onLoop = vi.fn(
+        (
+          _event: KeyboardEvent,
+          _prevIndex: number,
+          _nextIndex: number,
+          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        ) => 4,
+      );
+
+      function App() {
+        return (
+          <GridCompositeRoot grid={threeColsGrid} onLoop={onLoop}>
+            <TestGridItems />
+          </GridCompositeRoot>
+        );
+      }
+
+      await render(<App />);
+
+      screen.getByTestId('6').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('6'), { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      expect(onLoop).toHaveBeenCalledOnce();
+
+      const [event, prevIndex, nextIndex, elementsRef] = onLoop.mock.calls[0]!;
+      expect(event.key).toBe('ArrowRight');
+      expect(prevIndex).toBe(5);
+      expect(nextIndex).toBe(3);
+      expect(elementsRef.value[5]).toBe(screen.getByTestId('6'));
+      expect(screen.getByTestId('5')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('5')).toHaveFocus();
+    });
+
+    it('calls onLoop when looping vertically between rows', async () => {
+      const onLoop = vi.fn(
+        (
+          _event: KeyboardEvent,
+          _prevIndex: number,
+          nextIndex: number,
+          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        ) => nextIndex,
+      );
+
+      await render(
+        <GridCompositeRoot grid={threeColsGrid} onLoop={onLoop}>
+          <TestGridItems />
+        </GridCompositeRoot>,
+      );
+
+      screen.getByTestId('9').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(onLoop).toHaveBeenCalledTimes(1);
+
+      const [downEvent, downPrevIndex, downNextIndex] = onLoop.mock.calls[0]!;
+      expect(downEvent.key).toBe('ArrowDown');
+      expect(downPrevIndex).toBe(8);
+      expect(downNextIndex).toBe(2);
+      expect(screen.getByTestId('3')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('3'), { key: 'ArrowUp' });
+      await flushMicrotasks();
+
+      expect(onLoop).toHaveBeenCalledTimes(2);
+
+      const [upEvent, upPrevIndex, upNextIndex] = onLoop.mock.calls[1]!;
+      expect(upEvent.key).toBe('ArrowUp');
+      expect(upPrevIndex).toBe(2);
+      expect(upNextIndex).toBe(8);
+      expect(screen.getByTestId('9')).toHaveFocus();
+    });
+
+    it('stays on the current item when onLoop returns prevIndex', async () => {
+      const onLoop = vi.fn(
+        (
+          _event: KeyboardEvent,
+          prevIndex: number,
+          _nextIndex: number,
+          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        ) => prevIndex,
+      );
+
+      await render(
+        <GridCompositeRoot grid={threeColsGrid} orientation="horizontal" onLoop={onLoop}>
+          <TestGridItems />
+        </GridCompositeRoot>,
+      );
+
+      screen.getByTestId('9').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      expect(onLoop).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('9')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(onLoop).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('9')).toHaveFocus();
+    });
+
+    it('does not loop or call onLoop when loopFocus is disabled', async () => {
+      const onLoop = vi.fn(
+        (
+          _event: KeyboardEvent,
+          _prevIndex: number,
+          nextIndex: number,
+          _elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        ) => nextIndex,
+      );
+
+      await render(
+        <GridCompositeRoot grid={threeColsGrid} loopFocus={false} onLoop={onLoop}>
+          <TestGridItems />
+        </GridCompositeRoot>,
+      );
+
+      screen.getByTestId('9').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('9')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('9'), { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      expect(onLoop).not.toHaveBeenCalled();
+      expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('9')).toHaveFocus();
+    });
+
+    it('skips disabled indices', async () => {
+      function App() {
+        return (
+          <GridCompositeRoot grid={threeColsGrid} disabledIndices={[4]}>
+            <TestGridItems />
+          </GridCompositeRoot>
+        );
+      }
+
+      await render(<App />);
+
+      screen.getByTestId('2').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('2'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('8')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('8')).toHaveFocus();
+    });
+
+    it('packs items into earlier gaps when dense', async () => {
+      await render(
+        <GridCompositeRoot
+          grid={gridNavigation({
+            cols: 2,
+            dense: true,
+            itemSizes: [
+              { width: 1, height: 1 },
+              { width: 2, height: 1 },
+              { width: 1, height: 1 },
+            ],
+          })}
+        >
+          <CompositeItem data-testid="1">1</CompositeItem>
+          <CompositeItem data-testid="2">2</CompositeItem>
+          <CompositeItem data-testid="3">3</CompositeItem>
+        </GridCompositeRoot>,
+      );
+
+      // Item 2 is too wide for the first row. Dense packing then puts item 3 in the gap next to
+      // item 1. Without `dense`, that cell stays empty and item 3 goes below item 2.
+      screen.getByTestId('1').focus();
+      await flushMicrotasks();
+
+      await fireEvent.keyDown(screen.getByTestId('1'), { key: 'ArrowRight' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('3')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('3')).toHaveFocus();
+
+      await fireEvent.keyDown(screen.getByTestId('3'), { key: 'ArrowDown' });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('2')).toHaveAttribute('tabindex', '0');
+      expect(screen.getByTestId('2')).toHaveFocus();
+    });
+
+    describe('rtl', () => {
+      it('horizontal orientation', async () => {
+        await render(
+          <div dir="rtl">
+            <DirectionProvider direction="rtl">
+              <GridCompositeRoot grid={threeColsGrid} orientation="horizontal" enableHomeAndEndKeys>
+                <TestGridItems />
+              </GridCompositeRoot>
+            </DirectionProvider>
+          </div>,
+        );
+
+        screen.getByTestId('1').focus();
+        await flushMicrotasks();
+
+        await fireEvent.keyDown(screen.getByTestId('1'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('2')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('2')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('2'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('3')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('3')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('3'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('4')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('4')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('4'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('5')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('5')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('5'), { key: 'Home' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('1')).toHaveAttribute('tabindex', '0');
+
+        await fireEvent.keyDown(screen.getByTestId('1'), { key: 'End' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+      });
+
+      it('both horizontal and vertical orientation', async () => {
+        await render(
+          <div dir="rtl">
+            <DirectionProvider direction="rtl">
+              <GridCompositeRoot grid={threeColsGrid} orientation="both" enableHomeAndEndKeys>
+                <TestGridItems />
+              </GridCompositeRoot>
+            </DirectionProvider>
+          </div>,
+        );
+
+        screen.getByTestId('1').focus();
+        await flushMicrotasks();
+
+        await fireEvent.keyDown(screen.getByTestId('1'), { key: 'ArrowDown' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('4')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('4')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('4'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('5')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('5')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('5'), { key: 'ArrowDown' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('8')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('8')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('8'), { key: 'ArrowRight' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('7')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('7')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('7'), { key: 'ArrowUp' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('4')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('4')).toHaveFocus();
+
+        await fireEvent.keyDown(screen.getByTestId('4'), { key: 'End' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('9')).toHaveAttribute('tabindex', '0');
+
+        await fireEvent.keyDown(screen.getByTestId('9'), { key: 'Home' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('1')).toHaveAttribute('tabindex', '0');
+      });
+
+      it('uses the forward edge when navigating from a spanning item', async () => {
+        await render(
+          <div dir="rtl">
+            <DirectionProvider direction="rtl">
+              <GridCompositeRoot
+                grid={gridNavigation({
+                  cols: 3,
+                  itemSizes: [
+                    { width: 1, height: 1 },
+                    { width: 2, height: 1 },
+                    { width: 1, height: 1 },
+                  ],
+                })}
+                orientation="both"
+              >
+                <CompositeItem data-testid="1">1</CompositeItem>
+                <CompositeItem data-testid="2">2</CompositeItem>
+                <CompositeItem data-testid="3">3</CompositeItem>
+              </GridCompositeRoot>
+            </DirectionProvider>
+          </div>,
+        );
+
+        screen.getByTestId('2').focus();
+        await flushMicrotasks();
+
+        await fireEvent.keyDown(screen.getByTestId('2'), { key: 'ArrowLeft' });
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('1')).toHaveAttribute('tabindex', '0');
+        expect(screen.getByTestId('1')).toHaveFocus();
       });
     });
   });
