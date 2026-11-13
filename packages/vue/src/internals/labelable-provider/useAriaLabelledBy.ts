@@ -9,7 +9,10 @@ import { useVaseUiId } from '../useBaseUiId';
  * The result is the first of these that exists: `explicitAriaLabelledBy`, `labelId`, and the `id`
  * of the native `<label>` that names `labelSourceRef`. A server has no DOM, so the server HTML
  * never has the id of a native `<label>`. The control gets it in the first flush after the mount.
- * The result follows a label that comes or goes, a change of its `for` and a change of its `id`.
+ * The result follows a label that comes or goes, a change of its `for` and a change of its `id`. It
+ * also follows a change of the `id` of the control. WebKit keeps the `labels` of the control as they
+ * were before that change. There the result follows the change after a node is added or removed, or
+ * a `for` changes.
  * @param labelId The id of the label of the provider. Pass the result of `useControlLabelId()`.
  * @param labelSourceRef The labelable element, such as the hidden input of the control. Pass a ref
  * that a ref callback writes, or a getter of one. The lookup starts when the value changes from
@@ -164,6 +167,8 @@ function findAssociatedLabel(labelSource?: LabelSource | null) {
     }
   }
 
+  // WebKit keeps this list as it was before a change of the `id` of the control, until a node is
+  // added or removed or a `for` changes.
   const labels = labelSource.labels;
   return labels && labels[0];
 }
