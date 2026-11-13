@@ -13,8 +13,14 @@ import {
 type CompositeGridElementsRef = Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
 type CompositeGridOnLoop = (event: KeyboardEvent, prevIndex: number, nextIndex: number) => number;
 
+/** The number of columns (`width`) and of rows (`height`) that an item covers. */
 export interface CompositeGridItemSize {
+  /**
+   * A width that is not a finite number counts as 1. A width above the number of columns counts as
+   * the number of columns.
+   */
   width: number;
+  /** A height that is not a finite number counts as 1. */
   height: number;
 }
 

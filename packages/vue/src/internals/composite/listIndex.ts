@@ -431,12 +431,21 @@ export function getGridNavigatedIndex(
 
 /**
  * Gives the number of columns that grid navigation uses: the whole part of `cols`. A grid has at
- * least one column, so a value below 1 or a value that is not a finite number gives 1. Such a value
- * makes the search for a free cell and a step of the navigation run with no end.
+ * least one column, so a value below 1 or a value that is not a finite number gives 1. Without this
+ * rule, such a value makes the search for a free cell and a step of the navigation run with no end.
  */
 export function getGridColumns(cols: number) {
   const columns = floor(cols);
   return Number.isFinite(columns) && columns >= 1 ? columns : 1;
+}
+
+/**
+ * Gives the number of columns (a width) or of rows (a height) that a grid item covers. A value that
+ * is not a finite number gives 1. Without this rule, a width of NaN makes the search for a free
+ * cell run with no end, and a height of Infinity makes it use all the memory.
+ */
+function getGridSpan(span: number) {
+  return Number.isFinite(span) ? span : 1;
 }
 
 /**
@@ -448,13 +457,15 @@ export function createGridCellMap(sizes: Dimensions[], cols: number, dense: bool
   const cellMap: (number | undefined)[] = [];
   let startIndex = 0;
   sizes.forEach((size, index) => {
+    const itemWidth = getGridSpan(size.width);
+    const height = getGridSpan(size.height);
     // An item that is wider than the grid fits in no row. The search for a free place would never end.
-    const width = Math.min(size.width, columns);
-    const { height } = size;
-    if (process.env.NODE_ENV !== 'production' && size.width > columns) {
+    const width = Math.min(itemWidth, columns);
+    if (process.env.NODE_ENV !== 'production' && itemWidth > columns) {
+      const gridWidth = columns === 1 ? '1 column' : `${columns} columns`;
       error(
-        `The grid item at index ${index} has a width of ${size.width} columns, and the grid has ${columns} columns.`,
-        `Grid navigation cannot place an item that is wider than the grid, so it gives the item a width of ${columns} columns.`,
+        `The grid item at index ${index} has a width of ${itemWidth} columns, and the grid has ${gridWidth}.`,
+        `Grid navigation cannot place an item that is wider than the grid, so it gives the item a width of ${gridWidth}.`,
         `Give the item a width of at most ${columns}, or give the grid more columns.`,
       );
     }
@@ -509,12 +520,12 @@ export function getGridCellIndexOfCorner(
       if (!sizeItem) {
         return firstCellIndex;
       }
-      return firstCellIndex + Math.min(sizeItem.width, cols) - 1;
+      return firstCellIndex + Math.min(getGridSpan(sizeItem.width), cols) - 1;
     case 'bl':
       if (!sizeItem) {
         return firstCellIndex;
       }
-      return firstCellIndex + (sizeItem.height - 1) * cols;
+      return firstCellIndex + (getGridSpan(sizeItem.height) - 1) * cols;
     case 'br':
       return cellMap.lastIndexOf(index);
     default:

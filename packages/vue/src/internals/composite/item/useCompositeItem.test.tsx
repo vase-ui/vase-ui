@@ -162,6 +162,35 @@ describe('useCompositeItem', () => {
       expect(takeReportedMessages()).toEqual([]);
     });
 
+    it('keeps the tab stop on a mounted item while an item with no tab stop waits for its mount', async () => {
+      const props = { late: true };
+      const serverHtml = await renderOnServer(TAB_STOP_FIXTURE, props);
+      const { container, mount } = startHydration(CompositeItemTabStop, serverHtml, props);
+      const [a, b, c] = ['a', 'b', 'c'].map((testId) => within(container).getByTestId(testId));
+
+      // No item is active or disabled, so the server gave the tab stop to a.
+      expect(readTabindexes(container)).toEqual(['0', '-1', '-1']);
+
+      mount();
+      await settle();
+
+      // The element of b has the attribute of an item that hydrates, but it has no tab stop. The
+      // root waits only for an element that has the tab stop, so a keeps it.
+      expect(readTabindexes(container)).toEqual(['0', '-1', '-1']);
+
+      releaseAsyncBranch();
+      await waitFor(() => {
+        expect(findHydrationAttributes(container)).toBeNull();
+      });
+      await settle();
+
+      expect(readTabindexes(container)).toEqual(['0', '-1', '-1']);
+      expect(within(container).getByTestId('a')).toBe(a);
+      expect(within(container).getByTestId('b')).toBe(b);
+      expect(within(container).getByTestId('c')).toBe(c);
+      expect(takeReportedMessages()).toEqual([]);
+    });
+
     it('keeps the tab stop of the server until a Suspense outside the root resolves', async () => {
       const props = { disabled: ['a'] };
       const serverHtml = await renderOnServer(ASYNC_SETUP_FIXTURE, props);
