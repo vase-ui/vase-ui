@@ -508,7 +508,9 @@ describe('useTriggerRegistration', () => {
       expect(store.context.triggerElements.size).toBe(0);
     });
 
-    it('claims an open popup that has no active trigger when KeepAlive activates the trigger', async () => {
+    // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A claim in the
+    // activation would give the popup to the last trigger. The root picks the trigger instead.
+    it('claims no open popup when KeepAlive activates the trigger', async () => {
       const store = createTestPopupStore();
       const showBranch = shallowRef(true);
       const Branch = defineComponent({
@@ -530,9 +532,10 @@ describe('useTriggerRegistration', () => {
       showBranch.value = true;
       await nextTick();
 
-      expect(store.state.activeTriggerId).toBe('trigger');
-      expect(store.state.activeTriggerElement).toBe(document.getElementById('trigger'));
-      expect(store.state.payload).toBe('from trigger');
+      expect(registeredIds(store)).toEqual(['trigger']);
+      expect(store.state.triggerCount).toBe(1);
+      expect(store.state.activeTriggerId).toBe(null);
+      expect(store.state.payload).toBe(undefined);
     });
 
     it('keeps a deactivated trigger hidden when its handle gets a root, and shows it after the activation', async () => {
@@ -567,8 +570,7 @@ describe('useTriggerRegistration', () => {
       await nextTick();
 
       expect(rootStore.context.triggerElements.size).toBe(1);
-      expect(rootStore.state.activeTriggerId).toBe('detached');
-      expect(rootStore.state.payload).toBe('from trigger');
+      expect(rootStore.state.triggerCount).toBe(1);
     });
   });
 });
@@ -591,6 +593,27 @@ describe('useTriggerDataForwarding', () => {
     await setProps({ payload: 'two' });
 
     expect(store.state.payload).toBe('two');
+  });
+
+  it('gives the data of the trigger to the new store when the store changes and the trigger still owns the popup', async () => {
+    const first = createTestPopupStore();
+    const second = createTestPopupStore();
+    const element = document.createElement('button');
+    // Both popups are closed and mounted for the same trigger. The registration gives no payload to
+    // a closed popup, and `isMountedByThisTrigger` stays `true` when the store changes.
+    first.update({ mounted: true, activeTriggerId: 'trigger' });
+    second.update({ mounted: true, activeTriggerId: 'trigger' });
+
+    const { setProps } = await render(
+      <TestForwardedTrigger id="trigger" store={first} element={element} payload="payload" />,
+    );
+    expect(first.state.payload).toBe('payload');
+    expect(second.state.payload).toBe(undefined);
+
+    await setProps({ store: second });
+
+    expect(second.state.payload).toBe('payload');
+    expect(second.state.activeTriggerElement).toBe(element);
   });
 
   it('gives the payload of the trigger to a popup that is still mounted while it closes', async () => {

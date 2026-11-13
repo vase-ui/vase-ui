@@ -1,0 +1,1675 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/interactions/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/interactions/gridNavigation.ts",
+    "packages/react/src/utils/popups/interactions/hoverIntent.ts",
+    "packages/react/src/utils/popups/interactions/safePolygon.ts",
+    "packages/react/src/utils/popups/interactions/useClick.ts",
+    "packages/react/src/utils/popups/interactions/useClientPoint.ts",
+    "packages/react/src/utils/popups/interactions/useDismiss.ts",
+    "packages/react/src/utils/popups/interactions/useFocus.ts",
+    "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+    "packages/react/src/utils/popups/interactions/useHoverShared.ts",
+    "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
+    "packages/react/src/utils/popups/interactions/useListNavigation.ts",
+    "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
+    "packages/react/src/utils/popups/interactions/useTypeahead.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/interactions/safePolygon.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "does not close when a nested child is open"
+        },
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "does not close when an open nested child is behind a contextless intermediary node"
+        },
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "closes after intent timeout when no nested child is open"
+        },
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "keeps open while moving through the trough on %s placement"
+        },
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "closes when moving away from corridor on %s placement"
+        },
+        {
+          "describe": [
+            "safePolygon"
+          ],
+          "title": "resets traversal state for a new handler invocation"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "opens and closes on repeated clicks",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "keeps open on repeated clicks when toggle is false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "opens from the mousedown event path",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "closes from the mousedown event path",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "ignores the click event after mousedown when event is mousedown-only",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "ignores mouse input when ignoreMouse is true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "delays touch opening when touchOpenDelay is set",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "delays touch opening from the deferred mousedown event path",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "does not delay touch closing",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "uses the configured reason",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "stickIfOpen true keeps a hover-opened popup open on first click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useClick"
+          ],
+          "title": "stickIfOpen false closes a hover-opened popup on first click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
+      "rows": [
+        {
+          "describe": [],
+          "title": "updates position from trigger props"
+        },
+        {
+          "describe": [],
+          "title": "uses trigger element when dom reference is missing"
+        },
+        {
+          "describe": [],
+          "title": "renders at mouse event coords"
+        },
+        {
+          "describe": [],
+          "title": "cleans up window listener when closing or disabling"
+        },
+        {
+          "describe": [],
+          "title": "clears virtual references on unmount without retaining a stale DOM reference"
+        },
+        {
+          "describe": [],
+          "title": "axis x"
+        },
+        {
+          "describe": [],
+          "title": "axis y"
+        },
+        {
+          "describe": [],
+          "title": "keeps the reference size on the untracked axis when tracking $axis"
+        },
+        {
+          "describe": [],
+          "title": "removes window listener when cursor lands on floating element"
+        },
+        {
+          "describe": [],
+          "title": "reattaches window listener after cursor returns from floating element to reference"
+        },
+        {
+          "describe": [],
+          "title": "restores the DOM reference when opened by a non-mouse event"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "registers outside press touch listeners as passive",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses with escape key",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "calls preventDefault on escape key dismiss",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "does not call preventDefault on escape key if close is canceled",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "does not dismiss with escape key if IME is active",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "does not dismiss with escape key while a composition spans a reopen",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "does not dismiss with the escape key that ends a composition spanning a reopen",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses with escape key after closing during IME composition",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "does not dismiss a reopened popup when an old touch moves %s pixels and ends",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses with outside pointer press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "clears the inside marker when the interaction owner unmounts (strict: %s)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses with reference press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses with native click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "outsidePress function guard",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "outsidePress ignored for third party elements",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses when clicking outside a shared shadow root",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "dismisses when clicking outside a shared shadow root while focus is managed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "default options"
+          ],
+          "title": "outsidePress not ignored for nested floating elements",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "options set to false"
+          ],
+          "title": "does not dismiss with escape key",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "options set to false"
+          ],
+          "title": "does not dismiss with outside press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "options set to false"
+          ],
+          "title": "does not dismiss with reference pointer down",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "options set to false"
+          ],
+          "title": "does not dismiss when clicking portaled children",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "options set to false"
+          ],
+          "title": "outsidePress function guard",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "normalizeProp"
+          ],
+          "title": "undefined",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "normalizeProp"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "normalizeProp"
+          ],
+          "title": "{}",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "normalizeProp"
+          ],
+          "title": "{ escapeKey: false }",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "normalizeProp"
+          ],
+          "title": "{ outsidePress: false }",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.outsidePress"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.outsidePress"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.outsidePress"
+          ],
+          "title": "mixed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey"
+          ],
+          "title": "without FloatingTree",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey"
+          ],
+          "title": "mixed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey",
+            "when Escape reaches the document"
+          ],
+          "title": "closes only the most recently opened layer",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey",
+            "when Escape reaches the document"
+          ],
+          "title": "closes the layers below when the layers above bubble",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: bubbles",
+            "prop: bubbles.escapeKey",
+            "when Escape reaches the document"
+          ],
+          "title": "handles the Escape again once the layer above closed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "undefined",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "{}",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "{ escapeKey: true }",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "normalizeProp"
+          ],
+          "title": "{ outsidePress: false }",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "prop: capture.outsidePress"
+          ],
+          "title": "when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "prop: capture",
+            "prop: capture.escapeKey"
+          ],
+          "title": "when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "dragging outside the floating element does not close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "dragging inside the floating element does not close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "dragging outside the floating element then clicking outside closes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "dragging outside the floating element then clicking outside closes with mouse clicks",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "an outside click stopped before its target does not close on a later click inside",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "mouse click whose press started before open does not close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "compatibility events whose pointerdown opened the floating element do not count as a new press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "keyboard-generated outside click without a prior press closes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press-less outside click reporting a pointer type closes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press seen in a previous open session does not leak into a reopen",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press seen before a same-batch close and reopen does not leak into the new session",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press survives a redundant open dispatch while already open",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press survives listener re-attachment while open",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "pointerdown-only press while open allows the outside click to close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "non-primary-button press does not count as an outside press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "cancelled press does not count as an outside press",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "inside click then programmatic outside click closes",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "inside click after drag does not cause immediate close on first outside click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "drag ending on outsidePress-ignored target does not consume next outside click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press start prevented inside does not require double outside click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "press start prevented inside suppresses only immediate outside click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss",
+            "outsidePressEvent: intentional"
+          ],
+          "title": "pointercancel after prevented press start suppresses immediate outside click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useDismiss"
+          ],
+          "title": "nested floating elements with different portal containers",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useFocus"
+          ],
+          "title": "does not reopen when focus is restored after leaving the tab",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useHoverPopupInteraction"
+          ],
+          "title": "closes after the close delay when the pointer leaves the floating element",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverPopupInteraction"
+          ],
+          "title": "keeps the popup open when the floating element is entered before closeDelay elapses",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useHoverTriggerInteraction"
+          ],
+          "title": "updates the handleClose options during render",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction"
+          ],
+          "title": "does not treat child target as inactive when handlers are on a wrapper",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction"
+          ],
+          "title": "does not treat a synthetic child target as inactive when the native path differs",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction"
+          ],
+          "title": "treats disabled child trigger as inactive in wrapper fallback mode",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction"
+          ],
+          "title": "reopens immediately for same trigger in delegated wrapper mode during close transition",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "opens on mouseenter",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "closes on mouseleave",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "closes when the pointer moves onto the floating element without safePolygon",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics",
+            "prop: delay"
+          ],
+          "title": "symmetric number",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics",
+            "prop: delay"
+          ],
+          "title": "open",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics",
+            "prop: delay"
+          ],
+          "title": "close",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics",
+            "prop: delay"
+          ],
+          "title": "open with close 0",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics",
+            "prop: delay"
+          ],
+          "title": "restMs + nullish open delay should respect restMs",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "restMs",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "restMs does not reset timer for minor mouse movement",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useHoverTriggerInteraction",
+            "hover semantics"
+          ],
+          "title": "reports the hover reason",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "does not add role-dependent aria-orientation"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "opens on ArrowDown and focuses first item"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "opens on ArrowUp and focuses last item"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "navigates down on ArrowDown"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "navigates up on ArrowUp"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "skips disabled item on initial navigation"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "skips items hidden with CSS in navigation"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "skips visibility:hidden items in navigation"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "resets indexRef to -1 upon close"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: loopFocus"
+          ],
+          "title": "ArrowDown looping"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: loopFocus"
+          ],
+          "title": "ArrowUp looping"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: orientation"
+          ],
+          "title": "navigates down on ArrowRight"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: orientation"
+          ],
+          "title": "navigates up on ArrowLeft"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: rtl"
+          ],
+          "title": "navigates down on ArrowLeft"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: rtl"
+          ],
+          "title": "navigates up on ArrowRight"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnOpen"
+          ],
+          "title": "focuses the first item on click when true"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnOpen"
+          ],
+          "title": "does not focus the first item on click when false"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: selectedIndex"
+          ],
+          "title": "scrolls the selected item into view on open"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "allowEscape + virtual"
+          ],
+          "title": "when true"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "allowEscape + virtual"
+          ],
+          "title": "when false"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "allowEscape + virtual"
+          ],
+          "title": "true - onNavigate is called with `null` when escaped"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "reference focus"
+          ],
+          "title": "clears ordinary item focus when the open reference receives focus"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: openOnArrowKeyDown"
+          ],
+          "title": "opens on ArrowDown when true"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: openOnArrowKeyDown"
+          ],
+          "title": "opens on ArrowUp when true"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: openOnArrowKeyDown"
+          ],
+          "title": "does not open on ArrowDown when false"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: openOnArrowKeyDown"
+          ],
+          "title": "does not open on ArrowUp when false"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: disabledIndices"
+          ],
+          "title": "indices are skipped in focus order"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnHover"
+          ],
+          "title": "cancels pending item focus when the pointer leaves before focus lands",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnHover"
+          ],
+          "title": "true - focuses item on hover and syncs the active index"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnHover"
+          ],
+          "title": "true - syncs an item on hover when activeIndex is null but selectedIndex matches"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnHover"
+          ],
+          "title": "false - does not focus item on hover and does not sync the active index"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "prop: focusItemOnHover"
+          ],
+          "title": "clears the active item when the pointer leaves a clipped container while still within the item bounds"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "ArrowDown focuses first item"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "focuses first non-disabled item in grid"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "focuses next item using ArrowRight key, skipping disabled items"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "focuses previous item using ArrowLeft key, skipping disabled items"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "skips row and remains on same column when pressing ArrowDown"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "skips row and remains on same column when pressing ArrowUp"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "loops on the same column with ArrowDown"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "loops on the same column with ArrowUp"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "does not leave row with \"both\" orientation while looping"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "looping works on last row"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "wraps ArrowUp to the last row in the full list for virtualized rows"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "clamps ArrowUp to the last item in a partial last row for virtualized rows"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "clamps ArrowDown into a partial last row for virtualized rows"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "does not wrap ArrowUp when loopFocus is false for virtualized rows"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "still clamps ArrowDown into a partial last row when loopFocus is false"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "falls back left in a partial last row when the preferred candidate is disabled"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation"
+          ],
+          "title": "falls back left when the preferred candidate is hidden"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation in a multi-column grid with disabled items"
+          ],
+          "title": "focuses first non-disabled item in grid"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation in a multi-column grid with disabled items",
+            "with rtl $rtl"
+          ],
+          "title": "`focuses next item using ${arrowToEnd} key, skipping disabled items`"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation in a multi-column grid with disabled items",
+            "with rtl $rtl"
+          ],
+          "title": "`focuses previous item using ${arrowToStart} key, skipping disabled items`"
+        },
+        {
+          "describe": [
+            "useListNavigation",
+            "grid navigation in a multi-column grid with disabled items",
+            "with rtl $rtl"
+          ],
+          "title": "looping works on last row"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "grid navigation with changing list items"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "grid navigation with disabled list items"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "selectedIndex changing does not steal focus"
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "focus management in nested lists",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "keyboard navigation in nested menus lists",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "keyboard navigation in nested menus with different orientation",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useListNavigation"
+          ],
+          "title": "Home or End key press is ignored for typeable combobox reference"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useListNavigation.webkit.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useListNavigation (WebKit)"
+          ],
+          "title": "ignores stationary mousemove events fired when the list scrolls beneath the pointer"
+        },
+        {
+          "describe": [
+            "useListNavigation (WebKit)"
+          ],
+          "title": "keeps keyboard modality when a stationary pointermove fires on the floating element"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/popups/interactions/useTypeahead.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "passes the matching keydown event to onMatch"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "rapidly focuses list items when they start with the same letter"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "bails out of rapid focus of first letter if the list contains a string that starts with two of the same letter"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "starts from the current activeIndex and correctly loops (strict: %s)"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "capslock characters continue to match"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "does not depend on locale-sensitive lowercasing"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "matches when focus is within reference"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "matches when focus is within floating"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "onTyping is called with typing activity"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "onTyping is called when the popup closes without moving focus"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "skips hidden items when matching with elementsRef"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "does not let hidden double-letter items block rapid cycling with elementsRef"
+        },
+        {
+          "describe": [
+            "useTypeahead"
+          ],
+          "title": "skips visibility:hidden items when matching with elementsRef"
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}

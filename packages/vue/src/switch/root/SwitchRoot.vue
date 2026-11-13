@@ -113,7 +113,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
@@ -171,6 +171,7 @@ const {
 
 const isDisabled = computed(() => fieldDisabled.value || props.disabled);
 const inputName = computed(() => fieldName.value ?? props.name);
+const clearFieldError = useClearFieldError(inputName);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
 
@@ -209,9 +210,20 @@ useRegisterFieldControl(
 setFilled(isChecked.value);
 watch(isChecked, setFilled);
 
+// The change of a reset reaches `useValueChanged` after the reset timeout. A clear in the timeout
+// would come before `validation.change`, and the validation could show a new error. The timeout sets
+// this flag, and the callback clears the field and starts no validation.
+let isResetChangePending = false;
+
 useValueChanged(isChecked, () => {
   clearErrors(inputName.value);
   setDirty(isChecked.value !== validityData.value.initialValue);
+
+  if (isResetChangePending) {
+    isResetChangePending = false;
+    clearFieldError(isChecked.value);
+    return;
+  }
 
   validation.change(isChecked.value);
 });
@@ -286,8 +298,15 @@ function onReset(event: Event) {
       return;
     }
 
-    if (props.checked === undefined && isChecked.value !== props.defaultChecked) {
+    const hasChanged =
+      props.checked === undefined &&
+      isChecked.value !== props.defaultChecked &&
       requestChange(props.defaultChecked, event);
+
+    if (hasChanged) {
+      isResetChangePending = true;
+    } else {
+      clearFieldError(isChecked.value);
     }
   });
 }

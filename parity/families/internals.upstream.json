@@ -2,6 +2,7 @@
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
     "packages/react/src/internals/composite/**",
+    "packages/react/src/internals/constants.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createBaseUIEventDetails.spec.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
@@ -64,6 +65,7 @@
     "packages/react/src/internals/composite/root/CompositeRootContext.ts",
     "packages/react/src/internals/composite/root/gridNavigation.ts",
     "packages/react/src/internals/composite/root/useCompositeRoot.ts",
+    "packages/react/src/internals/constants.ts",
     "packages/react/src/internals/createBaseUIEventDetails.ts",
     "packages/react/src/internals/createFlushBeforePaint.ts",
     "packages/react/src/internals/field-constants/constants.ts",
