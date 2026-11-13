@@ -8,9 +8,8 @@ export type TransitionStatus = 'starting' | 'ending' | 'idle' | undefined;
  * Runs `effect` at mount and after each DOM update that follows a change of a source.
  * `effect` returns the animation frame that it requests. The next run and the end of the scope
  * cancel that frame.
- * Do not use `watchPostEffect` here. In Vue 3.5.0, a server render runs it one time, and a server
- * has no `requestAnimationFrame`. A `watch` that has a callback and no `immediate` does not run on
- * a server.
+ * A server has no `requestAnimationFrame`, and a server render does not run `effect`: it runs no
+ * `onMounted` hook and no `watch` that has a callback and no `immediate`.
  */
 function registerFrameEffect(sources: WatchSource[], effect: () => number | undefined) {
   let frame: number | undefined;

@@ -490,7 +490,7 @@ describe('useFieldControlRegistration', () => {
       expect(read()).toEqual(active('first'));
     });
 
-    describe('VUE-10: the control that was active before', () => {
+    describe('VUE-11: the control that was active before', () => {
       it.each([
         { name: 'goes away', change: { shown: false } },
         { name: 'gets `enabled` false', change: { disabled: true } },
@@ -742,7 +742,7 @@ describe('useFieldControlRegistration', () => {
       return { Test, read };
     }
 
-    it('VUE-10: uses the other control while `KeepAlive` has the active control, and the same control again when it comes back', async () => {
+    it('VUE-11: uses the other control while `KeepAlive` has the active control, and the same control again when it comes back', async () => {
       const { Test, read } = setupFirstControlInKeepAlive();
       const { rerender } = await render(<Test shown first="first" second="second" />);
 

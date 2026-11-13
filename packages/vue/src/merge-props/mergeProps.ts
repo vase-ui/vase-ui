@@ -3,9 +3,37 @@ import type { IntrinsicElementAttributes, NativeElements } from 'vue';
 import type { VaseUIEvent, WithVaseUIEvent } from '../internals/types';
 
 type ElementType = keyof IntrinsicElementAttributes;
-type PropsOf<T extends ElementType> = WithVaseUIEvent<NativeElements[T]>;
+type KeyOfEach<T> = T extends unknown ? keyof T : never;
+type AttributeName = KeyOfEach<NativeElements[ElementType]>;
+// Each member of the result has each attribute name. An indexed access on the union of the
+// members thus gives each type that an attribute has on an element. A conditional type for each
+// name and each element gives the same types, and its check is about five times slower.
+type WithEachAttributeName<T> = T extends unknown
+  ? T & { [K in Exclude<AttributeName, keyof T>]?: never }
+  : never;
+// `type` accepts the values of `button` and the values of `input`.
+type AttributesOfEachElement = {
+  [K in AttributeName]?: WithEachAttributeName<NativeElements[ElementType]>[K];
+};
+// Vue declares no `data-*` attribute.
+type DataAttributes = { [name: `data-${string}`]: string | number | boolean | null | undefined };
+// With no type argument, `T` is each tag. `any` is a type argument, and it stays `any`.
+type IsEachElement<T extends ElementType> = unknown extends T
+  ? false
+  : [ElementType] extends [T]
+    ? true
+    : false;
+type SetAttributes<T extends ElementType> =
+  IsEachElement<T> extends true ? AttributesOfEachElement : NativeElements[T];
+// Each element accepts the attributes of `div`. An element refuses `AttributesOfEachElement`:
+// its `type` is a string, and `button` accepts only three values.
+type MergedProps<T extends ElementType> =
+  IsEachElement<T> extends true ? NativeElements['div'] : NativeElements[T];
+// The first member accepts an object with no index signature, such as `HTMLProps`.
+type PropsOf<T extends ElementType> =
+  WithVaseUIEvent<SetAttributes<T>> | (WithVaseUIEvent<SetAttributes<T>> & DataAttributes);
 type InputProps<T extends ElementType> =
-  PropsOf<T> | ((otherProps: NativeElements[T]) => PropsOf<T>) | undefined;
+  PropsOf<T> | ((otherProps: MergedProps<T>) => PropsOf<T>) | undefined;
 type Handler = (...args: any[]) => unknown;
 type HandlerValue = Handler | Handler[] | null | false | undefined;
 
@@ -35,8 +63,9 @@ const EMPTY_PROPS = {};
  * must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
- * @template T Tag of the element that gets the merged props. The default is `div`: each HTML
- * element has the attributes of `div`.
+ * @template T Tag of the element that gets the merged props. The sets and the result then have
+ * the attributes of that element. With no type argument, a set accepts the attributes of each
+ * element, and the type of the result has the attributes that each HTML element has.
  * @param a Props object to merge.
  * @param b Props object to merge. Its props replace the conflicting props of `a`.
  * @param c Props object to merge. Its props replace the conflicting props of `a` and `b`.
@@ -45,28 +74,28 @@ const EMPTY_PROPS = {};
  * @returns The merged props.
  * @public
  */
-export function mergeProps<T extends ElementType = 'div'>(
+export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
   d: InputProps<T>,
   e: InputProps<T>,
-): NativeElements[T];
-export function mergeProps<T extends ElementType = 'div'>(
+): MergedProps<T>;
+export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
   d: InputProps<T>,
-): NativeElements[T];
-export function mergeProps<T extends ElementType = 'div'>(
+): MergedProps<T>;
+export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
   c: InputProps<T>,
-): NativeElements[T];
-export function mergeProps<T extends ElementType = 'div'>(
+): MergedProps<T>;
+export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
-): NativeElements[T];
+): MergedProps<T>;
 export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
   if (!c && !d && !e && !a) {
     return createInitialMergedProps(b);
@@ -103,14 +132,12 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  * @see mergeProps
  * @public
  */
-export function mergePropsN<T extends ElementType = 'div'>(
-  props: InputProps<T>[],
-): NativeElements[T] {
+export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return EMPTY_PROPS as NativeElements[T];
+    return EMPTY_PROPS as MergedProps<T>;
   }
   if (props.length === 1) {
-    return createInitialMergedProps(props[0]) as NativeElements[T];
+    return createInitialMergedProps(props[0]) as MergedProps<T>;
   }
 
   // `merged` is a copy, because the merge below changes it.
@@ -120,13 +147,13 @@ export function mergePropsN<T extends ElementType = 'div'>(
     merged = mergeInto(merged, props[i]);
   }
 
-  return merged as NativeElements[T];
+  return merged as MergedProps<T>;
 }
 
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
     // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS as NativeElements[T]) };
+    return { ...inputProps(EMPTY_PROPS as MergedProps<T>) };
   }
 
   return copyInitialProps(inputProps);
@@ -134,12 +161,12 @@ function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<
 
 function mergeInto<T extends ElementType>(merged: Record<string, any>, inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
-    return inputProps(merged as NativeElements[T]);
+    return inputProps(merged as MergedProps<T>);
   }
   return mutablyMergeInto(merged, inputProps);
 }
 
-function copyInitialProps<T extends ElementType>(inputProps: NativeElements[T] | undefined) {
+function copyInitialProps<T extends ElementType>(inputProps: PropsOf<T> | undefined) {
   const copiedProps = { ...inputProps } as Record<string, any>;
 
   // `copiedProps` is a new object, so `for...in` reads only its own keys.
@@ -153,16 +180,16 @@ function copyInitialProps<T extends ElementType>(inputProps: NativeElements[T] |
   return copiedProps;
 }
 
-function mutablyMergeInto<T extends ElementType>(
+function mutablyMergeInto(
   mergedProps: Record<string, any>,
-  externalProps: NativeElements[T] | undefined,
+  externalProps: Record<string, any> | undefined,
 ) {
   if (!externalProps) {
     return mergedProps;
   }
 
   for (const propName in externalProps) {
-    const externalPropValue: any = externalProps[propName];
+    const externalPropValue = externalProps[propName];
 
     switch (propName) {
       case 'style': {
@@ -202,7 +229,7 @@ function isEventHandler(key: string, value: unknown) {
 
 function isPropsGetter<T extends ElementType>(
   inputProps: InputProps<T>,
-): inputProps is (props: NativeElements[T]) => PropsOf<T> {
+): inputProps is (props: MergedProps<T>) => PropsOf<T> {
   return typeof inputProps === 'function';
 }
 
