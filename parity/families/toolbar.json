@@ -45,7 +45,7 @@
       "describe": ["<Toolbar.Input />", "rendering NumberField"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "Each case of the block renders `NumberField.Input` and the other parts of Number Field, which Vase UI does not have."
+      "reason": "Each case of the block renders `NumberField.Input`, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [],
