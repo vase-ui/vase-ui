@@ -377,18 +377,37 @@ describe('<ScrollArea.Viewport />', () => {
 
       const viewport = screen.getByTestId('viewport');
 
+      // The times are in ms from the first scroll.
+      let elapsed = 0;
+      async function advanceTo(time: number) {
+        await vi.advanceTimersByTimeAsync(time - elapsed);
+        await flushMicrotasks();
+        elapsed = time;
+      }
+
+      // The viewport tells the root about user scrolls only. The root removes `data-scrolling`
+      // 500 ms after the last user scroll.
       await fireEvent.pointerEnter(viewport);
       await fireEvent.scroll(viewport, { target: { scrollTop: 1 } });
 
       expect(viewport).toHaveAttribute('data-scrolling', '');
 
-      await vi.advanceTimersByTimeAsync(SCROLL_TIMEOUT);
-      await flushMicrotasks();
-
-      expect(viewport).not.toHaveAttribute('data-scrolling');
-
-      // No user event came after the first scroll, so this scroll is a programmatic scroll.
+      // A scroll less than 100 ms after another scroll is still a user scroll.
+      await advanceTo(99);
       await fireEvent.scroll(viewport, { target: { scrollTop: 2 } });
+      await advanceTo(198);
+      await fireEvent.scroll(viewport, { target: { scrollTop: 3 } });
+
+      // A scroll 100 ms after another scroll is a programmatic scroll.
+      await advanceTo(298);
+      await fireEvent.scroll(viewport, { target: { scrollTop: 4 } });
+
+      // The last user scroll is the third scroll.
+      await advanceTo(198 + SCROLL_TIMEOUT - 1);
+
+      expect(viewport).toHaveAttribute('data-scrolling', '');
+
+      await advanceTo(198 + SCROLL_TIMEOUT);
 
       expect(viewport).not.toHaveAttribute('data-scrolling');
     });
@@ -483,6 +502,16 @@ describe('<ScrollArea.Viewport />', () => {
   });
 
   describe('KeepAlive', () => {
+    const { render: renderWithFakeTimers } = createRenderer();
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('releases the observer and the timers on deactivation, and takes them back on activation', async () => {
       const observe = vi.spyOn(ResizeObserver.prototype, 'observe');
       const disconnect = vi.spyOn(ResizeObserver.prototype, 'disconnect');
@@ -509,22 +538,26 @@ describe('<ScrollArea.Viewport />', () => {
         </KeepAlive>
       ));
 
-      await render(<App />);
+      await renderWithFakeTimers(<App />);
       const viewport = screen.getByTestId('viewport');
 
-      viewport.scrollTop = 100;
-      await waitFor(() => expect(viewport).toHaveAttribute('data-overflow-y-start'));
+      await fireEvent.scroll(viewport, { target: { scrollTop: 100 } });
+
+      expect(viewport).toHaveAttribute('data-overflow-y-start');
       expect(observe).toHaveBeenCalledTimes(1);
       expect(disconnect).not.toHaveBeenCalled();
+      // The scroll end timer and the animation wait timer of the viewport are pending. The fake
+      // clock does not move, so no timer has run.
+      expect(vi.getTimerCount()).toBe(2);
 
-      // The test waits for microtasks only, so no timer of the viewport runs. The pointer move makes
-      // the next scroll a user scroll. The deactivation must end that state, as the scroll end timer
-      // does.
+      // The pointer move makes the next scroll a user scroll. The deactivation must end that state,
+      // as the scroll end timer does.
       await fireEvent.pointerMove(viewport);
       visible.value = false;
       await nextTick();
 
       expect(disconnect).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBe(0);
 
       visible.value = true;
       await nextTick();
