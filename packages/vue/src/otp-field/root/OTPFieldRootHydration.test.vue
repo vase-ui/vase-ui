@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Field } from '@vase-ui/vue/field';
-import { OTPField } from '@vase-ui/vue/otp-field';
+import * as OTPField from '../index.parts';
 
 const props = withDefaults(
   defineProps<{

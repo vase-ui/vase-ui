@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import { OTPField } from '@vase-ui/vue/otp-field';
+import * as OTPField from '../index.parts';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 
 function tag(html: string, pattern: RegExp) {

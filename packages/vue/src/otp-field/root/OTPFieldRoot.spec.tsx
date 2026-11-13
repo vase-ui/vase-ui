@@ -1,6 +1,6 @@
 import { expectType } from '#test-utils';
-import { OTPField } from '@vase-ui/vue/otp-field';
 import { REASONS } from '../../internals/reasons';
+import * as OTPField from '../index.parts';
 
 type OTPFieldChangeDetails = OTPField.Root.ChangeEventDetails;
 type OTPFieldChangeHandler = (value: string, eventDetails: OTPFieldChangeDetails) => void;

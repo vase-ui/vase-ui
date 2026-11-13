@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
-import { OTPField as OTPFieldBase } from '@vase-ui/vue/otp-field';
 import {
   createRenderer,
   describeConformance,
@@ -13,6 +12,7 @@ import {
   screen,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import * as OTPFieldBase from '../index.parts';
 import OTPFieldRootHydration from './OTPFieldRootHydration.test.vue';
 import OTPFieldRootReplace from './OTPFieldRootReplace.test.vue';
 
