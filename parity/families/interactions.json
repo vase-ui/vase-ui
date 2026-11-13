@@ -1,0 +1,118 @@
+{
+  "upstreamPaths": ["packages/react/src/utils/popups/interactions/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/gridNavigation.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the list navigation ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/hoverIntent.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the hover intent ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the click interaction ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the cursor anchor ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the dismissal ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the focus interaction ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the hover intent ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the hover intent ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the list navigation ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that first needs the file ports it."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the typeahead ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
+      "reason": "The file tests `useClick.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
+      "reason": "The file tests `useClientPoint.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useDismiss.ts",
+      "reason": "The file tests `useDismiss.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useFocus.ts",
+      "reason": "The file tests `useFocus.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
+      "reason": "The file tests `useHoverPopupInteraction.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
+      "reason": "The file tests `useHoverTriggerInteraction.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
+      "reason": "The file tests `useListNavigation.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.webkit.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
+      "reason": "The file tests `useListNavigation.ts`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
+      "reason": "The file tests `useTypeahead.ts`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
