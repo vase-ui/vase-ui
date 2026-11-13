@@ -119,6 +119,27 @@ describe('useComboboxFilter options', () => {
     expect(screen.getByTestId('matches').textContent).toBe('Apple');
   });
 
+  it('a computed of the consumer follows a change of the locale', async () => {
+    const locale = shallowRef('en');
+
+    const TestFilter = defineComponent(() => {
+      const filter = useComboboxFilter(() => ({ locale: locale.value }));
+      const matches = computed(() =>
+        ['Malmö', 'Malta'].filter((city) => filter.contains(city, 'malmo')),
+      );
+      return () => <span data-testid="matches">{matches.value.join()}</span>;
+    });
+
+    await render(<TestFilter />);
+
+    expect(screen.getByTestId('matches').textContent).toBe('Malmö');
+
+    locale.value = 'sv';
+    await nextTick();
+
+    expect(screen.getByTestId('matches').textContent).toBe('');
+  });
+
   it('makes no new collator when the collator options stay the same', async () => {
     const collatorSpy = spyOnCollator();
     const multiple = shallowRef(false);
