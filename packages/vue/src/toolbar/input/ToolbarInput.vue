@@ -86,9 +86,9 @@ const state = computed<ToolbarInputState>(() => ({
   focusable: props.focusableWhenDisabled,
 }));
 
-// On a server, the key `value` gives the `value` attribute. In a browser, Vue writes the key
-// `value` to the DOM property on each render, and that removes the text that the user typed. The
-// DOM property `defaultValue` is the `value` attribute, and Vue writes it only when it changes.
+// A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM
+// property `value` again on each render, and that replaces the text that the user typed. The DOM
+// property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes.
 function defaultValueProps() {
   if (props.defaultValue === undefined) {
     return undefined;

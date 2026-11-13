@@ -34,6 +34,8 @@ const separatorOrientation = computed(
   () => props.orientation ?? (context.orientation.value === 'vertical' ? 'horizontal' : 'vertical'),
 );
 
+// As in Base UI, this part renders `Separator` and makes no element of its own. The two parts then
+// share the role, the attributes and the state.
 const separatorRef = useTemplateRef('separator');
 const element = computed(() => separatorRef.value?.element ?? null);
 
