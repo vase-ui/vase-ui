@@ -1324,6 +1324,7 @@ The thing that a row names decides which kinds the row can have:
 
 - A row that names a source file also covers the cases in that file.
 - A ported case can have `skipIf`, `runIf`, `skip` or `todo` only where the upstream case has a condition, or with an `engine` row. A defect of the port never goes there.
+- A `types.md` can repeat an entry of another family. Give that entry a `not-applicable` row. The reason names the family that ports the entry. An example is the `types.md` of Radio Group, which repeats the entries of Radio.
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
 - `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
 
