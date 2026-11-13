@@ -1,0 +1,9 @@
+{
+  "id": "VUE-37",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/teleport.html",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useListNavigation.ts#L575-L580"
+  ],
+  "behavior": "A key that the list of a child popup does not stop goes to the list of the parent popup one time, also when `Teleport` moved the child popup. A close key of the child list that is also a navigation key of the parent list then closes the child list and moves the highlight of the parent list.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useListNavigation.ts"
+}

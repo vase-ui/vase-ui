@@ -8,11 +8,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/interactions/gridNavigation.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the list navigation ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the cursor anchor ports the file."
@@ -21,11 +16,6 @@
       "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the hover interaction of a popup ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the list navigation ports the file."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.ts",
@@ -81,14 +71,14 @@
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The file tests `useListNavigation.ts`."
+      "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
+      "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that ports the Base UI cases of the list navigation ports the cases."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.webkit.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The file tests `useListNavigation.ts`."
+      "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
+      "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that ports the Base UI cases of the list navigation ports the cases."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useTypeahead.test.tsx",
