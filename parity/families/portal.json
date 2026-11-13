@@ -50,7 +50,7 @@
       "title": "mounts children once in a connected container when a later update replaces its ref",
       "kind": "replaced",
       "test": "packages/vue/src/utils/popups/portal/FloatingPortalLite.test.tsx",
-      "reason": "The Vue portal gets its container in the flush after the mount. When updates in that flush replace the container, the children mount in the first container and Vue moves them. The case \"mounts the children once, and moves them when updates in the flush of the mount replace the container\" tests this."
+      "reason": "The Vue portal gets its container in the flush after the mount. When updates in that flush replace the container, the children mount in the first container. That container is out of the document when their `onMounted` hooks run. Vue then moves the children to the new container. The case \"mounts the children once, and moves them when updates in the flush of the mount replace the container\" tests this."
     }
   ],
   "surfaceAdditions": [],

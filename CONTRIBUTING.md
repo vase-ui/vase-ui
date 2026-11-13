@@ -598,7 +598,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `null` renders no `Teleport` until the container is not `null`, because a `Teleport` with a `null` target fails. A ref or a getter that gives `null` gives the fallback. An empty ref object of Base UI does the same.
 - The portal reads its container in a `watch` with `flush: 'post'`, so it follows a ref or a getter. It moves the portal element and does not mount the children again.
 - Base UI retries the check of a ref that is empty at first. The Vue portal does not, because Vue sets the ref of an ancestor or a later sibling before it runs that `watch`.
-- Updates in the flush of the mount can replace the container. The children then mount in the first container, and Vue moves them to the new container. Base UI mounts them one time, in the new container.
+- Updates in the flush of the mount can replace the container. The children then mount in the first container. That container is out of the document when the `onMounted` hooks of the children run. A child that focuses or measures in `onMounted` thus works on an element that is not in the document. Vue then moves the children to the new container. Base UI mounts them one time, in the new container.
 - `KeepAlive` leaves the content of a `Teleport` in the target. The portal sets `disabled` on its `Teleport` while `KeepAlive` holds the part. The content then leaves the document, and the same element returns.
 - `FloatingPortalLite` does not provide `PortalContext`, so a portal inside it does not render in the portal element of the Lite portal.
 

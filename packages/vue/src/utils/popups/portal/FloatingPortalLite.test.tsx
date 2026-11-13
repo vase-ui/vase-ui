@@ -192,15 +192,18 @@ describe('FloatingPortalLite', () => {
 
     it('mounts the children once, and moves them when updates in the flush of the mount replace the container', async () => {
       const counts = { mounted: 0, unmounted: 0 };
+      const connectedAtMount: (boolean | undefined)[] = [];
       const Content = defineComponent({
         setup() {
+          const content = shallowRef<HTMLDivElement | null>(null);
           onMounted(() => {
             counts.mounted += 1;
+            connectedAtMount.push(content.value?.isConnected);
           });
           onUnmounted(() => {
             counts.unmounted += 1;
           });
-          return () => <div data-testid="content" />;
+          return () => <div ref={content} data-testid="content" />;
         },
       });
       const Test = defineComponent({
@@ -234,6 +237,9 @@ describe('FloatingPortalLite', () => {
 
       expect(screen.getByTestId('portal').parentElement).toBe(screen.getByTestId('second'));
       expect(counts).toEqual({ mounted: 1, unmounted: 0 });
+      // The update that replaces the container takes the first container out of the document
+      // before the `onMounted` hooks of the children run.
+      expect(connectedAtMount).toEqual([false]);
     });
   });
 
