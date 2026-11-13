@@ -224,6 +224,7 @@ describe('NumberField parse', () => {
 
     it('BUG-5424: applies the rule to the decimal separator of the locale', () => {
       expect(parseNumber('1,2,3', 'de-DE')).toBe(null);
+      expect(parseNumber('1,,5', 'de-DE')).toBe(1.5);
       expect(parseNumber('1.234.567,89', 'de-DE')).toBe(1234567.89);
     });
 

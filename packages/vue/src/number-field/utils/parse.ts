@@ -243,6 +243,10 @@ export function parseNumber(
     // separate the sign from the digits
     .trim();
 
+  // The drop above runs before the decimal separator becomes a dot, so a run such as `1,,5` in
+  // de-DE reaches this line.
+  unformatted = unformatted.replace(/\.{2,}/g, '.');
+
   // Mixed-locale safety: keep only the last '.' as decimal. Each other dot must be where a group
   // separator can be, as in `1.234.567.89`. Text such as `1.2.3` is not a number. With one dot
   // only, the field would show `1.2.3` and submit 12.3.
