@@ -180,8 +180,6 @@ async function expectCollapsiblePage(page: Page) {
   expect(untilFoundPanelId).not.toBe(openPanelId);
 }
 
-// The server HTML has the ids in the two directions: the trigger names the open panel, and the
-// panel names its trigger.
 async function expectAccordionPage(page: Page) {
   const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open', 'data-index'];
   const panelAttributeNames = ['hidden', 'data-open', 'data-closed', 'role', 'data-index'];
