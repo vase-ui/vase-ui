@@ -20,6 +20,15 @@ function readPanelTag(html: string) {
   return tag;
 }
 
+/** The start tag of the trigger, the only `button` of the HTML. */
+function readTriggerTag(html: string) {
+  const tag = /<button[^>]*>/.exec(html)?.[0];
+  if (tag === undefined) {
+    throw new Error(`The HTML has no trigger:\n${html}`);
+  }
+  return tag;
+}
+
 /** The declarations of the `style` attribute of the panel, in the order that the server wrote them. */
 function readPanelDeclarations(html: string) {
   const style = /style="([^"]*)"/.exec(readPanelTag(html))?.[1] ?? '';
@@ -123,6 +132,25 @@ describe('<Collapsible.Panel />', () => {
       expect(panelTag).not.toMatch(/\shidden/);
       expect(panelId).toMatch(/^vase-ui-./);
       expect(html).toContain(`aria-controls="${panelId}"`);
+    });
+
+    // The server writes the trigger before the `setup` of the panel runs, so the trigger cannot
+    // name the `id` prop of the panel.
+    it('names the generated id in aria-controls of an open trigger whose panel has an id', async () => {
+      const html = await renderToString(
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <Collapsible.Panel id="custom-panel-id" data-testid="panel">
+            {PANEL_CONTENT}
+          </Collapsible.Panel>
+        </Collapsible.Root>,
+      );
+
+      const triggerTag = readTriggerTag(html);
+
+      expect(triggerTag).toMatch(/\saria-controls="[^"]+"/);
+      expect(triggerTag).not.toContain('aria-controls="custom-panel-id"');
+      expect(readPanelTag(html)).toContain(' id="custom-panel-id"');
     });
 
     it('has no panel when it is closed and has no keepMounted', async () => {

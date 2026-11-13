@@ -1,5 +1,5 @@
 import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, shallowRef, watch } from 'vue';
+import { defineComponent, KeepAlive, shallowRef, watch } from 'vue';
 import { Collapsible } from '@vase-ui/vue/collapsible';
 import {
   createRenderer,
@@ -9,8 +9,10 @@ import {
   flushMicrotasks,
   isJSDOM,
   screen,
+  waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import CollapsiblePanelReplacement from './CollapsiblePanelReplacement.test.vue';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -97,6 +99,47 @@ describe('<Collapsible.Root />', () => {
       await rerender(<App panelId={undefined} />);
       expect(panel.id).not.toBe('');
       expect(panel.id).not.toBe('second-panel-id');
+      expect(trigger).toHaveAttribute('aria-controls', panel.id);
+    });
+
+    // The compiled template of the fixture mounts the new panel before it unmounts the old panel.
+    // A render function in TSX reuses the panel component, so it does not show this order.
+    it('keeps aria-controls when a template replaces the panel', async () => {
+      const { setProps } = await render(<CollapsiblePanelReplacement first />);
+      const trigger = screen.getByRole('button');
+
+      await setProps({ first: false });
+      await waitFor(() => {
+        expect(screen.getByText('Panel 2')).toBeInTheDocument();
+      });
+
+      expect(trigger).toHaveAttribute('aria-controls', screen.getByText('Panel 2').id);
+    });
+
+    it('names the panel in aria-controls only while KeepAlive shows it', async () => {
+      const visible = shallowRef(true);
+      const App = defineComponent(() => () => (
+        <Collapsible.Root defaultOpen>
+          <Collapsible.Trigger>Trigger</Collapsible.Trigger>
+          <KeepAlive>{visible.value ? <Collapsible.Panel data-testid="panel" /> : null}</KeepAlive>
+        </Collapsible.Root>
+      ));
+
+      await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+      const panel = screen.getByTestId('panel');
+
+      expect(trigger).toHaveAttribute('aria-controls', panel.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('panel')).toBe(panel);
       expect(trigger).toHaveAttribute('aria-controls', panel.id);
     });
   });
