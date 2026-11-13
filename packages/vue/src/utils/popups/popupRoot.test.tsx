@@ -1635,10 +1635,11 @@ describe('usePopupRootSync', () => {
 
   it('clears the open method when the popup closes, and keeps it while the popup is open', async () => {
     const store = createStoreWithOpenMethod();
-    const open = shallowRef(true);
+    const open = shallowRef(false);
     await render(() => <SyncTest store={store} open={open.value} />);
 
     store.set('openMethod', 'touch');
+    open.value = true;
     await flushMicrotasks();
     expect(store.state.openMethod).toBe('touch');
 

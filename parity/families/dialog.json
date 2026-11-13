@@ -94,7 +94,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Trigger`, `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case that has no counterpart renders `Dialog.Trigger`, `Dialog.Portal` or `Dialog.Popup`, which Vase UI does not have. The case `does not warn for a detached payload open in production` is the one exception. It renders no part. It needs a production build, so its counterpart is a case of the Node project."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",

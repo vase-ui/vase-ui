@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, h, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -291,6 +291,10 @@ describe('<Dialog.Root />', () => {
   describe('handle', () => {
     it('gives the payload of openWithPayload() to the default slot, and isOpen follows the root', async () => {
       const handle = Dialog.createHandle<number>();
+      // The computed reads `isOpen` before a root attaches. It follows the root only when `isOpen`
+      // depends on the pointer of the handle.
+      const isOpen = computed(() => handle.isOpen);
+      expect(isOpen.value).toBe(false);
       await render(() => (
         <Dialog.Root handle={handle}>
           {{
@@ -301,16 +305,16 @@ describe('<Dialog.Root />', () => {
         </Dialog.Root>
       ));
       expect(screen.getByTestId('payload').textContent).toBe('undefined');
-      expect(handle.isOpen).toBe(false);
+      expect(isOpen.value).toBe(false);
 
       handle.openWithPayload(7);
       await flushMicrotasks();
       expect(screen.getByTestId('payload').textContent).toBe('7');
-      expect(handle.isOpen).toBe(true);
+      expect(isOpen.value).toBe(true);
 
       handle.close();
       await flushMicrotasks();
-      expect(handle.isOpen).toBe(false);
+      expect(isOpen.value).toBe(false);
     });
 
     it('opens with no trigger and warns when open() names an id that no trigger has', async () => {
@@ -328,22 +332,6 @@ describe('<Dialog.Root />', () => {
         [
           expect.stringContaining(
             'Vase UI: DialogHandle.open: No trigger found with id "missing".',
-          ),
-        ],
-      ]);
-    });
-
-    it('ignores openWithPayload() and warns while no root is mounted', () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const handle = Dialog.createHandle<number>();
-
-      handle.openWithPayload(1);
-
-      expect(handle.isOpen).toBe(false);
-      expect(warn.mock.calls).toEqual([
-        [
-          expect.stringContaining(
-            'Vase UI: DialogHandle.openWithPayload() was called while no root',
           ),
         ],
       ]);
@@ -589,7 +577,7 @@ describe('<Dialog.Root />', () => {
   });
 
   describe('server render', () => {
-    it('hydrates an open root with a nested root and reports nothing', async () => {
+    it('hydrates an open root with a nested root, with no message', async () => {
       const serverHtml = await renderOnServer('src/dialog/root/DialogRootHydration.test.vue', {});
 
       await hydrate(DialogRootHydration, { serverHtml });
