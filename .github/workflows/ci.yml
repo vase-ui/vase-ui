@@ -89,7 +89,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.0
+      - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.5.12
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm test:node
       - run: pnpm test:chromium

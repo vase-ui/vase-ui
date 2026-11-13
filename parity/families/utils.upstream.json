@@ -4,6 +4,9 @@
     "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
+    "packages/react/src/utils/getCssDimensions.test.ts",
+    "packages/react/src/utils/getCssDimensions.ts",
+    "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
@@ -29,6 +32,8 @@
     "packages/react/src/utils/collapsibleOpenStateMapping.ts",
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
+    "packages/react/src/utils/getCssDimensions.ts",
+    "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
@@ -47,6 +52,20 @@
   ],
   "typeTests": [],
   "cases": [
+    {
+      "file": "packages/react/src/utils/getCssDimensions.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getCssDimensions"
+          ],
+          "title": "reads the CSS size of an SVG element",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
     {
       "file": "packages/react/src/utils/popups/positioning/hideMiddleware.test.ts",
       "rows": [
