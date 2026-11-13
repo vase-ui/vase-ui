@@ -1,5 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
 import {
   createRenderer,
@@ -30,6 +31,75 @@ describe('<Fieldset.Root />', () => {
 
     expect(screen.getByTestId('fieldset')).toHaveAttribute('disabled');
     expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+
+  it('keeps nested fieldsets disabled when an ancestor fieldset is disabled', async () => {
+    await render(
+      <Fieldset.Root disabled>
+        <Fieldset.Root>
+          <Field.Root>
+            <Field.Control data-testid="control" />
+          </Field.Root>
+        </Fieldset.Root>
+      </Fieldset.Root>,
+    );
+
+    expect(screen.getByTestId('control')).toHaveAttribute('disabled');
+  });
+
+  it('updates nested disabled precedence in both directions', async () => {
+    const App = defineComponent(() => {
+      const outerDisabled = shallowRef(false);
+      const innerDisabled = shallowRef(true);
+
+      return () => (
+        <>
+          <Fieldset.Root disabled={outerDisabled.value}>
+            <Fieldset.Root disabled={innerDisabled.value}>
+              <Field.Root data-testid="root">
+                <Field.Control data-testid="control" />
+              </Field.Root>
+            </Fieldset.Root>
+          </Fieldset.Root>
+          <button
+            type="button"
+            onClick={() => {
+              outerDisabled.value = true;
+            }}
+          >
+            Disable outer
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              innerDisabled.value = false;
+            }}
+          >
+            Enable inner
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              outerDisabled.value = false;
+            }}
+          >
+            Enable outer
+          </button>
+        </>
+      );
+    });
+
+    await render(<App />);
+
+    expect(screen.getByTestId('control')).toBeDisabled();
+    expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+    await fireEvent.click(screen.getByRole('button', { name: 'Disable outer' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Enable inner' }));
+    expect(screen.getByTestId('control')).toBeDisabled();
+    expect(screen.getByTestId('root')).toHaveAttribute('data-disabled');
+    await fireEvent.click(screen.getByRole('button', { name: 'Enable outer' }));
+    expect(screen.getByTestId('control')).not.toBeDisabled();
+    expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
   });
 
   it('sets no disabled attribute on an enabled root that renders a div', async () => {

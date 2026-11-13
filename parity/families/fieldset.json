@@ -8,22 +8,6 @@
     {
       "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
       "describe": ["<Fieldset.Root />"],
-      "title": "keeps nested fieldsets disabled when an ancestor fieldset is disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
-      "reason": "The case renders `Field.Root` and `Field.Control`, which Vase UI does not have. The case \"disables an inner root inside a disabled outer root\" tests the same behavior with no Field."
-    },
-    {
-      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
-      "describe": ["<Fieldset.Root />"],
-      "title": "updates nested disabled precedence in both directions",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/field/root/FieldRoot.tsx",
-      "reason": "The case renders `Field.Root` and `Field.Control`, which Vase UI does not have. The case \"follows a change of the disabled prop of the outer and of the inner root\" tests the same behavior with no Field."
-    },
-    {
-      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
-      "describe": ["<Fieldset.Root />"],
       "title": "passes disabled to rendered Base UI roots",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/thumb/SliderThumb.tsx",

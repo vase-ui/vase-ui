@@ -295,6 +295,28 @@ async function expectHydratedScrollAreaPage(page: Page) {
   expect(await page.getByTestId('viewport').getAttribute('tabindex')).toBe('0');
 }
 
+async function expectFieldPage(page: Page) {
+  const control = await readAttributes(page.getByTestId('control'), [
+    'id',
+    'name',
+    'value',
+    'data-filled',
+  ]);
+
+  expect(control.id).toBeTruthy();
+  expect(control).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
+  expect(
+    await readAttributes(page.getByTestId('invalid-control'), ['data-invalid', 'aria-invalid']),
+  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+}
+
+// The root of the field gets `data-filled` in the first render of the browser. The server HTML has
+// it only on the control and on the parts after it.
+async function expectHydratedFieldPage(page: Page) {
+  await expectFieldPage(page);
+  expect(await page.getByTestId('root').getAttribute('data-filled')).toBe('');
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -369,6 +391,7 @@ const PAGES: PageCase[] = [
     expectPage: expectScrollAreaPage,
     expectHydratedPage: expectHydratedScrollAreaPage,
   },
+  { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
