@@ -13,7 +13,7 @@ describe('test setup', () => {
 });
 
 describe('task boundary between tests', () => {
-  // Vitest runs the tests of a file in order. The first test of each pair only makes the state that
+  // Vitest runs the tests of a file in order. In a pair, the first test only makes the state that
   // the second test reads.
 
   describe('a test that ends in a ResizeObserver callback', () => {
@@ -68,6 +68,17 @@ describe('task boundary between tests', () => {
 
     it('starts after the timer of the last test ran', () => {
       expect(hasTimerRun).toBe(true);
+    });
+  });
+
+  describe('a test whose 0 ms timer writes to the console', () => {
+    // The wait runs before the check of the messages. The check then sees the message of the timer
+    // and fails the test. With the wait after the check, the message reaches the console, the test
+    // passes, and `fails` reports an error.
+    it('fails a test whose 0 ms timer writes to console.error', { fails: true }, () => {
+      setTimeout(() => {
+        console.error('text');
+      }, 0);
     });
   });
 
