@@ -137,7 +137,9 @@ jobs:
       - run: pnpm test:chromium
 
   required:
-    if: always()
+    # `always()` starts this job in a cancelled run. The job waits for a runner and keeps the
+    # concurrency group. The run of the new commit then waits with no jobs.
+    if: ${{ !cancelled() }}
     needs: [check, test-node, test-browser, test-vue-floor, test-nuxt]
     runs-on: ubuntu-latest
     timeout-minutes: 5
