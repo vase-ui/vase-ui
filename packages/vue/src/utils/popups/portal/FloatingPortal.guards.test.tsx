@@ -37,6 +37,16 @@ function getOutsideGuards() {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-type="outside"]'));
 }
 
+// The Tab key skips this element, so a guard can reach it only as the reference of the focus
+// manager.
+function appendUntabbableReference() {
+  const reference = document.createElement('button');
+  reference.tabIndex = -1;
+  document.body.append(reference);
+  onTestFinished(() => reference.remove());
+  return reference;
+}
+
 describe('FloatingPortal', () => {
   const { render } = createRenderer();
 
@@ -145,10 +155,7 @@ describe('FloatingPortal', () => {
     });
 
     it('sends the focus from the first guard to the reference of the focus manager when no tabbable comes before it', async () => {
-      const reference = document.createElement('button');
-      reference.tabIndex = -1;
-      document.body.append(reference);
-      onTestFinished(() => reference.remove());
+      const reference = appendUntabbableReference();
       await render(
         <div>
           <FloatingPortal>
@@ -187,6 +194,24 @@ describe('FloatingPortal', () => {
         await renderPopupBeforeNextField({});
 
         expect(screen.getByTestId('next')).toHaveFocus();
+      });
+
+      it('sends the focus to the reference of the focus manager when no tabbable comes after it', async () => {
+        const reference = appendUntabbableReference();
+        await render(
+          <div>
+            <FloatingPortal>
+              <FocusManagerPart domReference={reference}>
+                <input data-testid="inside" />
+              </FocusManagerPart>
+            </FloatingPortal>
+          </div>,
+        );
+
+        screen.getByTestId('inside').focus();
+        getOutsideGuards()[1].focus();
+
+        expect(reference).toHaveFocus();
       });
 
       it('closes the popup when closeOnFocusOut is true', async () => {
@@ -320,6 +345,25 @@ describe('FloatingPortal', () => {
 
         expect(portal.id).not.toBe('');
         expect(owner).toHaveAttribute('aria-owns', ownedId ?? portal.id);
+      });
+
+      it('names the new id when the id of the portal element changes', async () => {
+        const id = shallowRef('first-portal');
+        await render(() => (
+          <div data-testid="host">
+            <FloatingPortal id={id.value} data-testid="portal">
+              <FocusManagerPart />
+            </FloatingPortal>
+          </div>
+        ));
+        const owner = getOwner(screen.getByTestId('host'));
+        expect(owner).toHaveAttribute('aria-owns', 'first-portal');
+
+        id.value = 'second-portal';
+        await nextTick();
+
+        expect(screen.getByTestId('portal')).toHaveAttribute('id', 'second-portal');
+        expect(owner).toHaveAttribute('aria-owns', 'second-portal');
       });
 
       it('names no id when the #render slot gives the portal element no id', async () => {

@@ -59,8 +59,9 @@ const focusManagerState = shallowRef<FocusManagerState | null>(null);
 const modal = computed(() => focusManagerState.value?.modal);
 const open = computed(() => focusManagerState.value?.open);
 
-// The elements in the portal are tabbable only after the focus has entered the portal, by the Tab
-// key from a guard or by the pointer.
+// When the focus moves from the portal to an element outside it, the Tab key must skip the
+// elements of the portal. It must enter the popup only through a guard. The flag records that the
+// portal made the elements untabbable.
 let focusInsideDisabled = false;
 
 function handleFocus(event: FocusEvent) {
