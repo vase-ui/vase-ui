@@ -1788,7 +1788,7 @@ describe('<Switch.Root />', () => {
         expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
       });
 
-      it('VUE-21: clears the error when the reset turns the switch off, and does not validate it', async () => {
+      it('VUE-21: clears the error when the reset turns the switch off, does not validate it, and validates the next click', async () => {
         const validate = vi.fn((value: unknown) => (value ? 'Turn it off' : null));
         await render(
           <Form data-testid="form">
@@ -1812,6 +1812,12 @@ describe('<Switch.Root />', () => {
         expect(validate).toHaveBeenCalledTimes(1);
         expectNeutralField();
         expectInputConstraint(false);
+
+        await fireEvent.click(screen.getByRole('switch'));
+
+        expect(validate).toHaveBeenCalledTimes(2);
+        expect(validate.mock.lastCall?.[0]).toBe(true);
+        expect(screen.getByTestId('error')).toHaveTextContent('Turn it off');
       });
 
       it('VUE-21: shows no error when the reset turns off a required switch that was valid', async () => {
