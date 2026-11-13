@@ -75,7 +75,7 @@ If your CSP blocks inline style _attributes_ in addition to _elements_, you can 
 
 1. Add `'unsafe-inline'` to the `style-src-attr` directive, or use `style-src-elem` and not `style-src`. A style attribute is a smaller security risk than a style element, but a high-security environment can reject this option.
 2. Render the affected components only on the client. The first HTML then has no inline styles.
-3. Unset an inline style of a part in its `style` attribute, and put the style in your CSS. An example is `<ScrollArea.Viewport :style="{ overflow: undefined }">`. A server render keeps an empty `style` attribute on the part. The browser reports a CSP violation for this attribute, but the attribute applies no style. Check each new version of Vase UI for new inline styles.
+3. Unset an inline style of a part in its `style` attribute, and put the style in your CSS. An example is `<ScrollArea.Viewport :style="{ overflow: undefined }">`. Check each new version of Vase UI for new inline styles.
 
 ## API reference
 
