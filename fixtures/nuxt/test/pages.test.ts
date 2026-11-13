@@ -611,6 +611,98 @@ async function expectHydratedSwitchPage(page: Page) {
   expect(await page.getByTestId('notifications').getAttribute('aria-labelledby')).toBe(labelId);
 }
 
+async function readIndicator(page: Page, testId: string) {
+  const indicator = page.getByTestId(testId);
+  if ((await indicator.count()) === 0) {
+    return null;
+  }
+
+  return readAttributes(indicator, ['data-checked', 'data-unchecked', 'data-indeterminate']);
+}
+
+async function readCheckboxPage(page: Page) {
+  const read = (testId: string) =>
+    readAttributes(page.getByTestId(testId), [
+      'role',
+      'aria-checked',
+      'data-checked',
+      'data-indeterminate',
+      'aria-label',
+    ]);
+  const form = page.getByTestId('form');
+
+  return {
+    terms: await read('terms'),
+    news: await read('news'),
+    some: await read('some'),
+    indicators: {
+      terms: await readIndicator(page, 'terms-indicator'),
+      news: await readIndicator(page, 'news-indicator'),
+      some: await readIndicator(page, 'some-indicator'),
+      kept: await readIndicator(page, 'kept-indicator'),
+    },
+    // The entries that a submit of the server HTML sends.
+    formData: await form.evaluate((element) =>
+      Array.from(
+        new FormData(element as HTMLFormElement),
+        ([name, value]) => `${name}=${String(value)}`,
+      ),
+    ),
+    indeterminate: await form.evaluate((element) =>
+      Array.from(
+        element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+        (input) => input.indeterminate,
+      ),
+    ),
+  };
+}
+
+async function expectCheckboxPage(page: Page) {
+  expect(await readCheckboxPage(page)).toEqual({
+    terms: {
+      role: 'checkbox',
+      'aria-checked': 'false',
+      'data-checked': null,
+      'data-indeterminate': null,
+      'aria-label': null,
+    },
+    news: {
+      role: 'checkbox',
+      'aria-checked': 'true',
+      'data-checked': '',
+      'data-indeterminate': null,
+      'aria-label': 'News',
+    },
+    some: {
+      role: 'checkbox',
+      'aria-checked': 'mixed',
+      'data-checked': null,
+      'data-indeterminate': '',
+      'aria-label': 'Some',
+    },
+    indicators: {
+      terms: null,
+      news: { 'data-checked': '', 'data-unchecked': null, 'data-indeterminate': null },
+      some: { 'data-checked': null, 'data-unchecked': null, 'data-indeterminate': '' },
+      kept: { 'data-checked': null, 'data-unchecked': '', 'data-indeterminate': null },
+    },
+    formData: ['terms=no', 'news=on'],
+    // HTML has no attribute for `indeterminate`, so a server cannot write it.
+    indeterminate: [false, false, false, false],
+  });
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(null);
+}
+
+async function expectHydratedCheckboxPage(page: Page) {
+  const { formData, indeterminate } = await readCheckboxPage(page);
+  expect(formData).toEqual(['terms=no', 'news=on']);
+  expect(indeterminate).toEqual([false, false, true, false]);
+  const labelId = await page.getByTestId('label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('terms').getAttribute('aria-labelledby')).toBe(labelId);
+}
+
 // The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
@@ -664,6 +756,11 @@ const PAGES: PageCase[] = [
     path: '/switch',
     expectPage: expectSwitchPage,
     expectHydratedPage: expectHydratedSwitchPage,
+  },
+  {
+    path: '/checkbox',
+    expectPage: expectCheckboxPage,
+    expectHydratedPage: expectHydratedCheckboxPage,
   },
   {
     path: '/scroll-area',
@@ -755,6 +852,22 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('wifi').getAttribute('aria-checked')).toBe('false');
     expect(await page.getByTestId('wifi-value').textContent()).toBe('false');
     expect((await readSwitchPage(page)).formData).toEqual(['notifications=on']);
+    expect(messages).toEqual([]);
+  });
+
+  it('changes a checkbox on a click on its label and on the checkbox after hydration, and mounts and unmounts its indicator', async () => {
+    const page = await createPage('/checkbox');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('label').click();
+    await page.getByTestId('news').click();
+    await page.getByTestId('news-indicator').waitFor({ state: 'detached' });
+
+    expect(await page.getByTestId('terms').getAttribute('aria-checked')).toBe('true');
+    expect(await page.getByTestId('terms-indicator').getAttribute('data-checked')).toBe('');
+    expect(await page.getByTestId('news').getAttribute('aria-checked')).toBe('false');
+    expect(await page.getByTestId('news-value').textContent()).toBe('false');
+    expect((await readCheckboxPage(page)).formData).toEqual(['terms=on']);
     expect(messages).toEqual([]);
   });
 
