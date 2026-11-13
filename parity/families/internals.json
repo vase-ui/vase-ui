@@ -19,6 +19,7 @@
     "packages/react/src/internals/TransitionStatusDataAttributes.ts",
     "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/**",
+    "packages/react/src/internals/useAnchorPositioning.ts",
     "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
