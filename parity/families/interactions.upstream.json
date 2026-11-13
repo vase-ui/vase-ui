@@ -1,7 +1,10 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
-    "packages/react/src/utils/popups/interactions/**"
+    "packages/react/src/utils/popups/interactions/**",
+    "packages/react/test/floating-ui-tests/useFloating.ts",
+    "packages/react/test/useTestInteractions.test.tsx",
+    "packages/react/test/useTestInteractions.ts"
   ],
   "sources": [
     "packages/react/src/utils/popups/interactions/gridNavigation.ts",
@@ -16,7 +19,9 @@
     "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts",
     "packages/react/src/utils/popups/interactions/useListNavigation.ts",
     "packages/react/src/utils/popups/interactions/useOpenInteractionType.ts",
-    "packages/react/src/utils/popups/interactions/useTypeahead.ts"
+    "packages/react/src/utils/popups/interactions/useTypeahead.ts",
+    "packages/react/test/floating-ui-tests/useFloating.ts",
+    "packages/react/test/useTestInteractions.ts"
   ],
   "typeTests": [],
   "cases": [
@@ -1666,6 +1671,53 @@
             "useTypeahead"
           ],
           "title": "skips visibility:hidden items when matching with elementsRef"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/useTestInteractions.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "correctly merges functions"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "does not error with undefined user supplied functions"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "does not break props that start with `on`"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "does not break props that return values"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "adds focusable props to floating elements"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "strips active and selected from item props passed to item callbacks"
+        },
+        {
+          "describe": [
+            "useTestInteractions"
+          ],
+          "title": "prop getters are memoized"
         }
       ]
     }
