@@ -1,3 +1,8 @@
+import CheckboxIndicator from './indicator/CheckboxIndicator.vue';
+import type {
+  CheckboxIndicatorProps,
+  CheckboxIndicatorState,
+} from './indicator/CheckboxIndicator.vue';
 import CheckboxRoot from './root/CheckboxRoot.vue';
 import type {
   CheckboxRootChangeEventDetails,
@@ -19,4 +24,14 @@ export namespace Root {
   export type Props = CheckboxRootProps;
   export type ChangeEventReason = CheckboxRootChangeEventReason;
   export type ChangeEventDetails = CheckboxRootChangeEventDetails;
+}
+
+/**
+ * Indicates whether the checkbox is ticked.
+ * Renders a `<span>` element.
+ */
+export const Indicator: typeof CheckboxIndicator = CheckboxIndicator;
+export namespace Indicator {
+  export type State = CheckboxIndicatorState;
+  export type Props = CheckboxIndicatorProps;
 }

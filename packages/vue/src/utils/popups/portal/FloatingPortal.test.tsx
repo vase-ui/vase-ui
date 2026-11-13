@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { defineComponent, onMounted, shallowRef, watch } from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
+import { Checkbox } from '@vase-ui/vue/checkbox';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
@@ -270,6 +271,59 @@ describe.each([
     });
 
     expect(mountedBeforePaint).toBe(true);
+  });
+
+  test('keeps content connected when an indicator exit removes the container in the same checkpoint', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const content = shallowRef<HTMLDivElement | null>(null);
+    const visible = shallowRef(false);
+
+    const Test = defineComponent({
+      setup() {
+        const container = shallowRef<HTMLSpanElement | null>(null);
+        return () => (
+          <>
+            <style>{`
+              @keyframes indicator-exit { from { opacity: 1; } to { opacity: 0; } }
+              .indicator[data-ending-style] { animation: indicator-exit 100ms paused; }
+            `}</style>
+            {visible.value && (
+              <Portal container={container}>
+                <div ref={content} />
+              </Portal>
+            )}
+            <Checkbox.Root defaultChecked>
+              <Checkbox.Indicator class="indicator" data-testid="indicator">
+                {visible.value && <span ref={container} />}
+              </Checkbox.Indicator>
+            </Checkbox.Root>
+          </>
+        );
+      },
+    });
+
+    const { user } = await renderPortal(<Test />);
+    await user.click(screen.getByRole('checkbox'));
+    // Wait until the indicator has registered its own completion handler.
+    await new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+
+    const indicator = screen.getByTestId('indicator');
+    expect(indicator).toHaveAttribute('data-ending-style');
+    const [animation] = indicator.getAnimations();
+
+    // The write queues the flush of Vue before the callbacks of `animation.finished`. That flush
+    // mounts the portal in the span of the indicator. The indicator then unmounts in a later
+    // microtask of the same checkpoint, and the span leaves the document.
+    visible.value = true;
+    animation.finish();
+    await new Promise((resolve) => {
+      requestAnimationFrame(resolve);
+    });
+
+    expect(screen.queryByTestId('indicator')).toBe(null);
+    expect(content.value?.isConnected).toBe(true);
   });
 
   test('mounts deeply nested portals inside their ancestor refs', async () => {
