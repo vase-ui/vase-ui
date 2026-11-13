@@ -10,12 +10,12 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
 import { REASONS } from '../../internals/reasons';
 import CollapsiblePanelHydration from './CollapsiblePanelHydration.test.vue';
 
@@ -819,23 +819,23 @@ describe('<Collapsible.Panel />', () => {
 
       // The state exists only while the animation runs. The listener exists before the click, so
       // the test reads the state when the animation starts.
-      const closing = nextEvent(panel, 'animationstart').then(() => ({
+      const closing = nextEvent(panel, 'animationstart').then((event) => ({
         closed: panel.hasAttribute('data-closed'),
-        animations: panel.getAnimations().length,
+        animationName: (event as AnimationEvent).animationName,
       }));
       const [closingState] = await Promise.all([closing, user.click(trigger)]);
-      expect(closingState).toEqual({ closed: true, animations: 1 });
+      expect(closingState).toEqual({ closed: true, animationName: 'panel-slide-up' });
 
       await waitFor(() => {
         expect(panel).toHaveAttribute('hidden');
       });
 
-      const opening = nextEvent(panel, 'animationstart').then(() => ({
+      const opening = nextEvent(panel, 'animationstart').then((event) => ({
         open: panel.hasAttribute('data-open'),
-        animations: panel.getAnimations().length,
+        animationName: (event as AnimationEvent).animationName,
       }));
       const [openingState] = await Promise.all([opening, user.click(trigger)]);
-      expect(openingState).toEqual({ open: true, animations: 1 });
+      expect(openingState).toEqual({ open: true, animationName: 'panel-slide-down' });
     });
 
     it('restores measured dimensions before applying a closing keyframe animation', async () => {
@@ -945,15 +945,14 @@ describe('<Collapsible.Panel />', () => {
         expect(panel).toHaveAttribute('data-closed');
       });
 
-      await user.click(trigger);
-
-      // The animation runs only while the panel is opening, so check both in one snapshot.
-      await waitFor(() => {
-        expect({
-          open: panel.hasAttribute('data-open'),
-          animations: panel.getAnimations().length,
-        }).toEqual({ open: true, animations: 1 });
-      });
+      // The state exists only while the animation runs. The listener exists before the click, so
+      // the test reads the state when the animation starts.
+      const opening = nextEvent(panel, 'animationstart').then((event) => ({
+        open: panel.hasAttribute('data-open'),
+        animationName: (event as AnimationEvent).animationName,
+      }));
+      const [openingState] = await Promise.all([opening, user.click(trigger)]);
+      expect(openingState).toEqual({ open: true, animationName: 'panel-slide-down' });
     });
   });
 
@@ -1389,15 +1388,14 @@ describe('<Collapsible.Panel />', () => {
 
       expect(getComputedStyle(panel).animationDuration).toBe('0s');
 
-      await user.click(trigger);
-
-      // The animation runs only while the panel is closing, so check both in one snapshot.
-      await waitFor(() => {
-        expect({
-          closed: panel.hasAttribute('data-closed'),
-          animations: panel.getAnimations().length,
-        }).toEqual({ closed: true, animations: 1 });
-      });
+      // The state exists only while the animation runs. The listener exists before the click, so
+      // the test reads the state when the animation starts.
+      const closing = nextEvent(panel, 'animationstart').then((event) => ({
+        closed: panel.hasAttribute('data-closed'),
+        animationName: (event as AnimationEvent).animationName,
+      }));
+      const [closingState] = await Promise.all([closing, user.click(trigger)]);
+      expect(closingState).toEqual({ closed: true, animationName: 'panel-slide-up' });
 
       expect(getComputedStyle(panel).animationDuration).toBe('0.123s');
     });
@@ -1460,16 +1458,16 @@ describe('<Collapsible.Panel />', () => {
 
       // The state exists only while the transition runs. The listener exists before the click, so
       // the test reads the state when the transition runs.
-      const closing = nextEvent(panel, 'transitionrun').then(() => ({
+      const closing = nextEvent(panel, 'transitionrun').then((event) => ({
         endingStyle: panel.hasAttribute('data-ending-style'),
         transitionDuration: panel.style.transitionDuration,
-        animations: panel.getAnimations().length,
+        propertyName: (event as TransitionEvent).propertyName,
       }));
       const [closingState] = await Promise.all([closing, user.click(trigger)]);
       expect(closingState).toEqual({
         endingStyle: true,
         transitionDuration: '123ms',
-        animations: 1,
+        propertyName: 'height',
       });
     });
 
