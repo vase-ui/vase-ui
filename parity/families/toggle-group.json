@@ -1,0 +1,20 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/toggle-group/**",
+    "docs/src/app/(docs)/react/components/toggle-group/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/toggle-group/ToggleGroup.test.tsx",
+      "describe": ["<ToggleGroup />", "prop: multiple transitions"],
+      "title": "preserves selection and roving focus when %s",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/toolbar/group/ToolbarGroup.tsx",
+      "reason": "The row `nested in Toolbar.Group` renders `Toolbar.Group`, which Vase UI does not have. The case \"keeps the selection and the roving focus when $name\" tests the same steps for a group alone and for a group in `Toolbar.Root`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

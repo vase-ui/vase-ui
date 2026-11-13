@@ -210,6 +210,32 @@ async function expectHydratedToolbarPage(page: Page) {
   expect(await readToolbarTabindexes(page, 'async')).toEqual(['0', '-1', '-1']);
 }
 
+function readButtons(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .getByRole('button')
+    .evaluateAll(
+      (buttons, name) => buttons.map((button) => button.getAttribute(name)),
+      attributeName,
+    );
+}
+
+// The tab stop of a group is its first toggle that is not disabled, also when another toggle is
+// pressed. In a toolbar, the toggles are items of the toolbar, so the toolbar has one tab stop.
+async function expectToggleGroupPage(page: Page) {
+  expect(await page.getByTestId('alone').getAttribute('role')).toBe('group');
+  expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'alone', 'aria-pressed')).toEqual(['false', 'true', 'false']);
+  expect(await readButtons(page, 'alone', 'data-pressed')).toEqual([null, '', null]);
+  expect(await readButtons(page, 'disabled-first', 'tabindex')).toEqual(['-1', '0']);
+  expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['0', '-1', '-1']);
+  expect(await readButtons(page, 'in-toolbar', 'aria-pressed')).toEqual([null, 'true', 'false']);
+  expect(await readAttributes(page.getByTestId('single'), ['tabindex', 'aria-pressed'])).toEqual({
+    tabindex: '0',
+    'aria-pressed': 'true',
+  });
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -277,6 +303,7 @@ const PAGES: PageCase[] = [
     expectPage: expectToolbarPage,
     expectHydratedPage: expectHydratedToolbarPage,
   },
+  { path: '/toggle-group', expectPage: expectToggleGroupPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -387,6 +414,38 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       expect(messages).toEqual([]);
     },
   );
+
+  it('presses a toggle on a click and moves the focus of the group with an arrow key after hydration', async () => {
+    const page = await createPage('/toggle-group');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('alone-1').click();
+
+    expect(await readButtons(page, 'alone', 'aria-pressed')).toEqual(['true', 'false', 'false']);
+    expect(await page.getByTestId('alone-value').textContent()).toBe('left');
+
+    await page.keyboard.press('ArrowRight');
+
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+      'alone-2',
+    );
+    expect(await readButtons(page, 'alone', 'tabindex')).toEqual(['-1', '0', '-1']);
+    expect(messages).toEqual([]);
+  });
+
+  it('moves the focus of a toolbar into its toggle group with an arrow key after hydration', async () => {
+    const page = await createPage('/toggle-group');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('in-toolbar-1').focus();
+    await page.keyboard.press('ArrowRight');
+
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe(
+      'in-toolbar-2',
+    );
+    expect(await readButtons(page, 'in-toolbar', 'tabindex')).toEqual(['-1', '0', '-1']);
+    expect(messages).toEqual([]);
+  });
 
   it.each(RANGE_PAGES)(
     'formats a value of $path with the locale of the visitor after hydration',

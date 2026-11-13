@@ -54,9 +54,21 @@
         "rendering other Base UI components",
         "Toggle and ToggleGroup"
       ],
+      "kind": "replaced",
+      "test": "packages/vue/src/toggle-group/ToggleGroupInToolbar.test.tsx",
+      "reason": "The cases render `Toggle` and `ToggleGroup` in a toolbar. They are in a test file of Toggle Group, with the same titles."
+    },
+    {
+      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
+      "describe": [
+        "<Toolbar.Button />",
+        "rendering other Base UI components",
+        "Toggle and ToggleGroup"
+      ],
+      "title": "disables direct ToggleGroup children when Toolbar.Group is disabled",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toggle-group/ToggleGroup.tsx",
-      "reason": "Each case of the block renders `Toggle` and `ToggleGroup`, which Vase UI does not have. Toggle Group comes after Toggle, so the row names its file."
+      "waitsOn": "packages/react/src/toolbar/group/ToolbarGroup.tsx",
+      "reason": "The case renders `Toolbar.Group`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toolbar/group/ToolbarGroup.tsx",
