@@ -9,6 +9,7 @@ export {
   pressWithScreenReader,
   pressWithTouch,
 } from './pointer';
+export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
 export * from './animation';
 export { describeConformance } from './describeConformance';
