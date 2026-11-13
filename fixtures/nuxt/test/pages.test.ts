@@ -236,6 +236,53 @@ async function expectToggleGroupPage(page: Page) {
   });
 }
 
+function readDisableScrollbarStyles(page: Page) {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll('style'))
+      .filter((element) => element.textContent?.includes('.vase-ui-disable-scrollbar'))
+      .map((element) => ({
+        nonce: element.getAttribute('nonce'),
+        parent: element.parentElement?.localName,
+        parentTestId: element.parentElement?.getAttribute('data-testid'),
+        isFirstChild: element.parentElement?.firstElementChild === element,
+      })),
+  );
+}
+
+// The server HTML has no measurement. So the corner is absent, and the viewport is out of the tab
+// order. Each root holds its own style element, with the nonce of the provider.
+async function expectScrollAreaPage(page: Page) {
+  const style = { nonce: 'test-nonce', parent: 'div', isFirstChild: true };
+  expect(await readDisableScrollbarStyles(page)).toEqual([
+    { ...style, parentTestId: 'root' },
+    { ...style, parentTestId: 'second-root' },
+  ]);
+
+  const viewportId = await page.getByTestId('viewport').getAttribute('data-id');
+  const secondViewportId = await page.getByTestId('second-viewport').getAttribute('data-id');
+  expect(viewportId).toMatch(/-viewport$/);
+  expect(secondViewportId).toMatch(/-viewport$/);
+  expect(secondViewportId).not.toBe(viewportId);
+  expect(await page.getByTestId('scrollbar').getAttribute('data-id')).toBe(
+    `${viewportId!.slice(0, -'viewport'.length)}scrollbar`,
+  );
+  expect(await readAttributes(page.getByTestId('viewport'), ['tabindex', 'class'])).toEqual({
+    tabindex: '-1',
+    class: 'vase-ui-disable-scrollbar',
+  });
+  expect(await page.getByTestId('corner').count()).toBe(0);
+}
+
+// After the mount, the roots share one style element in the head.
+async function expectHydratedScrollAreaPage(page: Page) {
+  await page.getByTestId('corner').waitFor();
+
+  const styles = await readDisableScrollbarStyles(page);
+  expect(styles).toHaveLength(1);
+  expect(styles[0]).toMatchObject({ nonce: 'test-nonce', parent: 'head' });
+  expect(await page.getByTestId('viewport').getAttribute('tabindex')).toBe('0');
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -304,6 +351,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedToolbarPage,
   },
   { path: '/toggle-group', expectPage: expectToggleGroupPage },
+  {
+    path: '/scroll-area',
+    expectPage: expectScrollAreaPage,
+    expectHydratedPage: expectHydratedScrollAreaPage,
+  },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -377,6 +429,29 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await counter.textContent()).toBe('Count 0');
     await counter.click();
     expect(await counter.textContent()).toBe('Count 1');
+  });
+
+  it('moves the thumb of /scroll-area when its viewport scrolls after hydration', async () => {
+    const page = await createPage('/scroll-area');
+    const thumb = page.getByTestId('thumb');
+    await page.getByTestId('corner').waitFor();
+    const readTransform = () => thumb.evaluate((element) => element.style.transform);
+    const initialTransform = await readTransform();
+
+    await page.getByTestId('viewport').evaluate((element) => {
+      element.scrollTop = 400;
+    });
+    await page.waitForFunction(
+      ([testId, previous]) =>
+        document.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.style.transform !==
+        previous,
+      ['thumb', initialTransform],
+    );
+
+    const offsetY = Number(
+      /^translate3d\(0px, ([\d.]+)px, 0px\)$/.exec(await readTransform())?.[1],
+    );
+    expect(offsetY).toBeGreaterThan(0);
   });
 
   it('opens a collapsible panel on a click on its trigger after hydration', async () => {

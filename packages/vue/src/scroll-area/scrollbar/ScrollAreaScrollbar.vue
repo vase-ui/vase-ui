@@ -210,8 +210,10 @@ function handleTrackPointerDown(event: PointerEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   // `useRenderElement` calls this callback only when the element changes. The callback reads the
-  // orientation when it runs. A change of `orientation` does not change the element, so the
-  // `watch` below moves the element to the other holder.
+  // orientation when it runs. While the scrollbar stays mounted, a change of `orientation` does not
+  // change the element, so the `watch` below moves the element to the other holder. If the change
+  // also mounts or removes the element, the callback runs after the `watch`, because the `watch`
+  // runs before the render. The callback then reads the new orientation and writes the right holder.
   ref: (scrollbar) => {
     getElementHolder(props.orientation).value = scrollbar;
   },
