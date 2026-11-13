@@ -1,0 +1,9 @@
+{
+  "id": "VUE-37",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/utils/src/useScrollLock.ts#L28-L30",
+    "https://github.com/floating-ui/floating-ui/blob/%40floating-ui/utils%400.2.12/packages/utils/src/dom.ts#L17-L19"
+  ],
+  "behavior": "The scroll lock reads the scrollbar width from the window of the document that it locks. Base UI gives the document to `ownerWindow`, which returns the window of the page. For a frame, it then compares the frame with the page, and it takes the way for scrollbars that take space also when the frame has overlay scrollbars.",
+  "dueWith": "packages/utils/src/useScrollLock.ts"
+}

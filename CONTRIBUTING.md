@@ -774,6 +774,20 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
 - Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
 
+### Scroll lock
+
+The scroll lock stops the scroll of the page under a modal popup. The code is in `src/common/useScrollLock.ts`, `src/utils/popups/useAnchoredPopupScrollLock.ts` and `src/utils/popups/InternalBackdrop.vue`.
+
+- The positioner of an anchored popup calls `useAnchoredPopupScrollLock` in `setup`. The root of a Dialog calls `useScrollLock`.
+- Each parameter of the two composables is a value, a ref or a getter. A getter that gives `undefined` means that the lock is off. Only a call with no argument is on by default.
+- A lock exists only while the part is enabled, is mounted and is not held by `KeepAlive`. A server render takes no lock.
+- The lock reads the scrollbars from the window of the document that it locks (`VUE-37`).
+- One plain object on `globalThis[Symbol.for('vase-ui.scroll-lock')]` holds the state. Its fields are `version`, `lockCount`, `restore` and `stableGutter`. Two copies of the library then share one count (`VUE-6`). Each copy keeps its own timers.
+- The probe for `scrollbar-gutter` writes styles and reads the layout. That can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
+- `InternalBackdrop.vue` has the form of `FocusGuard.vue`: `inheritAttrs: false`, no `as`, no `#render` slot and no default slot. It exposes `element`.
+- The clip path of the backdrop follows its `cutout` through `autoUpdate`. React measures the cutout when the positioner renders. A Vue child does not render with its parent.
+- A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space, or a gutter that works, asks `probeStrategy`. It runs only in an engine that has them.
+
 ### Popup click
 
 `useClick(store, options)` opens or closes a popup for a press of its trigger. The code is in `src/utils/popups/interactions/useClick.ts`. It follows the rules of [Popup interactions](#popup-interactions).
