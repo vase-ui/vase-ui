@@ -2149,46 +2149,44 @@ describe('<OTPField.Root />', () => {
         const handleSubmit = vi.fn((event: Event) => {
           event.preventDefault();
         });
-        {
-          await render(
-            <Form onSubmit={handleSubmit}>
-              <Field.Root name="otp">
-                <OTPField autoSubmit />
-              </Field.Root>
-            </Form>,
-          );
 
-          const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
+        await render(
+          <Form onSubmit={handleSubmit}>
+            <Field.Root name="otp">
+              <OTPField autoSubmit />
+            </Field.Root>
+          </Form>,
+        );
 
-          await fireEvent.input(firstInput, { target: { value: '123456' } });
+        const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
 
-          expect(getValues()).toBe('123456');
-          expect(handleSubmit).toHaveBeenCalledTimes(1);
-        }
+        await fireEvent.input(firstInput, { target: { value: '123456' } });
+
+        expect(getValues()).toBe('123456');
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
       });
 
       it('blocks invalid Base UI Form auto-submit without calling flushSync inside a layout effect', async () => {
         const handleSubmit = vi.fn((event: Event) => {
           event.preventDefault();
         });
-        {
-          await render(
-            <Form onSubmit={handleSubmit}>
-              <Field.Root name="otp" validate={() => 'Invalid OTP'}>
-                <OTPField autoSubmit />
-                <Field.Error data-testid="error" />
-              </Field.Root>
-            </Form>,
-          );
 
-          const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
+        await render(
+          <Form onSubmit={handleSubmit}>
+            <Field.Root name="otp" validate={() => 'Invalid OTP'}>
+              <OTPField autoSubmit />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
 
-          await fireEvent.input(firstInput, { target: { value: '123456' } });
+        const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
 
-          expect(getValues()).toBe('123456');
-          expect(handleSubmit).not.toHaveBeenCalled();
-          expect(screen.getByTestId('error')).toHaveTextContent('Invalid OTP');
-        }
+        await fireEvent.input(firstInput, { target: { value: '123456' } });
+
+        expect(getValues()).toBe('123456');
+        expect(handleSubmit).not.toHaveBeenCalled();
+        expect(screen.getByTestId('error')).toHaveTextContent('Invalid OTP');
       });
 
       it('keeps focus on the first invalid field when auto-submit is blocked', async () => {
