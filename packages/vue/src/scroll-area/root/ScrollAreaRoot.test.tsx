@@ -1177,8 +1177,6 @@ describe('<ScrollArea.Root />', () => {
   describe('scroll snap of the viewport', () => {
     const snap = { scrollSnapType: 'y mandatory' };
 
-    // The consumer can write the value in four ways. In each way, the press sets `none`, and the
-    // release restores the value of the consumer.
     it.each([
       { name: 'style, thumb drag', source: 'style', gesture: 'thumb drag' },
       { name: 'style, track press', source: 'style', gesture: 'track press' },

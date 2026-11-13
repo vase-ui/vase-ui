@@ -682,13 +682,13 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - React adds `px` to a number in a style object. Vue does not. Write each length that is not zero as a string with its unit, such as `'1px'`.
 - Write a style key with a vendor prefix in its CSS form, such as `'-webkit-user-select'`. A server render writes the key `WebkitUserSelect` as `webkit-user-select`, which is not a CSS property.
 - Vue writes each key of a style again when the `style` object is not the object of the last render. A temporary inline style that the code writes to the DOM is then lost when the consumer has the same property in `style`.
-- Thus keep each temporary declaration also in a record that the part renders, until the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
+- Thus keep each temporary declaration that a part writes to its element also in a record that the part renders. Remove the declaration from the record when the code restores the property. `useCollapsiblePanel` returns that record as `temporaryStyle`.
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
 - A hidden input that `handleHiddenInputInvalid` grows gets the style constant itself, in a bound object, outside `mergeProps`.
 - A root can write a temporary declaration to the element of another part. `ScrollAreaRoot.vue` does this for `scroll-snap-type`, while a thumb drag or a track press is active.
 - The root saves the inline value that it finds, and it restores that value at the end.
 - A render of the other part can replace the declaration. The other part thus calls the root in `onUpdated`, and the root writes the declaration again.
-- Do not render the declaration in a record. Vue removes the property when the record loses the declaration. A value that the consumer wrote in script is then lost.
+- For a declaration on the element of another part, do not use a record. Vue removes the property when the record loses the declaration. A value that the consumer wrote in script is then lost.
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
@@ -703,7 +703,8 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
-- A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. In `onActivated`, it reads `:hover` again, because no enter event comes for a pointer that is already over the part. `ScrollAreaRoot.vue` and `ScrollAreaViewport.vue` do this.
+- A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. `ScrollAreaRoot.vue` does this for its hover state.
+- A part that reads `:hover` at mount reads it again in `onActivated`. No enter event comes for a pointer that is already over the part. `ScrollAreaViewport.vue` does this.
 - An effect that reads the DOM stops while the part is deactivated. `onDeactivated` runs the cleanup of the effect, and `onActivated` runs the effect again. `useCollapsiblePanel` does this for its size effect and its close effect.
 - `onActivated` also runs at the first mount in a `KeepAlive`. Keep a flag that `onDeactivated` sets. Do nothing in `onActivated` while the flag is not set.
 - Where the effect is a `watch` with `onCleanup`, the flag is a `shallowRef` in the sources of that `watch`. The callback returns while the flag is set. `ScrollAreaViewport.vue` and `ScrollAreaContent.vue` do this for their observers.
