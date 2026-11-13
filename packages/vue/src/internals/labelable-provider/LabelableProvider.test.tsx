@@ -106,6 +106,25 @@ describe('labelable provider', () => {
         expect(screen.getByTestId('label')).toHaveAttribute('for', 'b');
       });
 
+      it('keeps the control selected when its id changes beside another control', async () => {
+        const ChangedId = defineComponent(
+          (props: { firstId: string }) => () => (
+            <LabelableScope>
+              <LabelableControl id={props.firstId} />
+              <LabelableControl id="b" />
+              <LabelableLabel data-testid="label">Label</LabelableLabel>
+            </LabelableScope>
+          ),
+          { props: ['firstId'] },
+        );
+        const { rerender } = await render(<ChangedId firstId="a" />);
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'a');
+
+        await rerender(<ChangedId firstId="c" />);
+
+        expect(screen.getByTestId('label')).toHaveAttribute('for', 'c');
+      });
+
       it('keeps the selected id when a control with no id is mounted beside it', async () => {
         await render(
           <LabelableScope>
