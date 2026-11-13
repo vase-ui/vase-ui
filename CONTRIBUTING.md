@@ -474,11 +474,11 @@ The label, the control and the messages of a field:
 - A label and a message register a getter for their id one time in `setup`. Each part that Vue renders after that `setup` has the id in the server HTML. `useLabel()` registers the label. A message calls `useRegisteredMessageId(id)`.
 - `labelId` of the context is the id of the last label that has one. `messageIds` lists the ids of the messages in the order of the registrations, which is the order of the mount.
 - A control gets `aria-describedby` from `getDescriptionProps` of the context.
+- A control that renders a labelable element, such as `Field.Control`, binds `labelId` of the context to `aria-labelledby`. It does not call `useControlLabelId()`.
 - A control calls `useControlLabelId()` when its element is not a labelable element of HTML, such as a `<span>` with a role. It gives the result to `useAriaLabelledBy`, which follows this list. Until the control is mounted, the result is the id of a registered label. With no registered label, it is the id that the provider made for the label. A label that comes after the control then names it in the server HTML.
 - The control holds that state, and the provider does not. A control can hydrate after its provider.
 - When the field has no label, that `aria-labelledby` has no target until the control is mounted. A label with an `id` prop that comes after the control also does not name the control in the server HTML.
 - A control makes no assumption for a message. A message that comes after the control is in `aria-describedby` after the first flush on the client, before a paint.
-- A control that renders a labelable element, such as `Field.Control`, binds `labelId` of the context to `aria-labelledby`. It does not call `useControlLabelId()`.
 - A control whose element is not a labelable element calls `useAriaLabelledBy` and binds the result to `aria-labelledby`.
 - It passes `useControlLabelId()` as `labelId`, the `shallowRef` of its hidden input as the source, and the id of that input as the source id.
 - A native `<label>` names the control only after the mount. A server has no DOM, and the label of the consumer has no id.
