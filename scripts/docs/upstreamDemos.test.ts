@@ -103,7 +103,7 @@ test('the record names the other entry points that each demo imports, sorted and
     ],
     [
       `${DEMOS}/hero/css-modules/helper.ts`,
-      "export { Toggle } from '@base-ui/react/toggle';\nimport type { Foo } from '@base-ui/react/button/foo';\n",
+      "export { Checkbox } from '@base-ui/react/checkbox';\nexport { Toggle } from '@base-ui/react/toggle';\nimport type { Foo } from '@base-ui/react/button/foo';\n",
     ],
     [`${DEMOS}/hero/tailwind/index.tsx`, "import { Menu } from '@base-ui/react/menu';"],
     [`${DEMOS}/loading/css-modules/index.tsx`, "import { Button } from '@base-ui/react/button';"],
@@ -112,7 +112,7 @@ test('the record names the other entry points that each demo imports, sorted and
   const { record } = readUpstreamDemos('button', BUTTON, [...texts.keys()], (path) =>
     texts.get(path)!,
   );
-  assert.deepEqual(record.entryPoints, { hero: ['slider', 'toggle'] });
+  assert.deepEqual(record.entryPoints, { hero: ['checkbox', 'slider', 'toggle'] });
 });
 
 test('a record whose demos import only their own entry point has no key for entry points', () => {
