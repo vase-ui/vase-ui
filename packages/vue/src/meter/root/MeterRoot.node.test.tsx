@@ -34,6 +34,29 @@ describe('<Meter.Root /> on a server', () => {
     );
   });
 
+  it.each([
+    { name: 'an aria-label', attributes: { 'aria-label': 'Battery' }, labelledBy: undefined },
+    {
+      name: 'an aria-labelledby',
+      attributes: { 'aria-labelledby': 'outside' },
+      labelledBy: 'outside',
+    },
+  ])(
+    'renders no aria-labelledby of its own on a root that the consumer names: $name',
+    async ({ attributes, labelledBy }) => {
+      const html = await renderToString(<Meter.Root value={30} {...attributes} />);
+
+      expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toBe(labelledBy);
+      expect(html).not.toContain('vase-ui-');
+    },
+  );
+
+  it('renders the generated id in the aria-labelledby of a root with a blank aria-label', async () => {
+    const html = await renderToString(<Meter.Root value={30} aria-label="  " />);
+
+    expect(/aria-labelledby="([^"]*)"/.exec(html)?.[1]).toMatch(/^vase-ui-./);
+  });
+
   it('formats with en-US, and not with the runtime locale', async () => {
     const format = { maximumFractionDigits: 1 };
     mockRuntimeLocale('de-DE');

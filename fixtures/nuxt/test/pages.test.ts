@@ -117,6 +117,7 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
+  expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
 async function expectFieldsetPage(page: Page) {
@@ -124,6 +125,7 @@ async function expectFieldsetPage(page: Page) {
 
   expect(legendId).toBeTruthy();
   expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
+  expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
 // The server HTML has the form with `novalidate` and the input with its value.

@@ -12,6 +12,7 @@ import {
   screen,
   within,
 } from '#test-utils';
+import FieldsetLegendHydration from '../legend/FieldsetLegendHydration.test.vue';
 
 describe('<Fieldset.Root />', () => {
   const { render } = createRenderer();
@@ -254,5 +255,28 @@ describe('<Fieldset.Root />', () => {
         expect(within(container).getByRole('group')).not.toHaveAttribute('aria-labelledby');
       },
     );
+
+    it('hydrates a root that has an aria-label and a legend, and the legend then names the root', async () => {
+      const props = { ariaLabel: 'Billing' };
+      const serverHtml = await renderOnServer(
+        'src/fieldset/legend/FieldsetLegendHydration.test.vue',
+        props,
+      );
+
+      // The server cannot know that the legend exists, so the root has no `aria-labelledby` yet.
+      // A `<template>` element parses the HTML with no side effect.
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(
+        template.content.querySelector('fieldset')?.getAttribute('aria-labelledby'),
+      ).toBeNull();
+
+      const { container } = await hydrate(FieldsetLegendHydration, { serverHtml, props });
+
+      expect(within(container).getByRole('group')).toHaveAttribute(
+        'aria-labelledby',
+        within(container).getByTestId('legend').id,
+      );
+    });
   });
 });

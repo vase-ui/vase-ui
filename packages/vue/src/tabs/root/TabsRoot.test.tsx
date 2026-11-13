@@ -2336,6 +2336,33 @@ describe('<Tabs.Root />', () => {
       expect(screen.getByTestId('root')).toHaveAttribute('data-activation-direction', 'none');
     });
 
+    it('resets `data-activation-direction` when the selection is cleared and restored', async () => {
+      const { setProps } = await render(
+        <Tabs.Root data-testid="root" value={0}>
+          <Tabs.List>
+            <Tabs.Tab value={0} />
+            <Tabs.Tab value={1} />
+            <Tabs.Indicator data-testid="indicator" />
+          </Tabs.List>
+        </Tabs.Root>,
+      );
+
+      const root = screen.getByTestId('root');
+
+      await setProps({ value: 1 });
+      expect(root).toHaveAttribute('data-activation-direction', 'right');
+
+      // Clearing the selection is not a directional transition.
+      await setProps({ value: null });
+      expect(root).toHaveAttribute('data-activation-direction', 'none');
+      expect(screen.queryByTestId('indicator')).toBe(null);
+
+      // Neither is selecting a tab again from a cleared state.
+      await setProps({ value: 0 });
+      expect(root).toHaveAttribute('data-activation-direction', 'none');
+      expect(screen.getByTestId('indicator')).not.toBe(null);
+    });
+
     it('should update `data-activation-direction` on programmatic change after a canceled click', async () => {
       const { user, setProps } = await render(
         <Tabs.Root

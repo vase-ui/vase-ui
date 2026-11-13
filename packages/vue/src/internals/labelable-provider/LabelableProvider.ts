@@ -15,7 +15,6 @@ export function provideLabelableContext(): LabelableContext {
   const parent = useLabelableContext();
 
   const defaultControlId = useVaseUiId();
-  const defaultLabelId = useVaseUiId();
 
   const controlIdState = shallowRef<string | null>(defaultControlId.value);
   const { ids: controlIds, registerId: registerControlId } = createIdRegistry<string | null>();
@@ -62,7 +61,6 @@ export function provideLabelableContext(): LabelableContext {
     resetControlId,
     labelId,
     registerLabelId,
-    defaultLabelId,
     messageIds,
     registerMessageId,
     getDescriptionProps,

@@ -1,3 +1,5 @@
+import TabsIndicator from './indicator/TabsIndicator.vue';
+import type { TabsIndicatorProps, TabsIndicatorState } from './indicator/TabsIndicator.vue';
 import TabsList from './list/TabsList.vue';
 import type { TabsListProps, TabsListState } from './list/TabsList.vue';
 import TabsPanel from './panel/TabsPanel.vue';
@@ -47,6 +49,16 @@ export namespace Tab {
   export type Metadata = TabsTabMetadata;
   export type State = TabsTabState;
   export type Props = TabsTabProps;
+}
+
+/**
+ * A visual indicator that can be styled to match the position of the currently active tab.
+ * Renders a `<span>` element.
+ */
+export const Indicator: typeof TabsIndicator = TabsIndicator;
+export namespace Indicator {
+  export type State = TabsIndicatorState;
+  export type Props = TabsIndicatorProps;
 }
 
 /**
