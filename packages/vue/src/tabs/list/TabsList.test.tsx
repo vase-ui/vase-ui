@@ -424,4 +424,63 @@ describe('<Tabs.List />', () => {
       expect(secondTab).toHaveAttribute('aria-selected', 'true');
     });
   });
+
+  // Last in the file: after a recursion error, Vue runs no post-flush job of a later case.
+  describe('highlighted index', () => {
+    it.each([
+      {
+        name: 'hidden',
+        tabs: () => (
+          <Tabs.Root value={0}>
+            <Tabs.List>
+              <Tabs.Tab value={0} hidden />
+              <Tabs.Tab value={1} />
+              <Tabs.Tab value={2} />
+            </Tabs.List>
+          </Tabs.Root>
+        ),
+        tabStops: [0, -1, -1],
+      },
+      {
+        name: 'natively disabled',
+        tabs: () => (
+          <Tabs.Root value={0}>
+            <Tabs.List>
+              <Tabs.Tab
+                value={0}
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <button {...props} type="button" disabled />
+                  ),
+                }}
+              />
+              <Tabs.Tab value={1} />
+            </Tabs.List>
+          </Tabs.Root>
+        ),
+        tabStops: [0, -1],
+      },
+      {
+        name: 'hidden, selected by the root',
+        tabs: () => (
+          <Tabs.Root>
+            <Tabs.List>
+              <Tabs.Tab value="a" hidden />
+              <Tabs.Tab value="b" />
+            </Tabs.List>
+          </Tabs.Root>
+        ),
+        tabStops: [0, -1],
+      },
+    ])(
+      'mounts and keeps the tab stop on a selected tab that is $name',
+      async ({ tabs, tabStops }) => {
+        await render(tabs);
+
+        const tabElements = screen.getAllByRole('tab', { hidden: true });
+        expect(tabElements[0]).toHaveAttribute('aria-selected', 'true');
+        expect(tabElements.map((tab) => tab.tabIndex)).toEqual(tabStops);
+      },
+    );
+  });
 });

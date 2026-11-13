@@ -48,10 +48,19 @@ defineSlots<{
 
 const { hasChosenTab, orientation, setTabMap, tabActivationDirection } = useTabsRootContext();
 
+// The list controls the index, as Base UI does. The composite then does not move the tab stop off a
+// disabled tab. Without this, the composite moves the tab stop off a selected tab that is hidden or
+// natively disabled. The tab moves it back. The two moves repeat.
+const highlightedTabIndex = shallowRef(0);
+
 const { props: compositeProps, rootRef } = useCompositeRoot<TabsTabMetadata>({
+  highlightedIndex: highlightedTabIndex,
   enableHomeAndEndKeys: true,
   loopFocus: () => props.loopFocus,
   orientation,
+  onHighlightedIndexChange(index) {
+    highlightedTabIndex.value = index;
+  },
   onMapChange: setTabMap,
   // A disabled tab can get focus, so the keys do not skip it.
   disabledIndices: EMPTY_ARRAY,
