@@ -27,6 +27,7 @@
     "packages/react/src/internals/types.ts",
     "packages/react/src/internals/use-button/**",
     "packages/react/src/internals/useAnchorPositioning.ts",
+    "packages/react/src/internals/useAnchorPositioning.test.tsx",
     "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
@@ -1136,6 +1137,95 @@
             "dev warnings"
           ],
           "title": "errors if nativeButton=false but ref is a button"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useAnchorPositioning.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "uses the visual viewport for shift by default"
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "uses the configured shift options"
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "locks a flipped alignment after the popup shrinks",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "leaves the alignment free when lazy flipping is side-only",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "locks a flipped side after the popup shrinks",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "flips back to the preferred side without lazy flipping",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "centers an arrow that mounts after the popup is positioned",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "positions against the new anchor when the arrow mounts as the anchor changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "repositions when the arrow unmounts after the popup is positioned",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useAnchorPositioning"
+          ],
+          "title": "flips a capped popup to the larger side when it grows while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
         }
       ]
     },
