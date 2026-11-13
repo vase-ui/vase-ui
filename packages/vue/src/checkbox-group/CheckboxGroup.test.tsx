@@ -2275,6 +2275,59 @@ describe('<CheckboxGroup />', () => {
       },
     );
 
+    it.each([
+      { name: 'on', defaultChecked: true },
+      { name: 'off', defaultChecked: false },
+    ])(
+      'puts back a checkbox that has no value, because the group does not hold its state, $name',
+      async ({ defaultChecked }) => {
+        const handleChange = vi.fn();
+        const handleGroupChange = vi.fn();
+        const handleValidity = vi.fn();
+        await render(
+          <form data-testid="form">
+            <Field.Root>
+              <CheckboxGroup defaultValue={['apple']} onValueChange={handleGroupChange}>
+                <Checkbox.Root
+                  defaultChecked={defaultChecked}
+                  onCheckedChange={handleChange}
+                  aria-label="Own"
+                />
+                <Checkbox.Root value="apple" aria-label="Apple" />
+              </CheckboxGroup>
+              <Field.Validity v-slots={{ default: handleValidity }} />
+            </Field.Root>
+            <button type="reset">Reset</button>
+          </form>,
+        );
+        const [own, apple] = screen.getAllByRole('checkbox');
+        await fireEvent.click(own);
+        await fireEvent.click(apple);
+        expect(own).toHaveAttribute('aria-checked', String(!defaultChecked));
+        expect(apple).toHaveAttribute('aria-checked', 'false');
+
+        await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+        await settleReset();
+
+        expect(own).toHaveAttribute('aria-checked', String(defaultChecked));
+        expect(getInputs()[0].checked).toBe(defaultChecked);
+        expect(apple).toHaveAttribute('aria-checked', 'true');
+        expect(handleChange).toHaveBeenCalledTimes(2);
+        expect(handleChange.mock.lastCall?.[0]).toBe(defaultChecked);
+        expect(handleChange.mock.lastCall?.[1].event.type).toBe('reset');
+        expect(handleGroupChange).toHaveBeenCalledTimes(2);
+        expect(handleValidity.mock.lastCall?.[0].value).toEqual(['apple']);
+
+        // A reset with nothing to change. The field keeps the value of the group.
+        await fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+        await settleReset();
+
+        expect(handleChange).toHaveBeenCalledTimes(2);
+        expect(handleGroupChange).toHaveBeenCalledTimes(2);
+        expect(handleValidity.mock.lastCall?.[0].value).toEqual(['apple']);
+      },
+    );
+
     it('asks the listener one time for the checkboxes of one reset, and keeps the value when it cancels', async () => {
       const handleChange = vi.fn(
         (_value: string[], eventDetails: CheckboxGroup.ChangeEventDetails) => {

@@ -404,19 +404,32 @@ function onInputClick(event: MouseEvent) {
   void nextTick(writeStateToInput);
 }
 
+// An uncontrolled checkbox goes back to its default value through its change event. The result is
+// `true` when the state changed.
+function resetChecked(event: Event) {
+  return (
+    props.checked === undefined &&
+    isChecked.value !== props.defaultChecked &&
+    requestChange(props.defaultChecked, event)
+  );
+}
+
 useFormReset(inputElement, (event) => {
-  // The value of the group is the state of its checkboxes, so the group follows the reset.
   if (group) {
+    // The value of the group is the state of the checkboxes that have a value, so the group follows
+    // the reset. The group also clears the error of the field one time.
     group.reset(event);
+
+    // A checkbox with no value is not in the value of the group, so it puts its own state back.
+    // `useValueChanged` returns early in a group, so no flag and no clear of the error are needed.
+    if (itemValue.value === undefined) {
+      resetChecked(event);
+    }
+
     return;
   }
 
-  const hasChanged =
-    props.checked === undefined &&
-    isChecked.value !== props.defaultChecked &&
-    requestChange(props.defaultChecked, event);
-
-  if (hasChanged) {
+  if (resetChecked(event)) {
     isResetChangePending = true;
   } else {
     clearFieldError(isChecked.value);
