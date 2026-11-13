@@ -10,9 +10,9 @@ import { useVaseUiId } from '../useBaseUiId';
  * of the native `<label>` that names `labelSourceRef`. A server has no DOM, so the server HTML
  * never has the id of a native `<label>`. The control gets it in the first flush after the mount.
  * The result follows a label that comes or goes, a change of its `for` and a change of its `id`. It
- * also follows a change of the `id` of the control. WebKit keeps the `labels` of the control as they
- * were before that change. There the result follows the change after a node is added or removed, or
- * a `for` changes.
+ * also follows a change of the `id` of the control. In WebKit, it follows that change only after a
+ * node is added or removed or a `for` changes, because WebKit keeps the `labels` of the control as
+ * they were before the change.
  * @param labelId The id of the label of the provider. Pass the result of `useControlLabelId()`.
  * @param labelSourceRef The labelable element, such as the hidden input of the control. Pass a ref
  * that a ref callback writes, or a getter of one. The lookup starts when the value changes from
