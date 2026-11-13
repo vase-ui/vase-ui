@@ -1,10 +1,12 @@
-import type { VirtualElement } from '@floating-ui/vue';
+import type { Placement, VirtualElement } from '@floating-ui/vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { PopupTriggerMap } from './popupTriggerMap';
 import type { FloatingTreeStore } from './tree/FloatingTreeStore';
 
 export type ReferenceType = Element | VirtualElement;
+
+export type Delay = number | Partial<{ open: number; close: number }>;
 
 export type NarrowedElement<T> = T extends Element ? T : Element;
 
@@ -63,6 +65,10 @@ export interface PopupInteractionContext {
    */
   openEvent?: Event | undefined;
   /**
+   * The positioning of the popup. The positioner of the popup writes it.
+   */
+  positioning?: PopupPositioningContext | undefined;
+  /**
    * The orientation of the list navigation of the popup. A nested list reads it from its parent.
    * `useListNavigation` writes it.
    */
@@ -109,6 +115,7 @@ export interface PositioningInteractionStore extends PopupInteractionStore {
  */
 export interface PopupPositioningContext {
   open: boolean;
+  placement: Placement;
   nodeId: string | undefined;
   elements: ExtendedElements;
   rootStore: PopupInteractionStore;

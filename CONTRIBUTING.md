@@ -684,6 +684,17 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - Unless the popup is modal, the portal listens to `focusin` and `focusout` in the capture phase. When the focus moves from the portal to an element outside it, the portal sets `tabindex="-1"` on each tabbable element in the portal.
 - The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
 
+### Popup interactions
+
+The interaction composables of a popup are in `src/utils/popups/interactions`.
+
+- A trigger composable returns one plain object of listeners. It makes the object one time, in `setup`. Each listener returns while the composable is not enabled.
+- The part puts the object in the `props` of `useRenderElement`, before its own props and `attrs`. A listener of the consumer then runs first, and `event.preventVaseUIHandler()` stops the hover. A native listener of Base UI cannot be stopped.
+- Base UI listens for the first `mousemove` of a hover trigger with `{ once: true }`. The composable keeps a flag instead. A change of `enabled`, `move`, `mouseOnly` or the tree sets the flag again.
+- A composable reads the hover intent in a `computed`. A server render reads it in no hook. It thus makes no intent and adds no listener to a store that all requests share.
+- A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
+- A popup that hover opened closes with the reason `trigger-hover` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
@@ -1023,6 +1034,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
 | A function component that calls a hook and spreads the rest of its props                                   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`.                                                                                            |
 | `<CompositeList>`, `<CompositeRoot>` or `<CompositeItem>` in a test                                        | The fixture part of `packages/vue/test/fixtures`, imported with the upstream name                                                                                                                                                                         |
+| `useFloating` of `test/floating-ui-tests`                                                                  | `useFloating` of `test/fixtures`. It makes a `FloatingRootStore` and writes the positioning context that a positioner writes.                                                                                                                             |
 | `renderToString` of the renderer, with no `hydrate()`                                                      | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.                                                                                                          |
 | `renderToString` of the renderer, then `hydrate()`                                                         | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts between the server render and `hydrate()` hydrates by hand. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root                                 | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers).                                                                                                        |
