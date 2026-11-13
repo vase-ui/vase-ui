@@ -1,0 +1,70 @@
+{
+  "upstreamPaths": ["packages/react/src/radio/**", "docs/src/app/(docs)/react/components/radio/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
+      "describe": ["<Radio.Root />"],
+      "suite": "hiddenInputSizeTests",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/hiddenInputSizeTests.tsx",
+      "reason": "Vase UI does not have the shared suite. The case \"grows from zero size to an on-screen 1px box when reported invalid\" in the block \"hidden input size\" of the same test file tests the same behavior."
+    },
+    {
+      "upstream": "packages/react/src/radio/root/RadioRoot.test.tsx",
+      "describe": ["<Radio.Root />"],
+      "title": "prefers a render element's `aria-label` over an associated label",
+      "kind": "not-applicable",
+      "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
+    },
+    {
+      "upstream": "packages/react/src/radio/indicator/RadioIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Radio.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/radio/indicator/RadioIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Radio.Indicator`."
+    },
+    {
+      "upstream": "packages/react/src/radio/indicator/RadioIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
+      "reason": "Each case of the file renders `Radio.Indicator`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
+      "entry": "Indicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
+      "reason": "Vase UI does not have `Radio.Indicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio/types.md",
+      "entry": "RadioIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/radio/indicator/RadioIndicator.tsx",
+      "reason": "Vase UI does not have `Radio.Indicator`."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "id",
+      "reason": "The part reads `id` to name its hidden input and its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "prop": "ariaLabel",
+      "reason": "The part reads `aria-label` to find out if a label names the radio, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "prop": "ariaLabelledby",
+      "reason": "The part reads `aria-labelledby` to find out if a label names the radio, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

@@ -275,6 +275,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
 - For a change that a listener cancels, the part calls `preventDefault` on the click of the input. The browser then puts the old state back.
+- In a group with one input for each item, each item writes its state to its input after each change that no listener cancels. A browser unchecks the other inputs of a named group when one input gets checked. A parent that controls the group can also keep the old value.
 - The part listens to `reset` on the root node of the input, because the form of the input can change. The listener ignores an event whose target is not the form of the input when the event arrives. The part decides in a 0 ms timeout, after the listeners of the event. It does nothing when a listener prevented the event. An uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change. After each reset that the part follows, the part clears the error of its field with `useClearFieldError`, also when its value does not change. The change of a reset starts no validation.
 
 ```vue
@@ -571,7 +572,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context file exports the key with the type `InjectionKey<Context>`. It exports `use<Root>Context()` beside the key.
 - `use<Root>Context()` calls `inject(key, undefined)`. With one argument, Vue gives a warning of its own when there is no provider.
 - When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
-- A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`.
+- A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` returns `undefined`, because a radio with no group is valid.
 - A context that Base UI creates with a default value has one default object in its file. `use<Name>Context()` then calls `inject(key, DEFAULT_<NAME>_CONTEXT)`, and a part works with no provider. `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` do this.
 - The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does.
 - `DEFAULT_FIELD_ROOT_CONTEXT` has three more forms. A ref that parts write drops each write: `validation.inputRef` is a `customRef` that reads `null`. A member that only a provider can have is `null`: `focusOwnerRef`. A collection is empty and read-only: `registeredInputs`.
@@ -749,6 +750,7 @@ The composite item:
 A part that is in a composite only in some trees:
 
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
+- `Radio.Root` is an item only in a `RadioGroup`.
 - The part reads the context that decides with `inject`, in `setup`. It calls `useCompositeItem` or `useCompositeRoot` only when that context allows it: `const compositeItem = groupContext ? useCompositeItem({ … }) : undefined`.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
 - `useCompositeItem` throws when it has no composite root, so a part cannot call it in each tree.
@@ -792,6 +794,7 @@ The tab stop on a server:
 - If not, the tab stop is the first item that is not `disabled` and is at or after the highlighted index of the root.
 - The first client render uses the same rule and reads no DOM. An item keeps this tab stop until it is mounted. Then the tab stop is the item at the highlighted index, as in Base UI.
 - `Tabs.List` sets `hasActiveItem` only when `value` or an explicit `defaultValue` is not `null`. With the implicit default, the first enabled tab has the tab stop. With `null`, the first tab has it, also when it is disabled.
+- `RadioGroup` sets `hasActiveItem` only when it has a value.
 - The order of `setup` is the order of the document, with the exceptions of the list above. Two exceptions are usual:
   - An item below a component with an async `setup`. A server runs the `setup` of that item after the items that follow it.
   - An item in an async component that a module makes one time, such as a lazy component of Nuxt. After its first render, a server has loaded the component and runs its `setup` in the order of the document. A browser has not loaded it when the page hydrates.
@@ -830,6 +833,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - React implements `onFocus` and `onBlur` with `focusin` and `focusout`.
 - React calls `onChange` of a text input on each `input` event, and on a `change` event that has a new value.
 - React calls `onChange` of a checkbox or a radio input on the `click` event. A check of `event.nativeEvent.defaultPrevented` in such a handler becomes a check of `event.defaultPrevented`.
+- React calls `onChange` of a radio input only for a click that checks it. A part thus ignores the click of a radio input that its state has as checked.
 - To stop the focus handler of a part, call `event.preventVaseUIHandler()` from a `focusin` or `focusout` listener.
 - ESLint reports a React name from a fixed list, with or without the `Capture` suffix. It reports an object key, a property read and a JSX attribute in script, in `packages/vue/src`, in test files and in `packages/vue/test`. It does not read a template.
 - The lint rule has a fixed list of names, because a pattern for a second capital also matches a component event, such as `onOpenChange`.

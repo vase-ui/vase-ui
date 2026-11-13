@@ -69,7 +69,7 @@
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `CheckboxGroup`, `Checkbox`, `NumberField`, `RadioGroup`, `Radio`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `CheckboxGroup`, `Checkbox`, `NumberField`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -97,14 +97,6 @@
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "custom validity ownership"],
-      "title": "keeps a message set outside the field on another input of the same field",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "style hooks", "dirty"],
       "title": "should clear [data-dirty] when a null-valued control returns to its empty initial value",
       "kind": "waits-on",
@@ -118,14 +110,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
       "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "style hooks", "dirty"],
-      "title": "keeps [data-dirty] on a RadioGroup when returning to the first picked value",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -166,28 +150,12 @@
       "reason": "The case renders `Checkbox`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validateDebounceTime"],
-      "title": "should debounce validation for radio groups",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
-    },
-    {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
       "describe": ["<Field.Item />", "prop: disabled"],
       "title": "disables a wrapped checkbox",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox/root/CheckboxRoot.tsx",
       "reason": "The case renders `CheckboxGroup` and `Checkbox`, which Vase UI does not have. `Checkbox` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
-      "describe": ["<Field.Item />", "prop: disabled"],
-      "title": "disables a wrapped radio",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/radio/root/RadioRoot.tsx",
-      "reason": "The case renders `RadioGroup` and `Radio`, which Vase UI does not have. `Radio` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/item/FieldItem.test.tsx",
