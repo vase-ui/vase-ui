@@ -94,11 +94,18 @@ function isVisibleInTabbableTree(element: Element, isAncestor: boolean) {
   return styles.display !== 'none';
 }
 
+// A browser takes a `tabindex` value that is not an integer as no attribute.
+function hasIntegerTabindex(element: FocusableElement) {
+  return !Number.isNaN(Number.parseInt(element.getAttribute('tabindex') ?? '', 10));
+}
+
 function getTabIndex(element: FocusableElement) {
   const tabIndex = element.tabIndex;
-  if (tabIndex < 0) {
+  if (tabIndex < 0 && !hasIntegerTabindex(element)) {
     const nodeName = getNodeName(element);
     // A browser can give these elements the default `tabIndex` -1, but the Tab key reaches them.
+    // An author who writes `tabindex="-1"` takes them out of the Tab order, so the default applies
+    // only without an integer `tabindex`.
     if (
       nodeName === 'details' ||
       nodeName === 'audio' ||
