@@ -117,6 +117,7 @@ async function expectCurrencyRoot(page: Page, rootAttributes: RangeRootAttribute
 async function expectRangePage(page: Page, rootAttributes: RangeRootAttributes) {
   await expectCurrencyRoot(page, rootAttributes);
   expect(await page.getByTestId('percent-value').textContent()).toBe(PERCENT_TEXT);
+  expect(await page.getByTestId('percent-root').getAttribute('aria-labelledby')).toBeNull();
 }
 
 async function expectFieldsetPage(page: Page) {
@@ -124,6 +125,7 @@ async function expectFieldsetPage(page: Page) {
 
   expect(legendId).toBeTruthy();
   expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
+  expect(await page.getByTestId('named-fieldset').getAttribute('aria-labelledby')).toBeNull();
 }
 
 // The server HTML has the form with `novalidate` and the input with its value.
@@ -178,6 +180,71 @@ async function expectCollapsiblePage(page: Page) {
   const untilFoundPanelId = await untilFoundPanel.getAttribute('id');
   expect(untilFoundPanelId).toBeTruthy();
   expect(untilFoundPanelId).not.toBe(openPanelId);
+}
+
+async function expectAccordionPage(page: Page) {
+  const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open', 'data-index'];
+  const panelAttributeNames = ['hidden', 'data-open', 'data-closed', 'role', 'data-index'];
+  const readTrigger = (testId: string) =>
+    readAttributes(page.getByTestId(testId), triggerAttributeNames);
+  const readPanel = (testId: string) =>
+    readAttributes(page.getByTestId(testId), panelAttributeNames);
+  const readIds = async (name: string) => ({
+    triggerId: await page.getByTestId(`${name}-trigger`).getAttribute('id'),
+    labelledBy: await page.getByTestId(`${name}-panel`).getAttribute('aria-labelledby'),
+    panelId: await page.getByTestId(`${name}-panel`).getAttribute('id'),
+  });
+
+  // The trigger names the panel only while the panel is open.
+  expect(await readTrigger('closed-trigger')).toEqual({
+    'aria-expanded': 'false',
+    'aria-controls': null,
+    'data-panel-open': null,
+    'data-index': '0',
+  });
+  expect(await page.getByTestId('closed-panel').count()).toBe(0);
+
+  const open = await readIds('open');
+  expect(open.triggerId).toBeTruthy();
+  expect(open.panelId).toBeTruthy();
+  expect(open.labelledBy).toBe(open.triggerId);
+  expect(await readTrigger('open-trigger')).toEqual({
+    'aria-expanded': 'true',
+    'aria-controls': open.panelId,
+    'data-panel-open': '',
+    'data-index': '1',
+  });
+  expect(await readPanel('open-panel')).toEqual({
+    hidden: null,
+    'data-open': '',
+    'data-closed': null,
+    role: 'region',
+    'data-index': '1',
+  });
+  expect(await page.getByTestId('open-header').evaluate((element) => element.localName)).toBe('h3');
+
+  const untilFound = await readIds('until-found');
+  expect(untilFound.triggerId).toBeTruthy();
+  expect(untilFound.triggerId).not.toBe(open.triggerId);
+  expect(untilFound.labelledBy).toBe(untilFound.triggerId);
+  expect(untilFound.panelId).toBeTruthy();
+  expect(untilFound.panelId).not.toBe(open.panelId);
+  expect(await readTrigger('until-found-trigger')).toEqual({
+    'aria-expanded': 'false',
+    'aria-controls': null,
+    'data-panel-open': null,
+    'data-index': '2',
+  });
+  expect(await readPanel('until-found-panel')).toEqual({
+    hidden: 'until-found',
+    'data-open': null,
+    'data-closed': '',
+    role: 'region',
+    'data-index': '2',
+  });
+  expect((await page.getByTestId('until-found-panel').textContent())?.trim()).toBe(
+    'Until found panel',
+  );
 }
 
 // The server cannot know whether the image loads, so it renders the fallback and no image.
@@ -293,6 +360,131 @@ async function expectHydratedScrollAreaPage(page: Page) {
   expect(await page.getByTestId('viewport').getAttribute('tabindex')).toBe('0');
 }
 
+async function expectFieldPage(page: Page) {
+  const control = await readAttributes(page.getByTestId('control'), [
+    'id',
+    'name',
+    'value',
+    'data-filled',
+  ]);
+
+  expect(control.id).toBeTruthy();
+  expect(control).toMatchObject({ name: 'name', value: 'foo', 'data-filled': '' });
+  expect(
+    await readAttributes(page.getByTestId('invalid-control'), ['data-invalid', 'aria-invalid']),
+  ).toEqual({ 'data-invalid': '', 'aria-invalid': 'true' });
+}
+
+// The root of the field gets `data-filled` in the first render of the browser. The server HTML has
+// it only on the control and on the parts after it.
+async function expectHydratedFieldPage(page: Page) {
+  await expectFieldPage(page);
+  expect(await page.getByTestId('root').getAttribute('data-filled')).toBe('');
+}
+
+const ACTIVE_TAB_VARIABLE_SUFFIXES = ['left', 'right', 'top', 'bottom', 'width', 'height'];
+
+function readTabsRoot(page: Page, testId: string) {
+  return page.getByTestId(testId).evaluate((root) => ({
+    tabs: Array.from(root.querySelectorAll('[role="tab"]'), (tab) => ({
+      id: tab.id,
+      tabindex: tab.getAttribute('tabindex'),
+      controls: tab.getAttribute('aria-controls'),
+    })),
+    panels: Array.from(root.querySelectorAll('[role="tabpanel"]'), (panel) => ({
+      id: panel.id,
+      labelledby: panel.getAttribute('aria-labelledby'),
+    })),
+  }));
+}
+
+function readActiveTabVariables(page: Page) {
+  return page
+    .getByTestId('indicator')
+    .evaluate(
+      (indicator, suffixes) =>
+        Object.fromEntries(
+          suffixes.map((suffix) => [
+            suffix,
+            indicator.style.getPropertyValue(`--active-tab-${suffix}`),
+          ]),
+        ),
+      ACTIVE_TAB_VARIABLE_SUFFIXES,
+    );
+}
+
+// Before hydration the inline script sets the variables. After it, the part sets them.
+async function expectIndicatorUnderTab(
+  page: Page,
+  tabTestId: string,
+  { left, right }: { left: string; right: string },
+) {
+  expect(await readActiveTabVariables(page)).toEqual({
+    left,
+    right,
+    top: '0px',
+    bottom: '0px',
+    width: '100px',
+    height: '40px',
+  });
+  expect(await page.getByTestId('indicator').boundingBox()).toEqual(
+    await page.getByTestId(tabTestId).boundingBox(),
+  );
+}
+
+// The server writes a part before it registers the parts that come after it. The part that comes
+// first then has no id of the other part in the server HTML. It gets the id in the first flush on
+// the client. Panel `a` is not mounted, so no tab names it.
+async function expectTabIds(page: Page, { hydrated }: { hydrated: boolean }) {
+  const after = await readTabsRoot(page, 'panels-after');
+  const before = await readTabsRoot(page, 'panels-before');
+
+  expect(after.tabs[1].id).toBeTruthy();
+  expect(after.tabs.map((tab) => tab.tabindex)).toEqual(['-1', '0', '-1']);
+  expect(before.tabs.map((tab) => tab.tabindex)).toEqual(['-1', '0']);
+  expect(after.panels.map((panel) => panel.labelledby)).toEqual([
+    after.tabs[1].id,
+    after.tabs[2].id,
+  ]);
+  expect(after.tabs.map((tab) => tab.controls)).toEqual(
+    hydrated ? [null, after.panels[0].id, after.panels[1].id] : [null, null, null],
+  );
+  expect(before.tabs.map((tab) => tab.controls)).toEqual([null, before.panels[0].id]);
+  expect(before.panels.map((panel) => panel.labelledby)).toEqual([
+    hydrated ? before.tabs[1].id : null,
+  ]);
+}
+
+// The server cannot measure the layout, so the indicator is hidden and has no variable. The script
+// after it has the nonce of the provider. It does not run here, because this page has no JavaScript.
+async function expectTabsPage(page: Page) {
+  await expectTabIds(page, { hydrated: false });
+
+  expect(
+    await page.locator('[role="tablist"] script').evaluateAll((scripts) =>
+      scripts.map((script) => ({
+        nonce: script.getAttribute('nonce'),
+        follows: script.previousElementSibling?.getAttribute('data-testid'),
+        hasText: script.textContent?.includes('currentScript'),
+      })),
+    ),
+  ).toEqual([{ nonce: 'test-nonce', follows: 'indicator', hasText: true }]);
+  expect(await readAttributes(page.getByTestId('indicator'), ['hidden', 'role'])).toEqual({
+    hidden: '',
+    role: 'presentation',
+  });
+  expect(await readActiveTabVariables(page)).toEqual(
+    Object.fromEntries(ACTIVE_TAB_VARIABLE_SUFFIXES.map((suffix) => [suffix, ''])),
+  );
+}
+
+async function expectHydratedTabsPage(page: Page) {
+  await expectTabIds(page, { hydrated: true });
+
+  expect(await page.locator('[role="tablist"] script').count()).toBe(0);
+  await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
+}
+
 async function expectProvidersPage(page: Page) {
   expect(await page.getByTestId('outside').textContent()).toBe('ltr');
   expect(await page.getByTestId('inside').textContent()).toBe('rtl');
@@ -371,6 +563,7 @@ const PAGES: PageCase[] = [
   { path: '/fieldset', expectPage: expectFieldsetPage },
   { path: '/form', expectPage: expectFormPage },
   { path: '/collapsible', expectPage: expectCollapsiblePage },
+  { path: '/accordion', expectPage: expectAccordionPage },
   {
     path: '/avatar',
     expectPage: expectAvatarPageWithFallback,
@@ -387,6 +580,8 @@ const PAGES: PageCase[] = [
     expectPage: expectScrollAreaPage,
     expectHydratedPage: expectHydratedScrollAreaPage,
   },
+  { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
+  { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -501,6 +696,32 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(offsetY).toBeGreaterThan(0);
   });
 
+  it('positions the indicator of /tabs with its inline script when the files of the app do not load', async () => {
+    const page = await createPage();
+    await page.route('**/_nuxt/**', (route) => route.abort());
+
+    await page.goto(url('/tabs'));
+
+    // Vue removes the script when it hydrates, so the script shows that nothing hydrated.
+    expect(await page.locator('[role="tablist"] script').count()).toBe(1);
+    await expectIndicatorUnderTab(page, 'tab-b', { left: '100px', right: '100px' });
+  });
+
+  it('selects a tab of /tabs on a click and moves the indicator after hydration', async () => {
+    const page = await createPage('/tabs');
+    const messages = collectMessages(page);
+    const readTab = (testId: string) =>
+      readAttributes(page.getByTestId(testId), ['aria-selected', 'tabindex']);
+
+    await page.getByTestId('tab-c').click();
+
+    expect(await readTab('tab-c')).toEqual({ 'aria-selected': 'true', tabindex: '0' });
+    expect(await readTab('tab-b')).toEqual({ 'aria-selected': 'false', tabindex: '-1' });
+    expect(await page.getByTestId('panel-c').getAttribute('hidden')).toBeNull();
+    await expectIndicatorUnderTab(page, 'tab-c', { left: '200px', right: '0px' });
+    expect(messages).toEqual([]);
+  });
+
   it('opens a collapsible panel on a click on its trigger after hydration', async () => {
     const page = await createPage('/collapsible');
     const trigger = page.getByTestId('closed-trigger');
@@ -517,6 +738,39 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       'aria-controls': panelId,
     });
     expect(await panel.getAttribute('hidden')).toBeNull();
+  });
+
+  it('opens an accordion panel on a click on its trigger after hydration', async () => {
+    const page = await createPage('/accordion');
+    const trigger = page.getByTestId('closed-trigger');
+    const panel = page.getByTestId('closed-panel');
+
+    expect(await panel.count()).toBe(0);
+    await trigger.click();
+    await panel.waitFor();
+
+    expect(await readAttributes(trigger, ['aria-expanded', 'aria-controls'])).toEqual({
+      'aria-expanded': 'true',
+      'aria-controls': await panel.getAttribute('id'),
+    });
+    expect(await panel.getAttribute('aria-labelledby')).toBe(await trigger.getAttribute('id'));
+    // The root holds one value, so the open item closes.
+    expect(await page.getByTestId('open-trigger').getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('moves the focus of the accordion with Tab and not with an arrow key after hydration', async () => {
+    const page = await createPage('/accordion');
+    const messages = collectMessages(page);
+    const readFocus = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('closed-trigger').focus();
+    await page.keyboard.press('ArrowDown');
+    expect(await readFocus()).toBe('closed-trigger');
+
+    await page.keyboard.press('Tab');
+    expect(await readFocus()).toBe('open-trigger');
+    expect(messages).toEqual([]);
   });
 
   it.each(TOOLBARS)(

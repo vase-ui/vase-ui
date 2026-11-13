@@ -405,5 +405,23 @@ describe('<Meter.Root />', () => {
       const label = within(container).getByText('Battery Level');
       expect(within(container).getByRole('meter').getAttribute('aria-labelledby')).toBe(label.id);
     });
+
+    it('hydrates a root that has an aria-label and a label, and the label then names the root', async () => {
+      const props = { value: 30, ariaLabel: 'Charge' };
+      const serverHtml = await renderOnServer('src/meter/root/MeterRootHydration.test.vue', props);
+
+      // The server cannot know that the label exists, so the root has no `aria-labelledby` yet.
+      // A `<template>` element parses the HTML with no side effect.
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(
+        template.content.querySelector('[role="meter"]')?.getAttribute('aria-labelledby'),
+      ).toBeNull();
+
+      const { container } = await hydrate(MeterRootHydration, { serverHtml, props });
+
+      const label = within(container).getByText('Battery Level');
+      expect(within(container).getByRole('meter').getAttribute('aria-labelledby')).toBe(label.id);
+    });
   });
 });

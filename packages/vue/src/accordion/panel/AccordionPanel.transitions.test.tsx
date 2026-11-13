@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
-import { createRenderer, waitFor } from '#test-utils';
-import { nextEvent } from '../../../test/fixtures/animatedPanelHarness';
+import { createRenderer, nextEvent, waitFor } from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
