@@ -3,18 +3,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the portal with focus guards ports the file."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
-      "describe": ["FloatingPortal"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/portal/FloatingPortal.tsx",
-      "reason": "The cases render `FloatingPortal`. The pull request that adds `FloatingPortal.tsx` ports them."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/portal/FloatingPortal.test.tsx",
       "describe": ["FloatingPortal"],
       "title": "uses the rendered portal ID for the aria-owns relationship",

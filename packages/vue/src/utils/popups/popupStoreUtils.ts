@@ -58,12 +58,18 @@ function syncTriggerCount(store: PopupTriggerDataStore<PopupStoreState<unknown>>
  * @param id The id of the trigger. With no id, the trigger does not register.
  * @param store The store of the popup. It can change, for example when a root attaches to a handle.
  * @param onRegister Called after each registration and after `KeepAlive` activates the part. Use it
- * to give the data of the trigger to the store.
+ * to give the data of the trigger to the store. `activated` is `true` when `KeepAlive` activated the
+ * part.
  */
 export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
   id: MaybeRefOrGetter<string | undefined>,
   store: MaybeRefOrGetter<PopupTriggerDataStore<State>>,
-  onRegister?: (element: Element, store: PopupTriggerDataStore<State>, id: string) => void,
+  onRegister?: (
+    element: Element,
+    store: PopupTriggerDataStore<State>,
+    id: string,
+    activated: boolean,
+  ) => void,
 ) {
   const element = shallowRef<Element | null>(null);
   const deactivated = shallowRef(false);
@@ -97,7 +103,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
       triggerElements.setActive(currentId, !deactivated.value);
       syncTriggerCount(currentStore);
       if (!deactivated.value) {
-        onRegister?.(currentElement, currentStore, currentId);
+        onRegister?.(currentElement, currentStore, currentId, false);
       }
     },
     { flush: 'post' },
@@ -113,7 +119,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
       registration.store.context.triggerElements.setActive(registration.id, !isDeactivated);
       syncTriggerCount(registration.store);
       if (!isDeactivated) {
-        onRegister?.(registration.element, registration.store, registration.id);
+        onRegister?.(registration.element, registration.store, registration.id, true);
       }
     },
     { flush: 'post' },
@@ -133,6 +139,8 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
  *
  * The active trigger gives its element, and its `stateUpdates` while the popup is open. Another
  * trigger claims an open popup that has no active trigger, unless the popup opened with no trigger.
+ * An activation by `KeepAlive` claims nothing, because it runs the hooks of the triggers in an
+ * order that depends on the tree. The root then picks the trigger in `useImplicitActiveTrigger`.
  * While the trigger owns the mounted popup, each change of `stateUpdates` goes to the store.
  *
  * @param triggerId The id of the trigger.
@@ -155,7 +163,7 @@ export function useTriggerDataForwarding<
   const { element, registerTrigger } = useTriggerRegistration(
     triggerId,
     store,
-    (registered, currentStore, id) => {
+    (registered, currentStore, id, activated) => {
       const state = toRaw(currentStore.state);
       const open = popupStoreSelectors.open(state);
       const activeTriggerId = popupStoreSelectors.activeTriggerId(state);
@@ -168,7 +176,7 @@ export function useTriggerDataForwarding<
         return;
       }
 
-      if (activeTriggerId == null && open && !state.openedWithoutTrigger) {
+      if (!activated && activeTriggerId == null && open && !state.openedWithoutTrigger) {
         // A detached trigger can mount while the popup is open and has no active trigger. The
         // first trigger that registers then claims the popup. A popup that opened with no trigger
         // keeps its own state, such as the payload that the caller gave.

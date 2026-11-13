@@ -29,6 +29,11 @@ export interface UseFloatingPortalNodeProps {
    * The props of the part. The composable reads `as`, `stateClass` and `stateStyle`.
    */
   componentProps: UseRenderElementComponentProps<any>;
+  /**
+   * Props that the portal element gets, such as listeners. They come before the attributes of the
+   * consumer. The part calls the function in each render, so it can read reactive state.
+   */
+  props?: (() => Record<string, any> | undefined) | undefined;
 }
 
 export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue {
@@ -98,7 +103,7 @@ export function useFloatingPortalNode(
   });
 
   const { element, elementProps } = useRenderElement('div', params.componentProps, {
-    props: (attrs) => [{ id: uniqueId, [attr]: '' }, attrs],
+    props: (attrs) => [{ id: uniqueId, [attr]: '' }, params.props?.(), attrs],
   });
 
   return { element, elementProps, containerElement, deactivated };
