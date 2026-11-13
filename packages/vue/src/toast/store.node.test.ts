@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { computed, watchEffect } from 'vue';
+import { computed, watch, watchEffect } from 'vue';
 import { ToastStore, selectors } from './store';
 
 function createStore() {
@@ -70,6 +70,33 @@ describe('ToastStore with no DOM', () => {
 
     expect(indexOfA.value).toBe(1);
     expect(visibleIndexOfA.value).toBe(0);
+  });
+
+  it('keeps the place of each toast equal to the list while a sync watcher closes a toast', () => {
+    const onClose = vi.fn();
+    const store = createStore();
+    const stop = watch(
+      () => store.select('toasts'),
+      (toasts) => {
+        for (const olderToast of toasts.slice(1)) {
+          if (olderToast.transitionStatus !== 'ending') {
+            store.closeToast(olderToast.id);
+          }
+        }
+      },
+      { flush: 'sync' },
+    );
+    store.addToast({ id: 'a', onClose });
+
+    store.addToast({ id: 'b' });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(selectors.toast(store.state, 'a')).toBe(store.state.toasts[1]);
+
+    store.closeToast('a');
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    stop();
   });
 
   it.each([

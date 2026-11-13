@@ -25,7 +25,6 @@ export type StoredToast<Data extends object = any> = ToastObject<Data> & { updat
 
 export type State = {
   toasts: StoredToast[];
-  toastMetadata: Map<string, ToastMetadata>;
   hovering: boolean;
   focused: boolean;
   timeout: number;
@@ -41,8 +40,6 @@ type ToastMetadata = {
   visibleIndex: number;
   offsetY: number;
 };
-
-type InitialState = Omit<State, 'toastMetadata'>;
 
 function createToastMetadata(toasts: StoredToast[]) {
   const metadata = new Map<string, ToastMetadata>();
@@ -68,6 +65,20 @@ function createToastMetadata(toasts: StoredToast[]) {
   return metadata;
 }
 
+// The metadata comes from the list, not from a second key of the state. `ReactiveStore` writes one
+// key after another, so a second key lets a `flush: 'sync'` watcher read a list and metadata that
+// disagree.
+const metadataOfToasts = new WeakMap<StoredToast[], Map<string, ToastMetadata>>();
+
+function getToastMetadata(toasts: StoredToast[]) {
+  let metadata = metadataOfToasts.get(toasts);
+  if (!metadata) {
+    metadata = createToastMetadata(toasts);
+    metadataOfToasts.set(toasts, metadata);
+  }
+  return metadata;
+}
+
 // Marks the active (non-ending) toasts beyond `limit` as limited. Callers pass
 // toasts in newest-first order, so the newest `limit` toasts stay visible and
 // the rest are flagged. Returns the same toast reference when its `limited`
@@ -87,10 +98,11 @@ function applyLimited(toasts: StoredToast[], limit: number): StoredToast[] {
 export const selectors = {
   toasts: (state: State) => state.toasts,
   isEmpty: (state: State) => state.toasts.length === 0,
-  toast: (state: State, id: string) => state.toastMetadata.get(id)?.value,
-  toastIndex: (state: State, id: string) => state.toastMetadata.get(id)?.domIndex ?? -1,
-  toastOffsetY: (state: State, id: string) => state.toastMetadata.get(id)?.offsetY ?? 0,
-  toastVisibleIndex: (state: State, id: string) => state.toastMetadata.get(id)?.visibleIndex ?? -1,
+  toast: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.value,
+  toastIndex: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.domIndex ?? -1,
+  toastOffsetY: (state: State, id: string) => getToastMetadata(state.toasts).get(id)?.offsetY ?? 0,
+  toastVisibleIndex: (state: State, id: string) =>
+    getToastMetadata(state.toasts).get(id)?.visibleIndex ?? -1,
   focused: (state: State) => state.focused,
   expanded: (state: State) => state.hovering || state.focused,
   expandedOrOutOfFocus: (state: State) => state.hovering || state.focused || !state.isWindowFocused,
@@ -108,15 +120,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
    */
   private areTimersSuspended = false;
 
-  constructor(initialState: InitialState) {
-    super(
-      {
-        ...initialState,
-        toastMetadata: createToastMetadata(initialState.toasts),
-      },
-      {},
-      selectors,
-    );
+  constructor(initialState: State) {
+    super({ ...initialState }, {}, selectors);
   }
 
   /**
@@ -139,15 +144,10 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
       return;
     }
 
-    const updates = { timeout, limit } as Pick<
-      State,
-      'timeout' | 'limit' | 'toasts' | 'toastMetadata'
-    >;
+    const updates = { timeout, limit } as Pick<State, 'timeout' | 'limit' | 'toasts'>;
 
     if (limitChanged) {
-      const newToasts = applyLimited(this.current.toasts, limit);
-      updates.toasts = newToasts;
-      updates.toastMetadata = createToastMetadata(newToasts);
+      updates.toasts = applyLimited(this.current.toasts, limit);
     }
 
     this.update(updates);
@@ -513,10 +513,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   }
 
   private setToasts(newToasts: StoredToast[], clearInteraction: boolean = newToasts.length === 0) {
-    const updates = {
-      toasts: newToasts,
-      toastMetadata: createToastMetadata(newToasts),
-    } as Pick<State, 'toasts' | 'toastMetadata' | 'hovering' | 'focused'>;
+    const updates = { toasts: newToasts } as Pick<State, 'toasts' | 'hovering' | 'focused'>;
 
     if (clearInteraction) {
       updates.hovering = false;
