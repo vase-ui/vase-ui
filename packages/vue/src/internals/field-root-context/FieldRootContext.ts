@@ -78,6 +78,7 @@ export interface UseFieldValidationReturnValue {
   getInputControl: () => HTMLElement | null;
   commit: (value: unknown) => Promise<void>;
   change: (value: unknown, cancelPending?: boolean) => void;
+  reset: () => void;
 }
 
 export interface FieldRootContext {
@@ -147,6 +148,7 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
     getInputControl: () => null,
     commit: async () => {},
     change: NOOP,
+    reset: NOOP,
   },
 };
 

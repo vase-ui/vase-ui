@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
+import FieldPartOrder from './FieldPartOrder.test.vue';
 
 // The generated id has another form in each version of Vue.
 function readId(html: string) {
@@ -56,5 +57,59 @@ describe('<Field.Root /> on a server', () => {
     );
 
     expect(html).toBe(`<div><!--[--><input id="${readId(html)}"><!--]--></div>`);
+  });
+});
+
+function readAttribute(html: string, testId: string, name: string) {
+  const tag = new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0] ?? '';
+  return new RegExp(` ${name}="([^"]*)"`).exec(tag)?.[1];
+}
+
+function read(html: string) {
+  return {
+    labelId: readAttribute(html, 'label', 'id'),
+    descriptionId: readAttribute(html, 'description', 'id'),
+    errorId: readAttribute(html, 'error', 'id'),
+    labelledBy: readAttribute(html, 'control', 'aria-labelledby'),
+    describedBy: readAttribute(html, 'control', 'aria-describedby'),
+  };
+}
+
+describe('VUE-17: <Field.Control /> on a server, with a label and messages', () => {
+  it.each([
+    {
+      name: 'the label and the messages first',
+      parts: ['label', 'description', 'error', 'control'],
+    },
+    {
+      name: 'the label first, the messages last',
+      parts: ['label', 'control', 'description', 'error'],
+    },
+    { name: 'the control first', parts: ['control', 'label', 'description', 'error'] },
+    {
+      name: 'the messages first, the label last',
+      parts: ['description', 'error', 'control', 'label'],
+    },
+  ] as const)('names the label and the messages: $name', async ({ parts }) => {
+    const server = read(await renderToString(<FieldPartOrder parts={[...parts]} />));
+
+    expect(server.labelId).toMatch(/^vase-ui-./);
+    expect(server.labelledBy).toBe(server.labelId);
+    expect(server.describedBy).toBe(`${server.descriptionId} ${server.errorId}`);
+  });
+
+  it('names a control with the `id` prop of a label that comes after it', async () => {
+    const server = read(
+      await renderToString(<FieldPartOrder parts={['control', 'label']} labelId="own-label" />),
+    );
+
+    expect(server.labelledBy).toBe('own-label');
+  });
+
+  it('gives a control with no label no `aria-labelledby`', async () => {
+    const server = read(await renderToString(<FieldPartOrder parts={['control', 'error']} />));
+
+    expect(server.labelledBy).toBeUndefined();
+    expect(server.describedBy).toBe(server.errorId);
   });
 });

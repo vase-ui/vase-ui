@@ -5,6 +5,8 @@ import type {
   FieldControlProps,
   FieldControlState,
 } from './control/FieldControl.vue';
+import FieldError from './error/FieldError.vue';
+import type { FieldErrorProps, FieldErrorState } from './error/FieldError.vue';
 import FieldRoot from './root/FieldRoot.vue';
 import type {
   FieldRootActions,
@@ -12,6 +14,8 @@ import type {
   FieldRootState,
   FieldValidityData,
 } from './root/FieldRoot.vue';
+import FieldValidity from './validity/FieldValidity.vue';
+import type { FieldValidityProps, FieldValidityState } from './validity/FieldValidity.vue';
 
 /**
  * Groups all parts of the field.
@@ -22,6 +26,16 @@ export namespace Root {
   export type Props = FieldRootProps;
   export type State = FieldRootState;
   export type Actions = FieldRootActions;
+}
+
+/**
+ * An error message displayed if the field control fails validation.
+ * Renders a `<div>` element.
+ */
+export const Error: typeof FieldError = FieldError;
+export namespace Error {
+  export type Props = FieldErrorProps;
+  export type State = FieldErrorState;
 }
 
 /**
@@ -37,6 +51,16 @@ export namespace Control {
   export type State = FieldControlState;
   export type ChangeEventReason = FieldControlChangeEventReason;
   export type ChangeEventDetails = FieldControlChangeEventDetails;
+}
+
+/**
+ * Used to display a custom message based on the field's validity.
+ * Requires a default slot that accepts the field validity state as its slot props.
+ */
+export const Validity: typeof FieldValidity = FieldValidity;
+export namespace Validity {
+  export type Props = FieldValidityProps;
+  export type State = FieldValidityState;
 }
 
 export type ValidityData = FieldValidityData;
