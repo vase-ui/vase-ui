@@ -126,6 +126,16 @@ async function expectFieldsetPage(page: Page) {
   expect(await page.getByTestId('fieldset').getAttribute('aria-labelledby')).toBe(legendId);
 }
 
+// The server HTML has the form with `novalidate` and the input with its value.
+async function expectFormPage(page: Page) {
+  expect(await readAttributes(page.getByTestId('form'), ['novalidate'])).toEqual({
+    novalidate: '',
+  });
+  expect(await page.getByTestId('form').evaluate((element) => element.localName)).toBe('form');
+  expect(await page.getByTestId('email').getAttribute('value')).toBe('a@b.c');
+  expect(await page.getByTestId('output').textContent()).toBe('');
+}
+
 async function expectCollapsiblePage(page: Page) {
   const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open'];
   const panelAttributeNames = ['hidden', 'data-open', 'data-closed'];
@@ -339,6 +349,7 @@ const PAGES: PageCase[] = [
     expectPage: (page: Page) => expectRangePage(page, rootAttributes),
   })),
   { path: '/fieldset', expectPage: expectFieldsetPage },
+  { path: '/form', expectPage: expectFormPage },
   { path: '/collapsible', expectPage: expectCollapsiblePage },
   {
     path: '/avatar',
@@ -429,6 +440,17 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await counter.textContent()).toBe('Count 0');
     await counter.click();
     expect(await counter.textContent()).toBe('Count 1');
+  });
+
+  it('gives the FormData of /form to the submit listener after hydration', async () => {
+    const page = await createPage('/form');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('submit').click();
+
+    expect(await page.getByTestId('output').textContent()).toBe('a@b.c');
+    expect(page.url()).toBe(url('/form'));
+    expect(messages).toEqual([]);
   });
 
   it('moves the thumb of /scroll-area when its viewport scrolls after hydration', async () => {
