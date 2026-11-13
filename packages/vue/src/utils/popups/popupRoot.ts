@@ -11,8 +11,8 @@ import {
   watch,
 } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
-import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
+import { useControlled } from '../../common/useControlled';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -418,9 +418,8 @@ export function useImplicitActiveTrigger<State extends PopupStoreState<unknown>>
 }
 
 /**
- * Clears the interaction type that opened the popup when the popup closes and when the root
- * unmounts. A later open from code then has no interaction type. Call it in `setup` of a root whose
- * store keeps `openMethod`.
+ * Clears the open method of a popup that keeps one, when the popup closes and when the root
+ * unmounts. Call it in `setup` of the root.
  *
  * @param store The store of the popup.
  * @param open Whether the popup is open, as `usePopupRoot` returns it.

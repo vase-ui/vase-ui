@@ -1,7 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import type { PropType } from 'vue';
-import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import {
   createRenderer,
   createTransitionRunCounter,
@@ -20,6 +19,7 @@ import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { useImplicitActiveTrigger, usePopupRootSync } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { REASONS } from '../../internals/reasons';
 import { ReactiveStore } from './ReactiveStore';
@@ -1606,56 +1606,52 @@ describe('usePopupRoot', () => {
   });
 });
 
-type OpenMethodStore = ReactiveStore<
-  Readonly<PopupStoreState<unknown> & { openMethod: InteractionType | null }>,
-  PopupStoreContext<never>,
-  PopupStoreSelectors
->;
-
-function createOpenMethodStore(open: boolean, openMethod: InteractionType | null) {
-  return new ReactiveStore(
-    { ...createInitialPopupStoreState(), open, openMethod },
-    createPopupStoreContext(),
-    popupStoreSelectors,
-  ) as OpenMethodStore;
-}
-
-const PopupRootSyncTest = defineComponent({
-  props: { store: { type: Object as PropType<OpenMethodStore>, required: true } },
-  setup(props) {
-    usePopupRootSync(props.store, () => props.store.select('open'));
-    return () => null;
-  },
-});
-
 describe('usePopupRootSync', () => {
   const { render } = createRenderer();
 
-  it('clears openMethod when the popup closes', async () => {
-    const store = createOpenMethodStore(true, 'touch');
-    await render(<PopupRootSyncTest store={store} />);
+  type State = PopupStoreState<unknown> & { openMethod: InteractionType | null };
 
-    store.set('open', false);
-    await flushMicrotasks();
+  function createStoreWithOpenMethod() {
+    return new ReactiveStore<Readonly<State>, PopupStoreContext<never>, PopupStoreSelectors>(
+      { ...createInitialPopupStoreState(), openMethod: null },
+      createPopupStoreContext(),
+      popupStoreSelectors,
+    );
+  }
 
-    expect(store.state.openMethod).toBe(null);
+  const SyncTest = defineComponent({
+    props: {
+      store: {
+        type: Object as PropType<ReturnType<typeof createStoreWithOpenMethod>>,
+        required: true,
+      },
+      open: { type: Boolean, required: true },
+    },
+    setup(props) {
+      usePopupRootSync(props.store, () => props.open);
+      return () => null;
+    },
   });
 
-  it('keeps openMethod while the popup is open', async () => {
-    const store = createOpenMethodStore(true, 'touch');
-    await render(<PopupRootSyncTest store={store} />);
+  it('clears the open method when the popup closes, and keeps it while the popup is open', async () => {
+    const store = createStoreWithOpenMethod();
+    const open = shallowRef(false);
+    await render(() => <SyncTest store={store} open={open.value} />);
+
+    store.set('openMethod', 'touch');
+    open.value = true;
     await flushMicrotasks();
     expect(store.state.openMethod).toBe('touch');
 
-    store.set('openMethod', 'mouse');
+    open.value = false;
     await flushMicrotasks();
-
-    expect(store.state.openMethod).toBe('mouse');
+    expect(store.state.openMethod).toBe(null);
   });
 
-  it('clears openMethod when the root unmounts', async () => {
-    const store = createOpenMethodStore(true, 'touch');
-    const { unmount } = await render(<PopupRootSyncTest store={store} />);
+  it('clears the open method when the root unmounts', async () => {
+    const store = createStoreWithOpenMethod();
+    const { unmount } = await render(() => <SyncTest store={store} open />);
+    store.set('openMethod', 'mouse');
 
     unmount();
 
@@ -1663,13 +1659,14 @@ describe('usePopupRootSync', () => {
   });
 
   it('keeps openMethod while KeepAlive holds the root', async () => {
-    const store = createOpenMethodStore(true, 'touch');
+    const store = createStoreWithOpenMethod();
     const visible = shallowRef(true);
     await render(() => (
       <KeepAlive>
-        {visible.value ? <PopupRootSyncTest key="root" store={store} /> : <Other key="other" />}
+        {visible.value ? <SyncTest key="root" store={store} open /> : <Other key="other" />}
       </KeepAlive>
     ));
+    store.set('openMethod', 'touch');
 
     visible.value = false;
     await flushMicrotasks();
