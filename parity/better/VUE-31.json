@@ -1,0 +1,10 @@
+{
+  "id": "VUE-31",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useFocus.ts#L49",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useFocus.ts#L165-L178",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useFocus.ts#L232-L235"
+  ],
+  "behavior": "A trigger that gets disabled, or that moves to another store, stops its open delay. Base UI keeps the timer until the trigger unmounts, so the popup opens when the delay ends, also for a trigger that is disabled or that has another store.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useFocus.ts"
+}
