@@ -1,5 +1,5 @@
-import { expect, vi, describe, it } from 'vitest';
-import { defineComponent, KeepAlive, onScopeDispose } from 'vue';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { defineComponent, KeepAlive } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
   createRenderer,
@@ -10,16 +10,6 @@ import {
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
-import { useTabsListContext } from './TabsListContext';
-
-// An indicator of a later part registers its listener in this way.
-const IndicatorListener = defineComponent(
-  (props: { listener: () => void }) => {
-    onScopeDispose(useTabsListContext().registerIndicatorUpdateListener(props.listener));
-    return () => null;
-  },
-  { props: ['listener'] },
-);
 
 describe('<Tabs.List />', () => {
   const { render } = createRenderer();
@@ -313,51 +303,102 @@ describe('<Tabs.List />', () => {
   });
 
   describe('size observer', () => {
-    it('calls the listeners when a tab or the list changes its size', async () => {
-      const listener = vi.fn();
+    function readIndicatorVariable(name: string) {
+      return screen.getByTestId('indicator').style.getPropertyValue(`--active-tab-${name}`);
+    }
+
+    // The observer calls the indicator in the microtask checkpoint of its own callback. A style
+    // write in that checkpoint gives the loop error of the browser, so each step leaves the task.
+    async function expectIndicatorVariable(name: string, expected: string) {
+      await waitFor(() => expect(readIndicatorVariable(name)).toBe(expected));
+      await flushMicrotasks();
+    }
+
+    it('makes the indicator measure again when a tab or the list changes its size', async () => {
       const TestComponent = defineComponent(
-        (props: { showSecondTab: boolean }) => () => (
-          <Tabs.Root value={0}>
-            <Tabs.List data-testid="list" style={{ width: '200px' }}>
-              <Tabs.Tab value={0} style={{ width: '50px' }} />
-              {props.showSecondTab && <Tabs.Tab value={1} style={{ width: '50px' }} />}
-              <IndicatorListener listener={listener} />
-            </Tabs.List>
-          </Tabs.Root>
-        ),
-        { props: ['showSecondTab'] },
+        (props: { listWidth: number; firstTabWidth: number; insertedTabWidth: number | null }) =>
+          () => (
+            <Tabs.Root value={1}>
+              <Tabs.List style={{ width: `${props.listWidth}px` }}>
+                {props.insertedTabWidth !== null && (
+                  <Tabs.Tab value={2} style={{ width: `${props.insertedTabWidth}px` }} />
+                )}
+                <Tabs.Tab value={0} style={{ width: `${props.firstTabWidth}px` }} />
+                <Tabs.Tab value={1} style={{ width: '50px' }} />
+                <Tabs.Indicator data-testid="indicator" />
+              </Tabs.List>
+            </Tabs.Root>
+          ),
+        { props: ['listWidth', 'firstTabWidth', 'insertedTabWidth'] },
       );
-      const { setProps } = await render(<TestComponent showSecondTab={false} />);
+      // Each step makes a new object. A change of the object of the first vnode is not a change.
+      let sizes: { listWidth: number; firstTabWidth: number; insertedTabWidth: number | null } = {
+        listWidth: 200,
+        firstTabWidth: 50,
+        insertedTabWidth: null,
+      };
+      const { setProps } = await render(<TestComponent {...sizes} />);
 
-      async function expectListenerCall(action: () => void | Promise<void>) {
-        const callCount = listener.mock.calls.length;
-        await action();
-        await waitFor(() => expect(listener.mock.calls.length).toBeGreaterThan(callCount));
-      }
+      // The active tab is the last tab. A write of a prop changes the layout and no value that the
+      // indicator reads, so only the size observer can tell the indicator.
+      await expectIndicatorVariable('left', '50px');
+      // The first notification of the observer has come after two frames. A change before it would
+      // reach the indicator through that notification, and the case would not test the observer.
+      await waitSingleFrame();
+      await waitSingleFrame();
 
-      // The observer reports each element one time when it starts.
-      await waitFor(() => expect(listener).toHaveBeenCalled());
-      await expectListenerCall(() => {
-        screen.getAllByRole('tab')[0].style.width = '60px';
-      });
-      await expectListenerCall(() => {
-        screen.getByTestId('list').style.width = '220px';
-      });
-      await expectListenerCall(() => setProps({ showSecondTab: true }));
-      await expectListenerCall(() => {
-        screen.getAllByRole('tab')[1].style.width = '60px';
-      });
+      sizes = { ...sizes, firstTabWidth: 60 };
+      await setProps(sizes);
+      await expectIndicatorVariable('left', '60px');
+
+      sizes = { ...sizes, listWidth: 220 };
+      await setProps(sizes);
+      await expectIndicatorVariable('right', '110px');
+
+      sizes = { ...sizes, insertedTabWidth: 50 };
+      await setProps(sizes);
+      await expectIndicatorVariable('left', '110px');
+
+      sizes = { ...sizes, insertedTabWidth: 70 };
+      await setProps(sizes);
+      await expectIndicatorVariable('left', '130px');
     });
   });
 
   describe('KeepAlive', () => {
+    // A deactivated list has an empty map, so the indicator measures nothing and shows no trace of
+    // a call. The case counts the observers instead.
     it('stops the size observer while the list is deactivated and starts it again', async () => {
-      const listener = vi.fn();
+      const NativeResizeObserver = window.ResizeObserver;
+      const observers: { observed: Set<Element>; isDisconnected: boolean }[] = [];
+      class RecordedResizeObserver extends NativeResizeObserver {
+        record = { observed: new Set<Element>(), isDisconnected: false };
+
+        constructor(callback: ResizeObserverCallback) {
+          super(callback);
+          observers.push(this.record);
+        }
+
+        observe(target: Element, options?: ResizeObserverOptions) {
+          this.record.observed.add(target);
+          super.observe(target, options);
+        }
+
+        disconnect() {
+          this.record.isDisconnected = true;
+          super.disconnect();
+        }
+      }
+      vi.stubGlobal('ResizeObserver', RecordedResizeObserver);
+      onTestFinished(() => {
+        vi.unstubAllGlobals();
+      });
+
       const Inner = defineComponent(() => () => (
         <Tabs.Root value={0}>
-          <Tabs.List style={{ width: '200px' }}>
+          <Tabs.List data-testid="list" style={{ width: '200px' }}>
             <Tabs.Tab value={0} style={{ width: '50px' }} />
-            <IndicatorListener listener={listener} />
+            <Tabs.Indicator data-testid="indicator" />
           </Tabs.List>
         </Tabs.Root>
       ));
@@ -369,22 +410,26 @@ describe('<Tabs.List />', () => {
         { props: ['visible'] },
       );
       const { setProps } = await render(<App visible />);
-      await waitFor(() => expect(listener).toHaveBeenCalled());
+      const list = screen.getByTestId('list');
       const tab = screen.getByRole('tab');
+      const indicator = screen.getByTestId('indicator');
+      const readRunning = () => observers.filter((observer) => !observer.isDisconnected);
+
+      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
 
       await setProps({ visible: false });
-      listener.mockClear();
-      // An observer that still runs reports the element that left the document in a frame.
-      await waitSingleFrame();
-      await waitSingleFrame();
 
-      expect(listener).not.toHaveBeenCalled();
+      expect(readRunning()).toEqual([]);
 
       await setProps({ visible: true });
-      listener.mockClear();
+
+      expect(readRunning().map((observer) => [...observer.observed])).toEqual([[list, tab]]);
+
       tab.style.width = '60px';
 
-      await waitFor(() => expect(listener).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(indicator.style.getPropertyValue('--active-tab-width')).toBe('60px'),
+      );
     });
   });
 
