@@ -202,6 +202,7 @@ describe('NumberField parse', () => {
       { name: 'groups of one digit', text: '1.2.3' },
       { name: 'a first group of four digits', text: '1234.567.89' },
       { name: 'a middle group of two digits', text: '12.34.567' },
+      { name: 'a middle group of four digits', text: '1.2345.67' },
       { name: 'a short group after a group of three', text: '1.234.5.6' },
       { name: 'an empty first group', text: '.234.5' },
       { name: 'a minus sign before the text', text: '-1.2.3' },
