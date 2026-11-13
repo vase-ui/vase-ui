@@ -182,6 +182,71 @@ async function expectCollapsiblePage(page: Page) {
   expect(untilFoundPanelId).not.toBe(openPanelId);
 }
 
+async function expectAccordionPage(page: Page) {
+  const triggerAttributeNames = ['aria-expanded', 'aria-controls', 'data-panel-open', 'data-index'];
+  const panelAttributeNames = ['hidden', 'data-open', 'data-closed', 'role', 'data-index'];
+  const readTrigger = (testId: string) =>
+    readAttributes(page.getByTestId(testId), triggerAttributeNames);
+  const readPanel = (testId: string) =>
+    readAttributes(page.getByTestId(testId), panelAttributeNames);
+  const readIds = async (name: string) => ({
+    triggerId: await page.getByTestId(`${name}-trigger`).getAttribute('id'),
+    labelledBy: await page.getByTestId(`${name}-panel`).getAttribute('aria-labelledby'),
+    panelId: await page.getByTestId(`${name}-panel`).getAttribute('id'),
+  });
+
+  // The trigger names the panel only while the panel is open.
+  expect(await readTrigger('closed-trigger')).toEqual({
+    'aria-expanded': 'false',
+    'aria-controls': null,
+    'data-panel-open': null,
+    'data-index': '0',
+  });
+  expect(await page.getByTestId('closed-panel').count()).toBe(0);
+
+  const open = await readIds('open');
+  expect(open.triggerId).toBeTruthy();
+  expect(open.panelId).toBeTruthy();
+  expect(open.labelledBy).toBe(open.triggerId);
+  expect(await readTrigger('open-trigger')).toEqual({
+    'aria-expanded': 'true',
+    'aria-controls': open.panelId,
+    'data-panel-open': '',
+    'data-index': '1',
+  });
+  expect(await readPanel('open-panel')).toEqual({
+    hidden: null,
+    'data-open': '',
+    'data-closed': null,
+    role: 'region',
+    'data-index': '1',
+  });
+  expect(await page.getByTestId('open-header').evaluate((element) => element.localName)).toBe('h3');
+
+  const untilFound = await readIds('until-found');
+  expect(untilFound.triggerId).toBeTruthy();
+  expect(untilFound.triggerId).not.toBe(open.triggerId);
+  expect(untilFound.labelledBy).toBe(untilFound.triggerId);
+  expect(untilFound.panelId).toBeTruthy();
+  expect(untilFound.panelId).not.toBe(open.panelId);
+  expect(await readTrigger('until-found-trigger')).toEqual({
+    'aria-expanded': 'false',
+    'aria-controls': null,
+    'data-panel-open': null,
+    'data-index': '2',
+  });
+  expect(await readPanel('until-found-panel')).toEqual({
+    hidden: 'until-found',
+    'data-open': null,
+    'data-closed': '',
+    role: 'region',
+    'data-index': '2',
+  });
+  expect((await page.getByTestId('until-found-panel').textContent())?.trim()).toBe(
+    'Until found panel',
+  );
+}
+
 // The server cannot know whether the image loads, so it renders the fallback and no image.
 async function expectAvatarPageWithFallback(page: Page) {
   expect(await page.getByTestId('fallback').textContent()).toBe('LT');
@@ -375,6 +440,7 @@ const PAGES: PageCase[] = [
   { path: '/fieldset', expectPage: expectFieldsetPage },
   { path: '/form', expectPage: expectFormPage },
   { path: '/collapsible', expectPage: expectCollapsiblePage },
+  { path: '/accordion', expectPage: expectAccordionPage },
   {
     path: '/avatar',
     expectPage: expectAvatarPageWithFallback,
@@ -517,6 +583,39 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       'aria-controls': panelId,
     });
     expect(await panel.getAttribute('hidden')).toBeNull();
+  });
+
+  it('opens an accordion panel on a click on its trigger after hydration', async () => {
+    const page = await createPage('/accordion');
+    const trigger = page.getByTestId('closed-trigger');
+    const panel = page.getByTestId('closed-panel');
+
+    expect(await panel.count()).toBe(0);
+    await trigger.click();
+    await panel.waitFor();
+
+    expect(await readAttributes(trigger, ['aria-expanded', 'aria-controls'])).toEqual({
+      'aria-expanded': 'true',
+      'aria-controls': await panel.getAttribute('id'),
+    });
+    expect(await panel.getAttribute('aria-labelledby')).toBe(await trigger.getAttribute('id'));
+    // The root holds one value, so the open item closes.
+    expect(await page.getByTestId('open-trigger').getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('moves the focus of the accordion with Tab and not with an arrow key after hydration', async () => {
+    const page = await createPage('/accordion');
+    const messages = collectMessages(page);
+    const readFocus = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('closed-trigger').focus();
+    await page.keyboard.press('ArrowDown');
+    expect(await readFocus()).toBe('closed-trigger');
+
+    await page.keyboard.press('Tab');
+    expect(await readFocus()).toBe('open-trigger');
+    expect(messages).toEqual([]);
   });
 
   it.each(TOOLBARS)(

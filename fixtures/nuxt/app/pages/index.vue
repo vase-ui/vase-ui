@@ -8,6 +8,7 @@
       <li><NuxtLink to="/fieldset">Fieldset</NuxtLink></li>
       <li><NuxtLink to="/form">Form</NuxtLink></li>
       <li><NuxtLink to="/collapsible">Collapsible</NuxtLink></li>
+      <li><NuxtLink to="/accordion">Accordion</NuxtLink></li>
       <li><NuxtLink to="/avatar">Avatar</NuxtLink></li>
       <li><NuxtLink to="/toolbar">Toolbar</NuxtLink></li>
       <li><NuxtLink to="/toggle-group">Toggle Group</NuxtLink></li>
