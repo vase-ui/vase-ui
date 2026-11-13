@@ -1637,6 +1637,227 @@ describe('<Switch.Root />', () => {
       expect(getStateAttributes('switch')).toEqual(['data-disabled']);
       expect(screen.getByTestId('form')).toHaveAttribute('data-fields', '');
     });
+
+    describe('VUE-21: a native reset clears the error of the field', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      function submitForm() {
+        return fireEvent.submit(screen.getByTestId('form'));
+      }
+
+      async function resetForm() {
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+      }
+
+      // The field is neutral, as after a reset of `Field.Control`.
+      function expectNeutralField() {
+        expect(screen.queryByTestId('error')).toBe(null);
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-valid');
+        expect(screen.getByRole('switch')).not.toHaveAttribute('aria-invalid');
+      }
+
+      // The input keeps no message of the field. A required switch that is off keeps the message of
+      // its native constraint.
+      function expectInputConstraint(valueMissing: boolean) {
+        const input = screen.getByRole<HTMLInputElement>('checkbox', { hidden: true });
+        expect(input.validity.customError).toBe(false);
+        expect(input.validity.valueMissing).toBe(valueMissing);
+        expect(Boolean(input.validationMessage)).toBe(valueMissing);
+      }
+
+      it.each([
+        {
+          name: 'a switch at its default',
+          valueMissing: false,
+          renderForm: () => () => (
+            <Form data-testid="form">
+              <Field.Root
+                data-testid="root"
+                name="notifications"
+                validate={(value) => (value ? null : 'Turn it on')}
+              >
+                <Switch.Root aria-label="Notifications" />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          ),
+          makeInvalid: submitForm,
+        },
+        {
+          name: 'a required switch at its default',
+          valueMissing: true,
+          renderForm: () => () => (
+            <Form data-testid="form">
+              <Field.Root data-testid="root" name="notifications">
+                <Switch.Root aria-label="Notifications" required />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          ),
+          makeInvalid: submitForm,
+        },
+        {
+          name: 'the form for a switch at its default',
+          valueMissing: false,
+          renderForm: () => () => (
+            <Form data-testid="form" errors={{ notifications: 'Server error' }}>
+              <Field.Root data-testid="root" name="notifications">
+                <Switch.Root aria-label="Notifications" />
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          ),
+          makeInvalid: undefined,
+        },
+        {
+          name: 'a controlled switch',
+          valueMissing: false,
+          renderForm: () => {
+            const checked = shallowRef(false);
+            return () => (
+              <Form data-testid="form">
+                <Field.Root
+                  data-testid="root"
+                  name="notifications"
+                  validate={(value) => (value ? null : 'Turn it on')}
+                >
+                  <Switch.Root
+                    aria-label="Notifications"
+                    checked={checked.value}
+                    {...{ 'onUpdate:checked': (next: boolean) => (checked.value = next) }}
+                  />
+                  <Field.Error data-testid="error" />
+                </Field.Root>
+              </Form>
+            );
+          },
+          makeInvalid: submitForm,
+        },
+      ])('VUE-21: clears the error of $name', async ({ renderForm, makeInvalid, valueMissing }) => {
+        await render(h(defineComponent(renderForm)));
+        await makeInvalid?.();
+        expect(screen.getByTestId('error')).toBeInTheDocument();
+
+        await resetForm();
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+        expectNeutralField();
+        expectInputConstraint(valueMissing);
+      });
+
+      it('VUE-21: clears the error of a switch whose listener cancels the reset, and validates the next click', async () => {
+        const validate = vi.fn((value: unknown) => (value ? 'Turn it off' : null));
+        await render(
+          <Form data-testid="form">
+            <Field.Root data-testid="root" name="notifications" validate={validate}>
+              <Switch.Root
+                aria-label="Notifications"
+                onCheckedChange={(_checked: boolean, details: Switch.Root.ChangeEventDetails) => {
+                  if (details.event.type === 'reset') {
+                    details.cancel();
+                  }
+                }}
+              />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+        await fireEvent.click(screen.getByRole('switch'));
+        await submitForm();
+        expect(screen.getByTestId('error')).toHaveTextContent('Turn it off');
+
+        await resetForm();
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
+        expect(validate).toHaveBeenCalledTimes(1);
+        expectNeutralField();
+        expectInputConstraint(false);
+
+        await fireEvent.click(screen.getByRole('switch'));
+
+        expect(validate).toHaveBeenCalledTimes(2);
+        expect(validate.mock.lastCall?.[0]).toBe(false);
+        expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+      });
+
+      it('VUE-21: clears the error when the reset turns the switch off, and does not validate it', async () => {
+        const validate = vi.fn((value: unknown) => (value ? 'Turn it off' : null));
+        await render(
+          <Form data-testid="form">
+            <Field.Root
+              data-testid="root"
+              name="notifications"
+              validate={validate}
+              validationMode="onChange"
+            >
+              <Switch.Root aria-label="Notifications" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+        await fireEvent.click(screen.getByRole('switch'));
+        expect(screen.getByTestId('error')).toHaveTextContent('Turn it off');
+
+        await resetForm();
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+        expect(validate).toHaveBeenCalledTimes(1);
+        expectNeutralField();
+        expectInputConstraint(false);
+      });
+
+      it('VUE-21: shows no error when the reset turns off a required switch that was valid', async () => {
+        const validate = vi.fn();
+        const { container } = await render(
+          <Form data-testid="form">
+            <Field.Root data-testid="root" name="notifications" validate={validate}>
+              <Switch.Root aria-label="Notifications" required />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+        // Firefox loads the page again for a valid submit that no listener prevents.
+        container.addEventListener('submit', (event) => event.preventDefault());
+        await fireEvent.click(screen.getByRole('switch'));
+        await submitForm();
+        expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+        expect(validate).toHaveBeenCalledTimes(1);
+
+        await resetForm();
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+        expect(validate).toHaveBeenCalledTimes(1);
+        expectNeutralField();
+        expectInputConstraint(true);
+      });
+
+      it('VUE-21: removes the validity mark that a change gave to a field with an error of the form', async () => {
+        await render(
+          <Form data-testid="form" errors={{ notifications: 'Server error' }}>
+            <Field.Root data-testid="root" name="notifications">
+              <Switch.Root aria-label="Notifications" />
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+        await fireEvent.click(screen.getByRole('switch'));
+        expect(screen.queryByTestId('error')).toBe(null);
+        expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+
+        await resetForm();
+
+        expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
+        expectNeutralField();
+      });
+    });
   });
 
   describe('server-side rendering', () => {

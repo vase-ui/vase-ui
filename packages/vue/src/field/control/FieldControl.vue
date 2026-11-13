@@ -56,9 +56,9 @@ export interface FieldControlProps
 import { computed, nextTick, onMounted, watch } from 'vue';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { DEFAULT_VALIDITY_STATE, fieldValidityMapping } from '../../internals/field-constants';
+import { fieldValidityMapping } from '../../internals/field-constants';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
-import { useFieldRootContext } from '../../internals/field-root-context';
+import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
 import {
@@ -98,7 +98,6 @@ const {
   setTouched,
   setDirty,
   validityData,
-  setValidityData,
   setFilled,
   validationMode,
   validation,
@@ -112,6 +111,7 @@ useDeferredServerRender();
 
 const isDisabled = computed(() => (fieldDisabled.value ?? false) || props.disabled);
 const controlName = computed(() => fieldName.value ?? props.name);
+const clearFieldError = useClearFieldError(controlName);
 const state = computed<FieldControlState>(() => ({
   ...fieldState.value,
   disabled: isDisabled.value,
@@ -344,18 +344,7 @@ watch(
         handledValue = value;
         setFilled(value !== '');
         setDirty(value !== (validityData.value.initialValue ?? ''));
-
-        // After the reset the error of the field is out of date: the validation that is pending,
-        // the message on the input and the error of the form must go.
-        validation.reset();
-        setValidityData({
-          ...validityData.value,
-          state: DEFAULT_VALIDITY_STATE,
-          error: '',
-          errors: [],
-          value,
-        });
-        clearErrors(controlName.value);
+        clearFieldError(value);
       });
     };
     root.addEventListener('reset', handleReset);
