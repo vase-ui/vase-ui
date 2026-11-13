@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, h, onMounted, onUpdated, shallowRef, useAttrs } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -16,8 +17,10 @@ import {
   waitFor,
   within,
 } from '#test-utils';
-import * as Slider from '../index.parts';
+import { platform } from '../../common/platform';
 import SliderThumbHydration from './SliderThumbHydration.test.vue';
+
+const isWebKit = platform.engine.webkit;
 
 // Gives its root a new function ref in each render. It exposes its element.
 const UnstableRefThumb = defineComponent(
@@ -672,6 +675,683 @@ describe('<Slider.Thumb />', () => {
       expect(document.body).toHaveFocus();
       expect(thumb1.style.zIndex).toBe('1');
       expect(thumb0.style.zIndex).toBe('');
+    });
+  });
+
+  describe('prop: thumbAlignment', () => {
+    async function waitForFrames() {
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+      await flushMicrotasks();
+    }
+
+    it.skipIf(isJSDOM)(
+      'recomputes inset positions when the slider becomes visible (strict: $strict)',
+      async () => {
+        const visible = shallowRef(false);
+
+        const { user } = await render(() => (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                visible.value = true;
+              }}
+            >
+              show
+            </button>
+            <div style={{ display: visible.value ? 'block' : 'none' }}>
+              <Slider.Root defaultValue={30} thumbAlignment="edge" style={{ width: '100px' }}>
+                <Slider.Control
+                  data-testid="control"
+                  style={{ position: 'relative', width: '100%', height: '10px' }}
+                >
+                  <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                    <Slider.Indicator data-testid="indicator" />
+                    <Slider.Thumb data-testid="thumb" style={{ width: '10px', height: '10px' }} />
+                  </Slider.Track>
+                </Slider.Control>
+              </Slider.Root>
+            </div>
+          </>
+        ));
+
+        const thumb = screen.getByTestId('thumb');
+        const indicator = screen.getByTestId('indicator');
+        // Read the thumb and indicator together so each poll checks one consistent snapshot.
+        const getInsetStyles = () => ({
+          thumbVisibility: thumb.style.visibility,
+          thumbPosition: thumb.style.getPropertyValue('--position'),
+          indicatorVisibility: indicator.style.visibility,
+          indicatorStartPosition: indicator.style.getPropertyValue('--start-position'),
+        });
+
+        await waitFor(() => {
+          expect(getInsetStyles()).toEqual({
+            thumbVisibility: 'hidden',
+            thumbPosition: '0%',
+            indicatorVisibility: 'hidden',
+            indicatorStartPosition: '0%',
+          });
+        });
+
+        await user.click(screen.getByRole('button', { name: 'show' }));
+
+        await waitFor(() => {
+          expect(getInsetStyles()).toEqual({
+            thumbVisibility: '',
+            thumbPosition: '32%',
+            indicatorVisibility: '',
+            indicatorStartPosition: '32%',
+          });
+        });
+      },
+    );
+
+    it.skipIf(isJSDOM)(
+      'recomputes range inset positions when the slider becomes visible (strict: $strict)',
+      async () => {
+        const visible = shallowRef(false);
+
+        const { user } = await render(() => (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                visible.value = true;
+              }}
+            >
+              show
+            </button>
+            <div style={{ display: visible.value ? 'block' : 'none' }}>
+              <Slider.Root defaultValue={[30, 70]} thumbAlignment="edge" style={{ width: '100px' }}>
+                <Slider.Control
+                  data-testid="control"
+                  style={{ position: 'relative', width: '100%', height: '10px' }}
+                >
+                  <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                    <Slider.Indicator data-testid="indicator" />
+                    <Slider.Thumb
+                      data-testid="start-thumb"
+                      style={{ width: '10px', height: '10px' }}
+                    />
+                    <Slider.Thumb
+                      data-testid="end-thumb"
+                      style={{ width: '10px', height: '10px' }}
+                    />
+                  </Slider.Track>
+                </Slider.Control>
+              </Slider.Root>
+            </div>
+          </>
+        ));
+
+        const startThumb = screen.getByTestId('start-thumb');
+        const endThumb = screen.getByTestId('end-thumb');
+        const indicator = screen.getByTestId('indicator');
+        // Read the thumbs and indicator together so each poll checks one consistent snapshot.
+        const getInsetStyles = () => ({
+          startThumbVisibility: startThumb.style.visibility,
+          startThumbPosition: startThumb.style.getPropertyValue('--position'),
+          endThumbVisibility: endThumb.style.visibility,
+          endThumbPosition: endThumb.style.getPropertyValue('--position'),
+          indicatorVisibility: indicator.style.visibility,
+          indicatorStartPosition: indicator.style.getPropertyValue('--start-position'),
+          indicatorRelativeSize: indicator.style.getPropertyValue('--relative-size'),
+        });
+
+        await waitFor(() => {
+          expect(getInsetStyles()).toEqual({
+            startThumbVisibility: 'hidden',
+            startThumbPosition: '0%',
+            endThumbVisibility: 'hidden',
+            endThumbPosition: '0%',
+            indicatorVisibility: 'hidden',
+            indicatorStartPosition: '0%',
+            indicatorRelativeSize: '0%',
+          });
+        });
+
+        await user.click(screen.getByRole('button', { name: 'show' }));
+
+        await waitFor(() => {
+          expect(getInsetStyles()).toEqual({
+            startThumbVisibility: '',
+            startThumbPosition: '32%',
+            endThumbVisibility: '',
+            endThumbPosition: '68%',
+            indicatorVisibility: '',
+            indicatorStartPosition: '32%',
+            indicatorRelativeSize: '36%',
+          });
+        });
+      },
+    );
+
+    it.skipIf(isJSDOM)('recomputes inset positions when the control resizes', async () => {
+      const App = defineComponent(
+        (props: { width: number }) => () => (
+          <Slider.Root defaultValue={0} thumbAlignment="edge" style={{ width: `${props.width}px` }}>
+            <Slider.Control
+              data-testid="control"
+              style={{ position: 'relative', width: '100%', height: '10px' }}
+            >
+              <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                <Slider.Thumb data-testid="thumb" style={{ width: '40px', height: '10px' }} />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
+        ),
+        { props: ['width'] },
+      );
+
+      const { setProps } = await render(<App width={200} />);
+
+      const control = screen.getByTestId('control');
+      const thumb = screen.getByTestId('thumb');
+      const getThumbStartGap = () =>
+        thumb.getBoundingClientRect().left - control.getBoundingClientRect().left;
+
+      await waitFor(() => {
+        expect(getThumbStartGap()).toBeCloseTo(0);
+      });
+
+      await setProps({ width: 600 });
+
+      expect(control.getBoundingClientRect().width).toBe(600);
+      await waitFor(() => {
+        expect(getThumbStartGap()).toBeCloseTo(0);
+      });
+    });
+
+    it.skipIf(isJSDOM)('recomputes inset positions when the value changes', async () => {
+      await render(
+        <Slider.Root defaultValue={0} thumbAlignment="edge" style={{ width: '200px' }}>
+          <Slider.Control
+            data-testid="control"
+            style={{ position: 'relative', width: '100%', height: '10px' }}
+          >
+            <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+              <Slider.Thumb data-testid="thumb" style={{ width: '40px', height: '10px' }} />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      const thumb = screen.getByTestId('thumb');
+      const getThumbStartGap = () =>
+        thumb.getBoundingClientRect().left - control.getBoundingClientRect().left;
+      const getThumbEndGap = () =>
+        control.getBoundingClientRect().right - thumb.getBoundingClientRect().right;
+
+      await waitFor(() => {
+        expect(getThumbStartGap()).toBeCloseTo(0);
+      });
+      // Let the ResizeObserver deliver its initial callback, so it can't recompute after the key press.
+      await waitForFrames();
+
+      const slider = screen.getByRole('slider');
+      slider.focus();
+      await flushMicrotasks();
+      await fireEvent.keyDown(slider, { key: 'End' });
+
+      expect(slider).toHaveAttribute('aria-valuenow', '100');
+      await waitFor(() => {
+        expect(getThumbEndGap()).toBeCloseTo(0);
+      });
+    });
+
+    it.skipIf(isJSDOM)('hides the thumb when min and max become equal', async () => {
+      const App = defineComponent(
+        (props: { max: number }) => () => (
+          <Slider.Root
+            value={0}
+            min={0}
+            max={props.max}
+            thumbAlignment="edge"
+            style={{ width: '200px' }}
+          >
+            <Slider.Control style={{ position: 'relative', width: '100%', height: '10px' }}>
+              <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                <Slider.Thumb data-testid="thumb" style={{ width: '40px', height: '10px' }} />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
+        ),
+        { props: ['max'] },
+      );
+
+      const { setProps } = await render(<App max={100} />);
+      const thumb = screen.getByTestId('thumb');
+
+      await waitFor(() => {
+        expect(thumb.style.visibility).toBe('');
+      });
+
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => warnSpy.mockRestore());
+
+      await setProps({ max: 0 });
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Vase UI: Slider `max` must be greater than `min`. With `max` at or below `min`, the slider has no range of values to choose from. Set `max` above `min`.',
+      );
+
+      await waitFor(() => {
+        expect(thumb.style.visibility).toBe('hidden');
+      });
+    });
+
+    it.skipIf(isJSDOM).each([
+      { name: 'with a resize', nextWidth: 600 },
+      { name: 'without a resize', nextWidth: 200 },
+    ])(
+      'moves the indicator end to a thumb that becomes the last thumb ($name)',
+      async ({ nextWidth }) => {
+        const App = defineComponent(
+          (props: { value: number[]; width: number }) => () => (
+            <Slider.Root
+              value={props.value}
+              thumbAlignment="edge"
+              style={{ width: `${props.width}px` }}
+            >
+              <Slider.Control
+                data-testid="control"
+                style={{ position: 'relative', width: '100%', height: '10px' }}
+              >
+                <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                  <Slider.Indicator data-testid="indicator" />
+                  {props.value.map((_, index) => (
+                    <Slider.Thumb
+                      key={index}
+                      index={index}
+                      data-testid={`thumb-${index}`}
+                      style={{ width: '40px', height: '10px' }}
+                    />
+                  ))}
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          ),
+          { props: ['value', 'width'] },
+        );
+
+        const { setProps } = await render(<App value={[20, 50, 80]} width={200} />);
+
+        const control = screen.getByTestId('control');
+        const indicator = screen.getByTestId('indicator');
+        const getIndicatorEnd = () =>
+          indicator.getBoundingClientRect().right - control.getBoundingClientRect().left;
+        const getThumbCenter = (thumb: HTMLElement) => {
+          const rect = thumb.getBoundingClientRect();
+          return rect.left + rect.width / 2 - control.getBoundingClientRect().left;
+        };
+
+        await waitFor(() => {
+          expect(getIndicatorEnd()).toBeCloseTo(getThumbCenter(screen.getByTestId('thumb-2')));
+        });
+        // Let the ResizeObserver deliver its initial callback, so it can't recompute after the update.
+        await waitForFrames();
+
+        await setProps({ value: [20, 50], width: nextWidth });
+
+        expect(screen.queryByTestId('thumb-2')).toBe(null);
+        const thumb = screen.getByTestId('thumb-1');
+        await waitFor(() => {
+          expect(getIndicatorEnd()).toBeCloseTo(getThumbCenter(thumb));
+        });
+      },
+    );
+
+    it.skipIf(isJSDOM)(
+      'moves the indicator start to a thumb that becomes the first thumb',
+      async () => {
+        const App = defineComponent(
+          (props: { value: number[] }) => () => (
+            <Slider.Root value={props.value} thumbAlignment="edge" style={{ width: '200px' }}>
+              <Slider.Control
+                data-testid="control"
+                style={{ position: 'relative', width: '100%', height: '10px' }}
+              >
+                <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                  <Slider.Indicator data-testid="indicator" />
+                  {props.value.map((thumbValue, index) => (
+                    <Slider.Thumb
+                      key={thumbValue}
+                      index={index}
+                      data-testid={`thumb-${thumbValue}`}
+                      style={{ width: '40px', height: '10px' }}
+                    />
+                  ))}
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          ),
+          { props: ['value'] },
+        );
+
+        const { setProps } = await render(<App value={[20, 50, 80]} />);
+
+        const control = screen.getByTestId('control');
+        const indicator = screen.getByTestId('indicator');
+        const getIndicatorStart = () =>
+          indicator.getBoundingClientRect().left - control.getBoundingClientRect().left;
+        const getThumbCenter = (thumb: HTMLElement) => {
+          const rect = thumb.getBoundingClientRect();
+          return rect.left + rect.width / 2 - control.getBoundingClientRect().left;
+        };
+
+        await waitFor(() => {
+          expect(getIndicatorStart()).toBeCloseTo(getThumbCenter(screen.getByTestId('thumb-20')));
+        });
+        // Let the ResizeObserver deliver its initial callback, so it can't recompute after the update.
+        await waitForFrames();
+
+        await setProps({ value: [50, 80] });
+
+        expect(screen.queryByTestId('thumb-20')).toBe(null);
+        const thumb = screen.getByTestId('thumb-50');
+        await waitFor(() => {
+          expect(getIndicatorStart()).toBeCloseTo(getThumbCenter(thumb));
+        });
+      },
+    );
+
+    it.skipIf(isJSDOM)(
+      'disconnects its ResizeObserver when the slider unmounts during the mount measurement',
+      async () => {
+        const proto = ResizeObserver.prototype;
+        const originalObserve = proto.observe;
+        const originalDisconnect = proto.disconnect;
+        const observedTargets = new Map<ResizeObserver, Element[]>();
+        const disconnected = new Set<ResizeObserver>();
+        const observeSpy = vi.spyOn(proto, 'observe').mockImplementation(function observe(
+          this: ResizeObserver,
+          target: Element,
+          options?: ResizeObserverOptions,
+        ) {
+          observedTargets.set(this, [...(observedTargets.get(this) ?? []), target]);
+          return originalObserve.call(this, target, options);
+        });
+        const disconnectSpy = vi.spyOn(proto, 'disconnect').mockImplementation(function disconnect(
+          this: ResizeObserver,
+        ) {
+          disconnected.add(this);
+          return originalDisconnect.call(this);
+        });
+        onTestFinished(() => {
+          observeSpy.mockRestore();
+          disconnectSpy.mockRestore();
+        });
+
+        const handleShown = vi.fn();
+        const mounted = shallowRef(true);
+
+        // Unmounts the slider once the indicator is positioned,
+        // which happens inside the flush of the mount measurement.
+        const UnmountOnShow = defineComponent({
+          inheritAttrs: false,
+          props: { onShown: { type: Function, required: true } },
+          setup(props) {
+            const attrs = useAttrs();
+            const check = () => {
+              if ((attrs.style as { visibility?: string } | undefined)?.visibility !== 'hidden') {
+                props.onShown();
+              }
+            };
+            onMounted(check);
+            onUpdated(check);
+            return () => h('div', attrs);
+          },
+        });
+
+        const onShown = () => {
+          handleShown();
+          mounted.value = false;
+        };
+
+        await render(() =>
+          mounted.value ? (
+            <Slider.Root defaultValue={30} thumbAlignment="edge" style={{ width: '200px' }}>
+              <Slider.Control
+                data-testid="control"
+                style={{ position: 'relative', width: '100%', height: '10px' }}
+              >
+                <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                  <Slider.Indicator
+                    v-slots={{
+                      render: ({ props }: { props: Record<string, unknown> }) => (
+                        <UnmountOnShow {...props} onShown={onShown} />
+                      ),
+                    }}
+                  />
+                  <Slider.Thumb style={{ width: '40px', height: '10px' }} />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          ) : (
+            <span />
+          ),
+        );
+        await waitForFrames();
+
+        expect(handleShown).toHaveBeenCalledTimes(1);
+        expect(screen.queryByTestId('control')).toBe(null);
+
+        const controlObservers = [...observedTargets].filter(([, targets]) =>
+          targets.some((target) => target.getAttribute('data-testid') === 'control'),
+        );
+        // Without an observer, the next check passes with nothing to check.
+        expect(controlObservers.length).toBeGreaterThan(0);
+        expect(controlObservers.filter(([observer]) => !disconnected.has(observer))).toEqual([]);
+      },
+    );
+
+    describe.skipIf(isJSDOM)('updates inset positions before the next paint', () => {
+      async function renderEdgeSlider() {
+        await render(
+          <div data-testid="wrapper">
+            <Slider.Root defaultValue={0} thumbAlignment="edge" style={{ width: '200px' }}>
+              <Slider.Control
+                data-testid="control"
+                style={{ position: 'relative', width: '100%', height: '10px' }}
+              >
+                <Slider.Track style={{ position: 'relative', width: '100%', height: '10px' }}>
+                  <Slider.Thumb data-testid="thumb" style={{ width: '40px', height: '10px' }} />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </div>,
+        );
+
+        const control = screen.getByTestId('control');
+        const thumb = screen.getByTestId('thumb');
+
+        await waitFor(() => {
+          expect(thumb.getBoundingClientRect().left - control.getBoundingClientRect().left).toBe(0);
+        });
+        // Let the slider's ResizeObserver deliver its initial callback.
+        await waitForFrames();
+
+        return { control, thumb };
+      }
+
+      // Observers are notified in creation order before paint, so this callback sees what's painted.
+      function readThumbOnNextResize(control: HTMLElement, thumb: HTMLElement) {
+        return new Promise<{ startGap: number; visibility: string }>((resolve) => {
+          const observer = new ResizeObserver(() => {
+            const controlRect = control.getBoundingClientRect();
+            if (controlRect.width === 0) {
+              return;
+            }
+            observer.disconnect();
+            resolve({
+              startGap: thumb.getBoundingClientRect().left - controlRect.left,
+              visibility: thumb.style.visibility,
+            });
+          });
+          observer.observe(control);
+        });
+      }
+
+      it('after the control resizes', async () => {
+        const { control, thumb } = await renderEdgeSlider();
+        const painted = readThumbOnNextResize(control, thumb);
+
+        control.parentElement!.style.width = '600px';
+        await waitForFrames();
+
+        expect(await painted).toEqual({ startGap: 0, visibility: '' });
+      });
+
+      it('after the slider is shown again', async () => {
+        const { control, thumb } = await renderEdgeSlider();
+        const wrapper = screen.getByTestId('wrapper');
+
+        wrapper.style.display = 'none';
+        await waitForFrames();
+        expect(control.getBoundingClientRect().width).toBe(0);
+
+        const painted = readThumbOnNextResize(control, thumb);
+        wrapper.style.display = '';
+        await waitForFrames();
+
+        expect(await painted).toEqual({ startGap: 0, visibility: '' });
+      });
+    });
+  });
+
+  /**
+   * Browser tests render with 1024px width by default, so most tests here set
+   * the component to `width: 100px` to make the asserted values more readable.
+   */
+  describe.skipIf(isJSDOM || isWebKit || typeof Touch === 'undefined')('positioning styles', () => {
+    describe('positions the thumb when the controlled value changes externally', () => {
+      it('single thumb', async () => {
+        const value = shallowRef(20);
+        await render(() => (
+          <>
+            <button
+              onClick={() => {
+                value.value = 55;
+              }}
+            />
+            <Slider.Root
+              value={value.value}
+              onValueChange={(newValue) => {
+                value.value = newValue as number;
+              }}
+              style={{
+                width: '100px',
+              }}
+            >
+              <Slider.Control data-testid="control">
+                <Slider.Track>
+                  <Slider.Indicator />
+                  <Slider.Thumb data-testid="thumb" />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </>
+        ));
+
+        const thumbStyles = getComputedStyle(screen.getByTestId('thumb'));
+        expect(thumbStyles.getPropertyValue('left')).toBe('20px');
+
+        await fireEvent.click(screen.getByRole('button'));
+        expect(thumbStyles.getPropertyValue('left')).toBe('55px');
+      });
+
+      it('multiple thumbs', async () => {
+        const value = shallowRef([20, 50]);
+        await render(() => (
+          <>
+            <button
+              onClick={() => {
+                value.value = [33, 72];
+              }}
+            />
+            <Slider.Root
+              value={value.value}
+              onValueChange={(newValue) => {
+                value.value = newValue as number[];
+              }}
+              style={{
+                width: '100px',
+              }}
+            >
+              <Slider.Control data-testid="control">
+                <Slider.Track>
+                  <Slider.Indicator />
+                  <Slider.Thumb data-testid="thumb" />
+                  <Slider.Thumb data-testid="thumb" />
+                </Slider.Track>
+              </Slider.Control>
+            </Slider.Root>
+          </>
+        ));
+
+        const computedStyles = {
+          thumb1: getComputedStyle(screen.getAllByTestId('thumb')[0]),
+          thumb2: getComputedStyle(screen.getAllByTestId('thumb')[1]),
+        };
+
+        expect(computedStyles.thumb1.getPropertyValue('left')).toBe('20px');
+        expect(computedStyles.thumb2.getPropertyValue('left')).toBe('50px');
+
+        await fireEvent.click(screen.getByRole('button'));
+        expect(computedStyles.thumb1.getPropertyValue('left')).toBe('33px');
+        expect(computedStyles.thumb2.getPropertyValue('left')).toBe('72px');
+      });
+    });
+
+    it('thumb should not go out of bounds when the controlled value goes out of bounds', async () => {
+      const value = shallowRef(50);
+      const { user } = await render(() => (
+        <>
+          <button
+            onClick={() => {
+              value.value = 119.9;
+            }}
+          >
+            max
+          </button>
+          <button
+            onClick={() => {
+              value.value = -7.31;
+            }}
+          >
+            min
+          </button>
+          <Slider.Root
+            value={value.value}
+            onValueChange={(newValue) => {
+              value.value = newValue;
+            }}
+            min={0}
+            max={100}
+            style={{ width: '100px' }}
+          >
+            <Slider.Control data-testid="control">
+              <Slider.Track>
+                <Slider.Indicator />
+                <Slider.Thumb data-testid="thumb" />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
+        </>
+      ));
+
+      const thumbStyles = getComputedStyle(screen.getByTestId('thumb'));
+      expect(thumbStyles.getPropertyValue('left')).toBe('50px');
+
+      await user.click(screen.getByRole('button', { name: 'max' }));
+      expect(thumbStyles.getPropertyValue('left')).toBe('100px');
+
+      await user.click(screen.getByRole('button', { name: 'min' }));
+      expect(thumbStyles.getPropertyValue('left')).toBe('0px');
     });
   });
 

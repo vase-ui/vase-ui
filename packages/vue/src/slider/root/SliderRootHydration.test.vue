@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Slider from '../index.parts';
+import { Slider } from '@vase-ui/vue/slider';
 
 defineProps<{
   id?: string | undefined;
