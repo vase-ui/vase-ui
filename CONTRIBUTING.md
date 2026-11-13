@@ -752,6 +752,18 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
 - Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
 
+### Toast store
+
+The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+
+- `ToastStore` is a `ReactiveStore`. Code can make one with no component.
+- A reader calls a selector of the store in a `computed`. `useToastManager()` does this for `toasts`, so it returns `toasts` as a `ComputedRef`. Its four methods are plain functions.
+- A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
+- `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
+- The `title` and the `description` of a toast are `VNodeChild` values: a text, a number, a vnode, or an array of them.
+- `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
+- `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
+
 ### Composite
 
 A composite is a group of items with one tab stop, such as a toolbar or a list of tabs. Its code is in `src/internals/composite`.
@@ -1096,6 +1108,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `clock.tick(n)`                                                                                            | `vi.advanceTimersByTime(n)`, then `await flushMicrotasks()`                                                                                                                                                                                               |
 | `clock.tickAsync(n)`                                                                                       | `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`                                                                                                                                                                                    |
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
+| `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]`                              | `toasts.value`, because the composable returns a ref                                                                                                                                                                                                      |
 | A function component that calls a hook and spreads the rest of its props                                   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`.                                                                                            |
 | `useTestInteractions([useX(…), …])` in a test component                                                    | The same call in `setup`. In the render function, call the functions of the result that the upstream test component calls. A call of these functions in `setup` reads the props only one time.                                                            |
 | `<CompositeList>`, `<CompositeRoot>` or `<CompositeItem>` in a test                                        | The fixture part of `packages/vue/test/fixtures`, imported with the upstream name                                                                                                                                                                         |
