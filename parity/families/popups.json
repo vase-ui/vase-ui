@@ -31,7 +31,7 @@
       "describe": ["concrete popup handles"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/store/MenuHandle.ts",
-      "reason": "The cases run for the handles of Alert Dialog, Dialog, Menu, Popover, Preview Card and Tooltip, which Vase UI does not have. Menu comes last, so the row names its file."
+      "reason": "The cases run for the handles of Alert Dialog, Dialog, Menu, Popover, Preview Card and Tooltip, and Vase UI has only a part of them. Menu comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
