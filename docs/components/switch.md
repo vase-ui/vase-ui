@@ -37,7 +37,7 @@ Import the component and assemble its parts:
 
 `Switch.Root` renders its element and a hidden `<input>` after it. The input gives the switch the form behavior of a native checkbox. A reset of the form puts an uncontrolled switch back to `defaultChecked`. A controlled switch does not change.
 
-`Switch.Root` thus has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+Because of the hidden input, `Switch.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
 ## Examples
 
