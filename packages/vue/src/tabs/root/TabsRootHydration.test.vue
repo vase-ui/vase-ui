@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Tabs } from '@vase-ui/vue/tabs';
-import TabsPanelProbe from './TabsPanelProbe.test.vue';
 
 withDefaults(
   defineProps<{
@@ -22,7 +21,7 @@ withDefaults(
     :orientation="orientation"
     data-testid="root"
   >
-    <TabsPanelProbe v-if="panel === 'before'" :value="numeric ? 0 : 'a'" id="panel-a" />
+    <Tabs.Panel v-if="panel === 'before'" :value="numeric ? 0 : 'a'" id="panel-a" />
     <Tabs.List>
       <Tabs.Tab :value="numeric ? 0 : 'a'" :disabled="firstDisabled" id="tab-a" data-testid="a">
         A
@@ -30,6 +29,6 @@ withDefaults(
       <Tabs.Tab :value="numeric ? 1 : 'b'" data-testid="b">B</Tabs.Tab>
       <Tabs.Tab :value="numeric ? 2 : 'c'" data-testid="c">C</Tabs.Tab>
     </Tabs.List>
-    <TabsPanelProbe v-if="panel === 'after'" :value="numeric ? 0 : 'a'" id="panel-a" />
+    <Tabs.Panel v-if="panel === 'after'" :value="numeric ? 0 : 'a'" id="panel-a" />
   </Tabs.Root>
 </template>

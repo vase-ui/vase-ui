@@ -1,11 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import { Tabs } from '@vase-ui/vue/tabs';
 import TabsRootHydration from './TabsRootHydration.test.vue';
+
+/** The start tag of the element that has the selector text. */
+function findTag(html: string, selector: string) {
+  return html.match(new RegExp(`<[^>]*${selector}[^>]*>`))?.[0];
+}
+
+function readTag(html: string, selector: string) {
+  const tag = findTag(html, selector);
+  if (tag === undefined) {
+    throw new Error(`The HTML has no element with ${selector}:\n${html}`);
+  }
+  return tag;
+}
 
 // The attribute order in the HTML is not part of the test.
 function readAttribute(html: string, selector: string, name: string) {
-  const tag = html.match(new RegExp(`<[^>]*${selector}[^>]*>`))?.[0];
-  return tag?.match(new RegExp(` ${name}="([^"]*)"`))?.[1];
+  return findTag(html, selector)?.match(new RegExp(` ${name}="([^"]*)"`))?.[1];
+}
+
+// Vue writes a Boolean attribute, and an attribute with an empty value, with no `=` on a server.
+function hasBareAttribute(tag: string, name: string) {
+  return new RegExp(` ${name}(?=[ >/])`).test(tag);
 }
 
 function readTabindexes(html: string) {
@@ -53,6 +71,37 @@ describe('<Tabs.Root />', () => {
       const html = await renderToString(<TabsRootHydration {...props} />);
 
       expect(readTabindexes(html)).toEqual([0, 1, 2].map((index) => (index === stop ? '0' : '-1')));
+    });
+
+    it('renders the open panel, a hidden panel that stays mounted and no other panel', async () => {
+      const html = await renderToString(
+        <Tabs.Root defaultValue="a">
+          <Tabs.List>
+            <Tabs.Tab value="a" />
+            <Tabs.Tab value="b" />
+            <Tabs.Tab value="c" />
+          </Tabs.List>
+          <Tabs.Panel value="a" data-testid="open" />
+          <Tabs.Panel value="b" keepMounted data-testid="hidden" />
+          <Tabs.Panel value="c" data-testid="unmounted" />
+        </Tabs.Root>,
+      );
+      const open = readTag(html, 'data-testid="open"');
+      const hidden = readTag(html, 'data-testid="hidden"');
+
+      expect(open).toContain(' tabindex="0"');
+      expect(hasBareAttribute(open, 'hidden')).toBe(false);
+      expect(hasBareAttribute(open, 'inert')).toBe(false);
+      expect(hasBareAttribute(open, 'data-hidden')).toBe(false);
+      // A panel that is open in the server HTML does not animate in.
+      expect(hasBareAttribute(open, 'data-starting-style')).toBe(false);
+
+      expect(hidden).toContain(' tabindex="-1"');
+      expect(hasBareAttribute(hidden, 'hidden')).toBe(true);
+      expect(hasBareAttribute(hidden, 'inert')).toBe(true);
+      expect(hasBareAttribute(hidden, 'data-hidden')).toBe(true);
+
+      expect(html).not.toContain('data-testid="unmounted"');
     });
 
     it.each([
