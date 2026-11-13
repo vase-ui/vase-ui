@@ -96,7 +96,7 @@ describe('useFieldControlRegistration', () => {
       const field = shallowRef<FieldScopeInstance | null>(null);
       const Test = defineComponent(
         (props: { errors: Errors }) => () => (
-          <FormScope errors={props.errors}>
+          <FormScope data-testid="form" errors={props.errors}>
             <FieldScope ref={field} name="root-name" data-testid="root">
               <FieldControlPart id="control" name="control-name" />
             </FieldScope>
@@ -107,6 +107,7 @@ describe('useFieldControlRegistration', () => {
       const { rerender } = await render(<Test errors={{ 'control-name': 'taken' }} />);
 
       expect(field.value!.registeredFieldName).toBeUndefined();
+      expect(screen.getByTestId('form')).toHaveAttribute('data-fields', 'root-name');
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
 
       await rerender(<Test errors={{ 'root-name': 'taken' }} />);
