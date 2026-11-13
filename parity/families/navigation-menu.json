@@ -1,0 +1,398 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/navigation-menu/**",
+    "docs/src/app/(docs)/react/components/navigation-menu/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Backdrop`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdropDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Backdrop`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Content`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContentDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Content`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopupDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortalContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Trigger`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTriggerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Trigger`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `NavigationMenu.Viewport`."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuDismissContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have the dismissal of Navigation Menu."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Arrow`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Backdrop`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Popup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Portal`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Positioner`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Trigger`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Viewport`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the file renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",
+      "kind": "not-applicable",
+      "reason": "The cases assert the `displayName` of a React context. A Vue injection key has no such name."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />"],
+      "title": "does not apply aria-orientation to the top-level list or root element",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "The case renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />"],
+      "title": "does not apply aria-orientation to nested lists or root elements",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "The case renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "interactions"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "patient click threshold"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: defaultValue"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: onValueChange"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: delay"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: closeDelay"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: disabled"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: actionsRef"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "prop: side"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "tabbing"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested popups"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested menus"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["initial open"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.test.tsx",
+      "describe": ["<NavigationMenu.Link />", "prop: closeOnClick"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/link/NavigationMenuLink.test.tsx",
+      "describe": ["<NavigationMenu.Link />"],
+      "title": "keeps the menu open when a link loses focus without a related target",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "The case renders `NavigationMenu.Trigger` and `NavigationMenu.Content`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuList.test.tsx",
+      "describe": ["<NavigationMenu.List />"],
+      "title": "stops vertical navigation keys from escaping the list",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "The case renders `NavigationMenu.Trigger`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/list/NavigationMenuList.test.tsx",
+      "describe": ["<NavigationMenu.List />", "item removal"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Each case of the block renders `NavigationMenu.Trigger`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Root",
+      "prop": "render",
+      "kind": "not-applicable",
+      "reason": "The default tag is `nav`, or `div` when the root is nested. The part decides it in `setup`, so the prop `as` has no static default."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Arrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Backdrop",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Backdrop`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Content",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Content`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Portal`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Positioner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Trigger`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "Viewport",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Viewport`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuBackdropDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Backdrop`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuContentDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Content`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuPositionerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "entry": "NavigationMenuTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+      "reason": "Vase UI does not have `NavigationMenu.Trigger`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
