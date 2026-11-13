@@ -1,0 +1,41 @@
+{
+  "upstreamPaths": ["packages/react/src/utils/popups/focus/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the focus manager ports the file, with its tests."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/FocusGuard.tsx",
+      "kind": "waits-on",
+      "reason": "The pull request that adds the focus guard ports the file."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/enqueueFocus.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that first needs the file ports it."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/markOthers.ts",
+      "kind": "waits-on",
+      "reason": "The pull request that first needs the file ports it, with its tests."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
+      "reason": "The file tests `FloatingFocusManager.tsx`."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/focus/markOthers.test.ts",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
+      "reason": "The file tests `markOthers.ts`."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

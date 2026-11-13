@@ -50,6 +50,20 @@ export interface AccordionRootProps<Value = any>
    */
   disabled?: boolean | undefined;
   /**
+   * Allows the browser's built-in page search to find and expand the panel contents.
+   *
+   * Overrides the `keepMounted` prop and uses `hidden="until-found"`
+   * to hide the element without removing it from the DOM.
+   * @default false
+   */
+  hiddenUntilFound?: boolean | undefined;
+  /**
+   * Whether to keep the element in the DOM while the panel is closed.
+   * This prop is ignored when `hiddenUntilFound` is used.
+   * @default false
+   */
+  keepMounted?: boolean | undefined;
+  /**
    * Whether multiple items can be open at the same time.
    * @default false
    */
@@ -67,9 +81,10 @@ const rootStateAttributesMapping = {
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, provide, shallowRef } from 'vue';
+import { computed, onMounted, provide, shallowRef, watch } from 'vue';
 import { EMPTY_ARRAY } from '../../common/empty';
 import { useControlled } from '../../common/useControlled';
+import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -77,11 +92,15 @@ import { AccordionRootContext } from './AccordionRootContext';
 
 defineOptions({ inheritAttrs: false });
 
+// An absent Boolean prop is `false` in Vue. `keepMounted` stays `undefined`, because only an
+// explicit `keepMounted={false}` gets the warning below.
 const props = withDefaults(defineProps<AccordionRootProps<Value>>(), {
   as: 'div',
   value: undefined,
   defaultValue: undefined,
   disabled: false,
+  hiddenUntilFound: false,
+  keepMounted: undefined,
   multiple: false,
 });
 
@@ -98,6 +117,20 @@ defineSlots<{
   default(props: { state: AccordionRootState<Value> }): unknown;
   render: ComponentRenderFn<HTMLProps, AccordionRootState<Value>>;
 }>();
+
+if (process.env.NODE_ENV !== 'production') {
+  const warnWhenKeepMountedIsIgnored = () => {
+    if (props.hiddenUntilFound && props.keepMounted === false) {
+      warn(
+        'The `keepMounted` prop of `Accordion.Root` is `false` and `hiddenUntilFound` is enabled.',
+        'The panels must stay mounted while they are closed, so `keepMounted` has no effect.',
+        'Remove `keepMounted`, or remove `hiddenUntilFound`.',
+      );
+    }
+  };
+  onMounted(warnWhenKeepMountedIsIgnored);
+  watch([() => props.hiddenUntilFound, () => props.keepMounted], warnWhenKeepMountedIsIgnored);
+}
 
 useCompositeList({ elementsRef: shallowRef([]) });
 
@@ -140,6 +173,8 @@ const state = computed<AccordionRootState<Value>>(() => ({
 provide(AccordionRootContext, {
   disabled: computed(() => props.disabled),
   handleValueChange,
+  hiddenUntilFound: computed(() => props.hiddenUntilFound),
+  keepMounted: computed(() => props.keepMounted ?? false),
   state,
   value: openValues,
 });
