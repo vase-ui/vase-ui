@@ -53,11 +53,6 @@
       "reason": "The pull request that ports the Base UI cases of `useDismiss` adds the test helper."
     },
     {
-      "upstream": "packages/react/test/useTestInteractions.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the test helper of the interactions ports the file, with its tests."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useClick.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/interactions/useClick.ts",
@@ -73,7 +68,7 @@
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
-      "reason": "The file makes each popup with the test helpers `useFloating` and `useTestInteractions` of Base UI, which Vase UI does not have. The pull request that adds `useFloating` ports the cases."
+      "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that adds `useFloating` ports the cases."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useFocus.test.tsx",
@@ -114,9 +109,10 @@
     },
     {
       "upstream": "packages/react/test/useTestInteractions.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/useTestInteractions.ts",
-      "reason": "The file tests `useTestInteractions.ts`."
+      "describe": ["useTestInteractions"],
+      "title": "prop getters are memoized",
+      "kind": "not-applicable",
+      "reason": "`setup` runs one time, so the composable makes the getters one time and their identity cannot change. React makes new getters when a props object of the list changes. A new case covers the half that applies: a getter reads the current props of an entry that changes."
     }
   ],
   "surfaceAdditions": [],
