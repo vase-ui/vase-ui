@@ -1,0 +1,605 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/radio/**",
+    "docs/src/app/(docs)/react/components/radio/**"
+  ],
+  "sources": [
+    "packages/react/src/radio/index.parts.ts",
+    "packages/react/src/radio/index.ts",
+    "packages/react/src/radio/indicator/RadioIndicator.tsx",
+    "packages/react/src/radio/indicator/RadioIndicatorDataAttributes.ts",
+    "packages/react/src/radio/root/RadioRoot.tsx",
+    "packages/react/src/radio/root/RadioRootContext.ts",
+    "packages/react/src/radio/root/RadioRootDataAttributes.ts",
+    "packages/react/src/radio/utils/stateAttributesMapping.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/radio/root/RadioRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/radio/indicator/RadioIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Radio.Indicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Radio.Indicator />"
+          ],
+          "title": "should remove the indicator when there is no exit animation defined"
+        },
+        {
+          "describe": [
+            "<Radio.Indicator />"
+          ],
+          "title": "should remove the indicator when the animation finishes"
+        },
+        {
+          "describe": [
+            "<Radio.Indicator />",
+            "animations"
+          ],
+          "title": "triggers enter animation via data-starting-style when mounting",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Radio.Indicator />",
+            "animations"
+          ],
+          "title": "applies data-ending-style before unmount",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/radio/root/RadioRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "sets checked and unchecked data attributes"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "does not forward `value` prop"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "allows `null` value"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "associates `id` with the native button when `nativeButton=true`"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "sets `aria-labelledby` from a sibling label associated with the hidden input"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "updates fallback `aria-labelledby` when the hidden input id changes"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "prefers `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Radio.Root />"
+          ],
+          "title": "prefers a render element's `aria-label` over an associated label"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: onClick"
+          ],
+          "title": "propagates a single click event to ancestors per user click (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: onClick"
+          ],
+          "title": "does not propagate to ancestors when stopPropagation() is called (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: onClick"
+          ],
+          "title": "does not propagate a click to ancestors when selecting with arrow keys"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: disabled"
+          ],
+          "title": "uses aria-disabled instead of HTML disabled"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not acquire the field focused state when focused programmatically"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: disabled"
+          ],
+          "title": "keeps the tab stop on a checked radio that is disabled"
+        },
+        {
+          "describe": [
+            "<Radio.Root />",
+            "prop: readOnly"
+          ],
+          "title": "acquires the field focused state on focus"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/radio/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "span",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "Value",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Radio.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Radio.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Radio.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "RadioRootState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type RadioRootState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Radio.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Radio.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Radio.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "RadioIndicatorState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type RadioIndicatorState = {\n    transitionStatus: TransitionStatus;\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "RadioIndicatorDataAttributes",
+          "code": "declare namespace RadioIndicatorDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "RadioRootDataAttributes",
+          "code": "declare namespace RadioRootDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": []
+}

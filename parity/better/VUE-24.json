@@ -1,0 +1,10 @@
+{
+  "id": "VUE-24",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/hoverIntent.ts#L269-L273",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts#L100-L108",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tooltip/root/TooltipRoot.tsx#L65-L69"
+  ],
+  "behavior": "A trigger that gets disabled stops its open delay, its rest delay and its safe polygon. Base UI keeps the timer, so the popup opens when the delay ends. The owner of a Tooltip then hears `openChange(true)` and `openChange(false)` with the reason `disabled`, for a popup that never shows.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useHoverTriggerInteraction.ts"
+}

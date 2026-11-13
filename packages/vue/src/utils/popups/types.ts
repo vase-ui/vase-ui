@@ -7,6 +7,8 @@ import type { FloatingTreeStore } from './tree/FloatingTreeStore';
 
 export type ReferenceType = Element | VirtualElement;
 
+export type Delay = number | Partial<{ open: number; close: number }>;
+
 export type NarrowedElement<T> = T extends Element ? T : Element;
 
 export interface ExtendedElements {
