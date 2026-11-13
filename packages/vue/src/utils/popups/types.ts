@@ -171,3 +171,9 @@ export interface ElementProps {
 export type DismissElementProps = Required<
   Pick<ElementProps, 'reference' | 'floating' | 'trigger'>
 >;
+
+/**
+ * The props that `useClick` returns. Each handler does nothing while the composable is not enabled,
+ * so the object always has the `reference` member.
+ */
+export type ClickElementProps = Required<Pick<ElementProps, 'reference'>>;

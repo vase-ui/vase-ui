@@ -116,7 +116,7 @@ export type CheckboxRootChangeEventDetails =
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, shallowRef, watch } from 'vue';
+import { computed, nextTick, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { getDefaultFormSubmitter } from '../../common/getDefaultFormSubmitter';
 import { ownerWindow } from '../../common/owner';
@@ -144,6 +144,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
 import { getCheckboxStateAttributesMapping } from '../utils/getCheckboxStateAttributesMapping';
+import { CheckboxRootContext } from './CheckboxRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -354,7 +355,7 @@ watch(
   { flush: 'post' },
 );
 
-watch([isChecked, () => props.indeterminate], writeStateToInput, { flush: 'post' });
+watch(() => props.indeterminate, writeStateToInput, { flush: 'post' });
 
 const enterTimeout = useTimeout();
 
@@ -408,6 +409,8 @@ const state = computed<CheckboxRootState>(() => ({
   required: props.required,
   indeterminate: props.indeterminate,
 }));
+
+provide(CheckboxRootContext, state);
 
 const stateAttributesMapping = getCheckboxStateAttributesMapping(state);
 
