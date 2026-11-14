@@ -12,6 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import type { HTMLProps } from '../../internals/types';
 import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
@@ -51,6 +52,23 @@ describe('<Combobox.Clear />', () => {
     );
 
     expect(screen.queryByTestId('clear')).toBe(null);
+  });
+
+  it('renders and clears the typed value in no-selection mode', async () => {
+    const { user } = await render(
+      <Autocomplete.Root defaultValue="apple">
+        <Autocomplete.Input />
+        <Autocomplete.Clear data-testid="clear" />
+      </Autocomplete.Root>,
+    );
+
+    const input = screen.getByRole<HTMLInputElement>('combobox');
+    expect(input.value).toBe('apple');
+
+    await user.click(screen.getByTestId('clear'));
+
+    expect(input.value).toBe('');
+    expect(input).toHaveFocus();
   });
 
   it('clears after pointer interaction marks keyboard navigation inactive', async () => {
