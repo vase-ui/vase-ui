@@ -29,7 +29,9 @@
       <li><NuxtLink to="/portal">Portal</NuxtLink></li>
       <li><NuxtLink to="/toast">Toast</NuxtLink></li>
       <li><NuxtLink to="/select">Select</NuxtLink></li>
+      <li><NuxtLink to="/navigation-menu">Navigation Menu</NuxtLink></li>
       <li><NuxtLink to="/menu">Menu</NuxtLink></li>
+      <li><NuxtLink to="/preview-card">Preview Card</NuxtLink></li>
     </ul>
   </main>
 </template>

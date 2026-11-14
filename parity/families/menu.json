@@ -125,7 +125,7 @@
     {
       "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have this file of the `trigger` folder of Menu. The pull request that adds the part ports it."
+      "reason": "Vase UI does not have this file. It handles the press of a trigger in a menubar, and the trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/utils/findRootOwnerId.ts",

@@ -46,7 +46,7 @@ export interface MenuPopupProps
 import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
+import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
@@ -171,7 +171,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         }
       },
     },
-    transitionStatus.value === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
+    getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,
     { 'data-rootownerid': store.select('rootId') },
   ],
