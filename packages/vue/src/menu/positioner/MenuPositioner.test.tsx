@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { computed, defineComponent, shallowRef, toValue } from 'vue';
+import { defineComponent, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { Menubar } from '@vase-ui/vue/menubar';
 import * as Menu from '../index.parts';
