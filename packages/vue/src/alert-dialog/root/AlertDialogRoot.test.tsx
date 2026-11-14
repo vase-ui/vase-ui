@@ -5,6 +5,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  popupConformanceTests,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -43,6 +44,21 @@ const AlertDialogState = defineComponent({
 
 describe('<AlertDialog.Root />', () => {
   const { render } = createRenderer();
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <AlertDialog.Root {...props.root}>
+        <AlertDialog.Trigger {...props.trigger}>Open dialog</AlertDialog.Trigger>
+        <AlertDialog.Portal {...props.portal}>
+          <AlertDialog.Popup {...props.popup}>Dialog</AlertDialog.Popup>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+    ),
+    render,
+    triggerMouseAction: 'click',
+    expectedPopupRole: 'alertdialog',
+    expectedAriaHasPopupValue: 'dialog',
+  });
 
   it('ARIA attributes', async () => {
     await render(
