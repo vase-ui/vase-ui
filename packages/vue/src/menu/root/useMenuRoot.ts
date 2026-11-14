@@ -80,12 +80,6 @@ export interface UseMenuRootOptions {
    * @default true
    */
   allowEscape?: MaybeRefOrGetter<boolean | undefined>;
-  /**
-   * Whether the highlight leaves an item when the pointer leaves it. It is a value, a ref or a
-   * getter.
-   * @default true
-   */
-  resetOnPointerLeave?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 /**
@@ -420,7 +414,6 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     externalTree: () => (!virtualFocus && nested.value ? floatingTreeRoot.value : undefined),
     nestedReturnFocusRef: () => parentMenuStore?.context.virtualFocusRef?.value,
     focusItemOnHover: () => props.highlightItemOnHover ?? true,
-    resetOnPointerLeave: () => toValue(options.resetOnPointerLeave) ?? true,
   });
 
   const typeahead = useTypeahead(store, {
