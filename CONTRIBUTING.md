@@ -255,7 +255,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
-- The Viewport part of a popup family has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model.
+- The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`, so `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content.
 
 <!-- prettier-ignore -->
 ```vue
