@@ -85,6 +85,7 @@ if (rootContext === undefined && props.handle === undefined) {
     'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
   );
 }
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
 const store = computed<MenuHandleStore<any>>(() => handleStore.value ?? rootContext!.store);
 
 const thisTriggerId = useVaseUiId(() => props.id);
