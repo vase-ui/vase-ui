@@ -4,6 +4,7 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  fireTouch,
   flushMicrotasks,
   isJSDOM,
   screen,
@@ -45,35 +46,6 @@ function getAnchorRect(context: ContextMenuRootContext) {
 
 function createContextMenuEvent(init: MouseEventInit = {}) {
   return new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, ...init });
-}
-
-// Firefox on a desktop has no `TouchEvent`, and WebKit on a desktop refuses `new Touch()`. Those
-// engines get an `Event` with the `touches` and `changedTouches` lists.
-function fireTouch(
-  element: Element,
-  type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
-  points: Array<{ clientX: number; clientY: number }> = [],
-) {
-  const touchPoints = points.map((point, identifier) => ({
-    identifier,
-    target: element,
-    ...point,
-  }));
-  let event: Event;
-  try {
-    const touches = touchPoints.map((point) => new Touch(point));
-    event = new TouchEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      touches,
-      changedTouches: touches,
-    });
-  } catch {
-    event = new Event(type, { bubbles: true, cancelable: true });
-    Object.defineProperty(event, 'touches', { value: touchPoints });
-    Object.defineProperty(event, 'changedTouches', { value: touchPoints });
-  }
-  return fireEvent(element, event);
 }
 
 async function advance(milliseconds: number) {
@@ -369,7 +341,7 @@ describe('<ContextMenu.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
 
       await advance(500);
 
@@ -392,11 +364,11 @@ describe('<ContextMenu.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
 
       // Simulate touch move (more than 10px movement)
       // This should cancel the long press
-      await fireTouch(trigger, 'touchmove', [{ clientX: 120, clientY: 100 }]);
+      await fireTouch.move(trigger, { touches: [{ clientX: 120, clientY: 100 }] });
 
       await advance(500);
 
@@ -417,8 +389,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 105, clientY: 105 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 105, clientY: 105 }] });
 
       await advance(500);
 
@@ -440,8 +412,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchend');
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.end(trigger);
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -466,17 +438,17 @@ describe('<ContextMenu.Trigger />', () => {
       const firstTouch = { clientX: 100, clientY: 100 };
       const touches = [firstTouch, { clientX: 120, clientY: 100 }];
 
-      await fireTouch(trigger, 'touchstart', [firstTouch]);
-      await fireTouch(trigger, 'touchmove', touches);
-      await fireTouch(trigger, 'touchmove', [firstTouch]);
+      await fireTouch.start(trigger, { touches: [firstTouch] });
+      await fireTouch.move(trigger, { touches });
+      await fireTouch.move(trigger, { touches: [firstTouch] });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
       expect(screen.queryByRole('menu')).toBe(null);
 
-      await fireTouch(trigger, 'touchend');
-      await fireTouch(trigger, 'touchstart', [firstTouch]);
-      await fireTouch(trigger, 'touchstart', touches);
+      await fireTouch.end(trigger);
+      await fireTouch.start(trigger, { touches: [firstTouch] });
+      await fireTouch.start(trigger, { touches });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -496,7 +468,7 @@ describe('<ContextMenu.Trigger />', () => {
       );
 
       const trigger = screen.getByTestId('trigger');
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(500);
 
       await fireEvent.mouseDown(document.body);
@@ -523,7 +495,7 @@ describe('<ContextMenu.Trigger />', () => {
 
       const trigger = screen.getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
 
       await advance(500);
 
@@ -618,7 +590,7 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
 
       expect(probe.context.allowMouseUpTriggerRef.value).toBe(false);
 
@@ -780,7 +752,7 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(499);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -809,8 +781,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [point]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [point] });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -825,8 +797,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 110, clientY: 90 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 110, clientY: 90 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
@@ -841,8 +813,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchcancel');
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.cancel(trigger);
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -864,7 +836,7 @@ describe('<ContextMenu.Trigger />', () => {
         </ContextMenu.Root>,
       );
 
-      await fireTouch(getByTestId('trigger'), 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(getByTestId('trigger'), { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -887,8 +859,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 140, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 140, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
@@ -907,7 +879,7 @@ describe('<ContextMenu.Trigger />', () => {
         </ContextMenu.Root>,
       );
 
-      await fireTouch(getByTestId('trigger'), 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(getByTestId('trigger'), { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
@@ -1048,7 +1020,7 @@ describe('<ContextMenu.Trigger />', () => {
       {
         name: 'a finger',
         press: (trigger: Element) =>
-          fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]),
+          fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] }),
       },
       {
         name: 'a stylus',
@@ -1106,7 +1078,7 @@ describe('<ContextMenu.Trigger />', () => {
     expect(countCalls(removeListener, 'contextmenu')).toBe(0);
 
     // A long press and the listener of the mouseup wait.
-    await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+    await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
     await fireEvent.contextMenu(trigger);
 
     expect(onOpenChange).toHaveBeenCalledTimes(1);
