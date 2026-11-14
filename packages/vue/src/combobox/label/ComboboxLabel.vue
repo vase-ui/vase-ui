@@ -18,6 +18,7 @@ import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useLabel } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getDefaultLabelId } from '../../utils/resolveAriaLabelledBy';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -56,6 +57,9 @@ const labelProps = useLabel({
   fallbackControlId: () =>
     store.select('triggerElement')?.id ?? (inputInsidePopup.value ? store.select('id') : undefined),
   registerLabelId: store.context.registerLabelId,
+  reaches: (target) =>
+    isInTreeOf(store.select('triggerElement') ?? store.select('inputElement'), target),
+  element: () => element.value,
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

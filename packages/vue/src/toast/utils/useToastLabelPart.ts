@@ -1,5 +1,5 @@
 import { computed, onBeforeUpdate, shallowRef, useSlots } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { useRegisteredId } from '../../internals/labelable-provider/useRegisteredId';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useToastRootContext } from '../root/ToastRootContext';
@@ -25,16 +25,18 @@ export function useHasDefaultSlot(): Readonly<Ref<boolean>> {
  * The shared logic of `Toast.Title` and `Toast.Description`.
  * The part renders only while it has content: a default slot, or the label of its toast. While it
  * renders, it registers its `id` with the root.
+ * @param element The element of the part.
  */
 export function useToastLabelPart(
   idProp: () => string | undefined,
   part: 'title' | 'description',
+  element: MaybeRefOrGetter<Element | null | undefined>,
 ): {
   labelId: ComputedRef<string>;
   rendered: ComputedRef<boolean>;
   state: ComputedRef<{ type: string | undefined }>;
 } {
-  const { toast, registerTitleId, registerDescriptionId } = useToastRootContext();
+  const { toast, registerTitleId, registerDescriptionId, reaches } = useToastRootContext();
   const register = part === 'title' ? registerTitleId : registerDescriptionId;
 
   const labelId = useVaseUiId(idProp);
@@ -47,6 +49,8 @@ export function useToastLabelPart(
   useRegisteredId(
     () => (rendered.value ? labelId.value : undefined),
     (getId) => register(source, getId),
+    element,
+    reaches,
   );
 
   return { labelId, rendered, state };

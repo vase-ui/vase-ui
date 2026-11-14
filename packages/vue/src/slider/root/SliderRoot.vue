@@ -206,6 +206,7 @@ import { createLabelIdRegistry, useControlLabelId } from '../../internals/labela
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { isInTreeOf } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { asc } from '../utils/asc';
@@ -607,6 +608,7 @@ provide(SliderRootContext, {
   labelId,
   rootLabelId,
   registerLabelId,
+  reaches: (target) => isInTreeOf(element.value, target),
   thumbMap,
   largeStep: computed(() => props.largeStep),
   lastUsedThumbIndex,

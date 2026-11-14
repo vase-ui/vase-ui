@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
 import {
+  createHeldBranch,
   createRenderer,
   describeConformance,
   flushMicrotasks,
@@ -198,6 +199,27 @@ describe('<Tabs.Panel />', () => {
 
       expect(screen.getByTestId('last-panel')).toBe(lastPanel);
       expect(tab).toHaveAttribute('aria-controls', 'last-panel');
+    });
+
+    it('is not named by its tab while KeepAlive holds a panel that mounted in a held branch', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Tabs.Panel key="panel" value="a" id="held-panel" />
+      ));
+      await render(() => (
+        <Tabs.Root defaultValue="a">
+          <Tabs.List>
+            <Tabs.Tab value="a" />
+          </Tabs.List>
+          <HeldBranch />
+        </Tabs.Root>
+      ));
+      const tab = screen.getByRole('tab');
+
+      await mountWhileHeld();
+      expect(tab).not.toHaveAttribute('aria-controls');
+
+      await show();
+      expect(tab).toHaveAttribute('aria-controls', 'held-panel');
     });
   });
 

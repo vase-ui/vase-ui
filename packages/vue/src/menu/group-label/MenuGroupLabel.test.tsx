@@ -2,11 +2,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { defineComponent, provide } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import {
+  createHeldBranch,
+  createRenderer,
+  describeConformance,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
 import { MenuGroupContext } from '../group/MenuGroupContext';
 
 const TestGroupProvider = defineComponent((_, { slots }) => {
-  provide(MenuGroupContext, () => {});
+  provide(MenuGroupContext, { registerLabelId: () => {}, reaches: () => true });
   return () => slots.default?.();
 });
 
@@ -207,6 +213,39 @@ describe('<Menu.GroupLabel />', () => {
       expect(group).toHaveAttribute('aria-labelledby', 'new-label');
     });
   });
+
+  it.each([
+    { name: 'Menu.Group', Group: Menu.Group },
+    { name: 'Menu.RadioGroup', Group: Menu.RadioGroup },
+  ])(
+    'does not name $name while KeepAlive holds a label that mounted in a held branch',
+    async ({ Group }) => {
+      const { HeldBranch, mountWhileHeld, show } = createHeldBranch(() => (
+        <Menu.GroupLabel key="label" id="held-label" />
+      ));
+      await render(() => (
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Group data-testid="group">
+                  <HeldBranch />
+                  <Menu.Item>Item</Menu.Item>
+                </Group>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      const group = screen.getByTestId('group');
+
+      await mountWhileHeld();
+      expect(group).not.toHaveAttribute('aria-labelledby');
+
+      await show();
+      expect(group).toHaveAttribute('aria-labelledby', 'held-label');
+    },
+  );
 
   it('throws when rendered outside Menu.Group or Menu.RadioGroup', async () => {
     await expect(render(<Menu.GroupLabel />)).rejects.toThrow(

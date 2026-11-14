@@ -62,7 +62,13 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, AccordionTriggerState>;
 }>();
 
-const { panelId, open, handleTrigger, disabled: contextDisabled } = useCollapsibleRootContext();
+const {
+  panelId,
+  open,
+  handleTrigger,
+  disabled: contextDisabled,
+  reaches,
+} = useCollapsibleRootContext();
 
 const isDisabled = computed(() => props.disabled || contextDisabled.value);
 
@@ -80,6 +86,8 @@ const source = Symbol();
 useRegisteredId(
   () => triggerId.value,
   (getId) => registerTriggerId(source, getId),
+  () => element.value,
+  reaches,
 );
 
 const state = computed<AccordionTriggerState>(() => ({
