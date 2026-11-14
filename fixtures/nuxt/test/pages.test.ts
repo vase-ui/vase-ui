@@ -901,6 +901,48 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+const PREVIEW_CARD_LINK_ATTRIBUTES = [
+  'href',
+  'data-popup-open',
+  'role',
+  'aria-expanded',
+  'tabindex',
+];
+
+// The link is a native link: the part adds no ARIA attribute, no `role` and no `tabindex`.
+async function expectPreviewCardLinks(page: Page) {
+  expect(await readElement(page.getByTestId('closed-link'), PREVIEW_CARD_LINK_ATTRIBUTES)).toEqual({
+    tag: 'a',
+    text: 'Closed link',
+    attributes: {
+      href: '#closed',
+      'data-popup-open': null,
+      role: null,
+      'aria-expanded': null,
+      tabindex: null,
+    },
+  });
+  expect(await readAttributes(page.getByTestId('open-link'), ['id', 'data-popup-open'])).toEqual({
+    id: 'open-link',
+    'data-popup-open': '',
+  });
+}
+
+// The portal renders after the mount, so the server HTML has no popup.
+async function expectPreviewCardPageOnServer(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+}
+
+// After the mount, the card that is open by default shows the payload of its link in the viewport.
+async function expectHydratedPreviewCardPage(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('open-viewport').locator('[data-current]').textContent()).toBe(
+    'Open preview',
+  );
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -967,6 +1009,11 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
+  },
+  {
+    path: '/preview-card',
+    expectPage: expectPreviewCardPageOnServer,
+    expectHydratedPage: expectHydratedPreviewCardPage,
   },
 ];
 
@@ -1395,6 +1442,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await waitForTwoFrames(page);
 
     expect(await page.getByTestId('wide').textContent()).toBe('false');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the card of /preview-card on a hover of its link after hydration', async () => {
+    const page = await createPage('/preview-card');
+    const messages = collectMessages(page);
+    const link = page.getByTestId('closed-link');
+
+    await link.hover();
+    await page.getByTestId('closed-popup').waitFor();
+
+    expect(await link.getAttribute('data-popup-open')).toBe('');
+    expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
     expect(messages).toEqual([]);
   });
 
