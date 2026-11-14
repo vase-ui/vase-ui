@@ -123,7 +123,7 @@ describe('<Select.Popup />', () => {
   });
 
   it('VUE-5: keeps its open state under KeepAlive and hears no Escape while deactivated', async () => {
-    const changes: Array<[boolean, string]> = [];
+    const changes: [boolean, string][] = [];
     const Page = defineComponent({
       name: 'Page',
       setup() {
