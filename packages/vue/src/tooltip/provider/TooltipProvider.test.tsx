@@ -3,10 +3,6 @@ import * as Tooltip from '../index.parts';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { OPEN_DELAY } from '../utils/constants';
 
-// The cases dispatch hover events. The real pointer of the browser can rest on a trigger and send
-// events of its own, so each trigger ignores it. A dispatched event still reaches the trigger.
-const ignoreRealPointer = { pointerEvents: 'none' } as const;
-
 describe('<Tooltip.Provider />', () => {
   const { render } = createRenderer();
 
@@ -33,7 +29,7 @@ describe('<Tooltip.Provider />', () => {
       await render(
         <Tooltip.Provider delay={10_000}>
           <Tooltip.Root>
-            <Tooltip.Trigger style={ignoreRealPointer} />
+            <Tooltip.Trigger />
             <Tooltip.Portal>
               <Tooltip.Positioner>
                 <Tooltip.Popup>Content</Tooltip.Popup>
@@ -65,7 +61,7 @@ describe('<Tooltip.Provider />', () => {
       await render(
         <Tooltip.Provider delay={0}>
           <Tooltip.Root>
-            <Tooltip.Trigger style={ignoreRealPointer} />
+            <Tooltip.Trigger />
             <Tooltip.Portal>
               <Tooltip.Positioner>
                 <Tooltip.Popup>Content</Tooltip.Popup>
@@ -91,7 +87,7 @@ describe('<Tooltip.Provider />', () => {
       await render(
         <Tooltip.Provider delay={10}>
           <Tooltip.Root>
-            <Tooltip.Trigger delay={100} style={ignoreRealPointer} />
+            <Tooltip.Trigger delay={100} />
             <Tooltip.Portal>
               <Tooltip.Positioner>
                 <Tooltip.Popup>Content</Tooltip.Popup>
@@ -127,7 +123,7 @@ describe('<Tooltip.Provider />', () => {
       await render(
         <Tooltip.Provider closeDelay={400}>
           <Tooltip.Root>
-            <Tooltip.Trigger style={ignoreRealPointer} />
+            <Tooltip.Trigger />
             <Tooltip.Portal>
               <Tooltip.Positioner>
                 <Tooltip.Popup>Content</Tooltip.Popup>
@@ -166,7 +162,7 @@ describe('<Tooltip.Provider />', () => {
         return (
           <Tooltip.Provider closeDelay={closeDelay}>
             <Tooltip.Root>
-              <Tooltip.Trigger style={ignoreRealPointer} />
+              <Tooltip.Trigger />
               <Tooltip.Portal>
                 <Tooltip.Positioner>
                   <Tooltip.Popup>Content</Tooltip.Popup>
@@ -222,9 +218,7 @@ describe('<Tooltip.Provider />', () => {
         <Tooltip.Provider delay={providerDelay} timeout={timeout}>
           {['One', 'Two'].map((name) => (
             <Tooltip.Root key={name}>
-              <Tooltip.Trigger delay={triggerDelay} style={ignoreRealPointer}>
-                {name}
-              </Tooltip.Trigger>
+              <Tooltip.Trigger delay={triggerDelay}>{name}</Tooltip.Trigger>
               <Tooltip.Portal>
                 <Tooltip.Positioner>
                   <Tooltip.Popup>{`Content ${name}`}</Tooltip.Popup>
