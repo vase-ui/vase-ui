@@ -240,11 +240,11 @@ function toggleCollapse(event: KeyboardEvent) {
   if (drag.dragging.value) {
     return;
   }
-  const by = { pivot: pivot.value, reason: REASONS.keyboard, event };
+  const handleMove = { pivot: pivot.value, reason: REASONS.keyboard, event };
   if (isCollapsed(panel, size)) {
-    root.expandPanel(panel.id, by);
+    root.expandPanel(panel.id, handleMove);
   } else {
-    root.collapsePanel(panel.id, by);
+    root.collapsePanel(panel.id, handleMove);
   }
 }
 

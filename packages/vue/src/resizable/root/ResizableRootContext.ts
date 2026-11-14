@@ -103,25 +103,26 @@ export interface ResizableRootContext {
   commitLayout: (layout: Layout, details: ResizableRootCommitEventDetails) => void;
   /**
    * Collapses the panel to its collapsed size, and commits the change. It does nothing for a panel
-   * that is not collapsible or is collapsed. A handle (`by`) moves the panel for a key. With no
-   * handle, the move is an action of the app.
+   * that is not collapsible or is collapsed. A handle (`handleMove`) moves the panel for a key.
+   * With no handle, the move is an action of the app.
    */
-  collapsePanel: (id: string, by?: ResizableHandleMove) => void;
+  collapsePanel: (id: string, handleMove?: ResizableHandleMove) => void;
   /**
    * Gives a collapsed panel the size that it had before it collapsed, or its least size, and
    * commits the change. It does not collapse another panel, and it does nothing for a panel that
    * is not collapsed.
    */
-  expandPanel: (id: string, by?: ResizableHandleMove) => void;
+  expandPanel: (id: string, handleMove?: ResizableHandleMove) => void;
   /**
    * Gives the panel a size, and commits the change. It is an action of the app.
    */
   resizePanel: (id: string, size: number | string) => void;
   /**
    * Gives the panel the size that it has in the first layout, and commits the change. A double
-   * click on a handle (`by`) does this. The result is `false` when the panel has that size already.
+   * click on a handle (`handleMove`) does this. The result is `false` when the panel has that
+   * size already.
    */
-  resetPanel: (id: string, by: ResizableHandleMove) => boolean;
+  resetPanel: (id: string, handleMove: ResizableHandleMove) => boolean;
   /**
    * What `useParentRoot()` gives to a part inside the root.
    */

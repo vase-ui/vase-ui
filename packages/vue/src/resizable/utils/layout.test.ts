@@ -349,25 +349,25 @@ describe('layout', () => {
 
   it.each([
     {
-      name: 'the handle before it grows it',
+      name: 'the handle before it, to the right',
       pivot: 0,
       delta: 10,
       expected: { a: 40, b: 30, c: 30 },
     },
     {
-      name: 'the handle before it shrinks it',
+      name: 'the handle before it, to the left',
       pivot: 0,
       delta: -10,
       expected: { a: 20, b: 30, c: 50 },
     },
     {
-      name: 'the handle after it grows the panel before',
+      name: 'the handle after it, to the right',
       pivot: 1,
       delta: 10,
       expected: { a: 40, b: 30, c: 30 },
     },
     {
-      name: 'the handle after it shrinks the panel before',
+      name: 'the handle after it, to the left',
       pivot: 1,
       delta: -10,
       expected: { a: 20, b: 30, c: 50 },

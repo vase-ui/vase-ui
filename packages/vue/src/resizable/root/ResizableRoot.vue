@@ -264,7 +264,7 @@ if (process.env.NODE_ENV !== 'production') {
         warn(
           `Two panels of one root have the id "${duplicate}".`,
           'The layout has one size for each id, so the panels cannot have sizes of their own.',
-          'Give each panel an id of your own.',
+          'Give each panel an id of its own.',
         );
       }
       if (!areConstraintsFeasible(current)) {
@@ -438,14 +438,14 @@ function findPanel(id: string) {
 }
 
 // Gives the panel `index` the size `size` with a move of a handle, and emits the change and the
-// commit. A key or a double click gives the handle in `by`, and the move obeys `pushPanels`. A
-// method gives no handle: it uses the handle after the panel, or the handle before the last panel,
-// and it pushes the panels. A method also moves a disabled panel.
-function giveSize(
+// commit. A key or a double click gives `handleMove`, and the move obeys `pushPanels`. A method
+// gives none: it uses the handle after the panel, or the handle before the last panel, and it
+// pushes the panels. A method also moves a disabled panel.
+function resizeWithHandle(
   index: number,
   size: number,
   only: number | undefined,
-  by: ResizableHandleMove | undefined,
+  handleMove: ResizableHandleMove | undefined,
 ): boolean {
   const unlocked = constraints.value.map((panel, panelIndex) =>
     panelIndex === index ? { ...panel, locked: false } : panel,
@@ -453,47 +453,56 @@ function giveSize(
   const next = adjustLayoutToSize(
     unlocked,
     shown.value,
-    by?.pivot ?? (index < unlocked.length - 1 ? index : index - 1),
+    handleMove?.pivot ?? (index < unlocked.length - 1 ? index : index - 1),
     index,
     size,
-    { only, push: by === undefined || props.pushPanels },
+    { only, push: handleMove === undefined || props.pushPanels },
   );
   if (areLayoutsEqual(next, shown.value)) {
     return false;
   }
-  const reason = by?.reason ?? REASONS.imperativeAction;
-  const applied = changeLayout(next, createChangeEventDetails(reason, by?.event));
+  const reason = handleMove?.reason ?? REASONS.imperativeAction;
+  const applied = changeLayout(next, createChangeEventDetails(reason, handleMove?.event));
   if (applied) {
-    commitLayout(applied, createCommitDetails(reason, by?.event));
+    commitLayout(applied, createCommitDetails(reason, handleMove?.event));
   }
   return true;
 }
 
-function collapsePanel(id: string, by?: ResizableHandleMove) {
+function collapsePanel(id: string, handleMove?: ResizableHandleMove) {
   const found = findPanel(id);
   if (found?.panel.collapsible && !isCollapsed(found.panel, found.size)) {
-    giveSize(found.index, found.panel.collapsedSize, found.index, by);
+    resizeWithHandle(found.index, found.panel.collapsedSize, found.index, handleMove);
   }
 }
 
-function expandPanel(id: string, by?: ResizableHandleMove) {
+function expandPanel(id: string, handleMove?: ResizableHandleMove) {
   const found = findPanel(id);
   if (found && isCollapsed(found.panel, found.size)) {
-    giveSize(found.index, sizesBeforeCollapse.get(id) ?? found.panel.minSize, -1, by);
+    resizeWithHandle(
+      found.index,
+      sizesBeforeCollapse.get(id) ?? found.panel.minSize,
+      -1,
+      handleMove,
+    );
   }
 }
 
 function resizePanel(id: string, size: number | string) {
   const found = findPanel(id);
   if (found) {
-    giveSize(found.index, parseSize(size), found.index, undefined);
+    resizeWithHandle(found.index, parseSize(size), found.index, undefined);
   }
 }
 
-function resetPanel(id: string, by: ResizableHandleMove) {
+function resetPanel(id: string, handleMove: ResizableHandleMove) {
   const found = findPanel(id);
   const first = resolveLayout(constraints.value, firstRequested)[id];
-  return found !== undefined && first !== undefined && giveSize(found.index, first, undefined, by);
+  return (
+    found !== undefined &&
+    first !== undefined &&
+    resizeWithHandle(found.index, first, undefined, handleMove)
+  );
 }
 
 function getLayout() {
