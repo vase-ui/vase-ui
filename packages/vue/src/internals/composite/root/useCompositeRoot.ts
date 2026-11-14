@@ -593,8 +593,8 @@ export interface UseCompositeRootParameters<Metadata> {
   orientation?: MaybeRefOrGetter<'horizontal' | 'vertical' | 'both' | undefined> | undefined;
   /**
    * The grid navigator that `gridNavigation` makes. With a grid, the arrow keys move the highlight
-   * by cell. A root that gets no `grid` does not load the code of the grid. This is a plain
-   * function, and the root reads it when a key comes.
+   * by cell. A root with no grid does not import `gridNavigation`, so a bundler can remove the
+   * grid code. This is a plain function, and the root reads it when a key comes.
    */
   grid?: CompositeGridNavigator | undefined;
   /**
