@@ -18,7 +18,8 @@ export interface SelectPortalProps
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useSelectRootContext } from '../root/SelectRootContext';
 
@@ -28,7 +29,7 @@ withDefaults(defineProps<SelectPortalProps>(), { as: 'div' });
 
 defineSlots<{
   default(props: { state: SelectPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, SelectPortalState>;
+  render(props: { props: HTMLProps; state: SelectPortalState; children: Component }): unknown;
 }>();
 
 const store = useSelectRootContext();

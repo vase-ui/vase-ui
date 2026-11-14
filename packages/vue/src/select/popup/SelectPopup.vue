@@ -32,7 +32,7 @@ export interface SelectPopupProps
 <script setup lang="ts">
 import { computed } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
-import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
+import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -113,7 +113,7 @@ const { element, elementProps } = useRenderElement('div', props, {
         }
       },
     },
-    transitionStatus.value === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
+    getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,
   ],
 });
