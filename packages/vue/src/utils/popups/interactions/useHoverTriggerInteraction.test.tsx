@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
-import type { CSSProperties, ShallowRef } from 'vue';
+import type { CSSProperties, PropType, ShallowRef } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
@@ -9,13 +9,20 @@ import { PopupFixtureStore } from '../../../../test/fixtures/PopupFixture';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import type { FloatingRootStore } from '../floating-root/FloatingRootStore';
 import { FloatingTreeStore } from '../tree/FloatingTreeStore';
+import type { Delay } from '../types';
 import { getHoverIntent } from './hoverIntent';
 import { safePolygon } from './safePolygon';
+import { useHoverPopupInteraction } from './useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
 import type { UseHoverTriggerInteractionProps } from './useHoverTriggerInteraction';
 
 describe('useHoverTriggerInteraction', () => {
   const { render } = createRenderer();
+
+  async function tick(ms: number) {
+    vi.advanceTimersByTime(ms);
+    await flushMicrotasks();
+  }
 
   it('updates the handleClose options during render', async () => {
     const block = shallowRef(false);
@@ -265,6 +272,237 @@ describe('useHoverTriggerInteraction', () => {
     expect(screen.queryByRole('tooltip')).not.toBe(null);
   });
 
+  describe('hover semantics', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const App = defineComponent({
+      props: {
+        delay: { type: [Number, Object] as PropType<Delay>, default: undefined },
+        restMs: { type: Number, default: undefined },
+      },
+      setup(props) {
+        const open = shallowRef(false);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+        });
+        const referenceProps = useHoverTriggerInteraction(context.rootStore, {
+          triggerElement: refs.reference,
+          delay: () => props.delay,
+          restMs: () => props.restMs,
+        });
+        useHoverPopupInteraction(context.rootStore);
+
+        return () => (
+          <>
+            <button {...referenceProps} ref={refs.setReference} />
+            {open.value && <div role="tooltip" ref={refs.setFloating} />}
+          </>
+        );
+      },
+    });
+
+    it('opens on mouseenter', async () => {
+      await render(<App />);
+
+      await fireEvent.mouseEnter(screen.getByRole('button'));
+
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      await flushMicrotasks();
+    });
+
+    it('closes on mouseleave', async () => {
+      await render(<App />);
+
+      await fireEvent.mouseEnter(screen.getByRole('button'));
+      await fireEvent.mouseLeave(screen.getByRole('button'));
+
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('closes when the pointer moves onto the floating element without safePolygon', async () => {
+      await render(<App />);
+
+      await fireEvent.mouseEnter(screen.getByRole('button'));
+      await flushMicrotasks();
+
+      await fireEvent(
+        screen.getByRole('button'),
+        new MouseEvent('mouseleave', { relatedTarget: screen.getByRole('tooltip') }),
+      );
+
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    describe('prop: delay', () => {
+      it('symmetric number', async () => {
+        await render(<App delay={1000} />);
+
+        await fireEvent.mouseEnter(screen.getByRole('button'));
+
+        await tick(999);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+        await tick(1);
+
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      });
+
+      it('open', async () => {
+        await render(<App delay={{ open: 500 }} />);
+
+        await fireEvent.mouseEnter(screen.getByRole('button'));
+
+        await tick(499);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+        await tick(1);
+
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      });
+
+      it('close', async () => {
+        await render(<App delay={{ close: 500 }} />);
+
+        await fireEvent.mouseEnter(screen.getByRole('button'));
+        await fireEvent.mouseLeave(screen.getByRole('button'));
+
+        await tick(499);
+
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+        await tick(1);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      });
+
+      it('open with close 0', async () => {
+        await render(<App delay={{ open: 500 }} />);
+
+        await fireEvent.mouseEnter(screen.getByRole('button'));
+
+        await tick(499);
+
+        await fireEvent.mouseLeave(screen.getByRole('button'));
+
+        await tick(1);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      });
+
+      it('restMs + nullish open delay should respect restMs', async () => {
+        await render(<App restMs={100} delay={{ close: 100 }} />);
+
+        await fireEvent.mouseEnter(screen.getByRole('button'));
+
+        await tick(99);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      });
+    });
+
+    it('restMs', async () => {
+      await render(<App restMs={100} />);
+
+      const button = screen.getByRole('button');
+
+      const originalDispatchEvent = button.dispatchEvent;
+      const spy = vi.spyOn(button, 'dispatchEvent').mockImplementation((event) => {
+        Object.defineProperty(event, 'movementX', { value: 10 });
+        Object.defineProperty(event, 'movementY', { value: 10 });
+        return originalDispatchEvent.call(button, event);
+      });
+
+      await fireEvent.mouseMove(button);
+
+      await tick(99);
+
+      await fireEvent.mouseMove(button);
+
+      await tick(1);
+
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      await fireEvent.mouseMove(button);
+
+      await tick(100);
+
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      spy.mockRestore();
+    });
+
+    it('restMs does not reset timer for minor mouse movement', async () => {
+      await render(<App restMs={100} />);
+
+      const button = screen.getByRole('button');
+
+      const originalDispatchEvent = button.dispatchEvent;
+      const spy = vi.spyOn(button, 'dispatchEvent').mockImplementation((event) => {
+        Object.defineProperty(event, 'movementX', { value: 1 });
+        Object.defineProperty(event, 'movementY', { value: 0 });
+        return originalDispatchEvent.call(button, event);
+      });
+
+      await fireEvent.mouseMove(button);
+
+      await tick(99);
+
+      await fireEvent.mouseMove(button);
+
+      await tick(1);
+
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      spy.mockRestore();
+    });
+
+    it('reports the hover reason', async () => {
+      const reasons: string[] = [];
+
+      const ReasonApp = defineComponent({
+        setup() {
+          const open = shallowRef(false);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange(nextOpen, details) {
+              reasons.push(details.reason);
+              open.value = nextOpen;
+            },
+          });
+          const referenceProps = useHoverTriggerInteraction(context.rootStore, {
+            triggerElement: refs.reference,
+          });
+
+          return () => (
+            <>
+              <button {...referenceProps} ref={refs.setReference} />
+              {open.value && <div role="tooltip" ref={refs.setFloating} />}
+            </>
+          );
+        },
+      });
+
+      await render(<ReasonApp />);
+      const button = screen.getByRole('button');
+      await fireEvent.mouseEnter(button);
+      await flushMicrotasks();
+      await fireEvent.mouseLeave(button);
+
+      expect(reasons).toEqual([REASONS.triggerHover, REASONS.triggerHover]);
+    });
+  });
+
   describe('rules with no Base UI case', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -398,11 +636,6 @@ describe('useHoverTriggerInteraction', () => {
     async function enter(element: Element, pointerType = 'mouse') {
       await fireEvent.pointerEnter(element, { pointerType });
       await fireEvent.mouseEnter(element);
-    }
-
-    async function tick(ms: number) {
-      vi.advanceTimersByTime(ms);
-      await flushMicrotasks();
     }
 
     it.each([
