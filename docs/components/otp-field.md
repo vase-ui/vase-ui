@@ -55,7 +55,7 @@ To announce a supporting text with the field, give the root `aria-describedby`.
 
 <<< ./otp-field/NativeLabel.vue{7,9}
 
-A native `<label>` names the group and the inputs after the page hydrates, because a server has no DOM. In a `Field`, the server HTML already names them with `Field.Label`.
+In the server HTML, a native `<label>` names only the first input, through `for`. The group gets the name of the label after the page hydrates, because a server has no DOM. In a `Field`, the server HTML names the group and each input with `Field.Label`.
 
 ### Submitting on completion
 
@@ -97,7 +97,7 @@ Put sets of inputs in your own layout elements. Add `OTPField.Separator` to show
 
 Use `normalizeValue` to change the accepted characters before the state changes, for example to make a code uppercase. It runs after the filter of `validationType`, and that filter then applies to its result again. Set `validationType` to `none` when the normalizer is the full validation rule.
 
-Use `inputMode` to give the keyboard a hint for a custom rule. Listen to `valueInvalid` to know the characters that the field refused.
+Use `inputMode` to give the keyboard a hint for a custom rule. Listen to `valueInvalid` to know when the field refuses characters.
 
 <DemoFrame>
   <DemoOTPFieldCustomNormalize />
