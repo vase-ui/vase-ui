@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
-import type { CSSProperties, PropType } from 'vue';
+import type { PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
@@ -108,11 +108,6 @@ describe('useHoverPopupInteraction', () => {
       document.body.style.removeProperty('pointer-events');
     });
 
-    // The browser keeps its real pointer where an earlier test left it. An element under that
-    // pointer gets trusted events in a later frame. Each app of this block renders in a wrapper
-    // with this style. A dispatched event still reaches the listeners.
-    const NO_POINTER_EVENTS: CSSProperties = { pointerEvents: 'none' };
-
     const isOpen = (name = 'popup') => screen.queryByTestId(name) !== null;
 
     function openByHover(store: FloatingRootStore) {
@@ -147,7 +142,7 @@ describe('useHoverPopupInteraction', () => {
           useHoverPopupInteraction(store, options);
 
           return () => (
-            <div style={NO_POINTER_EVENTS}>
+            <>
               <button data-testid="trigger" ref={refs.setReference} />
               {open.value && (
                 <div data-testid="popup" ref={refs.setFloating}>
@@ -155,7 +150,7 @@ describe('useHoverPopupInteraction', () => {
                   <button data-testid="button" />
                 </div>
               )}
-            </div>
+            </>
           );
         },
       });
@@ -270,10 +265,10 @@ describe('useHoverPopupInteraction', () => {
             triggerElement: refs.reference,
           });
           return () => (
-            <div style={NO_POINTER_EVENTS}>
+            <>
               <button data-testid="trigger" {...hoverProps} ref={refs.setReference} />
               {showPopup.value && <PopupPart />}
-            </div>
+            </>
           );
         },
       });
@@ -423,7 +418,7 @@ describe('useHoverPopupInteraction', () => {
             useHoverPopupInteraction(() => (moved.value ? stores.second : stores.first));
 
             return () => (
-              <div style={NO_POINTER_EVENTS}>
+              <>
                 <button
                   data-testid="trigger"
                   ref={(node) => {
@@ -438,7 +433,7 @@ describe('useHoverPopupInteraction', () => {
                     second.setFloating(node);
                   }}
                 />
-              </div>
+              </>
             );
           },
         });
