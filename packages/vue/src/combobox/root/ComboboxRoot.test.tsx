@@ -126,15 +126,20 @@ describe('<Combobox.Root />', () => {
       await render(
         <Combobox.Root
           items={cities}
-          onValueChange={(value, details) => events.push(`valueChange:${value}:${details.reason}`)}
+          onValueChange={(value, details) =>
+            events.push(`valueChange:${String(value)}:${details.reason}`)
+          }
           onInputValueChange={(value, details) =>
-            events.push(`inputValueChange:${value}:${details.reason}:${inputValue.value}`)
+            events.push(
+              `inputValueChange:${String(value)}:${details.reason}:${String(inputValue.value)}`,
+            )
           }
           onOpenChange={(open, details) => events.push(`openChange:${open}:${details.reason}`)}
           {...{
-            'onUpdate:value': (value: unknown) => events.push(`update:value:${value}`),
-            'onUpdate:inputValue': (value: unknown) => events.push(`update:inputValue:${value}`),
-            'onUpdate:open': (value: unknown) => events.push(`update:open:${value}`),
+            'onUpdate:value': (value: unknown) => events.push(`update:value:${String(value)}`),
+            'onUpdate:inputValue': (value: unknown) =>
+              events.push(`update:inputValue:${String(value)}`),
+            'onUpdate:open': (value: unknown) => events.push(`update:open:${String(value)}`),
           }}
         >
           <InputValueProbe />

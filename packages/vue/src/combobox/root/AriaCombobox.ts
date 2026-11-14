@@ -1198,7 +1198,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     const positioner = store.select('positionerElement');
     animatedPopup.value =
       inline.value && positioner
-        ? (closest(positioner, '[role="dialog"]') as HTMLElement | null)
+        ? closest<HTMLElement>(positioner, '[role="dialog"]')
         : popupRef.value;
   }
   onMounted(syncAnimatedPopup);
@@ -1291,7 +1291,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       isResetChangePending = false;
       clearFieldError(selectedValue.value);
     } else {
-      void validation.change(selectedValue.value);
+      validation.change(selectedValue.value);
     }
     if (single.value && !hasInputValue.value && !inputInsidePopup.value) {
       syncInputToSelectedLabel();
@@ -1309,7 +1309,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       isResetChangePending = false;
       clearFieldError(inputValue.value);
     } else {
-      void validation.change(inputValue.value);
+      validation.change(inputValue.value);
     }
   });
 
@@ -1525,7 +1525,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       if (matchingIndex === -1) {
         matchingIndex = valuesRef.value.findIndex((_, index) => {
           const renderedLabel = labelsRef.value[index];
-          return renderedLabel != null && renderedLabel.toLowerCase() === nextValueLower;
+          return renderedLabel?.toLowerCase() === nextValueLower;
         });
       }
 
@@ -1643,7 +1643,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           state.triggerElement?.focus();
           return;
         }
-        (inputRef.value || state.triggerElement)?.focus();
+        (inputRef.value ?? state.triggerElement)?.focus();
       },
       onInput: handleAutofill,
       onChange: handleAutofill,
