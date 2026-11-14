@@ -487,6 +487,21 @@ describe('useScrollLock', () => {
     );
   });
 
+  describe('a release while the lock waits', () => {
+    it('takes no lock when the release comes before the lock timer', async () => {
+      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
+      // `render` waits only for microtasks, so the lock timer has not run when `lock` returns.
+      const { enabled } = await lock(page);
+      expect(getScrollLockRegistry()?.lockCount).toBe(1);
+      expect(isPageLocked(page)).toBe(false);
+
+      await release(enabled);
+      await wait(0);
+
+      expect(isPageLocked(page)).toBe(false);
+    });
+  });
+
   describe('an acquire while the unlock waits', () => {
     it('keeps the lock and writes no style', async () => {
       const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
