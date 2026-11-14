@@ -127,8 +127,8 @@ defineSlots<{
 
 // As in Base UI, this part renders `Menu.Positioner` and makes no element of its own.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `Menu.Positioner` dynamic. Vue then renders each part in its content again
-// each time this part renders.
+// makes the slots of `Menu.Positioner` dynamic. Vue then renders `Menu.Positioner` again each time
+// this part renders. It also renders again each part in that slot that has slot content.
 const positioner = useTemplateRef('positioner');
 const element = computed(() => positioner.value?.element ?? null);
 

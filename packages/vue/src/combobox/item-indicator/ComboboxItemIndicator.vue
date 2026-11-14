@@ -51,8 +51,8 @@ const shouldRender = computed(() => props.keepMounted || selected.value);
 // As in Base UI, this part renders `ItemIndicator` and makes no element of its own. It mounts that
 // part only while the item is selected or `keepMounted` is set.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `ItemIndicator` dynamic. Vue then renders `ItemIndicator` and each part in its
-// content again each time this part renders.
+// makes the slots of `ItemIndicator` dynamic. Vue then renders `ItemIndicator` again each time this
+// part renders. It also renders again each part in that slot that has slot content.
 const indicator = useTemplateRef('indicator');
 const element = computed(() => indicator.value?.element ?? null);
 

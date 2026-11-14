@@ -40,8 +40,8 @@ defineSlots<{
 
 // As in Base UI, this part renders `ListboxSeparator` and makes no element of its own.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `ListboxSeparator` dynamic. Vue then renders `ListboxSeparator` and each part
-// in its content again each time this part renders.
+// makes the slots of `ListboxSeparator` dynamic. Vue then renders `ListboxSeparator` again each
+// time this part renders. It also renders again each part in that slot that has slot content.
 const separator = useTemplateRef('separator');
 const element = computed(() => separator.value?.element ?? null);
 

@@ -56,8 +56,8 @@ defineSlots<{
 // no element of its own, so the two triggers have the same DOM. Its own props interface gives the
 // API reference the handle of Drawer.
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots of `Dialog.Trigger` dynamic. Vue then renders `Dialog.Trigger` and each part in
-// its content again each time this part renders.
+// makes the slots of `Dialog.Trigger` dynamic. Vue then renders `Dialog.Trigger` again each time
+// this part renders. It also renders again each part in that slot that has slot content.
 const trigger = useTemplateRef<{ element: HTMLElement | null }>('trigger');
 const element = computed(() => trigger.value?.element ?? null);
 

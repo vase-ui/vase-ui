@@ -44,7 +44,8 @@ defineSlots<{
 // As in Base UI, this part renders `SelectScrollArrow` and makes no element of its own.
 // The template has one form for `#render`, one for the content and one for no slot. A `v-if` on a
 // slot template makes the slots of `SelectScrollArrow` dynamic. Vue then renders
-// `SelectScrollArrow` and each part in its content again each time this part renders.
+// `SelectScrollArrow` again each time this part renders. It also renders again each part in that
+// slot that has slot content.
 // `SelectScrollArrow` shows the arrow only when it gets no default slot. The form for no slot
 // keeps that behavior.
 const arrow = useTemplateRef('arrow');
