@@ -227,8 +227,7 @@ describe('<Dialog.Portal />', () => {
 
     await hydrate(DialogPortalHydration, { serverHtml });
 
-    // `hydrate` also mounts a client-only app. Each of the two apps renders one dialog.
-    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
