@@ -33,6 +33,11 @@ const typesOf = (container: Element) =>
     input.getAttribute('data-type'),
   );
 // The text that the field shows: the numbers of its segments, its literals and its era.
+// The text that `Intl` gives for a value, with the options of the layout.
+const textOf = (value: TemporalValue, options: Intl.DateTimeFormatOptions, locale: string) => {
+  const [format, epoch] = formatter(value, options, locale);
+  return format.format(epoch);
+};
 const shownBy = (container: Element) =>
   Array.from(container.querySelectorAll<HTMLElement>('[data-type]'), (element) =>
     element instanceof HTMLInputElement ? element.value : element.textContent,
@@ -150,9 +155,9 @@ describe('useDateTimeFieldRoot', () => {
     });
 
     it.each([
-      { name: 'month, day and hour', force: true, expected: '01/05/2026 09:04' },
-      { name: 'no number', force: false, expected: '1/5/2026 09:04' },
-    ])('pads $name when forceLeadingZeros is $force', async ({ force, expected }) => {
+      { name: 'month, day and hour', force: true, digits: '2-digit' },
+      { name: 'no number', force: false, digits: 'numeric' },
+    ] as const)('pads $name when forceLeadingZeros is $force', async ({ force, digits }) => {
       const { container } = await render(
         <DateTimeFieldProbe
           defaultValue="2026-01-05T09:04"
@@ -162,7 +167,17 @@ describe('useDateTimeFieldRoot', () => {
         />,
       );
 
-      expect(shownBy(container)).toBe(expected.replace(' ', ', '));
+      const options = {
+        year: 'numeric',
+        month: digits,
+        day: digits,
+        hour: digits,
+        minute: '2-digit',
+        hourCycle: 'h23',
+      } as const;
+      expect(shownBy(container)).toBe(
+        textOf(Temporal.PlainDateTime.from('2026-01-05T09:04'), options, 'en-US'),
+      );
     });
 
     it('shows the era of a date before the year 1, and adds it when a year goes below 1', async () => {
@@ -231,7 +246,13 @@ describe('useDateTimeFieldRoot', () => {
       await setProps({ locale: 'de-DE' });
 
       expect(typesOf(container)).toEqual(['day', 'month', 'year']);
-      expect(shownBy(container)).toBe('14.11.2026');
+      expect(shownBy(container)).toBe(
+        textOf(
+          Temporal.PlainDate.from('2026-11-14'),
+          { year: 'numeric', month: 'numeric', day: 'numeric' },
+          'de-DE',
+        ),
+      );
     });
 
     it('shows the time zone name of a zoned value, unless hideTimeZone is set', async () => {
@@ -1325,7 +1346,13 @@ describe('useDateTimeFieldRoot', () => {
       const { container } = await hydrate(DateTimeFieldProbe, { serverHtml, props });
 
       expect(typesOf(container).join(' ')).toBe('month day year');
-      expect(shownBy(container)).toBe('11/14/2026');
+      expect(shownBy(container)).toBe(
+        textOf(
+          Temporal.PlainDate.from('2026-11-14'),
+          { year: 'numeric', month: 'numeric', day: 'numeric' },
+          'en-US',
+        ),
+      );
     });
   });
 
