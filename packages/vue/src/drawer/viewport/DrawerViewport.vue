@@ -945,8 +945,7 @@ function processTouchMove(
     if (event.cancelable) {
       event.preventDefault();
     }
-    // Claim the gesture before the touch listeners of the elements see it; a move that reaches
-    // the popup through them re-rasterizes the popup content on every frame.
+    // Claim the gesture before the touch listeners of the elements see it.
     event.stopPropagation();
     swipe.moveNative(event, rootElement);
     return;
