@@ -6,11 +6,20 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
   isJSDOM,
+  renderOnServer,
   screen,
+  within,
 } from '#test-utils';
+import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
+import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import * as Combobox from '../index.parts';
+import type { ComboboxStore } from '../store';
+import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
+
+const HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputHydration.test.vue';
 
 describe('<Combobox.Input />', () => {
   const { render } = createRenderer();
@@ -306,9 +315,11 @@ describe('<Combobox.Input />', () => {
 
       await fireEvent.compositionStart(getInput());
       await type('ma', 'insertCompositionText');
-      await fireEvent.compositionEnd(getInput());
-      // WebKit sends the last `input` event of a composition after `compositionend`.
+      // WebKit sends the last `input` event of a composition after `compositionend`, before the
+      // input renders again.
+      const ended = fireEvent.compositionEnd(getInput());
       await type('ma', 'insertCompositionText');
+      await ended;
 
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
       expect(handleInputValueChange.mock.lastCall?.[0]).toBe('ma');
@@ -398,6 +409,67 @@ describe('<Combobox.Input />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'false');
       expect(handleOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(handleOpenChange.mock.lastCall?.[1].reason).toBe('input-clear');
+    });
+
+    it('gives the form one entry for the name in the selection mode none', async () => {
+      await render(
+        <form data-testid="form">
+          <AutocompleteRootPart name="search" defaultInputValue="ma">
+            <Combobox.Input />
+          </AutocompleteRootPart>
+        </form>,
+      );
+
+      expect(getInput()).toHaveAttribute('name', 'search');
+      expect(new FormData(screen.getByTestId<HTMLFormElement>('form')).getAll('search')).toEqual([
+        'ma',
+      ]);
+    });
+
+    it('keeps the input and the dismiss button of an input that mounts before the old input unmounts', async () => {
+      let store!: ComboboxStore;
+      const { setProps } = await render(
+        <ComboboxPartsReplacement first onStore={(value: ComboboxStore) => (store = value)} />,
+      );
+      expect(store.select('inputElement')).toBe(screen.getByTestId('first-input'));
+
+      await setProps({ first: false });
+
+      const input = screen.getByTestId('second-input');
+      expect(screen.queryByTestId('first-input')).toBe(null);
+      expect(store.select('inputElement')).toBe(input);
+      expect(store.context.inputRef.value).toBe(input);
+      expect(store.context.startDismissRef.value).toBe(input.previousElementSibling);
+      expect(store.context.startDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
+    });
+
+    it.each([
+      { name: 'the label first, the description last', parts: ['label', 'input', 'description'] },
+      { name: 'the input first', parts: ['input', 'label', 'description'] },
+      { name: 'the description first, the label last', parts: ['description', 'input', 'label'] },
+    ])('VUE-17: hydrates with the ids of the server: $name', async ({ parts }) => {
+      const props = { parts };
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+
+      // A `<template>` element parses the HTML with no side effect.
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      const serverInput = template.content.querySelector('[data-testid="input"]');
+      const serverId = (testId: string) =>
+        template.content.querySelector(`[data-testid="${testId}"]`)?.id;
+      expect(serverInput?.getAttribute('aria-labelledby')).toBe(serverId('label'));
+      expect(serverInput?.getAttribute('aria-describedby')).toBe(serverId('description'));
+      expect(template.content.querySelector('[data-testid="label"]')?.getAttribute('for')).toBe(
+        serverInput?.id,
+      );
+      expect(serverInput?.getAttribute('value')).toBe('ma');
+
+      const { container } = await hydrate(ComboboxInputHydration, { serverHtml, props });
+
+      const input = within(container).getByTestId('input');
+      expect(input).toHaveAttribute('aria-labelledby', serverId('label'));
+      expect(input).toHaveAttribute('aria-describedby', serverId('description'));
+      expect(input).toHaveValue('ma');
     });
 
     it('the dismiss button closes with the reason close-press', async () => {

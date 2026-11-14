@@ -11,8 +11,10 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import type { HTMLProps } from '../../internals/types';
 import * as Combobox from '../index.parts';
+import type { ComboboxStore } from '../store';
 
 describe('<Combobox.Clear />', () => {
   const { render } = createRenderer();
@@ -155,6 +157,19 @@ describe('<Combobox.Clear />', () => {
     );
 
     expect(screen.getByTestId('clear').textContent).toBe('x');
+  });
+
+  it('keeps the element of a clear button that mounts before the old button unmounts', async () => {
+    let store!: ComboboxStore;
+    const { setProps } = await render(
+      <ComboboxPartsReplacement first onStore={(value: ComboboxStore) => (store = value)} />,
+    );
+    expect(store.context.clearRef.value).toBe(screen.getByTestId('first-clear'));
+
+    await setProps({ first: false });
+
+    expect(screen.queryByTestId('first-clear')).toBe(null);
+    expect(store.context.clearRef.value).toBe(screen.getByTestId('second-clear'));
   });
 
   it('the clear button is in the DOM until its exit animation ends', async () => {
