@@ -682,6 +682,8 @@ The label of a root:
 - `labelId` of `useLabelId()` is the id of the registered label, with no assumption. `legendId` in the context of `Fieldset.Root` is that id.
 - After the mount, a root with no label has no `aria-labelledby`. A root whose label has an `id` prop has that id. Vue gives no warning, and the hydrated DOM is equal to a client-only render.
 - Until the page hydrates, the server HTML of those two roots points at the generated id, unless the consumer gives the root a non-blank `aria-label`.
+- No element has that id then. An `aria-labelledby` with no valid IDREF gives no name ([step 2B of the name computation](https://www.w3.org/TR/accname-1.2/#computation-steps)). Each of those roots thus has the name that it has with no `aria-labelledby`, as in Base UI.
+- axe reports such an `aria-labelledby` as `aria-valid-attr-value` in its `incomplete` list, and not as a violation. `expectNoAxeViolations` reads only the violations.
 - An `aria-labelledby` of the consumer on the root wins, because the attributes of the consumer merge last.
 - Two labels with no `id` in one root get the same id.
 - `Slider.Root` is the exception, as in Base UI: its label always has the id `<id>-label`, and `<id>` is the `id` of the root. The root thus calls `createLabelIdRegistry()` and not `useLabelId()`. It assumes that id until it is mounted, under the rules above.
