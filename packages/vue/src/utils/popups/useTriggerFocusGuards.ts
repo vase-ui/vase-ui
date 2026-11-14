@@ -1,12 +1,22 @@
 import { computed, nextTick, onScopeDispose, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
+import { contains } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import { createAttribute } from './createAttribute';
 import { createFocusGuardElement } from './focus/createFocusGuardElement';
 import { getTabbableNearElement, isOutsideEvent } from './focus/tabbable';
 import { useElementSiblings } from './focus/useElementSiblings';
 import type { ElementSiblings } from './focus/useElementSiblings';
+
+// The guards that a portal renders around its place in the document have `data-type="outside"`.
+function isPortalGuard(element: Element) {
+  return (
+    element.hasAttribute(createAttribute('focus-guard')) &&
+    element.getAttribute('data-type') === 'outside'
+  );
+}
 
 /**
  * The part of a popup store that the focus guards of a trigger use. The stores of Popover and Menu
@@ -39,39 +49,28 @@ export function useTriggerFocusGuards(
   triggerElement: MaybeRefOrGetter<HTMLElement | null>,
   enabled: MaybeRefOrGetter<boolean>,
 ): void {
-  let movesFocus = false;
-
   async function closeAndFocus(
     event: FocusEvent,
     direction: 1 | -1,
     positionerElement: HTMLElement | null,
   ) {
     const guard = event.currentTarget as HTMLElement;
-    if (movesFocus) {
-      // The popup did not close, for example because its `open` prop did not change. The guards of
-      // its portal then sent the focus into the popup, and the popup had no tabbable element to
-      // keep it. A new search would give the same guards with no end, so the trigger keeps the
-      // focus.
-      toValue(triggerElement)?.focus();
-      return;
-    }
     toValue(store).setOpen(false, createChangeEventDetails(REASONS.focusOut, event, guard));
     // The close can change the tab order. The search below reads the DOM after the update.
     await nextTick();
-    // The close removes the guard. The trigger is then the anchor, also when its tab index is -1.
-    const target = getTabbableNearElement(
-      guard.isConnected ? guard : toValue(triggerElement),
+    // A popup that did not close keeps its guards, and a guard of its portal sends the focus back
+    // into the popup. The search leaves out the guards and the content of the popup. It starts at
+    // the trigger, also when the `tabindex` of the trigger is -1, so the trigger keeps the focus
+    // when no other element is tabbable.
+    getTabbableNearElement(
+      toValue(triggerElement),
       direction,
-      positionerElement,
-    );
-    movesFocus = true;
-    try {
-      // Each guard that gets the focus moves it in its `focusin` listener, so the call returns
-      // after the last of these moves.
-      target?.focus();
-    } finally {
-      movesFocus = false;
-    }
+      (element) =>
+        contains(positionerElement, element) ||
+        element === guards?.before ||
+        element === guards?.after ||
+        isPortalGuard(element),
+    )?.focus();
   }
 
   function handlePreFocusGuardFocus(event: FocusEvent) {

@@ -1,10 +1,11 @@
 {
   "id": "VUE-63",
   "evidence": [
+    "https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/useTriggerFocusGuards.ts#L38-L69",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L293-L305",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L1029-L1071"
   ],
-  "behavior": "A focus guard of a popup trigger closes the popup and then moves the focus to the next tabbable element. A popup can stay open, for example when its `open` prop does not change. The next tabbable element can then be a guard of the portal, which sends the focus into the popup. When the popup has no tabbable element, its guards send the focus back to the guard of the trigger. Vase UI then starts no new search and gives the focus to the trigger, so the Tab key ends there. In Base UI, the handler of each guard calls `focus()` on the next guard in the same call stack, and no handler ends the sequence.",
+  "behavior": "A popup that is not modal can stay open when a guard of its trigger asks for the close, for example when its `open` prop does not change. The focus order is then the trigger, the elements of the popup, and the element after the trigger. A popup with no tabbable element is skipped. The search for the element after the trigger leaves out the guards of the trigger, the guards of the portal and the content of the popup. The trigger keeps the focus only when no other element is tabbable. In Base UI, the search can give a guard of the portal, and that guard sends the focus back into the popup. When the popup has no tabbable element, the guards call `focus()` on each other in the same call stack, and no handler ends the sequence.",
   "dueWith": "packages/react/src/utils/popups/useTriggerFocusGuards.ts"
 }

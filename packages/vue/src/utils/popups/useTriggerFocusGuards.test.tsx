@@ -388,68 +388,257 @@ describe('useTriggerFocusGuards', () => {
     });
   });
 
-  describe('Popover that stays open', () => {
-    // The `open` prop of the root does not change, so the close of a guard has no effect.
-    async function renderOpenPopover(content: () => VNodeChild) {
-      await render(() => (
-        <div>
-          <Popover.Root open triggerId="trigger">
-            <Popover.Trigger id="trigger">Toggle</Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner>
-                <Popover.Popup initialFocus={false}>{content()}</Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
-          <button>After</button>
-        </div>
-      ));
-      await flushMicrotasks();
-      return screen.getByRole('button', { name: 'Toggle' });
-    }
+  // The `open` prop of the root does not change, so the close that a guard asks for has no effect.
+  // `placement` puts the portal right after the trigger, right before it, or (`detached`) after the
+  // element that follows the trigger.
+  interface OpenOptions {
+    content?: 'text' | 'button' | undefined;
+    placement?: 'beside' | 'before' | 'detached' | undefined;
+    before?: boolean | undefined;
+    after?: boolean | undefined;
+    tabindex?: number | undefined;
+  }
 
-    // Counts the moves of the focus. After `limit` moves, it stops the listeners of the guards. A
-    // sequence of moves with no end then fails its case, and the page does not stop.
-    function countFocusMoves(limit: number) {
-      let moves = 0;
-      const controller = new AbortController();
-      document.addEventListener(
-        'focusin',
-        (event) => {
-          moves += 1;
-          if (moves >= limit) {
-            event.stopImmediatePropagation();
-          }
-        },
-        { capture: true, signal: controller.signal },
-      );
-      onTestFinished(() => controller.abort());
-      return () => moves;
-    }
+  async function renderOpenPopover(options: OpenOptions = {}) {
+    const { content = 'text', placement = 'beside', before, after, tabindex } = options;
+    const reasons: string[] = [];
+    const renderPortal = () => (
+      <Popover.Portal>
+        <Popover.Positioner>
+          <Popover.Popup initialFocus={false}>
+            {content === 'button' ? <button data-testid="inside">Inside</button> : 'Text'}
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    );
+    await render(() => (
+      <div>
+        {before && <button data-testid="before">Before</button>}
+        <Popover.Root
+          open
+          triggerId="trigger"
+          onOpenChange={(_open, details) => reasons.push(details.reason)}
+        >
+          {placement === 'before' && renderPortal()}
+          <Popover.Trigger id="trigger" tabindex={tabindex}>
+            Toggle
+          </Popover.Trigger>
+          {placement === 'beside' && renderPortal()}
+          {after && <button data-testid="after">After</button>}
+          {placement === 'detached' && renderPortal()}
+        </Popover.Root>
+      </div>
+    ));
+    await flushMicrotasks();
+    return { reasons, trigger: screen.getByRole('button', { name: 'Toggle' }) };
+  }
 
-    it('moves the focus into the popup again for Tab from the end of the popup', async () => {
-      await renderOpenPopover(() => <button>Inside</button>);
-      const inside = screen.getByRole('button', { name: 'Inside' });
-      inside.focus();
-      await flushMicrotasks();
+  // The items of a menu have `tabindex="-1"`, so a menu with items has no tabbable element.
+  async function renderOpenMenu(options: OpenOptions = {}) {
+    const { content = 'text', placement = 'beside', before, after, tabindex } = options;
+    const reasons: string[] = [];
+    const renderPortal = () => (
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup>
+            {content === 'button' ? (
+              <button data-testid="inside">Inside</button>
+            ) : (
+              <Menu.Item>Item</Menu.Item>
+            )}
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    );
+    await render(() => (
+      <div>
+        {before && <button data-testid="before">Before</button>}
+        <Menu.Root
+          modal={false}
+          open
+          triggerId="trigger"
+          onOpenChange={(_open, details) => reasons.push(details.reason)}
+        >
+          {placement === 'before' && renderPortal()}
+          <Menu.Trigger id="trigger" tabindex={tabindex}>
+            Toggle
+          </Menu.Trigger>
+          {placement === 'beside' && renderPortal()}
+          {after && <button data-testid="after">After</button>}
+          {placement === 'detached' && renderPortal()}
+        </Menu.Root>
+      </div>
+    ));
+    // A menu moves the focus into its popup when it opens. The cases start after that move.
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toContainElement(document.activeElement as HTMLElement);
+    });
+    return { reasons, trigger: screen.getByRole('button', { name: 'Toggle' }) };
+  }
 
-      await userEvent.tab();
-      await flushMicrotasks();
+  const FOCUS_MOVE_LIMIT = 50;
 
-      expect(inside).toHaveFocus();
+  // Records the elements that get the focus. After `FOCUS_MOVE_LIMIT` moves, it stops the listeners
+  // of the guards. A sequence of moves with no end then fails its case, and the page does not stop.
+  function trackFocus() {
+    const targets: Element[] = [];
+    const controller = new AbortController();
+    document.addEventListener(
+      'focusin',
+      (event) => {
+        targets.push(event.target as Element);
+        if (targets.length >= FOCUS_MOVE_LIMIT) {
+          event.stopImmediatePropagation();
+        }
+      },
+      { capture: true, signal: controller.signal },
+    );
+    onTestFinished(() => controller.abort());
+    return {
+      get moves() {
+        return targets.length;
+      },
+      get portalGuards() {
+        return targets.filter((target) => target.getAttribute('data-type') === 'outside');
+      },
+    };
+  }
+
+  // The search for the next element leaves out the guards of the portal, so no guard of the portal
+  // sends the focus back into the popup.
+  function expectNoReentry(focus: ReturnType<typeof trackFocus>) {
+    expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
+    expect(focus.portalGuards).toEqual([]);
+  }
+
+  async function pressTab(shift = false) {
+    await userEvent.tab({ shift });
+    await flushMicrotasks();
+  }
+
+  describe.each([
+    { name: 'Popover', renderOpen: renderOpenPopover },
+    { name: 'Menu', renderOpen: renderOpenMenu },
+  ])('VUE-63: $name that stays open', ({ renderOpen }) => {
+    it.each([
+      { name: 'beside the trigger', placement: 'beside' as const },
+      { name: 'detached', placement: 'detached' as const },
+    ])(
+      'skips a popup with no tabbable element for Tab from the trigger ($name)',
+      async ({ placement }) => {
+        const { trigger, reasons } = await renderOpen({ placement, after: true });
+        trigger.focus();
+        const focus = trackFocus();
+
+        await pressTab();
+
+        expect(screen.getByTestId('after')).toHaveFocus();
+        expect(reasons).toEqual([REASONS.focusOut]);
+        expectNoReentry(focus);
+      },
+    );
+
+    it.each([
+      { name: 'beside the trigger', placement: 'beside' as const },
+      { name: 'detached', placement: 'detached' as const },
+    ])(
+      'goes through the popup to the element after the trigger for Tab ($name)',
+      async ({ placement }) => {
+        const { trigger, reasons } = await renderOpen({
+          content: 'button',
+          placement,
+          after: true,
+        });
+        trigger.focus();
+        const focus = trackFocus();
+
+        await pressTab();
+        expect(screen.getByTestId('inside')).toHaveFocus();
+        expect(reasons).toEqual([]);
+
+        await pressTab();
+        expect(screen.getByTestId('after')).toHaveFocus();
+        expect(reasons).toEqual([REASONS.focusOut]);
+        expectNoReentry(focus);
+      },
+    );
+
+    it.each([
+      { name: 'before the trigger', placement: 'before' as const },
+      { name: 'detached', placement: 'detached' as const },
+    ])(
+      'goes to the element before the trigger for Shift+Tab from the trigger ($name)',
+      async ({ placement }) => {
+        const { trigger, reasons } = await renderOpen({ placement, before: true });
+        trigger.focus();
+        const focus = trackFocus();
+
+        await pressTab(true);
+
+        expect(screen.getByTestId('before')).toHaveFocus();
+        expect(reasons).toEqual([REASONS.focusOut]);
+        expectNoReentry(focus);
+      },
+    );
+
+    // The portal makes its content untabbable when the focus leaves it, and tabbable again when the
+    // focus comes back. The second pass must be the same as the first.
+    it('passes a popup with no tabbable element in both directions, and again', async () => {
+      const { trigger, reasons } = await renderOpen({ after: true });
+      const after = screen.getByTestId('after');
+      trigger.focus();
+      const focus = trackFocus();
+
+      await pressTab();
+      expect(after).toHaveFocus();
+
+      await pressTab(true);
+      expect(trigger).toHaveFocus();
+
+      await pressTab();
+      expect(after).toHaveFocus();
+      expect(reasons).toEqual([REASONS.focusOut, REASONS.focusOut]);
+      expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
     });
 
-    it('VUE-63: gives the focus to the trigger for Tab when the popup has no tabbable element', async () => {
-      const trigger = await renderOpenPopover(() => 'Text');
-      trigger.focus();
-      await flushMicrotasks();
-      const getFocusMoves = countFocusMoves(100);
+    // The trigger is the only element that the Tab key reaches outside the popup. The search goes
+    // round the document, so it meets the content of the popup too.
+    it.each([
+      { name: 'Tab, trigger tabindex 0', shift: false, tabindex: 0 },
+      { name: 'Tab, trigger tabindex -1', shift: false, tabindex: -1 },
+      { name: 'Shift+Tab, trigger tabindex 0', shift: true, tabindex: 0 },
+      { name: 'Shift+Tab, trigger tabindex -1', shift: true, tabindex: -1 },
+      {
+        name: 'Shift+Tab, popup with a button',
+        shift: true,
+        tabindex: 0,
+        content: 'button' as const,
+      },
+    ])(
+      'keeps the focus on the trigger when no other element is tabbable ($name)',
+      async ({ shift, tabindex, content }) => {
+        const { trigger, reasons } = await renderOpen({ tabindex, content });
+        trigger.focus();
+        const focus = trackFocus();
 
-      await userEvent.tab();
-      await flushMicrotasks();
+        await pressTab(shift);
+
+        expect(trigger).toHaveFocus();
+        expect(reasons).toEqual([REASONS.focusOut]);
+        expectNoReentry(focus);
+      },
+    );
+
+    it('gives the focus to the trigger for Tab from the end of the popup when no other element is tabbable', async () => {
+      const { trigger, reasons } = await renderOpen({ content: 'button' });
+      screen.getByTestId('inside').focus();
+      const focus = trackFocus();
+
+      await pressTab();
 
       expect(trigger).toHaveFocus();
-      expect(getFocusMoves()).toBeLessThan(100);
+      expect(reasons).toEqual([REASONS.focusOut]);
+      expectNoReentry(focus);
     });
   });
 });
