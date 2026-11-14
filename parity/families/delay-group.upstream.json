@@ -1,0 +1,73 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/delay-group/**"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.tsx"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "groups delays correctly",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "timeoutMs",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "resets the instant phase after Strict Mode replays the lifecycle effects",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "keeps the active context when an inactive consumer unmounts",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "keeps the timeout active when the last closed consumer unmounts",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "FloatingDelayGroup"
+          ],
+          "title": "does not re-render unrelated consumers",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}
