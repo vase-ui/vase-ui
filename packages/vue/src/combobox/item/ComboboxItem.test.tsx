@@ -661,8 +661,8 @@ describe('<Combobox.Item />', () => {
     });
   });
 
-  // A keystroke that doesn't change which items match must not re-render the items that stay
-  // mounted.
+  // The case guards the list that `ComboboxCollection` keeps when a query keeps the same items.
+  // With a new list, the `#item` slot of the list runs again, and each item renders again.
   describe('item re-renders on keystroke', () => {
     it('does not re-render still-mounted items when filtering keeps the same membership', async () => {
       const items = ['apple', 'apricot', 'avocado'];
