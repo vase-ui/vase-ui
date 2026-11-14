@@ -1,5 +1,5 @@
 {
-  "id": "VUE-47",
+  "id": "VUE-48",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/context-menu/root/ContextMenuRoot.tsx#L82-L84",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/context-menu/root/ContextMenuRoot.tsx#L98-L99"
