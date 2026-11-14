@@ -123,7 +123,6 @@ export type CheckboxRootChangeEventDetails =
 import {
   computed,
   nextTick,
-  onActivated,
   onDeactivated,
   onMounted,
   onUpdated,
@@ -156,6 +155,7 @@ import type { ComponentRenderFn, HTMLProps, VaseUIEvent } from '../../internals/
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -204,6 +204,7 @@ const {
   disabled: fieldDisabled,
   name: fieldName,
   validation: fieldValidation,
+  reaches: fieldReaches,
 } = useFieldRootContext();
 const fieldItemContext = useFieldItemContext();
 const { getDescriptionProps, registerControlId } = useLabelableContext();
@@ -251,9 +252,9 @@ let heldInput: HTMLInputElement | null = null;
 let isParentInput = props.parent;
 let unregisterInput: (() => void) | void;
 // `KeepAlive` takes the input out of the document, and the field must not use an input that is not
-// in the document. A deactivated required checkbox that is off would block the submit of the form,
-// and its value would stay in the values of the form.
-const isDeactivated = shallowRef(false);
+// in the document. A held required checkbox that is off would block the submit of the form, and its
+// value would stay in the values of the form.
+const { isHeld, shown } = useKeepAliveState(() => element.value, group?.reaches ?? fieldReaches);
 
 function updateInputRegistration() {
   unregisterInput?.();
@@ -283,30 +284,32 @@ function setInputElement(value: unknown) {
   updateInputRegistration();
 }
 
-onDeactivated(() => {
-  isDeactivated.value = true;
+function releaseInput() {
   unregisterInput?.();
   unregisterInput = undefined;
-});
+}
 
-onActivated(() => {
-  isDeactivated.value = false;
+onDeactivated(releaseInput);
+
+// The `ref` setter of a checkbox that mounts in a held branch registers the input.
+watch(isHeld, (held) => {
+  if (held) {
+    releaseInput();
+  }
 });
 
 // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
-// the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
-watch(isDeactivated, (deactivated) => {
-  if (!deactivated) {
-    updateInputRegistration();
-  }
-});
+// the hook would reverse the order of the inputs. A watcher runs in the order of the parts. The
+// release before the registration moves an input that is still registered to the end, because
+// `Map.set` keeps the place of a key.
+watch(shown, updateInputRegistration);
 
 watch(
   () => props.parent,
   (parent) => {
     isParentInput = parent;
 
-    if (!isDeactivated.value) {
+    if (!isHeld.value) {
       updateInputRegistration();
     }
   },
@@ -321,7 +324,11 @@ const rootId = useVaseUiId();
 // provider chain does not change, so `setup` makes this choice one time.
 const ownsControlId = group?.registerControlId !== registerControlId;
 // An empty `id` is not an own id: the control takes the id of the provider.
-const controlId = useLabelableId({ id: () => props.id || undefined, enabled: ownsControlId });
+const controlId = useLabelableId({
+  id: () => props.id || undefined,
+  enabled: ownsControlId,
+  element: () => element.value,
+});
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 // The group holds the state of a checkbox that has a value, and of the parent checkbox of a group
@@ -645,9 +652,9 @@ onUpdated(readRenderedId);
 const isHydrated = useIsHydrated();
 
 watch(
-  [isHydrated, isDeactivated, groupParent, () => props.parent, itemValue, isDisabled],
-  ([hydrated, deactivated, parent, isParent, value, disabled], _previous, onCleanup) => {
-    if (!hydrated || deactivated || isParent || !parent || value === undefined) {
+  [isHydrated, isHeld, groupParent, () => props.parent, itemValue, isDisabled],
+  ([hydrated, held, parent, isParent, value, disabled], _previous, onCleanup) => {
+    if (!hydrated || held || isParent || !parent || value === undefined) {
       return;
     }
 
@@ -657,9 +664,9 @@ watch(
 );
 
 watch(
-  [isDeactivated, groupParent, () => props.parent, itemValue, renderedId],
-  ([deactivated, parent, isParent, value, id], _previous, onCleanup) => {
-    if (deactivated || isParent || !parent || value === undefined || id === undefined) {
+  [isHeld, groupParent, () => props.parent, itemValue, renderedId],
+  ([held, parent, isParent, value, id], _previous, onCleanup) => {
+    if (held || isParent || !parent || value === undefined || id === undefined) {
       return;
     }
 
