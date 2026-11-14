@@ -4,10 +4,13 @@ import * as Tooltip from '../index.parts';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
+  waitForPositioned,
 } from '#test-utils';
 import TooltipPopupReplace from './TooltipPopupReplace.test.vue';
 
@@ -106,6 +109,51 @@ describe('<Tooltip.Popup />', () => {
     await user.keyboard('[Escape]');
     await waitFor(() => {
       expect(screen.queryByTestId('new')).toBe(null);
+    });
+  });
+
+  it('stays open while the pointer is on it, and closes when the pointer leaves it', async () => {
+    await render(
+      <div style={{ paddingTop: '100px', paddingLeft: '100px' }}>
+        <Tooltip.Root>
+          <Tooltip.Trigger delay={0} style={{ width: '120px', height: '40px' }}>
+            Trigger
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner data-testid="positioner" side="bottom">
+              <Tooltip.Popup data-testid="popup" style={{ width: '120px', height: '40px' }}>
+                Content
+              </Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </div>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Trigger' });
+    await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+    await fireEvent.mouseEnter(trigger);
+    await fireEvent.mouseMove(trigger);
+    const popup = await screen.findByTestId('popup');
+    const positioner = screen.getByTestId('positioner');
+    await waitForPositioned(positioner);
+
+    const rect = popup.getBoundingClientRect();
+    const inside = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+    await fireEvent.mouseLeave(trigger, inside);
+    await fireEvent.mouseEnter(positioner, inside);
+    await fireEvent.mouseMove(popup, inside);
+    // The safe polygon closes a popup that the pointer did not reach 40 ms after the leave.
+    await wait(100);
+
+    expect(popup).toHaveAttribute('data-open');
+
+    await fireEvent.mouseLeave(positioner, {
+      relatedTarget: document.body,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.bottom + 100,
+    });
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
   });
 
