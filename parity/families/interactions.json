@@ -8,11 +8,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the cursor anchor ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the hover interaction of a popup ports the file."
@@ -42,12 +37,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
       "reason": "The case opens the popup with the hover interactions of a trigger and of a popup. The pull request that adds the hover interaction of a popup ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
-      "reason": "The file tests `useClientPoint.ts`."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",

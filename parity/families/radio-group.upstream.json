@@ -1,0 +1,1286 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/radio-group/**",
+    "docs/src/app/(docs)/react/components/radio-group/**"
+  ],
+  "sources": [
+    "packages/react/src/radio-group/RadioGroup.tsx",
+    "packages/react/src/radio-group/RadioGroupContext.ts",
+    "packages/react/src/radio-group/RadioGroupDataAttributes.ts",
+    "packages/react/src/radio-group/index.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/radio-group/RadioGroup.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "extra props"
+          ],
+          "title": "can override the built-in attributes"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: id"
+          ],
+          "title": "is forwarded to the root element"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should call onValueChange when an item is clicked"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should report keyboard modifier event properties when calling onCheckedChange"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should select an item with Space on keyup"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should not select an item with Enter"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "does not change state when canceled via a root click"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "does not change state when canceled via a hidden input click"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "does not change state when canceled via arrow key navigation"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: disabled"
+          ],
+          "title": "should have the `aria-disabled` attribute"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: disabled"
+          ],
+          "title": "should not have the aria attribute when `disabled` is not set"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: disabled"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: disabled"
+          ],
+          "title": "is not a tab stop when the whole group is disabled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: disabled"
+          ],
+          "title": "lets a tabIndex prop override the disabled group tab index"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: readOnly"
+          ],
+          "title": "should have the `aria-readonly` attribute"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: readOnly"
+          ],
+          "title": "should not have the aria attribute when `readOnly` is not set"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "prop: readOnly"
+          ],
+          "title": "should not change its state when clicked"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should update its state if the underlying input is toggled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should place the style hooks on the root and subcomponents"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should set the name attribute on each radio input"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "points inputRef to the checked radio input when present"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "allows reading inputRef.current in an effect"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "supports inputRef as a function"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "does not detach a stable inputRef callback on unrelated re-renders"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "transfers the current input when the object inputRef changes"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "detaches the previous callback inputRef when it changes (cleanup: %s)"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "cleans up inputRef bindings when selecting, clearing, and unmounting"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "detaches inputRef when an initially disabled radio is enabled and then unmounted"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "skips disabled radios when assigning inputRef"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "points inputRef to the first radio input when nativeButton wraps a button"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "keeps inputRef pointing to the first radio when the value is cleared"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "detaches inputRef when its current radio unmounts"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "detaches inputRef when a radio selected after mount unmounts"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should return null when no radio is selected (matching native behavior)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should return null in form data when no radio is selected",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should include selected radio value in form data",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "should automatically select radio upon navigation"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "should manage arrow key navigation"
+          ],
+          "title": "does not select on refocus after an ignored arrow (%s)"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "should manage arrow key navigation",
+            "direction: $direction"
+          ],
+          "title": "moves focus with arrow keys and Tab",
+          "conditions": [
+            "skipIf(isJSDOM && direction === 'rtl')"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "should manage arrow key navigation",
+            "direction: $direction",
+            "modifier keys"
+          ],
+          "title": "when Shift is pressed arrow keys move focus normally",
+          "conditions": [
+            "skipIf(isJSDOM && direction === 'rtl')"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "item removal"
+          ],
+          "title": "moves the tab stop to the checked radio when the highlighted radio is removed"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "style hooks"
+          ],
+          "title": "should apply data-checked and data-unchecked to radio root and indicator"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "does not forward `value` prop"
+        },
+        {
+          "describe": [
+            "<RadioGroup />"
+          ],
+          "title": "sets tabIndex=0 to the correct element initially"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "with native <label>"
+          ],
+          "title": "associates implicitly"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "with native <label>"
+          ],
+          "title": "associates explicitly"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field"
+          ],
+          "title": "passes the `name` prop to the radio input"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused group becomes disabled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused group unmounts"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is kept when a previously focused radio unmounts after focus moves to a sibling"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused radio unmounts but its group remains"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is not acquired when focus lands on a disabled radio"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is not reacquired when a radio disabled while focused is refocused"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is reacquired when a radio that kept focus while disabled is re-enabled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is not acquired when a radio inherits disabled from Field.Item"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is reacquired when an arrow key moves focus from a disabled radio to an enabled sibling"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Root"
+          ],
+          "title": "should receive disabled prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Root"
+          ],
+          "title": "should receive name prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Root"
+          ],
+          "title": "revalidates when the controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Label"
+          ],
+          "title": "associates implicitly"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Label"
+          ],
+          "title": "associates explicitly"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "Field.Description"
+          ],
+          "title": "links the group and individual radios"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "onSubmit"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Field",
+            "prop: validationMode"
+          ],
+          "title": "onBlur validates only when focus leaves the group"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Fieldset"
+          ],
+          "title": "keeps inputRef available after an ancestor fieldset is enabled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Fieldset"
+          ],
+          "title": "labels the radio group from the fieldset legend"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Fieldset"
+          ],
+          "title": "updates label precedence without retaining replaced or unmounted IDs"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "triggers native HTML validation on submit"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "submits null to onFormSubmit when no radio is selected"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "unblocks submission after every radio in the group unmounts"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "runs the custom validator after every radio in the group unmounts"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "excludes a disabled selected radio from onFormSubmit to match native form data"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "includes a selected radio again when it is re-enabled before form submission"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "excludes an initially disabled selected radio from onFormSubmit to match native form data"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "projects an enabled selected radio, matching native form data",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "excludes a radio disabled through an ancestor <fieldset disabled> to match native form data",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "includes a selected radio after its ancestor fieldset is enabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "omits a radio associated to another form via the `form` prop",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "includes a context-portaled radio without native form association in onFormSubmit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "includes a group fully portaled outside the form element in onFormSubmit"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "submits null when the selected radio in a required group is disabled, matching native validity",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "clears required validation when a value is selected"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "validates when inputRef is a function"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "focuses the first enabled radio when all radios start disabled"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "validates and focuses the first radio after its ancestor fieldset is enabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<RadioGroup />",
+            "Form"
+          ],
+          "title": "appends the id attribute of the error to aria-describedby of individual radios"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "span",
+          "props": [
+            {
+              "name": "value",
+              "required": true,
+              "type": "Value",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Radio.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Radio.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Radio.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "RadioRootState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type RadioRootState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Indicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Radio.Indicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Radio.Indicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Radio.Indicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "RadioIndicatorState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type RadioIndicatorState = {\n    transitionStatus: TransitionStatus;\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "RadioGroup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "Value",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "Value",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: Value, eventDetails: RadioGroup.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: RadioGroup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: RadioGroup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: RadioGroup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "RadioGroupState",
+            "fields": [
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "required",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type RadioGroupState = {\n    readOnly: boolean;\n    required: boolean;\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "RadioGroupChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type RadioGroupChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "RadioGroupChangeEventDetails",
+            "code": "type RadioGroupChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "RadioGroupDataAttributes",
+          "code": "declare namespace RadioGroupDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "RadioIndicatorDataAttributes",
+          "code": "declare namespace RadioIndicatorDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "RadioIndicatorProps",
+          "code": "type RadioIndicatorProps = {\n    keepMounted?: boolean;\n    className?: string | ((state: Radio.Indicator.State) => string | undefined);\n    render?: ReactElement | ((props: HTMLProps, state: Radio.Indicator.State) => ReactElement);\n    style?: React.CSSProperties | ((state: Radio.Indicator.State) => React.CSSProperties | undefined);\n};"
+        },
+        {
+          "name": "RadioIndicatorState",
+          "code": "type RadioIndicatorState = {\n    transitionStatus: TransitionStatus;\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+        },
+        {
+          "name": "RadioRootDataAttributes",
+          "code": "declare namespace RadioRootDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            }
+          ]
+        },
+        {
+          "name": "RadioRootProps",
+          "code": "type RadioRootProps<Value = any> = {\n    value: Value;\n    disabled?: boolean;\n    required?: boolean;\n    readOnly?: boolean;\n    inputRef?: React.Ref<HTMLInputElement>;\n    nativeButton?: boolean;\n    className?: string | ((state: Radio.Root.State) => string | undefined);\n    style?: React.CSSProperties | ((state: Radio.Root.State) => React.CSSProperties | undefined);\n    render?: ReactElement | ((props: HTMLProps, state: Radio.Root.State) => ReactElement);\n};"
+        },
+        {
+          "name": "RadioRootState",
+          "code": "type RadioRootState = {\n    checked: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    required: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/radio-group/page.mdx",
+      "referenceTags": [
+        "TypesRadioGroup.RadioGroup",
+        "TypesRadioGroup.Root",
+        "TypesRadioGroup.Indicator"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "VUE-36",
+  "evidence": [
+    "https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/resolveValueLabel.tsx#L72-L75"
+  ],
+  "behavior": "The label of an item can be a function that returns the content of the label, so one label can show in the value part and in its item at the same time. The text of such an item is the result of `itemToStringLabel`, or the text of its value. Base UI takes a React element as a label, and the text of that item is `[object Object]`.",
+  "dueWith": "packages/react/src/internals/resolveValueLabel.tsx"
+}
