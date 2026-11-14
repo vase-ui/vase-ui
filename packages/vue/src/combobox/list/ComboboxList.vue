@@ -16,17 +16,10 @@ export interface ComboboxListProps
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onScopeDispose,
-  shallowRef,
-  toRaw,
-  watch,
-} from 'vue';
+import { computed, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isInTreeOf, useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { stopEvent } from '../../utils/popups/event';
 import ComboboxCollection from '../collection/ComboboxCollection.vue';
@@ -87,13 +80,7 @@ if (!toRaw(store.state).virtualized) {
 // A compiled template can mount a new list before it unmounts the old one. The old one then must
 // not clear the elements of the new one.
 let listElement: HTMLElement | null = null;
-// `KeepAlive` takes the list out of the document and calls no `ref` callback. While it holds the
-// list, the list gives no element to the store, so that the input and the trigger do not name it.
-let deactivated = false;
 function setElements(list: HTMLElement | null) {
-  if (deactivated) {
-    return;
-  }
   const current = toRaw(store.state);
   if (list !== null || current.listElement === listElement) {
     store.set('listElement', list as HTMLDivElement | null);
@@ -104,9 +91,24 @@ function setElements(list: HTMLElement | null) {
   listElement = list;
 }
 
+// `KeepAlive` takes the list out of the document and calls no `ref` callback. A list can also mount
+// in a branch that `KeepAlive` holds. While `KeepAlive` holds the list, the list gives no element to
+// the store, so that the input and the trigger do not name it. The `aria-controls` of the input
+// names the list, so the input is the owner of that reference.
+const { isHeld } = useKeepAliveState(
+  () => element.value,
+  (list) => isInTreeOf(toRaw(store.state).inputElement, list),
+);
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [setElements],
+  ref: [
+    (list: HTMLElement | null) => {
+      if (!isHeld.value) {
+        setElements(list);
+      }
+    },
+  ],
   props: (attrs) => {
     const grid = store.select('grid');
     return [
@@ -141,18 +143,9 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
-onDeactivated(() => {
-  setElements(null);
-  deactivated = true;
-});
-// `onActivated` also runs at the first mount in a `KeepAlive`. A render while `KeepAlive` held the
-// list can give a new element, so the list gives the element that it has now.
-onActivated(() => {
-  if (deactivated) {
-    deactivated = false;
-    setElements(element.value);
-  }
-});
+// A render while `KeepAlive` held the list can give a new element, so the activation gives the
+// element that the list has now.
+watch(isHeld, (held) => setElements(held ? null : element.value));
 
 defineExpose({ element });
 </script>
