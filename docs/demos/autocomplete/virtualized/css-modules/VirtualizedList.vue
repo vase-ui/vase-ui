@@ -27,7 +27,12 @@ const virtualizer = useVirtualizer(
 );
 
 const totalSize = computed(() => virtualizer.value.getTotalSize());
-const virtualItems = computed(() => virtualizer.value.getVirtualItems());
+const rows = computed(() =>
+  virtualizer.value.getVirtualItems().flatMap((virtualItem) => {
+    const item = filteredItems.value[virtualItem.index];
+    return item ? [{ virtualItem, item }] : [];
+  }),
+);
 
 // Vue calls a function ref again on each patch, and `measure()` makes the next patch.
 function setScrollElement(element: unknown) {
@@ -64,12 +69,12 @@ defineExpose({ virtualizer });
       :style="{ height: `${totalSize}px` }"
     >
       <Autocomplete.Item
-        v-for="virtualItem in virtualItems"
+        v-for="{ virtualItem, item } in rows"
         :key="virtualItem.index"
         :ref="measureItem"
         :index="virtualItem.index"
         :data-index="virtualItem.index"
-        :value="filteredItems[virtualItem.index]"
+        :value="item"
         :class="styles.Item"
         :aria-setsize="filteredItems.length"
         :aria-posinset="virtualItem.index + 1"
@@ -82,7 +87,7 @@ defineExpose({ virtualizer });
           transform: `translateY(${virtualItem.start}px)`,
         }"
       >
-        {{ filteredItems[virtualItem.index]?.name }}
+        {{ item.name }}
       </Autocomplete.Item>
     </div>
   </div>
