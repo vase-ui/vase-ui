@@ -52,6 +52,6 @@ describe('demos', () => {
 
   // VitePress adds no base path to a link in a demo. A link that starts with `/` then misses the page.
   it('start the path of each link to this site with the base path', () => {
-    expect(sourcesThatMatch(/\bhref(?:="|:\s*['"])\/(?!\/)/)).toEqual([]);
+    expect(sourcesThatMatch(/\bhref(?:="['`]?|:\s*['"`])\/(?!\/)/)).toEqual([]);
   });
 });
