@@ -648,7 +648,7 @@
       "title": "removes the hover mouseup listener when unmounted before mouseup",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and releases the mouse button. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The case opens the menu on hover and checks the `mouseup` listener of the hover. The trigger and the popup of Vase UI have no hover and no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
