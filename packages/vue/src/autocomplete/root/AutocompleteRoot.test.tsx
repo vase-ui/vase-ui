@@ -312,8 +312,8 @@ describe('<Autocomplete.Root />', () => {
               if (!nextOpen) {
                 details.preventUnmountOnClose();
               }
-              // A transition of React applies the write after the event. Vue has no transition
-              // of state, so the write comes in the next tick.
+              // React applies the write of a transition after the event. The write in `nextTick`
+              // comes after the event too.
               void nextTick(() => {
                 open.value = nextOpen;
               });
