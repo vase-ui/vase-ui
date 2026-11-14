@@ -2,7 +2,8 @@
 import { computed, provide } from 'vue';
 import { DialogPortalContext } from '../../src/dialog/portal/DialogPortalContext';
 
-// Stands in for `Dialog.Portal`. It gives the portal context to the parts below it.
+// The tests use this part in place of `Dialog.Portal`. It gives the portal context to the parts
+// below it.
 const props = withDefaults(defineProps<{ keepMounted?: boolean }>(), { keepMounted: false });
 
 provide(
