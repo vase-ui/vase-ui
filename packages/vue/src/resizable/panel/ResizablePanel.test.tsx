@@ -233,46 +233,32 @@ describe('<Resizable.Panel />', () => {
       expect(flexOf(0)).toBe('25');
     });
 
-    it('moves the layout inside a new constraint with no change event', async () => {
-      const minSize = shallowRef(0);
-      const onLayoutChange = vi.fn();
-      await render(() => (
-        <div style={{ width: '1000px' }}>
-          <Resizable.Root onLayoutChange={onLayoutChange}>
-            <Resizable.Panel id="a" data-testid="a" minSize={minSize.value} />
-            <Resizable.Panel id="b" data-testid="b" />
-          </Resizable.Root>
-        </div>
-      ));
-      expect(screen.getByTestId('a').style.flexGrow).toBe('50');
+    it.each([
+      { name: 'minimum', prop: 'minSize', from: 0, to: 70, first: '70', second: '30' },
+      { name: 'maximum', prop: 'maxSize', from: 100, to: 20, first: '20', second: '80' },
+    ])(
+      'moves the layout inside a new $name with no change event',
+      async ({ prop, from, to, first, second }) => {
+        const size = shallowRef(from);
+        const onLayoutChange = vi.fn();
+        await render(() => (
+          <div style={{ width: '1000px' }}>
+            <Resizable.Root onLayoutChange={onLayoutChange}>
+              <Resizable.Panel id="a" data-testid="a" {...{ [prop]: size.value }} />
+              <Resizable.Panel id="b" data-testid="b" />
+            </Resizable.Root>
+          </div>
+        ));
+        expect(screen.getByTestId('a').style.flexGrow).toBe('50');
 
-      minSize.value = 70;
-      await nextTick();
+        size.value = to;
+        await nextTick();
 
-      expect(screen.getByTestId('a').style.flexGrow).toBe('70');
-      expect(screen.getByTestId('b').style.flexGrow).toBe('30');
-      expect(onLayoutChange).not.toHaveBeenCalled();
-    });
-
-    it('moves the layout inside a new maximum with no change event', async () => {
-      const maxSize = shallowRef(100);
-      const onLayoutChange = vi.fn();
-      await render(() => (
-        <div style={{ width: '1000px' }}>
-          <Resizable.Root onLayoutChange={onLayoutChange}>
-            <Resizable.Panel id="a" data-testid="a" maxSize={maxSize.value} />
-            <Resizable.Panel id="b" data-testid="b" />
-          </Resizable.Root>
-        </div>
-      ));
-
-      maxSize.value = 20;
-      await nextTick();
-
-      expect(screen.getByTestId('a').style.flexGrow).toBe('20');
-      expect(screen.getByTestId('b').style.flexGrow).toBe('80');
-      expect(onLayoutChange).not.toHaveBeenCalled();
-    });
+        expect(screen.getByTestId('a').style.flexGrow).toBe(first);
+        expect(screen.getByTestId('b').style.flexGrow).toBe(second);
+        expect(onLayoutChange).not.toHaveBeenCalled();
+      },
+    );
 
     it('warns once when the sizes cannot sum to 100', async () => {
       await renderPanels({

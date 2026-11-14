@@ -342,29 +342,21 @@ describe('<Resizable.Handle />', () => {
       expect(handle).toHaveAttribute('aria-valuenow', '50');
     });
 
-    it('leaves a key that a consumer listener prevented', async () => {
-      await renderPanels({
-        handle: {
-          onKeydown: (event: KeyboardEvent) => {
-            event.preventDefault();
-          },
+    it.each([
+      {
+        name: 'preventDefault()',
+        onKeydown: (event: KeyboardEvent) => {
+          event.preventDefault();
         },
-      });
-      const handle = screen.getByTestId('handle-1');
-
-      await fireEvent.keyDown(handle, { key: 'ArrowRight' });
-
-      expect(handle).toHaveAttribute('aria-valuenow', '50');
-    });
-
-    it('does not handle a key after preventVaseUIHandler()', async () => {
-      await renderPanels({
-        handle: {
-          onKeydown: (event: KeyboardEvent & { preventVaseUIHandler: () => void }) => {
-            event.preventVaseUIHandler();
-          },
+      },
+      {
+        name: 'preventVaseUIHandler()',
+        onKeydown: (event: KeyboardEvent & { preventVaseUIHandler: () => void }) => {
+          event.preventVaseUIHandler();
         },
-      });
+      },
+    ])('does not handle a key after a listener calls $name', async ({ onKeydown }) => {
+      await renderPanels({ handle: { onKeydown } });
       const handle = screen.getByTestId('handle-1');
 
       await fireEvent.keyDown(handle, { key: 'ArrowRight' });
@@ -521,31 +513,21 @@ describe('<Resizable.Handle />', () => {
       expect(handle).toHaveAttribute('aria-valuenow', '50');
     });
 
-    it('does not start a drag when a listener prevents the default of the press', async () => {
-      await renderPanels({
-        handle: {
-          onPointerdown: (event: PointerEvent) => {
-            event.preventDefault();
-          },
+    it.each([
+      {
+        name: 'preventDefault()',
+        onPointerdown: (event: PointerEvent) => {
+          event.preventDefault();
         },
-      });
-      const handle = screen.getByTestId('handle-1');
-
-      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
-      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
-
-      expect(handle).not.toHaveAttribute('data-dragging');
-      expect(handle).toHaveAttribute('aria-valuenow', '50');
-    });
-
-    it('does not start a drag after preventVaseUIHandler()', async () => {
-      await renderPanels({
-        handle: {
-          onPointerdown: (event: PointerEvent & { preventVaseUIHandler: () => void }) => {
-            event.preventVaseUIHandler();
-          },
+      },
+      {
+        name: 'preventVaseUIHandler()',
+        onPointerdown: (event: PointerEvent & { preventVaseUIHandler: () => void }) => {
+          event.preventVaseUIHandler();
         },
-      });
+      },
+    ])('does not start a drag after a listener calls $name', async ({ onPointerdown }) => {
+      await renderPanels({ handle: { onPointerdown } });
       const handle = screen.getByTestId('handle-1');
 
       await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));

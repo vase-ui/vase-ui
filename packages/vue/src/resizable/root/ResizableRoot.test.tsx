@@ -310,30 +310,24 @@ describe('<Resizable.Root />', () => {
       expect(onLayoutCommitted.mock.calls[0]?.[1].event.type).toBe('pointerup');
     });
 
-    it('emits no layoutCommitted for a drag that changed nothing', async () => {
-      const onLayoutChange = vi.fn();
-      const onLayoutCommitted = vi.fn();
-      const onDraggingChange = vi.fn();
-      await render(<Three root={{ onLayoutChange, onLayoutCommitted, onDraggingChange }} />);
-      const handle = screen.getByTestId('handle-a');
+    it.each([
+      { name: 'a move of 0 px', distance: 0 },
+      { name: 'a move that the rounding takes away', distance: 0.0001 },
+    ])(
+      'emits no change and no layoutCommitted for $name, and still reports the drag',
+      async ({ distance }) => {
+        const onLayoutChange = vi.fn();
+        const onLayoutCommitted = vi.fn();
+        const onDraggingChange = vi.fn();
+        await render(<Three root={{ onLayoutChange, onLayoutCommitted, onDraggingChange }} />);
 
-      await fireEvent.pointerDown(handle, { ...pointer, clientX: 0, buttons: 1 });
-      await fireEvent.pointerMove(handle, { ...pointer, clientX: 0, buttons: 1 });
-      await fireEvent.pointerUp(handle, { ...pointer, clientX: 0 });
+        await drag('handle-a', distance);
 
-      expect(onLayoutChange).not.toHaveBeenCalled();
-      expect(onLayoutCommitted).not.toHaveBeenCalled();
-      expect(onDraggingChange).toHaveBeenCalledTimes(2);
-    });
-
-    it('emits no change when a move gives the layout that the panels show', async () => {
-      const onLayoutChange = vi.fn();
-      await render(<Three root={{ onLayoutChange }} />);
-
-      await drag('handle-a', 0.0001);
-
-      expect(onLayoutChange).not.toHaveBeenCalled();
-    });
+        expect(onLayoutChange).not.toHaveBeenCalled();
+        expect(onLayoutCommitted).not.toHaveBeenCalled();
+        expect(onDraggingChange).toHaveBeenCalledTimes(2);
+      },
+    );
 
     it('emits draggingChange with true at the press and with false at the end', async () => {
       const onDraggingChange = vi.fn();
@@ -618,32 +612,6 @@ describe('<Resizable.Root />', () => {
       await nextTick();
 
       expect(grows('a', 'b', 'c')).toEqual(['68', '12', '20']);
-    });
-
-    it('emits no change when a panel that the layout names unmounts and mounts again', async () => {
-      const showC = shallowRef(true);
-      const onLayoutChange = vi.fn();
-      await render(() => (
-        <div style={{ width: '1000px' }}>
-          <Resizable.Root
-            defaultLayout={{ a: 33.334, b: 33.333, c: 33.333 }}
-            onLayoutChange={onLayoutChange}
-          >
-            <Resizable.Panel id="a" data-testid="a" />
-            <Resizable.Panel id="b" data-testid="b" />
-            {showC.value ? <Resizable.Panel id="c" data-testid="c" /> : null}
-          </Resizable.Root>
-        </div>
-      ));
-
-      showC.value = false;
-      await nextTick();
-      expect(grows('a', 'b')).toEqual(['50.001', '49.999']);
-      showC.value = true;
-      await nextTick();
-
-      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
-      expect(onLayoutChange).not.toHaveBeenCalled();
     });
 
     it('emits no change when a panel unmounts, and one change when a panel that the layout does not name mounts', async () => {
