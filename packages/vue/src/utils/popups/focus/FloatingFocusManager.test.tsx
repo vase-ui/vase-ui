@@ -1927,6 +1927,41 @@ describe('FloatingFocusManager', () => {
       expect(document.body).toHaveFocus();
     });
 
+    it('moves no focus for an element that had the focus in the last open of a kept popup', async () => {
+      const removed = shallowRef(false);
+      const initialFocus = shallowRef(true);
+      await render(() => (
+        <Popup
+          keepMounted
+          role="dialog"
+          manager={{ restoreFocus: true, initialFocus: initialFocus.value }}
+        >
+          {{
+            default: ({ close }: { close: () => void }) => [
+              <input data-testid="one" />,
+              removed.value ? null : <input data-testid="two" />,
+              <button data-testid="close" onClick={() => close()} />,
+            ],
+          }}
+        </Popup>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      screen.getByTestId('two').focus();
+      await fireEvent.click(screen.getByTestId('close'));
+      await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
+      initialFocus.value = false;
+      await openPopup();
+      screen.getByTestId('reference').blur();
+      await flushMicrotasks();
+
+      removed.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+
     it('moves no focus when another element has the focus after the removal', async () => {
       await renderAndFocusTwo(true);
 

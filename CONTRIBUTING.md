@@ -722,11 +722,11 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - After a press outside the popup, the part returns the focus only when the browser supports the `preventScroll` option of `focus()`. A virtual press, a nested popup and an explicit target do not need that support.
 - The part returns no focus after a close that a focus guard caused, and after a `mouseleave` event that closed a hover popup.
 - A popup that is not modal closes when the focus moves from its reference or its popup element to an element outside the popup. The reason is `focus-out`, and the part returns no focus. `closeOnFocusOut` set to `false` stops this close.
-- These elements count as inside the popup: the reference, the popup element, the portal, the triggers of the store, the guards and the elements of `getInsideElements`.
-- The popup elements and the references of the nodes above and below the popup in the popup tree also count as inside. `externalTree` replaces the tree above the part.
+- These elements count as inside the popup: the reference, the popup element and each element that contains it, the portal, the triggers of the store, the guards and the elements of `getInsideElements`.
+- The popup element and the reference of a node below the popup in the popup tree also count as inside, with their content. For a node above the popup, only the popup element itself and the reference itself count as inside. `externalTree` replaces the tree above the part.
 - A typeable reference with `role="combobox"` and `initialFocus` set to `false` closes its popup in the same way, also when the popup is modal.
 - A focus change in the task of a press on the reference, or on an element with `data-vase-ui-click-trigger`, does not close the popup.
-- In a `FloatingPortal`, a focus that leaves the popup element closes the popup only after a press outside it. The guards of the portal close it for the Tab key.
+- In a `FloatingPortal`, a focus that leaves the popup element closes the popup only between the `pointerdown` and the `pointerup` of a press outside it. The guards of the portal close it for the Tab key.
 - With `restoreFocus`, the part moves the focus back into the popup when a removal or a hidden element in the popup leaves the focus on the body. This also needs `closeOnFocusOut`.
 - `true` focuses the last tabbable element that had the focus, or else the last tabbable element, or else the popup element. `'popup'` focuses the popup element.
 - Firefox and WebKit send no `focusout` when they remove the focused element. A `MutationObserver` on the popup element thus also starts the restore (`VUE-47`).

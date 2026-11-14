@@ -85,6 +85,8 @@ export interface FloatingFocusManagerProps {
    *   tabbable if possible, otherwise the last tabbable, then the floating element itself)
    * - `'popup'`: restore directly to the floating element (container) itself
    * - `false`: do not restore focus
+   *
+   * The restore needs `closeOnFocusOut` set to `true`.
    * @default false
    */
   restoreFocus?: boolean | 'popup' | undefined;
@@ -460,6 +462,9 @@ effect(
 
     closeType = '';
     lastInteractionType = '';
+    // A popup that stays mounted removes its listeners before the return of the focus, so the
+    // record can hold an element of the last open.
+    focusedElement = null;
 
     const doc = ownerDocument(floatingFocusEl);
     const previouslyFocusedElement = activeElement(doc);
