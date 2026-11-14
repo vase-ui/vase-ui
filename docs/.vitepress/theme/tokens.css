@@ -109,4 +109,12 @@
   --vase-syntax-keyword: var(--vase-color-red);
   --vase-syntax-string: var(--vase-color-navy);
   --vase-syntax-variable: var(--vase-color-red);
+  --vase-syntax-invalid: var(--vase-color-red);
+}
+
+/* The header of Base UI is 3rem high until the side navigation shows. */
+@media (width < 60rem) {
+  :root {
+    --vp-nav-height: 3rem;
+  }
 }

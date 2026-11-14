@@ -11,12 +11,6 @@
   outline-offset: 2px;
 }
 
-@media (width < 60rem) {
-  :root {
-    --vp-nav-height: 3rem;
-  }
-}
-
 /* Header */
 
 .VPNavBar .divider {
@@ -209,6 +203,10 @@
   text-wrap: pretty;
 }
 
+.vp-doc h1 + p + h2 {
+  margin-top: 0;
+}
+
 .vp-doc p {
   margin: 0 0 1rem;
   line-height: 1.5;
@@ -235,9 +233,13 @@
   font-weight: 700;
 }
 
-/* A heading is the link to its own section: the anchor of VitePress covers the heading. */
-.vp-doc .header-anchor,
-.vp-doc h2 .header-anchor {
+/* As in Base UI, a heading of level 2 or 3 is the link to its own section, and no other heading
+   is a link. The anchor of VitePress covers the heading. */
+.vp-doc :is(h1, h4, h5, h6) .header-anchor {
+  display: none;
+}
+
+.vp-doc :is(h2, h3) .header-anchor {
   inset: -0.25rem -0.5rem;
   margin: 0;
   border-radius: var(--vase-radius-6);
@@ -254,7 +256,7 @@
 }
 
 @media (hover: hover) {
-  .vp-doc :is(h1, h2, h3, h4, h5, h6):has(> .header-anchor:hover) {
+  .vp-doc :is(h2, h3):has(> .header-anchor:hover) {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;
@@ -320,6 +322,11 @@
   margin: 0 -0.75rem;
   padding: 0 0.75rem;
   width: calc(100% + 1.5rem);
+}
+
+/* On the highlight color of the light theme, the comment color gray-t1 has 4.2:1 contrast. */
+:root:not(.dark) .vp-doc [class*='language-'] code .highlighted {
+  --vase-syntax-comment: var(--vase-gray-t2);
 }
 
 .vp-doc [class*='language-'] > button.copy {

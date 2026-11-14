@@ -124,7 +124,15 @@ function idOf(name: string): string {
     </table>
   </div>
   <section v-for="part in parts" :key="part.name">
-    <h3 :id="idOf(part.name)">{{ part.name }}</h3>
+    <h3 :id="idOf(part.name)" tabindex="-1">
+      {{ part.name }}
+      <a
+        class="header-anchor"
+        :href="`#${idOf(part.name)}`"
+        :aria-label="`Permalink to “${part.name}”`"
+        >&#8203;</a
+      >
+    </h3>
     <p v-if="part.description"><TextWithCode :text="part.description" /></p>
     <p v-if="part.hasChildren">
       The part has nodes of its own, so a <code>#render</code> slot must mount the

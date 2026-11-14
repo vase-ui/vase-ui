@@ -23,6 +23,7 @@ const SYNTAX_ROLES = {
   keyword: ['#d73a49', '#f97583'],
   string: ['#032f62', '#9ecbff'],
   variable: ['#e36209', '#ffab70'],
+  invalid: ['#b31d28', '#fdaeb7'],
 } as const;
 const SYNTAX_COLORS = Object.fromEntries(
   (['github-light', 'github-dark'] as const).map((theme, index) => [
