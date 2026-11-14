@@ -589,7 +589,6 @@ const TriggerAndPopup = () => (
 
 const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
 
-// Calls `close()` of the handle in a lifecycle hook of a part of a consumer.
 const CloseOnHook = defineComponent({
   props: {
     hook: { type: Function as PropType<(callback: () => void) => unknown>, required: true },
