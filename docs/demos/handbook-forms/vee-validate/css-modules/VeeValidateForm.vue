@@ -229,7 +229,7 @@ const protocols = ['http', 'https', 'ssh'];
                 <Combobox.Clear :class="comboboxStyles.Clear" aria-label="Clear selection">
                   <XIcon />
                 </Combobox.Clear>
-                <Combobox.Trigger :class="comboboxStyles.Trigger" aria-label="Open popup">
+                <Combobox.Trigger :class="comboboxStyles.Trigger">
                   <CaretDownIcon />
                 </Combobox.Trigger>
               </div>
@@ -431,6 +431,7 @@ const protocols = ['http', 'https', 'ssh'];
               <Slider.Control :class="[sliderStyles.Control, layout.SliderControl]">
                 <Slider.Track :class="sliderStyles.Track">
                   <Slider.Indicator :class="sliderStyles.Indicator" />
+                  <!-- The thumb input has the focus and `blur` does not bubble. Use `focusout`. -->
                   <Slider.Thumb
                     :index="0"
                     aria-label="Minimum threshold"

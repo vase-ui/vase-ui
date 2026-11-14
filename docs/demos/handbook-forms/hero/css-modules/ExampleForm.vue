@@ -162,7 +162,7 @@ const protocols = ['http', 'https', 'ssh'];
               <Combobox.Clear :class="comboboxStyles.Clear" aria-label="Clear selection">
                 <XIcon />
               </Combobox.Clear>
-              <Combobox.Trigger :class="comboboxStyles.Trigger" aria-label="Open popup">
+              <Combobox.Trigger :class="comboboxStyles.Trigger">
                 <CaretDownIcon />
               </Combobox.Trigger>
             </div>
