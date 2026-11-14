@@ -3,8 +3,8 @@ import type { CSSProperties } from 'vue';
 export const DISABLED_TRANSITIONS_STYLE = { style: { transition: 'none' } };
 
 /**
- * The collision avoidance of a dropdown. A dropdown prefers the top and bottom sides, and it limits
- * its height with `var(--available-height)`.
+ * The collision avoidance of a dropdown. Such a popup usually takes only the top and the bottom
+ * side, and it limits its height with `var(--available-height)`.
  */
 export const DROPDOWN_COLLISION_AVOIDANCE = {
   fallbackAxisSide: 'none',
@@ -28,6 +28,12 @@ export const PATIENT_CLICK_THRESHOLD = 500;
  * The attribute that marks a trigger that opens its popup with a press.
  */
 export const CLICK_TRIGGER_IDENTIFIER = 'data-vase-ui-click-trigger';
+
+export const VASE_UI_SWIPE_IGNORE_ATTRIBUTE = 'data-vase-ui-swipe-ignore';
+export const LEGACY_SWIPE_IGNORE_ATTRIBUTE = 'data-swipe-ignore';
+
+export const VASE_UI_SWIPE_IGNORE_SELECTOR = `[${VASE_UI_SWIPE_IGNORE_ATTRIBUTE}]`;
+export const LEGACY_SWIPE_IGNORE_SELECTOR = `[${LEGACY_SWIPE_IGNORE_ATTRIBUTE}]`;
 
 /**
  * The style of the `aria-owns` owner element. The element is an empty `span`, so it needs fewer

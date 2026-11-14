@@ -1,4 +1,5 @@
 export * from '../src/common/testUtils';
+export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
 export { createRenderer } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
@@ -10,6 +11,7 @@ export {
   pressWithScreenReader,
   pressWithTouch,
 } from './pointer';
+export { fireTouch } from './touch';
 export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
 export { waitForPositioned } from './waitForPositioned';

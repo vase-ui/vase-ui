@@ -23,8 +23,8 @@ import {
   within,
 } from '#test-utils';
 import { useFieldRootContext } from '../../internals/field-root-context';
-import SelectInFieldHydration from '../../select/root/SelectInFieldHydration.test.vue';
 import * as Select from '../../select/index.parts';
+import SelectInFieldHydration from './SelectInFieldHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type FieldControlInstance = InstanceType<typeof Field.Control>;
@@ -311,7 +311,7 @@ describe('<Field.Root />', () => {
   it.skipIf(isJSDOM)(
     'keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration',
     async () => {
-      const serverHtml = await renderOnServer('src/select/root/SelectInFieldHydration.test.vue');
+      const serverHtml = await renderOnServer('src/field/root/SelectInFieldHydration.test.vue');
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
       const serverLabelId = template.content.querySelector('[data-testid="label"]')?.id;
@@ -346,7 +346,7 @@ describe('<Field.Root />', () => {
     async () => {
       const props = { control: 'select' };
       const serverHtml = await renderOnServer(
-        'src/select/root/SelectInFieldHydration.test.vue',
+        'src/field/root/SelectInFieldHydration.test.vue',
         props,
       );
       const template = document.createElement('template');

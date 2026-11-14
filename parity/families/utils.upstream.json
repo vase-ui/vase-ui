@@ -6,6 +6,7 @@
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getCssDimensions.test.ts",
     "packages/react/src/utils/getCssDimensions.ts",
+    "packages/react/src/utils/getElementAtPoint.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/getPseudoElementBounds.test.ts",
@@ -24,6 +25,7 @@
     "packages/react/src/utils/resolveAriaLabelledBy.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
+    "packages/react/src/utils/scrollable.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
     "packages/react/src/utils/scrollEdges.ts",
     "packages/react/src/utils/styles.tsx",
@@ -34,6 +36,8 @@
     "packages/react/src/utils/useIsHydrating.ts",
     "packages/react/src/utils/useRegisteredLabelId.test.tsx",
     "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/useSwipeDismiss.test.tsx",
+    "packages/react/src/utils/useSwipeDismiss.ts",
     "packages/react/src/utils/valueToPercent.ts"
   ],
   "sources": [
@@ -42,6 +46,7 @@
     "packages/react/src/utils/dispatchClickWithModifiers.ts",
     "packages/react/src/utils/formatRangeValue.ts",
     "packages/react/src/utils/getCssDimensions.ts",
+    "packages/react/src/utils/getElementAtPoint.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
     "packages/react/src/utils/getPseudoElementBounds.ts",
@@ -57,11 +62,13 @@
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.ts",
+    "packages/react/src/utils/scrollable.ts",
     "packages/react/src/utils/styles.tsx",
     "packages/react/src/utils/useFocusableWhenDisabled.ts",
     "packages/react/src/utils/useFormatLocale.ts",
     "packages/react/src/utils/useIsHydrating.ts",
     "packages/react/src/utils/useRegisteredLabelId.ts",
+    "packages/react/src/utils/useSwipeDismiss.ts",
     "packages/react/src/utils/valueToPercent.ts"
   ],
   "typeTests": [],
@@ -249,6 +256,185 @@
             "useRegisteredLabelId"
           ],
           "title": "does not let an older label cleanup clear a newer label"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/useSwipeDismiss.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "does not start swiping within a scrollable element when ignoreScrollableAncestors is true"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "starts a touch swipe when the page scroller is `body`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "keeps gating on a scrollable descendant of the other axis when `body` scrolls the page",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "does not prevent touch scrolling during swipe interactions"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "fires onProgress relative to the element size"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "continues firing onProgress when swipe progress is clamped"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "applies exponential damping for opposite-direction movement"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "preserves inline transform and transition when resetting drag styles"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "applies the drag transform imperatively while swiping"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "keeps the drag transform on a render that lags behind the swiping state"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "respects custom swipeThreshold"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "snapshots swipeThreshold for the active gesture (strict: %s)"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "fires onSwipingChange on start and end"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "cancels pointer swipe when the primary mouse button is released without pointerup"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "commits the swipe when the primary button is released past the threshold without pointerup"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "uses the final buttons:0 release move to decide dismissal when it crosses the threshold"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "resets swiping when touch ends over a scrollable descendant"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "allows onRelease to override dismissal"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "provides swipe velocity on release"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "provides release velocity from the latest swipe movement"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "handles a stationary move at $trailingTime and release at $releaseTime"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "measures release velocity from the latest movement ($name)"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "keeps release velocity when moves arrive sparsely"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "measures release velocity from the first move rather than the press"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "decays release velocity while the pointer stays pinned"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "does not report a previous gesture velocity for a release without movement"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "clamps short swipe durations when computing velocity"
+        },
+        {
+          "describe": [
+            "useSwipeDismiss"
+          ],
+          "title": "ignores pointer interactions that were default prevented"
         }
       ]
     }

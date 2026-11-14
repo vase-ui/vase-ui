@@ -17,11 +17,6 @@
       "reason": "Vase UI does not have `Combobox.Arrow`."
     },
     {
-      "upstream": "packages/react/src/combobox/arrow/ComboboxArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Arrow`."
-    },
-    {
       "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -29,11 +24,6 @@
     },
     {
       "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdropDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Backdrop`."
     },
@@ -60,11 +50,6 @@
       "reason": "Vase UI does not have `Combobox.Chip`."
     },
     {
-      "upstream": "packages/react/src/combobox/chip/ComboboxChipContext.ts",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Chip` and `Combobox.ChipRemove` use the context, and Vase UI does not have them."
-    },
-    {
       "upstream": "packages/react/src/combobox/chips/ComboboxChips.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -74,11 +59,6 @@
       "upstream": "packages/react/src/combobox/chips/ComboboxChips.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Chips`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chips/ComboboxChipsContext.ts",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Chips`, `Combobox.Chip` and `Combobox.Input` use the context, and Vase UI does not have them."
     },
     {
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
@@ -92,11 +72,6 @@
       "reason": "Vase UI does not have `Combobox.Clear`."
     },
     {
-      "upstream": "packages/react/src/combobox/clear/ComboboxClearDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Clear`."
-    },
-    {
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -106,11 +81,6 @@
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Collection`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/collection/GroupCollectionContext.tsx",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Collection` and `Combobox.Group` use the context, and Vase UI does not have them."
     },
     {
       "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.test.tsx",
@@ -146,17 +116,6 @@
       "reason": "Vase UI does not have `Combobox.Group`."
     },
     {
-      "upstream": "packages/react/src/combobox/group/ComboboxGroupContext.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/group/ComboboxGroupContext.ts",
-      "reason": "The file tests `useComboboxGroupContext` of `ComboboxGroupContext.ts`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/group/ComboboxGroupContext.ts",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Group` and `Combobox.GroupLabel` use the context, and Vase UI does not have them."
-    },
-    {
       "upstream": "packages/react/src/combobox/icon/ComboboxIcon.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -184,11 +143,6 @@
       "reason": "Vase UI does not have `Combobox.InputGroup`."
     },
     {
-      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.InputGroup`."
-    },
-    {
       "upstream": "packages/react/src/combobox/input/ComboboxInput.android.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -212,11 +166,6 @@
       "reason": "Vase UI does not have `Combobox.Input`."
     },
     {
-      "upstream": "packages/react/src/combobox/input/ComboboxInputDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Input`."
-    },
-    {
       "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicator.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -228,11 +177,6 @@
       "reason": "Vase UI does not have `Combobox.ItemIndicator`."
     },
     {
-      "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicatorDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.ItemIndicator`."
-    },
-    {
       "upstream": "packages/react/src/combobox/item/ComboboxItem.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -240,22 +184,6 @@
     },
     {
       "upstream": "packages/react/src/combobox/item/ComboboxItem.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Item`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/item/ComboboxItemContext.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/item/ComboboxItemContext.ts",
-      "reason": "The file tests `useComboboxItemContext` of `ComboboxItemContext.ts`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/item/ComboboxItemContext.ts",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Item` and `Combobox.ItemIndicator` use the context, and Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/combobox/item/ComboboxItemDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Item`."
     },
@@ -299,11 +227,6 @@
       "reason": "Vase UI does not have `Combobox.Popup`."
     },
     {
-      "upstream": "packages/react/src/combobox/popup/ComboboxPopupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Popup`."
-    },
-    {
       "upstream": "packages/react/src/combobox/portal/ComboboxPortal.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -315,17 +238,6 @@
       "reason": "Vase UI does not have `Combobox.Portal`."
     },
     {
-      "upstream": "packages/react/src/combobox/portal/ComboboxPortalContext.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/portal/ComboboxPortalContext.tsx",
-      "reason": "The file tests `useComboboxPortalContext` of `ComboboxPortalContext.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/portal/ComboboxPortalContext.tsx",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Portal` and `Combobox.Positioner` use the context, and Vase UI does not have them."
-    },
-    {
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -335,32 +247,6 @@
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerContext.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/positioner/ComboboxPositionerContext.tsx",
-      "reason": "The file tests `useComboboxPositionerContext` of `ComboboxPositionerContext.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerContext.tsx",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Popup`, `Combobox.Positioner`, `Combobox.Input`, `Combobox.Arrow` and `Combobox.List` use the context, and Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/positioner/ComboboxPositionerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/AriaCombobox.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have the internal root of Combobox, which `Combobox.Root` wraps."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.spec.tsx",
@@ -380,30 +266,9 @@
       "reason": "Vase UI does not have `Combobox.Root`."
     },
     {
-      "upstream": "packages/react/src/combobox/root/ComboboxRootContext.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/root/ComboboxRootContext.tsx",
-      "reason": "The file tests `useComboboxRootContext` and `useComboboxDerivedItemsContext` of `ComboboxRootContext.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRootContext.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have the root of Combobox. Each part reads this context from it."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/utils/useFilteredItems.ts",
-      "kind": "waits-on",
-      "reason": "The hook reads the context of the root, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/combobox/row/ComboboxRow.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Row`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/row/ComboboxRowContext.ts",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Row` and `Combobox.Item` use the context, and Vase UI does not have them."
     },
     {
       "upstream": "packages/react/src/combobox/separator/ComboboxSeparator.tsx",
@@ -434,11 +299,6 @@
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Root` and other parts of Combobox, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/combobox/store.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have the store of Combobox."
-    },
-    {
       "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -450,41 +310,9 @@
       "reason": "Vase UI does not have `Combobox.Trigger`."
     },
     {
-      "upstream": "packages/react/src/combobox/trigger/ComboboxTriggerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Trigger`."
-    },
-    {
       "upstream": "packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx",
       "kind": "waits-on",
       "reason": "Only `Combobox.Popup` and `Combobox.Input` use the file, and Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/handleInputPress.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/utils/handleInputPress.ts",
-      "reason": "The file tests `handleInputPress` of `handleInputPress.ts`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/handleInputPress.ts",
-      "kind": "waits-on",
-      "reason": "The file reads the store of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/parts.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/utils/parts.ts",
-      "reason": "The file tests `clickHighlightedItem` and `getIndexAfterChipRemoval` of `parts.ts`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/parts.ts",
-      "kind": "waits-on",
-      "reason": "The file reads the store of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/stateAttributesMapping.ts",
-      "kind": "waits-on",
-      "reason": "Only the parts of Combobox use the file, and Vase UI does not have them."
     },
     {
       "upstream": "packages/react/src/combobox/value/ComboboxValue.test.tsx",

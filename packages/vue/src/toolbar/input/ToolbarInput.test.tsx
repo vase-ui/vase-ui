@@ -1,4 +1,4 @@
-import { expect, describe, it } from 'vitest';
+import { expect, describe, it, vi } from 'vitest';
 import { computed, defineComponent, provide } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -310,6 +310,64 @@ describe('<Toolbar.Input />', () => {
       );
 
       expect(screen.getByRole('textbox')).toHaveAttribute('aria-roledescription', 'Number field');
+    });
+
+    it('handles interactions', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Toolbar.Root>
+          <NumberField.Root min={1} max={10} defaultValue={5} onValueChange={onValueChange}>
+            <NumberField.Group>
+              <NumberField.Decrement />
+              <Toolbar.Input as={NumberField.Input} />
+              <NumberField.Increment />
+            </NumberField.Group>
+          </NumberField.Root>
+        </Toolbar.Root>,
+      );
+
+      const input = screen.getByRole('textbox');
+
+      await user.keyboard('[Tab]');
+      expect(input).toHaveAttribute('tabindex', '0');
+      expect(input).toHaveFocus();
+
+      await user.keyboard(`[${ARROW_UP}]`);
+      expect(onValueChange.mock.calls.length).toBe(1);
+      expect(onValueChange.mock.calls[0][0]).toBe(6);
+
+      await user.keyboard(`[${ARROW_DOWN}]`);
+      expect(onValueChange.mock.calls.length).toBe(2);
+      expect(onValueChange.mock.calls[1][0]).toBe(5);
+    });
+
+    it('disabled state', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Toolbar.Root>
+          <NumberField.Root min={1} max={10} defaultValue={5} onValueChange={onValueChange}>
+            <NumberField.Group>
+              <NumberField.Decrement />
+              <Toolbar.Input disabled as={NumberField.Input} />
+              <NumberField.Increment />
+            </NumberField.Group>
+          </NumberField.Root>
+        </Toolbar.Root>,
+      );
+
+      const input = screen.getByRole('textbox');
+
+      expect(input).not.toHaveAttribute('disabled');
+      expect(input).toHaveAttribute('data-disabled');
+      expect(input).toHaveAttribute('aria-disabled', 'true');
+
+      await user.keyboard('[Tab]');
+      expect(input).toHaveAttribute('tabindex', '0');
+      expect(input).toHaveFocus();
+
+      await user.keyboard(`[${ARROW_UP}]`);
+      await user.keyboard(`[${ARROW_DOWN}]`);
+      expect(onValueChange.mock.calls.length).toBe(0);
     });
   });
 
