@@ -115,14 +115,7 @@ const open = computed(() => store.select('open'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
 const popupId = computed(() => store.select('triggerPopupId', thisTriggerId.value));
 
-const { registerTrigger } = useTriggerRegistration(thisTriggerId, store, (element, _store, id) => {
-  if (
-    store.select('open') &&
-    (store.select('activeTriggerElement') === element || store.select('activeTriggerId') == null)
-  ) {
-    store.update({ activeTriggerId: id, activeTriggerElement: element, closeDelay: props.closeDelay });
-  }
-});
+const { registerTrigger } = useTriggerRegistration(thisTriggerId, store);
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
 
@@ -241,7 +234,6 @@ const { element, elementProps } = useRenderElement('div', props, {
     registerTrigger,
     (trigger) => {
       triggerElement.value = trigger;
-      store.set('activeTriggerElement', trigger);
     },
   ],
   props: (attrs) => [
