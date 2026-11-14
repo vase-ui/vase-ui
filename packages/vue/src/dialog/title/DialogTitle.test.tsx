@@ -89,6 +89,25 @@ describe('<Dialog.Title />', () => {
       expect(popup).toHaveAttribute('aria-labelledby', screen.getByTestId('first').id);
     });
 
+    it('VUE-45: names the title that stays when the first of two titles unmounts', async () => {
+      const firstMounted = shallowRef(true);
+      await render(() => (
+        <Dialog.Root open modal={false}>
+          <DialogPopupPart>
+            {firstMounted.value ? <Dialog.Title data-testid="first" /> : null}
+            <Dialog.Title data-testid="second" />
+          </DialogPopupPart>
+        </Dialog.Root>
+      ));
+      const popup = screen.getByRole('dialog');
+      expect(popup).toHaveAttribute('aria-labelledby', screen.getByTestId('second').id);
+
+      firstMounted.value = false;
+      await flushMicrotasks();
+
+      expect(popup).toHaveAttribute('aria-labelledby', screen.getByTestId('second').id);
+    });
+
     // The compiled template of the fixture mounts the new title before it unmounts the old title.
     // A render function in TSX reuses the title component, so it does not show this order.
     it('VUE-45: names the new title when a template replaces the title', async () => {

@@ -19,7 +19,7 @@ export interface DialogCloseProps
     VaseUIComponentProps<DialogCloseState>,
     /* @vue-ignore */ Omit<WithVaseUIEvent<ButtonHTMLAttributes>, 'disabled'> {
   /**
-   * Whether the button is disabled.
+   * Whether the button should ignore user interaction.
    * @default false
    */
   disabled?: boolean | undefined;

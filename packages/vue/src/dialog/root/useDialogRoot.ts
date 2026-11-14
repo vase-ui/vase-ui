@@ -162,8 +162,9 @@ export function useDialogInteractions({
     }
   });
 
-  // Each registry keeps the ids of the parts of one kind. When one of two titles unmounts, the
-  // popup names the title that stays. A write of the id from each part would clear the name.
+  // Each registry keeps the ids of the parts of one kind, so the popup keeps its name when one of
+  // two titles unmounts. A part that writes its own id to the store would clear that name when it
+  // unmounts.
   const titleIds = createIdRegistry();
   const descriptionIds = createIdRegistry();
   store.context.registerTitleId = titleIds.registerId;

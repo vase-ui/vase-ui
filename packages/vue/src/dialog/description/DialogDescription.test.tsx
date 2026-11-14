@@ -88,6 +88,25 @@ describe('<Dialog.Description />', () => {
       expect(popup).toHaveAttribute('aria-describedby', screen.getByTestId('first').id);
     });
 
+    it('VUE-45: describes the popup with the description that stays when the first of two descriptions unmounts', async () => {
+      const firstMounted = shallowRef(true);
+      await render(() => (
+        <Dialog.Root open modal={false}>
+          <DialogPopupPart>
+            {firstMounted.value ? <Dialog.Description data-testid="first" /> : null}
+            <Dialog.Description data-testid="second" />
+          </DialogPopupPart>
+        </Dialog.Root>
+      ));
+      const popup = screen.getByRole('dialog');
+      expect(popup).toHaveAttribute('aria-describedby', screen.getByTestId('second').id);
+
+      firstMounted.value = false;
+      await flushMicrotasks();
+
+      expect(popup).toHaveAttribute('aria-describedby', screen.getByTestId('second').id);
+    });
+
     it('describes the popup with the description only while KeepAlive shows the description', async () => {
       const visible = shallowRef(true);
       const App = defineComponent(() => () => (
