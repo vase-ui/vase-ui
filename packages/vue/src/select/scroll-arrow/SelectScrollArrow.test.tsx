@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { h } from 'vue';
+import type { Component } from 'vue';
 import { Select } from '@vase-ui/vue/select';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import {
@@ -9,6 +11,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import type { HTMLProps } from '../../internals/types';
 
 const DEFAULT_ITEM_OFFSETS = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360];
 
@@ -439,4 +442,50 @@ describe('<Select.ScrollArrow /> and the pointer that opens the popup', () => {
     expect(screen.getByTestId('up')).not.toHaveAttribute('data-visible');
     expect(screen.getByTestId('down')).not.toHaveAttribute('data-visible');
   });
+});
+
+describe('<Select.ScrollArrow /> content', () => {
+  const { render } = createRenderer();
+
+  const arrows = [
+    { direction: 'up', Arrow: Select.ScrollUpArrow, text: '▲' },
+    { direction: 'down', Arrow: Select.ScrollDownArrow, text: '▼' },
+  ];
+
+  it.each(arrows)('shows the default slot in place of the $direction arrow', async ({ Arrow }) => {
+    await render(
+      <Select.Root open>
+        <Select.Positioner>
+          <Arrow keepMounted data-testid="arrow" v-slots={{ default: () => 'more' }} />
+        </Select.Positioner>
+      </Select.Root>,
+    );
+
+    expect(screen.getByTestId('arrow').textContent).toBe('more');
+  });
+
+  it.each(arrows)(
+    'shows the $direction arrow in the children component of the #render slot',
+    async ({ Arrow, text }) => {
+      await render(
+        <Select.Root open>
+          <Select.Positioner>
+            <Arrow
+              keepMounted
+              data-testid="arrow"
+              v-slots={{
+                render: ({ props, children }: { props: HTMLProps; children: Component }) => (
+                  <i {...props}>{h(children)}</i>
+                ),
+              }}
+            />
+          </Select.Positioner>
+        </Select.Root>,
+      );
+
+      const arrow = screen.getByTestId('arrow');
+      expect(arrow.localName).toBe('i');
+      expect(arrow.textContent).toBe(text);
+    },
+  );
 });

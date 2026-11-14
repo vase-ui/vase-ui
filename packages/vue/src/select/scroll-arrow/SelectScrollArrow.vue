@@ -37,10 +37,11 @@ export interface SelectScrollArrowProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose } from 'vue';
+import { computed, onMounted, onScopeDispose, provide } from 'vue';
+import type { Component } from 'vue';
 import { useTimeout } from '../../common/useTimeout';
 import { transitionStatusMapping } from '../../internals/stateAttributesMapping';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useTransitionStatus } from '../../internals/useTransitionStatus';
@@ -51,6 +52,8 @@ import {
 } from '../../utils/scrollEdges';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
+import SelectScrollArrowChildren from './SelectScrollArrowChildren.vue';
+import { SelectScrollArrowContext } from './SelectScrollArrowContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -60,14 +63,20 @@ const props = withDefaults(defineProps<SelectScrollArrowProps>(), {
 });
 
 defineSlots<{
+  /**
+   * The content of the arrow. The default is `▲` or `▼`.
+   */
   default(props: { state: SelectScrollArrowState }): unknown;
-  render: ComponentRenderFn<HTMLProps, SelectScrollArrowState>;
+  render(props: { props: HTMLProps; state: SelectScrollArrowState; children: Component }): unknown;
 }>();
 
 const store = useSelectRootContext();
 const { side } = useSelectPositionerContext();
 
-const isUp = computed(() => props.direction === 'up');
+const direction = computed(() => props.direction);
+const isUp = computed(() => direction.value === 'up');
+
+provide(SelectScrollArrowContext, direction);
 
 // Scroll arrows are disabled for touch modality as they are a hover-only element.
 const visible = computed(
@@ -97,7 +106,7 @@ onScopeDispose(() => {
 });
 
 const state = computed<SelectScrollArrowState>(() => ({
-  direction: props.direction,
+  direction: direction.value,
   visible: visible.value,
   side: side.value,
   transitionStatus: transitionStatus.value,
@@ -130,7 +139,7 @@ function scrollNextItem() {
     const scrollArrowHeight = element.value?.offsetHeight || 0;
     scroller.scrollTop = getTargetScrollTop(
       items,
-      props.direction,
+      direction.value,
       scrollTop,
       scroller.clientHeight,
       scrollArrowHeight,
@@ -162,6 +171,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     },
     attrs,
   ],
+  children: true,
 });
 
 useOpenChangeComplete({
@@ -227,11 +237,10 @@ function getTargetScrollTop(
 }
 </script>
 
+<!-- prettier-ignore -->
 <template>
   <template v-if="shouldRender">
-    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-    <component :is="as" v-else v-bind="elementProps()"
-      ><slot :state="state">{{ isUp ? '▲' : '▼' }}</slot></component
-    >
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="SelectScrollArrowChildren" />
+    <component :is="as" v-else v-bind="elementProps()"><SelectScrollArrowChildren><template v-if="$slots.default" #default><slot :state="state" /></template></SelectScrollArrowChildren></component>
   </template>
 </template>

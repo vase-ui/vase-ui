@@ -18,7 +18,8 @@ export interface SelectScrollDownArrowProps
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import SelectScrollArrow from '../scroll-arrow/SelectScrollArrow.vue';
 
 defineOptions({ inheritAttrs: false });
@@ -29,8 +30,15 @@ const props = withDefaults(defineProps<SelectScrollDownArrowProps>(), {
 });
 
 defineSlots<{
+  /**
+   * The content of the arrow. The default is `▼`.
+   */
   default(props: { state: SelectScrollDownArrowState }): unknown;
-  render: ComponentRenderFn<HTMLProps, SelectScrollDownArrowState>;
+  render(props: {
+    props: HTMLProps;
+    state: SelectScrollDownArrowState;
+    children: Component;
+  }): unknown;
 }>();
 
 // As in Base UI, this part renders `SelectScrollArrow` and makes no element of its own.
