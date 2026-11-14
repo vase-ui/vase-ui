@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import type { VNode } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import * as AlertDialog from '../../../alert-dialog/index.parts';
@@ -29,8 +30,9 @@ async function press(target: Element) {
   await fireEvent.click(target, { button: 0 });
 }
 
-// A popover decides for a mouse press on `click`. A popover with `modal="trap-focus"` decides on
-// `pointerdown`, and a menu, a select and a combobox close on `pointerdown` too.
+// The popup above decides for a mouse press on `click`, or on `pointerdown` for a popover with
+// `modal="trap-focus"`. A menu, a select and a combobox close on `pointerdown`, and their backdrops
+// leave the document before the `click`. Only the second kind of parent gets a press on them.
 const parents = {
   popover: (record: Recorder, content: VNode) => (
     <Popover.Root defaultOpen onOpenChange={record}>
@@ -377,4 +379,44 @@ describe('a press on a part of a child popup that is outside its popup element',
       child: closesChild ? OUTSIDE_PRESS : [],
     });
   });
+
+  // A real click has the order of events and the targets of the browser.
+  it.each([
+    { name: 'a modal dialog', modal: true },
+    { name: 'a dialog that is not modal', modal: false },
+  ])(
+    'VUE-4: a real click on the backdrop of $name in a popover closes only the dialog',
+    async ({ modal }) => {
+      const parentChanges: Change[] = [];
+      const childChanges: Change[] = [];
+      await render(
+        parents.popover(
+          recordInto(parentChanges),
+          <Dialog.Root defaultOpen modal={modal} onOpenChange={recordInto(childChanges)}>
+            <Dialog.Portal>
+              <Dialog.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: 0 }} />
+              <Dialog.Popup
+                data-testid="popup"
+                initialFocus={false}
+                style={{ position: 'fixed', left: '40%', top: '40%' }}
+              >
+                Dialog
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>,
+        ),
+      );
+      await screen.findByTestId('popup');
+
+      // A modal dialog makes its own backdrop inert, so its internal backdrop gets the click.
+      const backdrop = modal ? findPart(INTERNAL_BACKDROP) : screen.getByTestId('backdrop');
+      await userEvent.click(backdrop, { position: { x: 5, y: 5 } });
+      await flushMicrotasks();
+
+      expect({ parent: parentChanges, child: childChanges }).toEqual({
+        parent: [],
+        child: OUTSIDE_PRESS,
+      });
+    },
+  );
 });
