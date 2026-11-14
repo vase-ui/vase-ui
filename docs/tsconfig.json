@@ -15,7 +15,8 @@
     "types": ["node", "vitepress/client"]
   },
   "vueCompilerOptions": {
-    "strictTemplates": true
+    "strictTemplates": true,
+    "dataAttributes": ["data-*"]
   },
   "include": [
     ".vitepress/**/*.ts",

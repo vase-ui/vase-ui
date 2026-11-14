@@ -301,16 +301,12 @@ describe('<Toast.Provider />', () => {
       },
     });
 
-    // The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
-    // viewport, and the real pointer sends no event of its own.
-    const noRealPointer = { pointerEvents: 'none' } as const;
-
     function renderApp(toastManager: ToastManager, visible: ShallowRef<boolean>) {
       const Page = defineComponent({
         name: 'Page',
         setup: () => () => (
           <Toast.Provider toastManager={toastManager}>
-            <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+            <Toast.Viewport data-testid="viewport">
               <ToastList />
             </Toast.Viewport>
           </Toast.Provider>
