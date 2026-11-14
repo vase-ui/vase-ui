@@ -941,6 +941,13 @@ The composite root:
 - The highlighted index goes through `useControlled`. A root with `onHighlightedIndexChange` and no `highlightedIndex` also writes its own state. Base UI writes no state in that case.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - The composable adds no attribute to the element of the root.
+- When the active item changes while the focus is outside the element of the root, the root moves the highlighted index to that item. The Tab key then enters the composite on the active item, as it does for a native radio group. Base UI does this only in `Tabs.Tab`.
+- When no item stays active, or the active item becomes disabled or hidden, the root moves the highlighted index to the first item that is not disabled or hidden. The APG radio pattern gives the focus to the first radio of a group with no checked radio.
+- An active item that leaves the list is a removal. The rule of `onMapChange` for a removal then sets the highlighted index, as in Base UI.
+- When the focus leaves the element of the root, the root moves the highlighted index to the active item. The APG radio and tabs patterns give the focus to the active item when the focus enters the composite. A composite with no active item keeps the item that had the focus last, as Base UI does in each composite.
+- The root finds the active item by `data-composite-item-active`. A `MutationObserver` on the element of the root tells it when that attribute, `disabled` or `aria-disabled` changes on an item. A new map also starts the search, for an item that mounts late and for the items of a `KeepAlive` that is active again.
+- While the focus is in the element of the root, the highlighted index stays on the item that the user chose.
+- An active item that is disabled or hidden does not take the highlighted index. A change of a style starts no search, so an active item that becomes visible takes the highlighted index only at the next change.
 - The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
 - The composable returns `props`, `rootRef` and `highlightedIndex`. A part below the root reads `onHighlightedIndexChange` and `relayKeyboardEvent` from `useCompositeRootContext()`. Base UI's hook also returns them, for its `CompositeRoot` component.
 
@@ -1019,7 +1026,7 @@ The tab stop on a server:
 - An item can be mounted after its root: an item in an async component, or below a `<Suspense>` inside the root. Its element keeps the `tabindex` of the server HTML until the item is mounted.
 - While such an element has `tabindex="0"`, the mounted items do not take the tab stop. The list then has one tab stop. That element has no listeners of its own until its item is mounted.
 - While an item hydrates, it also gives the attribute `data-vase-ui-hydrating-composite-item` with the id of its root. The root finds the element by that attribute. Thus it does not wait for an item of a nested composite or for an element of a consumer.
-- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index.
+- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index. If the item that was mounted is active, the new map moves the highlighted index to it, so the item keeps the tab stop.
 - The root searches its own element only. It does not find an item whose element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab stop, the list can have two tab stops until the item is mounted.
 - A `<Suspense>` outside the root holds the mount of the root. Until it resolves, the list keeps the tab stop of the server HTML.
 - The server HTML has no tab stop in three cases:

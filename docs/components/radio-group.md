@@ -47,6 +47,8 @@ The group exposes `element` and `inputElement` through a template ref. `inputEle
 
 The group has one tab stop. A group with `disabled` has none. In the server HTML, the tab stop is on the checked radio. With no value, it is on the first radio that is not disabled.
 
+While the focus is outside the group, the tab stop follows the checked radio, and it goes back to that radio when the focus leaves the group. When the value clears, or the checked radio is disabled, while the focus is outside the group, the tab stop moves to the first radio that is not disabled.
+
 In the server HTML, the group already has the id of its `Field.Label` in `aria-labelledby`. A radio in a `Field.Item` has the id of its `Field.Label` there too. The group and its radios already have the id of a `Field.Description` in `aria-describedby`, and the id of a `Field.Error` while it shows. A label or a message can follow the part that it names.
 
 ## Examples
