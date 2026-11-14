@@ -5,7 +5,8 @@
     "packages/react/src/utils/popups/floating-root/**",
     "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx",
-    "packages/react/test/popupConformanceTests.tsx"
+    "packages/react/test/popupConformanceTests.tsx",
+    "packages/react/test/detachedTriggersConformanceTests.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
@@ -34,6 +35,7 @@
     "packages/react/src/utils/popups/usePopupHandleStore.ts",
     "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
     "packages/react/src/utils/popups/value-popup/ValuePopupStore.ts",
+    "packages/react/test/detachedTriggersConformanceTests.tsx",
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
@@ -1082,6 +1084,191 @@
             "tabbing %s"
           ],
           "title": "returns focus to the trigger when no outside element is tabbable and trigger tabIndex=%s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/detachedTriggersConformanceTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "opens with any trigger on $interaction and marks only that trigger as active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "sets the payload of the active trigger and renders content based on it",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "reports the trigger the popup was opened from for an Escape close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "reports no trigger for a close once the trigger the popup was opened from has unmounted",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "reuses the popup DOM nodes when switching triggers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "marks the trigger matching a controlled `triggerId` as active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "opens initially with the payload of a non-first `defaultTriggerId`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "allows controlling the open state and active trigger programmatically",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "keeps the trigger a controlled `triggerId` moved the popup to while it closes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "$mode triggers",
+            "multiple triggers"
+          ],
+          "title": "does not leave an inline scale style on the popup after switching triggers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "imperative actions on the handle"
+          ],
+          "title": "opens by trigger id with its payload and closes"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "imperative actions on the handle"
+          ],
+          "title": "throws when opened with an unregistered trigger id"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "imperative actions on the handle"
+          ],
+          "title": "opens unassociated with a warning when opened with an unregistered trigger id"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "root ownership"
+          ],
+          "title": "ignores imperative calls while no root is attached and follows the root across remounts"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "root ownership"
+          ],
+          "title": "drops a hover open pending when the root mounts and opens on the next hover",
+          "conditions": [
+            "skipIf(!openInteractions.includes('hover'))"
+          ]
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "root ownership"
+          ],
+          "title": "registers a detached trigger declared after the root"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "root ownership"
+          ],
+          "title": "resolves a trigger still registered to the previous root during a transient overlap"
+        },
+        {
+          "describe": [
+            "detached triggers conformance",
+            "detached triggers",
+            "reparenting"
+          ],
+          "title": "keeps a detached trigger working $name",
           "conditions": [
             "skipIf(isJSDOM)"
           ]
