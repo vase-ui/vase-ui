@@ -7,6 +7,8 @@ import type {
   DialogDescriptionProps,
   DialogDescriptionState,
 } from './description/DialogDescription.vue';
+import DialogPopup from './popup/DialogPopup.vue';
+import type { DialogPopupProps, DialogPopupState } from './popup/DialogPopup.vue';
 import DialogPortal from './portal/DialogPortal.vue';
 import type { DialogPortalProps, DialogPortalState } from './portal/DialogPortal.vue';
 import DialogRoot from './root/DialogRoot.vue';
@@ -52,6 +54,16 @@ export const Description: typeof DialogDescription = DialogDescription;
 export namespace Description {
   export type Props = DialogDescriptionProps;
   export type State = DialogDescriptionState;
+}
+
+/**
+ * A container for the dialog contents.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof DialogPopup = DialogPopup;
+export namespace Popup {
+  export type Props = DialogPopupProps;
+  export type State = DialogPopupState;
 }
 
 /**
