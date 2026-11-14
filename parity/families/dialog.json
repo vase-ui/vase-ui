@@ -6,15 +6,12 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/dialog/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Dialog. Until each Base UI case of the family has a counterpart, the tests import `index.parts.ts`."
-    },
-    {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
+      "describe": ["<Dialog.Popup />", "return focus when opened from a popup item"],
+      "title": "returns focus to the $name trigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case that has no counterpart and no row of its own renders `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "Two rows of the case open the dialog from `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
@@ -41,143 +38,91 @@
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
+      "describe": ["<Dialog.Root />", "handle-backed root ownership"],
+      "title": "does not warn for a detached payload open in production",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/root/DialogRoot.node.test.tsx",
+      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it. The case `ignores openWithPayload() with no root and gives no warning in a production build` tests the same."
     },
     {
-      "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The type test imports the entry point of Dialog, which Vase UI does not have."
+      "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
+      "describe": ["<Dialog.Root />", "handle-backed root ownership"],
+      "title": "does not attach a replacement root store from an abandoned transition render",
+      "kind": "not-applicable",
+      "reason": "The case tests a render that React starts in a transition and then drops. Vue has no transitions of this kind, so it does not drop a render that it started."
+    },
+    {
+      "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
+      "describe": [
+        "<Dialog.Root />",
+        "handle-backed root ownership",
+        "multiple roots sharing one handle"
+      ],
+      "title": "keeps the root attached through Strict Mode effect replay",
+      "kind": "not-applicable",
+      "reason": "The case tests React Strict Mode. Vue has no Strict Mode."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "describe": ["<Dialog.Root />", "when using $name", "nested popups"],
+      "title": "should not dismiss the dialog when dismissing outside a nested modal menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Three cases that have no counterpart render `Menu.Item`, which Vase UI does not have. The case `closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes` expects the focus on the body after the nested dialog closes, and Vase UI moves it into the parent popup (BUG-6037)."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Root",
+      "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "describe": ["<Dialog.Root />", "when using $name", "nested popups"],
+      "title": "should not close the parent menu when Escape is pressed in a nested dialog",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Root`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders the trigger of the dialog as `Menu.Item`, which Vase UI does not have."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Trigger`. Vase UI does not have that entry point."
+      "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "describe": ["<Dialog.Root />"],
+      "title": "closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes",
+      "kind": "replaced",
+      "test": "packages/vue/src/dialog/root/DialogRoot.test.tsx",
+      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037). The case `BUG-6037: closes a popover opened during a nested dialog on Escape, with the focus in the parent popup` tests the Escape key with that focus."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Portal",
+      "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
+      "describe": ["<Dialog.Root />"],
+      "title": "returns focus to the menu trigger when a detached dialog trigger unmounts",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Title`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Description`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Close",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "createHandle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.createHandle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "Handle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports `Dialog.Handle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the attribute names of `Dialog.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogCloseDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the attribute names of `Dialog.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogPopupCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the CSS variable names of `Dialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the attribute names of `Dialog.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the attribute names of `Dialog.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
-      "entry": "DialogViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The entry point of Dialog exports the attribute names of `Dialog.Viewport`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders the detached trigger of the dialog as `Menu.Item`, which Vase UI does not have."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Title",
+      "prop": "id",
+      "reason": "The part reads `id` to register it with the root for `aria-labelledby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Description",
+      "prop": "id",
+      "reason": "The part reads `id` to register it with the root for `aria-describedby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Close",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "DialogHandle<Payload>",
+      "reason": "`Dialog.Handle` is the class `DialogHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
   "notApplicableCommits": []
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import * as Dialog from '../index.parts';
@@ -13,6 +13,10 @@ function getButtonTag(html: string, id: string) {
 }
 
 describe('<Dialog.Root /> on a server', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('renders its default slot with no payload and attaches no store to its handle', async () => {
     const handle = Dialog.createHandle<number>();
 
@@ -97,5 +101,16 @@ describe('<Dialog.Root /> on a server', () => {
     const one = getButtonTag(html, 'one');
     expect(one).toContain('aria-expanded="false"');
     expect(one).not.toContain('data-popup-open');
+  });
+
+  it('ignores openWithPayload() with no root and gives no warning in a production build', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubEnv('NODE_ENV', 'production');
+    const handle = Dialog.createHandle<number>();
+
+    handle.openWithPayload(8);
+
+    expect(handle.isOpen).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
   });
 });
