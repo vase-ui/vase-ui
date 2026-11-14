@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import * as Tooltip from '../index.parts';
 
+// An enabled trigger has the attribute that marks it for the rule of nested triggers.
+const triggerAttribute = 'data-vase-ui-tooltip-trigger';
+
 function button(id: string, attributes: string) {
   return `<button ${attributes} type="button"><!--[-->${id}<!--]--></button>`;
 }
@@ -24,18 +27,18 @@ describe('<Tooltip.Root />', () => {
   describe('server render', () => {
     // The portal renders after the mount, so it writes one comment in each state.
     it.each([
-      { name: 'a closed tooltip', root: {}, portal: {}, two: 'id="two"' },
+      { name: 'a closed tooltip', root: {}, portal: {}, two: `id="two" ${triggerAttribute}` },
       {
         name: 'an open tooltip with no trigger id',
         root: { defaultOpen: true },
         portal: {},
-        two: 'id="two"',
+        two: `id="two" ${triggerAttribute}`,
       },
       {
         name: 'an open tooltip with a trigger id',
         root: { defaultOpen: true, defaultTriggerId: 'two' },
         portal: {},
-        two: 'data-popup-open id="two"',
+        two: `data-popup-open id="two" ${triggerAttribute}`,
       },
       {
         name: 'a disabled tooltip',
@@ -47,7 +50,7 @@ describe('<Tooltip.Root />', () => {
         name: 'a closed tooltip that stays mounted',
         root: {},
         portal: { keepMounted: true },
-        two: 'id="two"',
+        two: `id="two" ${triggerAttribute}`,
       },
     ])(
       'writes the triggers and one comment for the portal of $name',
@@ -80,7 +83,9 @@ describe('<Tooltip.Root />', () => {
         </>,
       );
 
-      expect(html).toBe(`<!--[-->${button('one', 'id="one"')}<!--[--><!--]--><!--]-->`);
+      expect(html).toBe(
+        `<!--[-->${button('one', `id="one" ${triggerAttribute}`)}<!--[--><!--]--><!--]-->`,
+      );
       expect(handle.isOpen).toBe(false);
       expect(calls).toEqual([]);
     });

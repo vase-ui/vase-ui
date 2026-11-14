@@ -88,4 +88,27 @@ describe('<Combobox.Root /> on a server', () => {
       `${comboboxInput('false', 'value="mal" name="city"')}<input id="city-hidden-input" value="mal" style tabindex="-1" aria-hidden="true">`,
     );
   });
+
+  it('the server HTML has the name in mode none and one named input in each mode', async () => {
+    const getNamedInputs = (html: string) =>
+      [...html.matchAll(/<input [^>]*>/g)]
+        .map(([tag]) => tag)
+        .filter((tag) => tag.includes(' name="city"'));
+
+    const noneHtml = await renderToString(
+      <AutocompleteRootPart id="city" name="city" defaultInputValue="mal">
+        <Combobox.Input />
+      </AutocompleteRootPart>,
+    );
+    const singleHtml = await renderToString(
+      <Combobox.Root id="city" name="city" items={['Malmö']} defaultValue="Malmö">
+        <Combobox.Input />
+      </Combobox.Root>,
+    );
+
+    expect(getNamedInputs(noneHtml)).toEqual([expect.stringContaining('role="combobox"')]);
+    expect(getNamedInputs(noneHtml)[0]).toContain('value="mal"');
+    expect(getNamedInputs(singleHtml)).toEqual([expect.stringContaining('aria-hidden="true"')]);
+    expect(getNamedInputs(singleHtml)[0]).toContain('value="Malmö"');
+  });
 });
