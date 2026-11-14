@@ -147,6 +147,7 @@ describe('<Autocomplete.Root /> on a server', () => {
         </Form>,
       );
 
+      expect(html).toMatch(/<input [^>]*value="alpha"/);
       expect(getNamedInputs(html)).toEqual([]);
       expect(html).not.toContain('data-testid="input"');
     });
