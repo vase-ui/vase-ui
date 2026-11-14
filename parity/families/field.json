@@ -53,7 +53,7 @@
       "title": "receives all form values as the 2nd argument",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
-      "reason": "The case renders `NumberField.Input`, `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
+      "reason": "The case renders `Slider` and `Select`, which Vase UI does not have. `Select` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
@@ -65,43 +65,11 @@
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "prop: validate"],
-      "title": "updates field-aware control name fallbacks when the name changes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "style hooks", "dirty"],
-      "title": "should clear [data-dirty] when a null-valued control returns to its empty initial value",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
       "describe": ["<Field.Root />", "style hooks", "dirty"],
       "title": "should clear [data-dirty] when a Select returns to its null initial value",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/root/SelectRoot.tsx",
       "reason": "The case renders `Select`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "style hooks", "control remount"],
-      "title": "clears dirty after an empty text control returns to empty following a null-valued control",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
-      "describe": ["<Field.Root />", "style hooks", "control remount"],
-      "title": "captures the baseline only once in StrictMode",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/input/NumberFieldInput.tsx",
-      "reason": "The case renders `NumberField.Input`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/field/types.md",
