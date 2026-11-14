@@ -1982,7 +1982,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use an API that renders a string as HTML.
-- ESLint refuses an API that renders a string as HTML in each script file, each SFC and each page of `docs`. The list of these APIs has the HTML injection sinks of the Trusted Types API and the methods of the HTML Sanitizer API. It also has `v-html`, `createStaticVNode` and `Static`.
+- ESLint refuses an API that renders a string as HTML in each file of `docs` that it reads. These are script files, SFCs and pages. The list of these APIs has the HTML injection sinks of the Trusted Types API and the methods of the HTML Sanitizer API. It also has `v-html`, `createStaticVNode` and `Static`.
 - ESLint refuses `innerHTML`, `outerHTML` and `srcdoc` as a bound attribute, as an object key and as a member. A name in a key or a member can be an identifier, a string or a template literal that has no expression. ESLint ignores the case of the letters. A read through destructuring is correct: `const { innerHTML } = element`.
 - ESLint refuses a member with one of these names: `insertAdjacentHTML`, `setHTML`, `setHTMLUnsafe`, `parseHTML`, `parseHTMLUnsafe`, `createContextualFragment`, `parseFromString`, `execCommand` and `writeln`.
 - ESLint refuses `write` on a name that ends in `document`: `document.write`, `element.ownerDocument.write` and `ownerDocument(element).write`. A `write` on a stream or on the clipboard is correct.
@@ -1996,7 +1996,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - When an option of `markdown` in `docs/.vitepress/config.ts` changes the HTML of a page, give the option to `createMarkdownRenderer` in `eslint.config.js`.
 - ESLint reads syntax, not values. It cannot see a name that a value holds. Examples are a `v-bind` object from an import, a computed key or member from a variable, and a template literal with an expression.
 - ESLint does not see the name in the arguments of `Reflect.set` or `Object.defineProperty`. It does not see `write` on a document that a variable holds, when the name of the variable does not end in `document`.
-- ESLint does not see HTML in a URL, such as the `:src` of an iframe with a `data:` or `blob:` URL. It does not read a script file outside `docs` that a `docs` file imports.
+- ESLint does not see HTML in a URL, such as the `:src` of an iframe with a `data:` or `blob:` URL. The rules do not apply to a script file outside `docs` that a `docs` file imports.
 - Because of these limits, a page shows text from `parity/` and from Base UI commits only through a component in `docs/.vitepress/components`.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
