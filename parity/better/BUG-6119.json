@@ -1,6 +1,6 @@
 {
   "id": "BUG-6119",
   "evidence": ["https://github.com/mui/base-ui/issues/6119"],
-  "behavior": "The scroll lock makes no layout probe while a transition runs.",
+  "behavior": "The scroll lock probes the scrollbar gutter one time for each document. A later lock makes no layout probe, so it cannot stop a transition that runs.",
   "dueWith": "packages/utils/src/useScrollLock.ts"
 }
