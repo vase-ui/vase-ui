@@ -10,7 +10,7 @@
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases of the block move the focus or the highlight with the keys, and Menu has no keys and no focus management yet. The block runs its cases for three test menubars, so it is ported in one piece."
+      "reason": "Most cases of the block that have no counterpart move the focus or the highlight with the keys, and Menu has no keys yet. The other cases of the block are not ported yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",

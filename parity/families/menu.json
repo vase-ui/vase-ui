@@ -265,19 +265,19 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases move the highlight with the keys or move the focus, and Menu has neither yet."
+      "reason": "Most cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The file imports the entry point of Menu. The cases of `prop: modal` and `scroll locking` have counterparts. Most other cases move the highlight with the keys or move the focus, and Menu has neither yet."
+      "reason": "The file imports the entry point of Menu. The cases of `prop: modal`, `scroll locking` and the press cases of `mouse interaction` have counterparts. Many other cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases move the highlight with the keys or move the focus, and Menu has neither yet."
+      "reason": "Most cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
@@ -309,7 +309,7 @@
       "title": "keeps a submenu open on direct trigger focus but closes it on guard return",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case needs the focus that the list navigation of Menu gives to a hovered item. Menu has no list navigation yet."
+      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no keys yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
@@ -317,7 +317,7 @@
       "title": "closes a submenu when its focus guard is in a shadow-root portal",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case needs the focus that the list navigation of Menu gives to a hovered item. Menu has no list navigation yet."
+      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no keys yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
@@ -364,7 +364,7 @@
       "title": "omits the expanded state when the submenu is opened with ArrowRight",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter, and it expects the focus on the highlighted item. It then opens the submenu with a key and expects the focus in the submenu. Menu has no keys and no focus management yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
+      "reason": "The case opens the menu with Enter, and it expects the focus on the first item, which the list navigation of Menu highlights. It then opens the submenu with a key. Menu has no keys yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
@@ -372,7 +372,7 @@
       "title": "omits the expanded state when the submenu is opened with Enter",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter, and it expects the focus on the highlighted item. It then opens the submenu with a key and expects the focus in the submenu. Menu has no keys and no focus management yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
+      "reason": "The case opens the menu with Enter, and it expects the focus on the first item, which the list navigation of Menu highlights. It then opens the submenu with a key. Menu has no keys yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
