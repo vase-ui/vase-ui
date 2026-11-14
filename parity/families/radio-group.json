@@ -1,0 +1,77 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/radio-group/**",
+    "docs/src/app/(docs)/react/components/radio-group/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />"],
+      "title": "supports inputRef as a function",
+      "kind": "not-applicable",
+      "reason": "The case gives `inputRef` as a ref callback. Vue has no `inputRef` prop. The part exposes `inputElement`."
+    },
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />"],
+      "title": "does not detach a stable inputRef callback on unrelated re-renders",
+      "kind": "not-applicable",
+      "reason": "The case tests that a ref callback stays attached when the parent renders again. Vue has no `inputRef` prop. The part exposes `inputElement`."
+    },
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />"],
+      "title": "transfers the current input when the object inputRef changes",
+      "kind": "not-applicable",
+      "reason": "The case changes the `inputRef` prop from one ref object to another. Vue has no `inputRef` prop. The part exposes `inputElement`."
+    },
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />"],
+      "title": "detaches the previous callback inputRef when it changes (cleanup: %s)",
+      "kind": "not-applicable",
+      "reason": "The case changes the `inputRef` prop between ref callbacks, with and without a cleanup function. Vue has no `inputRef` prop. The part exposes `inputElement`."
+    },
+    {
+      "upstream": "packages/react/src/radio-group/RadioGroup.test.tsx",
+      "describe": ["<RadioGroup />"],
+      "title": "cleans up inputRef bindings when selecting, clearing, and unmounting",
+      "kind": "not-applicable",
+      "reason": "The case counts the cleanups of a ref callback. Vue has no `inputRef` prop. The cases \"points inputRef to the checked radio input when present\", \"keeps inputRef pointing to the first radio when the value is cleared\" and \"detaches inputRef when its current radio unmounts\" test the same changes of `inputElement`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "Root",
+      "kind": "not-applicable",
+      "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "Indicator",
+      "kind": "not-applicable",
+      "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "RadioRootDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/radio-group/types.md",
+      "entry": "RadioIndicatorDataAttributes",
+      "kind": "not-applicable",
+      "reason": "The `types.md` of Radio Group repeats this entry of Radio. The family `radio` ports it."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "RadioGroup",
+      "prop": "id",
+      "reason": "The part gives `id` to the field as the id of its control and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

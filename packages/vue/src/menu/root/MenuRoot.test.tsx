@@ -2,7 +2,6 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { ComponentPublicInstance, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, waitFor } from '#test-utils';
-import { Menu } from '@vase-ui/vue/menu';
 import {
   ContextMenuProvider,
   MenubarProvider,
@@ -15,6 +14,7 @@ import { REASONS } from '../../internals/reasons';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
+import * as Menu from '../index.parts';
 import type { MenuStore } from '../store/MenuStore';
 import { useMenuRootContext } from './MenuRootContext';
 import type { MenuRootContext } from './MenuRootContext';
@@ -95,7 +95,11 @@ const TestPopup = defineComponent({
   },
 });
 
-const imperativeClose = () => createChangeEventDetails(REASONS.imperativeAction);
+const imperativeActionDetails = () => createChangeEventDetails(REASONS.imperativeAction);
+
+// The real pointer of the browser can rest on an element. A dispatched event still reaches the
+// element, and the real pointer sends no event of its own.
+const noRealPointer = { pointerEvents: 'none' } as const;
 
 function useFakeTimers() {
   vi.useFakeTimers();
@@ -214,6 +218,37 @@ describe('<Menu.Root />', () => {
     expect(optionsProbe.context.allowEscape.value).toBe(true);
   });
 
+  it('gives the virtual focus of its options to its context and to a submenu', async () => {
+    const virtualFocusRef = shallowRef<HTMLElement | null>(null);
+    const plain = createProbe();
+    const virtual = createProbe();
+    const submenu = createProbe();
+    const VirtualFocusRoot = createRootPart({ virtualFocus: true, virtualFocusRef });
+    const Submenu = createRootPart({ isSubmenu: true });
+    await render(
+      <div>
+        <Menu.Root>
+          <plain.Probe />
+        </Menu.Root>
+        <VirtualFocusRoot>
+          <virtual.Probe />
+          <Submenu>
+            <submenu.Probe />
+          </Submenu>
+        </VirtualFocusRoot>
+      </div>,
+    );
+
+    expect(plain.context.virtualFocus).toBe(false);
+    expect(plain.context.parentVirtualFocus).toBe(false);
+    expect(plain.store.context.virtualFocusRef).toBe(undefined);
+    expect(virtual.context.virtualFocus).toBe(true);
+    expect(virtual.context.parentVirtualFocus).toBe(false);
+    expect(virtual.store.context.virtualFocusRef).toBe(virtualFocusRef);
+    expect(submenu.context.virtualFocus).toBe(false);
+    expect(submenu.context.parentVirtualFocus).toBe(true);
+  });
+
   describe('open state', () => {
     it('emits openChange and then update:open', async () => {
       const events: unknown[] = [];
@@ -227,7 +262,7 @@ describe('<Menu.Root />', () => {
         </Menu.Root>,
       );
 
-      probe.store.setOpen(true, imperativeClose());
+      probe.store.setOpen(true, imperativeActionDetails());
 
       expect(events).toEqual([
         ['openChange', true, 'imperative-action'],
@@ -251,7 +286,7 @@ describe('<Menu.Root />', () => {
         </Menu.Root>,
       );
 
-      probe.store.setOpen(false, imperativeClose());
+      probe.store.setOpen(false, imperativeActionDetails());
 
       expect(events).toEqual([['openChange', false]]);
       expect(probe.store.state.open).toBe(true);
@@ -282,7 +317,7 @@ describe('<Menu.Root />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
-      probe.store.setOpen(false, imperativeClose());
+      probe.store.setOpen(false, imperativeActionDetails());
       await flushMicrotasks();
 
       expect(open.value).toBe(false);
@@ -394,7 +429,7 @@ describe('<Menu.Root />', () => {
         setup() {
           store = useMenuRootContext().store;
           onMounted(() => {
-            store.setOpen(true, imperativeClose());
+            store.setOpen(true, imperativeActionDetails());
           });
           return () => null;
         },
@@ -452,7 +487,7 @@ describe('<Menu.Root />', () => {
       const { store } = probe;
 
       unmount();
-      store.setOpen(false, imperativeClose());
+      store.setOpen(false, imperativeActionDetails());
 
       expect(store.state.open).toBe(true);
     });
@@ -639,6 +674,31 @@ describe('<Menu.Root />', () => {
 
       expect(events).toEqual(['second']);
     });
+
+    it('publishes the highlighted item to the store only under virtual focus', async () => {
+      const plain = createProbe();
+      const virtual = createProbe();
+      const VirtualFocusRoot = createRootPart({ virtualFocus: true });
+      await render(
+        <div>
+          <Menu.Root>
+            <plain.Probe />
+          </Menu.Root>
+          <VirtualFocusRoot>
+            <virtual.Probe />
+          </VirtualFocusRoot>
+        </div>,
+      );
+      const items = createItems('first', 'second');
+      for (const { store } of [plain, virtual]) {
+        store.context.itemDomElements.value = items;
+        store.setActiveIndex(1, 'keyboard', new KeyboardEvent('keydown'));
+      }
+      await flushMicrotasks();
+
+      expect(virtual.store.state.highlightedItem).toBe(items[1]);
+      expect(plain.store.state.highlightedItem).toBe(undefined);
+    });
   });
 
   describe('popup', () => {
@@ -647,7 +707,7 @@ describe('<Menu.Root />', () => {
       const { getByTestId } = await render(
         <Menu.Root defaultOpen>
           <probe.Probe />
-          <TestPopup />
+          <TestPopup style={noRealPointer} />
         </Menu.Root>,
       );
       const { store } = probe;
@@ -659,13 +719,58 @@ describe('<Menu.Root />', () => {
 
       expect(store.state.allowMouseEnter).toBe(true);
 
-      store.setOpen(false, imperativeClose());
+      store.setOpen(false, imperativeActionDetails());
       await waitFor(() => {
         expect(store.state.mounted).toBe(false);
       });
 
       expect(store.state.allowMouseEnter).toBe(false);
     });
+
+    it('sets allowMouseEnter for a mouse move over the active trigger', async () => {
+      const probe = createProbe();
+      const { getByRole } = await render(
+        <Menu.Root defaultOpen defaultTriggerId="trigger">
+          <probe.Probe />
+          <TestTrigger id="trigger" style={noRealPointer} />
+        </Menu.Root>,
+      );
+      const { store } = probe;
+
+      expect(store.state.allowMouseEnter).toBe(false);
+
+      await fireEvent.mouseMove(getByRole('button'));
+
+      expect(store.state.allowMouseEnter).toBe(true);
+    });
+
+    it.each([
+      { name: 'a root with no parent', isSubmenu: false, hoverEnabled: true },
+      { name: 'a submenu root', isSubmenu: true, hoverEnabled: false },
+    ])(
+      'sets hoverEnabled to $hoverEnabled for a mouse move over the popup of $name',
+      async ({ isSubmenu, hoverEnabled }) => {
+        const probe = createProbe();
+        const Part = createRootPart({ isSubmenu });
+        const { getByTestId } = await render(
+          <Menu.Root>
+            <Part>
+              <probe.Probe />
+              <TestPopup style={noRealPointer} />
+            </Part>
+          </Menu.Root>,
+        );
+        const { store } = probe;
+        store.setOpen(true, imperativeActionDetails());
+        await flushMicrotasks();
+
+        expect(store.state.hoverEnabled).toBe(true);
+
+        await fireEvent.mouseMove(getByTestId('popup'));
+
+        expect(store.state.hoverEnabled).toBe(hoverEnabled);
+      },
+    );
 
     it('turns the hover off for a click in the popup, and on again after the close', async () => {
       const probe = createProbe();
@@ -683,7 +788,7 @@ describe('<Menu.Root />', () => {
 
       expect(store.state.hoverEnabled).toBe(false);
 
-      store.setOpen(false, imperativeClose());
+      store.setOpen(false, imperativeActionDetails());
       await flushMicrotasks();
 
       expect(store.state.hoverEnabled).toBe(true);
@@ -890,6 +995,126 @@ describe('<Menu.Root />', () => {
       await pressOutside();
 
       expect(events).toEqual([true, false, true, false]);
+    });
+
+    it('gives each open of a context menu its own grace time', async () => {
+      useFakeTimers();
+      const events: unknown[] = [];
+      const probe = createProbe();
+      const { getByTestId } = await render(
+        <div>
+          <button data-testid="outside" />
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root onOpenChange={(open) => events.push(open)}>
+              <probe.Probe />
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        </div>,
+      );
+      const { store } = probe;
+      const pressOutside = () =>
+        fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+      const openWithMousedown = () =>
+        store.setOpen(
+          true,
+          createChangeEventDetails(REASONS.triggerPress, new MouseEvent('mousedown')),
+        );
+
+      openWithMousedown();
+      await flushMicrotasks();
+      vi.advanceTimersByTime(500);
+      await pressOutside();
+
+      expect(events).toEqual([true, false]);
+
+      openWithMousedown();
+      await flushMicrotasks();
+      await pressOutside();
+
+      expect(events).toEqual([true, false, true]);
+
+      vi.advanceTimersByTime(500);
+      await pressOutside();
+
+      expect(events).toEqual([true, false, true, false]);
+    });
+
+    it('gives a context menu that mounts open the grace time', async () => {
+      useFakeTimers();
+      const events: unknown[] = [];
+      const { getByTestId } = await render(
+        <div>
+          <button data-testid="outside" />
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root defaultOpen onOpenChange={(open) => events.push(open)}>
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        </div>,
+      );
+      const pressOutside = () =>
+        fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+
+      await pressOutside();
+
+      expect(events).toEqual([]);
+
+      vi.advanceTimersByTime(500);
+      await pressOutside();
+
+      expect(events).toEqual([false]);
+    });
+
+    it('forgets the contextmenu event of the last open, so that the next open has the grace time', async () => {
+      useFakeTimers();
+      const events: unknown[] = [];
+      const open = shallowRef(false);
+      const probe = createProbe();
+      const { getByTestId } = await render(() => (
+        <div>
+          <button data-testid="outside" />
+          <ContextMenuProvider context={createContextMenuContext()}>
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen) => events.push(nextOpen)}
+              onUpdate:open={(nextOpen) => {
+                open.value = nextOpen;
+              }}
+            >
+              <probe.Probe />
+              <TestPopup />
+            </Menu.Root>
+          </ContextMenuProvider>
+        </div>
+      ));
+      const { store } = probe;
+      const pressOutside = () =>
+        fireEvent.pointerDown(getByTestId('outside'), { pointerType: 'mouse' });
+
+      store.setOpen(
+        true,
+        createChangeEventDetails(REASONS.triggerPress, new MouseEvent('contextmenu')),
+      );
+      await flushMicrotasks();
+
+      expect(store.context.lastOpenChangeEvent?.type).toBe('contextmenu');
+
+      open.value = false;
+      await flushMicrotasks();
+
+      expect(store.context.lastOpenChangeEvent).toBe(undefined);
+
+      open.value = true;
+      await flushMicrotasks();
+      await pressOutside();
+
+      expect(events).toEqual([true]);
+
+      vi.advanceTimersByTime(500);
+      await pressOutside();
+
+      expect(events).toEqual([true, false]);
     });
   });
 

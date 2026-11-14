@@ -15,7 +15,6 @@ import { useContextMenuRootContext } from '../../internals/context-menu-root-con
 import { createGenericEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
 import { REASONS } from '../../internals/reasons';
-import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -375,12 +374,12 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         'aria-haspopup': 'menu',
         'aria-expanded': open.value,
       },
-    ) as HTMLProps,
+    ),
     inactiveTriggerProps: mergeProps(dismiss.trigger, {
       'aria-haspopup': 'menu',
       'aria-expanded': false,
-    }) as HTMLProps,
-    popupProps: mergeProps(FOCUSABLE_POPUP_PROPS, popupListeners, dismiss.floating) as HTMLProps,
+    }),
+    popupProps: mergeProps(FOCUSABLE_POPUP_PROPS, popupListeners, dismiss.floating),
   }));
 
   const context: MenuRootContext<Payload> = {
