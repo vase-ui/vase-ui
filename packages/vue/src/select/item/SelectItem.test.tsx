@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import * as Select from '../index.parts';
+import { platform } from '../../common/platform';
 import type { VaseUIEvent } from '../../internals/types';
 import {
   createRenderer,
@@ -11,6 +12,8 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+
+const isWebKit = platform.engine.webkit;
 
 describe('<Select.Item />', () => {
   const { render } = createRenderer();
@@ -132,6 +135,111 @@ describe('<Select.Item />', () => {
     });
   });
 
+  it('navigating with keyboard should focus item', async () => {
+    const { user } = await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+              <Select.Item value="three">three</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    await fireEvent.click(screen.getByTestId('trigger'));
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(screen.getByRole('listbox')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(screen.getByText('one')).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => {
+      expect(screen.getByText('two')).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => {
+      expect(screen.getByText('three')).toHaveFocus();
+    });
+  });
+
+  it('should select item when Enter key is pressed', async () => {
+    const { user } = await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    await fireEvent.click(screen.getByTestId('trigger'));
+    await flushMicrotasks();
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('value').textContent).toBe('two');
+    });
+  });
+
+  it('should focus disabled items', async () => {
+    const { user } = await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two" disabled>
+                two
+              </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    screen.getByTestId('trigger').focus();
+    await flushMicrotasks();
+    await user.keyboard('{ArrowDown}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'two' })).toHaveFocus();
+    });
+  });
+
   it('should not select disabled item', async () => {
     const handleValueChange = vi.fn();
     const { user } = await render(
@@ -162,6 +270,46 @@ describe('<Select.Item />', () => {
     expect(screen.getByRole('listbox')).toBeVisible();
   });
 
+  it('should not select disabled item when Enter is pressed', async () => {
+    const handleValueChange = vi.fn();
+    const { user } = await render(
+      <Select.Root onValueChange={handleValueChange}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two" disabled>
+                two
+              </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    screen.getByTestId('trigger').focus();
+    await flushMicrotasks();
+    await user.keyboard('{ArrowDown}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'one' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'two' })).toHaveFocus();
+    });
+
+    await user.keyboard('{Enter}');
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId('value').textContent).toBe('');
+  });
+
   it('inherits the disabled state from the root', async () => {
     const handleClick = vi.fn();
 
@@ -190,6 +338,256 @@ describe('<Select.Item />', () => {
 
     expect(handleClick).not.toHaveBeenCalled();
     expect(screen.getByTestId('value').textContent).toBe('');
+  });
+
+  it('should call onClick exactly once for a regular click', async () => {
+    const handleClick = vi.fn();
+
+    await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one" onClick={handleClick}>
+                one
+              </Select.Item>
+              <Select.Item value="two">two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    await fireEvent.click(screen.getByTestId('trigger'));
+    await flushMicrotasks();
+
+    await fireEvent.click(screen.getByRole('option', { name: 'one' }));
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('value').textContent).toBe('one');
+    expect(handleClick).toHaveBeenCalledOnce();
+  });
+
+  it('should select an unhighlighted item with the mouse', async () => {
+    await render(
+      <Select.Root defaultOpen highlightItemOnHover={false}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    await flushMicrotasks();
+
+    const option = screen.getByRole('option', { name: 'two' });
+
+    expect(option).not.toHaveAttribute('data-highlighted');
+
+    await fireEvent.pointerDown(option, { pointerType: 'mouse' });
+    await fireEvent.mouseDown(option);
+    await fireEvent.mouseUp(option);
+    await fireEvent.click(option, { detail: 1 });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('value').textContent).toBe('two');
+    });
+  });
+
+  it.skipIf(isWebKit)(
+    'should highlight a hovered item and commit it with a mouse click',
+    async () => {
+      const onValueChange = vi.fn();
+
+      await render(
+        <Select.Root onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+                <Select.Item value="three">three</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(trigger);
+      await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseUp(trigger);
+      await fireEvent.click(trigger);
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+      await waitForLaterMillisecond();
+
+      const option = screen.getByRole('option', { name: 'two' });
+
+      await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
+      await fireEvent.mouseMove(option);
+
+      await waitFor(() => {
+        expect(option).toHaveAttribute('data-highlighted');
+      });
+
+      await fireEvent.pointerDown(option, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(option);
+      await fireEvent.pointerUp(option, { pointerType: 'mouse' });
+      await fireEvent.mouseUp(option);
+      await fireEvent.click(option);
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith('two', expect.anything());
+      await waitFor(() => {
+        expect(screen.getByTestId('value').textContent).toBe('two');
+      });
+    },
+  );
+
+  it('should ignore an unhighlighted item with a generic virtual click', async () => {
+    await render(
+      <Select.Root defaultOpen highlightItemOnHover={false}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    await flushMicrotasks();
+
+    const option = screen.getByRole('option', { name: 'two' });
+
+    expect(option).not.toHaveAttribute('data-highlighted');
+
+    await fireEvent.click(option, { detail: 0 });
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('value').textContent).toBe('');
+  });
+
+  it('should focus the selected item upon opening the popup', async () => {
+    const { user } = await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+              <Select.Item value="two">two</Select.Item>
+              <Select.Item value="three">three</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+
+    await fireEvent.click(trigger);
+    const option = await screen.findByRole('option', { name: 'three' });
+    await waitForLaterMillisecond();
+    await user.click(option);
+    await fireEvent.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'three' })).toHaveFocus();
+    });
+  });
+
+  it('should allow pointer click after a typeahead sequence that ends with Space', async () => {
+    const { user } = await render(
+      <Select.Root defaultOpen>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="one">Item One</Select.Item>
+              <Select.Item value="two">Item Two</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    await flushMicrotasks();
+
+    const [firstItem, secondItem] = screen.getAllByRole('option');
+
+    firstItem!.focus();
+    await flushMicrotasks();
+
+    await user.keyboard('item t ');
+
+    await waitFor(() => {
+      expect(secondItem).toHaveFocus();
+    });
+
+    await user.click(secondItem!);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('value').textContent).toBe('two');
+    });
+  });
+
+  it('selects the item with a click and hides the positioner after the popup closes', async () => {
+    await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner data-testid="positioner">
+            <Select.Popup>
+              <Select.Item value="one">one</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const value = screen.getByTestId('value');
+    expect(value.textContent).toBe('');
+
+    await fireEvent.click(screen.getByTestId('trigger'));
+    await flushMicrotasks();
+
+    await fireEvent.click(screen.getByText('one'));
+    await flushMicrotasks();
+
+    expect(value.textContent).toBe('one');
+    // The trigger gets the focus back and mounts the portal again, so query the new positioner.
+    await waitFor(() => {
+      expect(screen.getByTestId('positioner')).toHaveAttribute('hidden');
+    });
+    expect(screen.getByTestId('positioner')).not.toBeVisible();
   });
 
   it('does not change the value of a read-only select', async () => {
@@ -280,7 +678,7 @@ describe('<Select.Item />', () => {
             <Select.Value />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger={false}>
               <Select.Popup>
                 <Select.Item value="a">a</Select.Item>
                 <Select.Item value="b" onClick={onClick}>
@@ -348,6 +746,37 @@ describe('<Select.Item />', () => {
       await waitFor(() => {
         expect(value.textContent).toBe('Select font');
       });
+    });
+
+    it('should not select an unselected item within the selected delay when aligned with the trigger', async () => {
+      await render(
+        <Select.Root defaultValue="one">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const value = screen.getByTestId('value');
+
+      expect(value.textContent).toBe('one');
+
+      await openWithMouseDown(trigger);
+
+      const option = screen.getByRole('option', { name: 'two' });
+      await vi.advanceTimersByTimeAsync(250);
+      await fireEvent.mouseUp(option);
+
+      expect(value.textContent).toBe('one');
     });
 
     it('should call onClick when selecting via drag-to-select (mousedown on trigger, mouseup on item)', async () => {
@@ -513,7 +942,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>
@@ -548,6 +977,82 @@ describe('<Select.Item />', () => {
       await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('three'));
     });
 
+    it('should select via drag-to-select when hover highlighting is disabled', async () => {
+      await render(
+        <Select.Root highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" placeholder="Select font" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await openWithMouseDown(screen.getByTestId('trigger'));
+
+      const option = screen.getByRole('option', { name: 'two' });
+      await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
+      await fireEvent.pointerMove(option, {
+        pointerType: 'mouse',
+        buttons: 1,
+        movementY: 8,
+      });
+
+      expect(option).not.toHaveAttribute('data-highlighted');
+
+      await tick(500);
+      await fireEvent.mouseUp(option);
+
+      await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('two'));
+    });
+
+    it('focuses the selected item after drag-to-select so arrow navigation continues from it', async () => {
+      await render(
+        <Select.Root multiple highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value
+              v-slots={{
+                default: ({ value }: { value: string[] }) =>
+                  value.length ? value.join(', ') : 'Select items',
+              }}
+            />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+                <Select.Item value="three">three</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await openWithMouseDown(screen.getByTestId('trigger'));
+
+      const option = screen.getByRole('option', { name: 'two' });
+      await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
+      await fireEvent.pointerMove(option, { pointerType: 'mouse', buttons: 1, movementY: 8 });
+
+      expect(option).not.toHaveFocus();
+
+      await tick(500);
+      await fireEvent.mouseUp(option);
+
+      expect(option).toHaveAttribute('aria-selected', 'true');
+      expect(option).toHaveFocus();
+
+      await fireEvent.keyDown(option, { key: 'ArrowDown' });
+      await waitFor(() => expect(screen.getByRole('option', { name: 'three' })).toHaveFocus());
+    });
+
     it('should not treat small pointer movement as drag-to-select', async () => {
       await render(
         <Select.Root defaultValue="one">
@@ -555,7 +1060,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>
@@ -592,7 +1097,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>
@@ -616,6 +1121,34 @@ describe('<Select.Item />', () => {
       await fireEvent.mouseUp(option);
 
       await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('two'));
+    });
+
+    it('should ignore an opening click that did not start on the item', async () => {
+      await render(
+        <Select.Root highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" placeholder="Select font" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+      await openWithMouseDown(trigger);
+
+      const option = screen.getByRole('option', { name: 'one' });
+      await fireEvent.mouseUp(option);
+      await fireEvent.click(option, { detail: 1 });
+
+      expect(screen.getByTestId('value').textContent).toBe('Select font');
     });
 
     it('should not select item when onClick calls preventBaseUIHandler during drag-to-select', async () => {
@@ -656,6 +1189,67 @@ describe('<Select.Item />', () => {
       expect(handleClick).toHaveBeenCalledOnce();
       expect(screen.getByTestId('value').textContent).toBe('Select font');
       expect(screen.queryByRole('listbox')).not.toBe(null);
+    });
+  });
+
+  describe('style hooks', () => {
+    it('should apply data-highlighted attribute when item is highlighted', async () => {
+      const { user } = await render(
+        <Select.Root defaultValue="a">
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-highlighted', '');
+      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-highlighted');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'a' })).not.toHaveAttribute('data-highlighted');
+      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-highlighted', '');
+    });
+
+    it('should apply data-selected attribute when item is selected', async () => {
+      await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+
+      await fireEvent.click(screen.getByRole('option', { name: 'a' }));
+      await flushMicrotasks();
+
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
+      });
+      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-selected');
     });
   });
 });

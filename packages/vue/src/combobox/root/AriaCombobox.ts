@@ -1261,9 +1261,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     flush: 'post',
   });
 
-  // The blocks below are the layout effects of Base UI, in the sequence of its source. The
-  // highlight blocks are `post` watchers, so they run after the items of the render wrote their
-  // registry. A flush runs the watchers in the sequence of the writes to their sources.
+  // The blocks below are the layout effects of Base UI, in the sequence of its source.
   function syncSelectedIndex() {
     const closeQueryReleased = previousCloseQuery !== null && closeQuery.value === null;
     previousCloseQuery = closeQuery.value;
@@ -1377,7 +1375,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           queueMicrotask(() => {
             const current = toRaw(store.state);
             if (
-              (!current.open && (!current.inline || getResolvedPopup())) ||
+              (!open.value && (!current.inline || getResolvedPopup())) ||
               (inputRef.value && inputRef.value.value.trim() !== '')
             ) {
               return;
@@ -1463,45 +1461,63 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const activeIndex = computed(() => store.select('activeIndex'));
   const selectedIndex = computed(() => store.select('selectedIndex'));
 
-  onMounted(() => {
-    syncSelectedIndex();
-    dropPendingHighlightOnClose();
-    syncHighlight();
-  });
-  watch(
-    [
-      open,
-      closeQuery,
-      selectedValue,
-      selectionMode,
-      hasItems,
-      flatFilteredValues,
-      isItemEqualToValue,
-    ],
-    syncSelectedIndex,
-    { flush: 'post' },
-  );
+  // The dependencies of each block, from its last run.
+  const lastHighlightDependencies = new Map<string, ReadonlyArray<unknown>>();
+  function haveChanged(block: string, dependencies: ReadonlyArray<unknown>) {
+    const last = lastHighlightDependencies.get(block);
+    lastHighlightDependencies.set(block, dependencies);
+    return !last || dependencies.some((dependency, i) => !Object.is(dependency, last[i]));
+  }
+
+  function readHighlightDependencies() {
+    return {
+      selectedIndex: [
+        open.value,
+        closeQuery.value,
+        selectedValue.value,
+        selectionMode.value,
+        hasItems.value,
+        flatFilteredValues.value,
+        isItemEqualToValue.value,
+      ],
+      pendingHighlight: [open.value],
+      highlight: [
+        activeIndex.value,
+        autoHighlightMode.value,
+        hasFilteredItemsProp.value,
+        hasItems.value,
+        flatFilteredValues.value,
+        inline.value,
+        open.value,
+        // The resolved popup of an inline list is the dialog around its positioner.
+        inline.value ? store.select('positionerElement') : null,
+        // Reruns the effect when the query changes without affecting the deps above, such as
+        // clearing the input when no items are filtered out (individually rendered items).
+        inputValue.value,
+      ],
+    };
+  }
+
+  // One watcher runs the three blocks, and each block runs when one of its dependencies changed. A
+  // flush that changes the dependencies of two blocks then runs them in the sequence of Base UI. A
+  // watcher for each block runs in the sequence of the writes: a controlled close in the flush of
+  // a typed query would then highlight an item of the closing popup.
+  function syncHighlightBlocks(dependencies = readHighlightDependencies()) {
+    if (haveChanged('selectedIndex', dependencies.selectedIndex)) {
+      syncSelectedIndex();
+    }
+    if (haveChanged('pendingHighlight', dependencies.pendingHighlight)) {
+      dropPendingHighlightOnClose();
+    }
+    if (haveChanged('highlight', dependencies.highlight)) {
+      syncHighlight();
+    }
+  }
+
+  onMounted(() => syncHighlightBlocks());
+  watch(readHighlightDependencies, syncHighlightBlocks, { flush: 'post' });
   syncValuesRef();
   watch([items, flatFilteredValues], syncValuesRef);
-  watch(open, dropPendingHighlightOnClose, { flush: 'post' });
-  watch(
-    [
-      activeIndex,
-      autoHighlightMode,
-      hasFilteredItemsProp,
-      hasItems,
-      flatFilteredValues,
-      inline,
-      open,
-      // The resolved popup of an inline list is the dialog around its positioner.
-      () => (inline.value ? store.select('positionerElement') : null),
-      // Reruns the effect when the query changes without affecting the deps above, such as
-      // clearing the input when no items are filtered out (individually rendered items).
-      inputValue,
-    ],
-    syncHighlight,
-    { flush: 'post' },
-  );
 
   const filled = computed(() => {
     if (selectionMode.value === 'none') {

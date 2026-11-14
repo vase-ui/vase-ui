@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, reactive, shallowRef, toRaw } from 'vue';
+import { KeepAlive, defineComponent, reactive, shallowRef, toRaw, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -25,14 +25,13 @@ import { useComboboxInputValueContext, useComboboxRootContext } from './Combobox
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 
-// No part of this family renders the positioner, the list or the items yet. The cases use the
-// fixture parts in their place, and they test the root. Most cases also use the fixture input. It
-// handles only the `input` event, and its `insidePopup` prop stands for a positioner around it.
-// The Base UI cases of this file render those parts, so the pull requests that add the parts port
-// them. A ported case then replaces the case of this file that tests the same thing: the order of
-// the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
-// and the server render. One Base UI case of this file renders only the root. It is in the block
-// `coverage edge cases`.
+// Most cases use the fixture parts in place of the positioner, the list and the items, and they
+// test the root. Most cases also use the fixture input. It handles only the `input` event, and its
+// `insidePopup` prop stands for a positioner around it. The Base UI cases of this file render the
+// parts of the family. A ported case replaces the case of this file that tests the same thing: the
+// order of the events, a canceled change, the controlled values, the hidden inputs, the autofill,
+// the field and the server render. One Base UI case of this file renders only the root. It is in
+// the block `coverage edge cases`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -532,6 +531,91 @@ describe('<Combobox.Root />', () => {
       for (const animation of document.getAnimations()) {
         animation.finish();
       }
+    });
+
+    it('keeps the highlight of the popup that a controlled root closes for the typed text', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const open = shallowRef(true);
+      const activeIndices: Array<number | null> = [];
+      const ActiveIndexRecorder = defineComponent(() => {
+        const rootStore = useComboboxRootContext();
+        watch(
+          () => rootStore.select('activeIndex'),
+          (activeIndex) => activeIndices.push(activeIndex),
+          { flush: 'sync' },
+        );
+        return () => null;
+      });
+      const { container } = await render(() => (
+        <Combobox.Root
+          id="city"
+          items={cities}
+          autoHighlight
+          open={open.value}
+          onInputValueChange={(value: string) => {
+            if (value === 'mal') {
+              open.value = false;
+            }
+          }}
+        >
+          <ActiveIndexRecorder />
+          <Combobox.Input />
+          <ComboboxListPart />
+        </Combobox.Root>
+      ));
+      // The popup of the fixture list is the parent of the list. Its animation holds the close.
+      const style = document.createElement('style');
+      style.textContent =
+        '@keyframes hold { to { opacity: 0.5; } } div:has(> #city-list) { animation: hold 100s; }';
+      container.append(style);
+      getInput().focus();
+      await type('ma');
+      await fireEvent.keyDown(getInput(), { key: 'ArrowDown' });
+      await flushMicrotasks();
+      expect(activeIndices).toEqual([0, 1]);
+
+      await type('mal');
+
+      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
+      expect(getOptions()).toEqual(['Malmö', 'Malta']);
+      expect(activeIndices).toEqual([0, 1]);
+
+      for (const animation of document.getAnimations()) {
+        animation.finish();
+      }
+    });
+
+    it('returns the highlight to the selected item after a clear of the text in a root that the consumer opens', async () => {
+      const { user } = await render(
+        <Combobox.Root open multiple items={cities} defaultValue={['Malta']}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      getInput().focus();
+      await user.keyboard('os');
+      await waitFor(() => expect(getOptions()).toEqual(['Oslo']));
+      await user.keyboard('{Backspace}{Backspace}');
+      await waitFor(() => expect(getOptions()).toEqual(cities));
+
+      await waitFor(() =>
+        expect(screen.getByRole('option', { name: 'Malta' })).toHaveAttribute('data-highlighted'),
+      );
     });
   });
 

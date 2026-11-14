@@ -1,0 +1,14 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/tooltip/demos",
+  "files": {
+    "detached-triggers-controlled/css-modules/index.tsx": "470b4437165617690a5406684bcd5cb6fbb730970a4bc859a1d5f939299b0b18",
+    "detached-triggers-full/css-modules/index.module.css": "ffda78ad2260d063318f2e631bfa0783ed168353ddb0595e0cf311ca75d4df0f",
+    "detached-triggers-full/css-modules/index.tsx": "01674689a3cdbc41c7b23c3e24e6799e9fe33b931dd4795c7ad0b6fde09b47db",
+    "detached-triggers-simple/css-modules/index.tsx": "3847b8fde098e4793411c566160eca316d5cf430ae0fc1a3f22a1fb172dfb3d8",
+    "hero/css-modules/index.module.css": "65d586445ed74d5292ca84898225a922a0915840fa1abefe5d3fd27ba92617a7",
+    "hero/css-modules/index.tsx": "e878852faafbce9deb7510e168850294f2414215cee930489973e5cb68c82a0d",
+    "icons-tw.tsx": "834792d30843f014b6aa7f4e68a7e1fc4c5702bf37daf13fab08ee1202ccfe4b",
+    "index.module.css": "9c2913761af758c47852c8ba389e7e036e782644135d4390a2fcef489f0c77b6"
+  }
+}

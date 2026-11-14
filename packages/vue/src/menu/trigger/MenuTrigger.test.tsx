@@ -1,5 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { computed, defineComponent, shallowRef } from 'vue';
+import { computed, defineComponent, nextTick, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -16,8 +16,10 @@ import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import * as Popover from '../../popover/index.parts';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
+import MenuTriggerScoped from './MenuTriggerScoped.test.vue';
 
 const popup = (
   <Menu.Portal>
@@ -446,6 +448,54 @@ describe('<Menu.Trigger />', () => {
       expect(items.map((item) => item.textContent)).toEqual(['File', 'Edit']);
       expect(items.map((item) => item.getAttribute('tabindex'))).toEqual(['0', '-1']);
     });
+
+    it('has no focus guards while it owns the open menu', async () => {
+      await render(
+        <MenubarProvider context={createMenubarContext()}>
+          <CompositeRootPart>
+            <Menu.Root defaultOpen defaultTriggerId="file">
+              <Menu.Trigger id="file">File</Menu.Trigger>
+            </Menu.Root>
+          </CompositeRootPart>
+        </MenubarProvider>,
+      );
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('menuitem', { name: 'File' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(
+        trigger.parentElement!.querySelectorAll(`[${createAttribute('focus-guard')}]`),
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('VUE-60: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed menu', open: false },
+      { name: 'an open menu', open: true },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to the trigger of $name',
+      async ({ open }) => {
+        const shown = shallowRef(true);
+        await render(() => <MenuTriggerScoped open={open} shown={shown.value} />);
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        // The guards of the trigger are its siblings. The portal has guards of its own in its place.
+        expect(
+          [trigger.previousElementSibling, trigger.nextElementSibling].map(
+            (sibling) => sibling?.hasAttribute(createAttribute('focus-guard')) ?? false,
+          ),
+        ).toEqual([open, open]);
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   describe('prop: openOnHover', () => {
