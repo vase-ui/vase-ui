@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, nextTick, shallowRef } from 'vue';
 import type { Component, CSSProperties } from 'vue';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import type { TimeClockFaceNumber } from '@vase-ui/vue/time-clock';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -592,6 +593,25 @@ describe('<TimeClock.Face />', () => {
       expect(slider).toHaveValue('0');
       await user.keyboard('{End}');
       expect(slider).toHaveValue('23');
+    });
+
+    it('keeps the direction of the arrow keys in a right-to-left page', async () => {
+      const { user } = await render(
+        <DirectionProvider direction="rtl">
+          <div dir="rtl">
+            <TimeClock.Root locale="en-US" hourCycle={12} defaultValue={time('11:00')}>
+              <TimeClock.Face />
+            </TimeClock.Root>
+          </div>
+        </DirectionProvider>,
+      );
+      const slider = screen.getByRole('slider');
+      await user.tab();
+
+      await user.keyboard('{ArrowRight}');
+      expect(slider).toHaveValue('12');
+      await user.keyboard('{ArrowLeft}{ArrowLeft}');
+      expect(slider).toHaveValue('10');
     });
 
     it('skips the numbers that are disabled', async () => {
