@@ -775,13 +775,21 @@ describe('useTriggerDataForwarding', () => {
 });
 
 describe('popupId selector', () => {
-  it('uses the default popup id as the popup id', () => {
-    const store = createTestPopupStore();
-
-    store.set('defaultPopupId', 'popup-id');
-
-    expect(store.select('popupId')).toBe('popup-id');
-  });
+  // The `setState` of `BasePopupStore` copies the `id` of the popup element to the state, and a bare
+  // store has no such step.
+  function createBasePopupStore() {
+    class PopupStore extends BasePopupStore<
+      PopupStoreState<unknown>,
+      PopupStoreContext<PopupOpenChangeEventDetails>,
+      PopupStoreSelectors,
+      PopupOpenChangeEventDetails
+    > {}
+    return new PopupStore(
+      createInitialPopupStoreState(),
+      createPopupStoreContext(),
+      popupStoreSelectors,
+    );
+  }
 
   it('omits the popup id when the default popup id is empty', () => {
     const store = createTestPopupStore();
@@ -792,19 +800,7 @@ describe('popupId selector', () => {
   });
 
   it('prefers an explicit popup element id over the default popup id', () => {
-    // The `setState` of `BasePopupStore` copies the `id` of the popup element to the state, and a
-    // bare store has no such step.
-    class PopupStore extends BasePopupStore<
-      PopupStoreState<unknown>,
-      PopupStoreContext<PopupOpenChangeEventDetails>,
-      PopupStoreSelectors,
-      PopupOpenChangeEventDetails
-    > {}
-    const store = new PopupStore(
-      createInitialPopupStoreState(),
-      createPopupStoreContext(),
-      popupStoreSelectors,
-    );
+    const store = createBasePopupStore();
     const popupElement = document.createElement('div');
     popupElement.id = 'explicit-popup-id';
 
@@ -818,14 +814,27 @@ describe('popupId selector', () => {
     expect(store.select('popupId')).toBe('explicit-popup-id');
   });
 
-  it('associates a lone trigger with the popup id unless the popup opened without a trigger', () => {
-    const store = createTestPopupStore();
+  describe('VUE-73: the popup id is the id of the popup element', () => {
+    it('gives no popup id while no popup element exists', () => {
+      const store = createTestPopupStore();
 
-    store.update({ open: true, defaultPopupId: 'popup-id', triggerCount: 1 });
-    expect(store.select('triggerPopupId', 'trigger')).toBe('popup-id');
+      store.update({ open: true, defaultPopupId: 'popup-id', triggerCount: 1 });
 
-    store.set('openedWithoutTrigger', true);
-    expect(store.select('triggerPopupId', 'trigger')).toBeUndefined();
+      expect(store.select('popupId')).toBeUndefined();
+      expect(store.select('triggerPopupId', 'trigger')).toBeUndefined();
+    });
+
+    it('gives a lone trigger the id of the popup element unless the popup opened without a trigger', () => {
+      const store = createBasePopupStore();
+      const popupElement = document.createElement('div');
+      popupElement.id = 'popup-id';
+
+      store.update({ open: true, defaultPopupId: 'generated-popup-id', triggerCount: 1, popupElement });
+      expect(store.select('triggerPopupId', 'trigger')).toBe('popup-id');
+
+      store.set('openedWithoutTrigger', true);
+      expect(store.select('triggerPopupId', 'trigger')).toBeUndefined();
+    });
   });
 });
 

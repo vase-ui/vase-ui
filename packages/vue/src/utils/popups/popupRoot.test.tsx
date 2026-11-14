@@ -39,6 +39,7 @@ import {
 } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
+import FloatingPortalLite from './portal/FloatingPortalLite.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -1690,6 +1691,9 @@ describe('usePopupRoot', () => {
       controls: expect.stringMatching(/^vase-ui-/) as string,
       open: true,
     };
+    // A portal renders the popup after the mount, so an open trigger of the server HTML names no
+    // popup.
+    const openOnServer: TriggerValues = { expanded: 'true', controls: null, open: true };
 
     // A server registers no trigger and attaches no store to a handle. A trigger that the root has
     // not named gets its values in the first flush after the mount. Vue does not patch an attribute
@@ -1709,13 +1713,13 @@ describe('usePopupRoot', () => {
       {
         name: 'open with defaultTriggerId',
         props: { defaultOpen: true, defaultTriggerId: 'first', triggers: ['first', 'second'] },
-        server: [open, closed],
+        server: [openOnServer, closed],
         client: [open, closed],
       },
       {
         name: 'open with the triggerId prop',
         props: { open: true, triggerId: 'second', triggers: ['first', 'second'] },
-        server: [closed, open],
+        server: [closed, openOnServer],
         client: [closed, open],
       },
       {
@@ -1761,7 +1765,7 @@ describe('usePopupRoot', () => {
       {
         name: 'a popup with an id of its own',
         props: { defaultOpen: true, defaultTriggerId: 'first', popupId: 'my-popup' },
-        server: [open],
+        server: [openOnServer],
         client: [{ expanded: 'true', controls: 'my-popup', open: true }],
       },
     ])('hydrates the server HTML of a root: $name', async ({ props, server, client }) => {
@@ -2235,8 +2239,7 @@ describe('usePopupRootWithPopupId', () => {
 
     await render(<Root />);
 
-    expect(getStore().state.defaultPopupId).toBe('first');
-    expect(getStore().select('popupId')).toBe('first');
+    expect(getStore().select('defaultPopupId')).toBe('first');
   });
 
   it('follows a change of the id', async () => {
@@ -2247,12 +2250,12 @@ describe('usePopupRootWithPopupId', () => {
     popupId.value = 'second';
     await flushMicrotasks();
 
-    expect(getStore().select('popupId')).toBe('second');
+    expect(getStore().select('defaultPopupId')).toBe('second');
 
     popupId.value = undefined;
     await flushMicrotasks();
 
-    expect(getStore().select('popupId')).toBe(undefined);
+    expect(getStore().select('defaultPopupId')).toBe(undefined);
   });
 
   it('names the id in aria-controls of the trigger that opens the popup', async () => {
@@ -2261,17 +2264,23 @@ describe('usePopupRootWithPopupId', () => {
     const { getByRole } = await render(
       <Root>
         <PopupTriggerPart>trigger</PopupTriggerPart>
+        <FloatingPortalLite>
+          <PopupPart>popup</PopupPart>
+        </FloatingPortalLite>
       </Root>,
     );
     const trigger = getByRole('button');
 
     await fireEvent.click(trigger);
+    await flushMicrotasks();
 
+    expect(getByRole('dialog').id).toBe('first');
     expect(trigger.getAttribute('aria-controls')).toBe('first');
 
     popupId.value = 'second';
-    await nextTick();
+    await flushMicrotasks();
 
+    expect(getByRole('dialog').id).toBe('second');
     expect(trigger.getAttribute('aria-controls')).toBe('second');
   });
 
@@ -2280,7 +2289,6 @@ describe('usePopupRootWithPopupId', () => {
 
     await render(<Root />);
 
-    expect(getStore().state.defaultPopupId).toBe(undefined);
-    expect(getStore().select('popupId')).toBe(undefined);
+    expect(getStore().select('defaultPopupId')).toBe(undefined);
   });
 });

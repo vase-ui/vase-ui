@@ -21,12 +21,9 @@ export function useKeepAliveElementRef(
     setElement(null);
   });
 
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
   onActivated(() => {
-    if (isDeactivated) {
-      isDeactivated = false;
-      setElement(element);
-    }
+    isDeactivated = false;
+    setElement(element);
   });
 
   return (value) => {

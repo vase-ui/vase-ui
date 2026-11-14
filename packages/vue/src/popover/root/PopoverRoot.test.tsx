@@ -3314,7 +3314,8 @@ describe('<Popover.Root />', () => {
     const second = screen.getByRole('button', { name: 'Second' });
     expect(first).toHaveAttribute('aria-expanded', 'true');
     expect(first).toHaveAttribute('data-popup-open');
-    expect(first.getAttribute('aria-controls')).toMatch(/^vase-ui-/);
+    // No popup is mounted, so the trigger names none.
+    expect(first).not.toHaveAttribute('aria-controls');
     expect(second).toHaveAttribute('aria-expanded', 'false');
     expect(second).not.toHaveAttribute('data-popup-open');
     expect(second).not.toHaveAttribute('aria-controls');
@@ -3792,6 +3793,9 @@ describe('<Popover.Root />', () => {
       controls: expect.stringMatching(/^vase-ui-/) as string,
       open: true,
     };
+    // A portal renders the popup after the mount, so an open trigger of the server HTML names no
+    // popup.
+    const openOnServer: TriggerValues = { expanded: 'true', controls: null, open: true };
 
     // A server registers no trigger and attaches no store to a handle. Vue does not patch an
     // attribute of a bound object when it hydrates, so the first render of each trigger must have
@@ -3811,7 +3815,7 @@ describe('<Popover.Root />', () => {
       {
         name: 'open with defaultTriggerId',
         props: { defaultOpen: true, defaultTriggerId: 'inside' },
-        server: [open],
+        server: [openOnServer],
         client: [open],
       },
       {

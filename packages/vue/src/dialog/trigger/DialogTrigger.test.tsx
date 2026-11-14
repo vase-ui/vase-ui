@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   renderOnServer,
   screen,
@@ -63,12 +65,13 @@ describe('<Dialog.Trigger />', () => {
     });
 
     it('marks only the trigger that opened the dialog, and names the popup in it', async () => {
-      let store!: DialogStore<unknown>;
       await render(
         <Dialog.Root modal={false}>
-          <DialogStoreProbe onStore={(value) => (store = value)} />
           <Dialog.Trigger>One</Dialog.Trigger>
           <Dialog.Trigger>Two</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>,
       );
       const one = screen.getByRole('button', { name: 'One' });
@@ -78,10 +81,13 @@ describe('<Dialog.Trigger />', () => {
       expect(one).not.toHaveAttribute('data-popup-open');
 
       await fireEvent.click(one, { detail: 1 });
+      await flushMicrotasks();
 
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
       expect(one).toHaveAttribute('aria-expanded', 'true');
       expect(one).toHaveAttribute('data-popup-open');
-      expect(one).toHaveAttribute('aria-controls', store.select('popupId'));
+      expect(one).toHaveAttribute('aria-controls', popup.id);
       expect(two).toHaveAttribute('aria-expanded', 'false');
       expect(two).not.toHaveAttribute('data-popup-open');
       expect(two).not.toHaveAttribute('aria-controls');
@@ -261,6 +267,57 @@ describe('<Dialog.Trigger />', () => {
 
       expect(container.querySelector('#one')).toHaveAttribute('aria-expanded', one);
       expect(container.querySelector('#two')).toHaveAttribute('aria-expanded', two);
+    });
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it('has no aria-controls while no popup is mounted', async () => {
+      await render(
+        <Dialog.Root defaultOpen modal={false}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+        </Dialog.Root>,
+      );
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+    });
+
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Dialog.Portal>
+            <Dialog.Popup>popup</Dialog.Popup>
+          </Dialog.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Dialog.Root defaultOpen modal={false}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Dialog.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
   });
 

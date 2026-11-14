@@ -26,11 +26,8 @@ function renderRoot(props: Record<string, unknown> = {}) {
 }
 
 const closed: TriggerValues = { expanded: 'false', controls: undefined, open: false };
-const open: TriggerValues = {
-  expanded: 'true',
-  controls: expect.stringMatching(/^vase-ui-/) as string,
-  open: true,
-};
+// A portal renders the popup after the mount, so an open trigger of the server HTML names no popup.
+const open: TriggerValues = { expanded: 'true', controls: undefined, open: true };
 
 describe('usePopupRoot on a server', () => {
   // A server calls no ref callback and no `onMounted` hook. It runs no `watch` with a callback
@@ -92,7 +89,7 @@ describe('usePopupRoot on a server', () => {
     expect(context.teleports).toBeUndefined();
   });
 
-  it('gives a trigger the generated id of a popup that has an id of its own', async () => {
+  it('gives an open trigger no aria-controls, also for a popup that has an id of its own', async () => {
     const props = { defaultOpen: true, defaultTriggerId: 'first' };
 
     // The portal renders the popup after the mount, so a server never reads the id of the popup.

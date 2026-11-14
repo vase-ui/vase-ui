@@ -209,7 +209,7 @@ describe('<Combobox.Popup />', () => {
   describe('the id of the popup in the store', () => {
     const Probe = defineComponent(() => {
       const store = useComboboxRootContext();
-      return () => <span data-testid="probe" data-popup-id={store.select('popupElementId')} />;
+      return () => <span data-testid="probe" data-popup-id={store.select('popupId')} />;
     });
 
     it('gives the rendered id of the popup to the store', async () => {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { nextTick, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
@@ -682,6 +682,46 @@ describe('<Popover.Trigger />', () => {
         expect(trigger).not.toBeVisible();
       },
     );
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>popup</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Popover.Root defaultOpen>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Popover.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

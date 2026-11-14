@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createRenderer, fireEvent, screen } from '#test-utils';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
@@ -66,5 +67,45 @@ describe('<Drawer.Trigger />', () => {
     const trigger = screen.getByRole('button', { name: 'Open' });
     expect(trigger.tagName).toBe('SPAN');
     expect(instance.element).toBe(trigger);
+  });
+
+  describe('VUE-73: aria-controls names only an element in the document', () => {
+    it('has no aria-controls while KeepAlive holds the popup', async () => {
+      const Popup = defineComponent({
+        setup: () => () => (
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup>popup</Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Drawer.Root defaultOpen modal={false}>
+          <Drawer.Trigger>Open</Drawer.Trigger>
+          <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+        </Drawer.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(false);
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(popup.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 });
