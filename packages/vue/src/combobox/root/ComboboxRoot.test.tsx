@@ -2826,6 +2826,76 @@ describe('<Combobox.Root />', () => {
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
       expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
     });
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held required combobox does not block the submit of its form: $name',
+      async ({ name }) => {
+        const handleSubmit = vi.fn();
+        const visible = shallowRef(true);
+        const extra = shallowRef(name === 'deactivated');
+        const Branch = defineComponent(() => () => (
+          <div>
+            {extra.value ? (
+              <Combobox.Root key="held" items={cities} required>
+                <Combobox.Input />
+              </Combobox.Root>
+            ) : null}
+          </div>
+        ));
+        const { user } = await render(() => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="city" data-testid="field">
+              <Field.Control defaultValue="shown" />
+              <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            </Field.Root>
+            <button type="submit">Submit</button>
+          </Form>
+        ));
+
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+        expect(handleSubmit).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+      },
+    );
+
+    it('the label does not name a combobox that mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Combobox.Root key="held" items={cities} id="held-combobox">
+              <Combobox.Input />
+            </Combobox.Root>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">City</Field.Label>
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const providerId = label.getAttribute('for');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(label.getAttribute('for')).toBe(providerId);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(label).toHaveAttribute('for', 'held-combobox');
+    });
   });
 
   describe('server render', () => {

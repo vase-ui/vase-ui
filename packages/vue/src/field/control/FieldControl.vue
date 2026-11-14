@@ -57,7 +57,7 @@ import { computed, nextTick, onMounted, watch } from 'vue';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
-import { useRegisterFieldControl } from '../../internals/field-register-control';
+import { useFieldInput, useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
 import { useFormContext } from '../../internals/form-context';
@@ -122,7 +122,7 @@ const state = computed<FieldControlState>(() => ({
   disabled: isDisabled.value,
 }));
 
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 
 // The DOM value is always a string, so the comparisons for `dirty` use the string.
 const serializedValue = computed(() => (props.value == null ? undefined : String(props.value)));
@@ -289,16 +289,7 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-// A template can mount the control that replaces this control before it unmounts this control.
-// The control then clears the input of the field only when the input is its own.
-let ownInput: HTMLInputElement | null = null;
-function setInput(next: HTMLElement | null) {
-  const input = next as HTMLInputElement | null;
-  if (input !== null || validation.inputRef.value === ownInput) {
-    validation.inputRef.value = input;
-  }
-  ownInput = input;
-}
+const setInput = useFieldInput();
 
 const { element, elementProps } = useRenderElement('input', props, {
   state,

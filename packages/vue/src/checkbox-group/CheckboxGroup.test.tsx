@@ -3019,6 +3019,40 @@ describe('<CheckboxGroup />', () => {
         other: 'x',
       });
     });
+
+    it('the label keeps naming a shown control when a group mounts while KeepAlive holds it', async () => {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <CheckboxGroup key="held" defaultValue={[]}>
+              <Checkbox.Root value="apple" />
+            </CheckboxGroup>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Fruit</Field.Label>
+          <Field.Control data-testid="control" />
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+      const control = screen.getByTestId('control');
+      const controlId = control.id;
+
+      expect(label).toHaveAttribute('for', controlId);
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('id', controlId);
+      expect(label).toHaveAttribute('for', controlId);
+    });
   });
 
   describe('in a field', () => {

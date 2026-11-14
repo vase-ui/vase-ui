@@ -10,7 +10,9 @@ import {
   shallowRef,
   useAttrs,
 } from 'vue';
+import type { VNode } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
 import { Slider } from '@vase-ui/vue/slider';
 import type { VaseUIEvent } from '@vase-ui/vue/types';
 import {
@@ -1904,6 +1906,62 @@ describe('<Slider.Thumb />', () => {
       await waitFor(() => {
         expect(thumb.style.getPropertyValue('--position')).toBe('59%');
       });
+    });
+
+    function renderHeldSlider(name: string, shownControl: () => VNode) {
+      const handleSubmit = vi.fn();
+      const visible = shallowRef(true);
+      const extra = shallowRef(name === 'deactivated');
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Slider.Root key="held" defaultValue={5}>
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          ) : null}
+        </div>
+      ));
+      const view = render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="volume" data-testid="field">
+            {shownControl()}
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      return async function submit() {
+        const { user } = await view;
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+        await user.click(screen.getByRole('button', { name: 'Submit' }));
+        return handleSubmit;
+      };
+    }
+
+    it.each([{ name: 'held mount' }, { name: 'deactivated' }])(
+      'a held slider keeps the input of a shown required control: $name',
+      async ({ name }) => {
+        const submit = renderHeldSlider(name, () => <Field.Control required />);
+
+        const handleSubmit = await submit();
+
+        expect(handleSubmit).not.toHaveBeenCalled();
+        expect(screen.getByTestId('field')).toHaveAttribute('data-invalid', '');
+      },
+    );
+
+    it('a slider that mounts while KeepAlive holds it gives no value to its form', async () => {
+      const submit = renderHeldSlider('held mount', () => <Field.Control defaultValue="shown" />);
+
+      const handleSubmit = await submit();
+
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ volume: 'shown' });
     });
   });
 
