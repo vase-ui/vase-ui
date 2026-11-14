@@ -132,7 +132,7 @@ const ariaControls = computed(() => {
     return undefined;
   }
   const id = inputInsidePopup.value
-    ? store.select('popupElementId')
+    ? store.select('popupId')
     : store.select('listElement')?.id;
   return id || undefined;
 });

@@ -1104,6 +1104,46 @@ describe('<Combobox.Trigger />', () => {
         expect(popup.id).not.toBe('');
         expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', popup.id);
       });
+
+      it('has no aria-controls while KeepAlive holds the popup', async () => {
+        const Popup = defineComponent({
+          setup: () => () => (
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup data-testid="popup">
+                  <Combobox.Input />
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          ),
+        });
+        const Other = defineComponent({ setup: () => () => <span /> });
+        const visible = shallowRef(true);
+        await render(() => (
+          <Combobox.Root defaultOpen>
+            <Combobox.Trigger data-testid="trigger" />
+            <KeepAlive>{visible.value ? <Popup key="popup" /> : <Other key="other" />}</KeepAlive>
+          </Combobox.Root>
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+        const popup = screen.getByTestId('popup');
+        expect(popup.id).not.toBe('');
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+        visible.value = false;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(false);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(trigger).not.toHaveAttribute('aria-controls');
+
+        visible.value = true;
+        await flushMicrotasks();
+
+        expect(popup.isConnected).toBe(true);
+        expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      });
     });
   });
 
