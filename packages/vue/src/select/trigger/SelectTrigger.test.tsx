@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
@@ -11,6 +12,8 @@ import {
   waitFor,
 } from '#test-utils';
 import * as Select from '../index.parts';
+import type { SelectStore } from '../store';
+import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
 
 describe('<Select.Trigger />', () => {
   const { render } = createRenderer();
@@ -208,6 +211,59 @@ describe('<Select.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
+  });
+
+  describe('VUE-5: KeepAlive', () => {
+    it('VUE-5: ignores the release of the opening press while KeepAlive holds the select', async () => {
+      const active = shallowRef(true);
+      const onOpenChange = vi.fn();
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Select.Root key="select" onOpenChange={onOpenChange}>
+              <Select.Trigger data-testid="trigger" />
+            </Select.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(trigger, { button: 0 });
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      });
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+      active.value = false;
+      await flushMicrotasks();
+      expect(trigger.isConnected).toBe(false);
+
+      await fireEvent.mouseUp(document.body, { button: 0, clientX: 300, clientY: 300 });
+      await wait(20);
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+
+      active.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  // The compiled template of the fixture mounts the new trigger before it unmounts the old
+  // trigger. A render function in TSX reuses the trigger component, so it does not show this
+  // order.
+  it('keeps the element of the new trigger in the store when a template replaces the trigger', async () => {
+    let store!: SelectStore;
+    const { setProps } = await render(
+      <SelectTriggerReplacement first onStore={(value: SelectStore) => (store = value)} />,
+    );
+    expect(store.select('triggerElement')).toBe(screen.getByTestId('first'));
+
+    await setProps({ first: false });
+
+    expect(store.select('triggerElement')).toBe(screen.getByTestId('second'));
   });
 
   describe('Field', () => {
