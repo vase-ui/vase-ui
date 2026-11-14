@@ -1168,6 +1168,7 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - In this package, vue-tsc reports no unknown prop on a generic SFC, in a `.spec.vue` file also. The files that are not strict give each generic SFC a type that accepts each unknown prop. For such a part, write a line that must fail: `<!-- @vue-expect-error -->` before an element that gives the prop a value of a wrong type.
 - The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
 - The job `test-nuxt` also runs `pnpm --filter @vase-ui/nuxt-fixture typecheck`. vue-tsc then checks the templates of the fixture against the built package, as it does in the project of a consumer.
+- A page that imports a part by its path, while no entry point exports it, also makes vue-tsc read the source of the package. The fixture turns off the Nuxt options `noUncheckedIndexedAccess` and `noImplicitOverride` for this reason, because the source does not follow them.
 
 ### How to port a test
 
