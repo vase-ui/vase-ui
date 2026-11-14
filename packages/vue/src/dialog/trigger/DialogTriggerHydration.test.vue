@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 
 withDefaults(defineProps<{ defaultOpen?: boolean; defaultTriggerId?: string | null }>(), {
   defaultOpen: false,

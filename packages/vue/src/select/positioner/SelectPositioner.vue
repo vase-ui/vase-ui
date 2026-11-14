@@ -51,6 +51,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useAnchorPositioning } from '../../internals/useAnchorPositioning';
 import { useVaseUIFloating } from '../../utils/popups/positioning/useFloating';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
+import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { clearStyles } from '../popup/utils';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { SelectPositionerContext } from './SelectPositionerContext';
@@ -114,6 +115,13 @@ watch(
 onScopeDispose(() => {
   store.context.alignItemWithTriggerActiveRef.value = false;
 });
+
+useAnchoredPopupScrollLock(
+  () => (alignItemWithTriggerActive.value || store.select('modal')) && open.value,
+  () => store.select('openMethod') === 'touch',
+  () => store.select('positionerElement'),
+  () => store.select('triggerElement'),
+);
 
 const positioning = useAnchorPositioning({
   anchor: () => props.anchor,
