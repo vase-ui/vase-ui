@@ -116,6 +116,66 @@ describe('createRenderer', () => {
 
       expect(await mountAndClick()).toBe(true);
     });
+
+    it('runs both listeners under fake timers that leave Date real', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      let failures = 0;
+      for (let index = 0; index < 100; index += 1) {
+        if (!(await mountAndClick())) {
+          failures += 1;
+        }
+      }
+
+      expect(failures).toBe(0);
+    });
+
+    it('runs both listeners with a mocked date and real timers, and render resolves', async () => {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+
+      expect(await mountAndClick()).toBe(true);
+    });
+  });
+
+  describe('under fake timers', () => {
+    it('runs a frame callback of the mount at the next frame', async () => {
+      vi.useFakeTimers();
+      const frame = vi.fn();
+      const Framed = defineComponent(() => {
+        onMounted(() => {
+          requestAnimationFrame(frame);
+        });
+        return () => <div />;
+      });
+
+      await render(<Framed />);
+      expect(frame).not.toHaveBeenCalled();
+
+      vi.advanceTimersToNextFrame();
+      expect(frame).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs no timer of the mount, and each timer keeps its delay', async () => {
+      vi.useFakeTimers();
+      const immediate = vi.fn();
+      const delayed = vi.fn();
+      const Timed = defineComponent(() => {
+        onMounted(() => {
+          setTimeout(immediate, 0);
+          setTimeout(delayed, 100);
+        });
+        return () => <div />;
+      });
+
+      await render(<Timed />);
+      expect(immediate).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(99);
+      expect(immediate).toHaveBeenCalledTimes(1);
+      expect(delayed).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      expect(delayed).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('shows the last state of a component that writes state after two ticks with flushMicrotasks', async () => {
