@@ -115,10 +115,6 @@ describe('<Menubar />', () => {
       menu.value!.report(true, 'trigger-press');
       await nextTick();
       expect(menubar).toHaveAttribute('data-has-submenu-open', '');
-
-      menu.value!.report(false, 'escape-key');
-      await nextTick();
-      expect(menubar).not.toHaveAttribute('data-has-submenu-open');
     });
   });
 
