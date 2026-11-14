@@ -131,6 +131,10 @@ describe('layout', () => {
     expect(areConstraintsFeasible([panel('a', { minSize: 60 }), panel('b', { minSize: 60 })])).toBe(
       false,
     );
+    // The sums allow 100, but no size of the first panel is inside its constraints.
+    expect(
+      areConstraintsFeasible([panel('a', { minSize: 60, maxSize: 40 }), panel('b')]),
+    ).toBe(false);
   });
 
   it('fit: a new panel takes its default and the others keep their ratio', () => {
@@ -187,6 +191,13 @@ describe('layout', () => {
 
     expect(Object.values(requested).reduce((total, size) => total + size, 0)).toBe(100);
     expect(requested.c).toBe(33.333);
+  });
+
+  it('requested: a panel that is not mounted keeps its exact size when the rounding has an error', () => {
+    // 30% of 12.345 and of 87.655 round to 3.704 and 26.297, which sum to 30.001.
+    const requested = toRequestedLayout({ a: 12.345, b: 87.655 }, { a: 10, b: 20, c: 70 });
+
+    expect(requested).toEqual({ a: 3.704, b: 26.296, c: 70 });
   });
 
   it('requested: the shown layout stays when no entry is left over', () => {

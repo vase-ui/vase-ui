@@ -36,13 +36,13 @@ function sizeOf(layout: Layout, panel: PanelConstraints): number {
   return layout[panel.id]!;
 }
 
-function toLayout(entries: readonly PanelSize[]): Layout {
+function toLayout(entries: readonly PanelSize[], total = 100): Layout {
   const rounded = entries.map(({ id, size }) => ({ id, size: round(size) }));
   const largestSize = Math.max(...rounded.map((entry) => entry.size));
   const largest = rounded.find((entry) => entry.size === largestSize);
-  // The rounding error goes to the largest panel, so the sum is exactly 100.
+  // The rounding error goes to the largest panel, so the sum is exactly `total`.
   if (largest) {
-    largest.size = round(largest.size + (100 - sum(rounded.map((entry) => entry.size))));
+    largest.size = round(largest.size + (total - sum(rounded.map((entry) => entry.size))));
   }
   return Object.fromEntries(rounded.map(({ id, size }) => [id, size]));
 }
@@ -78,7 +78,8 @@ export function validateLayout(panels: readonly PanelConstraints[], layout: Layo
 export function areConstraintsFeasible(panels: readonly PanelConstraints[]): boolean {
   return (
     panels.length === 0 ||
-    (sum(panels.map((panel) => panel.minSize)) <= 100 + EPSILON &&
+    (panels.every((panel) => panel.minSize <= panel.maxSize + EPSILON) &&
+      sum(panels.map((panel) => panel.minSize)) <= 100 + EPSILON &&
       sum(panels.map((panel) => panel.maxSize)) >= 100 - EPSILON)
   );
 }
@@ -190,15 +191,21 @@ export function hasSamePanels(a: Layout, b: Layout): boolean {
  * then comes back at its size.
  */
 export function toRequestedLayout(shown: Layout, requested: Layout): Layout {
-  const unmounted = Object.entries(requested).filter(([id]) => !Object.hasOwn(shown, id));
-  const unmountedTotal = sum(unmounted.map(([, size]) => size));
+  const unmounted = Object.entries(requested)
+    .filter(([id]) => !Object.hasOwn(shown, id))
+    .map(([id, size]) => ({ id, size: round(size) }));
+  const room = 100 - sum(unmounted.map((entry) => entry.size));
   // Sizes that leave no room cannot belong to the panels that are mounted: the layout forgets them.
-  if (unmounted.length === 0 || unmountedTotal >= 100) {
+  if (unmounted.length === 0 || room <= 0) {
     return shown;
   }
-  const scale = (100 - unmountedTotal) / 100;
-  return toLayout([
-    ...unmounted.map(([id, size]) => ({ id, size })),
-    ...Object.entries(shown).map(([id, size]) => ({ id, size: size * scale })),
-  ]);
+  // The rounding error goes to a mounted panel. A panel that is not mounted then keeps its size
+  // through each change, and it comes back at that size.
+  return {
+    ...Object.fromEntries(unmounted.map(({ id, size }) => [id, size])),
+    ...toLayout(
+      Object.entries(shown).map(([id, size]) => ({ id, size: (size * room) / 100 })),
+      room,
+    ),
+  };
 }
