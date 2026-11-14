@@ -1120,8 +1120,8 @@ function readTooltipTriggers(page: Page) {
 }
 
 // A portal renders after the mount, so the server HTML has no popup. Only the trigger that the
-// root names with `default-trigger-id` is open. A server attaches no root to a handle, so the
-// detached trigger is closed.
+// root names with `default-trigger-id` is open. On a server, a detached trigger reads the inert
+// store of its handle, so it is closed.
 async function expectTooltipPageOnServer(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
   expect(await page.locator('[data-testid$="-popup"]').count()).toBe(0);
