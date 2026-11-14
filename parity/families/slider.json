@@ -45,27 +45,27 @@
     {
       "entry": "Root",
       "prop": "id",
-      "reason": "The part reads `id` to make the id of `Slider.Label`, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to make the id of `Slider.Label`, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Root",
       "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to name itself and the thumbs, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `aria-labelledby` to name itself and the thumbs, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Thumb",
       "prop": "ariaLabel",
-      "reason": "The part gives `aria-label` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `aria-label` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Thumb",
       "prop": "ariaLabelledby",
-      "reason": "The part gives `aria-labelledby` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `aria-labelledby` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Thumb",
       "prop": "ariaDescribedby",
-      "reason": "The part gives `aria-describedby` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+      "reason": "The part gives `aria-describedby` to its input and not to its element, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Thumb",
