@@ -36,7 +36,7 @@ An input that suggests options as you type.
 
 - **Avoid when selection state is needed**: Use Combobox in place of Autocomplete if the selection should be remembered and the input value cannot be custom. Unlike Combobox, the input of Autocomplete can contain free-form text, as its suggestions only _optionally_ autocomplete the text.
 - **Form controls must have an accessible name**: Create it with a `<label>` element or with [Field](/components/field).
-- **Closing animations**: The popup stays rendered until its closing animation finishes. To animate it with JavaScript, call `eventDetails.preventUnmountOnClose()` in the `openChange` listener. The popup then stays rendered until you call `unmount()` on `Autocomplete.Root`.
+- **Closing animations**: The popup stays rendered until its closing animation finishes. To animate it with JavaScript, call `eventDetails.preventUnmountOnClose()` in the `openChange` listener. The popup then stays rendered until you call the `unmount()` method that `Autocomplete.Root` exposes.
 
 ## Anatomy
 
@@ -174,7 +174,7 @@ Efficiently handle large datasets using a virtualization library like `@tanstack
 
 #### Memoizing items
 
-A child component that takes the item as a prop is a simpler alternative to virtualization for datasets up to roughly 1,000 items. Vue renders a child component again only when its props change, so unchanged items skip re-rendering. While this speeds up typing, it does not speed up opening; with a large enough number of items, the mount cost dominates, and virtualization becomes necessary to keep the open interaction fast on low-end devices.
+A child component that takes the item as a prop is a simpler alternative to virtualization for datasets up to roughly 1,000 items. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change, so unchanged items skip re-rendering. While this speeds up typing, it does not speed up opening; with a large enough number of items, the mount cost dominates, and virtualization becomes necessary to keep the open interaction fast on low-end devices.
 
 ::: code-group
 

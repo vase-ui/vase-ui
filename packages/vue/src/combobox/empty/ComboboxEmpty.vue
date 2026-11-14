@@ -5,7 +5,9 @@ import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/type
 export interface ComboboxEmptyState {}
 
 export interface ComboboxEmptyProps
-  extends VaseUIComponentProps<ComboboxEmptyState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+  extends
+    VaseUIComponentProps<ComboboxEmptyState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">

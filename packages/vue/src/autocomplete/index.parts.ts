@@ -42,7 +42,10 @@ import type {
 import ComboboxRow from '../combobox/row/ComboboxRow.vue';
 import type { ComboboxRowProps, ComboboxRowState } from '../combobox/row/ComboboxRow.vue';
 import ComboboxStatus from '../combobox/status/ComboboxStatus.vue';
-import type { ComboboxStatusProps, ComboboxStatusState } from '../combobox/status/ComboboxStatus.vue';
+import type {
+  ComboboxStatusProps,
+  ComboboxStatusState,
+} from '../combobox/status/ComboboxStatus.vue';
 import { AutocompleteInputGroup } from './input-group/AutocompleteInputGroup';
 import type {
   AutocompleteInputGroupProps,

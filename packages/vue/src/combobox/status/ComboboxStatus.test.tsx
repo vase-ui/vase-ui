@@ -1,12 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  waitFor,
-} from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY } from '../../internals/useInitialLiveRegionTextMutation';
 import * as Combobox from '../index.parts';
