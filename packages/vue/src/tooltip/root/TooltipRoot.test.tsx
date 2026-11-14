@@ -1870,6 +1870,35 @@ describe('<Tooltip.Root />', () => {
     });
   });
 
+  describe('prop changes', () => {
+    it('makes the positioner inert when `disableHoverablePopup` or `trackCursorAxis` changes', async () => {
+      const disableHoverablePopup = shallowRef(false);
+      const trackCursorAxis = shallowRef<'none' | 'both'>('none');
+      await render(() => (
+        <Tooltip.Root
+          open
+          disableHoverablePopup={disableHoverablePopup.value}
+          trackCursorAxis={trackCursorAxis.value}
+        >
+          <Tooltip.Trigger style={ignoreRealPointer}>Trigger</Tooltip.Trigger>
+          {renderPortal({})}
+        </Tooltip.Root>
+      ));
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+      expect(positioner.style.pointerEvents).toBe('');
+
+      disableHoverablePopup.value = true;
+      await flushMicrotasks();
+      expect(positioner.style.pointerEvents).toBe('none');
+
+      disableHoverablePopup.value = false;
+      trackCursorAxis.value = 'both';
+      await flushMicrotasks();
+      expect(positioner.style.pointerEvents).toBe('none');
+    });
+  });
+
   describe('instant type', () => {
     it('marks a kept popup as instant while it closes because its active trigger unmounts', async () => {
       const showFirst = shallowRef(true);

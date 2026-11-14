@@ -189,7 +189,7 @@ function handleNestedTriggerHover(event: MouseEvent) {
   const trigger = triggerElement.value;
   const targetInsideTrigger = trigger && target && contains(trigger, target);
 
-  // Only close a tooltip that hover opened. A focus or a press keeps its tooltip open.
+  // Close only a tooltip that hover opened. A tooltip that another interaction opened stays open.
   if (
     nestedTriggerHovered &&
     currentStore.select('open') &&
@@ -212,7 +212,7 @@ function handleNestedTriggerHover(event: MouseEvent) {
       if (!isNestedTriggerHovered && !isDisabled.value && !store.value.select('open')) {
         store.value.setOpen(
           true,
-          createChangeEventDetails(REASONS.triggerHover, event, trigger as HTMLElement),
+          createChangeEventDetails(REASONS.triggerHover, event, trigger ?? undefined),
         );
       }
     };
@@ -238,10 +238,34 @@ const rootTriggerProps = computed(() =>
   ),
 );
 
+function preventNestedTriggerFocus(event: FocusEvent) {
+  if (isEnabledNestedTriggerTarget(getTargetElement(event))) {
+    (event as VaseUIEvent<FocusEvent>).preventVaseUIHandler();
+  }
+}
+
+function resetNestedTriggerHover() {
+  isNestedTriggerHovered = false;
+  nestedTriggerOpenTimeout.clear();
+  pointerType = undefined;
+}
+
+function setPointerType(event: PointerEvent) {
+  pointerType = event.pointerType;
+}
+
 function cancelPendingOpen(event: MouseEvent | PointerEvent) {
   if (props.closeOnClick && !store.value.select('open')) {
     store.value.cancelPendingOpen(event);
   }
+}
+
+function handlePointerdown(event: PointerEvent) {
+  pointerType = event.pointerType;
+  // A press of a trigger that is not active reaches the dismissal of the root while the tooltip
+  // follows the cursor. The dismissal then reads `closeOnClick` of this trigger.
+  store.value.set('closeOnClick', props.closeOnClick);
+  cancelPendingOpen(event);
 }
 
 const state = computed<TooltipTriggerState>(() => ({ open: isOpenedByThisTrigger.value }));
@@ -261,24 +285,10 @@ const { element, elementProps } = useRenderElement('button', props, {
     rootTriggerProps.value,
     {
       onMouseover: handleNestedTriggerHover,
-      onFocusin(event: FocusEvent) {
-        if (isEnabledNestedTriggerTarget(getTargetElement(event))) {
-          (event as VaseUIEvent<FocusEvent>).preventVaseUIHandler();
-        }
-      },
-      onMouseleave() {
-        isNestedTriggerHovered = false;
-        nestedTriggerOpenTimeout.clear();
-        pointerType = undefined;
-      },
-      onPointerenter(event: PointerEvent) {
-        pointerType = event.pointerType;
-      },
-      onPointerdown(event: PointerEvent) {
-        pointerType = event.pointerType;
-        store.value.set('closeOnClick', props.closeOnClick);
-        cancelPendingOpen(event);
-      },
+      onFocusin: preventNestedTriggerFocus,
+      onMouseleave: resetNestedTriggerHover,
+      onPointerenter: setPointerType,
+      onPointerdown: handlePointerdown,
       onClick: cancelPendingOpen,
       id: thisTriggerId.value,
       [TooltipTriggerDataAttributes.triggerDisabled]: isDisabled.value ? '' : undefined,
