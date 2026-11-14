@@ -2663,6 +2663,10 @@ describe('<NavigationMenu.Root />', () => {
 
     it('closes the parent menu after a nested submenu closes on delayed hover-out', async () => {
       const closeDelay = 200;
+      // The node of the nested menu gets its closed state in a flush between two tasks. A clock
+      // that moves by itself can run the close timer of the nested menu and the next timer of the
+      // root in one step, with no flush between them. This clock moves only when the case moves it.
+      vi.useFakeTimers();
 
       await render(<TestNestedNavigationMenu closeDelay={closeDelay} />);
       const trigger1 = screen.getByTestId('trigger-1');
@@ -2688,8 +2692,7 @@ describe('<NavigationMenu.Root />', () => {
       await fireEvent.mouseLeave(nestedTrigger1);
       await fireEvent.mouseLeave(nestedPositioner);
       await fireEvent.mouseLeave(topLevelPositioner);
-      // Each timer runs in its own task, as in a browser. A node gets its new `open` in a flush
-      // between two tasks.
+      // Each timer runs in its own task, as in a browser.
       await vi.advanceTimersByTimeAsync(closeDelay);
       await flushMicrotasks();
 
