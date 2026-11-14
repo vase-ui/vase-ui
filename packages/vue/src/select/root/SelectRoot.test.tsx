@@ -2154,8 +2154,8 @@ describe('<Select.Root />', () => {
           expect(getComputedStyle(positioner).position).toBe('absolute');
         });
 
-        // The exit lasts 100 ms. The record of the position in the frame of `data-ending-style`
-        // stays after the exit.
+        // The exit lasts 100 ms. The observer records the position while the popup has
+        // `data-ending-style`, and the record stays after the exit.
         const positionsWhileEnding: string[] = [];
         const observer = new MutationObserver(() => {
           if (popup.hasAttribute('data-ending-style')) {

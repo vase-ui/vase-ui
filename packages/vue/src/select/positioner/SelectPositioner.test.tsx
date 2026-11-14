@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
 import * as Select from '../index.parts';
 import {
   createRenderer,
@@ -10,7 +10,12 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import { getScrollLockRegistry, isScrollLocked } from '../../../test/fixtures/scrollDocument';
+import {
+  createScrollDocument,
+  getScrollLockRegistry,
+  isPageLocked,
+} from '../../../test/fixtures/scrollDocument';
+import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
 describe('<Select.Positioner />', () => {
@@ -300,108 +305,101 @@ describe('<Select.Positioner />', () => {
   });
 
   describe('scroll lock', () => {
+    // The lock and the unlock each wait for a timer of 0 ms. The observers of `waitFor` do not see a
+    // document in a frame, so it polls.
+    const POLL = { interval: 5, timeout: 3000 };
+
     function lockCount() {
       return getScrollLockRegistry()?.lockCount ?? 0;
     }
 
-    it('locks the page while a modal select is open, and unlocks it when the select closes', async () => {
-      const { user } = await render(
-        <Select.Root>
-          <Select.Trigger data-testid="trigger">Open</Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner alignItemWithTrigger={false}>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(isScrollLocked()).toBe(true);
-      });
-
-      await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(isScrollLocked()).toBe(false);
-      });
-      expect(lockCount()).toBe(0);
-    });
-
-    // The trigger has room for the placement over it, as in the case above that places the
-    // selected item over the trigger again.
-    it.each([
-      { name: 'over the trigger', alignItemWithTrigger: true, side: 'none', locks: 1 },
-      { name: 'beside the trigger', alignItemWithTrigger: false, side: 'bottom', locks: 0 },
-    ])(
-      'locks the page for a select that is not modal only while its popup is $name',
-      async ({ alignItemWithTrigger, side, locks }) => {
-        const { user } = await render(
-          <div style={{ paddingTop: '200px', minHeight: '600px' }}>
-            <Select.Root modal={false} defaultValue="a">
-              <Select.Trigger data-testid="trigger">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner
-                  data-testid="positioner"
-                  alignItemWithTrigger={alignItemWithTrigger}
-                >
-                  <Select.Popup>
-                    <Select.Item value="a">a</Select.Item>
-                    <Select.Item value="b">b</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          </div>,
-        );
-
-        await user.click(screen.getByTestId('trigger'));
-        await waitFor(() => {
-          expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', side);
-        });
-
-        expect(lockCount()).toBe(locks);
-      },
-    );
-
-    it('VUE-5: releases the lock while KeepAlive holds the select, and takes it back after', async () => {
-      const show = shallowRef(true);
+    // The trigger and the portal are in the document of a frame, so the lock changes no style of
+    // the test page. The trigger has room for the placement over it.
+    function createSelect(
+      page: ScrollDocument,
+      { root = {}, positioner = {} }: { root?: object; positioner?: object } = {},
+    ) {
+      const open = shallowRef(false);
       const ModalSelect = defineComponent({
         name: 'ModalSelect',
         setup: () => () => (
-          <Select.Root defaultOpen>
-            <Select.Trigger>Open</Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner alignItemWithTrigger={false}>
+          <Select.Root defaultValue="a" open={open.value} {...root}>
+            <Teleport to={page.body}>
+              <Select.Trigger style={{ position: 'fixed', top: '120px', left: '120px' }}>
+                <Select.Value />
+              </Select.Trigger>
+            </Teleport>
+            <Select.Portal container={page.body}>
+              <Select.Positioner data-testid="positioner" {...positioner}>
                 <Select.Popup>
                   <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
                 </Select.Popup>
               </Select.Positioner>
             </Select.Portal>
           </Select.Root>
         ),
       });
+      return { open, ModalSelect };
+    }
+
+    function getPositioner(page: ScrollDocument) {
+      return page.doc.querySelector<HTMLElement>('[data-testid="positioner"]');
+    }
+
+    it('locks the page while a modal select is open, and unlocks it when the select closes', async () => {
+      const page = await createScrollDocument();
+      const { open, ModalSelect } = createSelect(page, {
+        positioner: { alignItemWithTrigger: false },
+      });
+      await render(<ModalSelect />);
+
+      open.value = true;
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
+
+      open.value = false;
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
+      expect(lockCount()).toBe(0);
+    });
+
+    it.each([
+      { name: 'over the trigger', alignItemWithTrigger: true, side: 'none', locks: 1 },
+      { name: 'beside the trigger', alignItemWithTrigger: false, side: 'bottom', locks: 0 },
+    ])(
+      'locks the page for a select that is not modal only while its popup is $name',
+      async ({ alignItemWithTrigger, side, locks }) => {
+        const page = await createScrollDocument();
+        const { open, ModalSelect } = createSelect(page, {
+          root: { modal: false },
+          positioner: { alignItemWithTrigger },
+        });
+        await render(<ModalSelect />);
+
+        open.value = true;
+        await waitFor(() => expect(getPositioner(page)?.dataset.side).toBe(side), POLL);
+
+        expect(lockCount()).toBe(locks);
+      },
+    );
+
+    it('VUE-5: releases the lock while KeepAlive holds the select, and takes it back after', async () => {
+      const page = await createScrollDocument();
+      const show = shallowRef(true);
+      const { open, ModalSelect } = createSelect(page, {
+        positioner: { alignItemWithTrigger: false },
+      });
+      open.value = true;
       const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
       await render(() => (
         <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
       ));
-      await waitFor(() => {
-        expect(lockCount()).toBe(1);
-      });
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
 
       show.value = false;
-      await flushMicrotasks();
-
-      expect(lockCount()).toBe(0);
+      await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
 
       show.value = true;
-      await waitFor(() => {
-        expect(lockCount()).toBe(1);
-      });
+      await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
     });
   });
 
