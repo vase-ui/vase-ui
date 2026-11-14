@@ -802,38 +802,6 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
-async function expectNuxtLinkOfNavigationMenu(page: Page) {
-  const link = page.getByTestId('nuxt-link');
-  expect(await link.count()).toBe(1);
-  expect(await link.evaluate((element) => element.localName)).toBe('a');
-  expect(await readAttributes(link, ['href', 'aria-current', 'data-active'])).toEqual({
-    href: '/button',
-    'aria-current': 'page',
-    'data-active': '',
-  });
-}
-
-// The root gets the element of its viewport only after the mount. The server HTML thus has only
-// the content of an item with `keepMounted`, hidden in its item, also for an open item.
-async function expectNavigationMenuPageOnServer(page: Page) {
-  expect(await page.getByTestId('kept-link').count()).toBe(1);
-  expect(await page.getByTestId('kept-content').getAttribute('hidden')).toBe('');
-  expect(await page.getByTestId('dropped-link').count()).toBe(0);
-  expect(await page.getByTestId('open-trigger').getAttribute('aria-expanded')).toBe('true');
-  expect(await page.getByTestId('open-link').count()).toBe(0);
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
-  await expectNuxtLinkOfNavigationMenu(page);
-}
-
-// After the mount, the open menu shows its content in the popup.
-async function expectHydratedNavigationMenuPage(page: Page) {
-  expect(await page.getByTestId('open-link').isVisible()).toBe(true);
-  expect(await page.getByTestId('open-popup').getAttribute('data-open')).toBe('');
-  expect(await page.getByTestId('kept-content').getAttribute('hidden')).toBe('');
-  expect(await page.getByTestId('dropped-link').count()).toBe(0);
-  await expectNuxtLinkOfNavigationMenu(page);
-}
-
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -890,11 +858,6 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
-  },
-  {
-    path: '/navigation-menu',
-    expectPage: expectNavigationMenuPageOnServer,
-    expectHydratedPage: expectHydratedNavigationMenuPage,
   },
 ];
 

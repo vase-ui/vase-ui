@@ -20,6 +20,22 @@
     {
       "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
       "describe": ["<NavigationMenu.Trigger />"],
+      "title": "handles focus and positioner height",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "describe": ["<NavigationMenu.Trigger />"],
+      "title": "handles positioner width correctly",
+      "kind": "replaced",
+      "test": "packages/vue/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "describe": ["<NavigationMenu.Trigger />"],
       "title": "releases the pointer-events lock on the list when the open trigger unmounts",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/navigation-menu/index.ts",

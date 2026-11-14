@@ -875,6 +875,168 @@ describe('<NavigationMenu.Trigger />', () => {
   });
 
   describe('popup size', () => {
+    // Base UI asserts pixel sizes of the default font of Chromium. These cases compare the size
+    // variables of the positioner with the measured size of the content, so that they run in each
+    // engine.
+    function readPositionerSize(positioner: HTMLElement, name: 'width' | 'height') {
+      return parseFloat(getComputedStyle(positioner).getPropertyValue(`--positioner-${name}`));
+    }
+
+    it('gives the positioner the height of the content of the item that a key opens, and keeps the focus on the trigger', async () => {
+      const { user } = await render(
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger>Overview</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#">Quick Start</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger>Handbook</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#">Styling Base UI components</NavigationMenu.Link>
+              </NavigationMenu.Content>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#">Second Link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup data-testid="popup">
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+
+      const overviewButton = screen.getByRole('button', { name: 'Overview' });
+      overviewButton.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('{ArrowDown}');
+      await flushMicrotasks();
+
+      const positioner = screen.getByTestId('positioner');
+      const popupHeight = () => screen.getByTestId('popup').getBoundingClientRect().height;
+      await waitFor(() => {
+        expect(
+          Math.abs(readPositionerSize(positioner, 'height') - popupHeight()),
+        ).toBeLessThanOrEqual(1);
+      });
+      const oneLine = popupHeight();
+      expect(oneLine).toBeGreaterThan(0);
+
+      const overviewLink = screen.getByRole('link', { name: 'Quick Start' });
+      await waitFor(() => {
+        expect(overviewButton).toHaveFocus();
+      });
+
+      await user.tab();
+      await waitFor(() => {
+        expect(overviewLink).toHaveFocus();
+      });
+
+      await user.tab({ shift: true });
+      await waitFor(() => {
+        expect(overviewButton).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowRight}');
+      const handbookButton = screen.getByRole('button', { name: 'Handbook' });
+      await waitFor(() => {
+        expect(handbookButton).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(
+          Math.abs(readPositionerSize(positioner, 'height') - 2 * oneLine),
+        ).toBeLessThanOrEqual(1);
+      });
+      expect(Math.abs(popupHeight() - 2 * oneLine)).toBeLessThanOrEqual(1);
+
+      const handbookLink = screen.getByRole('link', { name: 'Styling Base UI components' });
+      await waitFor(() => {
+        expect(handbookButton).toHaveFocus();
+      });
+
+      await user.tab();
+      await waitFor(() => {
+        expect(handbookLink).toHaveFocus();
+      });
+
+      await user.tab({ shift: true });
+      await waitFor(() => {
+        expect(handbookButton).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowLeft}');
+      await waitFor(() => {
+        expect(overviewButton).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(Math.abs(readPositionerSize(positioner, 'height') - oneLine)).toBeLessThanOrEqual(1);
+      });
+      await waitFor(() => {
+        expect(overviewButton).toHaveFocus();
+      });
+    });
+
+    it('gives the positioner the width of the content after the pointer moves through a trigger with no content', async () => {
+      const { user } = await render(
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger>noContent</NavigationMenu.Trigger>
+            </NavigationMenu.Item>
+            <NavigationMenu.Item>
+              <NavigationMenu.Trigger>withContent</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#">Styling Base UI components</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner data-testid="positioner">
+              <NavigationMenu.Popup>
+                <NavigationMenu.Viewport />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+
+      const noContentButton = screen.getByRole('button', { name: 'noContent' });
+      const withContentButton = screen.getByRole('button', { name: 'withContent' });
+
+      await user.pointer([
+        { target: withContentButton },
+        { target: noContentButton, releasePrevious: true },
+        { target: withContentButton, releasePrevious: true },
+      ]);
+
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'Styling Base UI components' })).toBeVisible();
+      });
+
+      const positioner = screen.getByTestId('positioner');
+      const link = screen.getByRole('link', { name: 'Styling Base UI components' });
+
+      await waitFor(() => {
+        expect(
+          Math.abs(readPositionerSize(positioner, 'width') - link.getBoundingClientRect().width),
+        ).toBeLessThanOrEqual(1);
+      });
+    });
+
     it('gives the positioner the size of the new content when a press changes the active item', async () => {
       await render(
         <NavigationMenu.Root>
@@ -988,171 +1150,6 @@ describe('<NavigationMenu.Trigger />', () => {
     await flushMicrotasks();
 
     expect(trigger).toHaveFocus();
-  });
-
-  it('handles focus and positioner height', async () => {
-    const { user } = await render(
-      <NavigationMenu.Root>
-        <NavigationMenu.List>
-          <NavigationMenu.Item>
-            <NavigationMenu.Trigger>Overview</NavigationMenu.Trigger>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#">Quick Start</NavigationMenu.Link>
-            </NavigationMenu.Content>
-          </NavigationMenu.Item>
-          <NavigationMenu.Item>
-            <NavigationMenu.Trigger>Handbook</NavigationMenu.Trigger>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#">Styling Base UI components</NavigationMenu.Link>
-            </NavigationMenu.Content>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#">Second Link</NavigationMenu.Link>
-            </NavigationMenu.Content>
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-        <NavigationMenu.Portal>
-          <NavigationMenu.Positioner data-testid="positioner">
-            <NavigationMenu.Popup>
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
-          </NavigationMenu.Positioner>
-        </NavigationMenu.Portal>
-      </NavigationMenu.Root>,
-    );
-
-    const overviewButton = screen.getByRole('button', { name: 'Overview' });
-    overviewButton.focus();
-    await flushMicrotasks();
-
-    await user.keyboard('{ArrowDown}');
-    await flushMicrotasks();
-
-    const positioner = screen.getByTestId('positioner');
-    await waitFor(() => {
-      expect(
-        Math.abs(
-          parseInt(getComputedStyle(positioner).getPropertyValue('--positioner-height'), 10) - 18,
-        ),
-      ).toBeLessThanOrEqual(1);
-    });
-
-    const overviewLink = screen.getByRole('link', { name: 'Quick Start' });
-    await waitFor(() => {
-      expect(overviewButton).toHaveFocus();
-    });
-
-    await user.tab();
-
-    await waitFor(() => {
-      expect(overviewLink).toHaveFocus();
-    });
-
-    await user.tab({ shift: true });
-
-    await waitFor(() => {
-      expect(overviewButton).toHaveFocus();
-    });
-
-    await user.keyboard('{ArrowRight}');
-    const handbookButton = screen.getByRole('button', { name: 'Handbook' });
-    await waitFor(() => {
-      expect(handbookButton).toHaveFocus();
-    });
-
-    await user.keyboard('{ArrowDown}');
-    await flushMicrotasks();
-
-    await waitFor(() => {
-      expect(
-        Math.abs(
-          parseInt(getComputedStyle(positioner).getPropertyValue('--positioner-height'), 10) - 36,
-        ),
-      ).toBeLessThanOrEqual(1);
-    });
-
-    const handbookLink = screen.getByRole('link', { name: 'Styling Base UI components' });
-    await waitFor(() => {
-      expect(handbookButton).toHaveFocus();
-    });
-
-    await user.tab();
-
-    await waitFor(() => {
-      expect(handbookLink).toHaveFocus();
-    });
-
-    await user.tab({ shift: true });
-    await waitFor(() => {
-      expect(handbookButton).toHaveFocus();
-    });
-
-    await user.keyboard('{ArrowLeft}');
-    await waitFor(() => {
-      expect(overviewButton).toHaveFocus();
-    });
-
-    await user.keyboard('{ArrowDown}');
-    await flushMicrotasks();
-    await waitFor(() => {
-      expect(
-        Math.abs(
-          parseInt(getComputedStyle(positioner).getPropertyValue('--positioner-height'), 10) - 18,
-        ),
-      ).toBeLessThanOrEqual(1);
-    });
-    await waitFor(() => {
-      expect(overviewButton).toHaveFocus();
-    });
-  });
-
-  it('handles positioner width correctly', async () => {
-    const { user } = await render(
-      <NavigationMenu.Root>
-        <NavigationMenu.List>
-          <NavigationMenu.Item>
-            <NavigationMenu.Trigger>noContent</NavigationMenu.Trigger>
-          </NavigationMenu.Item>
-          <NavigationMenu.Item>
-            <NavigationMenu.Trigger>withContent</NavigationMenu.Trigger>
-            <NavigationMenu.Content>
-              <NavigationMenu.Link href="#">Styling Base UI components</NavigationMenu.Link>
-            </NavigationMenu.Content>
-          </NavigationMenu.Item>
-        </NavigationMenu.List>
-        <NavigationMenu.Portal>
-          <NavigationMenu.Positioner data-testid="positioner">
-            <NavigationMenu.Popup>
-              <NavigationMenu.Viewport />
-            </NavigationMenu.Popup>
-          </NavigationMenu.Positioner>
-        </NavigationMenu.Portal>
-      </NavigationMenu.Root>,
-    );
-
-    const noContentButton = screen.getByRole('button', { name: 'noContent' });
-    const withContentButton = screen.getByRole('button', { name: 'withContent' });
-
-    await user.pointer([
-      { target: withContentButton },
-      { target: noContentButton, releasePrevious: true },
-      { target: withContentButton, releasePrevious: true },
-    ]);
-
-    await waitFor(() => {
-      const handbookLink = screen.getByRole('link', { name: 'Styling Base UI components' });
-
-      expect(handbookLink).toBeVisible();
-    });
-
-    const positioner = await screen.findByTestId('positioner');
-
-    await waitFor(() => {
-      expect(
-        Math.abs(
-          parseInt(getComputedStyle(positioner).getPropertyValue('--positioner-width'), 10) - 183,
-        ),
-      ).toBeLessThanOrEqual(1);
-    });
   });
 
   it('repositions the positioner when switching triggers via hover', async () => {
