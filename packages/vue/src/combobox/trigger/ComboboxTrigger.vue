@@ -283,13 +283,15 @@ const { element, elementProps } = useRenderElement('button', props, {
         setTouched(true);
         setFocused(false);
 
-        // A combobox that the user leaves with no value is not marked dirty. With a selection mode,
-        // the trigger is a select, so the field counts `valueMissing` with no mark (BUG-1425).
+        // A combobox that the user leaves with no value is not marked dirty. A trigger that is the
+        // control of a selection mode is a select, so the field counts `valueMissing` with no mark
+        // (BUG-1425). An input outside the popup is the control in its place, and the user can
+        // empty it.
         if (validationMode.value === 'onBlur') {
           const selectsValues = selectionMode.value !== 'none';
           void validation.commit(
             selectsValues ? toRaw(store.state).selectedValue : inputValue.value,
-            selectsValues,
+            selectsValues && inputInsidePopup.value,
           );
         }
       },

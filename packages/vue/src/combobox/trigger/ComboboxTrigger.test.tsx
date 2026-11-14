@@ -1494,6 +1494,31 @@ describe('<Combobox.Trigger />', () => {
       expect(input).not.toHaveAttribute('aria-invalid');
     });
 
+    it('stays valid when the focus leaves a trigger beside an input outside the popup', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="onBlur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('input')).not.toHaveAttribute('aria-invalid');
+    });
+
     it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
       const { user } = await render(
         <div>
