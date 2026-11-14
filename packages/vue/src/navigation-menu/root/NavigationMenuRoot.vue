@@ -152,6 +152,10 @@ const emit = defineEmits<{
    * Callback fired when the value changes.
    */
   valueChange: [value: Value | null, eventDetails: NavigationMenuRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: Value | null];
   /**
    * Event handler called after any animations complete when the navigation menu is closed.
