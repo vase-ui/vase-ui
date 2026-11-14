@@ -49,6 +49,7 @@ export interface PreviewCardTriggerProps<Payload = unknown>
 import { computed, shallowRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
@@ -103,6 +104,11 @@ const hoverProps = useHoverTriggerInteraction(store, {
   triggerElement,
 });
 
+const inlineRectTriggerProps = getInlineRectTriggerProps(
+  () => store.value.context.inlineRectCoordsRef,
+  isOpenedByThisTrigger,
+);
+
 const state = computed<PreviewCardTriggerState>(() => ({ open: isOpenedByThisTrigger.value }));
 
 const { element, elementProps } = useRenderElement('a', props, {
@@ -114,7 +120,13 @@ const { element, elementProps } = useRenderElement('a', props, {
     },
   ],
   stateAttributesMapping: triggerOpenStateMapping,
-  props: (attrs) => [hoverProps, rootTriggerProps.value, { id: thisTriggerId.value }, attrs],
+  props: (attrs) => [
+    hoverProps,
+    rootTriggerProps.value,
+    inlineRectTriggerProps,
+    { id: thisTriggerId.value },
+    attrs,
+  ],
 });
 
 defineExpose({ element });
