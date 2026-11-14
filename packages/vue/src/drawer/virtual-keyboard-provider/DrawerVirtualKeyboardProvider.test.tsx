@@ -2527,9 +2527,6 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
           </Drawer.Content>
         </KeyboardDrawer>,
       );
-      // Under fake timers, the render moves the clock with `vi.setSystemTime`, which also moves
-      // each pending timer by 1 ms. The frame callbacks of the mount then miss the next frame.
-      vi.advanceTimersToNextFrame();
     }
 
     // New Chrome on iOS shrinks `svh` for the keyboard before resizing the layout viewport.
