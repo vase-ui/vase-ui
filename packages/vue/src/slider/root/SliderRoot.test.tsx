@@ -2208,6 +2208,43 @@ describe('<Slider.Root />', () => {
         expect(getFormData()).toEqual([['price', '55']]);
       });
 
+      it.each([
+        {
+          name: 'a slider whose form cancels the reset',
+          renderForm: () => (
+            <form data-testid="form" onReset={(event: Event) => event.preventDefault()}>
+              <Slider.Root name="price" defaultValue={30}>
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+            </form>
+          ),
+        },
+        {
+          name: 'a slider of another form',
+          renderForm: () => (
+            <div>
+              <form data-testid="form" />
+              <form id="other" />
+              <Slider.Root name="price" defaultValue={30} form="other">
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+            </div>
+          ),
+        },
+      ])('keeps the value of $name', async ({ renderForm }) => {
+        await render(renderForm());
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+      });
+
       it('keeps the value of a slider whose listener cancels the change of the reset, and commits nothing', async () => {
         const handleValueCommitted = vi.fn();
         await render(
