@@ -65,7 +65,7 @@ To stop the popup from overlapping the trigger, set `alignItemWithTrigger` to `f
 
 To fix both types, give the part its type arguments in an instantiation expression. Use the result as a component:
 
-<<< ./select/TypedWrapper.vue{7,15}
+<<< ./select/TypedComponent.vue{7,15}
 
 A wrapper that declares `defineProps<SelectRootProps<Value, Multiple>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the select cannot open.
 
