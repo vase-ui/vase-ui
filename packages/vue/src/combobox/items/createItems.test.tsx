@@ -1,4 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import * as Combobox from '../index.parts';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
@@ -18,12 +19,19 @@ const users: User[] = [
 const getUserId = (user: User) => user.id;
 const getUserName = (user: User) => user.name;
 
+const userItems = Combobox.createItems(users, {
+  getValue: (user) => user.id,
+  getLabel: (user) => user.name,
+});
+
 // The root reads a collection through this shape.
 function readCollection<Item, Value>(collection: ComboboxItemCollection<Item, Value>) {
   return collection as unknown as ItemCollection<Item, Value>;
 }
 
 describe('Combobox.createItems', () => {
+  const { render } = createRenderer();
+
   describe('lazy normalization', () => {
     it('does not call the accessors when creating a flat collection', () => {
       const getValue = vi.fn(getUserId);
@@ -110,6 +118,63 @@ describe('Combobox.createItems', () => {
 
       expect(collection.data).toBe(undefined);
       expect(collection.hasValue(1, defaultItemEquality)).toBe(false);
+    });
+  });
+
+  describe('integration', () => {
+    it('serializes derived values in multiple mode', async () => {
+      function App() {
+        const items = userItems;
+        return <Combobox.Root items={items} multiple name="users" defaultValue={[1, 2]} />;
+      }
+
+      await render(<App />);
+
+      expect(screen.getByDisplayValue('1')).toHaveAttribute('name', 'users');
+      expect(screen.getByDisplayValue('2')).toHaveAttribute('name', 'users');
+    });
+
+    it('serializes a derived value in single mode', async () => {
+      function App() {
+        const items = userItems;
+        return <Combobox.Root items={items} name="user" defaultValue={2} />;
+      }
+
+      await render(<App />);
+
+      expect(screen.getByDisplayValue('2')).toHaveAttribute('name', 'user');
+    });
+
+    it('serializes the derived value with itemToStringValue', async () => {
+      function App() {
+        const items = userItems;
+        return (
+          <Combobox.Root
+            items={items}
+            name="user"
+            defaultValue={2}
+            itemToStringValue={(id) => `user-${id}`}
+          />
+        );
+      }
+
+      await render(<App />);
+
+      expect(screen.getByDisplayValue('user-2')).toHaveAttribute('name', 'user');
+    });
+  });
+
+  // A `setup` that throws leaves the current instance set in Vue 3.5.12, so this block is the last.
+  describe('collection', () => {
+    it('rejects an items object that is not a collection', async () => {
+      await expect(render(<Combobox.Root items={{ a: 'A' } as never} />)).rejects.toThrow(
+        /not a collection/,
+      );
+
+      // Vue also warns about the error of `setup`.
+      expect(takeReportedMessages()).toEqual([
+        expect.stringContaining('Unhandled error during execution of setup function'),
+      ]);
     });
   });
 });
