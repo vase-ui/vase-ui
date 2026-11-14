@@ -59,8 +59,10 @@ class Scheduler {
       ((LAST_RAF = requestAnimationFrame), true);
 
     if (!this.isScheduled || didRAFChange) {
-      requestAnimationFrame(this.tick);
+      // A `requestAnimationFrame` that calls back at once runs `tick` inside the call.
+      // `tick` clears `isScheduled`, so set `isScheduled` before the call.
       this.isScheduled = true;
+      requestAnimationFrame(this.tick);
     }
     return id;
   }
