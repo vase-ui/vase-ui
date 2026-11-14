@@ -1423,7 +1423,6 @@ The hydration helpers:
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
-- A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
 - A test that replaces one child of `KeepAlive` with another child of the same component gives each child its own `key`. `KeepAlive` then keeps both children and deactivates the one that the other child replaces.
