@@ -14,6 +14,7 @@ import {
 import ComboboxTriggerPart from '../../../test/fixtures/ComboboxTriggerPart.vue';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
+import type { ComboboxStore } from '../store';
 
 describe('<Combobox.Popup />', () => {
   const { render } = createRenderer();
@@ -149,6 +150,54 @@ describe('<Combobox.Popup />', () => {
     });
   });
 
+  describe('the dismiss button after the popup', () => {
+    let store!: ComboboxStore;
+    const StoreProbe = defineComponent(() => {
+      store = useComboboxRootContext();
+      return () => null;
+    });
+
+    it('gives the dismiss button after the popup to the store', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <StoreProbe />
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup" />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      const popup = await screen.findByTestId('popup');
+
+      await waitFor(() => {
+        expect(store.context.endDismissRef.value).toBe(popup.nextElementSibling);
+      });
+      expect(store.context.endDismissRef.value).toHaveAttribute('aria-label', 'Dismiss');
+    });
+
+    it('renders no dismiss button after a popup that holds the input and is not modal', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <StoreProbe />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup">
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await screen.findByTestId('popup');
+      await flushMicrotasks();
+
+      expect(screen.queryAllByRole('button', { name: 'Dismiss', hidden: true })).toEqual([]);
+      expect(store.context.endDismissRef.value).toBe(null);
+    });
+  });
+
   describe('the focus', () => {
     function renderWithInputInPopup() {
       return render(
@@ -272,6 +321,27 @@ describe('<Combobox.Popup />', () => {
     const dismissButtons = screen.getAllByRole('button', { name: 'Dismiss', hidden: true });
     expect(dismissButtons).toHaveLength(2);
     expect(dismissButtons.map((button) => isInaccessible(button))).toEqual([false, false]);
+  });
+
+  it('hides the content outside a modal popup that holds the input', async () => {
+    await render(
+      <div>
+        <span data-testid="outside">Outside</span>
+        <Combobox.Root defaultOpen modal>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(isInaccessible(screen.getByTestId('outside'))).toBe(true);
+    });
   });
 
   it('emits openChangeComplete with true when the popup has opened', async () => {
