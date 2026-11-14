@@ -1606,6 +1606,44 @@ describe('<Combobox.Trigger />', () => {
 
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
     });
+
+    it('stops the timer of the focus while KeepAlive holds the combobox', async () => {
+      const active = shallowRef(true);
+      let store!: ComboboxStore;
+      const StoreProbe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+      await render(() => (
+        <KeepAlive>
+          {active.value ? (
+            <Combobox.Root key="combobox">
+              <StoreProbe />
+              <Combobox.Trigger data-testid="trigger" />
+            </Combobox.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      const trigger = screen.getByTestId('trigger');
+
+      // The focus starts a timer of 0 ms that mounts the items.
+      trigger.focus();
+      active.value = false;
+      await flushMicrotasks();
+      expect(trigger.isConnected).toBe(false);
+      // A timer of 20 ms ends after a timer of 0 ms that started before it.
+      await wait(20);
+
+      expect(store.select('forceMounted')).toBe(false);
+
+      active.value = true;
+      await flushMicrotasks();
+      screen.getByTestId('trigger').focus();
+
+      await waitFor(() => {
+        expect(store.select('forceMounted')).toBe(true);
+      });
+    });
   });
 
   // The compiled template of the fixture mounts the new trigger before it unmounts the old
