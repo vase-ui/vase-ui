@@ -491,7 +491,7 @@ describe('<Combobox.Root />', () => {
               if (!nextOpen) {
                 details.preventUnmountOnClose();
               }
-              // Vue has no transitions. The timer applies the close in a later task.
+              // Base UI applies the close in a transition. A timer applies it in a later task.
               setTimeout(() => {
                 open.value = nextOpen;
               });

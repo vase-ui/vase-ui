@@ -845,7 +845,8 @@ describe('Combobox.createItems', () => {
     });
 
     it('updates a selected label when a stable accessor returns a new result', async () => {
-      // Vue sees a new result only when the accessor reads a ref that changed.
+      // The root calls the accessor in a `computed`, so a plain variable would not make it call the
+      // accessor again.
       const language = shallowRef<'en' | 'es'>('en');
       const items = Combobox.createItems(users, {
         getValue: getUserId,
