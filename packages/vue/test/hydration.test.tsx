@@ -3,18 +3,34 @@ import { defineComponent, h, nextTick, onMounted, ref, warn } from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
+import LabelForControl from './fixtures/LabelForControl.vue';
 import PlainPart from './fixtures/PlainPart.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
 const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
 const CLASSED_ELEMENT = 'test/fixtures/ClassedElement.vue';
+const LABEL_FOR_CONTROL = 'test/fixtures/LabelForControl.vue';
 
 describe('hydrate', () => {
   it('passes for the clean fixture', async () => {
     const serverHtml = await renderOnServer(FIXTURE);
 
     await hydrate(HydrationFixture, { serverHtml });
+  });
+
+  it('passes for a label that names a control with `for`', async () => {
+    const serverHtml = await renderOnServer(LABEL_FOR_CONTROL);
+
+    const { container } = await hydrate(LabelForControl, { serverHtml });
+
+    // The control finds the label in the document after the mount.
+    const label = container.querySelector('label')!;
+    expect(label.id).not.toBe('');
+    expect(container.querySelector('[role="checkbox"]')).toHaveAttribute(
+      'aria-labelledby',
+      label.id,
+    );
   });
 
   it('fails for a seeded text mismatch', async () => {
@@ -183,7 +199,7 @@ describe('hydrate', () => {
 
     await hydrate(HydrationFixture, { serverHtml });
 
-    // One run when the helper inserts the server HTML, and one run in the client-only render.
+    // One run in the client-only render, and one run when the helper inserts the server HTML.
     expect(globals.vaseUiHydrationScriptRuns).toBe(runsBefore + 2);
   });
 

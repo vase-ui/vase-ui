@@ -52,53 +52,38 @@ async function mountAndSettle(app: App, container: HTMLElement) {
  * Hydrates the server HTML of a component, and throws when the hydration is not clean. A hydration
  * is not clean when Vue warns, when a console call occurs, or when the hydrated DOM differs from a
  * client-only render of the same component.
+ *
+ * The client-only render comes first, and the helper removes it before it hydrates. The document
+ * thus holds one app at a time, as a page does. The two apps generate the same ids, so a
+ * `<label for>` of one app would name a control of the other app.
  */
 export async function hydrate(
   component: Component,
   { serverHtml, props }: HydrateOptions,
 ): Promise<HydrateResult> {
-  const apps: App[] = [];
-  const containers: HTMLElement[] = [];
+  const clientDom = await renderOnClient(component, props);
+
+  const container = document.createElement('div');
+  document.body.append(container);
+  const app = createSSRApp(component, props);
+  recordVueWarnings(app);
 
   onTestFinished(() => {
-    for (const app of apps) {
-      try {
-        app.unmount();
-      } catch {
-        // An app whose hydration failed can fail to unmount.
-      }
+    try {
+      app.unmount();
+    } catch {
+      // An app whose hydration failed can fail to unmount.
     }
-    for (const container of containers) {
-      container.remove();
-    }
+    container.remove();
   });
 
-  function createContainer() {
-    const container = document.createElement('div');
-    document.body.append(container);
-    containers.push(container);
-    return container;
-  }
-
-  const container = createContainer();
   // `innerHTML` does not run an inline script, and a server HTML can hold one.
   const range = document.createRange();
   range.selectNodeContents(container);
   container.append(range.createContextualFragment(serverHtml));
 
-  const hydratingApp = createSSRApp(component, props);
-  apps.push(hydratingApp);
-  recordVueWarnings(hydratingApp);
-  await mountAndSettle(hydratingApp, container);
-
-  const clientContainer = createContainer();
-  const clientApp = createApp(component, props);
-  apps.push(clientApp);
-  recordVueWarnings(clientApp);
-  await mountAndSettle(clientApp, clientContainer);
-
+  await mountAndSettle(app, container);
   const hydratedDom = serializeChildren(container);
-  const clientDom = serializeChildren(clientContainer);
 
   // Vue writes some hydration messages only to the console.
   const messages = takeReportedMessages();
@@ -116,6 +101,24 @@ export async function hydrate(
   }
 
   return { container };
+}
+
+async function renderOnClient(
+  component: Component,
+  props: Record<string, unknown> | undefined,
+): Promise<string> {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const app = createApp(component, props);
+  recordVueWarnings(app);
+
+  try {
+    await mountAndSettle(app, container);
+    return serializeChildren(container);
+  } finally {
+    app.unmount();
+    container.remove();
+  }
 }
 
 function serializeChildren(element: Element): string {
