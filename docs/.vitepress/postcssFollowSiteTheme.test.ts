@@ -29,7 +29,7 @@ const CASES = [
     expected: '.a { color: black } :where(.dark) .a { color: white }',
   },
   {
-    name: 'a media rule that has other rules after it',
+    name: 'a media rule with rules after it',
     css: '.a { @media (prefers-color-scheme: dark) { color: white; } &:hover { color: gray; } }',
     expected: ':where(.dark) .a { color: white } .a { &:hover { color: gray } }',
   },
@@ -49,7 +49,7 @@ const CASES = [
     expected: '.a { :where(.dark) & .b { color: white } }',
   },
   {
-    name: 'a nested rule with the nesting selector at its end',
+    name: 'a nested rule with & at its end',
     css: '.a { .b[data-highlighted] & { @media (prefers-color-scheme: dark) { color: white; } } }',
     expected: '.a { :where(.dark) .b[data-highlighted] & { color: white } }',
   },
@@ -59,7 +59,7 @@ const CASES = [
     expected: '.a { :where(.dark) &[data-disabled], :where(.dark) &:disabled { color: white } }',
   },
   {
-    name: 'an at-rule between the style rule and the media rule',
+    name: 'a media rule in an at-rule',
     css: '.a { @supports (top: 0) { top: 0; @media (prefers-color-scheme: dark) { color: white; } } }',
     expected:
       '.a { @supports (top: 0) { top: 0 } } :where(.dark) .a { @supports (top: 0) { color: white } }',
