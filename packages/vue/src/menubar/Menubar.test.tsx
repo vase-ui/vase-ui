@@ -757,6 +757,74 @@ describe('<Menubar />', () => {
     });
   });
 
+  describe('disabled state', () => {
+    it('keeps the menubar reachable when the first trigger is disabled', async () => {
+      const { user } = await render(
+        <Menubar style={{ display: 'flex' }}>
+          <Menu.Root>
+            <Menu.Trigger disabled data-testid="file-trigger">
+              File
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Open</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger data-testid="edit-trigger">Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Copy</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+
+      const fileTrigger = screen.getByTestId('file-trigger');
+      const editTrigger = screen.getByTestId('edit-trigger');
+
+      expect(fileTrigger).toHaveAttribute('disabled');
+      expect(fileTrigger).toHaveAttribute('tabindex', '-1');
+      expect(editTrigger).toHaveAttribute('tabindex', '0');
+
+      // The disabled first trigger must not swallow the only tab stop.
+      await user.tab();
+      expect(editTrigger).toHaveFocus();
+    });
+
+    it('disables menu items while the menubar is disabled', async () => {
+      const handleClick = vi.fn();
+      const { user } = await render(
+        <Menubar disabled>
+          <Menu.Root open>
+            <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item data-testid="file-item" onClick={handleClick}>
+                    Open
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+
+      const item = screen.getByTestId('file-item');
+      expect(item).toHaveAttribute('aria-disabled', 'true');
+
+      await user.click(item);
+      expect(handleClick).not.toHaveBeenCalled();
+    });
+  });
+
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case of the file then gets a warning about a slot.
   it('throws when the menubar context is missing', async () => {

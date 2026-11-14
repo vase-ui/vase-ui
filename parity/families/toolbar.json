@@ -10,16 +10,8 @@
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
       "title": "handles interactions",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses Enter on the trigger to open the menu, and it moves the highlight with the arrow keys. The trigger of Vase UI has no press yet, and Menu has no list navigation."
-    },
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
-      "title": "disabled state",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses Enter and Space on a disabled trigger, and it expects that the menu stays closed. The trigger of Vase UI has no press yet, so the case cannot fail."
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The case opens the menu with Enter on the trigger, and it moves the highlight with the arrow keys. Menu has no list navigation yet."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",

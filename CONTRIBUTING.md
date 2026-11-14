@@ -720,6 +720,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - When the flag changes, the registration updates `triggerCount`. After the activation, the active trigger gives its data to the store again.
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
 - `activeTriggerProps`, `inactiveTriggerProps` and `popupProps` have the type `HTMLAttributes` of Vue. They hold attributes and listeners, and no `ref`.
+- Make `inactiveTriggerProps` one time in `setup` when it reads no state. A new object in each run of the getter renders each inactive trigger again. `Menu.Root` does this.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
 - The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root parts of Dialog and Alert Dialog only declare their props, their emits, their slot and their exposed actions.
 - `Drawer.Root` also provides `DrawerRootContext`, reports to `Drawer.Provider` and holds the close watcher. It gives the composable a function in place of its `emit`. For `update:open` and `openChangeComplete`, the function only emits the event. For `openChange`, it emits the event and returns when `details.isCanceled` is `true`. For a close of a root that has snap points, it then calls `setActiveSnapPoint` with the default snap point and the reason of the close. The composable then calls the function for `update:open`, so `update:open` comes after `snapPointChange` and `update:snapPoint`.
@@ -738,7 +739,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A key of the getter can depend on a key that a part writes in its `ref` callback. Until the root is mounted, such a key keeps the value of the first state, because a server calls no `ref` callback. `inputOwnsFormValue` of Combobox does this, so the server HTML has one named input.
 - `usePopupRootWithPopupId(props, createStore, defaultPopupId, options)` is `usePopupRoot` for a root that gives its own default popup id. The id is a value, a ref or a getter, and the store follows a change. `Menu.Root` gives the id that its popup registers, or else a generated id.
 - `popupRoot.ts` has `usePopupRoot`, `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`.
-- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root that `KeepAlive` holds keeps `openMethod`. A root whose trigger writes `openMethod` with `useOpenMethodTriggerProps` calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
+- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root that `KeepAlive` holds keeps `openMethod`. A root that writes `openMethod` with `useOpenMethodTriggerProps`, or whose trigger does, calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -1004,6 +1005,8 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - Where a trigger of Base UI sets the attribute `CLICK_TRIGGER_IDENTIFIER`, the trigger part sets the same constant of `src/internals/constants.ts`.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+- `Menu.Root` calls `useOpenMethodTriggerProps`, because its trigger props hold the listeners.
+- A trigger that listens on its document for the release of a press, as `Menu.Trigger` does, keeps that document in a variable. It removes the listener when it unmounts and when `KeepAlive` deactivates it.
 
 ### Popup list navigation
 
