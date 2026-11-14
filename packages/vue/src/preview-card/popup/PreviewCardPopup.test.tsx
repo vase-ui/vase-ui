@@ -121,17 +121,14 @@ describe('<PreviewCard.Popup />', () => {
     });
 
     it('closes `closeDelay` of its trigger after the pointer leaves it', async () => {
-      // The real pointer of the browser can rest on a part. A dispatched event still reaches the
-      // part, and the real pointer sends no event of its own.
-      const noRealPointer = { pointerEvents: 'none' } as const;
       const onOpenChange = vi.fn();
       await render(
         <PreviewCard.Root onOpenChange={onOpenChange}>
-          <PreviewCard.Trigger href="#preview" delay={0} closeDelay={100} style={noRealPointer}>
+          <PreviewCard.Trigger href="#preview" delay={0} closeDelay={100}>
             Link
           </PreviewCard.Trigger>
           <PreviewCard.Portal>
-            <PreviewCard.Positioner data-testid="positioner" style={noRealPointer}>
+            <PreviewCard.Positioner data-testid="positioner">
               <PreviewCard.Popup>Content</PreviewCard.Popup>
             </PreviewCard.Positioner>
           </PreviewCard.Portal>

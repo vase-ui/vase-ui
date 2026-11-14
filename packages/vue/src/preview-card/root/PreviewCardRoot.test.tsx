@@ -31,7 +31,7 @@ const testPreviewCardProps = {
 function renderPopup() {
   return (
     <PreviewCard.Portal>
-      <PreviewCard.Positioner data-testid="positioner" style={noRealPointer}>
+      <PreviewCard.Positioner data-testid="positioner">
         <PreviewCard.Popup data-testid="popup">Content</PreviewCard.Popup>
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
@@ -42,12 +42,7 @@ const ContainedTriggerPreviewCard = defineComponent({
   props: testPreviewCardProps,
   setup: (props) => () => (
     <PreviewCard.Root {...props.rootProps}>
-      <PreviewCard.Trigger
-        href="#"
-        data-testid="trigger"
-        style={noRealPointer}
-        {...props.triggerProps}
-      >
+      <PreviewCard.Trigger href="#" data-testid="trigger" {...props.triggerProps}>
         Link
       </PreviewCard.Trigger>
       {renderPopup()}
@@ -65,7 +60,6 @@ const DetachedTriggerPreviewCard = defineComponent({
         <PreviewCard.Trigger
           href="#"
           data-testid="trigger"
-          style={noRealPointer}
           {...props.triggerProps}
           handle={previewCardHandle}
         >
@@ -89,18 +83,12 @@ const MultipleDetachedTriggersPreviewCard = defineComponent({
         <PreviewCard.Trigger
           href="#"
           data-testid="trigger"
-          style={noRealPointer}
           {...props.triggerProps}
           handle={previewCardHandle}
         >
           Link
         </PreviewCard.Trigger>
-        <PreviewCard.Trigger
-          href="#"
-          data-testid="trigger-2"
-          style={noRealPointer}
-          handle={previewCardHandle}
-        >
+        <PreviewCard.Trigger href="#" data-testid="trigger-2" handle={previewCardHandle}>
           Another link
         </PreviewCard.Trigger>
 
@@ -604,9 +592,6 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: actionsRef', () => {
-      // `user.hover` refuses an element with `pointer-events: none`.
-      const realPointer = { pointerEvents: 'auto' } as const;
-
       it('unmounts the preview card when the `unmount` method is called', async () => {
         let actions: PreviewCard.Root.Actions | null = null;
 
@@ -623,7 +608,6 @@ describe('<PreviewCard.Root />', () => {
             triggerProps={{
               delay: 0,
               closeDelay: 0,
-              style: realPointer,
             }}
           />,
         );
@@ -661,7 +645,7 @@ describe('<PreviewCard.Root />', () => {
               onOpenChange,
               onOpenChangeComplete,
             }}
-            triggerProps={{ delay: 0, style: realPointer }}
+            triggerProps={{ delay: 0 }}
           />,
         );
 
@@ -1074,7 +1058,7 @@ describe('<PreviewCard.Root />', () => {
               <PreviewCard.Popup data-testid="parent-popup">
                 <div>Parent content</div>
                 <PreviewCard.Root>
-                  <PreviewCard.Trigger href="#" data-testid="child-trigger" style={noRealPointer}>
+                  <PreviewCard.Trigger href="#" data-testid="child-trigger">
                     Child
                   </PreviewCard.Trigger>
                   <PreviewCard.Portal>
@@ -1117,11 +1101,11 @@ describe('<PreviewCard.Root />', () => {
       it('keeps the parent open and re-opens the child when re-entering after partial close', async () => {
         await render(
           <PreviewCard.Root defaultOpen>
-            <PreviewCard.Trigger href="#" data-testid="parent-trigger" style={noRealPointer}>
+            <PreviewCard.Trigger href="#" data-testid="parent-trigger">
               Parent
             </PreviewCard.Trigger>
             <PreviewCard.Portal>
-              <PreviewCard.Positioner style={noRealPointer}>
+              <PreviewCard.Positioner>
                 <PreviewCard.Popup data-testid="parent-popup">
                   <div>Parent content</div>
                   <PreviewCard.Root>
@@ -1129,7 +1113,7 @@ describe('<PreviewCard.Root />', () => {
                       Child
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
-                      <PreviewCard.Positioner style={noRealPointer}>
+                      <PreviewCard.Positioner>
                         <PreviewCard.Popup data-testid="child-popup">
                           Child content
                         </PreviewCard.Popup>
@@ -1209,11 +1193,11 @@ describe('<PreviewCard.Root />', () => {
       it('parent popup closes as soon as the child popup closes', async () => {
         await render(
           <PreviewCard.Root>
-            <PreviewCard.Trigger href="#" data-testid="parent-trigger" style={noRealPointer}>
+            <PreviewCard.Trigger href="#" data-testid="parent-trigger">
               Parent
             </PreviewCard.Trigger>
             <PreviewCard.Portal>
-              <PreviewCard.Positioner style={noRealPointer}>
+              <PreviewCard.Positioner>
                 <PreviewCard.Popup data-testid="parent-popup">
                   <div>Parent content</div>
                   <PreviewCard.Root>
@@ -1221,7 +1205,7 @@ describe('<PreviewCard.Root />', () => {
                       Child
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
-                      <PreviewCard.Positioner style={noRealPointer}>
+                      <PreviewCard.Positioner>
                         <PreviewCard.Popup data-testid="child-popup">
                           Child content
                         </PreviewCard.Popup>

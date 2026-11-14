@@ -867,7 +867,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - `useHoverPopupInteraction` takes `store` as a store, a ref or a getter, because a part can get its store after `setup`. A change of the store runs each effect of the part again for the new store.
 - `useHoverPopupInteraction` adds its listeners to the positioner element with `addEventListener`, because the element belongs to another part than the popup part that calls it.
 - A popup part gives `useHoverPopupInteraction` the close delay of the store as a getter. The trigger that owns the popup writes its `closeDelay` to the store. `preview-card/popup/PreviewCardPopup.vue` is the model.
-- A trigger part makes its own `safePolygon()` in `setup`, because the handlers of one safe polygon share one timer. It gives the result to `handleClose` in a getter, because `toValue` calls a function.
+- A trigger part makes its own `safePolygon()` in `setup`, because the handlers of one safe polygon share one timer. It gives the result to `handleClose` in a getter or a ref, because `toValue` calls a function.
 - A popup part stops its own timer and the timers of the hover intent. It also gives back the pointer events that the intent blocked. It does both when it unmounts, when its store changes, and when `KeepAlive` deactivates it.
 - While `KeepAlive` holds a popup part, the part blocks no pointer events and has no listener on its positioner element.
 - A popup that the pointer left closes when the popup below it closes. It looks for an open popup below it in a 0 ms timer, because `open` of a node is the state of the last DOM update.
