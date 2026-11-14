@@ -1329,6 +1329,29 @@ describe('FloatingFocusManager', () => {
         expect(screen.getByTestId('reference')).toHaveFocus();
       });
 
+      it('uses the latest explicitReturnFocus at the close, and moves no focus while the popup is open', async () => {
+        const explicit = shallowRef(true);
+        const popup = captureStore();
+        await render(() => (
+          <div>
+            <Popup manager={{ explicitReturnFocus: explicit.value }} onStore={popup.onStore} />
+            <input data-testid="outside" />
+          </div>
+        ));
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+        explicit.value = false;
+        await flushMicrotasks();
+        expect(screen.getByTestId('one')).toHaveFocus();
+
+        screen.getByTestId('outside').focus();
+        popup.close();
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outside')).toHaveFocus();
+      });
+
       it('returns the focus when it is in the popup of a node below, in the popup tree', async () => {
         const tree = new FloatingTreeStore();
         const Tree = defineComponent({
@@ -4075,7 +4098,7 @@ describe('FloatingFocusManager', () => {
     });
 
     describe('non-modal + FloatingPortal', () => {
-      // The `App` of the cases of this block. `portalOwnerRole` goes to the portal.
+      // The `App` of four cases of this block. `portalOwnerRole` goes to the portal.
       const PortalApp = defineComponent({
         props: { portalOwnerRole: { type: String, default: undefined } },
         setup(props) {
@@ -4522,7 +4545,7 @@ describe('FloatingFocusManager', () => {
   describe('JSDOM-only coverage: combobox, focus return, hover and tabIndex scenarios', () => {
     beforeEach(runFramesAtOnce);
 
-    // The props that the role composable of Floating UI gives to a combobox or a dialog.
+    // The `role` entry of these Base UI cases: the ARIA props of the reference and of the popup.
     function roleProps(isOpen: boolean, role: 'listbox' | 'dialog') {
       return {
         reference: {
