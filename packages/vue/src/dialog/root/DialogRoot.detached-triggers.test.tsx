@@ -874,6 +874,7 @@ describe('<Dialog.Root />', () => {
         await setProps({ phase: 'incoming' });
 
         vi.advanceTimersByTime(20);
+        await flushMicrotasks();
 
         expect(overlapWarned(consoleWarn)).toBe(false);
         consoleWarn.mockRestore();
@@ -888,6 +889,7 @@ describe('<Dialog.Root />', () => {
         await setProps({ phase: 'incoming' });
 
         vi.advanceTimersByTime(20);
+        await flushMicrotasks();
 
         handle.open(null);
         await flushMicrotasks();
@@ -910,6 +912,7 @@ describe('<Dialog.Root />', () => {
         await setProps({ phase: 'outgoing' });
 
         vi.advanceTimersByTime(20);
+        await flushMicrotasks();
 
         // The still-mounted outgoing root regains control of the handle instead of being left inert.
         handle.open(null);
