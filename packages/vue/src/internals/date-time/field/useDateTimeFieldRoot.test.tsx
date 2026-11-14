@@ -1310,14 +1310,14 @@ describe('useDateTimeFieldRoot', () => {
 
       await user.click(segmentOf(container, 'day'));
       await user.keyboard('{Backspace}{Backspace}');
-      await user.tab();
-      await user.tab();
-      expect(screen.getByTestId('clear')).toHaveFocus();
+      // A focus by script, because Safari does not give a button the focus with Tab by default.
+      screen.getByTestId('clear').focus();
+      await flushMicrotasks();
       expect(root).toHaveAttribute('data-focused');
 
-      await user.tab();
+      screen.getByRole('button', { name: 'Next' }).focus();
+      await flushMicrotasks();
 
-      expect(screen.getByRole('button', { name: 'Next' })).toHaveFocus();
       expect(root).not.toHaveAttribute('data-focused');
       expect(root).toHaveAttribute('data-touched');
       expect(screen.getByTestId('error')).toHaveTextContent(PARTIAL_MESSAGE);

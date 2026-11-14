@@ -547,8 +547,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
   }
 
   // A number outside the range of its segment means that the text has another layout, such as
-  // `2027/05/17` for the layout month, day, year. The year comes first, because the limits of the
-  // month and the day need a year that `Temporal` can make.
+  // `2027/05/17` for the layout month, day, year.
   function isInRanges(next: SegmentNumbers): boolean {
     const types = editableTypes.value.filter(isNumericType);
     const isInRange = (type: NumericSegmentType, limits: Limits) => {
@@ -556,8 +555,9 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
       const { min, max } = getRange(type, limits, hourCycle.value);
       return number !== undefined && number >= min && number <= max;
     };
-    const anyLimits: Limits = { monthsInYear: 12, daysInMonth: 31 };
-    if (types.includes('year') && !isInRange('year', anyLimits)) {
+    // The range of a year reads no limits. The limits of the month and the day need a year that
+    // `Temporal` can make, so the year comes first.
+    if (types.includes('year') && !isInRange('year', { monthsInYear: 12, daysInMonth: 31 })) {
       return false;
     }
     const limits = getLimits(next, referenceNumbers.value, displayCal.value);
