@@ -54,7 +54,8 @@ export interface ResizableRootProps
   /**
    * The uncontrolled layout at the start.
    * A panel with no entry takes its `defaultSize`, or an equal share of the space that is left.
-   * The `reset()` method and a double click on a handle give the panels the sizes of this layout.
+   * The `reset()` method and a double click on a handle give back the sizes of this layout: the
+   * method for each panel, and the double click for the primary panel of the handle.
    *
    * To render a controlled root, use the `layout` prop instead.
    */
@@ -71,11 +72,10 @@ export interface ResizableRootProps
    */
   largeStep?: number | undefined;
   /**
-   * Whether a move of a handle can go on into the panels after the panel next to the handle.
-   * When a panel next to the handle is at its least size, the move goes on into the next panel.
+   * Whether a move of a handle goes on into the panels after the panel beside the handle.
+   * When the panel beside the handle is at its least size, the move goes on into the next panel.
    * With `false`, a move changes only the two panels beside the handle.
-   * The methods of the panels and of the root move the panels as they are asked, and ignore this
-   * prop.
+   * The methods of the panels and of the root ignore this prop.
    * @default true
    */
   pushPanels?: boolean | undefined;
@@ -105,15 +105,15 @@ export interface ResizableRootActions {
    * Gives each panel the size that the layout has for it, as far as the constraints of the panels
    * allow. A panel that the layout lacks takes its `defaultSize`, or an equal share of the space
    * that is left.
-   * The change has the reason `'imperative-action'`. It does nothing when the panels already show
-   * the layout.
+   * The change has the reason `'imperative-action'`. It does nothing when the root has this
+   * layout already.
    */
   setLayout: (layout: ResizableRootLayout) => void;
   /**
    * Gives the panels the layout that they had at the start: the `defaultLayout` of the root, and
    * the `defaultSize` of each panel that it does not name.
-   * The change has the reason `'imperative-action'`. It does nothing when the panels already show
-   * that layout.
+   * The change has the reason `'imperative-action'`. It does nothing when the root has that layout
+   * already.
    */
   reset: () => void;
 }
@@ -403,10 +403,10 @@ function findPanel(id: string) {
   return panel === undefined || size === undefined ? undefined : { panel, index, size };
 }
 
-// Gives the panel `index` the size `size` by a move of a handle, and emits the change and the
-// commit. A key or a double click moves the handle that has the focus or the press, and it obeys
-// `pushPanels`. A method moves the handle after the panel, or the handle before the last panel,
-// with the panels after it pushed. A method also works on a disabled panel.
+// Gives the panel `index` the size `size` with a move of a handle, and emits the change and the
+// commit. A key or a double click gives the handle in `by`, and the move obeys `pushPanels`. A
+// method gives no handle: it uses the handle after the panel, or the handle before the last panel,
+// and it pushes the panels. A method also moves a disabled panel.
 function giveSize(
   index: number,
   size: number,

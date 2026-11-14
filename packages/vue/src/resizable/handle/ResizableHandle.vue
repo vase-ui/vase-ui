@@ -219,8 +219,8 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-// Enter collapses a collapsible primary panel, or gives it back its size. The other keys leave Enter
-// to the browser.
+// Enter collapses a collapsible primary panel, or gives it back its size. For another panel, Enter
+// stays a key of the browser.
 function toggleCollapse(event: KeyboardEvent) {
   const panel = primary.value;
   const size = panel === undefined ? undefined : root.shown.value[panel.id];

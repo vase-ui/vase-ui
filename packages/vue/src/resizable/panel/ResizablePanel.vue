@@ -49,9 +49,10 @@ export interface ResizablePanelProps
   maxSize?: number | string | undefined;
   /**
    * Whether the panel can collapse to its `collapsedSize`.
-   * A drag collapses the panel when it takes the panel below `minSize` by the collapse threshold,
-   * and a collapsed panel expands when a drag gives it back that distance.
-   * A key on a handle collapses and expands the panel at once.
+   * A drag collapses the panel when it goes below `minSize` by more than `collapseThreshold`.
+   * A drag expands a collapsed panel when it goes above `collapsedSize` by more than
+   * `collapseThreshold`.
+   * A key on a handle and the methods of the panel collapse and expand it at once.
    * The panel needs a `minSize` that is greater than its `collapsedSize`.
    * @default false
    */
@@ -67,7 +68,7 @@ export interface ResizablePanelProps
    * `collapsedSize` to expand it, in percent of the panel space.
    * A size is a number, or a string of a number with an optional `%`.
    * The default is half of the distance between `minSize` and `collapsedSize`.
-   * A distance that is greater than that distance acts as that distance.
+   * A threshold that is greater than that distance acts as that distance.
    */
   collapseThreshold?: number | string | undefined;
   /**
@@ -81,21 +82,23 @@ export interface ResizablePanelProps
 
 export interface ResizablePanelActions {
   /**
-   * Collapses the panel to its `collapsedSize`. The panel that is next to it takes its space.
-   * It does not collapse another panel, and it does nothing when the panel is not collapsible or is
+   * Collapses the panel to its `collapsedSize`. The panel after it takes its space, or the panel
+   * before it for the last panel.
+   * No other panel collapses for it. It does nothing when the panel is not collapsible or is
    * collapsed.
    */
   collapse: () => void;
   /**
    * Gives a collapsed panel the size that it had before it collapsed, or its `minSize` when it has
-   * no such size. It does not collapse another panel, and it does nothing when the panel is not
-   * collapsed.
+   * no such size. The panel gets less when the other panels cannot give the room without a
+   * collapse.
+   * No other panel collapses for it. It does nothing when the panel is not collapsed.
    */
   expand: () => void;
   /**
    * Gives the panel a size, as far as the constraints of the panels allow. A collapsible panel
-   * collapses when the size is less than its `minSize`. The size is a number, or a string of a
-   * number with an optional `%`.
+   * collapses when the size is less than its `minSize`. No other panel collapses for it.
+   * The size is a number, or a string of a number with an optional `%`.
    */
   resize: (size: number | string) => void;
   /**
@@ -173,8 +176,8 @@ const state = computed<ResizablePanelState>(() => ({
   disabled: props.disabled,
 }));
 
-// The panels beside this panel register in `setup` too, so the first state of the layout is known
-// only when they all have mounted. The first value is the state at the mount, and it has no event.
+// The panels beside this panel register in `setup` too, so the layout is known only when they all
+// have registered. The watcher starts at the mount, so the state at the mount has no event.
 onMounted(() => {
   watch(collapsed, (value) => {
     emit('collapsedChange', value);
