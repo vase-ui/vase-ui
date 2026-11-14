@@ -8,15 +8,28 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/test/floating-ui-tests/useFloating.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that ports the Base UI cases of `useDismiss` adds the test helper."
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "describe": ["useDismiss", "default options"],
+      "title": "does not dismiss with the escape key that ends a composition spanning a reopen",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "reason": "The case asserts that Escape directly after `compositionend` keeps the popup open. Only WebKit sends `compositionend` before the `keydown` that ends a composition, so only WebKit needs that window. In the other engines Vase UI closes the popup (`BUG-6158`). The case \"ignores Escape for 5 ms after compositionend in WebKit\" tests the window in WebKit."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "describe": ["useDismiss", "default options"],
+      "title": "outsidePress ignored for third party elements",
       "kind": "waits-on",
-      "waitsOn": "packages/react/test/floating-ui-tests/useFloating.ts",
-      "reason": "The file makes each popup with the test helper `useFloating` of Base UI, which Vase UI does not have. The pull request that adds `useFloating` ports the cases."
+      "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
+      "reason": "The case needs the markers that `markOthers` writes while a focus manager is open. The focus manager of Vase UI writes no marker. The pull request that ports `markOthers.ts` ports the case."
+    },
+    {
+      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+      "describe": ["useDismiss", "options set to false"],
+      "title": "does not dismiss when clicking portaled children",
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
+      "reason": "The case presses a plain button in a portal in the popup. Vue gives that event to no listener of the popup element, so that button is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
