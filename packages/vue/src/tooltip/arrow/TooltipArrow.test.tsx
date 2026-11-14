@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   describeConformance,

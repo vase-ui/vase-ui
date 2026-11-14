@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 
 // An enabled trigger has the attribute that marks it for the rule of nested triggers.
 const triggerAttribute = 'data-vase-ui-tooltip-trigger';
