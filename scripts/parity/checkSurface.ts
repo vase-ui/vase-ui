@@ -1,8 +1,14 @@
 import { basename, dirname, join } from 'node:path';
 import { expectedSurface, normalizeDefault } from './mapping.ts';
 import type { ExpectedSurface } from './mapping.ts';
-import { labelOf, MEMBER_KINDS, memberOf, targetOf } from './parityFiles.ts';
-import type { ExceptionRow, FamilyExtract, FamilyFile, MemberKind, Target } from './parityFiles.ts';
+import { COMPONENT_MEMBER_KINDS, labelOf, memberOf, targetOf } from './parityFiles.ts';
+import type {
+  ComponentMemberKind,
+  ExceptionRow,
+  FamilyExtract,
+  FamilyFile,
+  Target,
+} from './parityFiles.ts';
 import { hasCounterpart, VASE_SOURCE_ROOT } from './paths.ts';
 import type { VaseFiles } from './paths.ts';
 import { extractCommand } from './repository.ts';
@@ -41,7 +47,7 @@ interface EntryRow {
 }
 
 type Add = (message: string, row?: string) => void;
-type MembersByKind<T> = Record<MemberKind, T>;
+type MembersByKind<T> = Record<ComponentMemberKind, T>;
 
 interface PartMembers {
   expected: MembersByKind<Map<string, string>>;
@@ -176,7 +182,7 @@ function compareMembers(
     prop: new Set(expected.nativeListeners.map(({ prop }) => prop)),
     emit: new Set(expected.nativeListeners.map(({ emit }) => emit)),
   };
-  for (const kind of MEMBER_KINDS) {
+  for (const kind of COMPONENT_MEMBER_KINDS) {
     const label = MEMBER_LABELS[kind];
     for (const [name, row] of members.expected[kind]) {
       if (!members.actual[kind].has(name)) {
@@ -199,6 +205,31 @@ function compareMembers(
       }
     }
   }
+}
+
+/**
+ * The reasons of the Vase UI type that Base UI also has, or that no "surfaceAdditions" row accepts.
+ * A row for a reason that Base UI has stays unused, and the check reports it as stale.
+ */
+function withoutAddedReasons(
+  context: Context,
+  entry: string,
+  expected: string[],
+  found: string[],
+): string[] {
+  return found.filter((reason) => {
+    if (expected.includes(reason)) {
+      return true;
+    }
+    const index = context.family.surfaceAdditions.findIndex(
+      (row) => row.entry === entry && row.changeEventReason === reason,
+    );
+    if (index === -1) {
+      return true;
+    }
+    context.usedAdditions.add(index);
+    return false;
+  });
 }
 
 function compareSets(
@@ -332,7 +363,13 @@ function comparePart(
           `missing export ${inlineCode(name)} in ${entry.file}, or it is not a union of strings. Add it as a union of the reason strings.`,
         );
       } else {
-        compareSets('reason', name, values, found, add);
+        compareSets(
+          'reason',
+          name,
+          values,
+          withoutAddedReasons(context, part.name, values, found),
+          add,
+        );
       }
     }
   }
@@ -540,14 +577,19 @@ export function checkSurface(options: {
       return;
     }
     const { kind, name: member } = memberOf(row);
-    const mapped = (context.members.get(row.entry) ?? []).some(({ expected }) =>
-      expected[kind].has(member),
-    );
-    const reason = !partTitles.has(row.entry)
-      ? `the extract has no part ${inlineCode(row.entry)}`
-      : mapped
+    let reason: string;
+    if (!partTitles.has(row.entry)) {
+      reason = `the extract has no part ${inlineCode(row.entry)}`;
+    } else if (kind === 'changeEventReason') {
+      reason = `the change reasons of the part have no ${inlineCode(member)} that Base UI lacks`;
+    } else {
+      const mapped = (context.members.get(row.entry) ?? []).some(({ expected }) =>
+        expected[kind].has(member),
+      );
+      reason = mapped
         ? `a Base UI row maps to the ${MEMBER_LABELS[kind]} ${inlineCode(member)}`
         : `the part does not have the ${MEMBER_LABELS[kind]} ${inlineCode(member)}`;
+    }
     problem(
       'stale row',
       `surfaceAdditions[${index}] (${row.entry}, ${kind} ${member})`,
