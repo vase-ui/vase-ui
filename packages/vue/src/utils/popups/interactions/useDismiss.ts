@@ -50,6 +50,16 @@ interface EscapeLayers {
 
 const ESCAPE_LAYERS_KEY = Symbol.for('vase-ui.escape-layers');
 
+// A capture listener for each of these events marks a press, as the capture listeners of `floating` do.
+const PRESS_EVENTS = [
+  'click',
+  'mousedown',
+  'pointerdown',
+  'mouseup',
+  'touchend',
+  'touchmove',
+] as const;
+
 // An open popup takes a number when it opens, and a parent opens before its child. An Escape that
 // reaches the document does not go through the `keydown` handler of a popup element, for example
 // when the focus is on `body` after a backdrop press. `stopPropagation()` cannot stop the other
@@ -65,13 +75,14 @@ function getEscapeLayers(): EscapeLayers {
 
 interface DismissParent {
   markInsideComponentTree(): void;
+  markInsidePortal(portal: Element): void;
   handleKeydown(event: KeyboardEvent): void;
 }
 
 // React gives an event of a portal child to the handlers of the popup around the component.
 // A DOM event of content that `Teleport` moved does not reach the popup element. Each
-// `useDismiss` call provides the two handlers that need such an event, and the call below it in
-// the component tree calls them.
+// `useDismiss` call provides the handlers that need such an event, and the call or the portal
+// below it in the component tree calls them.
 const DismissParentContext: InjectionKey<DismissParent> = Symbol();
 
 function alwaysFalse() {
@@ -170,8 +181,8 @@ export interface UseDismissProps {
  * the user presses the `escape` key or outside of the floating element.
  *
  * Call it in the `setup` of the root of the popup. A popup below that root then counts as inside
- * the popup, also when `Teleport` moved it. Other content that `Teleport` moved out of the popup
- * is outside it.
+ * the popup, also when `Teleport` moved it, with each part in its portal, such as its backdrop.
+ * Other content that `Teleport` moved out of the popup is outside it.
  *
  * A press in a same-origin frame below the document of the popup counts as a press on the frame
  * element. A press in a cross-origin frame closes nothing, and neither does a press in a frame in
@@ -247,6 +258,18 @@ export function useDismiss(
     clearInsideComponentTreeTimeout.start(0, clearInsideComponentTree);
   }
 
+  // The portal of this popup can hold its backdrop and its other parts outside the popup element.
+  // A press there is outside this popup and inside the popups above, so only they get the marker.
+  // A portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
+  // popup.
+  function markInsidePortal(portal: Element) {
+    if (contains(portal, getStore().select('positionerElement'))) {
+      parent?.markInsideComponentTree();
+    } else {
+      markInsideComponentTree();
+    }
+  }
+
   function hasBlockingChild(bubbleKey: 'escapeKeyBubbles' | 'outsidePressBubbles') {
     const nodeId = getStore().context.positioning?.nodeId;
     const children = tree.value ? getNodeChildren(tree.value.nodesRef.value, nodeId) : [];
@@ -317,6 +340,7 @@ export function useDismiss(
 
   provide(DismissParentContext, {
     markInsideComponentTree,
+    markInsidePortal,
     handleKeydown(event) {
       if (!isEventTargetWithin(event, getStore().select('positionerElement'))) {
         handleFloatingKeydown(event);
@@ -1001,4 +1025,45 @@ export function useDismiss(
   };
 
   return { reference, floating, trigger: reference };
+}
+
+/**
+ * Counts a press in the portal element of a popup as inside the popups above that popup. Call it in
+ * the `setup` of the portal, with its element as a ref or a getter. It adds no listener when no
+ * `useDismiss` call is above the portal.
+ *
+ * The portal element can hold parts of the popup outside the popup element, such as the backdrop
+ * and the positioner. A press on such a part reaches no listener of the popup element. The press
+ * counts as outside the popup that owns the portal. A popup owns the portal when its positioner
+ * element is in the portal element. A portal that no popup owns counts as inside the nearest popup
+ * above it.
+ *
+ * The composable adds its listeners with `addEventListener`. Vue stamps an event in the first Vue
+ * listener that gets it. Vue then skips each later listener that it attached in that millisecond
+ * or after it. A Vue listener on the portal element would get a press first. The listeners of the
+ * popup element could then miss a press in the millisecond of the open.
+ */
+export function useDismissPortal(portal: MaybeRefOrGetter<Element | null>): void {
+  const parent = inject(DismissParentContext, undefined);
+  if (!parent) {
+    return;
+  }
+
+  watch(
+    () => toValue(portal),
+    (element, _previousElement, onCleanup) => {
+      if (!element) {
+        return;
+      }
+      const mark = () => parent.markInsidePortal(element);
+      onCleanup(
+        mergeCleanups(
+          ...PRESS_EVENTS.map((type) =>
+            addEventListener(element, type, mark, { capture: true, passive: true }),
+          ),
+        ),
+      );
+    },
+    { flush: 'post' },
+  );
 }
