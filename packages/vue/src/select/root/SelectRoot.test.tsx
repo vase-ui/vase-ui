@@ -24,8 +24,7 @@ import SelectRootHydration from './SelectRootHydration.test.vue';
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
 
-// No part of this family sets the value yet, so the cases set it through the store, as an item
-// does.
+// The cases set the value through the store, as an item does, so they need no popup.
 let store: SelectStore;
 const StoreProbe = defineComponent(() => {
   store = useSelectRootContext();
@@ -577,6 +576,159 @@ describe('<Select.Root />', () => {
       await flushMicrotasks();
 
       expect(screen.getByTestId('trigger')).toHaveFocus();
+    });
+  });
+
+  describe('autofill', () => {
+    function renderFonts(props: { readOnly?: boolean } = {}) {
+      const handleValueChange = vi.fn();
+      const result = render(
+        <form data-testid="form">
+          <Select.Root
+            name="font"
+            defaultValue="sans"
+            readOnly={props.readOnly}
+            onValueChange={handleValueChange}
+          >
+            <Select.Trigger />
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="sans">Sans-serif</Select.Item>
+                  <Select.Item value="mono">Monospace</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
+      );
+      return { handleValueChange, result };
+    }
+
+    it('selects the item whose text the browser fills into the input of a closed select', async () => {
+      const { handleValueChange, result } = renderFonts();
+      await result;
+      expect(document.querySelector('[role="option"]')).toBe(null);
+      const input = getHiddenInput();
+
+      input.value = 'Monospace';
+      await fireEvent.input(input);
+      await flushMicrotasks();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe('mono');
+      expect((handleValueChange.mock.lastCall?.[1] as ChangeDetails).reason).toBe('none');
+      expect(input.value).toBe('mono');
+      expect(getFormData('font')).toEqual(['mono']);
+    });
+
+    it('selects the item whose value the browser fills in, in another case', async () => {
+      const fonts = [
+        { code: 'sans', name: 'Sans-serif' },
+        { code: 'mono', name: 'Monospace' },
+      ];
+      const handleValueChange = vi.fn();
+      await render(
+        <Select.Root
+          name="font"
+          defaultValue={fonts[0]}
+          itemToStringValue={(font) => font.code}
+          itemToStringLabel={(font) => font.name}
+          onValueChange={handleValueChange}
+        >
+          <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {fonts.map((font) => (
+                  <Select.Item key={font.code} value={font}>
+                    {font.name}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      const input = getHiddenInput();
+
+      input.value = 'MONO';
+      await fireEvent.change(input);
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(fonts[1]);
+      expect(input.value).toBe('mono');
+    });
+
+    it('keeps the value of a read-only select', async () => {
+      const { handleValueChange, result } = renderFonts({ readOnly: true });
+      await result;
+      const input = getHiddenInput();
+
+      input.value = 'Monospace';
+      await fireEvent.input(input);
+      await flushMicrotasks();
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(input.value).toBe('sans');
+    });
+  });
+
+  describe('selected index', () => {
+    it('follows the value while the popup is closed', async () => {
+      const value = shallowRef('a');
+      await render(() => (
+        <Select.Root value={value.value}>
+          <StoreProbe />
+          <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      store.set('forceMounted', true);
+      await flushMicrotasks();
+      expect(store.state.selectedIndex).toBe(0);
+
+      value.value = 'b';
+      await flushMicrotasks();
+
+      expect(store.state.selectedIndex).toBe(1);
+    });
+
+    it('is null for a new value after the items unmount', async () => {
+      const value = shallowRef('a');
+      const open = shallowRef(true);
+      await render(() => (
+        <Select.Root value={value.value} open={open.value}>
+          <StoreProbe />
+          <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+      expect(store.state.selectedIndex).toBe(0);
+
+      open.value = false;
+      await waitFor(() => {
+        expect(screen.queryByRole('option')).toBe(null);
+      });
+      value.value = 'b';
+      await flushMicrotasks();
+
+      expect(store.state.selectedIndex).toBe(null);
     });
   });
 

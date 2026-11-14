@@ -7,6 +7,7 @@ import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
 import { NOOP } from '../../internals/noop';
+import * as Select from '../../select/index.parts';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 
@@ -36,6 +37,13 @@ const NATIVE_BUTTON_MESSAGE =
   'the `nativeButton` prop is true. Rendering a non-<button> removes native button semantics, ' +
   'which can impact forms and accessibility. Use a real <button> with the `as` prop or the `#render` slot, or ' +
   'set `nativeButton` to `false`.';
+
+const NON_NATIVE_BUTTON_MESSAGE =
+  'Vase UI: A component that acts as a button expected a non-<button> because ' +
+  'the `nativeButton` prop is false. Rendering a <button> keeps native behavior while Vase UI ' +
+  'applies non-native attributes and handlers, which can add unintended extra attributes ' +
+  '(such as `role` or `aria-disabled`). Use a non-<button> with the `as` prop or the `#render` slot, or ' +
+  'set `nativeButton` to `true`.';
 
 describe('<Toolbar.Button />', () => {
   const { render } = createRenderer();
@@ -308,6 +316,89 @@ describe('<Toolbar.Button />', () => {
         await user.click(switchElement);
         expect(handleCheckedChange).toHaveBeenCalledTimes(0);
         expect(handleClick).toHaveBeenCalledTimes(0);
+      });
+    });
+
+    describe('Select', () => {
+      it('renders a select trigger', async () => {
+        await render(
+          <Toolbar.Root>
+            <Select.Root defaultValue="a">
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Select.Trigger {...props} />
+                  ),
+                }}
+              />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>,
+        );
+
+        const trigger = screen.getByTestId('button');
+        expect(trigger).toBe(screen.getByRole('combobox'));
+        expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+      });
+
+      it('disabled state', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const onValueChange = vi.fn();
+        const onOpenChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Select.Root defaultValue="a" onValueChange={onValueChange} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                disabled
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Select.Trigger {...props} nativeButton={false} />
+                  ),
+                }}
+              />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="a" />
+                    <Select.Item value="b" />
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(errorSpy).toHaveBeenCalledTimes(1);
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining(NON_NATIVE_BUTTON_MESSAGE));
+
+        expect(screen.queryByRole('listbox')).toBe(null);
+
+        const trigger = screen.getByRole('combobox');
+        expect(trigger).not.toHaveAttribute('disabled');
+        expect(trigger).toHaveAttribute('data-disabled');
+        expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+        expect(onValueChange).toHaveBeenCalledTimes(0);
+
+        await user.keyboard('[ArrowUp]');
+        await user.keyboard('[ArrowDown]');
+        await user.keyboard('[Enter]');
+        await user.keyboard('[Space]');
+
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+        expect(onValueChange).toHaveBeenCalledTimes(0);
       });
     });
 
