@@ -19,7 +19,7 @@ export interface NumberFieldInputProps
 </script>
 
 <script setup lang="ts">
-import { onMounted, shallowRef, watch } from 'vue';
+import { onMounted, watch } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
@@ -83,6 +83,8 @@ const {
   nameProp,
   setValue,
   state,
+  value: numberValue,
+  disabled: isDisabled,
   setInputValue,
   locale,
   inputRef,
@@ -109,33 +111,12 @@ const setFocused = useSetFieldFocused(() => state.value.disabled, inputRef);
 let blockRevalidation = false;
 let pendingCaret: number | null = null;
 
-// The field reads the registration inside its own computed values. `state` holds the state of the
-// field, so a getter of the registration that reads `state` makes those values depend on
-// themselves, and `data-focused` and `data-touched` stay stale. The registration reads these two
-// refs, which follow `state`.
-const registeredValue = shallowRef(state.value.value);
-const isRegistered = shallowRef(!state.value.disabled);
-watch(
-  () => state.value.value,
-  (value) => {
-    registeredValue.value = value;
-  },
-  { flush: 'sync' },
-);
-watch(
-  () => state.value.disabled,
-  (disabled) => {
-    isRegistered.value = !disabled;
-  },
-  { flush: 'sync' },
-);
-
 useRegisterFieldControl(
   inputRef,
   id,
-  () => registeredValue.value,
+  () => numberValue.value,
   undefined,
-  isRegistered,
+  () => !isDisabled.value,
   nameProp,
 );
 

@@ -15,7 +15,7 @@ import {
   renderOnServer,
   screen,
 } from '#test-utils';
-import { defineNumberFieldContextProbe } from '../../../test/fixtures/numberFieldContextProbe';
+import NumberFieldContextProbe from '../../../test/fixtures/NumberFieldContextProbe.vue';
 import { REASONS } from '../../internals/reasons';
 import NumberFieldRootHydration from './NumberFieldRootHydration.test.vue';
 import NumberFieldRootReplace from './NumberFieldRootReplace.test.vue';
@@ -33,6 +33,12 @@ function getHiddenInput() {
 
 function getText() {
   return screen.getByTestId<HTMLInputElement>('text');
+}
+
+// A case that reads the context of the root renders the probe with `probe` as its ref.
+function createProbe() {
+  const probe = shallowRef<InstanceType<typeof NumberFieldContextProbe> | null>(null);
+  return { probe, getContext: () => probe.value!.context };
 }
 
 // The way a browser fills a field: it sets the value, and then it sends `input` and `change`.
@@ -568,12 +574,11 @@ describe('<NumberField />', () => {
     });
 
     it('does not submit a required field with no value, and focuses the text input', async () => {
-      const { Probe } = defineNumberFieldContextProbe();
       const handleSubmit = vi.fn((event: Event) => event.preventDefault());
       const { user } = await render(
         <form data-testid="form" onSubmit={handleSubmit}>
           <NumberFieldBase.Root name="quantity" required>
-            <Probe />
+            <NumberFieldBase.Input data-testid="text" />
           </NumberFieldBase.Root>
           <button type="submit">Submit</button>
         </form>,
@@ -765,11 +770,11 @@ describe('<NumberField />', () => {
 
       it('puts the text of the input back to the formatted default', async () => {
         const formattedDefault = new Intl.NumberFormat().format(1234.5);
-        const { Probe, getContext } = defineNumberFieldContextProbe();
+        const { probe, getContext } = createProbe();
         await render(
           <form data-testid="form">
             <NumberFieldBase.Root name="quantity" defaultValue={1234.5}>
-              <Probe />
+              <NumberFieldContextProbe ref={probe} />
             </NumberFieldBase.Root>
           </form>,
         );
@@ -787,11 +792,11 @@ describe('<NumberField />', () => {
       });
 
       it('leaves no commit pending for the change of a reset', async () => {
-        const { Probe, getContext } = defineNumberFieldContextProbe();
+        const { probe, getContext } = createProbe();
         await render(
           <form data-testid="form">
             <NumberFieldBase.Root defaultValue={5}>
-              <Probe />
+              <NumberFieldContextProbe ref={probe} />
             </NumberFieldBase.Root>
           </form>,
         );
@@ -806,13 +811,14 @@ describe('<NumberField />', () => {
 
       it('tells the parts that a reset changes the value, until the render ends', async () => {
         const seen: boolean[] = [];
-        const { Probe, getContext } = defineNumberFieldContextProbe((context) =>
-          seen.push(context.isResetChangePending.value),
-        );
+        const { probe, getContext } = createProbe();
         await render(
           <form data-testid="form">
             <NumberFieldBase.Root defaultValue={5}>
-              <Probe />
+              <NumberFieldContextProbe
+                ref={probe}
+                onValueChanged={(context) => seen.push(context.isResetChangePending.value)}
+              />
             </NumberFieldBase.Root>
           </form>,
         );
