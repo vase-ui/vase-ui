@@ -3197,10 +3197,10 @@ describe('<RadioGroup />', () => {
   });
 
   describe('BUG-1425: a required group with no value after blur', () => {
-    function renderGroup() {
+    function renderGroup(validationMode?: Form.ValidationMode) {
       return render(
         <div>
-          <Field.Root name="fruit" validationMode="onBlur" data-testid="root">
+          <Field.Root name="fruit" validationMode={validationMode} data-testid="root">
             <RadioGroup required>
               <Radio.Root value="a" data-testid="a" />
               <Radio.Root value="b" data-testid="b" />
@@ -3215,7 +3215,7 @@ describe('<RadioGroup />', () => {
     }
 
     it('is invalid when the focus leaves the group, with no change before', async () => {
-      const { user } = await renderGroup();
+      const { user } = await renderGroup('onBlur');
       const group = screen.getByRole('radiogroup');
 
       screen.getByTestId('a').focus();
@@ -3236,7 +3236,7 @@ describe('<RadioGroup />', () => {
     });
 
     it('is valid again when the user picks a radio', async () => {
-      const { user } = await renderGroup();
+      const { user } = await renderGroup('onBlur');
 
       screen.getByTestId('a').focus();
       await user.tab();
@@ -3248,6 +3248,18 @@ describe('<RadioGroup />', () => {
       expect(screen.queryByTestId('error')).toBe(null);
       expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid');
       expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+    });
+
+    it('stays valid when the focus leaves the group, with the default validation mode', async () => {
+      const { user } = await renderGroup();
+
+      screen.getByTestId('a').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid');
     });
   });
 
