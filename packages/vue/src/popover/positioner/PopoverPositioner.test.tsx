@@ -1,8 +1,10 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
-import type { CSSProperties, FunctionalComponent, VNodeChild } from 'vue';
+import type { CSSProperties, FunctionalComponent, PropType, VNodeChild } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import * as Tooltip from '../../tooltip/index.parts';
+import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
+import type { FloatingTreeType } from '../../utils/popups/types';
 import * as Popover from '../index.parts';
 import {
   createRenderer,
@@ -547,6 +549,49 @@ describe('<Popover.Positioner />', () => {
         `${popupWidth / 2}px ${anchorRect.y + anchorHeight / 2 - positionerRect.y}px`,
       );
     });
+  });
+
+  it('makes the node of a popover in its popup a child of its own node', async () => {
+    const nodeIds: Record<string, string | null> = {};
+    let tree: FloatingTreeType | null = null;
+    // A part that gives the test the id of the node that the positioner above it provides.
+    const NodeProbe = defineComponent({
+      props: { name: { type: String as PropType<string>, required: true } },
+      setup(props) {
+        nodeIds[props.name] = useFloatingParentNodeId().value;
+        tree = useFloatingTree().value;
+        return () => null;
+      },
+    });
+
+    await render(
+      <Popover.Root open>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <NodeProbe name="parent" />
+              <Popover.Root open>
+                <Popover.Portal>
+                  <Popover.Positioner>
+                    <Popover.Popup>
+                      <NodeProbe name="child" />
+                    </Popover.Popup>
+                  </Popover.Positioner>
+                </Popover.Portal>
+              </Popover.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    // Each portal renders its popup in the flush after its mount.
+    await waitFor(() => {
+      expect(nodeIds.child).toEqual(expect.any(String));
+    });
+
+    expect(nodeIds.parent).toEqual(expect.any(String));
+    const childNode = tree!.nodesRef.value.find((node) => node.id === nodeIds.child);
+    expect(childNode?.parentId).toBe(nodeIds.parent);
   });
 
   // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and each later case of

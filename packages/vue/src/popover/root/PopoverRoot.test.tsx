@@ -694,5 +694,23 @@ describe('<Popover.Root />', () => {
 
       expect(readTriggers(container)).toEqual(client);
     });
+
+    it('shows the popup of an open root in the body after the hydration, with its labels', async () => {
+      const props = { defaultOpen: true, defaultTriggerId: 'inside' };
+      const serverHtml = await renderOnServer(HYDRATION_FILE, props);
+
+      const { container } = await hydrate(PopoverRootHydration, { serverHtml, props });
+
+      const popup = await screen.findByTestId('popup');
+      expect(container.contains(popup)).toBe(false);
+      expect(screen.getByRole('button', { name: 'Inside' })).toHaveAttribute(
+        'aria-controls',
+        popup.id,
+      );
+      await waitFor(() => {
+        expect(popup).toHaveAttribute('aria-labelledby', screen.getByText('Title').id);
+      });
+      expect(popup).toHaveAttribute('aria-describedby', screen.getByText('Description').id);
+    });
   });
 });

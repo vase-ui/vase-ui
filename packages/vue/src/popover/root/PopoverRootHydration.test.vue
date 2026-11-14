@@ -24,5 +24,16 @@ const handle = props.handle ?? Popover.createHandle<unknown>();
     :default-trigger-id="defaultTriggerId"
   >
     <Popover.Trigger id="inside">Inside</Popover.Trigger>
+    <Popover.Portal>
+      <Popover.Backdrop />
+      <Popover.Positioner>
+        <Popover.Popup data-testid="popup">
+          <Popover.Arrow />
+          <Popover.Title>Title</Popover.Title>
+          <Popover.Description>Description</Popover.Description>
+          <Popover.Close>Close</Popover.Close>
+        </Popover.Popup>
+      </Popover.Positioner>
+    </Popover.Portal>
   </Popover.Root>
 </template>
