@@ -10,8 +10,8 @@ interface DelayGroupMember {
 }
 
 /**
- * The state of a group. No field is reactive, as the refs of the context of Base UI are not, so a
- * change of a field renders no part.
+ * The state of a group. No field is reactive, as the refs of the context of Base UI are not. A
+ * change of a field thus renders no part.
  */
 interface DelayGroup {
   hasProvider: boolean;
@@ -25,8 +25,8 @@ interface DelayGroup {
 
 /**
  * The parts that have no provider share this group, as they share the default context of Base UI.
- * The group holds state, so a server render must not join it. A server runs no `onMounted` hook
- * and no `watch` of a member.
+ * The group holds state, and all server requests share it. A server render thus must not join it.
+ * A server runs no `onMounted` hook and no `watch` of a member.
  */
 const DEFAULT_DELAY_GROUP: DelayGroup = {
   hasProvider: false,
@@ -48,7 +48,7 @@ export interface FloatingDelayGroupOptions {
   /**
    * How long the group stays active after a popup closes. Use it to make the group last longer
    * than the close delay, for example when there is no close delay. A change applies to the next
-   * close.
+   * close of a popup.
    * @default 0
    */
   timeoutMs?: MaybeRefOrGetter<number | undefined>;
@@ -106,8 +106,8 @@ interface UseDelayGroupReturn {
    */
   delay: () => Delay;
   /**
-   * Whether the popup has no animation. It is `true` for a popup that opens while another popup of
-   * the group is open or has just closed, and for that other popup.
+   * Whether animations should be removed. It is `true` for a popup that opens while another popup
+   * of the group is active, and for that other popup.
    */
   isInstantPhase: Readonly<Ref<boolean>>;
   /**
@@ -118,8 +118,7 @@ interface UseDelayGroupReturn {
 
 /**
  * Makes the caller a member of the delay group above it. Call it in `setup`. The store can be a
- * ref or a getter, because a detached trigger moves from the store of its handle to the store of a
- * root.
+ * ref or a getter. A detached trigger moves from the store of its handle to the store of a root.
  * @see https://floating-ui.com/docs/FloatingDelayGroup
  * @internal
  */
@@ -168,7 +167,7 @@ export function useDelayGroup(
     }
 
     group.timeout.start(timeoutMs, () => {
-      // Another popup took over the group, or this popup is open for another trigger.
+      // The popup can be open for another trigger, or another popup can have taken over the group.
       if (toValue(store).select('open') || (group.currentId && group.currentId !== id)) {
         return;
       }
@@ -180,7 +179,7 @@ export function useDelayGroup(
     const previousContext = group.currentContext;
     const previousId = group.currentId;
 
-    // A popup is opening, so the timer that would end the group must not run.
+    // A popup opens, so the timer that would end the group must not run.
     group.timeout.clear();
     group.currentContext = member;
     group.currentId = id;
@@ -196,8 +195,8 @@ export function useDelayGroup(
     }
   }
 
-  // The values of the last run. Vue runs the cleanup of a part in the render of its parent, so the
-  // cleanup must read no reactive state.
+  // The values of the last run. Vue runs the cleanup of a part in the render of its parent. The
+  // cleanup thus reads no reactive state.
   let lastId: string | undefined;
   let lastOpen = false;
 

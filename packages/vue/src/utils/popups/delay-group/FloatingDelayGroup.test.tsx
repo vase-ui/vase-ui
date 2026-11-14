@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, test, vi } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, onUpdated, shallowRef } from 'vue';
-import type { PropType } from 'vue';
+import type { MaybeRefOrGetter, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
 import { getDelay } from '../interactions/useHoverShared';
@@ -224,7 +224,7 @@ describe('FloatingDelayGroup', () => {
   });
 
   it('keeps the active context when an inactive consumer unmounts', async () => {
-    const Test = defineComponent({
+    const GroupWithRemovableTooltip = defineComponent({
       setup() {
         const showSecond = shallowRef(true);
 
@@ -246,7 +246,7 @@ describe('FloatingDelayGroup', () => {
       },
     });
 
-    await render(<Test />);
+    await render(<GroupWithRemovableTooltip />);
 
     await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
 
@@ -266,7 +266,7 @@ describe('FloatingDelayGroup', () => {
   });
 
   it('keeps the timeout active when the last closed consumer unmounts', async () => {
-    const Test = defineComponent({
+    const GroupWithRemovableTooltip = defineComponent({
       setup() {
         const showFirst = shallowRef(true);
 
@@ -287,7 +287,7 @@ describe('FloatingDelayGroup', () => {
       },
     });
 
-    await render(<Test />);
+    await render(<GroupWithRemovableTooltip />);
 
     await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
 
@@ -342,6 +342,26 @@ describe('FloatingDelayGroup', () => {
     expect(screen.getByTestId('render-count-three').textContent).toBe('0');
   });
 
+  // A member that uses the first store, and the second store after `useSecond` becomes `true`.
+  // `closed` lists the stores that the group asked to close.
+  function createMemberWithChangingStore(open: MaybeRefOrGetter<boolean>) {
+    const closed: string[] = [];
+    const useSecond = shallowRef(false);
+    const Member = defineComponent({
+      setup() {
+        function useStore(name: string) {
+          const { context } = useFloating();
+          return Object.assign(context.rootStore, { closeForSibling: () => closed.push(name) });
+        }
+        const first = useStore('first');
+        const second = useStore('second');
+        useDelayGroup(() => (useSecond.value ? second : first), { open });
+        return () => null;
+      },
+    });
+    return { Member, closed, useSecond };
+  }
+
   describe('rules with no Base UI case', () => {
     it('sets the instant phase before the popup of the second tooltip is inserted', async () => {
       await render(
@@ -389,13 +409,31 @@ describe('FloatingDelayGroup', () => {
       expect(isOpen('one')).toBe(true);
     });
 
-    it('keeps the open delay at 0 and gives the new close delay while a popup keeps the group active', async () => {
+    it('keeps the open delay at 0 when the delay changes while a popup keeps the group active', async () => {
       const delay = shallowRef<Delay>({ open: 1000, close: 200 });
       await render(() => (
         <Group delay={delay.value}>
           <Tooltip label="one" />
           <Tooltip label="two" />
-          <Tooltip label="three" />
+        </Group>
+      ));
+      await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
+      await tick(1000);
+
+      delay.value = { open: 300, close: 200 };
+      await flushMicrotasks();
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(1);
+
+      expect(isOpen('two')).toBe(true);
+    });
+
+    it('gives the new delay to the popup that keeps the group active and to the next open', async () => {
+      const delay = shallowRef<Delay>({ open: 1000, close: 200 });
+      await render(() => (
+        <Group delay={delay.value}>
+          <Tooltip label="one" />
+          <Tooltip label="two" />
         </Group>
       ));
       await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
@@ -403,24 +441,43 @@ describe('FloatingDelayGroup', () => {
 
       delay.value = { open: 300, close: 50 };
       await flushMicrotasks();
-      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
-      await tick(1);
-      expect(isOpen('two')).toBe(true);
-
-      await fireEvent.mouseLeave(screen.getByTestId('reference-two'));
+      await fireEvent.mouseLeave(screen.getByTestId('reference-one'));
       await tick(49);
-      expect(isOpen('two')).toBe(true);
+      expect(isOpen('one')).toBe(true);
 
       await tick(1);
+      expect(isOpen('one')).toBe(false);
+
+      // The group has no timeout, so it ended with the close of the first popup.
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(299);
       expect(isOpen('two')).toBe(false);
 
-      // The group ended with the close of the second tooltip, so its delay is the new delay.
-      await fireEvent.mouseEnter(screen.getByTestId('reference-three'));
-      await tick(299);
-      expect(isOpen('three')).toBe(false);
+      await tick(1);
+      expect(isOpen('two')).toBe(true);
+    });
+
+    it('reads timeoutMs when a popup closes', async () => {
+      const timeoutMs = shallowRef(500);
+      await render(() => (
+        <Group delay={{ open: 1000, close: 0 }} timeoutMs={timeoutMs.value}>
+          <Tooltip label="one" />
+          <Tooltip label="two" />
+        </Group>
+      ));
+      timeoutMs.value = 100;
+      await flushMicrotasks();
+      await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
+      await tick(1000);
+      await fireEvent.mouseLeave(screen.getByTestId('reference-one'));
+
+      await tick(100);
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(999);
+      expect(isOpen('two')).toBe(false);
 
       await tick(1);
-      expect(isOpen('three')).toBe(true);
+      expect(isOpen('two')).toBe(true);
     });
 
     it('joins the group when its popup is open at the mount', async () => {
@@ -501,7 +558,7 @@ describe('FloatingDelayGroup', () => {
     });
 
     it('leaves the group when its open popup unmounts', async () => {
-      const Test = defineComponent({
+      const GroupWithRemovableTooltip = defineComponent({
         setup() {
           const showFirst = shallowRef(true);
 
@@ -521,7 +578,7 @@ describe('FloatingDelayGroup', () => {
           );
         },
       });
-      await render(<Test />);
+      await render(<GroupWithRemovableTooltip />);
       await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
       await tick(1000);
       expect(isOpen('one')).toBe(true);
@@ -536,7 +593,7 @@ describe('FloatingDelayGroup', () => {
     });
 
     it('VUE-48: a popup that unmounts does not stop the timer that another popup started', async () => {
-      const Test = defineComponent({
+      const GroupWithRemovableTooltip = defineComponent({
         setup() {
           const showFirst = shallowRef(true);
 
@@ -557,7 +614,7 @@ describe('FloatingDelayGroup', () => {
           );
         },
       });
-      await render(<Test />);
+      await render(<GroupWithRemovableTooltip />);
       // The first popup closes and then the second popup takes over the group. The second popup
       // closes, so its timer is the one that ends the group.
       await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
@@ -611,24 +668,11 @@ describe('FloatingDelayGroup', () => {
     });
 
     it('uses the store that it has now', async () => {
-      const closed: string[] = [];
       const open = shallowRef(false);
-      const useSecond = shallowRef(false);
-      const SwitchingTooltip = defineComponent({
-        setup() {
-          function useStore(name: string) {
-            const { context } = useFloating();
-            return Object.assign(context.rootStore, { closeForSibling: () => closed.push(name) });
-          }
-          const first = useStore('first');
-          const second = useStore('second');
-          useDelayGroup(() => (useSecond.value ? second : first), { open });
-          return () => null;
-        },
-      });
+      const { Member, closed, useSecond } = createMemberWithChangingStore(open);
       await render(
         <Group delay={{ open: 1000, close: 0 }}>
-          <SwitchingTooltip />
+          <Member />
           <Tooltip label="two" />
         </Group>,
       );
@@ -642,23 +686,10 @@ describe('FloatingDelayGroup', () => {
     });
 
     it('does not close its own popup when its store changes while the popup is open', async () => {
-      const closed: string[] = [];
-      const useSecond = shallowRef(false);
-      const SwitchingTooltip = defineComponent({
-        setup() {
-          function useStore(name: string) {
-            const { context } = useFloating();
-            return Object.assign(context.rootStore, { closeForSibling: () => closed.push(name) });
-          }
-          const first = useStore('first');
-          const second = useStore('second');
-          useDelayGroup(() => (useSecond.value ? second : first), { open: true });
-          return () => null;
-        },
-      });
+      const { Member, closed, useSecond } = createMemberWithChangingStore(true);
       await render(
         <Group delay={{ open: 1000, close: 0 }}>
-          <SwitchingTooltip />
+          <Member />
         </Group>,
       );
 
@@ -687,7 +718,7 @@ describe('FloatingDelayGroup', () => {
         },
       });
       // One popup with two triggers.
-      const Triggers = defineComponent({
+      const PopupWithTwoTriggers = defineComponent({
         setup() {
           const { context } = useFloating({ open });
           const store = Object.assign(context.rootStore, { closeForSibling() {} });
@@ -701,7 +732,7 @@ describe('FloatingDelayGroup', () => {
       });
       await render(
         <Group delay={{ open: 1000, close: 0 }} timeoutMs={500}>
-          <Triggers />
+          <PopupWithTwoTriggers />
           <Tooltip label="other" />
         </Group>,
       );
