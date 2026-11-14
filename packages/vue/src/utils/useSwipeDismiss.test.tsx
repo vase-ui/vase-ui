@@ -12,7 +12,12 @@ import {
   screen,
 } from '#test-utils';
 import { useSwipeDismiss } from './useSwipeDismiss';
-import type { SwipeDirection, UseSwipeDismissReturnValue } from './useSwipeDismiss';
+import type {
+  SwipeDirection,
+  SwipeThresholdFunction,
+  UseSwipeDismissOptions,
+  UseSwipeDismissReturnValue,
+} from './useSwipeDismiss';
 
 const SwipeBox = defineComponent(() => {
   const ref = shallowRef<HTMLDivElement | null>(null);
@@ -2370,7 +2375,7 @@ describe('useSwipeDismiss', () => {
   });
 });
 
-const offsets: Record<SwipeDirection, { x: number; y: number }> = {
+const unitVectors: Record<SwipeDirection, { x: number; y: number }> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
   left: { x: -1, y: 0 },
@@ -2382,7 +2387,7 @@ const directionRows = (['up', 'down', 'left', 'right'] as const).map((direction)
 }));
 
 async function dragWithPointer(element: Element, direction: SwipeDirection, distance: number) {
-  const { x, y } = offsets[direction];
+  const { x, y } = unitVectors[direction];
   await fireEvent.pointerDown(element, {
     button: 0,
     buttons: 1,
@@ -2402,7 +2407,7 @@ async function dragWithPointer(element: Element, direction: SwipeDirection, dist
 }
 
 async function releasePointer(element: Element, direction: SwipeDirection, distance: number) {
-  const { x, y } = offsets[direction];
+  const { x, y } = unitVectors[direction];
   await fireEvent.pointerUp(element, {
     pointerId: 1,
     clientX: 100 + x * distance,
@@ -2411,7 +2416,7 @@ async function releasePointer(element: Element, direction: SwipeDirection, dista
 }
 
 async function dragWithTouch(element: Element, direction: SwipeDirection, distance: number) {
-  const { x, y } = offsets[direction];
+  const { x, y } = unitVectors[direction];
   await fireTouch.start(element, {
     touches: [{ clientX: 100, clientY: 100 }],
   });
@@ -2429,6 +2434,7 @@ function createSwipeBox(options: {
   onSwipingChange?: (swiping: boolean) => void;
   onProgress?: (progress: number) => void;
   canStart?: () => boolean;
+  swipeThreshold?: UseSwipeDismissOptions['swipeThreshold'];
   touch?: boolean;
   readSwiping?: boolean;
 }) {
@@ -2455,6 +2461,7 @@ function createSwipeBox(options: {
         onSwipingChange: options.onSwipingChange,
         onProgress: options.onProgress,
         canStart: options.canStart,
+        swipeThreshold: options.swipeThreshold,
       });
 
       return () => {
@@ -2488,7 +2495,7 @@ describe('useSwipeDismiss: directions', () => {
       const element = screen.getByTestId('el');
 
       await dragWithPointer(element, direction, 41);
-      const { x, y } = offsets[direction];
+      const { x, y } = unitVectors[direction];
       expect(element.style.getPropertyValue('--x')).toBe(`${x * 41}px`);
       expect(element.style.getPropertyValue('--y')).toBe(`${y * 41}px`);
 
@@ -2604,6 +2611,40 @@ describe('useSwipeDismiss: refs and options', () => {
     await dragWithPointer(element, 'right', 41);
     await releasePointer(element, 'right', 41);
     expect(onDismiss.mock.calls[0][1]).toEqual({ direction: 'right' });
+  });
+
+  it('gives the element and the direction to a threshold function', async () => {
+    const onDismiss = vi.fn();
+    const getThreshold = vi.fn<SwipeThresholdFunction>(() => 60);
+    const { OptionsBox } = createSwipeBox({ onDismiss, swipeThreshold: () => getThreshold });
+    await render(<OptionsBox />);
+    const element = screen.getByTestId('el');
+
+    // 50 px is more than the default threshold and less than the threshold of the function.
+    await dragWithPointer(element, 'down', 50);
+    await releasePointer(element, 'down', 50);
+
+    expect(getThreshold).toHaveBeenLastCalledWith({ element, direction: 'down' });
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    await dragWithPointer(element, 'down', 61);
+    await releasePointer(element, 'down', 61);
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not accept a threshold function with a parameter in place of a getter', () => {
+    const swipeOptions = (swipeThreshold: SwipeThresholdFunction) =>
+      ({
+        enabled: true,
+        directions: ['down'],
+        elementRef: null,
+        movementCssVars: { x: '--x', y: '--y' },
+        // @ts-expect-error `toValue` calls a function, so the getter must return the function.
+        swipeThreshold,
+      }) satisfies UseSwipeDismissOptions;
+
+    expect(swipeOptions).toBeTypeOf('function');
   });
 
   it('adds the touchstart and touchmove listeners as passive listeners', async () => {

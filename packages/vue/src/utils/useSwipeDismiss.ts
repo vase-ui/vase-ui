@@ -91,8 +91,16 @@ function isTouchLikeEvent(event: SwipeDismissEvent) {
 }
 
 export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismissReturnValue {
-  const { movementCssVars, canStart, onDismiss, onProgress, onCancel, onSwipeStart, onRelease } =
-    options;
+  const {
+    movementCssVars,
+    canStart,
+    onDismiss,
+    onProgress,
+    onCancel,
+    onSwipeStart,
+    onRelease,
+    onSwipingChange,
+  } = options;
 
   const directionState = computed(() => {
     const directions = toValue(options.directions);
@@ -101,6 +109,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     const allowUp = directions.includes('up');
     const allowDown = directions.includes('down');
     const hasHorizontal = allowLeft || allowRight;
+    // The callers give directions on one axis only.
     const scrollAxis: ScrollAxis = hasHorizontal ? 'horizontal' : 'vertical';
 
     return {
@@ -112,7 +121,6 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       allowDown,
       hasHorizontal,
       hasVertical: allowUp || allowDown,
-      // The callers give directions on one axis only.
       scrollAxis,
     };
   });
@@ -164,7 +172,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
     }
 
     swiping.value = nextSwiping;
-    options.onSwipingChange?.(nextSwiping);
+    onSwipingChange?.(nextSwiping);
   }
 
   function resolveSwipeThreshold(direction: SwipeDirection | undefined) {

@@ -1,0 +1,8 @@
+{
+  "id": "VUE-48",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/delay-group/FloatingDelayGroup.tsx#L183-L200"
+  ],
+  "behavior": "A popup that unmounts leaves the timer of its delay group as it is. In Base UI, a closed popup that another popup replaced in the group clears the timer of that other popup when it unmounts. The group then stays active until a popup opens and closes again. Until then, each popup of the group opens with no delay and with no animation.",
+  "dueWith": "packages/react/src/utils/popups/delay-group/FloatingDelayGroup.tsx"
+}
