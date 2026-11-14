@@ -46,7 +46,8 @@ defineSlots<{
 }>();
 
 const store = useSelectRootContext();
-const { arrowRef, side, align, arrowUncentered, arrowStyles } = useSelectPositionerContext();
+const { arrowRef, side, align, arrowUncentered, arrowStyles, alignItemWithTriggerActive } =
+  useSelectPositionerContext();
 
 const state = computed<SelectArrowState>(() => ({
   open: store.select('open'),
@@ -66,6 +67,8 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <template v-if="!alignItemWithTriggerActive">
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  </template>
 </template>

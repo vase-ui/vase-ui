@@ -27,6 +27,46 @@ describe('<Select.Trigger />', () => {
     },
   }));
 
+  it.skipIf(isJSDOM)(
+    'closes an aligned popup when focus lands on the trigger so it is not obscured',
+    async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+          <Select.Root defaultOpen defaultValue="a" onOpenChange={onOpenChange}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner data-testid="positioner" alignItemWithTrigger>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      // `data-side="none"` proves the popup is still item-aligned over the trigger.
+      await waitFor(() => {
+        expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+      });
+
+      await fireEvent.focusIn(trigger);
+
+      await waitFor(() => {
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      });
+
+      expect(onOpenChange).toHaveBeenCalledWith(false, expect.objectContaining({ reason: 'none' }));
+    },
+  );
+
   it('keeps a non-aligned popup open when focus lands on the trigger', async () => {
     const onOpenChange = vi.fn();
 
@@ -36,7 +76,7 @@ describe('<Select.Trigger />', () => {
           <Select.Value />
         </Select.Trigger>
         <Select.Portal>
-          <Select.Positioner>
+          <Select.Positioner alignItemWithTrigger={false}>
             <Select.Popup>
               <Select.Item value="a">a</Select.Item>
             </Select.Popup>
@@ -93,7 +133,7 @@ describe('<Select.Trigger />', () => {
             <Select.Value />
           </Select.Trigger>
           <Select.Portal container={options.container}>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger={false}>
               <Select.Popup>
                 <Select.Item value="a">a</Select.Item>
               </Select.Popup>
@@ -349,7 +389,7 @@ describe('<Select.Trigger />', () => {
         <Select.Root>
           <Select.Trigger data-testid="trigger">Trigger</Select.Trigger>
           <Select.Portal>
-            <Select.Positioner side="right">
+            <Select.Positioner side="right" alignItemWithTrigger={false}>
               <Select.Popup>
                 <Select.Item value="apple">apple</Select.Item>
               </Select.Popup>
@@ -373,6 +413,40 @@ describe('<Select.Trigger />', () => {
       expect(screen.queryByRole('listbox')).toBe(null);
       expect(trigger).not.toHaveAttribute('data-popup-side');
     });
+
+    it.skipIf(isJSDOM)(
+      'sets data-popup-side to the resolved side when alignItemWithTrigger is active',
+      async () => {
+        const { user } = await render(
+          <div style={{ paddingTop: '100px', paddingLeft: '10px' }}>
+            <Select.Root defaultValue="apple">
+              <Select.Trigger data-testid="trigger" style={{ width: '120px', height: '36px' }}>
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner data-testid="positioner">
+                  <Select.Popup style={{ maxHeight: 'none' }}>
+                    <Select.Item value="apple">apple</Select.Item>
+                    <Select.Item value="orange">orange</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+        });
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('data-popup-side', 'bottom');
+        });
+      },
+    );
 
     it('should have the data-popup-open and data-pressed attributes when open', async () => {
       const { user } = await render(
