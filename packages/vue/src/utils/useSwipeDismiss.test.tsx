@@ -2563,10 +2563,9 @@ describe('useSwipeDismiss: directions', () => {
 });
 
 describe('useSwipeDismiss: shared swipe math', () => {
-  it('damps a delta away from each direction that dismisses, and keeps a delta toward one', () => {
+  it('damps only a delta toward a direction that does not dismiss', () => {
     expect(applyDirectionalDamping(100, 100, ['down', 'right'])).toEqual({ x: 100, y: 100 });
     expect(applyDirectionalDamping(-100, -100, ['down', 'right'])).toEqual({ x: -10, y: -10 });
-    // The x axis has no direction here, so each x delta is damped.
     expect(applyDirectionalDamping(100, -100, ['up'])).toEqual({ x: 10, y: -100 });
     expect(applyDirectionalDamping(-100, 100, ['up'])).toEqual({ x: -10, y: 10 });
     expect(applyDirectionalDamping(0, 0, [])).toEqual({ x: 0, y: 0 });

@@ -382,9 +382,9 @@ function handlePointermove(event: PointerEvent) {
 
   if (!isRealSwipe.value && Math.hypot(deltaX, deltaY) >= MIN_DRAG_THRESHOLD) {
     isRealSwipe.value = true;
-    // `lockedDirection` is always reset alongside `isRealSwipe`, so it is
-    // still `null` here. Locking is only meaningful when both axes are
-    // swipeable; otherwise the single axis already constrains the gesture.
+    // `lockedDirection` and `isRealSwipe` are reset together, so `lockedDirection` is `null` here.
+    // A lock is necessary only when the two axes have a direction. With one axis, the drag moves
+    // only on that axis.
     if (hasHorizontal && hasVertical) {
       resolvedLockedDirection = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
       lockedDirection.value = resolvedLockedDirection;
@@ -420,7 +420,6 @@ function handlePointermove(event: PointerEvent) {
       cancelledSwipe = false;
       currentSwipeDirection.value = direction;
     } else if (shouldCancelReverseSwipe(directions, maxSwipeDisplacement, currentDisplacement)) {
-      // Mark that a change-of-mind has occurred
       cancelledSwipe = true;
     }
   }
