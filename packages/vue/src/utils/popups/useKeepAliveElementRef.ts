@@ -6,13 +6,11 @@ import { isInTreeOf, useKeepAliveState } from '../../internals/useKeepAliveState
  * `setup`.
  *
  * `KeepAlive` takes the element out of the document and calls no `ref` callback. `setElement` thus
- * gets the element only while `KeepAlive` does not hold the part. It gets `null` when `KeepAlive`
- * holds the part, and the element again at the activation. The trigger then names no element that
- * `KeepAlive` took out of the document.
+ * gets `null` when `isHeld` of `useKeepAliveState` becomes `true`, and the element when it becomes
+ * `false`. The trigger then names no element that `KeepAlive` took out of the document.
  * @param setElement The setter of the part. It writes the element to the store or to the context.
- * @param trigger The element of the trigger that names the part. `useKeepAliveState` holds a part
- * that mounts in a held branch when its element is not in a document and not in the tree of the
- * trigger.
+ * @param trigger The element of the trigger that names the part. A part that mounts in a held branch
+ * is held when its element is not in a document and not in the tree of the trigger.
  */
 export function useKeepAliveElementRef(
   setElement: (element: HTMLElement | null) => void,
