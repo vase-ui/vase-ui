@@ -1,0 +1,273 @@
+---
+order: 1
+description: An unstyled Vue combobox component that renders an input combined with a list of predefined items to select.
+---
+
+<script setup lang="ts">
+import ApiReference from '../.vitepress/components/ApiReference.vue';
+import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoComboboxAsyncMultiple from '../demos/combobox/async-multiple/css-modules/index.vue';
+import DemoComboboxAsyncSingle from '../demos/combobox/async-single/css-modules/index.vue';
+import DemoComboboxCreateItems from '../demos/combobox/create-items/css-modules/index.vue';
+import DemoComboboxGrouped from '../demos/combobox/grouped/css-modules/index.vue';
+import DemoComboboxHero from '../demos/combobox/hero/css-modules/index.vue';
+import DemoComboboxInputInsidePopup from '../demos/combobox/input-inside-popup/css-modules/index.vue';
+import DemoComboboxMultiple from '../demos/combobox/multiple/css-modules/index.vue';
+import DemoComboboxVirtualized from '../demos/combobox/virtualized/css-modules/index.vue';
+</script>
+
+# Combobox
+
+An input combined with a list of predefined items to select.
+
+<DemoFrame>
+  <DemoComboboxHero />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/hero/css-modules/index.vue
+
+<<< ../demos/combobox/hero/css-modules/index.module.css
+
+:::
+
+## Usage guidelines
+
+- **Combobox is a Select with a filter**: Use Combobox when the user must pick one of the predefined items and the list is long enough to need a filter. It works like [Select](/components/select), but the user types in an input to filter the items.
+- **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
+- **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
+- **Form controls must have an accessible name**: If `<Combobox.Input>` is the form control, label it with a native `<label>` or with `<Field.Label>`. When no label is visible, give it an `aria-label`. `<Combobox.Label>` labels `<Combobox.Trigger>`. Use it for the [input inside popup](#input-inside-popup) pattern, where the trigger is the form control. See the [forms guide](/handbook/forms).
+- **Closing animations**: The popup stays rendered until its closing animation finishes. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself.
+
+## Anatomy
+
+Import the component and assemble its parts:
+
+<<< ./combobox/Anatomy.vue
+
+`Combobox.Root` renders no element. It renders hidden inputs beside its content. A combobox with a `name` submits its value with the form. With `multiple`, it submits one entry for each selected item.
+
+Bind the value with `v-model:value`, the text of the input with `v-model:inputValue` and the open state with `v-model:open`. The root emits `valueChange`, `inputValueChange` and `openChange` with the new value and `eventDetails`, and then `update:value`, `update:inputValue` and `update:open`. To stop a change, call `eventDetails.cancel()` before the listener returns. The root then emits no `update:` event.
+
+## Item values
+
+Each `<Combobox.Item>` takes a `value` prop that identifies it. Pass the item being rendered. To render each filtered item, give `<Combobox.List>` the `item` slot. The slot gets `{ item, index }`:
+
+<<< ./combobox/ItemObjects.vue{19}
+
+That item is the selected value. The `value` and `defaultValue` props take it, and `valueChange` gives it. To store IDs instead, see [Value selection with IDs](#value-selection-with-ids).
+
+## Examples
+
+### Typed component
+
+`Combobox.Root` is a generic component with the type arguments `Value`, `Multiple` and `Item`. `Multiple` defaults to `false`, and `Item` defaults to `Value`.
+
+To fix the types, give the part its type arguments in an instantiation expression. Use the result as a component:
+
+<<< ./combobox/TypedComponent.vue{10,23}
+
+A `createItems()` collection has items that differ from its selection values. The root needs the third type argument, `Item`, to accept such a collection. Without it, the type check refuses the collection.
+
+A wrapper that declares `defineProps<ComboboxRootProps<Value, Multiple, Item>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the combobox cannot open.
+
+### Value selection with IDs
+
+When your app stores IDs and not item objects, use `Combobox.createItems` with `getValue` and `getLabel`. They derive the selection value and the display label of each item.
+
+With static data, create the collection at module scope. The parameters of the two functions get their types from `users`. Give the derived ID to the `value` prop of `<Combobox.Item>`, not the item being rendered:
+
+<<< ./combobox/ItemIds.vue{19}
+
+The props and the events of the selection use the derived IDs, and the list still gets the original items. The filter and the typeahead use the derived label.
+
+When the data loads or changes at run time, make the collection in a `computed`. The collection then changes only with its data:
+
+<<< ./combobox/DynamicItems.vue
+
+<DemoFrame>
+  <DemoComboboxCreateItems />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/create-items/css-modules/index.vue
+
+<<< ../demos/combobox/create-items/css-modules/index.module.css
+
+:::
+
+As a rule of thumb, use primitive items for simple lists. Use object values when the selected record is useful application state. Use `createItems()` when the selection must use a stable primitive ID and the list and the filter still use object records.
+
+Stable IDs keep the match of the items when a data library replaces the row objects at a refetch. With object values, use `isItemEqualToValue` to compare their IDs.
+
+When a server filters the results, `items` is the list of the records that the app knows, and `filteredItems` is the window of results that the popup shows. Give `filteredItems` the source items, not the derived values. Keep the flat or grouped structure of `items`:
+
+<<< ./combobox/FilteredWindow.vue{23}
+
+Put the record of the selected user in `knownUsers`, so that its label stays available while the record is not in `searchResults`. Or give `itemToStringLabel` when the selected value alone gives the label.
+
+### Multiple select
+
+Add the `multiple` prop to `<Combobox.Root>` to let the user select more than one item. The value is then an array. Render each selected item as a `<Combobox.Chip>` in `<Combobox.Chips>`. The user can remove a chip.
+
+<DemoFrame>
+  <DemoComboboxMultiple />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/multiple/css-modules/index.vue
+
+<<< ../demos/combobox/multiple/css-modules/index.module.css
+
+:::
+
+For screen readers to announce how to reach and remove the chips, give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`, and give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
+
+The types of Vue do not list `aria-description`, so `strictTemplates` refuses it on a part. Give it with `v-bind`, as the demo does.
+
+To limit the visible chips, slice the selected values that `<Combobox.Value>` gives to its slot:
+
+<<< ./combobox/LimitedChips.vue{27,34-36}
+
+#### Keeping the filter after selection
+
+In `multiple` mode, a selection clears the typed filter and closes the popup when the input is outside the popup. To let the user pick more than one result of a query, cancel the change request that does this.
+
+The request to cancel depends on where the input is. When the input is outside the popup, cancel the close request with the reason `item-press` in `openChange`:
+
+<<< ./combobox/KeepFilterOutside.vue{5-7}
+
+When the input is inside the popup, cancel the request that clears the input in `inputValueChange`. That request has `eventDetails.isItemPress`:
+
+<<< ./combobox/KeepFilterInside.vue{5-7}
+
+The typed filter still resets when the popup closes.
+
+### Input inside popup
+
+`<Combobox.Input>` can be inside `<Combobox.Popup>`. The combobox is then a select popup with a search field.
+
+<DemoFrame>
+  <DemoComboboxInputInsidePopup />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/input-inside-popup/css-modules/index.vue
+
+<<< ../demos/combobox/input-inside-popup/css-modules/index.module.css
+
+:::
+
+In this pattern, use `<Combobox.Label>` to give the trigger a visible label:
+
+<<< ./combobox/Label.vue{7}
+
+`<Combobox.Label>` renders a `<div>`. A click on it moves the focus to the trigger and does not open the popup.
+
+### Grouped
+
+Use `<Combobox.Group>` and `<Combobox.GroupLabel>` to add headings that group related items in the popup.
+
+The `items` prop describes the groups as an array of objects. Each object has an `items` array with the items of its group. Another property, such as `value`, can give the text of the heading:
+
+<<< ./combobox/Grouped.vue{6,12,16}
+
+<DemoFrame>
+  <DemoComboboxGrouped />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/grouped/css-modules/index.vue
+
+<<< ../demos/combobox/grouped/css-modules/index.module.css
+
+:::
+
+### Async search (single)
+
+Load the items from a remote source when the input changes. Keep the selected item in the `items` list, so that it stays available while new results arrive. The list then needs no items at the start.
+
+<DemoFrame>
+  <DemoComboboxAsyncSingle />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/async-single/css-modules/index.vue
+
+<<< ../demos/combobox/async-single/css-modules/index.module.css
+
+:::
+
+### Async search (multiple)
+
+Load the items from a remote source when the input changes, and allow more than one selected item. The selected items stay in the list while new matches arrive. The list then needs no items at the start.
+
+<DemoFrame>
+  <DemoComboboxAsyncMultiple />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/async-multiple/css-modules/index.vue
+
+<<< ../demos/combobox/async-multiple/css-modules/index.module.css
+
+:::
+
+### Virtualized
+
+Use a virtualization library, such as `@tanstack/vue-virtual`, to handle a large data set.
+
+<DemoFrame>
+  <DemoComboboxVirtualized />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/combobox/virtualized/css-modules/index.vue
+
+<<< ../demos/combobox/virtualized/css-modules/VirtualizedList.vue
+
+<<< ../demos/combobox/virtualized/css-modules/index.module.css
+
+:::
+
+#### Memoizing items
+
+A child component that takes the item as a prop is a simpler alternative to virtualization for a short list. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change, so unchanged items skip re-rendering. This speeds up typing. It does not speed up opening, because the popup still mounts each item. For a long list, use virtualization.
+
+::: code-group
+
+<<< ./combobox/FruitItem.vue
+
+<<< ./combobox/MemoizedItems.vue{20}
+
+:::
+
+## API reference
+
+<ApiReference />
+
+## useFilter
+
+Matches items against a query using `Intl.Collator` for robust string matching. Use it when you filter the items yourself. Call it in `setup`. To make the filter follow a value that changes, give it a ref or a getter for its options.
+
+<ApiReference name="Combobox.useFilter" />
+
+## useFilteredItems
+
+Returns the items that the filter of `Combobox.Root` keeps. Call it inside `Combobox.Root`. It returns a `ComputedRef`: read `.value` in a script, and treat the list as read-only.
+
+<ApiReference name="Combobox.useFilteredItems" />
+
+## createItems
+
+Normalizes items into a collection for the `items` prop of `Combobox.Root`. It derives the selection value and the label of each item before the list renders them.
+
+<ApiReference name="Combobox.createItems" />

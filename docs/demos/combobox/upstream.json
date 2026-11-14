@@ -1,0 +1,22 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/combobox/demos",
+  "files": {
+    "async-multiple/css-modules/index.module.css": "964ac854c4d700f6c05e1836eb14cfc3fc660f74658012cee8dd218f797e0fa1",
+    "async-multiple/css-modules/index.tsx": "efb4da9678bf2ed0e0c3859b4e7f8c70f2d933a0fd39568d12fe94dc9accffd1",
+    "async-single/css-modules/index.module.css": "d2aca66b6bb22e9db2cf3c09bd8450c32981acc18dc01647632970efe5b1b2e4",
+    "async-single/css-modules/index.tsx": "412ffa00b50dbd4ae8f73e8f4af9a816718bc1aba3137d413e117c6208d2db21",
+    "create-items/css-modules/index.module.css": "28b128ca74dd430107d0854d3a700f59ae0a56cf005f0540898e243d5ee0333d",
+    "create-items/css-modules/index.tsx": "8771951a91e942ecb76073ab697c8a43f087a8fb296d78fbc419f66a6bc927ea",
+    "grouped/css-modules/index.module.css": "c5772cea1c3734b38747e08b20e41a07b91508926f613cff9c7d89607ee90f81",
+    "grouped/css-modules/index.tsx": "842c124b8cbd60861bcb07fceeeb1bbdc40a217509e6bc8087da01ff071e2e91",
+    "hero/css-modules/index.module.css": "28b128ca74dd430107d0854d3a700f59ae0a56cf005f0540898e243d5ee0333d",
+    "hero/css-modules/index.tsx": "19bcfb53020319a90d560581be5e4cc397e3e241e106052ca65770cd7e36e0a7",
+    "input-inside-popup/css-modules/index.module.css": "dc0fe0c4d5c61e5cc28bc0f477acf4d79f3635e194bf2066088d705002a014a1",
+    "input-inside-popup/css-modules/index.tsx": "339bf755233b8bbc5e0d0b1160327293a1d04bebc92a1650f5c1e0d0ac00c15e",
+    "multiple/css-modules/index.module.css": "53a5d96e8263fc9af090282d1d7946337a2690254e5410a480a792ed10332f8c",
+    "multiple/css-modules/index.tsx": "946b684ac248e2d7abdbd98b8f60da1613082c4793b9f52999a8d682f29a7851",
+    "virtualized/css-modules/index.module.css": "6ccaa679b0d579d9a7237e0906efa63d123a992454e478c87560dadb0fe6b6ff",
+    "virtualized/css-modules/index.tsx": "4bb9cdd29cd3a354295eb8b0129bcebf38fc80d28783858a08c1ae8d5352a33c"
+  }
+}
