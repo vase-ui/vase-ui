@@ -1,6 +1,7 @@
 import { toRaw } from 'vue';
-import type { HTMLAttributes, ShallowRef } from 'vue';
+import type { ComputedRef, HTMLAttributes, ShallowRef } from 'vue';
 import { compareItemEquality } from '../internals/itemEquality';
+import type { RegisterId } from '../internals/labelable-provider/LabelableContext';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AdaptiveOriginMiddleware } from '../utils/popups/positioning/adaptiveOriginConstants';
 import { popupStoreSelectors } from '../utils/popups/store';
@@ -76,6 +77,12 @@ export type ComboboxStoreContext = ValuePopupContext<AriaCombobox.OpenChangeEven
   readonly pointerDownItemRef: ShallowRef<Element | null>;
   /** The native event of the selection in progress. */
   readonly selectionEventRef: ShallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>;
+  /**
+   * The id of the last `Combobox.Label` that has one. A label registers in `setup`, so the trigger
+   * has the id in the server HTML. The state gets it only in a watcher, which a server does not run.
+   */
+  readonly labelId: ComputedRef<string | undefined>;
+  readonly registerLabelId: RegisterId;
 
   // The commands. The store starts with `NOOP` for each one, and the root assigns them in `setup`.
   // Thus they are not `readonly`.

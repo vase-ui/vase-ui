@@ -41,7 +41,6 @@ export interface ComboboxPositionerProps
 import { computed, onMounted, provide, watch } from 'vue';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
-import InternalBackdrop from '../../utils/popups/InternalBackdrop.vue';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 import { useComboboxPortalContext } from '../portal/ComboboxPortalContext';
@@ -83,7 +82,7 @@ const inputGroupElement = computed(() => store.select('inputGroupElement'));
 
 const empty = useListEmpty();
 
-const { element, elementProps, state, positioning, open, mounted } =
+const { element, elementProps, state, positioning, open } =
   usePopupPositioner<ComboboxPositionerInternalState>(store, props, {
     keepMounted,
     positioning: {
@@ -118,11 +117,6 @@ defineExpose({ element });
 </script>
 
 <template>
-  <InternalBackdrop
-    v-if="mounted && modal"
-    :inert="!open"
-    :cutout="inputGroupElement ?? inputElement ?? triggerElement"
-  />
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
 </template>

@@ -373,7 +373,13 @@ function handleFocusout() {
     store.context.setIndices({ activeIndex: null });
   }
 
-  if (validationMode.value === 'onBlur') {
+  // With a selection mode, an input in the popup is not the control of the field. The trigger and
+  // the root validate in its place, and they count a missing value (BUG-1425). A validation here
+  // would not count it, and it can come after theirs.
+  if (
+    validationMode.value === 'onBlur' &&
+    !(hasPositionerParent && selectionMode.value !== 'none')
+  ) {
     const valueToValidate =
       selectionMode.value === 'none' ? inputValue.value : toRaw(store.state).selectedValue;
     void validation.commit(valueToValidate);
