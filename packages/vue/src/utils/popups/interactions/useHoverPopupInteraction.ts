@@ -1,13 +1,4 @@
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  shallowRef,
-  toValue,
-  watch,
-} from 'vue';
+import { computed, toValue } from 'vue';
 import type { MaybeRefOrGetter, WatchSource } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
@@ -18,6 +9,7 @@ import { REASONS } from '../../../internals/reasons';
 import { useFloatingParentNodeId, useFloatingTree } from '../tree/FloatingTree';
 import type { PopupInteractionStore } from '../types';
 import { getNodeChildren } from '../tree/nodes';
+import { useDomEffect } from '../useDomEffect';
 import { getHoverIntent } from './hoverIntent';
 import type { HoverIntent } from './hoverIntent';
 
@@ -38,22 +30,6 @@ export interface UseHoverPopupInteractionProps {
    * without a `PopupPositioningContext`, such as inline nested navigation menus.
    */
   nodeId?: MaybeRefOrGetter<string | undefined>;
-}
-
-/**
- * Runs `run` at mount and after each DOM update that follows a change of `sources`. The cleanup
- * that `run` returns runs before the next run and when the part unmounts. A server calls no
- * `onMounted` hook and runs no such `watch`, so `run` reads nothing there.
- */
-function useDomEffect(sources: WatchSource[], run: () => (() => void) | void) {
-  let cleanup: (() => void) | undefined;
-  function update() {
-    cleanup?.();
-    cleanup = run() || undefined;
-  }
-  onMounted(update);
-  watch(sources, update, { flush: 'post' });
-  onScopeDispose(() => cleanup?.());
 }
 
 /**
@@ -78,21 +54,9 @@ export function useHoverPopupInteraction(
 
   const childClosedTimeout = useTimeout();
 
-  // `KeepAlive` takes the popup out of the document and sends it no leave event. While it holds the
-  // popup, the popup blocks no pointer events and has no listener on its positioner element.
-  const deactivated = shallowRef(false);
-  // A source list gets this getter, not the ref: a shallow ref in the list makes `watch` call its
-  // callback also when no value of a source changed.
-  const isDeactivated = () => deactivated.value;
-  onDeactivated(() => {
-    deactivated.value = true;
-  });
-  onActivated(() => {
-    deactivated.value = false;
-  });
-
   // A change of the store gives each effect a new intent. The cleanup then stops the old intent,
-  // and the effect runs for the new intent.
+  // and the effect runs for the new intent. `KeepAlive` takes the popup out of the document and
+  // sends it no leave event, so each cleanup also runs while `KeepAlive` holds the part.
   function useIntentEffect(
     sources: WatchSource[],
     run: (hoverIntent: HoverIntent) => (() => void) | void,
@@ -106,23 +70,18 @@ export function useHoverPopupInteraction(
     }
   });
 
-  // The store owns the intent, and the triggers use it too. While this part is active, it stops
-  // what is in flight when it unmounts, when its store changes and when `KeepAlive` deactivates it.
-  useIntentEffect([isDeactivated], (hoverIntent) => {
-    if (isDeactivated()) {
-      return undefined;
-    }
-    return () => {
-      childClosedTimeout.clear();
-      hoverIntent.cancelPendingOpen();
-      hoverIntent.restoreOutsidePointerEvents();
-    };
+  // The store owns the intent, and the triggers use it too. This part stops what is in flight when
+  // it unmounts, when its store changes and when `KeepAlive` deactivates it.
+  useIntentEffect([], (hoverIntent) => () => {
+    childClosedTimeout.clear();
+    hoverIntent.cancelPendingOpen();
+    hoverIntent.restoreOutsidePointerEvents();
   });
 
   useIntentEffect(
-    [enabled, open, anchorElement, positionerElement, tree, parentId, isDeactivated],
+    [enabled, open, anchorElement, positionerElement, tree, parentId],
     (hoverIntent) => {
-      if (!enabled() || isDeactivated()) {
+      if (!enabled()) {
         return undefined;
       }
 
@@ -147,8 +106,8 @@ export function useHoverPopupInteraction(
 
   // The positioner element belongs to another part than the popup part that calls this composable,
   // so its listeners cannot be props.
-  useIntentEffect([enabled, positionerElement, tree, parentId, isDeactivated], (hoverIntent) => {
-    if (!enabled() || isDeactivated()) {
+  useIntentEffect([enabled, positionerElement, tree, parentId], (hoverIntent) => {
+    if (!enabled()) {
       return undefined;
     }
 

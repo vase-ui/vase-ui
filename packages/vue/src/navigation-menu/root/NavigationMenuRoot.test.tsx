@@ -13,6 +13,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
@@ -1349,10 +1350,8 @@ describe('<NavigationMenu.Root />', () => {
         await fireEvent.pointerUp(trigger, { pointerType: 'touch' });
         await fireEvent.click(trigger);
         await flushMicrotasks();
-        // Vue skips a listener for an event in the millisecond when Vue attached that listener,
-        // when another Vue listener got the event first. The nested trigger mounted in this
-        // millisecond, and the fake clock moves only each 20 ms.
-        vi.setSystemTime(Date.now() + 1);
+        // The click mounted the nested trigger in this millisecond of the fake clock.
+        await waitForLaterMillisecond();
 
         const nestedTrigger2 = screen.getByTestId('nested-trigger-2');
         await fireEvent.pointerEnter(nestedTrigger2, { pointerType: 'touch' });
@@ -3106,10 +3105,8 @@ describe('<NavigationMenu.Root />', () => {
         expect(nestedTrigger1).toHaveAttribute('aria-expanded', 'true');
 
         const nestedTrigger2 = within(popup1).getByTestId('nested-trigger-2');
-        // Vue skips a listener for an event in the millisecond when Vue attached that listener,
-        // when another Vue listener got the event first. The nested trigger mounted in this
-        // millisecond, and the fake clock moves only each 20 ms.
-        vi.setSystemTime(Date.now() + 1);
+        // The first click mounted the nested trigger in this millisecond of the fake clock.
+        await waitForLaterMillisecond();
         await fireEvent.click(nestedTrigger2);
         await flushMicrotasks();
 
@@ -3486,10 +3483,8 @@ describe('<NavigationMenu.Root />', () => {
 
           popupHeight = 300;
           animations.start();
-          // Vue skips a listener for an event in the millisecond when Vue attached that listener,
-          // when another Vue listener got the event first. The nested trigger mounted in this
-          // millisecond, and the fake clock moves only each 20 ms.
-          vi.setSystemTime(Date.now() + 1);
+          // The first click mounted the nested trigger in this millisecond of the fake clock.
+          await waitForLaterMillisecond();
           await fireEvent.click(screen.getByTestId('nested-trigger-2'));
           await flushMicrotasks();
 

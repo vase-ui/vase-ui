@@ -6,65 +6,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.ScrubArea`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.ScrubArea`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubAreaContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.ScrubArea`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursorDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
-    },
-    {
-      "upstream": "packages/react/src/number-field/utils/getViewportRect.ts",
-      "kind": "waits-on",
-      "reason": "Only `NumberField.ScrubArea` imports the file. Vase UI does not have that part."
-    },
-    {
       "upstream": "packages/react/src/number-field/input/NumberFieldInput.test.tsx",
       "describe": ["<NumberField.Input />"],
       "title": "warns without an owner stack when React cannot provide one",
       "kind": "not-applicable",
       "reason": "The case tests the owner stack of React. Vue has no owner stack."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "reason": "Each case of the file renders `NumberField.ScrubArea`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.gecko.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "reason": "The case of the file renders `NumberField.ScrubArea`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
-      "reason": "Each case of the file renders `NumberField.ScrubAreaCursor`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/number-field/utils/getViewportRect.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/utils/getViewportRect.ts",
-      "reason": "Each case of the file calls `getViewportRect`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/number-field/utils/parse.test.ts",
@@ -73,34 +19,6 @@
       "kind": "replaced",
       "test": "packages/vue/src/number-field/utils/parse.test.ts",
       "reason": "The case reads `.0.0.0 … .5` as 0.5. Vase UI does not read dots that are not group separators (BUG-5424, https://github.com/mui/base-ui/issues/5424), so that text gives `null`. The case \"BUG-5424: keeps only the last of many dots that are group separators\" tests the same count of dots with groups of three digits, and it tests that the text of Base UI gives `null`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "ScrubArea",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "reason": "Vase UI does not have `NumberField.ScrubArea`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "ScrubAreaCursor",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
-      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldScrubAreaDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area/NumberFieldScrubArea.tsx",
-      "reason": "Vase UI does not have `NumberField.ScrubArea`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
-      "entry": "NumberFieldScrubAreaCursorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/number-field/scrub-area-cursor/NumberFieldScrubAreaCursor.tsx",
-      "reason": "Vase UI does not have `NumberField.ScrubAreaCursor`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/number-field/types.md",
