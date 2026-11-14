@@ -5,6 +5,7 @@ import { createRenderer, screen, takeReportedMessages } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Toast from '../index.parts';
 import type { ToastLabel } from '../useToastManager';
+import { List, Button } from './test-utils';
 
 interface LabelPartCase {
   name: string;
@@ -38,6 +39,58 @@ describe('useToastLabelPart', () => {
         </Toast.Provider>,
       );
     }
+
+    async function addToastFromManager() {
+      const { user } = await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <List />
+          </Toast.Viewport>
+          <Button />
+        </Toast.Provider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'add' }));
+    }
+
+    it(`renders the toast ${field} by default`, async () => {
+      await addToastFromManager();
+
+      expect(screen.getByTestId(field)).toHaveTextContent(field);
+    });
+
+    it(`adds ${attribute} to the root element`, async () => {
+      await addToastFromManager();
+
+      expect(screen.getByTestId('root')).toHaveAttribute(attribute, screen.getByTestId(field).id);
+    });
+
+    it('does not render if it has no children', async () => {
+      const AddButton = defineComponent({
+        setup() {
+          const { add } = Toast.useToastManager();
+          return () => (
+            <button type="button" onClick={() => add({ [field]: undefined })}>
+              add
+            </button>
+          );
+        },
+      });
+
+      const { user } = await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <List />
+          </Toast.Viewport>
+          <AddButton />
+        </Toast.Provider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'add' }));
+
+      expect(screen.getByTestId('root')).not.toHaveAttribute(attribute);
+      expect(screen.queryByTestId(field)).toBe(null);
+    });
 
     it('renders a numeric zero child', async () => {
       await renderInRoot(<Part>{0}</Part>);
