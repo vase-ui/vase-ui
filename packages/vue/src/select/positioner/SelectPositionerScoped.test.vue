@@ -15,7 +15,12 @@ const vMark: Directive<HTMLElement, string> = {
   <Select.Root default-open>
     <Select.Trigger />
     <Select.Portal>
-      <Select.Positioner v-show="shown" v-mark="'marked'" class="positioner" data-testid="positioner">
+      <Select.Positioner
+        v-show="shown"
+        v-mark="'marked'"
+        class="positioner"
+        data-testid="positioner"
+      >
         <Select.Popup />
       </Select.Positioner>
     </Select.Portal>

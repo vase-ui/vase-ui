@@ -38,9 +38,7 @@ describe('select store synchronization', () => {
       ),
     });
 
-    const { setProps } = await render(
-      <SynchronizationFixture id="first" modal disabled={false} />,
-    );
+    const { setProps } = await render(<SynchronizationFixture id="first" modal disabled={false} />);
     snapshots.length = 0;
 
     await setProps({ id: 'second', modal: false, disabled: true });
