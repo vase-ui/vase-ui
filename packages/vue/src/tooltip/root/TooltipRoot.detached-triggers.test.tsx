@@ -256,6 +256,40 @@ describe('<Tooltip.Root />', () => {
     });
   });
 
+  it('closes a cursor-tracking tooltip when an inactive trigger is pressed', async () => {
+    const handle = Tooltip.createHandle();
+
+    await render(
+      <div>
+        <Tooltip.Trigger handle={handle} id="trigger-1" style={ignoreRealPointer}>
+          Trigger 1
+        </Tooltip.Trigger>
+        <Tooltip.Trigger handle={handle} id="trigger-2" style={ignoreRealPointer}>
+          Trigger 2
+        </Tooltip.Trigger>
+        <Tooltip.Root handle={handle} trackCursorAxis="both">
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </div>,
+    );
+
+    handle.open('trigger-1');
+    await flushMicrotasks();
+    expect(await screen.findByTestId('popup')).not.toBe(null);
+
+    const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
+    await fireEvent.pointerDown(trigger2, { pointerType: 'touch' });
+    await fireEvent.click(trigger2);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBe(null);
+    });
+  });
+
   describe.skipIf(isJSDOM)('handle-backed root ownership', () => {
     it('keeps a default-open root open while a detached trigger migrates after the initial commit', async () => {
       const handle = Tooltip.createHandle();

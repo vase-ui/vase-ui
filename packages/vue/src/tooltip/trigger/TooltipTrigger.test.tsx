@@ -320,6 +320,71 @@ describe('<Tooltip.Trigger />', () => {
     });
   });
 
+  it('opens only the tooltip of a nested trigger that gets the focus', async () => {
+    await render(
+      <Tooltip.Root>
+        <Tooltip.Trigger as="span" style={{ pointerEvents: 'none' }}>
+          Outer
+          <Tooltip.Root>
+            <Tooltip.Trigger>Inner</Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="inner-popup">Inner tooltip</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Positioner>
+            <Tooltip.Popup data-testid="outer-popup">Outer tooltip</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Inner' }).focus();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('inner-popup')).toHaveAttribute('data-open');
+    expect(screen.queryByTestId('outer-popup')).toBe(null);
+  });
+
+  it('keeps a tooltip that follows the cursor open when a trigger with `closeOnClick` false is pressed', async () => {
+    const handle = Tooltip.createHandle();
+    await render(
+      <>
+        <Tooltip.Trigger handle={handle} id="first" style={{ pointerEvents: 'none' }}>
+          First
+        </Tooltip.Trigger>
+        <Tooltip.Trigger
+          handle={handle}
+          id="second"
+          closeOnClick={false}
+          style={{ pointerEvents: 'none' }}
+        >
+          Second
+        </Tooltip.Trigger>
+        <Tooltip.Root handle={handle} trackCursorAxis="both">
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </>,
+    );
+
+    handle.open('first');
+    await screen.findByTestId('popup');
+
+    const second = screen.getByRole('button', { name: 'Second' });
+    await fireEvent.pointerDown(second, { pointerType: 'mouse' });
+    await fireEvent.click(second);
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-open');
+  });
+
   it('throws a descriptive error when rendered without a root or a handle', async () => {
     await expect(render(<Tooltip.Trigger>Trigger</Tooltip.Trigger>)).rejects.toThrow(
       'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`.',
