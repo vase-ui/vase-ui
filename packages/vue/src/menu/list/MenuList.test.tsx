@@ -86,6 +86,38 @@ describe('<Menu.List /> in a plain menu', () => {
     expect(trigger).toHaveAttribute('aria-controls', 'new-list');
   });
 
+  it('keeps the element of a newer list when an older list unmounts', async () => {
+    const Test = defineComponent({
+      props: { lists: { type: String as PropType<'old' | 'both' | 'new'>, required: true } },
+      setup(props) {
+        return () => (
+          <Menu.Root defaultOpen defaultTriggerId="first">
+            <Menu.Trigger id="first">Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="popup">
+                  {props.lists !== 'new' && <Menu.List key="old" id="old-list" />}
+                  {props.lists !== 'old' && <Menu.List key="new" id="new-list" />}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        );
+      },
+    });
+
+    const { setProps } = await render(() => <Test lists="old" />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    expect(trigger).toHaveAttribute('aria-controls', 'old-list');
+
+    await setProps({ lists: 'both' });
+    expect(trigger).toHaveAttribute('aria-controls', 'new-list');
+
+    await setProps({ lists: 'new' });
+    expect(trigger).toHaveAttribute('aria-controls', 'new-list');
+    expect(screen.getByTestId('popup')).toHaveAttribute('role', 'presentation');
+  });
+
   it('puts aria-orientation on the list and not on the popup', async () => {
     await render(<PlainMenu orientation="horizontal" />);
 

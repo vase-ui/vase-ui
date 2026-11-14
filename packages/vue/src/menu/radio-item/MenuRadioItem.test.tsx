@@ -67,6 +67,20 @@ describe('<Menu.RadioItem />', () => {
       expect(item).toHaveAttribute('aria-checked', 'true');
     });
 
+    it('is disabled by a disabled root', async () => {
+      await render(
+        <Menu.Root open disabled>
+          <Menu.RadioGroup>
+            <Menu.RadioItem value="a">A</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Root>,
+      );
+
+      const item = screen.getByRole('menuitemradio');
+      expect(item).toHaveAttribute('data-disabled');
+      expect(item).toHaveAttribute('aria-disabled', 'true');
+    });
+
     it('selects nothing for a click on a disabled item', async () => {
       const onValueChange = vi.fn();
       const { user } = await render(

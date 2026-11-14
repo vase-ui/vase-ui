@@ -86,6 +86,18 @@ describe('<Menu.CheckboxItem />', () => {
       expect(item).toHaveAttribute(`data-${testCase.dataState}`, '');
     });
 
+    it('is disabled by a disabled root', async () => {
+      await render(
+        <Menu.Root open disabled>
+          <Menu.CheckboxItem>Item</Menu.CheckboxItem>
+        </Menu.Root>,
+      );
+
+      const item = screen.getByRole('menuitemcheckbox');
+      expect(item).toHaveAttribute('data-disabled');
+      expect(item).toHaveAttribute('aria-disabled', 'true');
+    });
+
     it('toggles on a click, and emits checkedChange and then update:checked', async () => {
       const events: string[] = [];
       const onCheckedChange = vi.fn(() => events.push('checkedChange'));

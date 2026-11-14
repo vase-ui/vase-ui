@@ -19,6 +19,22 @@ import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
 
+// A module namespace is read-only. The mock gives `os` as a plain object, so a case can set the
+// flag.
+vi.mock('../../common/platform', async () => {
+  const actual =
+    await vi.importActual<typeof import('../../common/platform')>('../../common/platform');
+  return { ...actual, platform: { ...actual.platform, os: { ...actual.platform.os } } };
+});
+
+function setMac(mac: boolean) {
+  const actual = platform.os.mac;
+  Object.defineProperty(platform.os, 'mac', { value: mac, configurable: true });
+  onTestFinished(() => {
+    Object.defineProperty(platform.os, 'mac', { value: actual, configurable: true });
+  });
+}
+
 describe('<Menu.Item />', () => {
   const { render } = createRenderer();
 
@@ -59,9 +75,6 @@ describe('<Menu.Item />', () => {
     'native press focuses a $name item before mouseup and click without hover focus',
     async ({ nativeButton }) => {
       // The `click` of `user` calls `focus()` itself, so it can't verify browser focus.
-      onTestFinished(async () => {
-        await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-      });
       let focusedAtMouseUp: Element | null = null;
       let focusedAtClick: Element | null = null;
       await render(
@@ -359,9 +372,9 @@ describe('<Menu.Item />', () => {
 
   describe('release of a press that started on the trigger', () => {
     it.each([
-      { name: 'after a press on the trigger', allowMouseUp: true, clicks: 1 },
-      { name: 'with no press on the trigger', allowMouseUp: false, clicks: 0 },
-    ])('clicks and focuses the item for a mouse release $name', async (testCase) => {
+      { name: 'clicks and focuses the item', allowMouseUp: true, clicks: 1 },
+      { name: 'does nothing with no trigger press', allowMouseUp: false, clicks: 0 },
+    ])('a mouse release $name', async (testCase) => {
       const probe = createMenuStoreProbe();
       const onClick = vi.fn();
       await render(
@@ -387,6 +400,8 @@ describe('<Menu.Item />', () => {
     });
 
     it('in a context menu, ignores the release at the point where the menu opened', async () => {
+      // On macOS no other rule ignores the release of the right button.
+      setMac(true);
       const context = createContextMenuContext();
       const probe = createMenuStoreProbe();
       const onClick = vi.fn();
@@ -415,7 +430,11 @@ describe('<Menu.Item />', () => {
 
     // On a platform that is not macOS, the release of the right button belongs to the gesture that
     // opened the context menu.
-    it('in a context menu, clicks the item for a release of the right button only on macOS', async () => {
+    it.each([
+      { name: 'clicks the item on macOS', mac: true, clicks: 1 },
+      { name: 'does nothing on another platform', mac: false, clicks: 0 },
+    ])('in a context menu, a release of the right button $name', async (testCase) => {
+      setMac(testCase.mac);
       const probe = createMenuStoreProbe();
       const onClick = vi.fn();
       await render(
@@ -430,13 +449,32 @@ describe('<Menu.Item />', () => {
       );
 
       probe.store.context.allowMouseUpTriggerRef.value = true;
-      const item = screen.getByRole('menuitem');
 
-      await fireEvent.mouseUp(item, { button: 0 });
+      await fireEvent.mouseUp(screen.getByRole('menuitem'), { button: 2 });
+
+      expect(onClick).toHaveBeenCalledTimes(testCase.clicks);
+    });
+
+    it('in a context menu, does nothing for a release of the left button', async () => {
+      setMac(true);
+      const probe = createMenuStoreProbe();
+      const onClick = vi.fn();
+      await render(
+        <ContextMenuProvider context={createContextMenuContext()}>
+          <Menu.Root open>
+            <probe.Probe />
+            <Menu.Item closeOnClick={false} onClick={onClick}>
+              Item
+            </Menu.Item>
+          </Menu.Root>
+        </ContextMenuProvider>,
+      );
+
+      probe.store.context.allowMouseUpTriggerRef.value = true;
+
+      await fireEvent.mouseUp(screen.getByRole('menuitem'), { button: 0 });
+
       expect(onClick).not.toHaveBeenCalled();
-
-      await fireEvent.mouseUp(item, { button: 2 });
-      expect(onClick).toHaveBeenCalledTimes(platform.os.mac ? 1 : 0);
     });
   });
 
