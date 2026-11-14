@@ -5,6 +5,7 @@ import {
   closeInTimerTask,
   createRenderer,
   createTransitionRunCounter,
+  nextAnimationsRead,
   nextEvent,
   openInTimerTask,
   probeFrameAfterExit,
@@ -145,13 +146,14 @@ describe('<Collapsible.Panel /> transitions', () => {
             expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
           });
 
+          // A busy machine can stall the page for some seconds, so the wait for the end of the exit
+          // has no time limit.
+          const read = nextAnimationsRead(getPanel()!);
           closeInTimerTask(open);
-          await waitFor(
-            () => {
-              expect(isGone()).toBe(true);
-            },
-            { timeout: 3000 },
-          );
+          await Promise.all((await read).map((animation) => animation.finished));
+          await waitFor(() => {
+            expect(isGone()).toBe(true);
+          });
         }
 
         // The browser can send the `transitionrun` of the last exit after the panel is hidden.
