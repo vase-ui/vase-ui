@@ -197,6 +197,44 @@ describe('<Menu.Item />', () => {
     });
   });
 
+  it.each([{ press: 'mouse' }, { press: 'Enter' }])(
+    'preserves focus moved by onClick after $press activation',
+    async ({ press }) => {
+      const { user } = await render(
+        <>
+          <Menu.Root>
+            <Menu.Trigger>Open</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup finalFocus={false}>
+                  <Menu.Item onClick={() => screen.getByRole('textbox').focus()}>
+                    Focus editor
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <textarea aria-label="Editor" />
+        </>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+      const item = await screen.findByRole('menuitem');
+      expect(screen.getByRole('textbox')).not.toHaveFocus();
+
+      if (press === 'Enter') {
+        item.focus();
+        await flushMicrotasks();
+        await user.keyboard('{Enter}');
+      } else {
+        await user.click(item);
+      }
+
+      expect(screen.queryByRole('menuitem')).toBe(null);
+      expect(screen.getByRole('textbox')).toHaveFocus();
+    },
+  );
+
   it('does not close the menu when onClick prevents Base UI handler', async () => {
     const onClick = vi.fn((event) => event.preventVaseUIHandler());
     const { user } = await render(

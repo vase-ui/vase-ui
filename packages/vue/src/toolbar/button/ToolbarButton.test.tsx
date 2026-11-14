@@ -429,6 +429,65 @@ describe('<Toolbar.Button />', () => {
         expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
       });
 
+      it('handles interactions', async () => {
+        const handleValueChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Select.Root defaultValue="a" onValueChange={handleValueChange}>
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Select.Trigger {...props} />
+                  ),
+                }}
+              />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup data-testid="popup">
+                    <Select.Item value="a" data-testid="item-a">
+                      a
+                    </Select.Item>
+                    <Select.Item value="b" data-testid="item-b">
+                      b
+                    </Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByRole('listbox')).toBe(null);
+
+        const trigger = screen.getByTestId('button');
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+
+        await user.keyboard('[ArrowDown]');
+        expect(screen.queryByRole('listbox')).toBe(screen.getByTestId('popup'));
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
+        });
+
+        await user.keyboard('[ArrowDown]');
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'b' })).toHaveFocus();
+        });
+
+        await user.keyboard('[Enter]');
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).toBe(null);
+        });
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+
+        expect(handleValueChange).toHaveBeenCalledTimes(1);
+        expect(handleValueChange).toHaveBeenCalledWith('b', expect.anything());
+      });
+
       it('disabled state', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const onValueChange = vi.fn();

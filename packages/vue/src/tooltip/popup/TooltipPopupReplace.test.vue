@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 
 // The popup that comes first in the template mounts before the other popup unmounts.
 defineProps<{ swapped: boolean }>();

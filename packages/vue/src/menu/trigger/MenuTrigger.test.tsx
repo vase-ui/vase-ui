@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, computed, defineComponent, shallowRef } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { KeepAlive, computed, defineComponent, nextTick, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -8,6 +9,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isJSDOM,
   screen,
   takeReportedMessages,
   wait,
@@ -20,8 +22,10 @@ import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/Me
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import * as Popover from '../../popover/index.parts';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
+import MenuTriggerScoped from './MenuTriggerScoped.test.vue';
 
 const popup = (
   <Menu.Portal>
@@ -42,6 +46,48 @@ describe('<Menu.Trigger />', () => {
       return render(<Menu.Root open>{node}</Menu.Root>);
     },
   }));
+
+  describe.skipIf(isJSDOM)('tabbing backward from the open trigger', () => {
+    it.each([true, false])('focuses the preceding element when modal=%s', async (modal) => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      await render(
+        <div>
+          <button>Before</button>
+          <Menu.Root modal={modal}>
+            <Menu.Trigger>Toggle</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+      await userEvent.click(trigger);
+      await waitFor(() => {
+        expect(screen.getByRole('menu')).toHaveFocus();
+      });
+
+      // Menu normally closes on Shift+Tab from its content. Focus the trigger while it stays open.
+      trigger.focus();
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      await userEvent.tab({ shift: true });
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Before' })).toHaveFocus();
+      });
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+    });
+  });
 
   describe('prop: disabled', () => {
     it('should render a disabled button', async () => {
@@ -937,6 +983,54 @@ describe('<Menu.Trigger />', () => {
 
       expect(trigger).not.toHaveAttribute('data-popup-open');
     });
+
+    it('has no focus guards while it owns the open menu', async () => {
+      await render(
+        <MenubarProvider context={createMenubarContext()}>
+          <CompositeRootPart>
+            <Menu.Root defaultOpen defaultTriggerId="file">
+              <Menu.Trigger id="file">File</Menu.Trigger>
+            </Menu.Root>
+          </CompositeRootPart>
+        </MenubarProvider>,
+      );
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('menuitem', { name: 'File' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(
+        trigger.parentElement!.querySelectorAll(`[${createAttribute('focus-guard')}]`),
+      ).toHaveLength(0);
+    });
+  });
+
+  describe('VUE-60: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed menu', open: false },
+      { name: 'an open menu', open: true },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to the trigger of $name',
+      async ({ open }) => {
+        const shown = shallowRef(true);
+        await render(() => <MenuTriggerScoped open={open} shown={shown.value} />);
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        // The guards of the trigger are its siblings. The portal has guards of its own in its place.
+        expect(
+          [trigger.previousElementSibling, trigger.nextElementSibling].map(
+            (sibling) => sibling?.hasAttribute(createAttribute('focus-guard')) ?? false,
+          ),
+        ).toEqual([open, open]);
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   describe('prop: openOnHover', () => {

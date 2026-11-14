@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import type { ComputedRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
@@ -10,14 +11,15 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
-import * as Menu from '../menu/index.parts';
 import type { Orientation } from '../internals/types';
+import * as Menu from '../menu/index.parts';
 import type { MenuRootChangeEventReason } from '../menu/root/MenuRoot.vue';
 import type { MenuOpenEventDetails } from '../menu/utils/types';
 import type { FloatingTreeStore } from '../utils/popups/tree/FloatingTreeStore';
@@ -121,6 +123,71 @@ const ContainedTriggerMenubar = defineComponent(() => () => (
   </Menubar>
 ));
 
+type MenuDefinition = {
+  label: string;
+  triggerTestId: string;
+  menuTestId: string;
+};
+
+const menus: MenuDefinition[] = [
+  { label: 'File', triggerTestId: 'file-trigger', menuTestId: 'file-menu' },
+  { label: 'Edit', triggerTestId: 'edit-trigger', menuTestId: 'edit-menu' },
+  { label: 'View', triggerTestId: 'view-trigger', menuTestId: 'view-menu' },
+];
+
+const DynamicMenu = defineComponent(
+  (props: { handle?: Menu.Handle<MenuDefinition> }, { slots }) =>
+    () => (
+      <Menu.Root
+        handle={props.handle}
+        v-slots={{
+          default: ({ payload: menu }: { payload: MenuDefinition | undefined }) => [
+            slots.default?.(),
+            <Menu.Portal>
+              <Menu.Positioner data-testid={menu?.menuTestId}>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>,
+          ],
+        }}
+      />
+    ),
+  { props: ['handle'] },
+);
+
+const DetachedTriggerMenubar = defineComponent(() => {
+  const menuHandle = Menu.createHandle<MenuDefinition>();
+  return () => (
+    <>
+      <Menubar>
+        {menus.map((menu) => (
+          <Menu.Trigger
+            handle={menuHandle}
+            payload={menu}
+            key={menu.label}
+            data-testid={menu.triggerTestId}
+          >
+            {menu.label}
+          </Menu.Trigger>
+        ))}
+      </Menubar>
+      <DynamicMenu handle={menuHandle} />
+    </>
+  );
+});
+
+const MultipleContainedTriggersMenubar = defineComponent(() => () => (
+  <Menubar>
+    <DynamicMenu>
+      {menus.map((menu) => (
+        <Menu.Trigger payload={menu} key={menu.label} data-testid={menu.triggerTestId}>
+          {menu.label}
+        </Menu.Trigger>
+      ))}
+    </DynamicMenu>
+  </Menubar>
+));
+
 describe('<Menubar />', () => {
   const { render } = createRenderer();
 
@@ -130,12 +197,6 @@ describe('<Menubar />', () => {
   }));
 
   describe('ARIA attributes', () => {
-    it('has role="menubar"', async () => {
-      const { container } = await render(<Menubar />);
-
-      expect(container.firstElementChild as HTMLElement).toHaveAttribute('role', 'menubar');
-    });
-
     it.each<{ orientation: Orientation }>([
       { orientation: 'horizontal' },
       { orientation: 'vertical' },
@@ -757,6 +818,117 @@ describe('<Menubar />', () => {
     });
   });
 
+  it('renders contained top-level portal ownership as an allowed menubar child', async () => {
+    const { user } = await render(<ContainedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = screen.getByRole('menubar').querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('role', 'group');
+    expect(owner).not.toHaveAttribute('aria-hidden');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+  });
+
+  it('renders detached top-level portal ownership without an accessibility role', async () => {
+    const { user } = await render(<DetachedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = fileMenu.ownerDocument.querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+    // The portal renders outside the menubar, so the `group` workaround would only add a stray
+    // accessible group.
+    expect(screen.getByRole('menubar')).not.toContainElement(owner as HTMLElement | null);
+    expect(owner).not.toHaveAttribute('role');
+  });
+
+  it('keeps focus on an outside target when a triggerless menubar menu closes', async () => {
+    const TestComponent = defineComponent(() => {
+      const open = shallowRef(true);
+      return () => (
+        <>
+          <button data-testid="outside" type="button">
+            Outside
+          </button>
+          <Menubar>
+            <Menu.Root
+              open={open.value}
+              onOpenChange={(nextOpen: boolean) => {
+                open.value = nextOpen;
+              }}
+            >
+              <Menu.Portal keepMounted>
+                <Menu.Positioner>
+                  <Menu.Popup data-testid="triggerless-menu">
+                    <Menu.Item>Item</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menubar>
+        </>
+      );
+    });
+
+    const { user } = await render(<TestComponent />);
+    const outside = screen.getByTestId('outside');
+    const popup = await screen.findByTestId('triggerless-menu');
+    expect(popup).toHaveAttribute('data-open');
+
+    await user.click(outside);
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('data-closed');
+    });
+    expect(outside).toHaveFocus();
+  });
+
+  describe.for([
+    { name: 'contained triggers', Component: ContainedTriggerMenubar },
+    { name: 'detached triggers', Component: DetachedTriggerMenubar },
+    { name: 'multiple contained triggers', Component: MultipleContainedTriggersMenubar },
+  ])('when using $name', ({ Component: TestMenubar }) => {
+    describe.skipIf(isJSDOM)('hover behavior', () => {
+      it('should not open submenus on hover when no submenu is already open', async () => {
+        await render(<TestMenubar />);
+
+        const fileTrigger = screen.getByTestId('file-trigger');
+
+        await userEvent.hover(fileTrigger);
+
+        expect(screen.queryByTestId('file-menu')).toBe(null);
+      });
+    });
+
+    describe('role', () => {
+      it('sets role="menubar" on the root element', async () => {
+        await render(<TestMenubar />);
+        expect(screen.queryByRole('menubar')).not.toBe(null);
+      });
+
+      it('sets aria-orientation on the root element', async () => {
+        await render(<Menubar orientation="vertical" />);
+        expect(screen.getByRole('menubar')).toHaveAttribute('aria-orientation', 'vertical');
+      });
+
+      it('sets role="menuitem" on menu triggers', async () => {
+        await render(<TestMenubar />);
+        const menuItems = screen.getAllByRole('menuitem');
+        expect(menuItems).toHaveLength(3);
+      });
+    });
+  });
+
   describe('disabled state', () => {
     it('keeps the menubar reachable when the first trigger is disabled', async () => {
       const { user } = await render(
@@ -817,7 +989,7 @@ describe('<Menubar />', () => {
         </Menubar>,
       );
 
-      const item = screen.getByTestId('file-item');
+      const item = await screen.findByTestId('file-item');
       expect(item).toHaveAttribute('aria-disabled', 'true');
 
       await user.click(item);

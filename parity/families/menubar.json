@@ -7,34 +7,10 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "keeps focus on an outside target when a triggerless menubar menu closes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case checks where the focus goes when a menu of the menubar closes. The popup of Vase UI has no focus management yet, so the case would pass with no code to test."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
       "reason": "Most cases of the block move the focus or the highlight with the keys, and Menu has no keys and no focus management yet. The block runs its cases for three test menubars, so it is ported in one piece."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "renders contained top-level portal ownership as an allowed menubar child",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case opens a menu with a press and reads the owner element that the portal renders beside its focus guards. `Menu.Popup` has no focus manager yet, so its portal renders no guards and no owner element."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "renders detached top-level portal ownership without an accessibility role",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case opens a menu with a press and reads the owner element that the portal renders beside its focus guards. `Menu.Popup` has no focus manager yet, so its portal renders no guards and no owner element."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",

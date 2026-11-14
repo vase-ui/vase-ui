@@ -1,6 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import type { FunctionalComponent } from 'vue';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   describeConformance,
@@ -50,6 +50,7 @@ describe('<Tooltip.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     defaultSide: 'top',
     defaultCollisionAvoidance: 'popup',
     createComponent: ({
@@ -57,6 +58,7 @@ describe('<Tooltip.Positioner />', () => {
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <Tooltip.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -65,7 +67,9 @@ describe('<Tooltip.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <Tooltip.Popup {...popup}>Popup</Tooltip.Popup>
+            <Tooltip.Popup {...popup}>
+              {viewport ? <Tooltip.Viewport>Popup</Tooltip.Viewport> : 'Popup'}
+            </Tooltip.Popup>
           </Tooltip.Positioner>
         </Tooltip.Portal>
       </Tooltip.Root>

@@ -130,3 +130,27 @@ describe('real pointer between tests', () => {
     expect(onPointerover).not.toHaveBeenCalled();
   });
 });
+
+describe('pointer lock', () => {
+  // A browser can give a pointer lock to a request that comes in a real press.
+  const { render } = createRenderer();
+
+  it('gets no pointer lock for a real press', async () => {
+    let refusal: Promise<unknown> | undefined;
+    await render(
+      <button
+        data-testid="button"
+        onPointerdown={() => {
+          refusal = document.body.requestPointerLock().then(
+            () => null,
+            (error: unknown) => error,
+          );
+        }}
+      />,
+    );
+    await userEvent.click(screen.getByTestId('button'));
+
+    expect(await refusal).toBeInstanceOf(DOMException);
+    expect(document.pointerLockElement).toBe(null);
+  });
+});

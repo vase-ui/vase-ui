@@ -51,6 +51,12 @@ export interface SelectRootProps<Value, Multiple extends boolean | undefined = f
    */
   multiple?: (Multiple & boolean) | undefined;
   /**
+   * Whether moving the pointer over items should highlight them.
+   * Disabling this prop allows CSS `:hover` to be differentiated from the `:focus` (`data-highlighted`) state.
+   * @default true
+   */
+  highlightItemOnHover?: boolean | undefined;
+  /**
    * Whether the select popup is initially open.
    *
    * To render a controlled select popup, use the `open` prop instead.
@@ -143,6 +149,7 @@ import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from
 import type { HTMLAttributes } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
+import { isElementDisabled } from '../../common/isElementDisabled';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
@@ -161,13 +168,14 @@ import {
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
-import type { HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
+import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
@@ -185,6 +193,7 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   disabled: false,
   readOnly: false,
   required: false,
+  highlightItemOnHover: true,
 });
 
 const emit = defineEmits<{
@@ -285,7 +294,7 @@ const {
         disabled: isDisabled.value,
         readOnly: props.readOnly,
         required: props.required,
-        highlightItemOnHover: true,
+        highlightItemOnHover: props.highlightItemOnHover,
         itemToStringLabel: props.itemToStringLabel,
         itemToStringValue: props.itemToStringValue,
         isItemEqualToValue: comparer.value,
@@ -296,7 +305,7 @@ const {
         activeIndex: null,
         selectedIndex: null,
         itemRoot: {
-          props: EMPTY_OBJECT as HTMLProps,
+          props: EMPTY_OBJECT,
           multiple: isMultiple.value,
           disabled: isDisabled.value,
           readOnly: props.readOnly,
@@ -463,13 +472,59 @@ watch(comparer, (nextComparer) => {
 });
 
 // `readOnly` locks the value, not the interaction: the popup can be opened and browsed so the
-// user can see the available options and which one is selected.
+// user can see the available options and which one is selected. Committing a value is blocked
+// separately in `SelectItem` and in the hidden input's autofill handler.
 const click = useClick(store, {
   enabled: () => !isDisabled.value,
   event: 'mousedown',
 });
 
 const dismiss = useDismiss(store);
+
+const getActiveIndex = () => store.select('activeIndex');
+const getSelectedIndex = () => store.select('selectedIndex');
+
+const listNavigation = useListNavigation(store, {
+  enabled: () => !isDisabled.value,
+  listRef: store.context.listRef,
+  activeIndex: getActiveIndex,
+  selectedIndex: getSelectedIndex,
+  disabledIndices: EMPTY_ARRAY,
+  onNavigate(nextActiveIndex) {
+    // Retain the highlight while transitioning out.
+    if (nextActiveIndex === null && !isOpen.value) {
+      return;
+    }
+
+    store.set('activeIndex', nextActiveIndex);
+  },
+  focusItemOnHover: () => props.highlightItemOnHover,
+});
+
+const typeahead = useTypeahead(store, {
+  // Typeahead on an open popup only moves the highlight, so it remains available while
+  // `readOnly`. The closed-trigger variant commits a value instead, so it doesn't.
+  enabled: () => !isDisabled.value && (isOpen.value || (!props.readOnly && !isMultiple.value)),
+  listRef: store.context.labelsRef,
+  activeIndex: getActiveIndex,
+  selectedIndex: getSelectedIndex,
+  // Skip disabled items while matching so typeahead advances to the next selectable item
+  // (a click can never select a disabled item and native `<select>` skips them too). Resolve
+  // the disabled state from the element via the attribute-only `isElementDisabled` so the
+  // hidden, force-mounted items used for closed-trigger typeahead aren't dropped by the
+  // `elementsRef`/visibility filter that `disabledIndices` deliberately sidesteps.
+  disabledIndices: (index) => isElementDisabled(store.context.listRef.value[index] ?? null),
+  onMatch(index) {
+    if (isOpen.value) {
+      store.set('activeIndex', index);
+    } else {
+      setValue(store.context.valuesRef.value[index], createChangeEventDetails(REASONS.none));
+    }
+  },
+  onTyping(typing) {
+    store.context.typingRef.value = typing;
+  },
+});
 
 const { openMethod, triggerProps: interactionTypeProps } = useOpenInteractionType(isOpen);
 
@@ -486,15 +541,28 @@ watch(
 );
 
 // `Select.Trigger` applies the id itself from the store, so it's deliberately not merged here.
-const triggerProps: HTMLAttributes = mergeProps(
-  dismiss.reference,
-  click.reference,
-  interactionTypeProps,
+// The members of `listNavigation` change only with `aria-activedescendant`, which a list with real
+// focus does not have. The props thus merge again only for that change.
+const triggerProps = computed<HTMLAttributes>(() =>
+  mergeProps(
+    typeahead.reference,
+    listNavigation.value.reference,
+    dismiss.reference,
+    click.reference,
+    interactionTypeProps,
+  ),
 );
-const popupProps: HTMLAttributes = mergeProps(FOCUSABLE_POPUP_PROPS, dismiss.floating);
+const popupProps = computed<HTMLAttributes>(() =>
+  mergeProps(
+    FOCUSABLE_POPUP_PROPS,
+    typeahead.floating,
+    listNavigation.value.floating,
+    dismiss.floating,
+  ),
+);
 
 const itemRoot = computed(() => ({
-  props: EMPTY_OBJECT as HTMLProps,
+  props: listNavigation.value.item,
   multiple: isMultiple.value,
   disabled: isDisabled.value,
   readOnly: props.readOnly,
@@ -508,9 +576,10 @@ usePopupInteractionProps(store, () => ({
   disabled: isDisabled.value,
   readOnly: props.readOnly,
   required: props.required,
+  highlightItemOnHover: props.highlightItemOnHover,
   selectedValue: selectedValue.value,
-  popupProps,
-  activeTriggerProps: triggerProps,
+  popupProps: popupProps.value,
+  activeTriggerProps: triggerProps.value,
   inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
   itemRoot: itemRoot.value,
   items: plainItems.value,
@@ -624,8 +693,6 @@ useFormReset(inputElement, (event) => {
   } else {
     clearFieldError(selectedValue.value);
   }
-
-  void nextTick(writeValueToInput);
 });
 
 watch(

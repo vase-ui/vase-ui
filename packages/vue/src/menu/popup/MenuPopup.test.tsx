@@ -8,10 +8,20 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  popupFocusPropsTests,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
+import * as Dialog from '../../dialog/index.parts';
+import {
+  ContextMenuProvider,
+  MenubarProvider,
+  createContextMenuContext,
+  createMenubarContext,
+} from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { ToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
@@ -118,6 +128,217 @@ describe('<Menu.Popup />', () => {
     );
     expect(onParentKeyDown).toHaveBeenCalled();
     expect(onParentKeyDown.mock.calls.every(([event]) => event.key === 'F1')).toBe(true);
+  });
+
+  it.each([
+    { name: 'its trigger', live: false },
+    // Live regions outside a modal stay exposed to assistive tech.
+    { name: 'its trigger in a live region', live: true },
+  ])(
+    'does not move focus behind a modal dialog to $name when an item hides the menu trigger',
+    async ({ live }) => {
+      const App = defineComponent(() => {
+        const step = shallowRef(1);
+        return () => {
+          const dialogTrigger = <Dialog.Trigger>Create</Dialog.Trigger>;
+          return (
+            <Dialog.Root>
+              {live ? <div aria-live="polite">{dialogTrigger}</div> : dialogTrigger}
+              <Dialog.Portal>
+                <Dialog.Popup>
+                  <div hidden={step.value !== 1}>
+                    <Menu.Root>
+                      <Menu.Trigger>Template</Menu.Trigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup>
+                            <Menu.Item
+                              onClick={() => {
+                                step.value = 2;
+                              }}
+                            >
+                              Blank
+                            </Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.Root>
+                  </div>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          );
+        };
+      });
+
+      const { user } = await render(<App />);
+      const dialogTrigger = screen.getByRole('button', { name: 'Create' });
+      await user.click(dialogTrigger);
+      await user.click(await screen.findByRole('button', { name: 'Template' }));
+      await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
+      });
+      await flushMicrotasks();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(dialogTrigger).not.toHaveFocus();
+    },
+  );
+
+  it('keeps focus on an input that autofocuses when the trigger is hidden as the menu closes', async () => {
+    const App = defineComponent(() => {
+      const renaming = shallowRef(false);
+      let renameRequested = false;
+      return () => (
+        <div>
+          <Menu.Root>
+            <Menu.Trigger>Other</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          {renaming.value && (
+            <input
+              aria-label="Name"
+              ref={(element) => (element as HTMLInputElement | null)?.focus()}
+            />
+          )}
+          <Menu.Root
+            onOpenChangeComplete={(open: boolean) => {
+              if (!open && renameRequested) {
+                renameRequested = false;
+                renaming.value = true;
+              }
+            }}
+          >
+            <Menu.Trigger hidden={renaming.value}>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item
+                    onClick={() => {
+                      renameRequested = true;
+                    }}
+                  >
+                    Rename
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      );
+    });
+
+    const { user } = await render(<App />);
+    // Leaves the other trigger in the return-focus history.
+    await user.click(screen.getByRole('button', { name: 'Other' }));
+    await screen.findByRole('menuitem', { name: 'Item' });
+    await user.keyboard('[Escape]');
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Rename' }));
+
+    const input = await screen.findByRole('textbox', { name: 'Name' });
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
+    });
+    await flushMicrotasks();
+    expect(input).toHaveFocus();
+  });
+
+  popupFocusPropsTests({
+    render,
+    initialFocus: false,
+    createComponent: ({ children, finalFocus }) => (
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup finalFocus={finalFocus}>
+              {children}
+              <Menu.Item>Close</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+  });
+
+  describe('prop: finalFocus', () => {
+    it('receives the interaction type of the item press that closed the menu', async () => {
+      const finalFocus = vi.fn(() => true);
+
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup finalFocus={finalFocus}>
+                <Menu.Item>Close</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByText('Open');
+
+      await user.click(trigger);
+      const item = await screen.findByText('Close');
+      await fireEvent.pointerDown(item, { pointerType: 'mouse' });
+      await fireEvent.click(item, { detail: 1 });
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('mouse');
+
+      await user.keyboard('{Enter}');
+      await screen.findByText('Close');
+      await user.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
+    });
+
+    it('receives the mouse interaction type after a drag-release item selection', async () => {
+      const finalFocus = vi.fn(() => true);
+
+      await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup finalFocus={finalFocus}>
+                <Menu.Item>Close</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByText('Open');
+      await fireEvent.mouseDown(trigger);
+      const item = await screen.findByText('Close');
+
+      // Drag-release selection is only armed 200ms after the trigger press.
+      await wait(200);
+      await fireEvent.mouseUp(item);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Close')).toBe(null);
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('mouse');
+    });
   });
 
   describe('attributes', () => {
@@ -422,6 +643,249 @@ describe('<Menu.Popup />', () => {
       await leaveAndWait(screen.getByTestId('positioner'));
 
       expect(screen.queryByTestId('popup')).not.toBe(null);
+    });
+  });
+
+  describe('focus', () => {
+    // The menu is controlled, so a case opens it with no press of the trigger.
+    async function renderMenu(popup: () => unknown, options: { before?: () => unknown } = {}) {
+      const open = shallowRef(false);
+      const result = await render(() => (
+        <div>
+          {options.before?.()}
+          <Menu.Root
+            modal={false}
+            open={open.value}
+            triggerId="trigger"
+            onUpdate:open={(nextOpen) => {
+              open.value = nextOpen;
+            }}
+          >
+            <Menu.Trigger id="trigger">Toggle</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>{popup()}</Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      ));
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+      trigger.focus();
+      open.value = true;
+      return { ...result, trigger };
+    }
+
+    it('focuses the popup when the menu opens, and returns the focus when it closes', async () => {
+      const { user, trigger } = await renderMenu(() => <Menu.Popup data-testid="popup" />);
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+    });
+
+    it.each([
+      { name: 'an element', finalFocus: (target: HTMLElement) => target },
+      { name: 'a ref', finalFocus: (target: HTMLElement) => shallowRef(target) },
+      { name: 'a function', finalFocus: (target: HTMLElement) => () => target },
+    ])('focuses the finalFocus target of $name when the menu closes', async ({ finalFocus }) => {
+      const target = shallowRef<HTMLElement | null>(null);
+      const { user } = await renderMenu(
+        () => (
+          <Menu.Popup
+            data-testid="popup"
+            finalFocus={target.value ? finalFocus(target.value) : undefined}
+          />
+        ),
+        {
+          before: () => (
+            <button
+              ref={(element) => {
+                target.value = element as HTMLElement | null;
+              }}
+            >
+              Final
+            </button>
+          ),
+        },
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Final' })).toHaveFocus();
+      });
+    });
+
+    it('gives the type of the interaction that closed the menu to a finalFocus function', async () => {
+      const finalFocus = vi.fn(() => false);
+      const { user } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup" finalFocus={finalFocus} />
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => {
+        expect(finalFocus).toHaveBeenCalledWith('keyboard');
+      });
+      await waitFor(() => {
+        expect(screen.queryByTestId('popup')).toBe(null);
+      });
+      expect(document.body).toHaveFocus();
+    });
+
+    it('focuses the trigger for Shift+Tab from the start of the popup', async () => {
+      const { trigger } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <button data-testid="inside">Inside</button>
+        </Menu.Popup>
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('inside')).toHaveFocus();
+      });
+
+      await userEvent.tab({ shift: true });
+
+      expect(trigger).toHaveFocus();
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+
+    it('moves the focus to the popup when the focused element in the popup goes away', async () => {
+      const shown = shallowRef(true);
+      await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          {shown.value && <button data-testid="inside">Inside</button>}
+        </Menu.Popup>
+      ));
+      await waitFor(() => {
+        expect(screen.getByTestId('inside')).toHaveFocus();
+      });
+
+      shown.value = false;
+
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveFocus();
+      });
+    });
+
+    it('focuses the list when the menu opens with no highlighted item', async () => {
+      await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <Menu.List data-testid="list" />
+        </Menu.Popup>
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('list')).toHaveFocus();
+      });
+    });
+
+    it('moves no focus when the menu with a list opens with a highlighted item', async () => {
+      const probe = createMenuStoreProbe();
+      const { trigger } = await renderMenu(() => (
+        <Menu.Popup data-testid="popup">
+          <probe.Probe />
+          <Menu.List data-testid="list" />
+        </Menu.Popup>
+      ));
+      probe.store.set('activeIndex', 0);
+      await waitFor(() => {
+        expect(screen.getByTestId('list')).toBeVisible();
+      });
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(trigger).toHaveFocus();
+    });
+
+    it('keeps the focus in a menu of a context menu', async () => {
+      await render(
+        <ContextMenuProvider context={createContextMenuContext()}>
+          <Menu.Root defaultOpen>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <button data-testid="first">First</button>
+                  <button data-testid="last">Last</button>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </ContextMenuProvider>,
+      );
+      await waitFor(() => {
+        expect(screen.getByTestId('first')).toHaveFocus();
+      });
+      screen.getByTestId('last').focus();
+
+      await userEvent.tab();
+
+      expect(screen.getByTestId('first')).toHaveFocus();
+    });
+
+    // With an active trigger the focus always returns, so the menu of these cases has no trigger.
+    describe('in a menubar', () => {
+      async function renderOpenMenu() {
+        const open = shallowRef(false);
+        const result = await render(() => (
+          <div>
+            <button data-testid="before">Before</button>
+            <div data-testid="outside">Outside</div>
+            <MenubarProvider context={createMenubarContext()}>
+              <Menu.Root
+                open={open.value}
+                onUpdate:open={(nextOpen) => {
+                  open.value = nextOpen;
+                }}
+              >
+                <Menu.Portal>
+                  <Menu.Positioner anchor={() => screen.getByTestId('before')}>
+                    <Menu.Popup data-testid="popup" />
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </MenubarProvider>
+          </div>
+        ));
+        const before = screen.getByTestId('before');
+        before.focus();
+        open.value = true;
+        await waitFor(() => {
+          expect(screen.getByTestId('popup')).toHaveFocus();
+        });
+        return { ...result, before };
+      }
+
+      it('returns the focus after Escape', async () => {
+        const { user, before } = await renderOpenMenu();
+
+        await user.keyboard('{Escape}');
+
+        await waitFor(() => {
+          expect(before).toHaveFocus();
+        });
+      });
+
+      it('returns no focus after a press outside', async () => {
+        const { before } = await renderOpenMenu();
+
+        await fireEvent.pointerDown(screen.getByTestId('outside'), { pointerType: 'mouse' });
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+        await flushMicrotasks();
+        expect(before).not.toHaveFocus();
+      });
     });
   });
 

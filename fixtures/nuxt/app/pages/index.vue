@@ -32,6 +32,7 @@
       <li><NuxtLink to="/navigation-menu">Navigation Menu</NuxtLink></li>
       <li><NuxtLink to="/menu">Menu</NuxtLink></li>
       <li><NuxtLink to="/preview-card">Preview Card</NuxtLink></li>
+      <li><NuxtLink to="/tooltip">Tooltip</NuxtLink></li>
     </ul>
   </main>
 </template>

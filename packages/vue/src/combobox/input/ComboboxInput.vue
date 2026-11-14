@@ -408,7 +408,7 @@ function handleKeydown(event: KeyboardEvent) {
   }
 
   const state = toRaw(store.state);
-  const isOpen = state.open;
+  const isOpen = open.value;
 
   if (isDisabled.value || state.readOnly) {
     // Browsing can highlight an item, and Enter there must not submit the form.
