@@ -1,0 +1,10 @@
+{
+  "id": "VUE-55",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/tree/FloatingTree.tsx#L93",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/root/MenuRoot.tsx#L596-L598",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/menu/trigger/MenuTrigger.tsx#L86-L90"
+  ],
+  "behavior": "A root provides the tree that its popup uses. A detached trigger can give the root another tree. A part in the popup of the root then registers in the new tree, so a menu that a trigger in the popup opens closes with the root. Base UI provides the first tree of the root and never changes it. A part in the popup then registers in a tree that the popup does not read, and the menu that its trigger opens stays open.",
+  "dueWith": "packages/react/src/utils/popups/tree/FloatingTree.tsx"
+}

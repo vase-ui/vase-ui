@@ -329,7 +329,7 @@ describe('<Menu.Trigger />', () => {
       expect(probe.store.select('floatingParentNodeId')).toBe('parent');
     });
 
-    it('VUE-54: closes the menu that a trigger in its popup opens when the menu closes', async () => {
+    it('VUE-55: closes the menu that a trigger in its popup opens when the menu closes', async () => {
       const outer = Menu.createHandle();
       const inner = Menu.createHandle();
       await render(
