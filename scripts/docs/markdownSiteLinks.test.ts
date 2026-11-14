@@ -9,7 +9,7 @@ import config from '../../docs/.vitepress/config.ts';
 const DOCS_ROOT = join(import.meta.dirname, '..', '..', 'docs');
 const BASE = config.base ?? '/';
 
-// The root package does not depend on VitePress, so the test loads the copy of the docs package.
+// The root package does not depend on VitePress, so the test loads VitePress from the docs package.
 const vitepress = await import(
   pathToFileURL(createRequire(join(DOCS_ROOT, 'package.json')).resolve('vitepress')).href
 );

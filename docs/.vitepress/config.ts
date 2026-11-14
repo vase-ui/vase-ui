@@ -39,7 +39,7 @@ const SYNTAX_COLORS = Object.fromEntries(
 );
 
 // README.md names a page of this site by its full address, because GitHub and npm show that file.
-// This rule turns such an address into a link by path, so the link opens in the same tab.
+// This rule changes such an address to a path of the site, so the link opens in the same tab.
 function markdownSiteLinks(md: MarkdownRenderer): void {
   md.core.ruler.after('linkify', 'site_links', ({ tokens }) => {
     for (const { children } of tokens) {
