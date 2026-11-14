@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { h } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Toast from '../index.parts';
+import { List, Button } from '../utils/test-utils';
 
 describe('<Toast.Action />', () => {
   const { render } = createRenderer();
@@ -27,6 +28,102 @@ describe('<Toast.Action />', () => {
       );
     },
   }));
+
+  it('performs an action when clicked', async () => {
+    const onClick = vi.fn();
+
+    const AddButton = defineComponent({
+      setup() {
+        const { add } = Toast.useToastManager();
+        return () => (
+          <button
+            type="button"
+            onClick={() =>
+              add({
+                title: 'title',
+                actionProps: {
+                  children: 'action',
+                  onClick,
+                },
+              })
+            }
+          >
+            add
+          </button>
+        );
+      },
+    });
+
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+        <AddButton />
+      </Toast.Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'add' }));
+    expect(onClick).not.toHaveBeenCalled();
+
+    await user.click(screen.getByTestId('action'));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards actionProps to the button', async () => {
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+        <Button />
+      </Toast.Provider>,
+    );
+
+    const button = screen.getByRole('button', { name: 'add' });
+
+    await user.click(button);
+
+    expect(screen.getByTestId('action').id).toBe('action');
+  });
+
+  it('does not render if it has no children', async () => {
+    const AddButton = defineComponent({
+      setup() {
+        const { add } = Toast.useToastManager();
+        return () => (
+          <button
+            type="button"
+            onClick={() =>
+              add({
+                actionProps: {
+                  children: undefined,
+                },
+              })
+            }
+          >
+            add
+          </button>
+        );
+      },
+    });
+
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+        <AddButton />
+      </Toast.Provider>,
+    );
+
+    const button = screen.getByRole('button', { name: 'add' });
+    await user.click(button);
+
+    const actionElement = screen.queryByTestId('action');
+    expect(actionElement).toBe(null);
+  });
 
   it('does not render a childless render prop when there is no action content', async () => {
     await render(
