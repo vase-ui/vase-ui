@@ -24,7 +24,7 @@ describe('<Toast.Viewport /> on a server', () => {
   });
 
   // Script makes the alert region after the mount, so a server renders only the toast.
-  it('renders no alert region on a server', async () => {
+  it('renders a high priority toast with no alert region on a server', async () => {
     const AddInSetup = defineComponent({
       setup() {
         Toast.useToastManager().add({ title: 'Saved', priority: 'high', timeout: 0 });
