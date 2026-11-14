@@ -854,6 +854,74 @@ describe('nested popups of a filterable menu', () => {
     expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
   });
 
+  // The tree gives an event to each popup in it. A popup takes only the events of the popups below
+  // it, as React gives an event only to the popups above its target.
+  it('gives the focus to a kept-mounted submenu input after another submenu had the focus', async () => {
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List>
+                  <Menu.FilterProvider>
+                    <Menu.SubmenuRoot>
+                      <Menu.SubmenuTrigger delay={0}>Move to</Menu.SubmenuTrigger>
+                      <Menu.Portal keepMounted>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="kept-mounted-submenu">
+                            <Menu.Input aria-label="Filter folders" />
+                            <Menu.List>
+                              <Menu.Item>Projects</Menu.Item>
+                            </Menu.List>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.SubmenuRoot>
+                  </Menu.FilterProvider>
+                  <Menu.SubmenuRoot>
+                    <Menu.SubmenuTrigger>Share</Menu.SubmenuTrigger>
+                    <Menu.Portal>
+                      <Menu.Positioner>
+                        <Menu.Popup>
+                          <Menu.Item>Email</Menu.Item>
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => {
+      expect(parentInput).toHaveFocus();
+    });
+    await user.keyboard('[ArrowDown][ArrowDown][ArrowRight]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Email' })).toHaveFocus();
+    });
+    await user.keyboard('[Escape]');
+    await waitFor(() => {
+      expect(parentInput).toHaveFocus();
+    });
+
+    const trigger = screen.getByRole('menuitem', { name: 'Move to' });
+    await user.hover(trigger);
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('data-popup-open');
+    });
+    await fireEvent.mouseMove(screen.getByTestId('kept-mounted-submenu'));
+
+    expect(screen.getByRole('searchbox', { name: 'Filter folders' })).toHaveFocus();
+  });
+
   it('disables the submenu input while the parent menu is disabled', async () => {
     await render(
       <Menu.Root open disabled>
