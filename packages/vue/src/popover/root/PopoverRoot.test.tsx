@@ -385,6 +385,30 @@ describe('<Popover.Root />', () => {
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('emits openChangeComplete when unmount() ends the close', async () => {
+    const completions: boolean[] = [];
+    const root = createRootRef();
+    await render(() => (
+      <Popover.Root
+        ref={root.ref}
+        defaultOpen
+        defaultTriggerId="trigger"
+        onOpenChange={(_open, details) => details.preventUnmountOnClose()}
+        onOpenChangeComplete={(open) => completions.push(open)}
+      >
+        <Popover.Trigger id="trigger" />
+      </Popover.Root>
+    ));
+
+    root.current.close();
+    await flushMicrotasks();
+    expect(completions).toEqual([]);
+
+    root.current.unmount();
+    await flushMicrotasks();
+    expect(completions).toEqual([false]);
+  });
+
   it('gives the modal prop to the store', async () => {
     const handle = Popover.createHandle<unknown>();
     const modal = shallowRef<boolean | 'trap-focus'>('trap-focus');

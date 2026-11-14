@@ -26,7 +26,8 @@ export interface PopoverRootProps<Payload = unknown> {
    * On touch devices, a `true` modal blocks outside taps but leaves the page scrollable unless the popup spans nearly the full viewport width, matching native iOS behavior.
    *
    * When `modal` is `true`, focus trapping is enabled only if `<Popover.Close>` is rendered
-   * inside `<Popover.Popup>`. It can be visually hidden with your own CSS if needed.
+   * inside `<Popover.Popup>`. It can be visually hidden with your own CSS if needed, such as
+   * Tailwind's `sr-only` utility.
    *
    * When `modal` is `'trap-focus'`, render `<Popover.Close>` inside `<Popover.Popup>` so touch
    * screen readers can escape the popup.

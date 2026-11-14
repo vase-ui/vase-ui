@@ -86,8 +86,8 @@ type Selectors = typeof selectors;
 /**
  * The view of the store that a detached trigger of a handle reads. The store of a root and the
  * inert store of a handle both fit it. It has the members that a trigger uses: the members for the
- * trigger data, and `setOpen`, which the focus guards call. On the inert store, each write does
- * nothing.
+ * trigger data, and `setOpen`, which the interactions of a trigger call. On the inert store, each
+ * write does nothing.
  */
 export type PopoverHandleStore<Payload> = Pick<
   PopoverStore<Payload>,
@@ -144,8 +144,8 @@ export class PopoverStore<Payload> extends BasePopupStore<
 /**
  * Makes the inert store that a detached trigger of a handle reads while no `Popover.Root` is
  * attached. Its context has a trigger map, so a detached trigger can register before it moves to
- * the store of a root. `setOpen` does nothing, so a trigger can give the store to the focus guard
- * code.
+ * the store of a root. `setOpen` does nothing, so a trigger can give the store to its
+ * interactions.
  */
 export function createNullPopoverStore<Payload>(): PopoverHandleStore<Payload> {
   const store = new NullStore<Readonly<State<Payload>>, Context, Selectors>(
