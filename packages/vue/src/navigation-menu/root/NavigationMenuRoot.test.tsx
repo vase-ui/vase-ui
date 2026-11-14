@@ -32,7 +32,7 @@ const falsyNavigationMenuValueCases = [
   ['0', 0],
   ['empty string', ''],
   ['false', false],
-] as const satisfies ReadonlyArray<[string, FalsyNavigationMenuValue]>;
+] as const satisfies readonly [string, FalsyNavigationMenuValue][];
 
 type TestNavigationMenuProps = NavigationMenu.Root.Props & {
   keepMountedPortal?: boolean;
