@@ -1,16 +1,31 @@
 <script setup lang="ts">
+import { useControlled } from '../../src/common/useControlled';
 import { useAriaCombobox } from '../../src/combobox/root/AriaCombobox';
+import type { AriaCombobox } from '../../src/combobox/root/AriaCombobox';
 
 // The tests use this part in place of `Autocomplete.Root`. It gives the root of the combobox the
-// selection mode `none`, so the input value is the value of the form.
+// selection mode `none`, so the input value is the value of the form. As `Autocomplete.Root`, it
+// keeps the input value itself and always gives it to the root.
 const props = defineProps<{
   id?: string | undefined;
   name?: string | undefined;
+  required?: boolean | undefined;
   items?: readonly string[] | undefined;
+  value?: string | undefined;
   defaultInputValue?: string | undefined;
 }>();
 
-const emit = defineEmits<{ inputValueChange: [inputValue: string] }>();
+const emit = defineEmits<{
+  inputValueChange: [inputValue: string, eventDetails: AriaCombobox.ChangeEventDetails];
+  'update:value': [value: string];
+}>();
+
+const [inputValue, setInputValue] = useControlled<string>({
+  controlled: () => props.value,
+  default: () => props.defaultInputValue ?? '',
+  name: 'AutocompleteRootPart',
+  state: 'value',
+});
 
 const { hiddenInputProps } = useAriaCombobox<string>(
   {
@@ -24,7 +39,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     get id() {
       return props.id;
     },
-    required: undefined,
+    get required() {
+      return props.required;
+    },
     readOnly: undefined,
     disabled: undefined,
     defaultOpen: undefined,
@@ -34,7 +51,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     keepHighlight: undefined,
     highlightItemOnHover: undefined,
     loopFocus: undefined,
-    inputValue: undefined,
+    get inputValue() {
+      return inputValue.value;
+    },
     get defaultInputValue() {
       return props.defaultInputValue;
     },
@@ -45,6 +64,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     filteredItems: undefined,
     filter: undefined,
     filterQuery: undefined,
+    get inputValueControlled() {
+      return props.value !== undefined;
+    },
     itemToStringLabel: undefined,
     itemToStringValue: undefined,
     isItemEqualToValue: undefined,
@@ -60,8 +82,12 @@ const { hiddenInputProps } = useAriaCombobox<string>(
   },
   {
     onSelectedValueChange() {},
-    onInputValueChange(value) {
-      emit('inputValueChange', value);
+    onInputValueChange(value, eventDetails) {
+      emit('inputValueChange', value, eventDetails);
+      if (!eventDetails.isCanceled) {
+        setInputValue(value);
+        emit('update:value', value);
+      }
     },
     onOpenChange() {},
     onOpenChangeComplete() {},

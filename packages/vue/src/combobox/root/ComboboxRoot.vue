@@ -238,6 +238,7 @@ const {
       return props.filter;
     },
     filterQuery: undefined,
+    inputValueControlled: undefined,
     get itemToStringLabel() {
       return props.itemToStringLabel;
     },
