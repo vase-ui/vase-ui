@@ -295,6 +295,56 @@ describe('<Select.Trigger />', () => {
     });
   });
 
+  describe('BUG-1425: a required select with no value after blur', () => {
+    function renderSelect(validationMode?: 'onBlur') {
+      return render(
+        <div>
+          <Field.Root validationMode={validationMode} data-testid="field">
+            <Select.Root required>
+              <Select.Trigger data-testid="trigger" />
+            </Select.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+    }
+
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
+      const { user } = await renderSelect('onBlur');
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
+      const { user } = await renderSelect();
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(trigger).not.toHaveAttribute('aria-invalid');
+    });
+  });
+
   describe('labels', () => {
     it('is named by Select.Label that comes after it', async () => {
       await render(
