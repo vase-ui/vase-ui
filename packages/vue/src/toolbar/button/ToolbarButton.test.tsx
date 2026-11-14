@@ -324,7 +324,14 @@ describe('<Toolbar.Button />', () => {
         await render(
           <Toolbar.Root>
             <Select.Root defaultValue="a">
-              <Toolbar.Button data-testid="button" as={Select.Trigger} />
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Select.Trigger {...props} />
+                  ),
+                }}
+              />
               <Select.Portal>
                 <Select.Positioner>
                   <Select.Popup>

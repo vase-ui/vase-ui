@@ -1,10 +1,11 @@
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { REASONS } from '../internals/reasons';
 import * as Select from './index.parts';
 import { useSelectRootContext } from './root/SelectRootContext';
+import type { SelectStore } from './store';
 
 describe('select store synchronization', () => {
   const { render } = createRenderer();
@@ -52,11 +53,18 @@ describe('select store synchronization', () => {
     const handleValueChange = vi.fn();
     let clickOnUpdate = false;
     let clicked = false;
+    let store!: SelectStore;
+
+    const StoreProbe = defineComponent(() => {
+      store = useSelectRootContext();
+      return () => null;
+    });
 
     const Fixture = defineComponent({
       props: { disabled: { type: Boolean, required: true } },
       setup: (props) => () => (
         <Select.Root defaultOpen disabled={props.disabled} onValueChange={handleValueChange}>
+          <StoreProbe />
           <Select.Trigger />
           <Select.Portal>
             <Select.Positioner>
@@ -91,6 +99,10 @@ describe('select store synchronization', () => {
 
     const { setProps } = await render(<Fixture disabled={false} />);
     const item = await screen.findByTestId('item');
+    // A click with no pointer selects only a highlighted item.
+    store.set('activeIndex', 0);
+    await flushMicrotasks();
+    expect(item).toHaveAttribute('data-highlighted');
 
     clickOnUpdate = true;
     await setProps({ disabled: true });
