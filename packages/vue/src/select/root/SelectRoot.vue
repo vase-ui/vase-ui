@@ -139,7 +139,7 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 </script>
 
 <script setup lang="ts" generic="Value, Multiple extends boolean | undefined = false">
-import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
+import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
@@ -153,10 +153,14 @@ import { useClearFieldError, useFieldRootContext } from '../../internals/field-r
 import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
-import { defaultItemEquality, isSelectedValueDirty } from '../../internals/itemEquality';
+import {
+  defaultItemEquality,
+  findSelectionIndex,
+  isSelectedValueDirty,
+} from '../../internals/itemEquality';
 import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
-import { stringifyAsValue } from '../../internals/resolveValueLabel';
+import { stringifyAsLabel, stringifyAsValue } from '../../internals/resolveValueLabel';
 import type { HTMLProps } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useValueChanged } from '../../internals/useValueChanged';
@@ -399,6 +403,29 @@ const hasSelectedValue = computed(() => {
 setFilled(hasSelectedValue.value);
 watch(hasSelectedValue, setFilled);
 
+// The items write their values after the DOM update, so the sync runs after it too.
+function syncSelectedIndex() {
+  const nextIndex = findSelectionIndex(
+    store.context.valuesRef.value,
+    selectedValue.value,
+    comparer.value,
+    isMultiple.value,
+  );
+
+  if (nextIndex === null) {
+    store.context.selectedItemTextRef.value = null;
+  }
+
+  if (isOpen.value) {
+    return;
+  }
+
+  store.set('selectedIndex', nextIndex);
+}
+
+onMounted(syncSelectedIndex);
+watch([isMultiple, isOpen, selectedValue, comparer], syncSelectedIndex, { flush: 'post' });
+
 // The change of a reset reaches `useValueChanged` after the reset timeout. The timeout sets this
 // flag, and the callback clears the field and starts no validation.
 let isResetChangePending = false;
@@ -507,6 +534,10 @@ function setInputElement(value: unknown) {
   validation.inputRef.value = input;
 }
 
+// The value that the input has after the last event that the root handled. A write of Vue or of
+// the root sets it too.
+let handledValue: string | undefined;
+
 // Vue writes the value to the input only when the root renders. A browser can change the input
 // with no change of the state: an autofill, and the restore of the form state of a page. A form
 // would then submit a value that the select does not show.
@@ -515,6 +546,70 @@ function writeValueToInput() {
   if (input && input.value !== serializedValue.value) {
     input.value = serializedValue.value;
   }
+  handledValue = input?.value;
+}
+
+onMounted(() => {
+  handledValue = inputElement.value?.value;
+});
+watch(
+  serializedValue,
+  () => {
+    handledValue = inputElement.value?.value;
+  },
+  { flush: 'post' },
+);
+
+// A browser autofills the hidden input with the value or the text of an item.
+function selectAutofilledItem(autofilledValue: string, eventDetails: SelectRootChangeEventDetails) {
+  // Browser autofill only writes a single scalar value.
+  if (isMultiple.value) {
+    return;
+  }
+
+  const { valuesRef, labelsRef } = store.context;
+  // Preserve the original serialized matching, then fall back to rendered text,
+  // which browsers can autofill for primitive values like
+  // `value="US">United States`.
+  const autofilledValueLower = autofilledValue.toLowerCase();
+  let matchingIndex = valuesRef.value.findIndex(
+    (candidate) =>
+      stringifyAsValue(candidate, props.itemToStringValue).toLowerCase() === autofilledValueLower ||
+      stringifyAsLabel(candidate, props.itemToStringLabel).toLowerCase() === autofilledValueLower,
+  );
+
+  if (matchingIndex === -1) {
+    matchingIndex = valuesRef.value.findIndex((_, index) => {
+      const renderedLabel = labelsRef.value[index];
+      return renderedLabel != null && renderedLabel.toLowerCase() === autofilledValueLower;
+    });
+  }
+
+  const matchingValue = valuesRef.value[matchingIndex];
+  if (matchingValue != null) {
+    // `setValue` may be canceled by `valueChange`; rely on `useValueChanged` to
+    // mark the field dirty and run validation only when the value actually changes.
+    setValue(matchingValue, eventDetails);
+  }
+}
+
+function handleHiddenInputChange(event: Event) {
+  const autofilledValue = (event.currentTarget as HTMLInputElement).value;
+  const isNewValue = autofilledValue !== handledValue;
+  handledValue = autofilledValue;
+
+  if (!isNewValue || event.defaultPrevented || isDisabled.value || props.readOnly) {
+    void nextTick(writeValueToInput);
+    return;
+  }
+
+  const eventDetails = createChangeEventDetails(REASONS.none, event);
+  // The items of a closed select mount in the next flush, and they then give their values.
+  store.set('forceMounted', true);
+  void nextTick(() => {
+    selectAutofilledItem(autofilledValue, eventDetails);
+    void nextTick(writeValueToInput);
+  });
 }
 
 useFormReset(inputElement, (event) => {
@@ -590,8 +685,8 @@ function inputProps() {
         focusVisible: true,
       } as FocusOptions);
     },
-    onInput: () => void nextTick(writeValueToInput),
-    onChange: () => void nextTick(writeValueToInput),
+    onInput: handleHiddenInputChange,
+    onChange: handleHiddenInputChange,
   };
 }
 

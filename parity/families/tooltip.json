@@ -51,20 +51,15 @@
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. Many of them need the focus of the trigger, the rule for nested triggers, the cursor anchor, the hover of the popup or `Tooltip.Provider`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+      "reason": "The other cases of the file render `Tooltip.Provider`, which Vase UI does not have. `Tooltip.Viewport` is the last part of the family, so the row names its file."
     },
     {
-      "upstream": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The cases of the file have no counterpart yet. Some of them need the focus of the trigger, the cursor anchor or the shared suite `detachedTriggersConformanceTests`. `Tooltip.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/trigger/TooltipTrigger.test.tsx",
-      "describe": ["<Tooltip.Trigger />", "once the tooltip has unmounted"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The two cases of the block focus the trigger, and `Tooltip.Trigger` does not open the tooltip on focus. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
+      "describe": ["<Tooltip.Root />", "hover changes"],
+      "title": "commits a hover open while the hover event is dispatched",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/root/TooltipRoot.test.tsx",
+      "reason": "Vue has no `flushSync`, so the popup renders in the update after the hover event, and a listener of the same event does not find it. The case `shows the popup after the awaited hover event` asserts the popup after the awaited event."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",

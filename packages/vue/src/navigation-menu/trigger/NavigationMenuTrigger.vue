@@ -82,6 +82,7 @@ import {
   onBeforeUnmount,
   onDeactivated,
   onMounted,
+  onScopeDispose,
   shallowRef,
   watch,
 } from 'vue';
@@ -98,13 +99,15 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { getCssDimensions } from '../../utils/getCssDimensions';
 import { stopEvent } from '../../utils/popups/event';
 import { useFloatingRootStore } from '../../utils/popups/floating-root/useFloatingRootStore';
-import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
+import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
 import {
   getNextTabbable,
   getPreviousTabbable,
   getTabbableNearElement,
   isOutsideEvent,
 } from '../../utils/popups/focus/tabbable';
+import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
+import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
@@ -119,7 +122,6 @@ import {
 } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootChangeEventDetails } from '../root/NavigationMenuRoot.vue';
 import { NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
-import { createElementSetter } from '../utils/createElementSetter';
 import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent';
 import { useNavigationMenuPopupSize } from './useNavigationMenuPopupSize';
 
@@ -311,7 +313,8 @@ watch(
 
 function handleActivation(event: MouseEvent | KeyboardEvent) {
   const currentTarget = event.currentTarget as HTMLElement;
-  const previousValue = value.value;
+  // The `keydown` handler writes the value before this function runs.
+  const previousValue = renderedValue;
   const prevTriggerRect = prevTriggerElementRef.value?.getBoundingClientRect();
   const trigger = triggerElement.value;
 
@@ -540,8 +543,67 @@ onActivated(() => {
   openHoveredTrigger();
 });
 
-const setBeforeOutsideGuard = createElementSetter(beforeOutsideRef);
-const setAfterOutsideGuard = createElementSetter(afterOutsideRef);
+// Script makes the two guards and the owner element after the trigger, so the trigger has one root
+// node.
+let outsideNodes: {
+  before: HTMLSpanElement;
+  owner: HTMLSpanElement;
+  after: HTMLSpanElement;
+  siblings: ElementSiblings;
+} | null = null;
+
+const outsideSiblings = computed(() => {
+  const trigger = triggerElement.value;
+  if (!isActiveItem.value || !trigger) {
+    return null;
+  }
+  if (!outsideNodes) {
+    const before = createFocusGuardElement(trigger.ownerDocument);
+    const owner = trigger.ownerDocument.createElement('span');
+    const after = createFocusGuardElement(trigger.ownerDocument);
+    Object.assign(owner.style, ownerVisuallyHidden);
+    before.addEventListener('focusin', handleBeforeOutsideFocusin);
+    after.addEventListener('focusin', (event) => void handleAfterOutsideFocusin(event));
+    outsideNodes = { before, owner, after, siblings: { after: [before, owner, after] } };
+  }
+  return outsideNodes.siblings;
+});
+
+useElementSiblings(triggerElement, outsideSiblings);
+
+// Another trigger of the root can write the refs in the same DOM update, so a trigger clears a ref
+// only while the ref holds its own guard.
+function releaseOutsideGuards() {
+  if (beforeOutsideRef.value === outsideNodes?.before) {
+    beforeOutsideRef.value = null;
+  }
+  if (afterOutsideRef.value === outsideNodes?.after) {
+    afterOutsideRef.value = null;
+  }
+}
+
+watch(
+  [outsideSiblings, () => viewportElement.value?.id],
+  ([siblings, viewportId]) => {
+    if (!outsideNodes) {
+      return;
+    }
+    if (!siblings) {
+      releaseOutsideGuards();
+      return;
+    }
+    beforeOutsideRef.value = outsideNodes.before;
+    afterOutsideRef.value = outsideNodes.after;
+    if (viewportId) {
+      outsideNodes.owner.setAttribute('aria-owns', viewportId);
+    } else {
+      outsideNodes.owner.removeAttribute('aria-owns');
+    }
+  },
+  { flush: 'post' },
+);
+
+onScopeDispose(releaseOutsideGuards);
 
 function handleBeforeOutsideFocusin(event: FocusEvent) {
   const referenceElement = hoverPopupElement.value;
@@ -590,9 +652,4 @@ defineExpose({ element });
 <template>
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-  <template v-if="isActiveItem">
-    <FocusGuard :ref="setBeforeOutsideGuard" @focusin="handleBeforeOutsideFocusin" />
-    <span :aria-owns="viewportElement?.id" :style="ownerVisuallyHidden" />
-    <FocusGuard :ref="setAfterOutsideGuard" @focusin="handleAfterOutsideFocusin" />
-  </template>
 </template>

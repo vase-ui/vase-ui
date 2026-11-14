@@ -1,7 +1,13 @@
 import { expect, vi, describe, it } from 'vitest';
-import { h } from 'vue';
+import { defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
@@ -28,6 +34,37 @@ describe('<Select.Value />', () => {
       );
 
       expect(screen.getByText('one')).not.toBe(null);
+    });
+
+    it('accepts a function with a value parameter', async () => {
+      const children = vi.fn();
+      await render(
+        <Select.Root value="1">
+          <Select.Trigger>
+            <Select.Value
+              v-slots={{
+                default: ({ value }: ValueSlotProps) => {
+                  children(value);
+                  return value;
+                },
+              }}
+            />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="1">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await fireEvent.click(screen.getByText('1'));
+      await flushMicrotasks();
+
+      expect(children.mock.calls[0]?.[0]).toBe('1');
+      expect(children.mock.calls[0]?.at(-1)).toBe('1');
     });
   });
 
@@ -77,6 +114,75 @@ describe('<Select.Value />', () => {
 
       expect(screen.getByTestId('value')).toHaveTextContent('Null');
     });
+
+    it('displays the label from items object when no children are provided', async () => {
+      const items = {
+        sans: 'Sans-serif',
+        serif: 'Serif',
+        mono: 'Monospace',
+      };
+
+      await render(
+        <Select.Root value="sans" items={items}>
+          <Select.Trigger>
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="sans">Sans-serif</Select.Item>
+                <Select.Item value="serif">Serif</Select.Item>
+                <Select.Item value="mono">Monospace</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Sans-serif');
+    });
+
+    it('updates the label when value changes with items object', async () => {
+      const items = {
+        sans: 'Sans-serif',
+        serif: 'Serif',
+        mono: 'Monospace',
+      };
+
+      const value = shallowRef<string | null>('sans');
+      const App = defineComponent({
+        setup: () => () => (
+          <div>
+            <button onClick={() => (value.value = 'serif')}>serif</button>
+            <button onClick={() => (value.value = 'mono')}>mono</button>
+            <Select.Root v-model:value={value.value} items={items}>
+              <Select.Trigger>
+                <Select.Value data-testid="value" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="sans">Sans-serif</Select.Item>
+                    <Select.Item value="serif">Serif</Select.Item>
+                    <Select.Item value="mono">Monospace</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        ),
+      });
+
+      const { user } = await render(<App />);
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Sans-serif');
+
+      await user.click(screen.getByRole('button', { name: 'serif' }));
+      expect(screen.getByTestId('value')).toHaveTextContent('Serif');
+
+      await user.click(screen.getByRole('button', { name: 'mono' }));
+      expect(screen.getByTestId('value')).toHaveTextContent('Monospace');
+    });
   });
 
   describe('prop: items (array format)', () => {
@@ -108,6 +214,195 @@ describe('<Select.Value />', () => {
       );
 
       expect(screen.getByTestId('value').querySelector('strong')).toHaveTextContent('Bold Text');
+    });
+
+    it('displays the label from items array when no children are provided', async () => {
+      const items = [
+        { value: 'sans', label: 'Sans-serif' },
+        { value: 'serif', label: 'Serif' },
+        { value: 'mono', label: 'Monospace' },
+      ];
+
+      await render(
+        <Select.Root value="serif" items={items}>
+          <Select.Trigger>
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="sans">Sans-serif</Select.Item>
+                <Select.Item value="serif">Serif</Select.Item>
+                <Select.Item value="mono">Monospace</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Serif');
+    });
+
+    it('updates the label when value changes with items array', async () => {
+      const items = [
+        { value: 'sans', label: 'Sans-serif' },
+        { value: 'serif', label: 'Serif' },
+        { value: 'mono', label: 'Monospace' },
+      ];
+
+      const value = shallowRef<string | null>('sans');
+      const App = defineComponent({
+        setup: () => () => (
+          <div>
+            <button onClick={() => (value.value = 'serif')}>serif</button>
+            <button onClick={() => (value.value = 'mono')}>mono</button>
+            <Select.Root v-model:value={value.value} items={items}>
+              <Select.Trigger>
+                <Select.Value data-testid="value" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="sans">Sans-serif</Select.Item>
+                    <Select.Item value="serif">Serif</Select.Item>
+                    <Select.Item value="mono">Monospace</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        ),
+      });
+
+      const { user } = await render(<App />);
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Sans-serif');
+
+      await user.click(screen.getByRole('button', { name: 'serif' }));
+      expect(screen.getByTestId('value')).toHaveTextContent('Serif');
+
+      await user.click(screen.getByRole('button', { name: 'mono' }));
+      expect(screen.getByTestId('value')).toHaveTextContent('Monospace');
+    });
+
+    it('is not stale after being updated', async () => {
+      const value = shallowRef<string | null>('a');
+      const items = shallowRef([
+        { value: 'a', label: 'a' },
+        { value: 'b', label: 'b' },
+      ]);
+
+      function updateItems() {
+        items.value = [
+          { value: 'a', label: 'a new' },
+          { value: 'b', label: 'b new' },
+          { value: 'c', label: 'c' },
+        ];
+      }
+
+      const App = defineComponent({
+        setup: () => () => (
+          <div>
+            <button onClick={updateItems}>update</button>
+            <button onClick={() => (value.value = 'c')}>select c</button>
+            <Select.Root v-model:value={value.value} items={items.value}>
+              <Select.Trigger>
+                <Select.Value data-testid="value" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    {items.value.map((item) => (
+                      <Select.Item key={item.value} value={item.value}>
+                        {item.label}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        ),
+      });
+
+      const { user } = await render(<App />);
+
+      expect(screen.getByTestId('value')).toHaveTextContent('a');
+
+      await user.click(screen.getByRole('button', { name: 'update' }));
+
+      expect(screen.getByTestId('value')).toHaveTextContent('a new');
+
+      await user.click(screen.getByRole('button', { name: 'select c' }));
+
+      expect(screen.getByTestId('value')).toHaveTextContent('c');
+    });
+  });
+
+  describe('prop: itemToStringLabel', () => {
+    it('uses custom itemToStringLabel function', async () => {
+      const items = [
+        { country: 'United States', code: 'US' },
+        { country: 'Canada', code: 'CA' },
+      ];
+
+      await render(
+        <Select.Root
+          value={items[1]}
+          itemToStringLabel={(i: any) => i.country}
+          itemToStringValue={(i: any) => i.code}
+        >
+          <Select.Trigger>
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Canada');
+    });
+
+    it('falls back to label/value properties when functions are not provided', async () => {
+      const items = [
+        { label: 'United States', value: 'US' },
+        { label: 'Canada', value: 'CA' },
+      ];
+
+      await render(
+        <Select.Root name="country" value={items[1]}>
+          <Select.Trigger>
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.value} value={it}>
+                    {it.label}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Canada');
+
+      const hiddenInput = screen.getByRole('textbox', {
+        hidden: true,
+      });
+      expect(hiddenInput).toHaveValue('CA');
     });
   });
 
@@ -144,6 +439,49 @@ describe('<Select.Value />', () => {
 
       expect(screen.getByTestId('value')).toHaveTextContent('Custom: sans');
     });
+  });
+
+  it('changes text when the value changes', async () => {
+    const value = shallowRef<string | null>(null);
+    const App = defineComponent({
+      setup: () => () => (
+        <div>
+          <button onClick={() => (value.value = '1')}>1</button>
+          <button onClick={() => (value.value = '2')}>2</button>
+          <button onClick={() => (value.value = null)}>null</button>
+          <Select.Root v-model:value={value.value}>
+            <Select.Trigger>
+              <Select.Value
+                data-testid="value"
+                v-slots={{ default: ({ value: val }: ValueSlotProps) => val ?? 'initial' }}
+              />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="1">1</Select.Item>
+                  <Select.Item value="2">2</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+      ),
+    });
+
+    const { user } = await render(<App />);
+
+    await user.click(screen.getByText('initial'));
+    await flushMicrotasks();
+
+    await user.click(screen.getByRole('button', { name: '1' }));
+    expect(screen.getByTestId('value')).toHaveTextContent('1');
+
+    await user.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByTestId('value')).toHaveTextContent('2');
+
+    await user.click(screen.getByRole('button', { name: 'null' }));
+    expect(screen.getByTestId('value')).toHaveTextContent('initial');
   });
 
   describe('prop: multiple', () => {
@@ -382,6 +720,69 @@ describe('<Select.Value />', () => {
       );
 
       expect(screen.getByTestId('placeholder')).toHaveTextContent('Select an option');
+    });
+
+    it('does not display placeholder when value is selected', async () => {
+      await render(
+        <Select.Root value="option1">
+          <Select.Value data-testid="value" placeholder="Select an option" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="option1">Option 1</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('option1');
+    });
+
+    it('null item label in items takes precedence over placeholder', async () => {
+      const items = [
+        { value: null, label: 'None' },
+        { value: 'option1', label: 'Option 1' },
+      ];
+
+      await render(
+        <Select.Root items={items}>
+          <Select.Value data-testid="value" placeholder="Select an option" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value={null}>None</Select.Item>
+                <Select.Item value="option1">Option 1</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('None');
+    });
+
+    it('uses placeholder when items have null value without label', async () => {
+      const items = [
+        { value: null, label: null },
+        { value: 'option1', label: 'Option 1' },
+      ];
+
+      await render(
+        <Select.Root items={items}>
+          <Select.Value data-testid="value" placeholder="Select an option" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value={null}>None</Select.Item>
+                <Select.Item value="option1">Option 1</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Select an option');
     });
   });
 

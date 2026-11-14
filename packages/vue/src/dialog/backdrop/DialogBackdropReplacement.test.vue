@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import * as Dialog from '../index.parts';
 
 defineProps<{ first: boolean }>();
@@ -11,7 +10,7 @@ defineProps<{ first: boolean }>();
     <Dialog.Root default-open>
       <Dialog.Backdrop v-if="!first" data-testid="second" />
       <Dialog.Backdrop v-if="first" data-testid="first" />
-      <DialogPopupPart />
+      <Dialog.Portal><Dialog.Popup /></Dialog.Portal>
     </Dialog.Root>
   </div>
 </template>

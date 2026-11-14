@@ -881,6 +881,84 @@ async function expectNumberFieldPage(page: Page) {
   expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
 }
 
+async function readSliderPage(page: Page) {
+  return page.evaluate(() => {
+    const all = (testId: string) =>
+      Array.from(document.querySelectorAll<HTMLElement>(`[data-testid="${testId}"]`));
+    const input = (thumb: HTMLElement) => thumb.querySelector('input')!;
+    const read = (element: Element, names: string[]) =>
+      Object.fromEntries(names.map((name) => [name, element.getAttribute(name)]));
+    const [priceIndicator] = all('price-indicator');
+    const [volumeThumb] = all('volume-thumb');
+
+    return {
+      volumeRoot: read(all('volume')[0], ['role', 'aria-labelledby']),
+      volumeLabelId: all('volume-label')[0].id,
+      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'aria-valuenow', 'name']),
+      volumeValue: [all('volume-value')[0].textContent, all('volume-value')[0].getAttribute('for')],
+      priceRoot: read(all('price')[0], ['aria-labelledby']),
+      priceLabelId: all('price-label')[0].id,
+      priceInputs: all('price-thumb').map((thumb) =>
+        read(input(thumb), ['aria-label', 'aria-labelledby', 'aria-valuenow']),
+      ),
+      priceThumbs: all('price-thumb').map((thumb) => [
+        thumb.getAttribute('data-index'),
+        thumb.style.visibility,
+        thumb.style.getPropertyValue('--position'),
+      ]),
+      priceIndicator: [
+        priceIndicator.style.visibility,
+        priceIndicator.style.getPropertyValue('--start-position'),
+        priceIndicator.style.getPropertyValue('--relative-size'),
+      ],
+      // A script of the server HTML with its nonce and its text.
+      scripts: Array.from(document.querySelectorAll<HTMLScriptElement>('script'))
+        .filter((script) => script.closest('[data-testid="price-control"]'))
+        .map((script) => [script.nonce, (script.textContent ?? '').length > 0]),
+      // The entries that a submit of the page sends.
+      formData: Array.from(
+        new FormData(document.querySelector('form')!),
+        ([name, value]) => `${name}=${String(value)}`,
+      ),
+    };
+  });
+}
+
+async function expectSliderPage(page: Page) {
+  const result = await readSliderPage(page);
+
+  // The script has not run. An edge thumb is hidden until the script or the app places it.
+  expect(result.priceThumbs).toEqual([
+    ['0', 'hidden', '0%'],
+    ['1', 'hidden', '0%'],
+  ]);
+  expect(result.scripts).toEqual([['test-nonce', true]]);
+  // The labels link to the root and to the input in each order of the parts.
+  expect(result.volumeLabelId).toBeTruthy();
+  expect(result.volumeRoot['aria-labelledby']).toBe(result.volumeLabelId);
+  expect(result.volumeInput['aria-labelledby']).toBe(result.volumeLabelId);
+  expect(result.priceLabelId).toBeTruthy();
+  expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
+  // A thumb that has a name of its own does not use the label.
+  expect(result.priceInputs.map((input) => input['aria-labelledby'])).toEqual([null, null]);
+  // The output names the inputs only after the mount, as in Base UI.
+  expect(result.volumeValue).toEqual(['30', null]);
+  expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
+}
+
+async function expectHydratedSliderPage(page: Page) {
+  const result = await readSliderPage(page);
+
+  expect(result.priceThumbs).toEqual([
+    ['0', '', '30%'],
+    ['1', '', '70%'],
+  ]);
+  expect(result.priceIndicator).toEqual(['', '30%', '40%']);
+  expect(result.scripts).toEqual([]);
+  expect(result.volumeValue).toEqual(['30', result.volumeInput.id]);
+  expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
+}
+
 // The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
@@ -899,6 +977,96 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await readParent('in-teleports')).toBe('teleports');
   expect(await page.getByTestId('no-container').count()).toBe(0);
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
+}
+
+const TOAST_VIEWPORT_ATTRIBUTES = [
+  'role',
+  'tabindex',
+  'aria-live',
+  'aria-atomic',
+  'aria-relevant',
+  'aria-label',
+];
+
+async function expectToastViewport(page: Page) {
+  expect(await readAttributes(page.getByTestId('viewport'), TOAST_VIEWPORT_ATTRIBUTES)).toEqual({
+    role: 'region',
+    tabindex: '-1',
+    'aria-live': 'polite',
+    'aria-atomic': 'false',
+    'aria-relevant': 'additions text',
+    'aria-label': 'Notifications',
+  });
+  expect(await page.getByTestId('toast').count()).toBe(0);
+}
+
+// The viewport in the page is in the server HTML. A portal renders after the mount, so the server
+// HTML has no element of the viewport in `Toast.Portal`.
+async function expectToastPageOnServer(page: Page) {
+  await expectToastViewport(page);
+  expect(await page.getByTestId('anchored-viewport').count()).toBe(0);
+}
+
+async function expectHydratedToastPage(page: Page) {
+  await expectToastViewport(page);
+  expect(
+    await page
+      .getByTestId('anchored-viewport')
+      .evaluate((element) => element.parentElement?.hasAttribute('data-vase-ui-portal')),
+  ).toBe(true);
+}
+
+// The server HTML has the label of the value before any item exists, the hidden inputs of the
+// form, and no popup: a portal renders after the mount.
+async function expectSelectPage(page: Page) {
+  const triggerAttributes = ['id', 'role', 'aria-expanded', 'aria-haspopup', 'aria-labelledby'];
+  expect(await readAttributes(page.getByTestId('font-trigger'), triggerAttributes)).toEqual({
+    id: 'font',
+    role: 'combobox',
+    'aria-expanded': 'false',
+    'aria-haspopup': 'listbox',
+    'aria-labelledby': null,
+  });
+  expect(await page.getByTestId('font-value').textContent()).toBe('Serif');
+
+  const labelId = await page.getByTestId('size-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('size-trigger').getAttribute('aria-labelledby')).toBe(labelId);
+
+  expect(await page.getByTestId('tags-value').textContent()).toBe('b');
+  expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
+  expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
+// A closed menu has the links of a kept content in its server HTML, and no links of another
+// content. An open item has no content before the mount, because its viewport has no target then.
+async function expectNavigationMenuPage(page: Page, { hydrated }: { hydrated: boolean }) {
+  const linkAttributes = ['href', 'aria-current', 'data-active'];
+  const countLinksInItem = (testId: string) =>
+    page.getByTestId(testId).locator('xpath=ancestor::li[1]//a').count();
+
+  expect(await page.getByTestId('kept-link').count()).toBe(1);
+  expect(await page.getByTestId('kept-content').getAttribute('hidden')).toBe('');
+  expect(await page.getByTestId('unkept-link').count()).toBe(0);
+  expect(await readElement(page.getByTestId('nuxt-link'), linkAttributes)).toEqual({
+    tag: 'a',
+    text: 'Home',
+    attributes: { href: '/', 'aria-current': 'page', 'data-active': '' },
+  });
+  expect(await readElement(page.getByTestId('router-link'), linkAttributes)).toEqual({
+    tag: 'a',
+    text: 'Home',
+    attributes: { href: '/', 'aria-current': null, 'data-active': null },
+  });
+  expect(await countLinksInItem('nuxt-link')).toBe(1);
+  expect(await countLinksInItem('router-link')).toBe(1);
+  expect(await page.getByTestId('news-trigger').getAttribute('aria-expanded')).toBe('true');
+  if (hydrated) {
+    await page.getByTestId('news-content').waitFor({ state: 'attached', timeout: 5000 });
+    expect(await page.getByTestId('news-content').getAttribute('data-open')).toBe('');
+  } else {
+    expect(await page.getByTestId('news-content').count()).toBe(0);
+  }
 }
 
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
@@ -952,6 +1120,48 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+const PREVIEW_CARD_LINK_ATTRIBUTES = [
+  'href',
+  'data-popup-open',
+  'role',
+  'aria-expanded',
+  'tabindex',
+];
+
+// The link is a native link: the part adds no ARIA attribute, no `role` and no `tabindex`.
+async function expectPreviewCardLinks(page: Page) {
+  expect(await readElement(page.getByTestId('closed-link'), PREVIEW_CARD_LINK_ATTRIBUTES)).toEqual({
+    tag: 'a',
+    text: 'Closed link',
+    attributes: {
+      href: '#closed',
+      'data-popup-open': null,
+      role: null,
+      'aria-expanded': null,
+      tabindex: null,
+    },
+  });
+  expect(await readAttributes(page.getByTestId('open-link'), ['id', 'data-popup-open'])).toEqual({
+    id: 'open-link',
+    'data-popup-open': '',
+  });
+}
+
+// The portal renders after the mount, so the server HTML has no popup.
+async function expectPreviewCardPageOnServer(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+}
+
+// After the mount, the card that is open by default shows the payload of its link in the viewport.
+async function expectHydratedPreviewCardPage(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('open-viewport').locator('[data-current]').textContent()).toBe(
+    'Open preview',
+  );
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -998,6 +1208,11 @@ const PAGES: PageCase[] = [
   },
   { path: '/radio-group', expectPage: expectRadioGroupPage },
   {
+    path: '/slider',
+    expectPage: expectSliderPage,
+    expectHydratedPage: expectHydratedSliderPage,
+  },
+  {
     path: '/scroll-area',
     expectPage: expectScrollAreaPage,
     expectHydratedPage: expectHydratedScrollAreaPage,
@@ -1019,7 +1234,23 @@ const PAGES: PageCase[] = [
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
   },
+  {
+    path: '/toast',
+    expectPage: expectToastPageOnServer,
+    expectHydratedPage: expectHydratedToastPage,
+  },
+  { path: '/select', expectPage: expectSelectPage },
+  {
+    path: '/navigation-menu',
+    expectPage: (page) => expectNavigationMenuPage(page, { hydrated: false }),
+    expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
+  },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
+  {
+    path: '/preview-card',
+    expectPage: expectPreviewCardPageOnServer,
+    expectHydratedPage: expectHydratedPreviewCardPage,
+  },
 ];
 
 const MODES = [
@@ -1185,6 +1416,50 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(messages).toEqual([]);
   });
 
+  it('adds a toast to /toast after hydration, and positions an anchored toast against its anchor', async () => {
+    const page = await createPage('/toast');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('add').click();
+    const toast = page.getByTestId('toast');
+    await toast.waitFor();
+    const titleId = await page.getByTestId('title').getAttribute('id');
+    expect(titleId).toBeTruthy();
+    expect(await toast.getAttribute('aria-labelledby')).toBe(titleId);
+
+    const anchor = page.getByTestId('anchor');
+    await anchor.click();
+    const positioner = page.getByTestId('anchored-positioner');
+    await positioner.waitFor();
+    await expect.poll(() => positioner.getAttribute('data-side')).toBe('bottom');
+    expect(await page.getByTestId('arrow').getAttribute('data-side')).toBe('bottom');
+    const anchorBox = await anchor.boundingBox();
+    await expect
+      .poll(async () => (await positioner.boundingBox())?.y)
+      .toBeCloseTo(anchorBox!.y + anchorBox!.height + 8, 0);
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the popup of /select in the body on a press after hydration, and selects an item', async () => {
+    const page = await createPage('/select');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('font-trigger').click();
+    const popup = page.getByTestId('font-popup');
+    await popup.waitFor({ state: 'visible' });
+
+    expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
+    expect(await page.getByTestId('font-trigger').getAttribute('aria-expanded')).toBe('true');
+
+    await page.getByRole('option', { name: 'Monospace' }).click();
+    // The focus of the trigger keeps the items mounted, so the closed popup stays in the body.
+    await popup.waitFor({ state: 'hidden' });
+
+    expect(await page.getByTestId('font-value').textContent()).toBe('Monospace');
+    expect(await readFormData(page)).toEqual(['font=mono', 'size=', 'tags=b']);
+    expect(messages).toEqual([]);
+  });
+
   it('counts the clicks on a button after hydration', async () => {
     const page = await createPage('/button');
     const counter = page.getByTestId('counter');
@@ -1272,6 +1547,40 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       /^translate3d\(0px, ([\d.]+)px, 0px\)$/.exec(await readTransform())?.[1],
     );
     expect(offsetY).toBeGreaterThan(0);
+  });
+
+  it('places the thumbs of /slider with its inline script when the files of the app do not load', async () => {
+    const page = await createPage();
+    // The app does not start, so only the inline script of the server HTML runs.
+    await page.route('**/_nuxt/**', (route) => route.abort());
+
+    await page.goto(url('/slider'), { waitUntil: 'domcontentloaded' });
+    const result = await readSliderPage(page);
+
+    expect(result.priceThumbs).toEqual([
+      ['0', '', '30%'],
+      ['1', '', '70%'],
+    ]);
+    expect(result.priceIndicator).toEqual(['', '30%', '40%']);
+  });
+
+  it('changes the value of /slider with the keyboard and with a click on its control after hydration', async () => {
+    const page = await createPage('/slider');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('volume-thumb').locator('input').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Shift+ArrowRight');
+
+    expect(await page.getByTestId('volume-model').textContent()).toBe('41');
+    expect(await page.getByTestId('volume-value').textContent()).toBe('41');
+
+    const box = (await page.getByTestId('volume-control').boundingBox())!;
+    await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
+
+    expect(await page.getByTestId('volume-model').textContent()).toBe('75');
+    expect((await readSliderPage(page)).formData).toEqual(['volume=75', 'price=25', 'price=75']);
+    expect(messages).toEqual([]);
   });
 
   it('positions the indicator of /tabs with its inline script when the files of the app do not load', async () => {
@@ -1447,6 +1756,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await waitForTwoFrames(page);
 
     expect(await page.getByTestId('wide').textContent()).toBe('false');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the card of /preview-card on a hover of its link after hydration', async () => {
+    const page = await createPage('/preview-card');
+    const messages = collectMessages(page);
+    const link = page.getByTestId('closed-link');
+
+    await link.hover();
+    await page.getByTestId('closed-popup').waitFor();
+
+    expect(await link.getAttribute('data-popup-open')).toBe('');
+    expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
     expect(messages).toEqual([]);
   });
 

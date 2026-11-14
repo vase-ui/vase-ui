@@ -3,8 +3,11 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/filter.ts#L22",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/utils/useFilter.ts#L33",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/AriaCombobox.tsx#L159",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/autocomplete/index.parts.ts#L24",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/autocomplete/root/AutocompleteRoot.tsx#L86",
     "https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch"
   ],
-  "behavior": "With no `locale`, the filter of `Combobox.useFilter` uses `en-US` until its component is mounted, and then the runtime locale. A locale that the developer gives applies from the first render, on the server and in the browser alike. A list that a server filtered then hydrates with no mismatch. With no `locale`, Base UI uses the runtime locale in each render, so a server and a browser can filter a list in different ways.",
+  "behavior": "With no `locale`, the filters of `Combobox.useFilter`, `Autocomplete.useFilter`, `Combobox.Root` and `Autocomplete.Root` use `en-US` until their component is mounted, and then the runtime locale. A locale that the developer gives applies from the first render, on the server and in the browser alike. A list that a server filtered then hydrates with no mismatch. With no `locale`, Base UI uses the runtime locale in each render, so a server and a browser can filter a list in different ways.",
   "dueWith": "packages/react/src/combobox/root/utils/useFilter.ts"
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, h, onMounted, shallowRef } from 'vue';
+import { defineComponent, h, onMounted, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import {
   createRenderer,
@@ -10,8 +10,9 @@ import {
   waitFor,
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManagerAddOptions } from '../useToastManager';
+import { List, Button } from '../utils/test-utils';
 import { toastRootStateAttributesMapping } from './ToastRoot.vue';
 
 const toast: Toast.Root.ToastObject = {
@@ -97,6 +98,21 @@ describe('<Toast.Root />', () => {
     expect(toastRootStateAttributesMapping.swipeDirection!('left')).toEqual({
       'data-swipe-direction': 'left',
     });
+  });
+
+  it('sets the vertical offset CSS variable', async () => {
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+        <Button />
+      </Toast.Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'add' }));
+
+    expect(screen.getByTestId('root').style.getPropertyValue('--toast-offset-y')).not.toBe('');
   });
 
   it('keeps dynamic title and description ids synchronized with mounted label parts', async () => {
@@ -710,6 +726,68 @@ describe('<Toast.Root />', () => {
     } finally {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = animationsDisabled;
     }
+  });
+
+  // requires :focus-visible check
+  it('closes when pressing escape', async () => {
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+        <Button />
+      </Toast.Provider>,
+    );
+
+    const button = screen.getByRole('button', { name: 'add' });
+
+    button.focus();
+    await flushMicrotasks();
+    await user.click(button);
+
+    await user.keyboard('{F6}');
+    await user.keyboard('{Tab}');
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByTestId('root')).toBe(null);
+  });
+
+  it('ignores Escape when focus is in portaled content', async () => {
+    const PortalList = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toastItem) => (
+            <Toast.Root key={toastItem.id} toast={toastItem} data-testid="root">
+              <Toast.Title />
+              <Teleport to={document.body}>
+                <button type="button" data-testid="portaled">
+                  portaled
+                </button>
+              </Teleport>
+            </Toast.Root>
+          ));
+      },
+    });
+
+    const { user } = await render(
+      <Toast.Provider>
+        <Toast.Viewport>
+          <PortalList />
+        </Toast.Viewport>
+        <Button />
+      </Toast.Provider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'add' }));
+
+    // The button is a child of the toast in the component tree, but it is outside the toast in the
+    // DOM and owns the Escape key.
+    screen.getByTestId('portaled').focus();
+    await flushMicrotasks();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByTestId('root')).not.toBe(null);
   });
 
   it('sets the index, the offset and the height of each toast as CSS variables', async () => {

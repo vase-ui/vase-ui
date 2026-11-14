@@ -3,7 +3,7 @@ import { h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 
 const toast: Toast.Root.ToastObject = {
   id: 'test',

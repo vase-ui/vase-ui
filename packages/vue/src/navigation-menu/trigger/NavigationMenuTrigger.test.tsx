@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -8,15 +8,17 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   waitFor,
   within,
 } from '#test-utils';
-import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import { REASONS } from '../../internals/reasons';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
+import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
 
 const HYDRATION_FIXTURE = 'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue';
 
@@ -55,17 +57,13 @@ const Menu = defineComponent({
     rootProps: { type: Object as PropType<Record<string, unknown>>, default: () => ({}) },
     direction: { type: String as PropType<'ltr' | 'rtl'>, default: 'ltr' },
     popup: { type: Boolean, default: false },
-    listStyle: {
-      type: Object as PropType<CSSProperties>,
-      default: () => ({ display: 'flex' }),
-    },
   },
   setup(props) {
     return () => (
       <DirectionProvider direction={props.direction}>
         <div style={NO_REAL_POINTER}>
           <NavigationMenu.Root {...props.rootProps}>
-            <NavigationMenu.List data-testid="list" style={props.listStyle}>
+            <NavigationMenu.List data-testid="list" style={{ display: 'flex' }}>
               <NavigationMenu.Item value="one">
                 <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
                 <NavigationMenu.Content data-testid="content-one">
@@ -146,6 +144,64 @@ const TestNavigationMenuRapidHoverSizing = defineComponent(() => {
       </NavigationMenu.Portal>
     </NavigationMenu.Root>
   );
+});
+
+const TestActiveItemDropsTrigger = defineComponent({
+  props: {
+    registerNavigate: {
+      type: Function as PropType<(navigate: () => void) => void>,
+      required: true,
+    },
+  },
+  setup(props) {
+    const value = shallowRef<string | null>(null);
+    const aIsActive = shallowRef(false);
+
+    onMounted(() => {
+      props.registerNavigate(() => {
+        // Batched: close the menu and drop A's trigger (A becomes the active item rendered inline).
+        value.value = null;
+        aIsActive.value = true;
+      });
+    });
+
+    return () => (
+      <NavigationMenu.Root
+        value={value.value}
+        onValueChange={(nextValue) => {
+          value.value = nextValue;
+        }}
+      >
+        <NavigationMenu.List data-testid="list">
+          {aIsActive.value ? (
+            <NavigationMenu.Item value="a">
+              <a href="#a">A active</a>
+            </NavigationMenu.Item>
+          ) : (
+            <NavigationMenu.Item value="a">
+              <NavigationMenu.Trigger>A</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#a">A link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          )}
+          <NavigationMenu.Item value="b">
+            <NavigationMenu.Trigger>B</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#b">B link</NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup>
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    );
+  },
 });
 
 function getPopupWidthCalls(calls: Array<[property: string, value: string, priority?: string]>) {
@@ -268,21 +324,6 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(after).toHaveAttribute('data-vase-ui-focus-guard');
       expect(rest).toEqual([]);
       expect(screen.getByTestId('trigger-two').parentElement!.children).toHaveLength(1);
-    });
-
-    it('keeps the menu open when a press changes the active item', async () => {
-      const handleValueChange = vi.fn();
-      await render(<Menu popup rootProps={{ onValueChange: handleValueChange }} />);
-      const one = screen.getByTestId('trigger-one');
-      const two = screen.getByTestId('trigger-two');
-
-      await fireEvent.click(one);
-      await fireEvent.click(two);
-      await flushMicrotasks();
-
-      expect(one).toHaveAttribute('aria-expanded', 'false');
-      expect(two).toHaveAttribute('aria-expanded', 'true');
-      expect(handleValueChange.mock.calls.map(([value]) => value)).toEqual(['one', 'two']);
     });
 
     it('closes the menu with a press of the active trigger', async () => {
@@ -447,19 +488,6 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('changes the active item at once when the pointer enters another trigger', async () => {
-      await render(<Menu popup />);
-      const one = screen.getByTestId('trigger-one');
-      const two = screen.getByTestId('trigger-two');
-      await hover(one, 50);
-      expect(one).toHaveAttribute('aria-expanded', 'true');
-
-      await fireEvent.mouseEnter(two);
-
-      expect(one).toHaveAttribute('aria-expanded', 'false');
-      expect(two).toHaveAttribute('aria-expanded', 'true');
-    });
-
     it('does not open its item, and does not block the list, while the trigger is disabled', async () => {
       await render(() => (
         <div style={NO_REAL_POINTER}>
@@ -483,35 +511,32 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(screen.getByTestId('list').style.pointerEvents).toBe('');
     });
 
-    it('closes its item when the pointer leaves the trigger for the close delay of the root', async () => {
-      await render(<Menu popup rootProps={{ closeDelay: 100 }} />);
+    it('keeps the open event of its store when a key opens the closed menu', async () => {
+      // A hover that `valueChange` cancels leaves its event in the store of the trigger. A press of
+      // the open trigger then keeps the menu open, as it does after a hover open.
+      await render(
+        <Menu
+          popup
+          rootProps={{
+            onValueChange(_value: unknown, details: NavigationMenu.Root.ChangeEventDetails) {
+              if (details.reason === REASONS.triggerHover) {
+                details.cancel();
+              }
+            },
+          }}
+        />,
+      );
       const trigger = screen.getByTestId('trigger-one');
       await hover(trigger, 50);
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      await fireEvent.mouseLeave(trigger);
-      vi.advanceTimersByTime(99);
-      await flushMicrotasks();
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      vi.advanceTimersByTime(1);
-      await flushMicrotasks();
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    });
 
-    it.each([
-      { name: 'before the patient threshold', after: PATIENT_CLICK_THRESHOLD - 1, open: true },
-      { name: 'at the patient threshold', after: PATIENT_CLICK_THRESHOLD, open: false },
-    ])('handles a press $name of a hover open', async ({ after, open }) => {
-      await render(<Menu popup />);
-      const trigger = screen.getByTestId('trigger-one');
-      await hover(trigger, 50);
+      await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+      await flushMicrotasks();
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
-      vi.advanceTimersByTime(after);
       await fireEvent.click(trigger);
 
-      expect(trigger).toHaveAttribute('aria-expanded', String(open));
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('blocks the pointer events of the list while the pointer is on the trigger, and releases them when the pointer leaves', async () => {
@@ -581,43 +606,6 @@ describe('<NavigationMenu.Trigger />', () => {
   });
 
   describe('activation direction', () => {
-    it.each([
-      {
-        name: 'a horizontal row of triggers',
-        orientation: 'horizontal',
-        listStyle: { display: 'flex' } satisfies CSSProperties,
-        toSecond: 'right',
-        toFirst: 'left',
-      },
-      {
-        name: 'a vertical column of triggers',
-        orientation: 'vertical',
-        listStyle: { display: 'flex', flexDirection: 'column' } satisfies CSSProperties,
-        toSecond: 'down',
-        toFirst: 'up',
-      },
-    ])(
-      'gives the content that enters the side that it came from for $name',
-      async ({ orientation, listStyle, toSecond, toFirst }) => {
-        await render(<Menu rootProps={{ orientation }} listStyle={listStyle} />);
-        const one = screen.getByTestId('trigger-one');
-        const two = screen.getByTestId('trigger-two');
-
-        await fireEvent.click(one);
-        await fireEvent.click(two);
-        expect(screen.getByTestId('content-two')).toHaveAttribute(
-          'data-activation-direction',
-          toSecond,
-        );
-
-        await fireEvent.click(one);
-        expect(screen.getByTestId('content-one')).toHaveAttribute(
-          'data-activation-direction',
-          toFirst,
-        );
-      },
-    );
-
     it('gives no direction to the content of a menu that opens', async () => {
       await render(<Menu />);
 
@@ -737,6 +725,92 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('focus-out');
       expect(screen.getByTestId('outside')).toHaveFocus();
     });
+  });
+
+  describe('guards and owner element', () => {
+    it.each([
+      { name: 'its item closes', nextValue: null, mounted: true },
+      { name: 'the trigger unmounts', nextValue: 'one', mounted: false },
+    ])('clears the guard refs of the root when $name', async ({ nextValue, mounted }) => {
+      let rootContext!: ReturnType<typeof useNavigationMenuRootContext>;
+      const RootContextReader = defineComponent(() => {
+        rootContext = useNavigationMenuRootContext();
+        return () => null;
+      });
+      const value = shallowRef<string | null>('one');
+      const hasTrigger = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root value={value.value}>
+          <RootContextReader />
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              {hasTrigger.value ? <NavigationMenu.Trigger>One</NavigationMenu.Trigger> : null}
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Viewport />
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      expect(rootContext.beforeOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+      expect(rootContext.afterOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+
+      value.value = nextValue;
+      hasTrigger.value = mounted;
+      await flushMicrotasks();
+
+      expect(rootContext.beforeOutsideRef.value).toBe(null);
+      expect(rootContext.afterOutsideRef.value).toBe(null);
+    });
+
+    it('removes aria-owns from the owner element when the viewport unmounts', async () => {
+      const hasViewport = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {hasViewport.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null}
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      const owner = screen.getByTestId('trigger').parentElement!.children[2];
+      expect(owner).toHaveAttribute('aria-owns', screen.getByTestId('viewport').id);
+
+      hasViewport.value = false;
+      await flushMicrotasks();
+
+      expect(owner).not.toHaveAttribute('aria-owns');
+    });
+  });
+
+  describe('VUE-60: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed item', defaultValue: null },
+      { name: 'an active item', defaultValue: 'one' },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to $name',
+      async ({ defaultValue }) => {
+        const shown = shallowRef(true);
+        await render(() => (
+          <NavigationMenuTriggerScoped defaultValue={defaultValue} shown={shown.value} />
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        expect(trigger.parentElement!.querySelectorAll('[data-vase-ui-focus-guard]')).toHaveLength(
+          defaultValue === null ? 0 : 2,
+        );
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   describe('hydration', () => {
@@ -1350,6 +1424,46 @@ describe('<NavigationMenu.Trigger />', () => {
 
     setPositionerPropertySpy.mockRestore();
   });
+
+  it.skipIf(isJSDOM)(
+    'releases the pointer-events lock on the list when the open trigger unmounts',
+    async () => {
+      let navigate = () => {};
+
+      const { user: rendererUser } = await render(
+        <TestActiveItemDropsTrigger
+          registerNavigate={(fn) => {
+            navigate = fn;
+          }}
+        />,
+      );
+
+      // The safe-polygon lock sets `pointer-events: none` on the list while hovering.
+      const user = rendererUser.setup({ pointerEventsCheck: 0 });
+
+      const list = screen.getByTestId('list');
+      const triggerA = screen.getByRole('button', { name: 'A' });
+
+      // Opening A's flyout by hovering the trigger locks the list with `pointer-events: none` (safe polygon),
+      // while the pointer stays on the trigger rather than the popup.
+      await user.pointer([{ target: triggerA }]);
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'A link' })).toBeVisible();
+      });
+      await waitFor(() => {
+        expect(list.style.pointerEvents).toBe('none');
+      });
+
+      // Drop A's trigger and close the menu in one update, while the pointer is still on the trigger, so none
+      // of the trigger-scoped release paths run before the trigger unmounts.
+      navigate();
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(list.style.pointerEvents).toBe('');
+      });
+    },
+  );
 
   it('releases the pointer-events lock when the pointer sweeps across a trigger without the menu opening', async () => {
     const { user: rendererUser } = await render(

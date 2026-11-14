@@ -35,10 +35,11 @@ export interface TooltipPopupProps
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
+import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
 import { useTooltipPositionerContext } from '../positioner/TooltipPositionerContext';
@@ -69,6 +70,11 @@ useOpenChangeComplete({
   },
 });
 
+useHoverPopupInteraction(store, {
+  enabled: () => !store.select('disabled'),
+  closeDelay: () => store.select('closeDelay'),
+});
+
 const state = computed<TooltipPopupState>(() => ({
   open: open.value,
   side: side.value,
@@ -96,7 +102,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     FOCUSABLE_POPUP_PROPS,
     store.select('popupProps'),
-    transitionStatus.value === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
+    getDisabledMountTransitionStyles(transitionStatus.value),
     attrs,
   ],
 });
