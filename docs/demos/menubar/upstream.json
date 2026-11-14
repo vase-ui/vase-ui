@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/menubar/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "5ee9ca4f58bbffa08bdfdfa6eb951d41537ed8d6a434235013c3a3916b99060a",
+    "hero/css-modules/index.tsx": "4c897a7aa314f5ba164e65e086827c506c4e75c0f2c8525e5dcfc661b83dca12"
+  },
+  "entryPoints": {
+    "hero": ["menu"]
+  }
+}

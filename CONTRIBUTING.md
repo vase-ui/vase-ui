@@ -1939,7 +1939,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A handbook page shows the source of a sample and does not render it.
 - Where the Base UI page has a demo, the handbook page renders it inside `<DemoFrame>`. On a page with no family, the demo is `docs/examples/<page>/demos/<demo>/index.vue`. It imports the copied style sheets of `docs/demos`. A `<style module>` block in the folder of the demo sets no color, because the copied style sheets follow the color scheme of the system.
 - The family of a handbook page, when it has one, is `handbook-<page>`. Its `upstreamPaths` name `docs/src/app/(docs)/react/handbook/<page>/**`. The Base UI demos of the page are then in `docs/demos/handbook-<page>`, and the rules of [Component pages](#component-pages) apply to the record, the style sheets and a demo that waits.
-- A handbook page can also render a demo that Vase UI writes, such as a Dialog in place of a Base UI demo that waits. That demo is `docs/examples/<page>/demos/<demo>/index.vue`.
+- A handbook page can also render a demo that Vase UI writes, for a block where Base UI shows only code. That demo is `docs/examples/<page>/demos/<demo>/index.vue`. The manual unmount demo of the Animation page is an example.
 - `packages/vue/test/demos.test.tsx` runs its checks on each `docs/examples/*/demos/*/index.vue` too, as on each demo of a component page.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
@@ -1967,6 +1967,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- A Base UI demo can use an API that only React has, such as a form action. The Vue demo then gives the same result with the API of Vue. The page says what the demo shows.
 - The text and the links of a demo are about Vase UI. A demo does not name Base UI or React. A link to the documentation or to the source of Vase UI goes to a page of this site or to `https://github.com/vase-ui/vase-ui`. When Base UI links a page that this site does not have, link the nearest page that exists, or remove that link.
 - The site has a base path, and VitePress does not add it to a link in a demo. Start the path of a link to a page of this site with `import.meta.env.BASE_URL`. Do not use `withBase` of VitePress, because the test of the demos mounts a demo with no VitePress.
 - `docs/tsconfig.json` sets `dataAttributes` to `data-*`. With `strictTemplates`, vue-tsc then accepts a `data-*` attribute on a part, such as `data-color` in the hero demo of Alert Dialog.

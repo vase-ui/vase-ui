@@ -176,7 +176,7 @@ The root then emits `openChangeComplete` with `false`. `keepMounted` still decid
 
 ::: code-group
 
-<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,32-34}
+<<< ../examples/animation/demos/manual-unmount/index.vue{12,18,24,33-35}
 
 :::
 
