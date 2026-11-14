@@ -22,6 +22,7 @@ export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
+export { viewportConformanceTests } from './viewportConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';

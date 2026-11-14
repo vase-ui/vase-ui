@@ -6,38 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/tooltip/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Tooltip. It comes in the last pull request of the family, so the package exports nothing of Tooltip before then."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/viewport/TooltipViewportCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/viewport/TooltipViewportDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The file tests `Tooltip.Viewport`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. They need the rule for nested triggers, the cursor anchor or the hover of the popup. `Tooltip.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
       "describe": ["<Tooltip.Root />", "hover changes"],
       "title": "commits a hover open while the hover event is dispatched",
@@ -47,125 +15,40 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Provider",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Provider`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Root`. Vase UI does not have that entry point."
+      "entry": "Trigger",
+      "prop": "delay",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `600`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the delay of `Tooltip.Provider`. With no provider, the part uses 600 for an absent prop, which is the default that Base UI documents."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Trigger`. Vase UI does not have that entry point."
+      "prop": "closeDelay",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `0`. The prop has no Vue default, because Base UI tells an absent prop from a number: an absent prop takes the close delay of `Tooltip.Provider`. With no provider, the part uses 0 for an absent prop, which is the default that Base UI documents."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "createHandle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.createHandle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "Handle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports `Tooltip.Handle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports the attribute names of `Tooltip.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports the attribute names of `Tooltip.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports the CSS variables of `Tooltip.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports the attribute names of `Tooltip.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/index.ts",
-      "reason": "The entry point of Tooltip exports the attribute names of `Tooltip.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipViewportCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
-      "entry": "TooltipViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "Vase UI does not have `Tooltip.Viewport`."
+      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
+      "describe": ["nested tooltips"],
+      "title": "should not re-announce an open outer tooltip when the pending reopen fires",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/root/TooltipRoot.test.tsx",
+      "reason": "The case passes in Base UI only in the Strict Mode of React. Its move on the inner trigger starts the rest timer of the outer trigger. Strict Mode mounts the outer popup two times, and the first cleanup of `useHoverPopupInteraction` cancels that timer. Vue has no Strict Mode, so the timer opens the open tooltip again, as React does with no Strict Mode. The case `does not announce an open outer tooltip again when the nested reopen fires` makes no move, and it asserts the guard of the nested reopen."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "id",
+      "reason": "The part reads `id` to register the trigger in the store of the tooltip, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "TooltipHandle<Payload>",
+      "reason": "`Tooltip.Handle` is the class `TooltipHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
   "notApplicableCommits": []
 }
