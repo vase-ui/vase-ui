@@ -15,7 +15,9 @@ describe('VUE-82: preventVaseUIHandler() in a part inside another part', () => {
       <Tooltip.Root onOpenChange={onTooltipOpenChange}>
         <Tooltip.Trigger as="span" delay={0}>
           <Popover.Root onOpenChange={onPopoverOpenChange}>
-            <Popover.Trigger onClick={(event) => event.preventVaseUIHandler()}>Open</Popover.Trigger>
+            <Popover.Trigger onClick={(event) => event.preventVaseUIHandler()}>
+              Open
+            </Popover.Trigger>
           </Popover.Root>
         </Tooltip.Trigger>
         <Tooltip.Portal>
