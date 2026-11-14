@@ -23,13 +23,6 @@
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Dialog"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "Each case of the block renders `Dialog.Trigger` and the other parts of Dialog from the entry point of Dialog. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Popover"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/index.ts",

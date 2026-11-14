@@ -160,3 +160,16 @@ declare const value: string;
     expectType<unknown, typeof item>(item);
   }}
 />;
+
+// The state types of the parts that Base UI types with fewer keys omit those keys.
+declare const triggerState: Autocomplete.Trigger.State;
+declare const inputGroupState: Autocomplete.InputGroup.State;
+declare const itemState: Autocomplete.Item.State;
+
+expectType<boolean, typeof itemState.highlighted>(itemState.highlighted);
+// @ts-expect-error The state of an item of Autocomplete has no `selected`.
+itemState.selected;
+// @ts-expect-error The state of the trigger of Autocomplete has no `placeholder`.
+triggerState.placeholder;
+// @ts-expect-error The state of the input group of Autocomplete has no `placeholder`.
+inputGroupState.placeholder;
