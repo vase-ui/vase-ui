@@ -1,8 +1,42 @@
 /// <reference types="vite/client" />
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, expectNoAxeViolations, hydrate, renderOnServer } from '#test-utils';
+import { mark } from './probeMarks';
+
+// PROBE: the bounds of each test. The gap from `test-finished` to the next `test-start` holds the
+// `onTestFinished` hooks of `test/setup.ts` and `test/reportedMessages.ts`.
+// PROBE: at `test-finished`, one task of each kind (a 0 ms timer, a port message, a frame) marks
+// when it runs. A late timer with an early message is a held timer; both late is a busy page.
+beforeEach((context) => {
+  let topVisibility: string | undefined;
+  try {
+    topVisibility = window.top === window ? 'self' : window.top?.document.visibilityState;
+  } catch {
+    topVisibility = 'cross-origin';
+  }
+  mark('test-start', {
+    test: context.task.name,
+    suite: context.task.suite?.name,
+    visibility: document.visibilityState,
+    topVisibility,
+    focus: document.hasFocus(),
+    readyState: document.readyState,
+  });
+  onTestFinished(() => {
+    mark('test-finished');
+    setTimeout(() => mark('probe-timer-0'), 0);
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      mark('probe-message');
+      channel.port1.close();
+    };
+    channel.port2.postMessage(0);
+    requestAnimationFrame(() => mark('probe-frame'));
+  });
+});
+afterEach(() => mark('after-each'));
 
 const modules = import.meta.glob<{ default: Component }>(
   ['../../../docs/demos/*/*/css-modules/index.vue', '../../../docs/examples/*/demos/*/index.vue'],

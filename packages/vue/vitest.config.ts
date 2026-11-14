@@ -3,6 +3,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx';
 import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { renderOnServer } from './test/server/renderOnServer.ts';
+import { probeLog } from './test/server/probe.ts';
 
 const contextOptions = { timezoneId: 'UTC' };
 
@@ -54,7 +55,7 @@ export default defineConfig({
             provider: playwright({ contextOptions }),
             headless: true,
             screenshotFailures: false,
-            commands: { renderOnServer },
+            commands: { renderOnServer, probeLog },
             instances: [
               { browser: 'chromium', name: 'chromium' },
               {
@@ -67,11 +68,13 @@ export default defineConfig({
                 provider: playwright({
                   contextOptions,
                   launchOptions: {
+                    env: { ...process.env, ...(process.env.PROBE_GC_FILE ? { MOZ_GCTIMER: process.env.PROBE_GC_FILE } : {}), ...(process.env.PROBE_PROFILE ? { MOZ_PROFILER_STARTUP: '1', MOZ_PROFILER_SHUTDOWN: process.env.PROBE_PROFILE, MOZ_PROFILER_STARTUP_FEATURES: 'js,cpu,ipc,markersallthreads', MOZ_PROFILER_STARTUP_FILTERS: 'GeckoMain,Socket Thread', MOZ_PROFILER_STARTUP_ENTRIES: '64000000' } : {}) },
                     firefoxUserPrefs: {
                       // Vitest sets this preference to `true`. With that value, Firefox sometimes
                       // crashes a page when the page starts. With `false`, Vitest mocks a module by
                       // request interception, not by import map.
                       'dom.multiple_import_maps.enabled': false,
+                      ...(process.env.PROBE_MEM_LOG ? { 'javascript.options.mem.log': true, 'devtools.console.stdout.chrome': true, 'browser.dom.window.dump.enabled': true } : {}),
                       // Without this preference, a test in Firefox has no `Touch` and no
                       // `TouchEvent`. The ported touch cases of Base UI construct a `Touch`.
                       'dom.w3c_touch_events.enabled': 1,

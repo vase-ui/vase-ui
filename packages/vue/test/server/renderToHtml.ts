@@ -13,7 +13,9 @@ export async function renderToHtml(file: string, props?: Record<string, unknown>
     );
   }
 
+  const start = Date.now();
   const module = (await import(/* @vite-ignore */ file)) as { default: Component };
+  const imported = Date.now();
   const warnings: string[] = [];
   const app = createSSRApp(module.default, props);
   app.config.warnHandler = (message, _instance, trace) => {
@@ -21,5 +23,5 @@ export async function renderToHtml(file: string, props?: Record<string, unknown>
   };
 
   const html = await renderToString(app);
-  return { html, warnings };
+  return { html, warnings, times: { importDemo: imported - start, renderToString: Date.now() - imported } };
 }
