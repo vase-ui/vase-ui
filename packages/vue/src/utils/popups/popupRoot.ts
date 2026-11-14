@@ -1,7 +1,6 @@
 import {
   computed,
   onActivated,
-  onBeforeMount,
   onDeactivated,
   onMounted,
   onScopeDispose,
@@ -91,8 +90,9 @@ export interface UsePopupRootOptions<Store extends PopupRootStore> {
    */
   onOpenChangeComplete: (open: boolean) => void;
   /**
-   * The root attaches its store to the handle when it mounts. It detaches when it unmounts and
-   * while `KeepAlive` holds it.
+   * The root attaches its store to the handle after the DOM update of its mount. A root in a
+   * pending `<Suspense>` branch attaches when Vue resolves the branch. The root detaches when it
+   * unmounts and while `KeepAlive` holds it.
    */
   handle?: MaybeRefOrGetter<PopupRootStoreHandle<Store> | undefined>;
   /**
@@ -203,36 +203,30 @@ export function usePopupRootWithPopupId<Store extends PopupRootStore>(
     closeOnActiveTriggerUnmount: options.closeOnActiveTriggerUnmount,
   });
 
-  // A server does not call `onBeforeMount`, so a server render never writes to a handle that all
-  // requests share.
-  let detach: (() => void) | undefined;
-  let isDeactivated = false;
-  function attach() {
-    detach?.();
-    detach = toValue(options.handle)?.attachStore(store);
-  }
-  onBeforeMount(attach);
+  // A `watch` with `immediate` runs in `setup`, also on a server, and all requests can share a
+  // handle. This `watch` has no `immediate`. The write after it gives it a first run in the post
+  // flush of the mount. That run comes after the DOM update and before the `onMounted` hook of each
+  // part below the root, so such a hook can call the handle. A write in `onMounted` of the root
+  // would come after those hooks. Vue holds that run while the root is in a pending `<Suspense>`
+  // branch, and a branch that Vue drops never runs it.
+  const isActive = shallowRef(false);
   watch(
-    () => toValue(options.handle),
-    () => {
-      if (!isDeactivated) {
-        attach();
+    () => (isActive.value ? toValue(options.handle) : undefined),
+    (handle, _previous, onCleanup) => {
+      const detach = handle?.attachStore(store);
+      if (detach !== undefined) {
+        onCleanup(detach);
       }
     },
+    { flush: 'post' },
   );
+  isActive.value = true;
   onDeactivated(() => {
-    isDeactivated = true;
-    detach?.();
-    detach = undefined;
+    isActive.value = false;
   });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
   onActivated(() => {
-    if (isDeactivated) {
-      isDeactivated = false;
-      attach();
-    }
+    isActive.value = true;
   });
-  onScopeDispose(() => detach?.());
 
   return { store, open, mounted, payload, transitionStatus, actions };
 }
