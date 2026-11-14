@@ -1881,6 +1881,16 @@ describe('FloatingFocusManager', () => {
 
       expect(document.body).toHaveFocus();
     });
+
+    it('moves no focus when another element has the focus after the removal', async () => {
+      await renderAndFocusTwo(true);
+
+      screen.getByTestId('two').remove();
+      screen.getByTestId('reference').focus();
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('reference')).toHaveFocus();
+    });
   });
 
   describe('marks outside the popup', () => {
@@ -2040,6 +2050,61 @@ describe('FloatingFocusManager', () => {
 
         expect(container).toHaveAttribute('inert');
         expect(containerField).not.toHaveAttribute('inert');
+      });
+    });
+
+    describe('popup in the content of a modal popup', () => {
+      const Popups = defineComponent({
+        props: { disabled: Boolean },
+        setup: (props) => () => (
+          <Popup portal role="dialog" manager={{ disabled: props.disabled }}>
+            {{
+              default: () => [
+                <input data-testid="one" />,
+                <Popup name="child-" portal role="dialog" />,
+              ],
+            }}
+          </Popup>
+        ),
+      });
+
+      async function openBoth() {
+        await openPopup();
+        await openPopup(document, 'child-');
+        await waitFor(() => expect(screen.getByTestId('child-one')).toHaveFocus());
+      }
+
+      const marks = () =>
+        ['floating', 'child-floating'].map((id) => {
+          const element = screen.getByTestId(id);
+          return ['aria-hidden', 'data-vase-ui-inert'].filter((name) => element.hasAttribute(name));
+        });
+      const marksOfChildOnTop = [['aria-hidden', 'data-vase-ui-inert'], []];
+
+      it('keeps the popup above hidden when that popup takes its marks later', async () => {
+        const disabled = shallowRef(true);
+        await render(() => <Popups disabled={disabled.value} />);
+        await openBoth();
+        expect(marks()).toEqual(marksOfChildOnTop);
+
+        disabled.value = false;
+        await nextTick();
+
+        expect(marks()).toEqual(marksOfChildOnTop);
+      });
+
+      it('keeps the popup above hidden after KeepAlive puts the two popups back', async () => {
+        const shown = shallowRef(true);
+        await render(() => <KeepAlive>{shown.value ? <Popups /> : null}</KeepAlive>);
+        await openBoth();
+        expect(marks()).toEqual(marksOfChildOnTop);
+
+        shown.value = false;
+        await nextTick();
+        shown.value = true;
+        await nextTick();
+
+        expect(marks()).toEqual(marksOfChildOnTop);
       });
     });
 

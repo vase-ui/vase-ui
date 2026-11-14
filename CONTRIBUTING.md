@@ -736,6 +736,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - With `outsideElementsInert`, a modal popup also gives `inert` to each element that gets `aria-hidden` (`BUG-4678`). The Tab key and a press then cannot reach those elements.
 - An element keeps an attribute that it had before the marks. The release of the marks leaves that attribute.
 - A popup that opens later lifts the marks of the earlier popups from its own elements and their ancestors (`BUG-5577`). The children of such an ancestor that hold none of its elements keep the marks.
+- A focus manager takes its marks again each time a focus manager above it takes marks. A popup in the content of another popup thus has the later marks.
 - The marks of all popups are in one registry on `globalThis[Symbol.for('vase-ui.modal-marks')]`. Two copies of the library share it.
 - When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
 - `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.

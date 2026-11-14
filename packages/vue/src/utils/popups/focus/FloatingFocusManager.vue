@@ -141,6 +141,11 @@ export interface FloatingFocusManagerProps {
 // as a dialog, finds its parent popup through this context.
 const ParentPopupElementContext: InjectionKey<() => HTMLElement | null> = Symbol();
 
+// The number of times that the focus managers above took their marks. A later take of the marks
+// lifts the marks of an earlier take, so the popup in the content of another popup must take its
+// marks last.
+const ParentMarksCountContext: InjectionKey<Readonly<Ref<number>>> = Symbol();
+
 const CLICK_TRIGGER_IDENTIFIER = createAttribute('click-trigger');
 
 function getEventType(event: Event, lastInteractionType?: InteractionType): InteractionType {
@@ -349,6 +354,15 @@ const tree = useFloatingTree(() => props.externalTree);
 
 const getParentPopupElement = inject(ParentPopupElementContext, null);
 provide(ParentPopupElementContext, () => floatingFocusElement.value);
+
+const parentMarksCount = inject(ParentMarksCountContext, null);
+const marksCount = shallowRef(0);
+// The sum also tells the focus managers below about a take above a focus manager that holds no
+// marks.
+provide(
+  ParentMarksCountContext,
+  computed(() => (parentMarksCount?.value ?? 0) + marksCount.value),
+);
 
 const getNodeId = () => props.store.context.positioning?.nodeId;
 
@@ -1124,7 +1138,10 @@ effect(
 );
 
 // Hide everything outside the floating tree from assistive tech while open. The portal renders
-// its outside guards one update after it gets the state, so they are sources too.
+// its outside guards one update after it gets the state, so they are sources too. A focus manager
+// above can take its marks after this one: at the mount of two open popups, at a `KeepAlive`
+// activation, or when it becomes enabled. Its count is thus a source, and this effect then takes
+// its marks again.
 effect(
   () => [
     open.value,
@@ -1142,6 +1159,7 @@ effect(
     afterGuardElement.value,
     portalContext?.beforeOutsideRef.value,
     portalContext?.afterOutsideRef.value,
+    parentMarksCount?.value,
   ],
   () => {
     const floatingEl = floating.value;
@@ -1187,6 +1205,7 @@ effect(
       (x): x is Element => x != null,
     );
     const markerCleanup = markOthers(markerInsideElements);
+    marksCount.value += 1;
 
     return () => {
       markerCleanup();
