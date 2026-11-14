@@ -11,6 +11,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
+import * as AlertDialog from '../../alert-dialog/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
@@ -468,6 +469,71 @@ describe('<Drawer.Popup />', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('dialog-popup')).toBeVisible();
+    });
+    await waitFor(() => {
+      expect(parentPopup.style.getPropertyValue('--nested-drawers')).toBe('1');
+    });
+    expect(childPopup.style.getPropertyValue('--nested-drawers')).toBe('0');
+    expect(childPopup).not.toHaveAttribute('data-nested-drawer-open');
+
+    observer.disconnect();
+
+    expect(observedNestedDrawerCounts).not.toContain('2');
+  });
+
+  it('does not treat alert dialogs inside nested drawers as nested drawers', async () => {
+    await render(
+      <Drawer.Root open modal={false}>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root open modal={false}>
+                <Drawer.Portal>
+                  <Drawer.Viewport>
+                    <Drawer.Popup data-testid="child-popup">
+                      <AlertDialog.Root>
+                        <AlertDialog.Trigger>Open alert dialog</AlertDialog.Trigger>
+                        <AlertDialog.Portal>
+                          <AlertDialog.Popup data-testid="alert-dialog-popup">
+                            Alert dialog
+                            <AlertDialog.Close>Close alert dialog</AlertDialog.Close>
+                          </AlertDialog.Popup>
+                        </AlertDialog.Portal>
+                      </AlertDialog.Root>
+                    </Drawer.Popup>
+                  </Drawer.Viewport>
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const parentPopup = screen.getByTestId('parent-popup');
+    const childPopup = screen.getByTestId('child-popup');
+    const observedNestedDrawerCounts = [parentPopup.style.getPropertyValue('--nested-drawers')];
+
+    const observer = new MutationObserver(() => {
+      observedNestedDrawerCounts.push(parentPopup.style.getPropertyValue('--nested-drawers'));
+    });
+
+    observer.observe(parentPopup, {
+      attributeFilter: ['style'],
+      attributes: true,
+    });
+
+    await waitFor(() => {
+      expect(parentPopup.style.getPropertyValue('--nested-drawers')).toBe('1');
+    });
+    expect(childPopup.style.getPropertyValue('--nested-drawers')).toBe('0');
+    expect(childPopup).not.toHaveAttribute('data-nested-drawer-open');
+
+    screen.getByRole('button', { name: 'Open alert dialog' }).click();
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('alert-dialog-popup')).toBeVisible();
     });
     await waitFor(() => {
       expect(parentPopup.style.getPropertyValue('--nested-drawers')).toBe('1');

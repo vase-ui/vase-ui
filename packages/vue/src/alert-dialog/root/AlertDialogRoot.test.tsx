@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
+  detachedTriggersConformanceTests,
+  dialogRootSharedTests,
   fireEvent,
   flushMicrotasks,
   hydrate,
@@ -58,6 +60,22 @@ describe('<AlertDialog.Root />', () => {
     triggerMouseAction: 'click',
     expectedPopupRole: 'alertdialog',
     expectedAriaHasPopupValue: 'dialog',
+  });
+
+  dialogRootSharedTests({ parts: AlertDialog, popupRole: 'alertdialog', render });
+
+  detachedTriggersConformanceTests({
+    render,
+    createHandle: AlertDialog.createHandle,
+    Root: AlertDialog.Root,
+    Trigger: AlertDialog.Trigger,
+    Portal: AlertDialog.Portal,
+    Popup: AlertDialog.Popup,
+    Close: AlertDialog.Close,
+    openInteractions: ['click'],
+    ariaExpanded: true,
+    throwOnMissingTrigger: false,
+    outsideElementsInert: true,
   });
 
   it('ARIA attributes', async () => {
@@ -458,76 +476,16 @@ describe('<AlertDialog.Root />', () => {
       ]);
       expect(screen.queryByRole('alertdialog')).toBe(null);
     });
-
-    it('keeps the popup mounted after preventUnmountOnClose() until the exposed unmount()', async () => {
-      let root!: AlertDialog.Root.Actions;
-      await render(() => (
-        <AlertDialog.Root
-          ref={(instance: unknown) => {
-            root = instance as AlertDialog.Root.Actions;
-          }}
-          defaultOpen
-          onOpenChange={(_, eventDetails) => eventDetails.preventUnmountOnClose()}
-        >
-          <AlertDialog.Portal>
-            <AlertDialog.Popup />
-          </AlertDialog.Portal>
-        </AlertDialog.Root>
-      ));
-      await flushMicrotasks();
-
-      root.close();
-      await flushMicrotasks();
-      expect(screen.queryByRole('alertdialog')).not.toBe(null);
-
-      root.unmount();
-      await flushMicrotasks();
-      expect(screen.queryByRole('alertdialog')).toBe(null);
-    });
   });
 
   describe('handle', () => {
-    it('gives the payload of openWithPayload() to the default slot, and isOpen follows the root', async () => {
-      const handle = AlertDialog.createHandle<number>();
-      const isOpen = computed(() => handle.isOpen);
-      await render(() => (
-        <AlertDialog.Root handle={handle}>
-          {{
-            default: ({ payload }: { payload: number | undefined }) => (
-              <span data-testid="payload">{String(payload)}</span>
-            ),
-          }}
-        </AlertDialog.Root>
-      ));
-      expect(isOpen.value).toBe(false);
-
-      handle.openWithPayload(7);
-      await flushMicrotasks();
-      expect(screen.getByTestId('payload').textContent).toBe('7');
-      expect(isOpen.value).toBe(true);
-
-      handle.close();
-      await flushMicrotasks();
-      expect(isOpen.value).toBe(false);
-    });
-
-    it('takes only a handle of Alert Dialog', () => {
+    it('creates a handle of Alert Dialog that is a handle of Dialog with no property of its own', () => {
       const dialogHandle = Dialog.createHandle<number>();
       const alertDialogHandle = AlertDialog.createHandle<number>();
-
-      // @ts-expect-error A handle of Dialog is not a handle of Alert Dialog.
-      const fromDialog: AlertDialog.Handle<number> = dialogHandle;
       const forDialog: Dialog.Handle<number> = alertDialogHandle;
 
-      // @ts-expect-error A root of Alert Dialog takes no handle of Dialog.
-      const rootWithDialogHandle = <AlertDialog.Root handle={dialogHandle} />;
-      // @ts-expect-error A trigger of Alert Dialog takes no handle of Dialog.
-      const triggerWithDialogHandle = <AlertDialog.Trigger handle={dialogHandle} />;
-
-      expect(fromDialog).toBeInstanceOf(Dialog.Handle);
-      expect(forDialog).toBeInstanceOf(AlertDialog.Handle);
-      expect(rootWithDialogHandle.props?.handle).toBe(dialogHandle);
-      expect(triggerWithDialogHandle.props?.handle).toBe(dialogHandle);
+      expect(alertDialogHandle).toBeInstanceOf(AlertDialog.Handle);
+      expect(forDialog).toBeInstanceOf(Dialog.Handle);
       expect(Object.keys(alertDialogHandle)).toEqual(Object.keys(dialogHandle));
     });
 
