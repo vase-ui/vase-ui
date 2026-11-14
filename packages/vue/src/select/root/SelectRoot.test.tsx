@@ -305,6 +305,9 @@ describe('<Select.Root />', () => {
       const animations = await nextAnimationsRead(popup, {
         action: () => user.keyboard('{Escape}'),
       });
+      // The popup reads its own animations in the same microtask as the close of the root. A close
+      // that does not wait for the popup thus ends before the next task.
+      await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
       expect(positioner).not.toHaveAttribute('hidden');
