@@ -6,67 +6,22 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/backdrop/DrawerBackdropDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/close/DrawerClose.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Close`."
-    },
-    {
       "upstream": "packages/react/src/drawer/content/DrawerContent.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Content` and other parts of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/content/DrawerContent.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Content`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/content/drawerContentAttribute.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Content`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/description/DrawerDescription.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Description`."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Portal`, `Drawer.Viewport` and `Drawer.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/indent-background/DrawerIndentBackground.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.IndentBackground` and other parts of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/indent-background/DrawerIndentBackground.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.IndentBackground`."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.Trigger`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/indent/DrawerIndent.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.Indent` and other parts of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/indent/DrawerIndent.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Indent`."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.Trigger`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/index.ts",
@@ -85,11 +40,6 @@
       "reason": "Vase UI does not have `Drawer.Popup`."
     },
     {
-      "upstream": "packages/react/src/drawer/popup/DrawerPopupCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Popup`."
-    },
-    {
       "upstream": "packages/react/src/drawer/popup/DrawerPopupDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Drawer.Popup`."
@@ -101,14 +51,11 @@
     },
     {
       "upstream": "packages/react/src/drawer/provider/DrawerProvider.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Provider` and the indent parts of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/provider/DrawerProvider.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Provider`."
+      "describe": ["<Drawer.Provider />"],
+      "title": "releases closed drawers once they are removed",
+      "kind": "replaced",
+      "test": "packages/vue/src/drawer/provider/DrawerProvider.node.test.tsx",
+      "reason": "The case forces a garbage collection through `node:v8`, so Base UI runs it only in jsdom. A browser has no `node:v8`. The case is in the test file that the Node project runs, with the same title. It reads the context of the provider from a server render."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
@@ -154,11 +101,6 @@
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeAreaDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Drawer.SwipeArea`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/title/DrawerTitle.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Title`."
     },
     {
       "upstream": "packages/react/src/drawer/trigger/DrawerTrigger.tsx",
