@@ -723,6 +723,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
+- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
@@ -737,6 +738,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
+- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
@@ -1025,6 +1027,14 @@ The composite root:
 - The highlighted index goes through `useControlled`. A root with `onHighlightedIndexChange` and no `highlightedIndex` also writes its own state. Base UI writes no state in that case.
 - A root part whose selected item can be hidden or natively disabled gives `highlightedIndex` and `onHighlightedIndexChange` to `useCompositeRoot`, as `Tabs.List` does. An uncontrolled root moves the tab stop off that item. The item moves it back. A development build of Vue then stops with `Maximum recursive updates exceeded`.
 - The composable adds no attribute to the element of the root.
+- When the active item changes while the focus is outside the element of the root, the root moves the highlighted index to that item. The Tab key then enters the composite on the active item, as it does for a native radio group. Base UI does this only in `Tabs.Tab`.
+- If that change leaves no active item, or an active item that is disabled or hidden, the root moves the highlighted index to the first item that is not disabled or hidden. An active item that becomes disabled is also such a change. The APG radio pattern gives the focus to the first radio of a group with no checked radio. `Tabs.Tab` then gives the highlighted index back to a selected tab that is hidden, as in Base UI.
+- When a search finds no active item, or one that is disabled or hidden, and nothing changed since the search before it, the highlighted index stays where the user put it.
+- An active item that leaves the list is a removal. The rule of `onMapChange` for a removal then sets the highlighted index, as in Base UI.
+- When the focus leaves the element of the root, the root moves the highlighted index to the active item. The APG radio and tabs patterns give the focus to the active item when the focus enters the composite. A composite with no active item keeps the item that had the focus last, as Base UI does in each composite.
+- The root finds the active item by `data-composite-item-active`. A `MutationObserver` on the element of the root tells it when that attribute, `disabled` or `aria-disabled` changes on an item. A new map also starts the search, for an item that mounts late and for the items of a `KeepAlive` that is active again.
+- While the focus is in the element of the root, the highlighted index stays on the item that the user chose.
+- In these moves, an active item that is disabled or hidden does not take the highlighted index. At the first map it takes it, as in Base UI. A change of a style or of `hidden` starts no search, so an active item that becomes visible takes the highlighted index only at the next search.
 - The check of `disabledIndices` reads the elements of the list, so `elementsRef` is a source of its watcher. Under `KeepAlive`, the list sorts after the `onActivated` hooks, and the check must run after that sort.
 - The composable returns `props`, `rootRef` and `highlightedIndex`. A part below the root reads `onHighlightedIndexChange` and `relayKeyboardEvent` from `useCompositeRootContext()`. Base UI's hook also returns them, for its `CompositeRoot` component.
 
@@ -1103,7 +1113,7 @@ The tab stop on a server:
 - An item can be mounted after its root: an item in an async component, or below a `<Suspense>` inside the root. Its element keeps the `tabindex` of the server HTML until the item is mounted.
 - While such an element has `tabindex="0"`, the mounted items do not take the tab stop. The list then has one tab stop. That element has no listeners of its own until its item is mounted.
 - While an item hydrates, it also gives the attribute `data-vase-ui-hydrating-composite-item` with the id of its root. The root finds the element by that attribute. Thus it does not wait for an item of a nested composite or for an element of a consumer.
-- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index.
+- The wait ends when the item is mounted or its element leaves the document. The tab stop is then the item at the highlighted index. If the item that was mounted is active, the new map moves the highlighted index to it, so the item keeps the tab stop.
 - The root searches its own element only. It does not find an item whose element is outside it, for example in a `Teleport`. If the server HTML gives that item the tab stop, the list can have two tab stops until the item is mounted.
 - A `<Suspense>` outside the root holds the mount of the root. Until it resolves, the list keeps the tab stop of the server HTML.
 - The server HTML has no tab stop in three cases:
@@ -1544,7 +1554,7 @@ The hydration helpers:
 - In a new or changed case, do not poll for a state that exists only while an animation runs. Record the state in a listener of `animationstart`, `animationend`, `transitionrun` or `transitionend`, or in a `MutationObserver`. Then wait for a state that stays. Then assert on the record.
 - In a listener of `animationstart` or `transitionrun`, read the fields of the event or a state that stays. Do not read `getAnimations()`. A late frame can end the animation before the browser sends the event, and the list is then empty.
 - In a new or changed case that needs the animations that a part waits for, get them from `nextAnimationsRead`. Call it before the action.
-- In a new or changed case that ends an animation with its own call (a seek or `finish()`), give that animation a duration of 100 s. A part reads its animations some frames after the close, and a late frame can end a short animation before that read.
+- Give a duration of 100 s to each animation that a new or changed case ends with its own call (a seek or `finish()`). A part reads its animations some frames after the close, and a late frame can end a short animation before that read.
 - A new case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. It also has a control case in which the removal is late, as `AnimatedPanel.test.tsx` has.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
