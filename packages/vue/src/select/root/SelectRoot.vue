@@ -352,7 +352,7 @@ const {
         setFocused(false);
 
         if (validationMode.value === 'onBlur') {
-          void validation.commit(selectedValue.value, true);
+          void validation.commit(selectedValue.value);
         }
       }
     },
