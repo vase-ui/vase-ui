@@ -243,6 +243,7 @@ describe('<Select.Root />', () => {
 
       await openWithClick(user, listeners.opened);
       expect(positioner).toHaveAttribute('data-open');
+      expect(positioner).not.toHaveAttribute('hidden');
 
       await user.keyboard('{Escape}');
       await listeners.closeCompleted;
@@ -265,6 +266,8 @@ describe('<Select.Root />', () => {
       const animations = await nextAnimationsRead(positioner, {
         action: () => user.keyboard('{Escape}'),
       });
+      // A close that does not wait for these animations ends in the microtasks after the read.
+      await flushMicrotasks();
 
       expect(animations).toHaveLength(1);
       expect(positioner).not.toHaveAttribute('hidden');
