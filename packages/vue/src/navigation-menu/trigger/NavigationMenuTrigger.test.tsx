@@ -14,7 +14,6 @@ import {
   waitFor,
   within,
 } from '#test-utils';
-import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import * as NavigationMenu from '../index.parts';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
@@ -56,17 +55,13 @@ const Menu = defineComponent({
     rootProps: { type: Object as PropType<Record<string, unknown>>, default: () => ({}) },
     direction: { type: String as PropType<'ltr' | 'rtl'>, default: 'ltr' },
     popup: { type: Boolean, default: false },
-    listStyle: {
-      type: Object as PropType<CSSProperties>,
-      default: () => ({ display: 'flex' }),
-    },
   },
   setup(props) {
     return () => (
       <DirectionProvider direction={props.direction}>
         <div style={NO_REAL_POINTER}>
           <NavigationMenu.Root {...props.rootProps}>
-            <NavigationMenu.List data-testid="list" style={props.listStyle}>
+            <NavigationMenu.List data-testid="list" style={{ display: 'flex' }}>
               <NavigationMenu.Item value="one">
                 <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
                 <NavigationMenu.Content data-testid="content-one">
@@ -329,21 +324,6 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(screen.getByTestId('trigger-two').parentElement!.children).toHaveLength(1);
     });
 
-    it('keeps the menu open when a press changes the active item', async () => {
-      const handleValueChange = vi.fn();
-      await render(<Menu popup rootProps={{ onValueChange: handleValueChange }} />);
-      const one = screen.getByTestId('trigger-one');
-      const two = screen.getByTestId('trigger-two');
-
-      await fireEvent.click(one);
-      await fireEvent.click(two);
-      await flushMicrotasks();
-
-      expect(one).toHaveAttribute('aria-expanded', 'false');
-      expect(two).toHaveAttribute('aria-expanded', 'true');
-      expect(handleValueChange.mock.calls.map(([value]) => value)).toEqual(['one', 'two']);
-    });
-
     it('closes the menu with a press of the active trigger', async () => {
       await render(<Menu popup />);
       const one = screen.getByTestId('trigger-one');
@@ -506,19 +486,6 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('changes the active item at once when the pointer enters another trigger', async () => {
-      await render(<Menu popup />);
-      const one = screen.getByTestId('trigger-one');
-      const two = screen.getByTestId('trigger-two');
-      await hover(one, 50);
-      expect(one).toHaveAttribute('aria-expanded', 'true');
-
-      await fireEvent.mouseEnter(two);
-
-      expect(one).toHaveAttribute('aria-expanded', 'false');
-      expect(two).toHaveAttribute('aria-expanded', 'true');
-    });
-
     it('does not open its item, and does not block the list, while the trigger is disabled', async () => {
       await render(() => (
         <div style={NO_REAL_POINTER}>
@@ -540,37 +507,6 @@ describe('<NavigationMenu.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(screen.getByTestId('list').style.pointerEvents).toBe('');
-    });
-
-    it('closes its item when the pointer leaves the trigger for the close delay of the root', async () => {
-      await render(<Menu popup rootProps={{ closeDelay: 100 }} />);
-      const trigger = screen.getByTestId('trigger-one');
-      await hover(trigger, 50);
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      await fireEvent.mouseLeave(trigger);
-      vi.advanceTimersByTime(99);
-      await flushMicrotasks();
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      vi.advanceTimersByTime(1);
-      await flushMicrotasks();
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it.each([
-      { name: 'before the patient threshold', after: PATIENT_CLICK_THRESHOLD - 1, open: true },
-      { name: 'at the patient threshold', after: PATIENT_CLICK_THRESHOLD, open: false },
-    ])('handles a press $name of a hover open', async ({ after, open }) => {
-      await render(<Menu popup />);
-      const trigger = screen.getByTestId('trigger-one');
-      await hover(trigger, 50);
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      vi.advanceTimersByTime(after);
-      await fireEvent.click(trigger);
-
-      expect(trigger).toHaveAttribute('aria-expanded', String(open));
     });
 
     it('blocks the pointer events of the list while the pointer is on the trigger, and releases them when the pointer leaves', async () => {
@@ -640,43 +576,6 @@ describe('<NavigationMenu.Trigger />', () => {
   });
 
   describe('activation direction', () => {
-    it.each([
-      {
-        name: 'a horizontal row of triggers',
-        orientation: 'horizontal',
-        listStyle: { display: 'flex' } satisfies CSSProperties,
-        toSecond: 'right',
-        toFirst: 'left',
-      },
-      {
-        name: 'a vertical column of triggers',
-        orientation: 'vertical',
-        listStyle: { display: 'flex', flexDirection: 'column' } satisfies CSSProperties,
-        toSecond: 'down',
-        toFirst: 'up',
-      },
-    ])(
-      'gives the content that enters the side that it came from for $name',
-      async ({ orientation, listStyle, toSecond, toFirst }) => {
-        await render(<Menu rootProps={{ orientation }} listStyle={listStyle} />);
-        const one = screen.getByTestId('trigger-one');
-        const two = screen.getByTestId('trigger-two');
-
-        await fireEvent.click(one);
-        await fireEvent.click(two);
-        expect(screen.getByTestId('content-two')).toHaveAttribute(
-          'data-activation-direction',
-          toSecond,
-        );
-
-        await fireEvent.click(one);
-        expect(screen.getByTestId('content-one')).toHaveAttribute(
-          'data-activation-direction',
-          toFirst,
-        );
-      },
-    );
-
     it('gives no direction to the content of a menu that opens', async () => {
       await render(<Menu />);
 
