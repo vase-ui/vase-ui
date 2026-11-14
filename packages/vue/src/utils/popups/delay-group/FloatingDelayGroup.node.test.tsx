@@ -3,10 +3,11 @@ import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NOOP } from '../../../common/empty';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import type { Delay } from '../types';
+import { useClientPoint } from '../interactions/useClientPoint';
 import { useFocus } from '../interactions/useFocus';
 import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
+import type { Delay } from '../types';
 import { useDelayGroup } from './FloatingDelayGroup';
 
 // The store of a module is the store of a handle that no root controls. Each request shares it.
@@ -21,11 +22,13 @@ describe('useDelayGroup on a server', () => {
         const group = useDelayGroup(sharedStore, { open: true });
         const hoverProps = useHoverTriggerInteraction(sharedStore, { delay: group.delay });
         const focusProps = useFocus(sharedStore);
+        const clientPointProps = useClientPoint(sharedStore);
         useHoverPopupInteraction(sharedStore);
         return () => (
           <button
             {...hoverProps}
             {...focusProps}
+            {...clientPointProps}
             data-instant-phase={group.isInstantPhase.value ? '' : undefined}
           />
         );
