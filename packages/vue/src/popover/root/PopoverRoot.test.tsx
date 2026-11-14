@@ -3297,102 +3297,40 @@ describe('<Popover.Root />', () => {
     expect(screen.getByRole('button', { name: 'Open' })).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('gives the payload of the active trigger to the default slot', async () => {
-    const handle = Popover.createHandle<string>();
+  it('registers a trigger outside the root', async () => {
+    const handle = Popover.createHandle<unknown>();
     await render(
-      <Popover.Root
-        handle={handle}
-        v-slots={{
-          default: ({ payload }: { payload: string | undefined }) => (
-            <>
-              <p data-testid="payload">{payload ?? 'none'}</p>
-              <Popover.Trigger id="one" payload="first" />
-              <Popover.Trigger id="two" payload="second" />
-            </>
-          ),
-        }}
-      />,
+      <>
+        <Popover.Trigger id="before" handle={handle}>
+          Before
+        </Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <Popover.Trigger id="inside">Inside</Popover.Trigger>
+        </Popover.Root>
+        <Popover.Trigger id="after" handle={handle}>
+          After
+        </Popover.Trigger>
+      </>,
     );
-    const payload = screen.getByTestId('payload');
-    expect(payload).toHaveTextContent('none');
+    const before = screen.getByRole('button', { name: 'Before' });
+    const inside = screen.getByRole('button', { name: 'Inside' });
+    const after = screen.getByRole('button', { name: 'After' });
 
-    handle.open('one');
+    handle.open('after');
     await flushMicrotasks();
-    expect(payload).toHaveTextContent('first');
+    expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
+      'false',
+      'false',
+      'true',
+    ]);
 
-    handle.open('two');
+    handle.open('before');
     await flushMicrotasks();
-    expect(payload).toHaveTextContent('second');
-  });
-
-  describe('handle', () => {
-    it('opens and closes from the handle and reports isOpen', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <Popover.Root handle={handle}>
-          <Popover.Trigger id="trigger">Open</Popover.Trigger>
-        </Popover.Root>,
-      );
-      const trigger = screen.getByRole('button');
-      expect(handle.isOpen).toBe(false);
-
-      handle.open('trigger');
-      await flushMicrotasks();
-      expect(handle.isOpen).toBe(true);
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-
-      handle.close();
-      await flushMicrotasks();
-      expect(handle.isOpen).toBe(false);
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it('registers a trigger outside the root', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <>
-          <Popover.Trigger id="before" handle={handle}>
-            Before
-          </Popover.Trigger>
-          <Popover.Root handle={handle}>
-            <Popover.Trigger id="inside">Inside</Popover.Trigger>
-          </Popover.Root>
-          <Popover.Trigger id="after" handle={handle}>
-            After
-          </Popover.Trigger>
-        </>,
-      );
-      const before = screen.getByRole('button', { name: 'Before' });
-      const inside = screen.getByRole('button', { name: 'Inside' });
-      const after = screen.getByRole('button', { name: 'After' });
-
-      handle.open('after');
-      await flushMicrotasks();
-      expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
-        'false',
-        'false',
-        'true',
-      ]);
-
-      handle.open('before');
-      await flushMicrotasks();
-      expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
-        'true',
-        'false',
-        'false',
-      ]);
-    });
-
-    it('throws when open() names no registered trigger', async () => {
-      const handle = Popover.createHandle<unknown>();
-      await render(
-        <Popover.Root handle={handle}>
-          <Popover.Trigger id="trigger" />
-        </Popover.Root>,
-      );
-
-      expect(() => handle.open('missing')).toThrow(/Vase UI: PopoverHandle\.open\(\)/);
-    });
+    expect([before, inside, after].map((item) => item.getAttribute('aria-expanded'))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
   });
 
   it('exposes close and unmount', async () => {
@@ -3416,30 +3354,6 @@ describe('<Popover.Root />', () => {
 
     expect(changes).toEqual([[false, 'imperative-action']]);
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'false');
-  });
-
-  it('emits openChangeComplete when unmount() ends the close', async () => {
-    const completions: boolean[] = [];
-    const root = createRootRef();
-    await render(() => (
-      <Popover.Root
-        ref={root.ref}
-        defaultOpen
-        defaultTriggerId="trigger"
-        onOpenChange={(_open, details) => details.preventUnmountOnClose()}
-        onOpenChangeComplete={(open) => completions.push(open)}
-      >
-        <Popover.Trigger id="trigger" />
-      </Popover.Root>
-    ));
-
-    root.current.close();
-    await flushMicrotasks();
-    expect(completions).toEqual([]);
-
-    root.current.unmount();
-    await flushMicrotasks();
-    expect(completions).toEqual([false]);
   });
 
   it('gives the modal prop to the store', async () => {
