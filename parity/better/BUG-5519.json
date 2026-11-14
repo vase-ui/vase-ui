@@ -1,6 +1,6 @@
 {
   "id": "BUG-5519",
   "evidence": ["https://github.com/mui/base-ui/issues/5519"],
-  "behavior": "During an exit animation, no focusable content is under `aria-hidden`.",
+  "behavior": "During an exit animation, no focusable content is under `aria-hidden`. `Combobox.Popup` stops its focus manager when the popup closes, so the focus guards and the `aria-hidden` marks go at the close, and the focus returns at the close. Base UI stops the focus manager when the popup unmounts.",
   "dueWith": "packages/react/src/combobox/popup/ComboboxPopup.tsx"
 }
