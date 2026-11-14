@@ -38,8 +38,8 @@ describe('Menu filter parts conformance', () => {
       ),
   }));
 
-  // A second input is in the popup. A case that replaces the input with a component that has no
-  // element leaves the menu with no input, and the menu then warns a second time.
+  // A second input is in the popup. A case can replace the input with a component that renders no
+  // element, and a menu with no input warns.
   describeConformance(<Menu.Input />, () => ({
     refInstanceof: window.HTMLInputElement,
     render: (node) => renderInPopup(node),
@@ -70,8 +70,8 @@ describe('Menu filter parts conformance', () => {
     render: (node) => renderInPopup(node),
   }));
 
-  // The input is beside the popup. A popup that a case replaces with a component can drop its slot,
-  // and the menu then has no input.
+  // The input is beside the popup. A case can replace the popup with a component that drops its
+  // slot, and a menu with no input warns.
   describeConformance(<Menu.Popup />, () => ({
     refInstanceof: window.HTMLDivElement,
     render: (node) =>
