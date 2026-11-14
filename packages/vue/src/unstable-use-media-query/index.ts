@@ -13,8 +13,8 @@ function getWindowMatchMedia(): typeof window.matchMedia | null {
  * Call it in `setup`.
  * The query and the options can each be a value, a ref or a getter.
  *
- * The composable returns a ref. The hook of Base UI returns a Boolean.
- * `setup` runs one time, so a Boolean does not follow a change.
+ * The composable returns a read-only ref.
+ * `setup` runs one time, so a plain Boolean does not follow a change.
  * @param query The media query. It can start with `@media`.
  * @param options The options as one object. A member cannot be a ref or a getter, because two
  * members are functions.

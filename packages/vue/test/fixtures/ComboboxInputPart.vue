@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, toRaw } from 'vue';
+import { computed, nextTick, onMounted, toRaw } from 'vue';
 import {
   useComboboxInputValueContext,
   useComboboxRootContext,
@@ -38,10 +38,13 @@ function setInputElement(value: unknown) {
   }
   store.update({
     inputElement: element,
-    inputInsidePopup: nextIsInsidePopup,
     inputOwnsFormValue: inputOwnsFormValue.value,
   });
 }
+
+onMounted(() => {
+  store.update({ inputInsidePopup: Boolean(props.insidePopup) || toRaw(store.state).inline });
+});
 
 function handleInput(event: Event) {
   const input = event.currentTarget as HTMLInputElement;
