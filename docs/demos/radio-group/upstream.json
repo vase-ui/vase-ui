@@ -1,0 +1,11 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/radio-group/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9d8623573c060a5a3fe2199372fe652649db7a9841ee0339c98c9e18ea315570",
+    "hero/css-modules/index.tsx": "6e4283290a07df107c9a9e9bcf71033f2c81262cc4600f76442780ddd98b7338"
+  },
+  "entryPoints": {
+    "hero": ["radio"]
+  }
+}
