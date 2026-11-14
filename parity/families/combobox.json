@@ -19,20 +19,9 @@
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Empty` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Empty`."
-    },
-    {
       "upstream": "packages/react/src/combobox/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Combobox. It exports parts that Vase UI does not have, such as `Combobox.Empty` and `Combobox.Status`."
+      "reason": "Vase UI does not have the entry point of Combobox."
     },
     {
       "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.test.tsx",
@@ -78,7 +67,7 @@
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render a part that Vase UI does not have, such as `Combobox.Empty`. The calls of `popupConformanceTests` and `popupListConformanceTests` each wait for a change of one case of the shared suite."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. The calls of `popupConformanceTests` and `popupListConformanceTests` each wait for a change of one case of the shared suite."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
@@ -106,22 +95,6 @@
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "input inside popup composition"],
-      "title": "clears a single-select query and restores the selection when reopening during the close animation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "input inside popup composition"],
-      "title": "preserves a typed query when input reopens single-select during the close animation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "describe": ["<Combobox.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "not-applicable",
@@ -135,35 +108,10 @@
       "reason": "React sends the key of a portal up the React tree, so the list could get it. A Vue key goes up the DOM only, and a `Teleport` puts its content outside the list. The list thus gets no such key."
     },
     {
-      "upstream": "packages/react/src/combobox/status/ComboboxStatus.iOS.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Status` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/status/ComboboxStatus.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Status` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/status/ComboboxStatus.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Status`."
-    },
-    {
       "upstream": "packages/react/src/combobox/store.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/value/ComboboxValue.test.tsx",
-      "describe": ["<Combobox.Value />", "items array format"],
-      "title": "renders null item label when input is inside popup and no defaultValue",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/combobox/types.md",

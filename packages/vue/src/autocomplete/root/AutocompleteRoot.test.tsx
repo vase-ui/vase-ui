@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, nextTick, shallowRef } from 'vue';
 import type { PropType, ShallowRef } from 'vue';
+import { Autocomplete, AutocompleteSeparatorDataAttributes } from '@vase-ui/vue/autocomplete';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
@@ -17,8 +18,6 @@ import {
 } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import * as AutocompleteSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
-import * as Autocomplete from '../index.parts';
 import AutocompleteRootHydration from './AutocompleteRootHydration.test.vue';
 
 const HYDRATION_FILE = 'src/autocomplete/root/AutocompleteRootHydration.test.vue';
