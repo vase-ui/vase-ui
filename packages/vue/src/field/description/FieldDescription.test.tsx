@@ -162,49 +162,52 @@ describe('<Field.Description />', () => {
           'description-a description-c description-b',
         ],
       },
-    ])('describes the control with a description that mounts while held only after the show: $name', async ({ outside, expected }) => {
-      const visible = shallowRef(true);
-      const extra = shallowRef(false);
-      const Branch = defineComponent(() => () => (
-        <div>
-          <Field.Description key="a" id="description-a">
-            A
-          </Field.Description>
-          {extra.value ? (
-            <Field.Description key="b" id="description-b">
-              B
+    ])(
+      'describes the control with a description that mounts while held only after the show: $name',
+      async ({ outside, expected }) => {
+        const visible = shallowRef(true);
+        const extra = shallowRef(false);
+        const Branch = defineComponent(() => () => (
+          <div>
+            <Field.Description key="a" id="description-a">
+              A
             </Field.Description>
-          ) : null}
-        </div>
-      ));
-      await render(() => (
-        <Field.Root>
-          <Field.Control data-testid="control" />
-          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
-          {outside ? <Field.Description id="description-c">C</Field.Description> : null}
-        </Field.Root>
-      ));
-      const control = screen.getByTestId('control');
-      const seen = [control.getAttribute('aria-describedby')];
-      const changes = [
-        () => {
-          visible.value = false;
-        },
-        () => {
-          extra.value = true;
-        },
-        () => {
-          visible.value = true;
-        },
-      ];
-      for (const change of changes) {
-        change();
-        await flushMicrotasks();
-        seen.push(control.getAttribute('aria-describedby'));
-      }
+            {extra.value ? (
+              <Field.Description key="b" id="description-b">
+                B
+              </Field.Description>
+            ) : null}
+          </div>
+        ));
+        await render(() => (
+          <Field.Root>
+            <Field.Control data-testid="control" />
+            <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+            {outside ? <Field.Description id="description-c">C</Field.Description> : null}
+          </Field.Root>
+        ));
+        const control = screen.getByTestId('control');
+        const seen = [control.getAttribute('aria-describedby')];
+        const changes = [
+          () => {
+            visible.value = false;
+          },
+          () => {
+            extra.value = true;
+          },
+          () => {
+            visible.value = true;
+          },
+        ];
+        for (const change of changes) {
+          change();
+          await flushMicrotasks();
+          seen.push(control.getAttribute('aria-describedby'));
+        }
 
-      expect(seen).toEqual(expected);
-    });
+        expect(seen).toEqual(expected);
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

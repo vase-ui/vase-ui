@@ -3140,6 +3140,34 @@ describe('<Checkbox.Root />', () => {
       expect(screen.getByTestId('box')).toHaveFocus();
     });
 
+    it('does not block the form of its group while held, and blocks it after the show', async () => {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+        <Checkbox.Root key="b" value="b" required />
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup defaultValue={[]}>
+              <Checkbox.Root value="a" />
+              <HeldBranch />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await mountWhileHeld();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+      await show();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+    });
+
     it('is not in `aria-controls` of the parent checkbox while held', async () => {
       const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
         <Checkbox.Root key="b" value="b" data-testid="b" />

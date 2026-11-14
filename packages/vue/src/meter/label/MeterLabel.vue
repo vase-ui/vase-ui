@@ -38,7 +38,11 @@ defineSlots<{
 
 const { labelRoot } = useMeterRootContext();
 
-const labelId = useRegisteredLabelId(() => props.id, labelRoot, () => element.value);
+const labelId = useRegisteredLabelId(
+  () => props.id,
+  labelRoot,
+  () => element.value,
+);
 
 const state: MeterLabelState = EMPTY_OBJECT;
 

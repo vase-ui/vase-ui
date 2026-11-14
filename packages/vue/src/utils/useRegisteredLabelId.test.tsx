@@ -1,6 +1,5 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, onDeactivated, shallowRef } from 'vue';
-import type { ShallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { useLabelId, useRegisteredLabelId } from './useRegisteredLabelId';
 import type { LabelIdRoot } from './useRegisteredLabelId';
@@ -25,26 +24,18 @@ describe('useRegisteredLabelId', () => {
   const Test = defineComponent(
     (props: { labels: 'old' | 'both' | 'new' }) => {
       const target = shallowRef<HTMLElement | null>(null);
-        const { labelId, labelRoot } = useLabelId(target);
+      const { labelId, labelRoot } = useLabelId(target);
 
       return () => (
         <>
           <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
           {props.labels !== 'new' && (
-            <Label
-              key="old"
-              id="old-label"
-              root={labelRoot}
-            >
+            <Label key="old" id="old-label" root={labelRoot}>
               Old
             </Label>
           )}
           {props.labels !== 'old' && (
-            <Label
-              key="new"
-              id="new-label"
-              root={labelRoot}
-            >
+            <Label key="new" id="new-label" root={labelRoot}>
               New
             </Label>
           )}
@@ -94,11 +85,7 @@ describe('useRegisteredLabelId', () => {
         return () => (
           <>
             <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
-            <KeepAlive>
-              {visible.value ? (
-                <Labels root={labelRoot} />
-              ) : null}
-            </KeepAlive>
+            <KeepAlive>{visible.value ? <Labels root={labelRoot} /> : null}</KeepAlive>
           </>
         );
       });
@@ -125,11 +112,7 @@ describe('useRegisteredLabelId', () => {
           <>
             <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
             <KeepAlive>
-              <Label
-                key={shown.value}
-                id={`label-${shown.value}`}
-                root={labelRoot}
-              >
+              <Label key={shown.value} id={`label-${shown.value}`} root={labelRoot}>
                 Label
               </Label>
             </KeepAlive>
@@ -159,10 +142,7 @@ describe('useRegisteredLabelId', () => {
       // The branch reads the id in its own render, so the held label gets the new id.
       const Branch = defineComponent(
         (props: { root: LabelIdRoot }) => () => (
-          <Label
-            id={labelId.value}
-            root={props.root}
-          >
+          <Label id={labelId.value} root={props.root}>
             Label
           </Label>
         ),
@@ -175,11 +155,7 @@ describe('useRegisteredLabelId', () => {
         return () => (
           <>
             <div ref={target} data-testid="target" aria-labelledby={rootLabelId.value} />
-            <KeepAlive>
-              {visible.value ? (
-                <Branch root={labelRoot} />
-              ) : null}
-            </KeepAlive>
+            <KeepAlive>{visible.value ? <Branch root={labelRoot} /> : null}</KeepAlive>
           </>
         );
       });
@@ -212,10 +188,7 @@ describe('useRegisteredLabelId', () => {
           });
 
           return () => (
-            <Label
-              id={labelId.value}
-              root={props.root}
-            >
+            <Label id={labelId.value} root={props.root}>
               Label
             </Label>
           );
@@ -229,11 +202,7 @@ describe('useRegisteredLabelId', () => {
         return () => (
           <>
             <div ref={target} data-testid="target" aria-labelledby={rootLabelId.value} />
-            <KeepAlive>
-              {visible.value ? (
-                <Branch root={labelRoot} />
-              ) : null}
-            </KeepAlive>
+            <KeepAlive>{visible.value ? <Branch root={labelRoot} /> : null}</KeepAlive>
           </>
         );
       });
@@ -252,19 +221,17 @@ describe('useRegisteredLabelId', () => {
   });
 
   describe('a label that mounts while KeepAlive holds its branch', () => {
-    const Root = defineComponent(
-      (_props, { slots }) => {
-        const target = shallowRef<HTMLElement | null>(null);
-        const { labelId, labelRoot } = useLabelId(target);
+    const Root = defineComponent((_props, { slots }) => {
+      const target = shallowRef<HTMLElement | null>(null);
+      const { labelId, labelRoot } = useLabelId(target);
 
-        return () => (
-          <div>
-            <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
-            {slots.default?.(labelRoot)}
-          </div>
-        );
-      },
-    );
+      return () => (
+        <div>
+          <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+          {slots.default?.(labelRoot)}
+        </div>
+      );
+    });
 
     function createApp(options: { before: boolean; outside: boolean; rootInBranch: boolean }) {
       const visible = shallowRef(true);
@@ -289,26 +256,27 @@ describe('useRegisteredLabelId', () => {
         ),
         { props: ['root'] },
       );
-      const RootWithLabels = defineComponent(
-        () => () => <Root>{(root: LabelIdRoot) => <Labels root={root} />}</Root>,
-      );
-      const App = defineComponent(() => () =>
-        options.rootInBranch ? (
-          <KeepAlive>{visible.value ? <RootWithLabels /> : null}</KeepAlive>
-        ) : (
-          <Root>
-            {(root: LabelIdRoot) => (
-              <>
-                <KeepAlive>{visible.value ? <Labels root={root} /> : null}</KeepAlive>
-                {options.outside ? (
-                  <Label id="label-c" root={root}>
-                    C
-                  </Label>
-                ) : null}
-              </>
-            )}
-          </Root>
-        ),
+      const RootWithLabels = defineComponent(() => () => (
+        <Root>{(root: LabelIdRoot) => <Labels root={root} />}</Root>
+      ));
+      const App = defineComponent(
+        () => () =>
+          options.rootInBranch ? (
+            <KeepAlive>{visible.value ? <RootWithLabels /> : null}</KeepAlive>
+          ) : (
+            <Root>
+              {(root: LabelIdRoot) => (
+                <>
+                  <KeepAlive>{visible.value ? <Labels root={root} /> : null}</KeepAlive>
+                  {options.outside ? (
+                    <Label id="label-c" root={root}>
+                      C
+                    </Label>
+                  ) : null}
+                </>
+              )}
+            </Root>
+          ),
       );
       return { App, visible, extra };
     }
@@ -377,7 +345,9 @@ describe('useRegisteredLabelId', () => {
         extra.value = true;
         visible.value = true;
       };
-      const changes = showFlush ? [hide, mountBAndShow, hide, show] : [hide, mountB, show, hide, show];
+      const changes = showFlush
+        ? [hide, mountBAndShow, hide, show]
+        : [hide, mountB, show, hide, show];
 
       await render(<App />);
       const seen = [readTarget()];

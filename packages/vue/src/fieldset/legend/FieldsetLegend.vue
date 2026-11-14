@@ -42,7 +42,11 @@ defineSlots<{
 
 const { legendRoot, disabled } = useFieldsetRootContext();
 
-const legendId = useRegisteredLabelId(() => props.id, legendRoot, () => element.value);
+const legendId = useRegisteredLabelId(
+  () => props.id,
+  legendRoot,
+  () => element.value,
+);
 
 const state = computed<FieldsetLegendState>(() => ({ disabled: disabled.value }));
 

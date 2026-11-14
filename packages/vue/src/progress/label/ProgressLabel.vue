@@ -38,7 +38,11 @@ defineSlots<{
 
 const { labelRoot, state } = useProgressRootContext();
 
-const labelId = useRegisteredLabelId(() => props.id, labelRoot, () => element.value);
+const labelId = useRegisteredLabelId(
+  () => props.id,
+  labelRoot,
+  () => element.value,
+);
 
 const { element, elementProps } = useRenderElement('span', props, {
   state,
