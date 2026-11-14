@@ -2933,8 +2933,7 @@ describe('<Select.Root />', () => {
         </Select.Root>,
       );
 
-      screen.getByTestId('trigger').focus();
-      await flushMicrotasks();
+      await focusTrigger(screen.getByTestId('trigger'));
 
       await user.keyboard('{ArrowDown}');
       await screen.findByRole('listbox');
@@ -3930,8 +3929,8 @@ describe('<Select.Root />', () => {
 
       const listbox = screen.getByRole('listbox');
 
-      // The four events go in one task. The focus manager keeps a marker for a focus change inside
-      // the popup, and the check of the first event clears the marker of the last one.
+      // The four events go in one task, as in Base UI. The `focusout` of the list marks a focus
+      // change inside the popup, and the check of the first `focusout` clears that marker.
       await Promise.all([
         fireEvent.focusOut(trigger, { relatedTarget: listbox }),
         fireEvent.focusIn(listbox),
@@ -4896,218 +4895,227 @@ describe('<Select.Root />', () => {
       });
     });
 
-    it('resets aligned positioning after controlled value reset and option replacement', async () => {
-      const Test = defineComponent(() => {
-        const group = shallowRef<'a' | 'b'>('a');
-        const value = shallowRef<string | null>(null);
+    it.skipIf(isJSDOM)(
+      'resets aligned positioning after controlled value reset and option replacement',
+      async () => {
+        const Test = defineComponent(() => {
+          const group = shallowRef<'a' | 'b'>('a');
+          const value = shallowRef<string | null>(null);
 
-        return () => {
-          const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
+          return () => {
+            const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
 
-          return (
-            <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
-              <button
-                type="button"
-                data-testid="replace-options"
-                onClick={() => {
-                  group.value = 'b';
-                  value.value = null;
-                }}
-              >
-                Replace options
-              </button>
-              <Select.Root
-                value={value.value}
-                onValueChange={(next: string | null) => {
-                  value.value = next;
-                }}
-              >
-                <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
-                  <Select.Value placeholder="Pick one" />
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Positioner data-testid="positioner">
-                    <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
-                      {options.map((option, index) => (
-                        <Select.Item key={index} value={option}>
-                          <Select.ItemText>{option}</Select.ItemText>
-                        </Select.Item>
-                      ))}
-                    </Select.Popup>
-                  </Select.Positioner>
-                </Select.Portal>
-              </Select.Root>
-            </div>
-          );
-        };
-      });
+            return (
+              <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
+                <button
+                  type="button"
+                  data-testid="replace-options"
+                  onClick={() => {
+                    group.value = 'b';
+                    value.value = null;
+                  }}
+                >
+                  Replace options
+                </button>
+                <Select.Root
+                  value={value.value}
+                  onValueChange={(next: string | null) => {
+                    value.value = next;
+                  }}
+                >
+                  <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
+                    <Select.Value placeholder="Pick one" />
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Positioner data-testid="positioner">
+                      <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
+                        {options.map((option, index) => (
+                          <Select.Item key={index} value={option}>
+                            <Select.ItemText>{option}</Select.ItemText>
+                          </Select.Item>
+                        ))}
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
+              </div>
+            );
+          };
+        });
 
-      const { user } = await render(<Test />);
+        const { user } = await render(<Test />);
 
-      const trigger = screen.getByTestId('trigger');
+        const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await user.click(await screen.findByRole('option', { name: 'a-35' }));
-      await user.click(screen.getByTestId('replace-options'));
-      await user.click(trigger);
+        await user.click(trigger);
+        await user.click(await screen.findByRole('option', { name: 'a-35' }));
+        await user.click(screen.getByTestId('replace-options'));
+        await user.click(trigger);
 
-      const listbox = await screen.findByRole('listbox');
-      const positioner = screen.getByTestId('positioner');
-      const firstOption = screen.getByRole('option', { name: 'b-0' });
+        const listbox = await screen.findByRole('listbox');
+        const positioner = screen.getByTestId('positioner');
+        const firstOption = screen.getByRole('option', { name: 'b-0' });
 
-      await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
-      await waitFor(() => expect(listbox.scrollTop).toBe(0));
-      await waitFor(() =>
-        expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-          positioner.getBoundingClientRect().top,
-        ),
-      );
-    });
+        await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
+        await waitFor(() => expect(listbox.scrollTop).toBe(0));
+        await waitFor(() =>
+          expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+            positioner.getBoundingClientRect().top,
+          ),
+        );
+      },
+    );
 
-    it('resets aligned positioning when value reset, option replacement, and controlled open happen together', async () => {
-      const Test = defineComponent(() => {
-        const group = shallowRef<'a' | 'b'>('a');
-        const value = shallowRef<string | null>(null);
-        const open = shallowRef(false);
+    it.skipIf(isJSDOM)(
+      'resets aligned positioning when value reset, option replacement, and controlled open happen together',
+      async () => {
+        const Test = defineComponent(() => {
+          const group = shallowRef<'a' | 'b'>('a');
+          const value = shallowRef<string | null>(null);
+          const open = shallowRef(false);
 
-        return () => {
-          const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
+          return () => {
+            const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
 
-          return (
-            <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
-              <button
-                type="button"
-                data-testid="replace-options-and-open"
-                onClick={() => {
-                  group.value = 'b';
-                  value.value = null;
-                  open.value = true;
-                }}
-              >
-                Replace options and open
-              </button>
-              <Select.Root
-                value={value.value}
-                onValueChange={(next: string | null) => {
-                  value.value = next;
-                }}
-                open={open.value}
-                onOpenChange={(nextOpen: boolean) => {
-                  open.value = nextOpen;
-                }}
-              >
-                <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
-                  <Select.Value placeholder="Pick one" />
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Positioner data-testid="positioner">
-                    <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
-                      {options.map((option, index) => (
-                        <Select.Item key={index} value={option}>
-                          <Select.ItemText>{option}</Select.ItemText>
-                        </Select.Item>
-                      ))}
-                    </Select.Popup>
-                  </Select.Positioner>
-                </Select.Portal>
-              </Select.Root>
-            </div>
-          );
-        };
-      });
+            return (
+              <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
+                <button
+                  type="button"
+                  data-testid="replace-options-and-open"
+                  onClick={() => {
+                    group.value = 'b';
+                    value.value = null;
+                    open.value = true;
+                  }}
+                >
+                  Replace options and open
+                </button>
+                <Select.Root
+                  value={value.value}
+                  onValueChange={(next: string | null) => {
+                    value.value = next;
+                  }}
+                  open={open.value}
+                  onOpenChange={(nextOpen: boolean) => {
+                    open.value = nextOpen;
+                  }}
+                >
+                  <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
+                    <Select.Value placeholder="Pick one" />
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Positioner data-testid="positioner">
+                      <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
+                        {options.map((option, index) => (
+                          <Select.Item key={index} value={option}>
+                            <Select.ItemText>{option}</Select.ItemText>
+                          </Select.Item>
+                        ))}
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
+              </div>
+            );
+          };
+        });
 
-      const { user } = await render(<Test />);
+        const { user } = await render(<Test />);
 
-      const trigger = screen.getByTestId('trigger');
+        const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await user.click(await screen.findByRole('option', { name: 'a-35' }));
-      await user.click(screen.getByTestId('replace-options-and-open'));
+        await user.click(trigger);
+        await user.click(await screen.findByRole('option', { name: 'a-35' }));
+        await user.click(screen.getByTestId('replace-options-and-open'));
 
-      const listbox = await screen.findByRole('listbox');
-      const positioner = screen.getByTestId('positioner');
-      const firstOption = screen.getByRole('option', { name: 'b-0' });
+        const listbox = await screen.findByRole('listbox');
+        const positioner = screen.getByTestId('positioner');
+        const firstOption = screen.getByRole('option', { name: 'b-0' });
 
-      await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
-      await waitFor(() => expect(listbox.scrollTop).toBe(0));
-      await waitFor(() =>
-        expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-          positioner.getBoundingClientRect().top,
-        ),
-      );
-    });
+        await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
+        await waitFor(() => expect(listbox.scrollTop).toBe(0));
+        await waitFor(() =>
+          expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+            positioner.getBoundingClientRect().top,
+          ),
+        );
+      },
+    );
 
-    it('resets aligned positioning when a stale controlled value, option replacement, and controlled open happen together', async () => {
-      const Test = defineComponent(() => {
-        const group = shallowRef<'a' | 'b'>('a');
-        const value = shallowRef<string | null>(null);
-        const open = shallowRef(false);
+    it.skipIf(isJSDOM)(
+      'resets aligned positioning when a stale controlled value, option replacement, and controlled open happen together',
+      async () => {
+        const Test = defineComponent(() => {
+          const group = shallowRef<'a' | 'b'>('a');
+          const value = shallowRef<string | null>(null);
+          const open = shallowRef(false);
 
-        return () => {
-          const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
+          return () => {
+            const options = Array.from({ length: 40 }, (_, index) => `${group.value}-${index}`);
 
-          return (
-            <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
-              <button
-                type="button"
-                data-testid="replace-options-and-open"
-                onClick={() => {
-                  group.value = 'b';
-                  open.value = true;
-                }}
-              >
-                Replace options and open
-              </button>
-              <Select.Root
-                value={value.value}
-                onValueChange={(next: string | null) => {
-                  value.value = next;
-                }}
-                open={open.value}
-                onOpenChange={(nextOpen: boolean) => {
-                  open.value = nextOpen;
-                }}
-              >
-                <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
-                  <Select.Value placeholder="Pick one" />
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Positioner data-testid="positioner">
-                    <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
-                      {options.map((option, index) => (
-                        <Select.Item key={index} value={option}>
-                          <Select.ItemText>{option}</Select.ItemText>
-                        </Select.Item>
-                      ))}
-                    </Select.Popup>
-                  </Select.Positioner>
-                </Select.Portal>
-              </Select.Root>
-            </div>
-          );
-        };
-      });
+            return (
+              <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
+                <button
+                  type="button"
+                  data-testid="replace-options-and-open"
+                  onClick={() => {
+                    group.value = 'b';
+                    open.value = true;
+                  }}
+                >
+                  Replace options and open
+                </button>
+                <Select.Root
+                  value={value.value}
+                  onValueChange={(next: string | null) => {
+                    value.value = next;
+                  }}
+                  open={open.value}
+                  onOpenChange={(nextOpen: boolean) => {
+                    open.value = nextOpen;
+                  }}
+                >
+                  <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
+                    <Select.Value placeholder="Pick one" />
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Positioner data-testid="positioner">
+                      <Select.Popup style={{ maxHeight: 'none', minHeight: '100px' }}>
+                        {options.map((option, index) => (
+                          <Select.Item key={index} value={option}>
+                            <Select.ItemText>{option}</Select.ItemText>
+                          </Select.Item>
+                        ))}
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
+              </div>
+            );
+          };
+        });
 
-      const { user } = await render(<Test />);
+        const { user } = await render(<Test />);
 
-      const trigger = screen.getByTestId('trigger');
+        const trigger = screen.getByTestId('trigger');
 
-      await user.click(trigger);
-      await user.click(await screen.findByRole('option', { name: 'a-35' }));
-      await user.click(screen.getByTestId('replace-options-and-open'));
+        await user.click(trigger);
+        await user.click(await screen.findByRole('option', { name: 'a-35' }));
+        await user.click(screen.getByTestId('replace-options-and-open'));
 
-      const listbox = await screen.findByRole('listbox');
-      const positioner = screen.getByTestId('positioner');
-      const firstOption = screen.getByRole('option', { name: 'b-0' });
+        const listbox = await screen.findByRole('listbox');
+        const positioner = screen.getByTestId('positioner');
+        const firstOption = screen.getByRole('option', { name: 'b-0' });
 
-      await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
-      await waitFor(() => expect(listbox.scrollTop).toBe(0));
-      await waitFor(() =>
-        expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-          positioner.getBoundingClientRect().top,
-        ),
-      );
-    });
+        await waitFor(() => expect(trigger).toHaveAttribute('aria-expanded', 'true'));
+        await waitFor(() => expect(listbox.scrollTop).toBe(0));
+        await waitFor(() =>
+          expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+            positioner.getBoundingClientRect().top,
+          ),
+        );
+      },
+    );
 
     it('falls back to null when both selected and initial default are removed (uncontrolled)', async () => {
       const Test = defineComponent(() => {
@@ -5659,899 +5667,6 @@ describe('<Select.Root />', () => {
   });
 
   describe('prop: multiple', () => {
-    it('removes selections that no longer exist', async () => {
-      const Test = defineComponent(() => {
-        const items = shallowRef(['a', 'b', 'c']);
-        return () => (
-          <div>
-            <Select.Root multiple defaultValue={['a', 'c']}>
-              <Select.Trigger data-testid="trigger">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    {items.value.map((it) => (
-                      <Select.Item key={it} value={it}>
-                        {it}
-                      </Select.Item>
-                    ))}
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-            <button
-              type="button"
-              data-testid="remove-a"
-              onClick={() => {
-                items.value = items.value.filter((i) => i !== 'a');
-              }}
-            >
-              Remove A
-            </button>
-            <button
-              type="button"
-              data-testid="remove-c"
-              onClick={() => {
-                items.value = items.value.filter((i) => i !== 'c');
-              }}
-            >
-              Remove C
-            </button>
-          </div>
-        );
-      });
-
-      const { user } = await render(<Test />);
-
-      const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      });
-      expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
-
-      // Remove one of the selected items; remaining selection should persist
-      await user.click(screen.getByTestId('remove-c'));
-
-      await user.click(trigger);
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      });
-      expect(screen.queryByRole('option', { name: 'c' })).toBe(null);
-
-      // Remove the last selected item; selection should become empty
-      await user.click(screen.getByTestId('remove-a'));
-
-      await user.click(trigger);
-
-      const options = await screen.findAllByRole('option');
-      options.forEach((opt) => {
-        expect(opt).not.toHaveAttribute('data-selected');
-      });
-    });
-
-    it('removes selections replaced without changing the item count', async () => {
-      const onValueChange = vi.fn();
-
-      const Test = defineComponent(() => {
-        const items = shallowRef(['a', 'b', 'c']);
-        const value = shallowRef(['a', 'c']);
-
-        return () => (
-          <div>
-            <Select.Root
-              multiple
-              defaultOpen
-              value={value.value}
-              onValueChange={(nextValue: string[]) => {
-                value.value = nextValue;
-                onValueChange(nextValue);
-              }}
-            >
-              <Select.Trigger>
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    {items.value.map((item) => (
-                      <Select.Item key={item} value={item}>
-                        {item}
-                      </Select.Item>
-                    ))}
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-            <button
-              type="button"
-              onClick={() => {
-                items.value = ['a', 'b', 'd'];
-              }}
-            >
-              Replace C with D
-            </button>
-          </div>
-        );
-      });
-
-      await render(<Test />);
-
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
-
-      await fireEvent.click(screen.getByRole('button', { name: 'Replace C with D' }));
-
-      await waitFor(() => {
-        expect(onValueChange.mock.lastCall?.[0]).toEqual(['a']);
-      });
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'd' })).not.toHaveAttribute('data-selected');
-    });
-
-    it('should allow multiple selections when multiple is true', async () => {
-      const handleValueChange = vi.fn();
-
-      const App = defineComponent(() => {
-        const value = shallowRef<any[]>([]);
-
-        return () => (
-          <Select.Root
-            multiple
-            value={value.value}
-            onValueChange={(newValue: any[]) => {
-              value.value = newValue;
-              handleValueChange(newValue);
-            }}
-          >
-            <Select.Trigger data-testid="trigger">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="a">a</Select.Item>
-                  <Select.Item value="b">b</Select.Item>
-                  <Select.Item value="c">c</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        );
-      });
-
-      const { user } = await render(<App />);
-
-      const trigger = screen.getByTestId('trigger');
-
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
-      await user.click(optionA);
-      await flushMicrotasks();
-
-      expect(handleValueChange.mock.calls[0][0]).toEqual(['a']);
-      expect(optionA).toHaveAttribute('data-selected', '');
-
-      const optionB = screen.getByRole('option', { name: 'b' });
-      await user.click(optionB);
-      await flushMicrotasks();
-
-      expect(handleValueChange.mock.calls[1][0]).toEqual(['a', 'b']);
-      expect(optionA).toHaveAttribute('data-selected', '');
-      expect(optionB).toHaveAttribute('data-selected', '');
-
-      expect(screen.getByRole('listbox')).not.toBe(null);
-    });
-
-    it('keeps the selection when items are added and none of the selected ones are removed', async () => {
-      const handleValueChange = vi.fn();
-
-      const App = defineComponent(() => {
-        const items = shallowRef(['a', 'b']);
-
-        return () => (
-          <div>
-            <Select.Root multiple open defaultValue={['a']} onValueChange={handleValueChange}>
-              <Select.Trigger data-testid="trigger">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    {items.value.map((item) => (
-                      <Select.Item key={item} value={item}>
-                        {item}
-                      </Select.Item>
-                    ))}
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-            <button
-              type="button"
-              data-testid="add"
-              onClick={() => {
-                items.value = [...items.value, 'c'];
-              }}
-            >
-              Add C
-            </button>
-          </div>
-        );
-      });
-
-      const { user } = await render(<App />);
-
-      expect(await screen.findByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-
-      await user.click(screen.getByTestId('add'));
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'c' })).not.toBe(null);
-      });
-
-      // Growing the list must not rewrite a still-valid selection.
-      expect(handleValueChange).not.toHaveBeenCalled();
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-    });
-
-    it('should deselect items when clicked again in multiple mode', async () => {
-      const handleValueChange = vi.fn();
-
-      const App = defineComponent(() => {
-        const value = shallowRef(['a', 'b']);
-
-        return () => (
-          <Select.Root
-            multiple
-            value={value.value}
-            onValueChange={(newValue: string[]) => {
-              value.value = newValue;
-              handleValueChange(newValue);
-            }}
-          >
-            <Select.Trigger data-testid="trigger">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="a">a</Select.Item>
-                  <Select.Item value="b">b</Select.Item>
-                  <Select.Item value="c">c</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        );
-      });
-
-      const { user } = await render(<App />);
-
-      const trigger = screen.getByTestId('trigger');
-
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
-      const optionB = screen.getByRole('option', { name: 'b' });
-
-      expect(optionA).toHaveAttribute('data-selected', '');
-      expect(optionB).toHaveAttribute('data-selected', '');
-
-      await user.click(optionA);
-      await flushMicrotasks();
-
-      expect(handleValueChange.mock.calls[0][0]).toEqual(['b']);
-      expect(optionA).not.toHaveAttribute('data-selected');
-      expect(optionB).toHaveAttribute('data-selected', '');
-    });
-
-    it('should update selected items when the controlled value prop changes while open', async () => {
-      const { setProps } = await render(
-        <Select.Root multiple value={['a', 'b']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await fireEvent.click(trigger);
-      await flushMicrotasks();
-
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
-
-      await setProps({ value: ['b'] });
-
-      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'a' })).not.toHaveAttribute('data-selected');
-    });
-
-    it('keeps the active index on a deselected item in multiple mode', async () => {
-      const { user } = await render(
-        <Select.Root multiple value={['a']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await user.click(trigger);
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
-
-      await user.click(optionB);
-
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-
-      await user.click(optionB);
-
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-    });
-
-    it('highlights the first selected item in rendered order regardless of value order', async () => {
-      // `a` renders first but sits in the middle of the value array, so neither end of that
-      // array points at it and only the rendered order does.
-      const { user } = await render(
-        <Select.Root multiple defaultValue={['b', 'a', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.click(screen.getByTestId('trigger'));
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
-      await waitFor(() => {
-        expect(optionA).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-highlighted');
-      expect(screen.getByRole('option', { name: 'c' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it('re-elects the anchor when the anchor item value changes in place', async () => {
-      const App = defineComponent({
-        props: { replaceA: Boolean },
-        setup(props) {
-          return () => (
-            <Select.Root multiple defaultValue={['a', 'c']}>
-              <Select.Trigger data-testid="trigger">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    <Select.Item value={props.replaceA ? 'x' : 'a'}>
-                      {props.replaceA ? 'x' : 'a'}
-                    </Select.Item>
-                    <Select.Item value="b">b</Select.Item>
-                    <Select.Item value="c">c</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          );
-        },
-      });
-
-      const { user, setProps } = await render(<App />);
-
-      // The list only mounts on the first open, and stays mounted once closed. Opening
-      // first is what makes the swap below happen in place, on items that already
-      // registered their values and elected an anchor.
-      const trigger = screen.getByTestId('trigger');
-      await user.click(trigger);
-      await screen.findByRole('option', { name: 'a' });
-      await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
-
-      await setProps({ replaceA: true });
-
-      await user.click(trigger);
-
-      const optionC = await screen.findByRole('option', { name: 'c' });
-      await waitFor(() => {
-        expect(optionC).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'x' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it('moves the anchor to the next selected item when the anchor item leaves the list', async () => {
-      const App = defineComponent({
-        props: { trimmed: Boolean },
-        setup(props) {
-          return () => (
-            <Select.Root multiple defaultValue={['a', 'b', 'c']}>
-              <Select.Trigger data-testid="trigger">
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    {!props.trimmed && <Select.Item value="a">a</Select.Item>}
-                    <Select.Item value="b">b</Select.Item>
-                    <Select.Item value="c">c</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          );
-        },
-      });
-
-      const { user, setProps } = await render(<App />);
-
-      // The items have to register under the full list before one of them can leave it.
-      await user.click(screen.getByTestId('trigger'));
-      await screen.findByRole('option', { name: 'a' });
-      await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
-
-      await setProps({ trimmed: true });
-
-      await user.click(screen.getByTestId('trigger'));
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'c' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it('re-anchors backwards when a new isItemEqualToValue identity re-runs every item', async () => {
-      // An inline comparer gives every render a new identity, so all item effects re-run. The
-      // anchor moving to an earlier item must survive the old anchor's own effect.
-      interface Option {
-        id: number;
-      }
-      const options: Option[] = [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }];
-
-      const App = defineComponent({
-        props: { value: { type: Array as PropType<Option[]>, required: true } },
-        setup(props) {
-          return () => (
-            <Select.Root
-              multiple
-              value={props.value}
-              isItemEqualToValue={(a: Option, b: Option) => a.id === b.id}
-            >
-              <Select.Trigger data-testid="trigger">
-                <Select.Value v-slots={{ default: () => 'value' }} />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup>
-                    {options.map((option) => (
-                      <Select.Item key={option.id} value={option}>
-                        <Select.ItemText>{`opt-${option.id}`}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          );
-        },
-      });
-
-      const { user, setProps } = await render(<App value={[{ id: 2 }, { id: 3 }]} />);
-
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'opt-2' })).toHaveAttribute('data-highlighted');
-      });
-      await user.keyboard('{Escape}');
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
-
-      await setProps({ value: [{ id: 0 }, { id: 1 }] });
-
-      await user.click(screen.getByTestId('trigger'));
-
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'opt-0' })).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'opt-1' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it.skipIf(isJSDOM)(
-      'aligns the first selected item with the trigger when alignItemWithTrigger is active',
-      async () => {
-        // The list has to be long enough, and the popup unconstrained enough, for aligned
-        // positioning to stay active. Otherwise the popup falls back to a side and the
-        // measurement below would be meaningless, so `data-side` is asserted first.
-        const options = Array.from({ length: 40 }, (_, index) => `opt-${index}`);
-
-        const { user } = await render(
-          <div style={{ paddingTop: '120px', paddingLeft: '32px' }}>
-            <Select.Root multiple defaultValue={['opt-10', 'opt-30']}>
-              <Select.Trigger data-testid="trigger" style={{ width: '160px', height: '36px' }}>
-                <Select.Value />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup
-                    data-testid="popup"
-                    style={{ maxHeight: 'none', minHeight: '100px' }}
-                  >
-                    {options.map((option) => (
-                      <Select.Item key={option} value={option}>
-                        <Select.ItemText>{option}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          </div>,
-        );
-
-        const trigger = screen.getByTestId('trigger');
-        await user.click(trigger);
-
-        const anchorItem = await screen.findByRole('option', { name: 'opt-10' });
-        await waitFor(() => {
-          expect(anchorItem).toHaveAttribute('data-highlighted');
-        });
-        await waitFor(() => {
-          expect(screen.getByTestId('popup')).toHaveAttribute('data-side', 'none');
-        });
-
-        const verticalCenter = (element: Element) => {
-          const rect = element.getBoundingClientRect();
-          return rect.top + rect.height / 2;
-        };
-
-        await waitFor(() => {
-          expect(
-            Math.abs(verticalCenter(anchorItem) - verticalCenter(trigger)),
-          ).toBeLessThanOrEqual(1);
-        });
-      },
-    );
-
-    it('anchors to the first selected item when opened with the keyboard', async () => {
-      const { user } = await render(
-        <Select.Root multiple defaultValue={['b', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.keyboard('{Tab}');
-      expect(screen.getByTestId('trigger')).toHaveFocus();
-      await user.keyboard('{ArrowDown}');
-
-      const optionB = await screen.findByRole('option', { name: 'b' });
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'c' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it('continues arrow navigation from the anchor rather than the top of the list', async () => {
-      const { user } = await render(
-        <Select.Root multiple defaultValue={['b', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-                <Select.Item value="d">d</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-      // Focus reaches the anchor asynchronously. Keys sent before it lands are lost.
-      await waitFor(() => {
-        expect(optionB).toHaveFocus();
-      });
-
-      // The next item after the anchor, not `a` at the top.
-      await user.keyboard('{ArrowDown}');
-      await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-highlighted');
-      });
-
-      await user.keyboard('{ArrowUp}');
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-    });
-
-    it('keeps the highlight on an item deselected with the keyboard', async () => {
-      const { user } = await render(
-        <Select.Root multiple defaultValue={['b', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.click(screen.getByTestId('trigger'));
-      const optionB = await screen.findByRole('option', { name: 'b' });
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-      // Focus reaches the anchor asynchronously. Keys sent before it lands are lost.
-      await waitFor(() => {
-        expect(optionB).toHaveFocus();
-      });
-
-      await user.keyboard('{Enter}');
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('aria-selected', 'false');
-      });
-      expect(optionB).toHaveAttribute('data-highlighted');
-    });
-
-    it('anchors to the first selected item in rendered order across groups', async () => {
-      // `spinach` renders first but is not the last value, so anchoring to the rendered order
-      // and anchoring to the end of the value array give different answers.
-      const { user } = await render(
-        <Select.Root multiple defaultValue={['spinach', 'plum']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Group>
-                  <Select.GroupLabel>Vegetables</Select.GroupLabel>
-                  <Select.Item value="artichoke">artichoke</Select.Item>
-                  <Select.Item value="spinach">spinach</Select.Item>
-                </Select.Group>
-                <Select.Group>
-                  <Select.GroupLabel>Fruits</Select.GroupLabel>
-                  <Select.Item value="apple">apple</Select.Item>
-                  <Select.Item value="plum">plum</Select.Item>
-                </Select.Group>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await user.click(screen.getByTestId('trigger'));
-
-      const spinachItem = await screen.findByRole('option', { name: 'spinach' });
-      await waitFor(() => {
-        expect(spinachItem).toHaveAttribute('data-highlighted');
-      });
-      expect(screen.getByRole('option', { name: 'plum' })).not.toHaveAttribute('data-highlighted');
-    });
-
-    it.skipIf(isJSDOM)(
-      'scrolls the first selected item into view on open',
-      async ({ onTestFinished }) => {
-        const scrollIntoView = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
-        onTestFinished(() => scrollIntoView.mockRestore());
-        const options = Array.from({ length: 100 }, (_, index) => `item ${index}`);
-
-        const { user } = await render(
-          <Select.Root multiple defaultValue={['item 80', 'item 90']}>
-            <Select.Trigger data-testid="trigger">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Portal>
-              {/* Aligned positioning translates the popup instead of scrolling the list, so the
-                  scroll path only runs with it turned off. */}
-              <Select.Positioner alignItemWithTrigger={false}>
-                <Select.Popup style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {options.map((option) => (
-                    <Select.Item key={option} value={option}>
-                      <Select.ItemText>{option}</Select.ItemText>
-                    </Select.Item>
-                  ))}
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>,
-        );
-
-        scrollIntoView.mockClear();
-        await user.click(screen.getByTestId('trigger'));
-
-        const selectedItem = await screen.findByRole('option', { name: 'item 80' });
-        await waitFor(() => {
-          expect(selectedItem).toHaveAttribute('data-highlighted');
-        });
-        await waitFor(() => {
-          expect(scrollIntoView.mock.contexts).toContain(selectedItem);
-        });
-      },
-    );
-
-    it('should handle defaultValue as array in multiple mode', async () => {
-      await render(
-        <Select.Root multiple defaultValue={['a', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await fireEvent.click(trigger);
-      await flushMicrotasks();
-
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-selected');
-      expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
-    });
-
-    it('should serialize multiple values correctly for form submission', async () => {
-      const { container } = await render(
-        <Select.Root multiple name="select" value={['a', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const hiddenInputs = container.querySelectorAll<HTMLInputElement>('[name="select"]');
-      expect(hiddenInputs).toHaveLength(2);
-      const values = Array.from(hiddenInputs).map((input) => input.value);
-      expect(values).toEqual(['a', 'c']);
-    });
-
-    it.skipIf(isJSDOM)('does not submit multiple values when disabled', async () => {
-      const submitSpy = vi.fn((event: Event) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget as HTMLFormElement);
-        return formData.getAll('select');
-      });
-
-      const { user } = await render(
-        <form onSubmit={submitSpy}>
-          <Select.Root multiple disabled name="select" value={['a', 'c']}>
-            <Select.Trigger>
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="a">a</Select.Item>
-                  <Select.Item value="b">b</Select.Item>
-                  <Select.Item value="c">c</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-          <button type="submit">Submit</button>
-        </form>,
-      );
-
-      await user.click(screen.getByRole('button', { name: 'Submit' }));
-
-      expect(submitSpy.mock.calls.length).toBe(1);
-      expect(submitSpy.mock.results.at(-1)?.value).toEqual([]);
-    });
-
-    it('should serialize empty array as empty string in multiple mode', async () => {
-      const { container } = await render(
-        <Select.Root multiple name="select">
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      // In multiple mode with empty array, no hidden inputs with name should exist
-      const namedHiddenInputs = container.querySelectorAll('[name="select"]');
-      expect(namedHiddenInputs).toHaveLength(0);
-
-      // But the main input should have the serialized empty value for Field validation purposes
-      const mainInput = container.querySelector<HTMLInputElement>('input[aria-hidden="true"]');
-      expect(mainInput).not.toBe(null);
-      expect(mainInput?.value).toBe('');
-    });
-
     it('does not mark the hidden input as required when selection exists', async () => {
       await render(
         <Select.Root multiple required name="select" value={['a']}>
@@ -6578,115 +5693,6 @@ describe('<Select.Root />', () => {
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
       expect(hiddenInput).not.toBe(null);
       expect(hiddenInput).toHaveAttribute('required');
-    });
-
-    it('should not close popup when selecting items in multiple mode', async () => {
-      const { user } = await render(
-        <Select.Root multiple>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
-      });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
-      await user.click(optionA);
-      await flushMicrotasks();
-
-      expect(screen.getByRole('listbox')).not.toBe(null);
-
-      const optionB = screen.getByRole('option', { name: 'b' });
-      await user.click(optionB);
-      await flushMicrotasks();
-
-      expect(screen.getByRole('listbox')).not.toBe(null);
-    });
-
-    it('should close popup in single select mode', async () => {
-      const { user } = await render(
-        <Select.Root>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await user.click(trigger);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.getByRole('listbox')).not.toBe(null);
-      });
-
-      const optionA = await screen.findByRole('option', { name: 'a' });
-      await user.click(optionA);
-      await flushMicrotasks();
-
-      await waitFor(() => {
-        expect(screen.queryByRole('listbox')).toBe(null);
-      });
-    });
-
-    it('should update selected items when value prop changes', async () => {
-      const { setProps } = await render(
-        <Select.Root multiple value={['a']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      const trigger = screen.getByTestId('trigger');
-
-      await fireEvent.click(trigger);
-      await flushMicrotasks();
-
-      expect(await screen.findByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-selected');
-
-      await setProps({ value: ['a', 'b', 'c'] });
-
-      expect(screen.getByRole('option', { name: 'a' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
-      expect(screen.getByRole('option', { name: 'c' })).toHaveAttribute('data-selected', '');
     });
   });
 
