@@ -43,7 +43,7 @@ import {
   removeItem,
   selectedValueIncludes,
 } from '../../internals/itemEquality';
-import { useLabelableId } from '../../internals/labelable-provider';
+import { createLabelIdRegistry, useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
 import { REASONS } from '../../internals/reasons';
 import {
@@ -432,6 +432,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   } = useFieldRootContext();
 
   const id = useLabelableId({ id: () => props.id });
+  const { labelId, registerLabelId } = createLabelIdRegistry();
   const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
   const collatorFilter = computed(() => getFilter({ locale: locale.value }));
@@ -630,7 +631,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           ...createInitialPopupStoreState(defaultPopupId),
           ...initialState,
           id: id.value,
-          labelId: undefined,
+          labelId: labelId.value,
           selectedValue: selectedValue.value,
           items: storeItems.value as readonly any[] | undefined,
           selectionMode: selectionMode.value,
@@ -696,6 +697,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           valuesRef,
           pointerDownItemRef,
           selectionEventRef,
+          labelId,
+          registerLabelId,
         },
         selectors,
       ),
@@ -1769,6 +1772,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // one time for each flush in which a source changed.
   usePopupInteractionProps(store, () => ({
     id: id.value,
+    labelId: labelId.value,
     selectedValue: selectedValue.value,
     items: storeItems.value as readonly any[] | undefined,
     inline: inlineProp.value,

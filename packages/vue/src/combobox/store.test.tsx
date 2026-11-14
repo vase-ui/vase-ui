@@ -3,6 +3,7 @@ import { shallowRef, watchEffect } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { defaultItemEquality } from '../internals/itemEquality';
+import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/popups/store';
 import { ComboboxStore, selectors } from './store';
@@ -79,6 +80,7 @@ function createComboboxStore(initialState: Partial<State> = {}) {
     clearRef: shallowRef(null),
     pointerDownItemRef: shallowRef(null),
     selectionEventRef: shallowRef(null),
+    ...createLabelIdRegistry(),
   };
   return new ComboboxStore(state, context, selectors);
 }

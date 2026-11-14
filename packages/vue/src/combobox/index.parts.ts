@@ -32,6 +32,8 @@ import type {
 } from './item-indicator/ComboboxItemIndicator.vue';
 import ComboboxItem from './item/ComboboxItem.vue';
 import type { ComboboxItemProps, ComboboxItemState } from './item/ComboboxItem.vue';
+import ComboboxLabel from './label/ComboboxLabel.vue';
+import type { ComboboxLabelProps, ComboboxLabelState } from './label/ComboboxLabel.vue';
 import ComboboxList from './list/ComboboxList.vue';
 import type { ComboboxListProps, ComboboxListState } from './list/ComboboxList.vue';
 import ComboboxPopup from './popup/ComboboxPopup.vue';
@@ -61,6 +63,10 @@ import type {
   ComboboxSeparatorProps,
   ComboboxSeparatorState,
 } from './separator/ComboboxSeparator.vue';
+import ComboboxTrigger from './trigger/ComboboxTrigger.vue';
+import type { ComboboxTriggerProps, ComboboxTriggerState } from './trigger/ComboboxTrigger.vue';
+import ComboboxValue from './value/ComboboxValue.vue';
+import type { ComboboxValueProps, ComboboxValueState } from './value/ComboboxValue.vue';
 
 /**
  * Groups all parts of the combobox.
@@ -86,6 +92,29 @@ export namespace Root {
 }
 
 /**
+ * An accessible label that is automatically associated with the combobox trigger.
+ * Renders a `<div>` element.
+ */
+export const Label: typeof ComboboxLabel = ComboboxLabel;
+export namespace Label {
+  export type Props = ComboboxLabelProps;
+  export type State = ComboboxLabelState;
+}
+
+/**
+ * The current value of the combobox.
+ * Doesn't render its own HTML element.
+ *
+ * The default slot formats the selected value with the slot props `{ value }`, in the place of the
+ * function child of Base UI.
+ */
+export const Value: typeof ComboboxValue = ComboboxValue;
+export namespace Value {
+  export type Props = ComboboxValueProps;
+  export type State = ComboboxValueState;
+}
+
+/**
  * A text input to search for items in the list.
  * Renders an `<input>` element.
  *
@@ -107,6 +136,16 @@ export const InputGroup: typeof ComboboxInputGroup = ComboboxInputGroup;
 export namespace InputGroup {
   export type Props = ComboboxInputGroupProps;
   export type State = ComboboxInputGroupState;
+}
+
+/**
+ * A button that opens the popup.
+ * Renders a `<button>` element.
+ */
+export const Trigger: typeof ComboboxTrigger = ComboboxTrigger;
+export namespace Trigger {
+  export type Props = ComboboxTriggerProps;
+  export type State = ComboboxTriggerState;
 }
 
 /**

@@ -9,7 +9,6 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import ComboboxTriggerPart from '../../../test/fixtures/ComboboxTriggerPart.vue';
 import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
 import type { OffsetFunction } from '../../internals/useAnchorPositioning';
 import * as Combobox from '../index.parts';
@@ -102,7 +101,7 @@ describe('<Combobox.Positioner />', () => {
         content: (positioner: VNode) => (
           <>
             <Combobox.Input data-testid="anchor" style={{ width: '120px' }} />
-            <ComboboxTriggerPart style={{ width: '240px' }}>Open</ComboboxTriggerPart>
+            <Combobox.Trigger style={{ width: '240px' }}>Open</Combobox.Trigger>
             {positioner}
           </>
         ),
@@ -124,9 +123,9 @@ describe('<Combobox.Positioner />', () => {
         inputInPopup: true,
         content: (positioner: VNode) => (
           <>
-            <ComboboxTriggerPart data-testid="anchor" style={{ width: '200px' }}>
+            <Combobox.Trigger data-testid="anchor" style={{ width: '200px' }}>
               Open
-            </ComboboxTriggerPart>
+            </Combobox.Trigger>
             {positioner}
           </>
         ),

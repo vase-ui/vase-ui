@@ -11,7 +11,6 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import ComboboxTriggerPart from '../../../test/fixtures/ComboboxTriggerPart.vue';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
@@ -202,7 +201,7 @@ describe('<Combobox.Popup />', () => {
     function renderWithInputInPopup() {
       return render(
         <Combobox.Root>
-          <ComboboxTriggerPart data-testid="trigger">Open</ComboboxTriggerPart>
+          <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
           <Combobox.Portal>
             <Combobox.Positioner>
               <Combobox.Popup data-testid="popup">
@@ -348,7 +347,7 @@ describe('<Combobox.Popup />', () => {
     const handleOpenChangeComplete = vi.fn();
     const { user } = await render(
       <Combobox.Root onOpenChangeComplete={handleOpenChangeComplete}>
-        <ComboboxTriggerPart data-testid="trigger">Open</ComboboxTriggerPart>
+        <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
         <Combobox.Portal>
           <Combobox.Positioner>
             <Combobox.Popup>
@@ -424,7 +423,7 @@ describe('<Combobox.Popup />', () => {
         <div>
           <style>{EXIT_CSS}</style>
           <Combobox.Root>
-            <ComboboxTriggerPart data-testid="trigger">Open</ComboboxTriggerPart>
+            <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
             <Combobox.Portal>
               <Combobox.Positioner>
                 <Combobox.Popup class="popup" data-testid="popup">
