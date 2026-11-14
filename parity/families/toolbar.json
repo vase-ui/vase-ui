@@ -7,14 +7,6 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
-      "title": "handles interactions",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter on the trigger, and it moves the highlight with the arrow keys. Menu has no list navigation yet."
-    },
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Popover"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/index.ts",
