@@ -114,6 +114,40 @@ describe('<Popover.Trigger />', () => {
     expect(button).toHaveAttribute('tabindex', '0');
   });
 
+  describe('prop: delay', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each([
+      { name: 'the default delay', delay: undefined, wait: 300 },
+      { name: 'a delay of 100 ms', delay: 100, wait: 100 },
+    ])('opens on hover after $name', async ({ delay, wait }) => {
+      await render(
+        <Popover.Root>
+          <Popover.Trigger openOnHover delay={delay}>
+            Open
+          </Popover.Trigger>
+        </Popover.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Open' });
+
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+      vi.advanceTimersByTime(wait - 1);
+      await flushMicrotasks();
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(1);
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('data-popup-open');
+    });
+  });
+
   describe('prop: disabled', () => {
     it('disables the popover', async () => {
       const { user } = await render(

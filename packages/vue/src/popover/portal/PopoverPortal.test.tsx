@@ -80,7 +80,7 @@ describe('<Popover.Portal />', () => {
             }) => (
               <section {...props} data-testid="portal">
                 {h(children, null, () => (
-                  <Popover.Positioner>
+                  <Popover.Positioner data-testid="positioner">
                     <Popover.Popup>Content</Popover.Popup>
                   </Popover.Positioner>
                 ))}
@@ -96,7 +96,11 @@ describe('<Popover.Portal />', () => {
     expect(portal.localName).toBe('section');
     expect(portal.parentElement).toBe(document.body);
     expect(portal.contains(screen.getByRole('dialog'))).toBe(true);
-    expect(portal.firstElementChild).toHaveAttribute('role', 'presentation');
+    // The backdrop of the modal popover shows that `children` is the component of this part.
+    expect(screen.getByTestId('positioner').previousElementSibling).toHaveAttribute(
+      'role',
+      'presentation',
+    );
   });
 
   describe('the internal backdrop of a modal popover', () => {
