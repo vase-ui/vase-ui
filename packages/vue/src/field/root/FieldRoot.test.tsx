@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -125,6 +126,33 @@ describe('<Field.Root />', () => {
     expect(label).toHaveAttribute('for', control.id);
   });
 
+  it('re-associates the label when a CheckboxGroup is replaced by another control', async () => {
+    const TestCase = defineComponent(
+      (props: { multi: boolean }) => () => (
+        <Field.Root>
+          <Field.Label>Answer</Field.Label>
+          {props.multi ? (
+            <CheckboxGroup allValues={['a']}>
+              <Checkbox.Root value="a" />
+            </CheckboxGroup>
+          ) : (
+            <Field.Control data-testid="control" />
+          )}
+        </Field.Root>
+      ),
+      { props: ['multi'] },
+    );
+
+    const { rerender } = await render(<TestCase multi />);
+
+    // The group is named through `aria-labelledby`, so it suppresses `for` entirely.
+    expect(screen.getByText('Answer')).not.toHaveAttribute('for');
+
+    await rerender(<TestCase multi={false} />);
+
+    expect(screen.getByText('Answer')).toHaveAttribute('for', screen.getByTestId('control').id);
+  });
+
   it('updates label associations when the control id changes', async () => {
     const TestCase = defineComponent(() => {
       const controlId = shallowRef('control-a');
@@ -232,6 +260,46 @@ describe('<Field.Root />', () => {
     expect(control.isConnected).toBe(false);
     expect(control).toHaveAttribute('id', 'email');
     expect(screen.getByTestId('label')).toHaveAttribute('for', 'email');
+  });
+
+  it('keeps the group label suppressed while its subtree is hidden', async () => {
+    const visible = shallowRef(true);
+
+    await render(() => (
+      <>
+        <Field.Root>
+          <Field.Label data-testid="label">Apples</Field.Label>
+          <KeepAlive>
+            {visible.value ? (
+              <CheckboxGroup allValues={['fuji', 'gala']} defaultValue={[]} data-testid="group">
+                <Checkbox.Root parent />
+                <Checkbox.Root value="fuji" />
+                <Checkbox.Root value="gala" />
+              </CheckboxGroup>
+            ) : null}
+          </KeepAlive>
+        </Field.Root>
+        <button
+          type="button"
+          onClick={() => {
+            visible.value = false;
+          }}
+        >
+          hide
+        </button>
+      </>
+    ));
+
+    const label = screen.getByTestId('label');
+    const group = screen.getByTestId('group');
+
+    expect(label).not.toHaveAttribute('for');
+    expect(group).toHaveAttribute('aria-labelledby', label.id);
+
+    await fireEvent.click(screen.getByRole('button', { name: 'hide' }));
+
+    expect(label).not.toHaveAttribute('for');
+    expect(group).toHaveAttribute('aria-labelledby', label.id);
   });
 
   describe('prop: disabled', () => {
@@ -764,6 +832,51 @@ describe('<Field.Root />', () => {
         input2: 'two',
       });
       expect(onSubmit).toHaveBeenCalledTimes(2);
+    });
+
+    it('excludes registration-gated controls from onFormSubmit when their field name is removed', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const name = shallowRef<string | undefined>('fruits');
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name={name.value}>
+              <CheckboxGroup defaultValue={['apple']}>
+                <Field.Item>
+                  <Checkbox.Root value="apple" />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="banana" />
+                </Field.Item>
+              </CheckboxGroup>
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = undefined;
+              }}
+            >
+              Clear name
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ fruits: ['apple'] });
+
+      await fireEvent.click(screen.getByText('Clear name'));
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(2);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
     });
 
     it('uses the Field.Control name for form submission and form validation values', async () => {

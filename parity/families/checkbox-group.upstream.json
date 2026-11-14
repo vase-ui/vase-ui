@@ -1,0 +1,844 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/checkbox-group/**",
+    "docs/src/app/(docs)/react/components/checkbox-group/**"
+  ],
+  "sources": [
+    "packages/react/src/checkbox-group/CheckboxGroup.tsx",
+    "packages/react/src/checkbox-group/CheckboxGroupContext.ts",
+    "packages/react/src/checkbox-group/CheckboxGroupDataAttributes.ts",
+    "packages/react/src/checkbox-group/index.ts",
+    "packages/react/src/checkbox-group/useCheckboxGroupParent.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<CheckboxGroup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: id"
+          ],
+          "title": "is forwarded to the root element"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: value"
+          ],
+          "title": "should control the value"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: value"
+          ],
+          "title": "supports an empty string item value"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: value"
+          ],
+          "title": "treats a controlled value that becomes undefined as an empty array"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should be called when the value changes"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "should treat an omitted defaultValue as an empty array"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: onValueChange"
+          ],
+          "title": "does not update the group when onValueChange cancels the event"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: defaultValue"
+          ],
+          "title": "treats null as an empty array"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: defaultValue"
+          ],
+          "title": "should set the initial value"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: defaultValue"
+          ],
+          "title": "keeps omitted defaults isolated between groups in Strict Mode"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: disabled"
+          ],
+          "title": "disables all checkboxes when `true`"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: disabled"
+          ],
+          "title": "does not disable all checkboxes when `false`"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "prop: disabled"
+          ],
+          "title": "takes precedence over individual checkboxes"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "[data-filled] follows the group value even without a matching rendered checkbox"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "keeps a required error while another required checkbox in the group is unchecked"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "ignores a disabled required checkbox when validating the group"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "keeps validating the remaining required checkbox after a checked sibling unmounts"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "validationMode=onChange keeps the error until every required checkbox is ticked"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "validationMode=onBlur keeps the error until every required checkbox is ticked"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "does not leave a stale custom error when toggling checkboxes in a group"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "clears custom validity from disabled registered inputs when the group becomes valid"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onChange"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "validates with the group value when toggling the parent checkbox"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "revalidates when the controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onBlur"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "keeps checkbox ids unique when the group shares one Field.Root (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "keeps checkbox ids unique in a shared Field.Root during SSR (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "keeps ids unique without allValues in a shared Field.Root (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "labels the group rather than pointing Field.Label at one checkbox inside it"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "gives each checkbox in a shared Field.Root its own accessible name"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "associates Field.Label with a grouped Checkbox during SSR (nativeButton=$nativeButton, parent=$parent)"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "points parent aria-controls at the children once they register (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "implicit association"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Label"
+          ],
+          "title": "explicit association"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Field.Description"
+          ],
+          "title": "links the group and individual checkboxes"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "projects selected enabled checkboxes while preserving the logical validation value"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "omits selected unmounted checkboxes while retaining group state across remounts"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "preserves the logical field-name value when Checkbox.Root has no value prop"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "updates duplicate-value registrations before a parent layout effect submits"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "omits selected checkboxes associated with another form"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "includes a context-portaled checkbox without native form association"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "includes a group fully portaled outside the form element"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "includes a portaled checkbox explicitly associated with the Form"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form values"
+          ],
+          "title": "omits checkboxes disabled by a fieldset"
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "includes the checkbox group value in form submission",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "is validated as a group upon form submission",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses the first checkbox when the field receives an error from Form",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses the invalid checkbox when a later checkbox in the group fails validation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "ignores required checkboxes associated with a different form",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "stops validating a checkbox after it changes form owner",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "validates and focuses required portaled checkboxes within the form",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "ignores a checkbox portaled into another form without a form attribute",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "skips a checkbox disabled by a fieldset when focusing Form errors",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses a remaining checkbox when Form errors unmount the first checkbox",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "unblocks submission after every checkbox in the group unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "still runs custom validation after every checkbox in the group unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "clears a custom error when an inputless group becomes valid after submission",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "does not validate on change with validationMode=%s after the final checkbox unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "respects validationMode=%s when a controlled group starts without inputs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "validates an inputless controlled group on change with validationMode=onChange",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "validates an initially empty group through the imperative action",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "skips a disabled representative checkbox on a later focus attempt",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses the first child checkbox instead of a parent checkbox for Form errors",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses a later invalid field when an inputless group is invalid without a control",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "focuses a later invalid field when every checkbox in an invalid group is disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "excludes parent checkboxes from form submission",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<CheckboxGroup />",
+            "Form"
+          ],
+          "title": "appends the id attribute of the error to aria-describedby of individual checkboxes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/checkbox-group/useCheckboxGroupParent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "should control child checkboxes"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "parent should be marked as mixed if some children are checked"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "updates uncontrolled parent-enabled groups from child clicks without duplicate callbacks"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "should correctly initialize the values array"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "should update the values array when a child checkbox is clicked"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "should apply space-separated aria-controls attribute with child names"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "keeps a custom child id in aria-controls"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "keeps a rendered child id in aria-controls (nativeButton=%s)"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "references the exposed child rather than its custom-id input without nativeButton"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "does not read aria-controls ids off Object.prototype"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "drops an unmounted child from aria-controls"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "keeps both ids for checkboxes sharing a value and retains the survivor"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "does not select a child without an identifying value"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "preserves initial state if mixed when parent is clicked"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "lets a parent checkbox cancel a parent-enabled group change"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "lets a child checkbox cancel a parent-enabled group change"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "does not advance the parent toggle cycle when the group cancels a parent change"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "does not pollute the parent snapshot when the group cancels a child change"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "handles unchecked disabled checkboxes"
+        },
+        {
+          "describe": [
+            "useCheckboxGroupParent"
+          ],
+          "title": "handles checked disabled checkboxes"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/checkbox-group/types.md",
+      "parts": [
+        {
+          "name": "CheckboxGroup",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string[]",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: string[], eventDetails: CheckboxGroup.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "allValues",
+              "required": false,
+              "type": "string[]",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: CheckboxGroup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: CheckboxGroup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: CheckboxGroup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "CheckboxGroupState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type CheckboxGroupState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "CheckboxGroupChangeEventReason",
+            "values": [
+              "none"
+            ],
+            "code": "type CheckboxGroupChangeEventReason = 'none';"
+          },
+          "changeEventDetails": {
+            "name": "CheckboxGroupChangeEventDetails",
+            "code": "type CheckboxGroupChangeEventDetails = {\n    reason: 'none';\n    event: Event;\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "CheckboxGroupDataAttributes",
+          "code": "declare namespace CheckboxGroupDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": []
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/checkbox-group/page.mdx",
+      "referenceTags": [
+        "TypesCheckboxGroup"
+      ]
+    }
+  ]
+}
