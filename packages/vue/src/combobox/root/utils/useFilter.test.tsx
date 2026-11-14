@@ -125,19 +125,23 @@ describe('useComboboxFilter options', () => {
     const TestFilter = defineComponent(() => {
       const filter = useComboboxFilter(() => ({ locale: locale.value }));
       const matches = computed(() =>
-        ['Malmö', 'Malta'].filter((city) => filter.contains(city, 'malmo')),
+        [
+          filter.contains('Malmö', 'malmo'),
+          filter.startsWith('Malmö', 'malmo'),
+          filter.endsWith('Malmö', 'malmo'),
+        ].join(),
       );
-      return () => <span data-testid="matches">{matches.value.join()}</span>;
+      return () => <span data-testid="matches">{matches.value}</span>;
     });
 
     await render(<TestFilter />);
 
-    expect(screen.getByTestId('matches').textContent).toBe('Malmö');
+    expect(screen.getByTestId('matches').textContent).toBe('true,true,true');
 
     locale.value = 'sv';
     await nextTick();
 
-    expect(screen.getByTestId('matches').textContent).toBe('');
+    expect(screen.getByTestId('matches').textContent).toBe('false,false,false');
   });
 
   it('makes no new collator when the collator options stay the same', async () => {
@@ -173,10 +177,16 @@ describe('useComboboxFilter options', () => {
 describe('VUE-44: filters with en-US until the component is mounted when it has no locale', () => {
   const probeFile = 'src/combobox/root/utils/UseFilterProbe.test.vue';
 
-  it('hydrates the list that the server filtered, then follows the runtime locale', async () => {
+  // `ö` and `o` are equal with `en-US` and different with `sv`. Both cases mock `sv`, because the
+  // filter that the probe keeps for no locale holds the runtime locale of the first case that ran.
+  function mockSwedishRuntimeLocale() {
     spyOnCollator('sv');
     expect(getFilter({ locale: 'en-US', numeric: true }).contains('Malmö', 'malmo')).toBe(true);
     expect(getFilter({ numeric: true }).contains('Malmö', 'malmo')).toBe(false);
+  }
+
+  it('hydrates the list that the server filtered, then follows the runtime locale', async () => {
+    mockSwedishRuntimeLocale();
     const serverHtml = await renderOnServer(probeFile);
     expect(serverHtml).toContain('<li>Malmö</li>');
 
@@ -186,13 +196,13 @@ describe('VUE-44: filters with en-US until the component is mounted when it has 
   });
 
   it('hydrates the list that the server filtered with the locale of the options', async () => {
-    spyOnCollator('en-US');
-    const props = { locale: 'sv' };
+    mockSwedishRuntimeLocale();
+    const props = { locale: 'en-US' };
     const serverHtml = await renderOnServer(probeFile, props);
-    expect(serverHtml).not.toContain('Malmö');
+    expect(serverHtml).toContain('<li>Malmö</li>');
 
     const { container } = await hydrate(UseFilterProbe, { serverHtml, props });
 
-    expect(within(container).queryByText('Malmö')).toBe(null);
+    expect(within(container).queryByText('Malmö')).not.toBe(null);
   });
 });
