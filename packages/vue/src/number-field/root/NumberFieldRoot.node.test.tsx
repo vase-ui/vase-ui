@@ -29,6 +29,10 @@ function getValueAttribute(input: string) {
   return match ? (match[1] ?? '') : undefined;
 }
 
+function getStepper(html: string, name: 'increment' | 'decrement') {
+  return tag(html, new RegExp(`<button[^>]*data-testid="${name}"[^>]*>`));
+}
+
 function getText(html: string) {
   return html.match(/<span data-testid="text">([^<]*)<\/span>/)?.[1];
 }
@@ -91,6 +95,70 @@ describe('<NumberField.Root />', () => {
       expect(/ disabled[ >]/.test(input)).toBe(true);
       expect(/ readonly[ >]/.test(input)).toBe(true);
       expect(/ required[ >]/.test(input)).toBe(true);
+    });
+
+    it.each([
+      { name: 'the increment button', testId: 'increment', label: 'Increase' },
+      { name: 'the decrement button', testId: 'decrement', label: 'Decrease' },
+    ] as const)(
+      'renders $name with its label, its tab stop and its style',
+      async ({ testId, label }) => {
+        const html = await renderToString(<NumberFieldRootHydration defaultValue={5} />);
+        const button = getStepper(html, testId);
+
+        expect(button).toContain(` aria-label="${label}"`);
+        expect(button).toMatch(/ aria-controls="[^"]+"/);
+        expect(button).toContain(' tabindex="-1"');
+        expect(button).toContain(' type="button"');
+        // A server writes the key of a style as it is. The key `WebkitUserSelect` would give
+        // `webkit-user-select`, which is not a CSS property.
+        expect(button).toContain('-webkit-user-select:none');
+        expect(button).toContain('user-select:none');
+      },
+    );
+
+    it.each([
+      {
+        name: 'a disabled root',
+        props: { defaultValue: 5, disabled: true },
+        increment: { disabled: true, ariaDisabled: 'true' },
+        decrement: { disabled: true, ariaDisabled: 'true' },
+      },
+      {
+        name: 'a read-only root',
+        props: { defaultValue: 5, readOnly: true },
+        increment: { disabled: false, ariaDisabled: 'true' },
+        decrement: { disabled: false, ariaDisabled: 'true' },
+      },
+      {
+        name: 'a value at its maximum',
+        props: { defaultValue: 9, max: 9 },
+        increment: { disabled: true, ariaDisabled: 'true' },
+        decrement: { disabled: false, ariaDisabled: 'false' },
+      },
+      {
+        name: 'a value at its minimum',
+        props: { defaultValue: 1, min: 1 },
+        increment: { disabled: false, ariaDisabled: 'false' },
+        decrement: { disabled: true, ariaDisabled: 'true' },
+      },
+    ])('renders the states of the buttons for $name', async ({ props, increment, decrement }) => {
+      const html = await renderToString(<NumberFieldRootHydration {...props} />);
+
+      for (const [name, expected] of [
+        ['increment', increment],
+        ['decrement', decrement],
+      ] as const) {
+        const button = getStepper(html, name);
+
+        expect(/ disabled[ >=]/.test(button), `${name}: disabled`).toBe(expected.disabled);
+        expect(/ data-disabled[ >=]/.test(button), `${name}: data-disabled`).toBe(
+          expected.disabled,
+        );
+        expect(button, `${name}: aria-disabled`).toContain(
+          ` aria-disabled="${expected.ariaDisabled}"`,
+        );
+      }
     });
 
     // A server cannot know the locale of the visitor, so the text has `en-US` when the root has no
