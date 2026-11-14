@@ -44,7 +44,9 @@ describe('<Menu.RadioGroup />', () => {
       expect(b).toHaveAttribute('aria-checked', 'true');
       expect(events).toEqual(['valueChange', 'update:value']);
       expect(onValueChange.mock.lastCall).toEqual(['b', expect.anything()]);
-      const details = (onValueChange.mock.lastCall as unknown[])[1] as Menu.RadioGroup.ChangeEventDetails;
+      const details = (
+        onValueChange.mock.lastCall as unknown[]
+      )[1] as Menu.RadioGroup.ChangeEventDetails;
       expect(details.reason).toBe(REASONS.itemPress);
       expect(onUpdateValue).toHaveBeenLastCalledWith('b');
     });

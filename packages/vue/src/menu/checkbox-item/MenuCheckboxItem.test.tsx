@@ -108,7 +108,9 @@ describe('<Menu.CheckboxItem />', () => {
       expect(item).toHaveAttribute('data-checked', '');
       expect(events).toEqual(['checkedChange', 'update:checked']);
       expect(onCheckedChange.mock.lastCall).toEqual([true, expect.anything()]);
-      const details = (onCheckedChange.mock.lastCall as unknown[])[1] as Menu.CheckboxItem.ChangeEventDetails;
+      const details = (
+        onCheckedChange.mock.lastCall as unknown[]
+      )[1] as Menu.CheckboxItem.ChangeEventDetails;
       expect(details.reason).toBe(REASONS.itemPress);
       expect(details.event.type).toBe('click');
       expect(onUpdateChecked).toHaveBeenLastCalledWith(true);

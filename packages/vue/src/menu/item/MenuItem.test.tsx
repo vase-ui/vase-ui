@@ -403,7 +403,11 @@ describe('<Menu.Item />', () => {
 
       probe.store.context.allowMouseUpTriggerRef.value = true;
       context.initialCursorPointRef.value = { x: 10, y: 10 };
-      await fireEvent.mouseUp(screen.getByRole('menuitem'), { button: 2, clientX: 11, clientY: 10 });
+      await fireEvent.mouseUp(screen.getByRole('menuitem'), {
+        button: 2,
+        clientX: 11,
+        clientY: 10,
+      });
 
       expect(onClick).not.toHaveBeenCalled();
       expect(context.initialCursorPointRef.value).toBe(null);
