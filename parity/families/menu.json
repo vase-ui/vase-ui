@@ -448,8 +448,8 @@
       "describe": ["<Menu.Popup />"],
       "title": "does not move focus behind a modal dialog to $name when an item hides the menu trigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
-      "reason": "The case renders `Dialog.Trigger` and the other parts of Dialog, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
@@ -473,13 +473,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />"],
-      "title": "uses aria-labelledby from a render element",
-      "kind": "not-applicable",
-      "reason": "A part does not see an attribute that a `#render` slot adds. The part reads `aria-labelledby` only from its own attributes."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",

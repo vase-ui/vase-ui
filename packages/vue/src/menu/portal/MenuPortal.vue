@@ -20,8 +20,7 @@ export interface MenuPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, shallowRef } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
+import { computed, provide, useTemplateRef } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -49,8 +48,8 @@ provide(
 // trigger gives its own.
 const portalOwnerRole = parent.type === 'menu' || parent.type === 'menubar' ? 'group' : undefined;
 
-const portal = shallowRef<(ComponentPublicInstance & { element: HTMLElement | null }) | null>(null);
-const element = computed(() => portal.value?.element ?? null);
+const portalRef = useTemplateRef('portal');
+const element = computed(() => portalRef.value?.element ?? null);
 
 defineExpose({ element });
 </script>

@@ -117,9 +117,11 @@ const state = computed<MenuPopupState>(() => ({
   instant: store.select('instantType'),
 }));
 
-// An `aria-label` or an `aria-labelledby` of the consumer replaces the label from the trigger. The
-// part reads only its own attributes, because it does not see an attribute that a `#render` slot
-// adds.
+// An `aria-label` or an `aria-labelledby` of the part replaces the label from the trigger. The part
+// reads only its own attributes. An `aria-labelledby` on the element of a `#render` slot also
+// replaces the label, because the element sets it after the props. An `aria-label` on that element
+// does not, because the part does not see it. The popup then keeps the `aria-labelledby` of the
+// trigger.
 function getAriaLabelledBy(attrs: Record<string, unknown>) {
   const ariaLabelledBy = attrs['aria-labelledby'] as string | undefined;
   if (ariaLabelledBy != null || attrs['aria-label']) {
