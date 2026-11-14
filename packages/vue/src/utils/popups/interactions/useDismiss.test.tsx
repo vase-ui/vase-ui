@@ -203,13 +203,6 @@ function isOpen(name: string) {
   return screen.queryByTestId(name) !== null;
 }
 
-// The pointer of the browser stays where a case leaves it, for each later test.
-function releasePointerAfterTest() {
-  onTestFinished(async () => {
-    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-  });
-}
-
 function addOutsideElement() {
   const outside = document.createElement('div');
   outside.style.cssText = 'position: absolute; left: 500px; top: 20px; width: 60px; height: 60px';
@@ -2429,7 +2422,6 @@ describe('useDismiss', () => {
       { name: 'on pointerdown in the sloppy form', mode: 'sloppy', eventType: 'pointerdown' },
       { name: 'on click in the intentional form', mode: 'intentional', eventType: 'click' },
     ] as const)('closes $name', async ({ mode, eventType }) => {
-      releasePointerAfterTest();
       const outside = addOutsideElement();
       const changes: Change[] = [];
       await render(
@@ -2449,7 +2441,6 @@ describe('useDismiss', () => {
 
   describe('popups below the popup in the component tree', () => {
     it('VUE-4: a press in a child popup that Teleport moved does not close the parent popup', async () => {
-      releasePointerAfterTest();
       const outside = addOutsideElement();
       await render(
         <Popup name="parent">
@@ -2715,7 +2706,6 @@ describe('useDismiss', () => {
 
   describe('shadow roots', () => {
     it('takes a press in a popup in a closed shadow root for a press inside', async () => {
-      releasePointerAfterTest();
       const outside = addOutsideElement();
       const host = document.createElement('div');
       document.body.append(host);
@@ -2754,7 +2744,6 @@ describe('useDismiss', () => {
     ] as const)(
       'BUG-5410: a press in a same-origin iframe closes the popup in the $mode form',
       async ({ mode, eventType }) => {
-        releasePointerAfterTest();
         const { frame, loaded } = addFrame();
         await loaded;
         const changes: Change[] = [];
@@ -2773,7 +2762,6 @@ describe('useDismiss', () => {
     );
 
     it('BUG-5410: a press in an iframe that loads while the popup is open closes the popup', async () => {
-      releasePointerAfterTest();
       await render(<Popup name="popup" />);
       const { frame, loaded } = addFrame();
       await loaded;
@@ -2784,7 +2772,6 @@ describe('useDismiss', () => {
     });
 
     it('BUG-5410: a press in an iframe in an iframe closes the popup', async () => {
-      releasePointerAfterTest();
       const outer = addFrame();
       await outer.loaded;
       await render(<Popup name="popup" />);
@@ -2798,7 +2785,6 @@ describe('useDismiss', () => {
     });
 
     it('keeps the popup open for a press in an iframe in the popup', async () => {
-      releasePointerAfterTest();
       await render(<Popup name="popup" />);
       const { frame, loaded } = addFrame({ parent: screen.getByTestId('popup') });
       frame.style.position = 'static';
@@ -2810,7 +2796,6 @@ describe('useDismiss', () => {
     });
 
     it('keeps the popup open for a press in an iframe in an iframe in the popup', async () => {
-      releasePointerAfterTest();
       await render(<Popup name="popup" />);
       const outer = addFrame({ parent: screen.getByTestId('popup') });
       outer.frame.style.position = 'static';
@@ -2827,7 +2812,6 @@ describe('useDismiss', () => {
     it.each([{ mode: 'sloppy' }, { mode: 'intentional' }] as const)(
       'keeps the popup open in the $mode form for a press in an iframe in a popup that Teleport moved',
       async ({ mode }) => {
-        releasePointerAfterTest();
         const dismiss = { outsidePressEvent: mode };
         await render(
           <Popup name="parent" dismiss={dismiss}>
@@ -2848,7 +2832,6 @@ describe('useDismiss', () => {
     );
 
     it('keeps the popup above open for a press in an iframe in a node of its tree', async () => {
-      releasePointerAfterTest();
       // The child listens for no press, so only the floating tree links it to the popup above.
       await render(
         <Tree>
@@ -2898,7 +2881,6 @@ describe('useDismiss', () => {
     });
 
     it('skips a cross-origin iframe and listens in the frames after it', async () => {
-      releasePointerAfterTest();
       const crossOrigin = addFrame({ sandboxed: true });
       const sameOrigin = addFrame({ top: 420 });
       await Promise.all([crossOrigin.loaded, sameOrigin.loaded]);
@@ -2938,7 +2920,6 @@ describe('useDismiss', () => {
     });
 
     it('takes a press in an iframe for a press on its element when the document has inert markers', async () => {
-      releasePointerAfterTest();
       const host = document.createElement('div');
       host.innerHTML = `<div ${createAttribute('inert')}></div>`;
       document.body.append(host);

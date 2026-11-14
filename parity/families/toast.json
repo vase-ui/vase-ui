@@ -3,16 +3,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/toast/action/ToastAction.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Action`."
-    },
-    {
-      "upstream": "packages/react/src/toast/action/ToastActionDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Action`. The file comes with the part."
-    },
-    {
       "upstream": "packages/react/src/toast/arrow/ToastArrow.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Toast.Arrow`."
@@ -21,26 +11,6 @@
       "upstream": "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Toast.Arrow`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/close/ToastClose.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Close`."
-    },
-    {
-      "upstream": "packages/react/src/toast/close/ToastCloseDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Close`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/description/ToastDescription.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Description`."
-    },
-    {
-      "upstream": "packages/react/src/toast/description/ToastDescriptionDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Description`. The file comes with the part."
     },
     {
       "upstream": "packages/react/src/toast/index.ts",
@@ -68,35 +38,40 @@
       "reason": "Vase UI does not have `Toast.Positioner`. The file comes with the part."
     },
     {
-      "upstream": "packages/react/src/toast/title/ToastTitle.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Title`."
-    },
-    {
-      "upstream": "packages/react/src/toast/title/ToastTitleDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Title`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/isRenderableNode.ts",
-      "kind": "waits-on",
-      "reason": "Only `Toast.Title`, `Toast.Description` and `Toast.Action` call the functions of this file, and Vase UI does not have those parts."
-    },
-    {
       "upstream": "packages/react/src/toast/utils/test-utils.tsx",
       "kind": "waits-on",
-      "reason": "The file has two components for the tests. `List` renders `Toast.Title`, `Toast.Description`, `Toast.Close` and `Toast.Action`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.ts",
-      "kind": "waits-on",
-      "reason": "Only `Toast.Title` and `Toast.Description` call the functions of this file, and Vase UI does not have those parts."
+      "reason": "The file has `List` and `Button`, two components for the tests. Vase UI adds it with the cases that render them."
     },
     {
       "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "describe": ["<Toast.Action />"],
+      "title": "performs an action when clicked",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/action/ToastAction.tsx",
-      "reason": "The cases render `Toast.Action`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "describe": ["<Toast.Action />"],
+      "title": "forwards actionProps to the button",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "describe": ["<Toast.Action />"],
+      "title": "does not render if it has no children",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
+      "describe": ["<Toast.Action />"],
+      "title": "renders content passed through the render prop",
+      "kind": "not-applicable",
+      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
       "upstream": "packages/react/src/toast/arrow/ToastArrow.test.tsx",
@@ -106,27 +81,17 @@
     },
     {
       "upstream": "packages/react/src/toast/close/ToastClose.test.tsx",
+      "describe": ["<Toast.Close />"],
+      "title": "closes the toast when clicked",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/close/ToastClose.tsx",
-      "reason": "The cases render `Toast.Close`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/content/ToastContent.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "Each case renders `Toast.Title`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/createToastManager.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
       "reason": "Each case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/description/ToastDescription.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/description/ToastDescription.tsx",
-      "reason": "The suite call renders `Toast.Description`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/positioner/ToastPositioner.test.tsx",
@@ -140,18 +105,6 @@
       "title": "does not sync provider props from an abandoned render",
       "kind": "not-applicable",
       "reason": "The case suspends a React transition, and React then abandons a render. Vue has no render that it abandons."
-    },
-    {
-      "upstream": "packages/react/src/toast/provider/ToastProvider.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "Each case renders `Toast.Title`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/close/ToastClose.tsx",
-      "reason": "Each case renders at least one of `Toast.Title`, `Toast.Description` and `Toast.Close`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
@@ -178,55 +131,11 @@
       "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/toast/title/ToastTitle.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "The suite call renders `Toast.Title`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/description/ToastDescription.tsx",
-      "reason": "Each case renders at least one of `Toast.Title`, `Toast.Close` and `Toast.Description`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
       "describe": ["useToast", "add"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
       "reason": "Each case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "add"],
-      "title": "keeps multiple providers isolated when one provider updates",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "The case renders `Toast.Title`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "add", "option: title"],
-      "title": "renders the title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "The case renders `Toast.Title`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "add", "option: description"],
-      "title": "renders the description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/description/ToastDescription.tsx",
-      "reason": "The case renders `Toast.Description`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "add", "option: type"],
-      "title": "renders the type",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "The case renders `Toast.Title`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
@@ -245,15 +154,56 @@
     },
     {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/isRenderableNode.ts",
-      "reason": "The cases call the functions of `isRenderableNode.ts`, which Vase UI does not have."
+      "describe": ["hasRenderableChildren"],
+      "title": "requires an element whose children are renderable",
+      "kind": "replaced",
+      "test": "packages/vue/src/toast/utils/useToastLabelPart.test.tsx",
+      "reason": "The case builds React elements. A Vue part cannot read the children of a vnode, so Vase UI has no `hasRenderableChildren`. The cases of the label parts test the rule that replaces it: a part renders only while it has a default slot or a label with content."
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />"],
+      "title": "`renders the toast ${field} by default`",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/useToastLabelPart.ts",
-      "reason": "The cases render `Toast.Title` and `Toast.Description`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />"],
+      "title": "`adds ${attribute} to the root element`",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />"],
+      "title": "does not render if it has no children",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
+      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
+      "title": "renders content passed through the render prop",
+      "kind": "not-applicable",
+      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
+      "title": "renders content passed through a render function",
+      "kind": "not-applicable",
+      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
+    },
+    {
+      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
+      "title": "`wires ${attribute} to a part rendered through the render prop`",
+      "kind": "not-applicable",
+      "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
@@ -264,17 +214,26 @@
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
       "describe": ["<Toast.Viewport />", "real browser input"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "Each case renders `Toast.Title`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
       "title": "leaves F6 to the browser when its origin becomes $name",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
       "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
+      "describe": ["<Toast.Viewport />", "real browser input"],
+      "title": "keeps timers paused when a hovered toast is clicked while nothing had focus",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
+      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
+      "describe": ["<Toast.Viewport />", "real browser input"],
+      "title": "keeps timers paused when the window regains focus while a toast is hovered",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
+      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -322,29 +281,29 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Title",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitle.tsx",
-      "reason": "Vase UI does not have `Toast.Title`."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports `Toast.Title`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Description",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/description/ToastDescription.tsx",
-      "reason": "Vase UI does not have `Toast.Description`."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports `Toast.Description`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Close",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/close/ToastClose.tsx",
-      "reason": "Vase UI does not have `Toast.Close`."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports `Toast.Close`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Action",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/action/ToastAction.tsx",
-      "reason": "Vase UI does not have `Toast.Action`."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports `Toast.Action`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -371,8 +330,8 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastActionDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/action/ToastActionDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastActionDataAttributes.ts`, the file of these names."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports the attribute names of `Toast.Action`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -385,8 +344,8 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastCloseDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/close/ToastCloseDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastCloseDataAttributes.ts`, the file of these names."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports the attribute names of `Toast.Close`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -399,8 +358,8 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastDescriptionDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/description/ToastDescriptionDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastDescriptionDataAttributes.ts`, the file of these names."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports the attribute names of `Toast.Description`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
@@ -434,8 +393,8 @@
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "ToastTitleDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/title/ToastTitleDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastTitleDataAttributes.ts`, the file of these names."
+      "waitsOn": "packages/react/src/toast/index.ts",
+      "reason": "The entry point of Toast exports the attribute names of `Toast.Title`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
