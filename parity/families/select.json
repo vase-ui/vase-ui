@@ -109,6 +109,21 @@
       "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
     },
     {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "scroll arrows"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The cases render `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "select inside popover"],
+      "title": "dismisses the popover after reopening a selected aligned select",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
+    },
+    {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
       "describe": ["<Select.GroupLabel />"],
       "title": "replaces and unregisters its label in Strict Mode",
