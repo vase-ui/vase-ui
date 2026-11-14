@@ -875,6 +875,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
 - The `#render` slots of `FloatingPortal` and `FloatingPortalLite` get `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. A portal part with no nodes of its own, such as `Tooltip.Portal`, gives each slot prop of the portal to its own `#render` slot. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 - `Dialog.Popup` gives the internal backdrop to its focus manager in `getInsideElements`, so the modal marks do not touch it. The release of the marks would remove the `inert` of the backdrop of a closing dialog.
+- `Drawer.Popup` gives the internal backdrop to its focus manager in the same way.
 
 ### Popup interactions
 

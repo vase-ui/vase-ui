@@ -539,6 +539,8 @@ watch(
   { flush: 'post' },
 );
 
+// As in `Dialog.Popup`, the modal marks must not touch the internal backdrop. Their release at the
+// close would remove the `inert` that the portal gives the backdrop while the drawer closes.
 function getInsideElements() {
   return [store.context.internalBackdropRef.value];
 }
