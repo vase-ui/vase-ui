@@ -51,7 +51,7 @@ describe('<Toast.Content />', () => {
           <Toast.Viewport data-testid="viewport">
             {toasts.value.map((toastItem) => (
               <Toast.Root key={toastItem.id} toast={toastItem}>
-                <Toast.Content data-testid={`content-${toastItem.title}`}>
+                <Toast.Content data-testid={`content-${String(toastItem.title)}`}>
                   <Toast.Title />
                 </Toast.Content>
               </Toast.Root>

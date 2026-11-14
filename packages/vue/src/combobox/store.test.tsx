@@ -212,12 +212,12 @@ describe('the store with no root', () => {
       read: (store: ComboboxStore) => [store.select('hasSelectionChips')],
       expected: [true],
     },
-  ] satisfies Array<{
+  ] satisfies {
     name: string;
     state: Partial<State>;
     read: (store: ComboboxStore) => boolean[];
     expected: boolean[];
-  }>)('selects $name', ({ state, read, expected }) => {
+  }[])('selects $name', ({ state, read, expected }) => {
     expect(read(createComboboxStore(state))).toEqual(expected);
   });
 });

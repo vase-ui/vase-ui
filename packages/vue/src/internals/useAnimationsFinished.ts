@@ -55,6 +55,7 @@ const getAnimationsBatched = createMicrotaskQueue<
       const root: Node & Partial<DocumentOrShadowRoot> = element.getRootNode();
       if (root === animatedRoot && !animationsByTarget) {
         animationsByTarget = new Map();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `animatedRoot` is only a root that has `getAnimations`.
         for (const animation of root.getAnimations!()) {
           const effect = animation.effect as KeyframeEffect;
           // `element.getAnimations()` excludes animations of the element's pseudo-elements.
@@ -67,6 +68,7 @@ const getAnimationsBatched = createMicrotaskQueue<
         }
       }
       animations =
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The block above makes `animationsByTarget` when `root` is `animatedRoot`.
         root === animatedRoot ? (animationsByTarget!.get(element) ?? []) : element.getAnimations();
       if (remaining > 1 && animations.length && element.isConnected && root.getAnimations) {
         animatedRoot ??= root;
@@ -96,7 +98,7 @@ function runAfterEarlierCompletions(fnToExecute: () => void, signal: AbortSignal
       fnToExecute();
       return nextTick();
     })
-    .catch((error) => reportError(error));
+    .catch((error: unknown) => reportError(error));
 }
 
 /**

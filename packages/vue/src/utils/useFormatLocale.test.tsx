@@ -8,7 +8,7 @@ describe('useFormatLocale', () => {
   const { render } = createRenderer();
 
   it('returns en-US for the first render of a client-only mount, then the runtime locale', async () => {
-    const locales: Array<Intl.LocalesArgument | undefined> = [];
+    const locales: (Intl.LocalesArgument | undefined)[] = [];
 
     const TestComponent = defineComponent(() => {
       const formatLocale = useFormatLocale(undefined);

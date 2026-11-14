@@ -20,7 +20,7 @@ export interface CompositeRootPartProps
         event: KeyboardEvent,
         prevIndex: number,
         nextIndex: number,
-        elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
       ) => number)
     | undefined;
   /** The highlighted index, when the root is controlled. */

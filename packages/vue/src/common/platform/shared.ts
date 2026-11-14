@@ -1,5 +1,5 @@
 interface NavigatorUAData {
-  readonly brands: ReadonlyArray<{ brand: string; version: string }>;
+  readonly brands: readonly { brand: string; version: string }[];
   readonly mobile: boolean;
   readonly platform: string;
 }

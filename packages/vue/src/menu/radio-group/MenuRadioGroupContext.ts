@@ -3,7 +3,7 @@ import type { ComputedRef, InjectionKey } from 'vue';
 import type { MenuRootChangeEventDetails } from '../root/MenuRoot.vue';
 
 export interface MenuRadioGroupContext {
-  value: ComputedRef<any>;
+  value: ComputedRef;
   setValue: (newValue: any, eventDetails: MenuRootChangeEventDetails) => void;
   disabled: ComputedRef<boolean>;
 }

@@ -3,7 +3,7 @@ import { renderToString } from 'vue/server-renderer';
 import CheckboxIndicatorHydration from './CheckboxIndicatorHydration.test.vue';
 
 function readIndicator(html: string) {
-  return html.match(/<span[^>]*data-testid="indicator"[^>]*>/)?.[0] ?? '';
+  return /<span[^>]*data-testid="indicator"[^>]*>/.exec(html)?.[0] ?? '';
 }
 
 describe('<Checkbox.Indicator />', () => {
