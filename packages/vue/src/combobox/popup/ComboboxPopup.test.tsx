@@ -86,33 +86,67 @@ describe('<Combobox.Popup />', () => {
     });
   });
 
-  it('gives the rendered id of the popup to the store', async () => {
+  describe('the id of the popup in the store', () => {
     const Probe = defineComponent(() => {
       const store = useComboboxRootContext();
       return () => <span data-testid="probe" data-popup-id={store.select('popupElementId')} />;
     });
-    const id = shallowRef<string | undefined>(undefined);
-    await render(() => (
-      <Combobox.Root defaultOpen>
-        <Probe />
+
+    it('gives the rendered id of the popup to the store', async () => {
+      const id = shallowRef<string | undefined>(undefined);
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Probe />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup data-testid="popup" {...(id.value ? { id: id.value } : {})}>
+                <Combobox.Input />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+      const popupId = screen.getByTestId('popup').id;
+      expect(popupId).not.toBe('');
+      expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', popupId);
+
+      id.value = 'fruits';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', 'fruits');
+    });
+
+    it('gives the new id of the popup to the store when the id of the root changes', async () => {
+      // A component with no props does not render again with its parent. The popup part thus
+      // renders again only for a value that its own render reads.
+      const PopupParts = defineComponent(() => () => (
         <Combobox.Portal>
           <Combobox.Positioner>
-            <Combobox.Popup data-testid="popup" {...(id.value ? { id: id.value } : {})}>
+            <Combobox.Popup data-testid="popup">
               <Combobox.Input />
             </Combobox.Popup>
           </Combobox.Positioner>
         </Combobox.Portal>
-      </Combobox.Root>
-    ));
-    await flushMicrotasks();
-    const popupId = screen.getByTestId('popup').id;
-    expect(popupId).not.toBe('');
-    expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', popupId);
+      ));
+      const rootId = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen id={rootId.value}>
+          <Probe />
+          <PopupParts />
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+      const firstPopupId = screen.getByTestId('popup').id;
+      expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', firstPopupId);
 
-    id.value = 'fruits';
-    await flushMicrotasks();
+      rootId.value = 'second';
+      await flushMicrotasks();
 
-    expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', 'fruits');
+      const secondPopupId = screen.getByTestId('popup').id;
+      expect(secondPopupId).not.toBe(firstPopupId);
+      expect(screen.getByTestId('probe')).toHaveAttribute('data-popup-id', secondPopupId);
+    });
   });
 
   describe('the focus', () => {

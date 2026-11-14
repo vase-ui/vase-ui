@@ -60,7 +60,7 @@ export interface ComboboxPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, onUpdated, toRaw } from 'vue';
+import { computed, onMounted, onScopeDispose, onUpdated, toRaw, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { contains, getTarget } from '../../common/shadowDom';
@@ -104,7 +104,8 @@ const popupId = computed(() =>
 );
 
 // Prefer the rendered DOM id, which an `id` attribute or the `#render` slot may override. The
-// attributes are not reactive, so each render of the part compares the id again.
+// attributes are not reactive, so each render of the part compares the id again. The focus manager
+// renders the element, so a new default id does not render this part: the `watch` follows it.
 function writePopupElementId() {
   const nextId = store.context.popupRef.value?.id || popupId.value;
   if (toRaw(store.state).popupElementId !== nextId) {
@@ -113,6 +114,7 @@ function writePopupElementId() {
 }
 onMounted(writePopupElementId);
 onUpdated(writePopupElementId);
+watch(popupId, writePopupElementId, { flush: 'post' });
 onScopeDispose(() => {
   store.set('popupElementId', undefined);
 });
