@@ -1868,7 +1868,11 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The title of a page in the navigation is its first-level heading.
 - The build fails when a page in the navigation has no `order` or no first-level heading.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
-- A page that is not a component page has its samples in `docs/examples/<page>`. The page imports each sample and renders it, as `docs/quick-start.md` does.
+- A page that is not a component page has its samples in `docs/examples/<page>`. `docs/quick-start.md` imports each sample and renders it.
+- The folder `docs/handbook` holds the handbook pages. Their `order` follows the Base UI handbook: Styling 1, Animation 2, Composition 3, Customization 4, Forms 5, TypeScript 6.
+- A handbook page shows the source of a sample and does not render it.
+- Where the Base UI page has a demo, the handbook page renders it inside `<DemoFrame>`. The demo is `docs/examples/<page>/demos/<demo>/index.vue`. It imports the copied style sheets of `docs/demos`. A `<style module>` block in the folder of the demo sets no color, because the copied style sheets follow the color scheme of the system.
+- `packages/vue/test/demos.test.tsx` runs its checks on each `docs/examples/*/demos/*/index.vue` too, as on each demo of a component page.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
