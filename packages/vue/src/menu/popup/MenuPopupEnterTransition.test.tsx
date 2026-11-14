@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { Timeout } from '../../common/useTimeout';
 import { createRenderer, isJSDOM, screen, waitFor } from '#test-utils';

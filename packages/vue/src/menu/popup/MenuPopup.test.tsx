@@ -1,7 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import {
   createRenderer,
   describeConformance,

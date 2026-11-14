@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 
 describe('<Menu.Backdrop /> on a server', () => {
   it('writes the user select style with the prefix in its CSS form', async () => {

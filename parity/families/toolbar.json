@@ -9,7 +9,7 @@
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",
       "reason": "The cases open the menu with a press and move the focus into the menu. The trigger and the popup of Vase UI have no press and no focus management yet."
     },
     {

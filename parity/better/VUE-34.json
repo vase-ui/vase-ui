@@ -1,0 +1,9 @@
+{
+  "id": "VUE-34",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/tooltip/store/TooltipHandle.ts#L45-L47",
+    "https://vuejs.org/guide/essentials/computed.html"
+  ],
+  "behavior": "`isOpen` of a popup handle is reactive. A `computed`, a `watch` or a template that reads it follows the open state of the popup, and the root that controls the handle. In Base UI, a component that reads `isOpen` in its render does not render again when the popup opens or closes.",
+  "dueWith": "packages/react/src/tooltip/store/TooltipHandle.ts"
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,

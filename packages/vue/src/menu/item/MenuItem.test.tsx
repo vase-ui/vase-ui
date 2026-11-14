@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import {
   createRenderer,
   describeConformance,

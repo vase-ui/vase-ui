@@ -1,4 +1,4 @@
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 
 const handle = Menu.createHandle<string>();
 

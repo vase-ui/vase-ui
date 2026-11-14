@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';

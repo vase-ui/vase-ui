@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import { Menu } from '@vase-ui/vue/menu';
+import * as Menu from '../index.parts';
 import { createRenderer, describeConformance } from '#test-utils';
 
 describe('<Menu.Arrow />', () => {
