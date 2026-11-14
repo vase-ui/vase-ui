@@ -11,6 +11,8 @@ const CURRENCY_TEXT = new Intl.NumberFormat('de-DE', { style: 'currency', curren
 );
 // The server cannot know the locale of the visitor, so it formats the value with `en-US`.
 const PERCENT_TEXT = new Intl.NumberFormat('en-US', { style: 'percent' }).format(0.42);
+const EURO_FORMAT = { style: 'currency', currency: 'EUR' } as const;
+const EURO_TEXT = new Intl.NumberFormat('en-US', EURO_FORMAT).format(1234.5);
 
 interface RangeRootAttributes {
   role: string;
@@ -770,6 +772,16 @@ async function expectRadioGroupPage(page: Page) {
   expect(await readRadios(page, 'empty', 'tabindex')).toEqual(['-1', '0', '-1']);
 }
 
+// The label and the messages name the input in the server HTML, in each order of the parts. The
+// hidden input has the number and not the text.
+async function expectNumberFieldPage(page: Page) {
+  await expectLabelledField(page, 'label-first');
+  await expectLabelledField(page, 'label-last');
+  expect(await page.getByTestId('label-first-control').inputValue()).toBe(EURO_TEXT);
+  expect(await page.getByTestId('label-last-control').inputValue()).toBe('7');
+  expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
+}
+
 // The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
@@ -838,6 +850,7 @@ const PAGES: PageCase[] = [
   { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
   { path: '/input', expectPage: expectInputPage },
+  { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
   { path: '/unstable-use-media-query', expectPage: expectMediaQueryPage },
@@ -966,6 +979,22 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readRadioIndicator('banana-indicator')).toMatchObject({ 'data-checked': '' });
     expect(await page.getByTestId('value').textContent()).toBe('banana');
     expect(await readFormData(page)).toEqual(['fruit=banana']);
+    expect(messages).toEqual([]);
+  });
+
+  it('changes the value of /number-field with typing after hydration, and formats the text on blur', async () => {
+    const page = await createPage('/number-field');
+    const messages = collectMessages(page);
+    const control = page.getByTestId('label-first-control');
+
+    await control.fill('42');
+
+    expect(await page.getByTestId('amount-value').textContent()).toBe('42');
+    expect(await readFormData(page)).toEqual(['amount=42', 'quantity=7']);
+
+    await control.blur();
+
+    expect(await control.inputValue()).toBe(new Intl.NumberFormat('en-US', EURO_FORMAT).format(42));
     expect(messages).toEqual([]);
   });
 
@@ -1182,6 +1211,24 @@ describe.each(MODES)('in $name', async ({ dev }) => {
       expect(messages).toEqual([]);
     },
   );
+
+  it('formats the text of /number-field with the locale of the visitor after hydration', async () => {
+    const page = await createPage(undefined, { locale: 'de-DE' });
+    const messages = collectMessages(page);
+
+    await page.goto(url('/number-field'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    const visitorText = await page.evaluate(
+      (format) => new Intl.NumberFormat(undefined, format).format(1234.5),
+      EURO_FORMAT,
+    );
+    expect(visitorText).not.toBe(EURO_TEXT);
+    expect(await page.getByTestId('label-first-control').inputValue()).toBe(visitorText);
+    expect(await page.getByTestId('label-last-control').inputValue()).toBe('7');
+    expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
+    expect(messages).toEqual([]);
+  });
 
   it('shows the media query of the visitor after hydration', async () => {
     // The screen is narrower than the query, so the real value differs from `defaultMatches`.
