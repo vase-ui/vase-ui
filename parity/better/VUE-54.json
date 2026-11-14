@@ -1,0 +1,10 @@
+{
+  "id": "VUE-54",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/root/useCompositeRoot.ts#L115-L142",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/radio/",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+  ],
+  "behavior": "When the active item of a composite changes while the focus is outside the composite, the tab stop moves to that item. A native reset, a controlled value that the parent changes, and an active item that mounts late are such changes. When such a change leaves no active item, or an active item that is disabled or hidden, the tab stop moves to the first enabled item. When the focus leaves the composite, the tab stop goes back to the active item. While the composite has the focus, the tab stop stays on the item that the user chose. The Tab key thus enters a Radio Group on the checked radio, and a Tabs list with manual activation on the active tab. In Base UI, only `Tabs.Tab` moves the tab stop, and only to a tab that becomes active. A Radio Group keeps the tab stop on the radio that had the focus last, and a Tabs list keeps it on the tab that had the focus last or that was active last.",
+  "dueWith": "packages/react/src/internals/composite/root/useCompositeRoot.ts"
+}

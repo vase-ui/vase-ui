@@ -31,7 +31,7 @@ const testPreviewCardProps = {
 function renderPopup() {
   return (
     <PreviewCard.Portal>
-      <PreviewCard.Positioner data-testid="positioner" style={noRealPointer}>
+      <PreviewCard.Positioner data-testid="positioner">
         <PreviewCard.Popup data-testid="popup">Content</PreviewCard.Popup>
       </PreviewCard.Positioner>
     </PreviewCard.Portal>
@@ -42,12 +42,7 @@ const ContainedTriggerPreviewCard = defineComponent({
   props: testPreviewCardProps,
   setup: (props) => () => (
     <PreviewCard.Root {...props.rootProps}>
-      <PreviewCard.Trigger
-        href="#"
-        data-testid="trigger"
-        style={noRealPointer}
-        {...props.triggerProps}
-      >
+      <PreviewCard.Trigger href="#" data-testid="trigger" {...props.triggerProps}>
         Link
       </PreviewCard.Trigger>
       {renderPopup()}
@@ -65,7 +60,6 @@ const DetachedTriggerPreviewCard = defineComponent({
         <PreviewCard.Trigger
           href="#"
           data-testid="trigger"
-          style={noRealPointer}
           {...props.triggerProps}
           handle={previewCardHandle}
         >
@@ -89,18 +83,12 @@ const MultipleDetachedTriggersPreviewCard = defineComponent({
         <PreviewCard.Trigger
           href="#"
           data-testid="trigger"
-          style={noRealPointer}
           {...props.triggerProps}
           handle={previewCardHandle}
         >
           Link
         </PreviewCard.Trigger>
-        <PreviewCard.Trigger
-          href="#"
-          data-testid="trigger-2"
-          style={noRealPointer}
-          handle={previewCardHandle}
-        >
+        <PreviewCard.Trigger href="#" data-testid="trigger-2" handle={previewCardHandle}>
           Another link
         </PreviewCard.Trigger>
 
@@ -684,9 +672,6 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: actionsRef', () => {
-      // `user.hover` refuses an element with `pointer-events: none`.
-      const realPointer = { pointerEvents: 'auto' } as const;
-
       it('unmounts the preview card when the `unmount` method is called', async () => {
         let actions: PreviewCard.Root.Actions | null = null;
 
@@ -703,7 +688,6 @@ describe('<PreviewCard.Root />', () => {
             triggerProps={{
               delay: 0,
               closeDelay: 0,
-              style: realPointer,
             }}
           />,
         );
@@ -741,7 +725,7 @@ describe('<PreviewCard.Root />', () => {
               onOpenChange,
               onOpenChangeComplete,
             }}
-            triggerProps={{ delay: 0, style: realPointer }}
+            triggerProps={{ delay: 0 }}
           />,
         );
 
@@ -1154,7 +1138,7 @@ describe('<PreviewCard.Root />', () => {
               <PreviewCard.Popup data-testid="parent-popup">
                 <div>Parent content</div>
                 <PreviewCard.Root>
-                  <PreviewCard.Trigger href="#" data-testid="child-trigger" style={noRealPointer}>
+                  <PreviewCard.Trigger href="#" data-testid="child-trigger">
                     Child
                   </PreviewCard.Trigger>
                   <PreviewCard.Portal>
@@ -1197,11 +1181,11 @@ describe('<PreviewCard.Root />', () => {
       it('keeps the parent open and re-opens the child when re-entering after partial close', async () => {
         await render(
           <PreviewCard.Root defaultOpen>
-            <PreviewCard.Trigger href="#" data-testid="parent-trigger" style={noRealPointer}>
+            <PreviewCard.Trigger href="#" data-testid="parent-trigger">
               Parent
             </PreviewCard.Trigger>
             <PreviewCard.Portal>
-              <PreviewCard.Positioner style={noRealPointer}>
+              <PreviewCard.Positioner>
                 <PreviewCard.Popup data-testid="parent-popup">
                   <div>Parent content</div>
                   <PreviewCard.Root>
@@ -1209,7 +1193,7 @@ describe('<PreviewCard.Root />', () => {
                       Child
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
-                      <PreviewCard.Positioner style={noRealPointer}>
+                      <PreviewCard.Positioner>
                         <PreviewCard.Popup data-testid="child-popup">
                           Child content
                         </PreviewCard.Popup>
@@ -1289,11 +1273,11 @@ describe('<PreviewCard.Root />', () => {
       it('parent popup closes as soon as the child popup closes', async () => {
         await render(
           <PreviewCard.Root>
-            <PreviewCard.Trigger href="#" data-testid="parent-trigger" style={noRealPointer}>
+            <PreviewCard.Trigger href="#" data-testid="parent-trigger">
               Parent
             </PreviewCard.Trigger>
             <PreviewCard.Portal>
-              <PreviewCard.Positioner style={noRealPointer}>
+              <PreviewCard.Positioner>
                 <PreviewCard.Popup data-testid="parent-popup">
                   <div>Parent content</div>
                   <PreviewCard.Root>
@@ -1301,7 +1285,7 @@ describe('<PreviewCard.Root />', () => {
                       Child
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
-                      <PreviewCard.Positioner style={noRealPointer}>
+                      <PreviewCard.Positioner>
                         <PreviewCard.Popup data-testid="child-popup">
                           Child content
                         </PreviewCard.Popup>
@@ -1388,6 +1372,44 @@ describe('<PreviewCard.Root />', () => {
       expect(outer.parentId).not.toBe(null);
       const innerNode = outer.tree!.nodesRef.value.find((node) => node.id === inner.parentId);
       expect(innerNode?.parentId).toBe(outer.parentId);
+    });
+
+    it('closes only the nested card on Escape while the focus is in the outer card', async () => {
+      const onOuterOpenChange = vi.fn();
+      const onInnerOpenChange = vi.fn();
+      const { user } = await render(
+        <PreviewCard.Root defaultOpen onOpenChange={onOuterOpenChange}>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="parent-popup">
+                <button type="button">Action</button>
+                <PreviewCard.Root defaultOpen onOpenChange={onInnerOpenChange}>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+      expect(screen.queryByTestId('child-popup')).not.toBe(null);
+
+      // The key event goes through the popup of the outer card, which finds the open nested card
+      // in the tree.
+      screen.getByRole('button', { name: 'Action' }).focus();
+      await user.keyboard('[Escape]');
+      await flushMicrotasks();
+
+      expect(onInnerOpenChange).toHaveBeenCalledTimes(1);
+      expect(onInnerOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(onOuterOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
     });
   });
 

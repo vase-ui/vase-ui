@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
-import { createRenderer, nextEvent, waitFor } from '#test-utils';
+import { createRenderer, createTransitionRunCounter, nextEvent, waitFor } from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -49,6 +49,10 @@ describe('<Accordion.Panel /> transitions', () => {
       'runs one exit and one enter when the value changes from one item to the other: $name',
       async (row) => {
         const value = shallowRef(['a']);
+        const counters = {
+          a: createTransitionRunCounter(() => value.value.includes('a')),
+          b: createTransitionRunCounter(() => value.value.includes('b')),
+        };
         const { container } = await render(() => (
           <>
             <style>{STYLE}</style>
@@ -57,9 +61,13 @@ describe('<Accordion.Panel /> transitions', () => {
               keepMounted={row.keepMounted}
               hiddenUntilFound={row.hiddenUntilFound}
             >
-              {['a', 'b'].map((itemValue) => (
+              {(['a', 'b'] as const).map((itemValue) => (
                 <Accordion.Item key={itemValue} value={itemValue}>
-                  <Accordion.Panel class={TRANSITION} data-testid={`panel-${itemValue}`}>
+                  <Accordion.Panel
+                    class={TRANSITION}
+                    data-testid={`panel-${itemValue}`}
+                    onTransitionrun={counters[itemValue].onTransitionrun}
+                  >
                     {PANEL_CONTENT}
                   </Accordion.Panel>
                 </Accordion.Item>
@@ -75,17 +83,13 @@ describe('<Accordion.Panel /> transitions', () => {
           return panel === null || panel.hasAttribute('hidden');
         };
 
-        const runs: string[] = [];
-        container.addEventListener('transitionrun', (event) => {
-          runs.push((event.target as Element).getAttribute('data-testid')!);
-        });
-
         let from = 'a';
         let to = 'b';
         for (let cycle = 0; cycle < 6; cycle += 1) {
-          const started = nextEvent(container, 'transitionrun');
+          // The end event of the previous exit can come after the panel is hidden.
+          const ended = nextEvent(container, 'transitionend', { after: 'transitionrun' });
           changeValueInTimerTask(value, [to]);
-          await started;
+          await ended;
 
           const closing = from;
           const opening = to;
@@ -103,9 +107,13 @@ describe('<Accordion.Panel /> transitions', () => {
           [from, to] = [to, from];
         }
 
-        // Each panel enters 3 times and exits 3 times.
-        expect(runs.filter((run) => run === 'panel-a')).toHaveLength(6);
-        expect(runs.filter((run) => run === 'panel-b')).toHaveLength(6);
+        // The last exit is the exit of panel b. The browser can send its `transitionrun` after the
+        // panel is gone.
+        await waitFor(() => {
+          expect(counters.b.counts.exit).toBe(3);
+        });
+        expect(counters.a.counts).toEqual({ enter: 3, exit: 3 });
+        expect(counters.b.counts).toEqual({ enter: 3, exit: 3 });
       },
       30_000,
     );

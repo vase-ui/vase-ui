@@ -2,6 +2,7 @@
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
     "packages/react/src/utils/popups/floating-root/**",
+    "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx",
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/detachedTriggersConformanceTests.tsx"

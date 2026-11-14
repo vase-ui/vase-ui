@@ -407,6 +407,71 @@ describe('<PreviewCard.Positioner />', () => {
       });
     });
 
+    it('uses a newly hovered line when the card opens again while it is mounted', async () => {
+      // With no anchor tracking, no observer starts a position pass after the open. Only the
+      // positioner part can then start the pass that reads the new line.
+      await render(
+        <div style={multilineWrapperStyle}>
+          <PreviewCard.Root
+            onOpenChange={(open: boolean, eventDetails: PreviewCard.Root.ChangeEventDetails) => {
+              if (!open) {
+                eventDetails.preventUnmountOnClose();
+              }
+            }}
+          >
+            <PreviewCard.Trigger
+              delay={0}
+              closeDelay={0}
+              data-testid="trigger"
+              style={multilineTriggerStyle}
+            >
+              This is a long text that will wrap across multiple lines in the trigger element
+            </PreviewCard.Trigger>
+            <PreviewCard.Portal>
+              <PreviewCard.Positioner
+                data-testid="positioner"
+                side="bottom"
+                sideOffset={5}
+                disableAnchorTracking
+              >
+                <PreviewCard.Popup data-testid="popup" style={{ width: '80px', height: '40px' }}>
+                  Preview Content
+                </PreviewCard.Popup>
+              </PreviewCard.Positioner>
+            </PreviewCard.Portal>
+          </PreviewCard.Root>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const [firstLineRect, secondLineRect] = trigger.getClientRects();
+
+      await hoverAt(
+        trigger,
+        firstLineRect.left + firstLineRect.width / 2,
+        firstLineRect.top + firstLineRect.height / 2,
+      );
+      const positioner = await screen.findByTestId('positioner');
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, firstLineRect.bottom + 5);
+      });
+
+      await fireEvent.mouseLeave(trigger);
+      await waitFor(() => {
+        expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
+      });
+
+      await hoverAt(
+        trigger,
+        secondLineRect.left + secondLineRect.width / 2,
+        secondLineRect.top + secondLineRect.height / 2,
+      );
+
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, secondLineRect.bottom + 5);
+      });
+    });
+
     it('re-anchors to a newly entered line while reopening during close transition', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const style = `

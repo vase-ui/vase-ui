@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Field } from '@vase-ui/vue/field';
-import * as OTPField from '../index.parts';
+import { OTPField } from '@vase-ui/vue/otp-field';
 
 // The root that comes first in the template mounts before the other root unmounts.
 defineProps<{ swapped: boolean }>();

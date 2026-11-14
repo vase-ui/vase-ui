@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import type { CSSProperties } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -112,11 +113,11 @@ describe('<PreviewCard.Trigger />', () => {
     it('stays open while the pointer crosses the gap to the card, and closes when it moves away', async () => {
       await render(
         <PreviewCard.Root>
-          <PreviewCard.Trigger href="#preview" delay={0} style={noRealPointer}>
+          <PreviewCard.Trigger href="#preview" delay={0}>
             Link
           </PreviewCard.Trigger>
           <PreviewCard.Portal>
-            <PreviewCard.Positioner sideOffset={20} style={noRealPointer} data-testid="positioner">
+            <PreviewCard.Positioner sideOffset={20} data-testid="positioner">
               <PreviewCard.Popup style={{ width: '200px', height: '100px' }}>
                 Card
               </PreviewCard.Popup>
@@ -142,6 +143,65 @@ describe('<PreviewCard.Trigger />', () => {
       await fireEvent.mouseMove(document, { clientX: x, clientY: linkRect.top - 10 });
       await tick(CLOSE_DELAY);
       expect(link).not.toHaveAttribute('data-popup-open');
+    });
+
+    it('closes when the pointer stops in the gap, also when another card closes at the same move', async () => {
+      const renderLinkWithCard = (name: string, style?: CSSProperties) => (
+        <PreviewCard.Root>
+          <PreviewCard.Trigger href="#preview" delay={0} closeDelay={0} style={style}>
+            {name}
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner sideOffset={20} data-testid={name}>
+              <PreviewCard.Popup style={{ width: '200px', height: '100px' }}>
+                Card
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>
+      );
+      await render(
+        <div>
+          {renderLinkWithCard('First')}
+          {renderLinkWithCard('Second', { display: 'block', marginTop: '300px' })}
+        </div>,
+      );
+      const first = screen.getByRole('link', { name: 'First' });
+      const second = screen.getByRole('link', { name: 'Second' });
+      await enter(first);
+      await enter(second);
+      await flushMicrotasks();
+
+      const firstRect = first.getBoundingClientRect();
+      const secondRect = second.getBoundingClientRect();
+      expect(screen.getByTestId('First').getBoundingClientRect().top).toBeGreaterThan(
+        firstRect.bottom + 15,
+      );
+      expect(screen.getByTestId('Second').getBoundingClientRect().top).toBeGreaterThan(
+        secondRect.bottom + 15,
+      );
+
+      await fireEvent.mouseLeave(first, {
+        clientX: firstRect.left + firstRect.width / 2,
+        clientY: firstRect.bottom + 1,
+      });
+      await fireEvent.mouseLeave(second, {
+        clientX: secondRect.left + secondRect.width / 2,
+        clientY: secondRect.bottom + 1,
+      });
+      // The point is in the safe polygon of the first card, beside the link, and outside the safe
+      // polygon of the second card.
+      await fireEvent.mouseMove(document, {
+        clientX: firstRect.right + 10,
+        clientY: firstRect.bottom + 15,
+      });
+      await tick(39);
+      expect(first).toHaveAttribute('data-popup-open');
+      expect(second).not.toHaveAttribute('data-popup-open');
+
+      // A safe polygon closes its card 40 ms after the last move in it.
+      await tick(1);
+      expect(first).not.toHaveAttribute('data-popup-open');
     });
   });
 
