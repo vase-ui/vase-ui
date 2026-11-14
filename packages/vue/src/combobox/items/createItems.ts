@@ -43,8 +43,8 @@ type RejectGroupShapedItems<Item> =
       : unknown;
 
 // The group-shape guard stays outside this union because folding it in breaks tsc's leaf-item
-// inference for grouped data. The group member comes first: tsc takes the first inference
-// candidate, and the flat member would give the group as the item.
+// inference for grouped data. The group member comes first. When the candidates for `Item` have no
+// common supertype, tsc takes the first one, and the flat member gives the group as the item.
 type ComboboxItemsData<Item> =
   | readonly { items: readonly Item[] }[]
   | (Extract<Item, { items: readonly unknown[] }> extends never ? readonly Item[] : never);

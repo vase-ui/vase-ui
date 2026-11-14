@@ -1,6 +1,6 @@
 import { expect, describe, it } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import * as Combobox from '../index.parts';
 
 describe('<Combobox.Collection />', () => {
   const { render } = createRenderer();

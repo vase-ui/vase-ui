@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 
 describe('<Combobox.InputGroup />', () => {

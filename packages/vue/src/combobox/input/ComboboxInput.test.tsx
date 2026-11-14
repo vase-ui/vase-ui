@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
@@ -15,9 +17,7 @@ import {
 } from '#test-utils';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
-import * as Autocomplete from '../../autocomplete/index.parts';
 import { REASONS } from '../../internals/reasons';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 

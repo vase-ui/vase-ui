@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY } from '../../internals/useInitialLiveRegionTextMutation';
-import * as Combobox from '../index.parts';
 
 vi.mock('../../common/platform', async () => {
   const actual =

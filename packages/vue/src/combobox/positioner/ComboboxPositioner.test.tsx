@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { VNode } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
@@ -12,7 +13,6 @@ import {
 } from '#test-utils';
 import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
 import type { OffsetFunction } from '../../internals/useAnchorPositioning';
-import * as Combobox from '../index.parts';
 import ComboboxPositionerScoped from './ComboboxPositionerScoped.test.vue';
 
 describe('<Combobox.Positioner />', () => {

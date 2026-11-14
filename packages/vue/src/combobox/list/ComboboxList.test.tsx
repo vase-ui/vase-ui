@@ -1,5 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { toRaw } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
@@ -8,8 +10,6 @@ import {
   screen,
 } from '#test-utils';
 import ComboboxListReplacement from '../../../test/fixtures/ComboboxListReplacement.vue';
-import * as Autocomplete from '../../autocomplete/index.parts';
-import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 

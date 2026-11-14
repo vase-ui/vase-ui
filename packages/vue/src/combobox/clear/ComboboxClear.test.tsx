@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { h, shallowRef } from 'vue';
 import type { Component } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   createTransitionRunCounter,
@@ -12,9 +14,7 @@ import {
   waitFor,
 } from '#test-utils';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
-import * as Autocomplete from '../../autocomplete/index.parts';
 import type { HTMLProps } from '../../internals/types';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 
 describe('<Combobox.Clear />', () => {

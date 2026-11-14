@@ -1,5 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, onBeforeUnmount, onMounted, shallowRef } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   expectType,
@@ -10,7 +11,6 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import * as Combobox from '../index.parts';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
 import type { ComboboxItemCollection, ItemCollection } from './itemCollection';

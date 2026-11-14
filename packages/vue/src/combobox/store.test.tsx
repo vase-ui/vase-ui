@@ -1,6 +1,7 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, shallowRef, watch, watchEffect } from 'vue';
 import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   fireEvent,
@@ -18,7 +19,6 @@ import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/popups/store';
 import ComboboxStoreHydration from './ComboboxStoreHydration.test.vue';
-import * as Combobox from './index.parts';
 import { useComboboxRootContext } from './root/ComboboxRootContext';
 import { ComboboxStore, selectors } from './store';
 import type { ComboboxStoreContext, State } from './store';
@@ -161,7 +161,7 @@ describe('combobox store synchronization', () => {
     const { setProps } = await render(<InlineOwnershipFixture inline={false} />);
 
     // A watcher with the default flush runs one time for the writes of one update.
-    const snapshots: Array<{ inline: boolean; inputOwnsFormValue: boolean }> = [];
+    const snapshots: { inline: boolean; inputOwnsFormValue: boolean }[] = [];
     const stop = watch(
       () => ({ inline: store.state.inline, inputOwnsFormValue: store.state.inputOwnsFormValue }),
       (snapshot) => {

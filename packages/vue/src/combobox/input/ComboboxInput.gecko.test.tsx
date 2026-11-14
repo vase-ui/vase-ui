@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { createRenderer, screen } from '#test-utils';
-import * as Combobox from '../index.parts';
 
 vi.mock('../../common/platform', async () => {
   const actual =

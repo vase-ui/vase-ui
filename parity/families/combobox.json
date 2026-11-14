@@ -85,7 +85,7 @@
     {
       "entry": "Trigger",
       "prop": "id",
-      "reason": "The part reads `id` to give the trigger its own id while the input is inside the popup, and the labels and the messages of the field name it, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to name its element. While the input is inside the popup, the part also registers `id` as the id of the control of the field, so it is a declared prop. Base UI reads `id` from the native attributes of the trigger, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "List",
@@ -100,7 +100,7 @@
     {
       "entry": "ChipRemove",
       "prop": "disabled",
-      "reason": "The part reads `disabled` to disable the button together with the root, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `disabled` and disables its button when the prop or the root says so, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [

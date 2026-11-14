@@ -13,6 +13,9 @@ import {
   watch,
 } from 'vue';
 import type { ComputedRef, PropType, ShallowRef } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox, ComboboxSeparatorDataAttributes } from '@vase-ui/vue/combobox';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -45,11 +48,7 @@ import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { HTMLProps } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
-import * as Autocomplete from '../../autocomplete/index.parts';
-import * as Dialog from '../../dialog/index.parts';
 import * as Popover from '../../popover/index.parts';
-import * as ComboboxSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import { useComboboxInputValueContext, useComboboxRootContext } from './ComboboxRootContext';
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
@@ -9611,6 +9610,81 @@ describe('<Combobox.Root />', () => {
     });
 
     it.skipIf(isJSDOM)(
+      'keeps filtered popup content stable while closing with input inside popup',
+      async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const items = ['apple', 'apricot', 'banana'];
+        const { user } = await render(
+          <>
+            <style>{closeAnimationStyle}</style>
+            <Combobox.Root multiple items={items}>
+              <Combobox.Trigger data-testid="trigger">
+                <Combobox.Value />
+              </Combobox.Trigger>
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup
+                    data-testid="popup"
+                    class="animation-test-popup"
+                    aria-label="Fruits"
+                  >
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.Empty>No matches</Combobox.Empty>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await user.click(trigger);
+
+        const input = await screen.findByTestId('input');
+        await user.type(input, 'zz');
+
+        await waitFor(() => {
+          expect(screen.getByRole('status')).toHaveTextContent('No matches');
+        });
+        expect(screen.queryByText('apple')).toBe(null);
+
+        const popup = screen.getByTestId('popup');
+        await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+        expect(popup).toHaveAttribute('data-ending-style');
+
+        expect(screen.getByRole('status')).toHaveTextContent('No matches');
+        expect(screen.queryByText('apple')).toBe(null);
+
+        // The animation of 100 s still runs after `animationstart`, so the case ends it. A busy
+        // machine can stall the page for some seconds, so the wait for the end has no time limit.
+        const animations = popup.getAnimations();
+        for (const animation of animations) {
+          animation.finish();
+        }
+        await Promise.all(animations.map((animation) => animation.finished));
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+
+        await user.click(trigger);
+
+        const reopenedInput = await screen.findByTestId('input');
+        expect(reopenedInput).toHaveValue('');
+        expect(screen.getByText('apple')).not.toBe(null);
+      },
+    );
+
+    it.skipIf(isJSDOM)(
       'keeps filtered popup content stable when input changes during the close animation',
       async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
@@ -9653,6 +9727,73 @@ describe('<Combobox.Root />', () => {
         expect(screen.getByText('apple')).not.toBe(null);
         expect(screen.getByText('apricot')).not.toBe(null);
         expect(screen.queryByText('banana')).toBe(null);
+      },
+    );
+
+    it.skipIf(isJSDOM)(
+      'clears the deferred popup input when reopening during close animation',
+      async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const items = ['apple', 'apricot', 'banana'];
+        const { user } = await render(
+          <>
+            <style>{closeAnimationStyle}</style>
+            <Combobox.Root multiple items={items}>
+              <Combobox.Trigger data-testid="trigger">
+                <Combobox.Value />
+              </Combobox.Trigger>
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup
+                    data-testid="popup"
+                    class="animation-test-popup"
+                    aria-label="Fruits"
+                  >
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.Empty>No matches</Combobox.Empty>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await user.click(trigger);
+
+        const input = await screen.findByTestId('input');
+        await user.type(input, 'zz');
+
+        await waitFor(() => {
+          expect(screen.getByRole('status')).toHaveTextContent('No matches');
+        });
+
+        const popup = screen.getByTestId('popup');
+        await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+        expect(popup).toHaveAttribute('data-ending-style');
+
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(popup).toHaveAttribute('data-open');
+        });
+        await waitFor(() => {
+          expect(popup).not.toHaveAttribute('data-ending-style');
+        });
+
+        expect(screen.getByTestId('input')).toHaveValue('');
+        expect(screen.getByText('apple')).not.toBe(null);
+        expect(screen.getByText('banana')).not.toBe(null);
       },
     );
 
@@ -16132,7 +16273,9 @@ describe('<Combobox.Root />', () => {
           <Combobox.Root>
             <Combobox.Input
               v-slots={{
-                render: ({ props }: { props: HTMLProps }) => <CompositeItem as="input" {...props} />,
+                render: ({ props }: { props: HTMLProps }) => (
+                  <CompositeItem as="input" {...props} />
+                ),
               }}
             />
           </Combobox.Root>
