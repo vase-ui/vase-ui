@@ -844,6 +844,10 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The `id` attribute and the `#render` slot can replace the generated `id`. The portal thus reads the `id` after each DOM update.
 - Unless the popup is modal, the portal listens to `focusin` and `focusout` in the capture phase. When the focus moves from the portal to an element outside it, the portal sets `tabindex="-1"` on each tabbable element in the portal.
 - The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
+- The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
+- That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
+- `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
+- The `#render` slot of `FloatingPortal` gets `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 
 ### Popup interactions
 
@@ -934,6 +938,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The result is one plain object with `reference`.
 - Each option is a value, a ref or a getter. A getter of `stickIfOpen` is read at each press, as the function of Base UI.
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
+- Where a trigger of Base UI sets the attribute `CLICK_TRIGGER_IDENTIFIER`, the trigger part sets the same constant of `src/internals/constants.ts`.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 
