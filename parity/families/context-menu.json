@@ -263,8 +263,8 @@
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Separator",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The family exports `Separator` of the Separator family with the items of Menu. Vase UI does not have that export yet."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The family exports `Separator` of the Separator family. Vase UI does not have that export yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -361,8 +361,8 @@
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuSeparatorDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The family exports the attribute names of the Separator family. Vase UI does not have that export yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
