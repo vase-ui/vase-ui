@@ -213,6 +213,9 @@ const mounted = computed(() => store.select('mounted'));
 const modal = computed(() => store.select('modal'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
 const nestedOpenDrawerCount = computed(() => store.select('nestedOpenDrawerCount'));
+// As in `Dialog.Popup`, the focus manager stops when the popup closes, not when it unmounts
+// (BUG-5519).
+const focusManagerDisabled = computed(() => !open.value);
 
 const swipe = useDrawerViewportContext();
 useDialogPortalContext();
@@ -552,7 +555,7 @@ defineExpose({ element });
   <FloatingFocusManager
     :store="store"
     :open-interaction-type="store.select('openMethod')"
-    :disabled="!mounted"
+    :disabled="focusManagerDisabled"
     :close-on-focus-out="!store.select('disablePointerDismissal')"
     :initial-focus="resolvedInitialFocus"
     :return-focus="finalFocus"
