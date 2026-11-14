@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, shallowRef } from 'vue';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import {
   createRenderer,
   detachedTriggersConformanceTests,
@@ -20,7 +21,6 @@ import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
-import * as AlertDialog from '../index.parts';
 import AlertDialogRootHydration from './AlertDialogRootHydration.test.vue';
 
 type Store = DialogStore<unknown>;

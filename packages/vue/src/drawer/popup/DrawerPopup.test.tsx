@@ -1,5 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, shallowRef } from 'vue';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import {
   createRenderer,
   describeConformance,
@@ -11,7 +12,6 @@ import {
   waitFor,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import * as AlertDialog from '../../alert-dialog/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import type { HTMLProps } from '../../internals/types';
