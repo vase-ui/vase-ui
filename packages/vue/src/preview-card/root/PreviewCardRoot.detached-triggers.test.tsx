@@ -85,8 +85,7 @@ describe('<PreviewCard.Root />', () => {
     Positioner: PreviewCard.Positioner,
     Popup: PreviewCard.Popup,
     Viewport: PreviewCard.Viewport,
-    // Keeps the real browser pointer from hovering the triggers; the suite dispatches the events.
-    triggerProps: { href: '#', delay: 0, closeDelay: 0, style: { pointerEvents: 'none' } },
+    triggerProps: { href: '#', delay: 0, closeDelay: 0 },
     openInteractions: ['hover', 'focus'],
     ariaExpanded: false,
     throwOnMissingTrigger: true,

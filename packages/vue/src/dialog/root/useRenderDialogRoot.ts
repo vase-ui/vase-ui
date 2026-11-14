@@ -16,6 +16,7 @@ const ROOT_NAMES: Record<DialogRootMode, string> = {
 interface DialogRootEmit {
   (event: 'openChange', open: boolean, eventDetails: DialogRootChangeEventDetails): void;
   (event: 'update:open', open: boolean): void;
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- vue-tsc types the emit function with one signature for each event. A signature for two events does not accept that function.
   (event: 'openChangeComplete', open: boolean): void;
 }
 

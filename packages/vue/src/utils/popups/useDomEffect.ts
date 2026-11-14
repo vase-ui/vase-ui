@@ -18,7 +18,7 @@ export function useDomEffect(sources: WatchSource[], run: () => (() => void) | v
 
   function update() {
     cleanup?.();
-    cleanup = deactivated ? undefined : run() || undefined;
+    cleanup = deactivated ? undefined : (run() ?? undefined);
   }
 
   onMounted(update);

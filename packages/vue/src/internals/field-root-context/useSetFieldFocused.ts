@@ -21,7 +21,7 @@ import { useFieldRootContext } from './FieldRootContext';
 export function useSetFieldFocused(
   disabled: MaybeRefOrGetter<boolean | undefined>,
   focusTargetRef: MaybeRefOrGetter<Element | null>,
-  onFocusedChange?: ((focused: boolean) => void) | undefined,
+  onFocusedChange?: (focused: boolean) => void,
 ): (focused: boolean) => void {
   const context = useFieldRootContext();
   // The default context holds no state. With no field, the control keeps the owner itself.

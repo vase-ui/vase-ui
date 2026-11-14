@@ -466,7 +466,7 @@ export function useAnchorPositioning(
       arrow((state) => ({
         // The `transform-origin` calculation needs an element. When the arrow is not set, use a
         // fake element.
-        element: arrowElement || ownerDocument(state.elements.floating).createElement('div'),
+        element: arrowElement ?? ownerDocument(state.elements.floating).createElement('div'),
         // The fake arrow gets no padding. Padding would move an aligned popup on a narrow anchor.
         padding: arrowElement ? arrowPadding : 0,
       })),

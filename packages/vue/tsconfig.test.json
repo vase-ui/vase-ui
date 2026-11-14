@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "noImplicitOverride": false,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["node", "vitest/browser"]
+  },
+  "include": ["src", "test", "scripts", "*.config.ts"],
+  "exclude": ["dist", ".package-check", "test/package-check/consumer"]
+}

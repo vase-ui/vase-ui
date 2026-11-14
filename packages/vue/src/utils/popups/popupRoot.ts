@@ -346,7 +346,7 @@ function usePopupRootTransitions(
   store: PopupRootStore,
   open: Readonly<Ref<boolean>>,
   popupRef: Readonly<Ref<HTMLElement | null>>,
-  animateInitialOpen?: boolean | undefined,
+  animateInitialOpen?: boolean,
 ) {
   const { mounted, transitionStatus, forceUnmount } = useUnmountAfterClose({
     open,
@@ -556,7 +556,7 @@ export function usePopupRootSync<
 ) {
   function clearOpenMethod() {
     if (toRaw(store.state).openMethod !== null) {
-      store.set('openMethod', null as State['openMethod']);
+      store.set('openMethod', null);
     }
   }
 

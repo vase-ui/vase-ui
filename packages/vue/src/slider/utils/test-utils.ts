@@ -1,4 +1,4 @@
-type Touches = Array<Pick<Touch, 'identifier' | 'clientX' | 'clientY'>>;
+type Touches = Pick<Touch, 'identifier' | 'clientX' | 'clientY'>[];
 
 interface LegacyTouchDocument {
   createTouch: (
@@ -16,6 +16,7 @@ interface LegacyTouchDocument {
 export function createTouches(touches: Touches) {
   // eslint-disable-next-line no-restricted-globals -- A helper of the tests. The cases dispatch their events in the document of the test page.
   const page = document;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The document of the page has a window.
   const view = page.defaultView!;
   const legacyDocument = page as unknown as Partial<LegacyTouchDocument>;
 

@@ -2,7 +2,7 @@ import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 
 export interface NavigationMenuItemContextValue {
-  value: ComputedRef<any>;
+  value: ComputedRef;
 }
 
 export const NavigationMenuItemContext: InjectionKey<NavigationMenuItemContextValue> = Symbol();

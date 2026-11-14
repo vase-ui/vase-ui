@@ -352,7 +352,7 @@ describe('mergeProps', () => {
   });
 
   it('forwards all arguments for merged non-standard event handlers', () => {
-    const log: Array<[string, boolean, { reason: string }]> = [];
+    const log: [string, boolean, { reason: string }][] = [];
     const eventDetails = { reason: 'test' };
 
     const mergedProps = mergeProps<any>(
@@ -377,7 +377,7 @@ describe('mergeProps', () => {
   });
 
   it('forwards additional arguments for synthetic event handlers', () => {
-    const log: Array<[string, string]> = [];
+    const log: [string, string][] = [];
 
     const mergedProps = mergeProps<any>(
       {
