@@ -5,11 +5,25 @@ description: An unstyled Vue toolbar component that groups a set of buttons and 
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoToolbarHero from '../demos/toolbar/hero/css-modules/index.vue';
 </script>
 
 # Toolbar
 
 A container that groups a set of buttons and controls.
+
+<DemoFrame>
+  <DemoToolbarHero />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/toolbar/hero/css-modules/index.vue
+
+<<< ../demos/toolbar/hero/css-modules/index.module.css
+
+:::
 
 ## Usage guidelines
 

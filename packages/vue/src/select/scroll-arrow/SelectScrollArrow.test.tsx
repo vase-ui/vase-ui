@@ -1,34 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { h } from 'vue';
+import { actOnElement } from '../../../test/fixtures/actOnElement';
 import * as Select from '../index.parts';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  pressWithTouch,
+  screen,
+  waitFor,
+} from '#test-utils';
 
 const DEFAULT_ITEM_OFFSETS = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360];
-
-/**
- * Gives a part a `#render` slot whose element gets the `ref` of the part and then `act`, one time.
- * A `ref` on a part gives the component, so the cases act on the element in this way.
- */
-function actOnElement(act: (element: HTMLElement) => void, children?: () => unknown) {
-  let acted = false;
-  return {
-    render: (args: { props: Record<string, any> }) =>
-      h(
-        'div',
-        {
-          ...args.props,
-          ref: (element: unknown) => {
-            args.props.ref(element);
-            if (element && !acted) {
-              acted = true;
-              act(element as HTMLElement);
-            }
-          },
-        },
-        children?.() as any,
-      ),
-  };
-}
 
 /**
  * Installs a mutable `scrollTop` plus fixed `scrollHeight`/`clientHeight` on a scroller so the
@@ -124,6 +106,7 @@ describe('<Select.ScrollArrow />', () => {
               <Select.ScrollUpArrow keepMounted data-testid="up" />
               <Select.List
                 v-slots={actOnElement(
+                  'div',
                   (node) =>
                     stubScroller(
                       node,
@@ -140,6 +123,7 @@ describe('<Select.ScrollArrow />', () => {
                         key={index}
                         value={`item-${index}`}
                         v-slots={actOnElement(
+                          'div',
                           (node) => stubItem(node, offsetTop, itemHeight),
                           () => `Item ${index}`,
                         )}
@@ -176,6 +160,7 @@ describe('<Select.ScrollArrow />', () => {
           <Select.Positioner alignItemWithTrigger={false}>
             <Select.Popup
               v-slots={actOnElement(
+                'div',
                 (node) =>
                   stubScroller(
                     node,
@@ -193,6 +178,7 @@ describe('<Select.ScrollArrow />', () => {
                         key={index}
                         value={`item-${index}`}
                         v-slots={actOnElement(
+                          'div',
                           (node) => stubItem(node, offsetTop, 40),
                           () => `Item ${index}`,
                         )}
@@ -392,5 +378,65 @@ describe('<Select.ScrollArrow />', () => {
     // Without a popup there is nothing to scroll; the loop must bail out instead of
     // dereferencing a missing scroller.
     expect(() => vi.advanceTimersByTime(400)).not.toThrow();
+  });
+});
+
+describe('<Select.ScrollArrow /> and the pointer that opens the popup', () => {
+  const { render } = createRenderer();
+
+  async function renderClosedSelect() {
+    const { user } = await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner alignItemWithTrigger={false}>
+            <Select.Popup>
+              <Select.ScrollUpArrow keepMounted data-testid="up" />
+              <Select.List
+                v-slots={actOnElement(
+                  'div',
+                  (node) =>
+                    stubScroller(
+                      node,
+                      { scrollHeight: 400, clientHeight: 200 },
+                      () => 100,
+                      () => {},
+                    ),
+                  () => (
+                    <Select.Item value="a">a</Select.Item>
+                  ),
+                )}
+              />
+              <Select.ScrollDownArrow keepMounted data-testid="down" />
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    return { user, trigger: screen.getByTestId('trigger') };
+  }
+
+  it('shows both arrows of a list that is scrolled to the middle, after a press of the mouse', async () => {
+    const { user, trigger } = await renderClosedSelect();
+
+    await user.click(trigger);
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('up')).toHaveAttribute('data-visible');
+    });
+    expect(screen.getByTestId('down')).toHaveAttribute('data-visible');
+  });
+
+  it('shows no arrow after a touch, because the arrows work on hover', async () => {
+    const { trigger } = await renderClosedSelect();
+
+    await pressWithTouch(trigger);
+    const list = await screen.findByRole('listbox');
+    await flushMicrotasks();
+    await fireEvent.scroll(list);
+
+    expect(screen.getByTestId('up')).not.toHaveAttribute('data-visible');
+    expect(screen.getByTestId('down')).not.toHaveAttribute('data-visible');
   });
 });
