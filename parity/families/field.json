@@ -12,8 +12,8 @@
       "describe": ["<Field.Root />"],
       "title": "does not set `aria-labelledby` during SSR when Field.Label is absent",
       "kind": "replaced",
-      "test": "packages/vue/src/select/root/SelectRoot.node.test.tsx",
-      "reason": "The case renders on a server only. The case \"gives a trigger with no label no `aria-labelledby`\" renders a select in a field with no label in Node."
+      "test": "packages/vue/src/field/root/FieldRoot.node.test.tsx",
+      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case with the same title renders a select in a field with no label, and asserts that the server HTML of the trigger has no `aria-labelledby`."
     },
     {
       "upstream": "packages/react/src/field/root/FieldRoot.test.tsx",
