@@ -8,6 +8,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  nextEvent,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
@@ -1108,9 +1109,10 @@ describe('<Menu.Popup />', () => {
 
     screen.getByRole('button', { name: 'Open' }).focus();
     await flushMicrotasks();
-    await user.keyboard('[ArrowDown]');
-    const one = await screen.findByRole('menuitem', { name: 'One' });
-    await waitFor(() => expect(one).toHaveFocus());
+    // The item takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', { action: () => user.keyboard('[ArrowDown]') });
+    const one = screen.getByRole('menuitem', { name: 'One' });
+    expect(one).toHaveFocus();
     await waitForLaterMillisecond();
 
     await user.keyboard('[ArrowDown]');

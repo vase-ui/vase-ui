@@ -12,6 +12,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   popupFocusPropsTests,
   renderOnServer,
   screen,
@@ -2084,9 +2085,10 @@ describe('<Select.Popup />', () => {
 
     screen.getByTestId('trigger').focus();
     await flushMicrotasks();
-    await user.keyboard('[Enter]');
-    const a = await screen.findByRole('option', { name: 'a' });
-    await waitFor(() => expect(a).toHaveFocus());
+    // The item takes the focus in an animation frame after the open.
+    await nextEvent(document, 'focusin', { action: () => user.keyboard('[Enter]') });
+    const a = screen.getByRole('option', { name: 'a' });
+    expect(a).toHaveFocus();
     await waitForLaterMillisecond();
 
     await user.keyboard('[ArrowDown]');
