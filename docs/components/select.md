@@ -33,7 +33,7 @@ A common form component for choosing a predefined value in a dropdown menu.
 - **Use Combobox for a long list**: Select has no filter. The keyboard typeahead only finds an item that matches the typed text. When the list is long enough to need a filter, use Combobox.
 - **Special positioning**: By default, the popup overlaps its trigger, so that the text of the selected item is over the value text of the trigger. See [Positioning](#positioning) to turn this off or to change it.
 - **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when the select has no visible label. See [Labeling a select](#labeling-a-select).
-- **Closing animations**: The popup stays rendered until its closing animation ends. To animate it with JavaScript, call `eventDetails.preventUnmountOnClose()` in the `openChange` listener. The popup then stays rendered until you call `unmount()` of the root.
+- **Closing animations**: The popup stays rendered until its closing animation ends. To animate it with JavaScript, call `eventDetails.preventUnmountOnClose()` in the `openChange` listener. The popup then stays rendered until you call `unmount()`, which the root exposes.
 
 ## Anatomy
 
@@ -59,11 +59,15 @@ To stop the popup from overlapping the trigger, set `alignItemWithTrigger` to `f
 
 ## Examples
 
-### Typed wrapper component
+### Typed component
 
-A generic wrapper keeps the types of `Value` and `Multiple` of `Select.Root`:
+`Select.Root` is a generic component. Its `Value` type follows the `items`, `value` and `defaultValue` props. Its `Multiple` type follows `multiple`.
 
-<<< ./select/TypedWrapper.vue
+To fix both types, give the part its type arguments in an instantiation expression. Use the result as a component:
+
+<<< ./select/TypedWrapper.vue{7,15}
+
+A wrapper that declares `defineProps<SelectRootProps<Value, Multiple>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the select cannot open.
 
 ### Formatting the value
 
@@ -93,7 +97,7 @@ To show a placeholder, set the `placeholder` prop of `<Select.Value>`:
 
 <<< ./select/Placeholder.vue{13}
 
-With a placeholder, the user cannot clear the value with the select itself. To make the value clearable from the popup, add an item with a `null` value to the list. The label of that item is the placeholder:
+With a placeholder, the user cannot clear the value with the select itself. To make the value clearable from the popup, add an item with a `null` value to the list. While nothing is selected, `<Select.Value>` shows the label of that item:
 
 <<< ./select/Items.vue{5}
 

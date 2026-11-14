@@ -2737,10 +2737,11 @@ describe('<Select.Root />', () => {
 
         scrollTop = 40;
         await nextEvent(arrow, 'animationend', { action: () => fireEvent.scroll(list) });
-        await flushMicrotasks();
 
         expect(hasEndingStyle).toBe(true);
-        expect(screen.queryByTestId('scroll-arrow')).toBe(null);
+        await waitFor(() => {
+          expect(screen.queryByTestId('scroll-arrow')).toBe(null);
+        });
       },
     );
   });

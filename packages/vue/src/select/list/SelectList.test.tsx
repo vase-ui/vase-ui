@@ -90,6 +90,7 @@ describe('<Select.List />', () => {
       await flushMicrotasks();
 
       expect(list).toHaveClass('vase-ui-disable-scrollbar');
+      expect(getComputedStyle(list).getPropertyValue('scrollbar-width')).toBe('none');
     });
 
     it('is not hidden after a touch, which scrolls the list itself', async () => {

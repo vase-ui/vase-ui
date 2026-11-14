@@ -179,7 +179,7 @@ const shouldRender = computed(() => mounted.value || props.keepMounted);
 defineExpose({ element });
 
 function getTargetScrollTop(
-  items: Array<HTMLElement | null>,
+  items: (HTMLElement | null)[],
   direction: 'up' | 'down',
   scrollTop: number,
   clientHeight: number,

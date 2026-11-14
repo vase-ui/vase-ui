@@ -1,11 +1,18 @@
-<script setup lang="ts" generic="Value, Multiple extends boolean | undefined = false">
+<script setup lang="ts">
 import { Select } from '@vase-ui/vue/select';
 
-const props = defineProps<Select.Root.Props<Value, Multiple>>();
+type Font = 'serif' | 'sans' | 'mono';
+
+// The type arguments are `Value` and `Multiple`.
+const FontSelect = Select.Root<Font, false>;
+
+function log(value: Font | null) {
+  console.log(value);
+}
 </script>
 
 <template>
-  <Select.Root v-bind="props">
+  <FontSelect default-value="serif" @value-change="log">
     <!-- ... -->
-  </Select.Root>
+  </FontSelect>
 </template>
