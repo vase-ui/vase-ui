@@ -1,0 +1,9 @@
+{
+  "id": "VUE-49",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/context-menu/root/ContextMenuRoot.tsx#L82-L84",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/context-menu/root/ContextMenuRoot.tsx#L98-L99"
+  ],
+  "behavior": "The details of the `openChange` event of `ContextMenu.Root` have the type of `preventUnmountOnClose()`. Base UI types the details of `onOpenChange` without that function, while the object has it and the text of the `unmount` action tells the developer to call it.",
+  "dueWith": "packages/react/src/context-menu/root/ContextMenuRoot.tsx"
+}
