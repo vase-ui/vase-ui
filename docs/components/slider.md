@@ -32,7 +32,7 @@ An easily stylable range input.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Use `Slider.Label`, or give each `Slider.Thumb` an `aria-label` when the slider has no visible label. See [Labeling a slider](#labeling-a-slider).
+- **Form controls must have an accessible name**: Use `Slider.Label`, or give each `Slider.Thumb` an `aria-label` when the slider has no visible label. See [Labeling a slider](#labeling-a-slider) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 
