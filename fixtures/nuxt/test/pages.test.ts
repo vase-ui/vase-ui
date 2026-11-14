@@ -1025,15 +1025,20 @@ describe.each(MODES)('in $name', async ({ dev }) => {
   });
 
   it('formats the text of a number field in the locale of the visitor after hydration', async () => {
-    const page = await createPage(undefined, { locale: 'de-DE' });
+    // In this locale, a number has another text than in `en-US`, and a price has another text than
+    // in `de-DE`. A field that uses the wrong locale then fails its check.
+    const visitorLocale = 'pt-BR';
+    const page = await createPage(undefined, { locale: visitorLocale });
     const messages = collectMessages(page);
 
     await page.goto(url('/number-field'), { waitUntil: 'hydration' });
     await waitForTwoFrames(page);
 
     expect(messages).toEqual([]);
-    expect(await page.getByTestId('quantity').inputValue()).toBe(formatQuantity(1234.5, 'de-DE'));
-    // A field with a `locale` keeps it.
+    expect(await page.getByTestId('quantity').inputValue()).toBe(
+      formatQuantity(1234.5, visitorLocale),
+    );
+    // The field `price` has a `locale`, so it does not take the locale of the visitor.
     expect(await page.getByTestId('price').inputValue()).toBe(PRICE_TEXT);
     expect(await readFormData(page)).toEqual(['quantity=1234.5', 'price=54.5']);
   });
