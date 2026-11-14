@@ -466,7 +466,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 `noUncheckedIndexedAccess` adds `undefined` to the type of an index read, and `no-non-null-assertion` refuses `!`. In the source, use the first of these rules that applies:
 
 1. Write the code so that no read can be absent, when the result is as short and does the same. Use `for...of`, a destructure or `.at(-1)`.
-2. If an algorithm of Base UI needs the index, keep the read and write `!`. Disable `@typescript-eslint/no-non-null-assertion` for the line, or for the block when a function has many such reads. The reason says why the index is in range. Where Base UI gives a read that can be absent to code that accepts the absent value, keep the read with `!`. The reason then says what the code does with the absent value.
+2. If an algorithm of Base UI needs the index, keep the read and write `!`. Disable `@typescript-eslint/no-non-null-assertion` for the line, or for the block when a function has many such reads. The reason says why the index is in range. If Base UI gives a read that can be absent to code that accepts it, keep the read with `!`. The reason says what that code does with the absent value.
 3. Do not add a guard or a default that cannot run. Do not write `as T`.
 
 A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`. For a block, write `/* eslint-disable <rule> -- <reason> */` before the block and `/* eslint-enable <rule> */` after it.
