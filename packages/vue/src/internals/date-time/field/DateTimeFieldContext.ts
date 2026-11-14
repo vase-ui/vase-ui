@@ -1,0 +1,114 @@
+import { inject } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
+import type { VaseUIChangeEventDetails } from '../../createBaseUIEventDetails';
+import type { FieldRootState } from '../../field-root-context/FieldRootContext';
+import type { REASONS } from '../../reasons';
+import type { EditableSegmentType } from './segmentLayout';
+import type { DayPeriod, NumericSegmentType } from './segmentRanges';
+
+export type DateTimeFieldChangeEventReason =
+  | typeof REASONS.inputChange
+  | typeof REASONS.inputClear
+  | typeof REASONS.inputPaste
+  | typeof REASONS.keyboard
+  | typeof REASONS.clearPress
+  | typeof REASONS.none;
+export type DateTimeFieldChangeEventDetails =
+  VaseUIChangeEventDetails<DateTimeFieldChangeEventReason>;
+
+export interface DateTimeFieldRootState extends FieldRootState {
+  readOnly: boolean;
+  required: boolean;
+  /** Whether no segment has a number. */
+  empty: boolean;
+  /** Whether each segment has a number, so that the field has a value. */
+  complete: boolean;
+  invalid: boolean;
+}
+
+/** An element of a layout. A part shows each one: an `input` for a segment that the user edits. */
+export type DateTimeFieldSegment =
+  | { type: EditableSegmentType; index: number; editable: true }
+  | { type: 'literal' | 'era' | 'timeZoneName'; index: number; editable: false; text: string };
+
+/** What an editable segment shows and what it tells to a screen reader. */
+export interface DateTimeFieldSegmentView {
+  /** The number of the segment, or `undefined` while the segment is empty. A day period is 0 or 1. */
+  number: number | undefined;
+  /** The text of the number, or an empty text while the segment is empty. */
+  text: string;
+  placeholder: string;
+  min: number;
+  max: number;
+  valueText: string | undefined;
+  label: string;
+  /** The greatest length of the text of the segment. */
+  size: number;
+  id: string | undefined;
+}
+
+/** A number is the amount of a step. `'min'` and `'max'` go to the least and the greatest number. */
+export type SegmentSpin = number | 'min' | 'max';
+
+export interface DateTimeFieldContext {
+  state: ComputedRef<DateTimeFieldRootState>;
+  segments: ComputedRef<DateTimeFieldSegment[]>;
+  /**
+   * Changes when the layout of the server differs from the layout of the browser. A part puts it
+   * in the `key` of each segment, so that Vue makes the elements again.
+   */
+  listKey: Readonly<Ref<number>>;
+  disabled: ComputedRef<boolean>;
+  readOnly: ComputedRef<boolean>;
+  required: ComputedRef<boolean>;
+  invalid: ComputedRef<boolean>;
+  /** The ten digits of the numbering system of the locale. */
+  digits: ComputedRef<string[]>;
+  dayPeriodTexts: ComputedRef<Record<DayPeriod, string>>;
+  getView: (type: EditableSegmentType) => DateTimeFieldSegmentView;
+  setNumber: (
+    type: NumericSegmentType,
+    number: number | undefined,
+    details: DateTimeFieldChangeEventDetails,
+  ) => void;
+  setDayPeriod: (
+    dayPeriod: DayPeriod | undefined,
+    details: DateTimeFieldChangeEventDetails,
+  ) => void;
+  spin: (
+    type: EditableSegmentType,
+    spin: SegmentSpin,
+    details: DateTimeFieldChangeEventDetails,
+  ) => void;
+  pasteText: (text: string, event: ClipboardEvent) => void;
+  /** Gives the focus to the segment `direction` places after `from`, or before it when negative. */
+  moveFocus: (from: HTMLInputElement, direction: 1 | -1) => void;
+  registerSegment: (element: HTMLInputElement) => void;
+  unregisterSegment: (element: HTMLInputElement) => void;
+  setFocused: (focused: boolean) => void;
+  handleSegmentBlur: (event: FocusEvent) => void;
+  /** A press on the `Input` outside a segment gives the focus to the first empty segment. */
+  handleInputPress: (event: MouseEvent) => void;
+  /** The part gives it to the `ref` of its element. */
+  setRootElement: (element: unknown) => void;
+  setInputElement: (element: unknown) => void;
+  /** The props of the element of the root, with the attributes of the consumer merged in. */
+  getRootProps: (attrs: Record<string, any>) => Record<string, any>[];
+  hiddenInputProps: () => Record<string, unknown>;
+  clear: (event?: MouseEvent | KeyboardEvent) => void;
+}
+
+export const DateTimeFieldContext: InjectionKey<DateTimeFieldContext> = Symbol();
+
+export function useDateTimeFieldContext(): DateTimeFieldContext {
+  // With one argument, Vue shows a warning when there is no provider. The error below says more.
+  const context = inject(DateTimeFieldContext, undefined);
+
+  if (context === undefined) {
+    throw new Error(
+      'Vase UI: A part of a date or time field must be inside its root. Without a root the part has no value to show. Put the part inside <DateField.Root> or <TimeField.Root>.',
+    );
+  }
+
+  return context;
+}
