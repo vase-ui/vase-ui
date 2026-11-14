@@ -24,6 +24,8 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolvePopupLabel.ts",
+    "packages/react/src/internals/resolvePopupLabel.test.tsx",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
     "packages/react/src/internals/resolveValueLabel.tsx",
@@ -108,6 +110,7 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolvePopupLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/serializeValue.ts",
@@ -951,6 +954,32 @@
             "useLabel"
           ],
           "title": "does not focus the control when a composed click originates inside a nested button"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "resolvePopupLabel"
+          ],
+          "title": "falls back to the trigger id"
+        },
+        {
+          "describe": [
+            "resolvePopupLabel"
+          ],
+          "title": "uses a render element's own label instead of the trigger"
+        },
+        {
+          "describe": [
+            "resolvePopupLabel"
+          ],
+          "title": "reads a server-created render element's label",
+          "conditions": [
+            "skipIf(reactMajor < 19)"
+          ]
         }
       ]
     },

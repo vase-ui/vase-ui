@@ -7,6 +7,7 @@ import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
 import { NOOP } from '../../internals/noop';
+import * as Menu from '../../menu/index.parts';
 import * as Select from '../../select/index.parts';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
@@ -319,6 +320,36 @@ describe('<Toolbar.Button />', () => {
       });
     });
 
+    describe('Menu', () => {
+      it('renders a menu trigger', async () => {
+        await render(
+          <Toolbar.Root>
+            <Menu.Root>
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Menu.Trigger {...props}>Toggle</Menu.Trigger>
+                  ),
+                }}
+              />
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item data-testid="item-1">1</Menu.Item>
+                    <Menu.Item data-testid="item-2">2</Menu.Item>
+                    <Menu.Item data-testid="item-3">3</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.getByTestId('button')).toHaveAttribute('aria-haspopup', 'menu');
+      });
+    });
+
     describe('Select', () => {
       it('renders a select trigger', async () => {
         await render(
@@ -347,6 +378,65 @@ describe('<Toolbar.Button />', () => {
         const trigger = screen.getByTestId('button');
         expect(trigger).toBe(screen.getByRole('combobox'));
         expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
+      });
+
+      it('handles interactions', async () => {
+        const handleValueChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Select.Root defaultValue="a" onValueChange={handleValueChange}>
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Select.Trigger {...props} />
+                  ),
+                }}
+              />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup data-testid="popup">
+                    <Select.Item value="a" data-testid="item-a">
+                      a
+                    </Select.Item>
+                    <Select.Item value="b" data-testid="item-b">
+                      b
+                    </Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByRole('listbox')).toBe(null);
+
+        const trigger = screen.getByTestId('button');
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+
+        await user.keyboard('[ArrowDown]');
+        expect(screen.queryByRole('listbox')).toBe(screen.getByTestId('popup'));
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'a' })).toHaveFocus();
+        });
+
+        await user.keyboard('[ArrowDown]');
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'b' })).toHaveFocus();
+        });
+
+        await user.keyboard('[Enter]');
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).toBe(null);
+        });
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+
+        expect(handleValueChange).toHaveBeenCalledTimes(1);
+        expect(handleValueChange).toHaveBeenCalledWith('b', expect.anything());
       });
 
       it('disabled state', async () => {

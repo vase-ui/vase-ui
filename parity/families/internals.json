@@ -23,6 +23,8 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolvePopupLabel.ts",
+    "packages/react/src/internals/resolvePopupLabel.test.tsx",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
     "packages/react/src/internals/resolveValueLabel.tsx",
@@ -178,6 +180,20 @@
       "upstream": "packages/react/src/internals/composite/item/CompositeItem.tsx",
       "kind": "not-applicable",
       "reason": "The file is a React component that renders the element of an item part and gives it the tab stop. A Vue part renders its own element and calls `useCompositeItem` of `item/useCompositeItem.ts` in `setup`, which holds the work of this file."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "describe": ["resolvePopupLabel"],
+      "title": "uses a render element's own label instead of the trigger",
+      "kind": "not-applicable",
+      "reason": "The case gives a React element with an `aria-label` as `render`. In Vue `#render` is a slot, which is a function, so the part does not see an attribute of the element of the slot. `resolvePopupLabel` reads the attributes of the part."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "describe": ["resolvePopupLabel"],
+      "title": "reads a server-created render element's label",
+      "kind": "not-applicable",
+      "reason": "The case gives the lazy wrapper of the React Flight client as `render`."
     },
     {
       "upstream": "packages/react/src/internals/resolveRenderedAriaLabel.ts",

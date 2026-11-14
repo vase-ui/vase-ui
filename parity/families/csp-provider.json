@@ -10,14 +10,6 @@
       "upstream": "packages/react/src/internals/csp-context/index.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/csp-context`, and Vase UI has no entry point for an internal module."
-    },
-    {
-      "upstream": "packages/react/src/csp-provider/CSPProvider.test.tsx",
-      "describe": ["<CSPProvider />"],
-      "title": "does not render Select inline style tags when disableStyleElements is true",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/popup/utils.ts",
-      "reason": "The case tests the style element that `Select.Popup` renders for a popup that is placed over the trigger (`alignItemWithTrigger`). Vase UI does not have that placement, so its popup renders no style element."
     }
   ],
   "surfaceAdditions": [],
