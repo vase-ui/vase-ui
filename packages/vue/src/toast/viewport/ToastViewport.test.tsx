@@ -2110,6 +2110,18 @@ describe('<Toast.Viewport />', () => {
       },
     });
 
+    // On a busy machine, a command of the browser can take longer than the timeout of a toast. The
+    // toast thus gets its timeout after the real pointer rests on it, and its timer starts paused.
+    async function addHoveredToast(manager: ToastManager) {
+      const { userEvent } = await import('vitest/browser');
+      manager.add({ id: 'toast', title: 'title', timeout: 0 });
+      await flushMicrotasks();
+      await userEvent.hover(screen.getByTestId('toast'));
+      await flushMicrotasks();
+      manager.update('toast', { timeout: 300 });
+      await flushMicrotasks();
+    }
+
     it('returns focus to the origin when onClose adds an unmounted replacement toast', async () => {
       const { userEvent } = await import('vitest/browser');
       const manager = Toast.createToastManager();
@@ -2187,15 +2199,14 @@ describe('<Toast.Viewport />', () => {
       const manager = Toast.createToastManager();
 
       await render(
-        <Toast.Provider toastManager={manager} timeout={300}>
+        <Toast.Provider toastManager={manager}>
           <Toast.Viewport>
             <TitleList />
           </Toast.Viewport>
         </Toast.Provider>,
       );
 
-      manager.add({ id: 'toast', title: 'title' });
-      await flushMicrotasks();
+      await addHoveredToast(manager);
       expect(document.activeElement).toBe(document.body);
 
       await userEvent.click(screen.getByTestId('toast-title'));
@@ -2209,22 +2220,17 @@ describe('<Toast.Viewport />', () => {
     });
 
     it('keeps timers paused when the window regains focus while a toast is hovered', async () => {
-      const { userEvent } = await import('vitest/browser');
       const manager = Toast.createToastManager();
 
       await render(
-        <Toast.Provider toastManager={manager} timeout={300}>
+        <Toast.Provider toastManager={manager}>
           <Toast.Viewport data-testid="viewport">
             <TitleList />
           </Toast.Viewport>
         </Toast.Provider>,
       );
 
-      manager.add({ id: 'toast', title: 'title' });
-      await flushMicrotasks();
-
-      await userEvent.hover(screen.getByTestId('toast'));
-      await flushMicrotasks();
+      await addHoveredToast(manager);
       expect(screen.getByTestId('viewport')).toHaveAttribute('data-expanded');
 
       // Focusing an element in the parent frame blurs this window for real.
