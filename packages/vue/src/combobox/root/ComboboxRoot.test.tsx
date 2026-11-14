@@ -541,7 +541,7 @@ describe('<Combobox.Root />', () => {
     it('keeps the highlight of the popup that a controlled root closes for the typed text', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const open = shallowRef(true);
-      const activeIndices: Array<number | null> = [];
+      const activeIndices: (number | null)[] = [];
       const ActiveIndexRecorder = defineComponent(() => {
         const rootStore = useComboboxRootContext();
         watch(
