@@ -135,6 +135,14 @@
       "reason": "React sends the key of a portal up the React tree, so the list could get it. A Vue key goes up the DOM only, and a `Teleport` puts its content outside the list. The list thus gets no such key."
     },
     {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "keyboard interaction"],
+      "title": "does not bubble Escape key when Empty component is present",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
+      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
+    },
+    {
       "upstream": "packages/react/src/combobox/status/ComboboxStatus.iOS.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
