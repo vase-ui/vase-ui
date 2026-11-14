@@ -51,7 +51,7 @@ type TestTooltipProps = {
   popupProps?: Record<string, unknown>;
 };
 
-const testTooltipProps: Array<keyof TestTooltipProps> = [
+const testTooltipProps: (keyof TestTooltipProps)[] = [
   'rootProps',
   'triggerProps',
   'portalProps',
