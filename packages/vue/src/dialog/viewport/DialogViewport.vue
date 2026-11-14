@@ -29,7 +29,7 @@ export interface DialogViewportProps
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRaw } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
@@ -58,9 +58,19 @@ const state = computed<DialogViewportState>(() => ({
   nestedDialogOpen: store.select('nestedOpenDialogCount') > 0,
 }));
 
+// A template can mount the viewport that replaces this viewport before it unmounts this viewport.
+// The viewport then clears the element in the store only when the store holds its own element.
+let ownViewport: HTMLElement | null = null;
+function setViewport(viewport: HTMLElement | null) {
+  if (viewport !== null || toRaw(store.state).viewportElement === ownViewport) {
+    store.set('viewportElement', viewport);
+  }
+  ownViewport = viewport;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: (viewport) => store.set('viewportElement', viewport),
+  ref: setViewport,
   stateAttributesMapping: dialogStateAttributesMapping,
   props: (attrs) => [
     {
