@@ -1793,7 +1793,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - An entry of `propsList` is a props object, or a ref or a getter that gives one. A composable can return a ref of its props, and the list takes that ref. Each of the four functions reads the entries when it runs.
 - `useFloating(options)` of `test/floating-ui-tests/useFloating.ts` makes the store and the positioning context of a popup in a test. It is not in `#test-utils`.
 - `options` has `open` and `placement` (each a value, a ref or a getter), `onOpenChange` and `nodeId`. The result has `refs` and `context`. `refs.reference` and `refs.floating` are the refs of the two elements. `refs.setReference` and `refs.setFloating` write them, and the store follows. `context.rootStore` is the store. The helper computes no position.
-- `expectType<Expected, Actual>(value)` makes a type error when `Actual` is not identical to `Expected`. The call then needs a second argument, and TypeScript reports TS2554: `Expected 2 arguments, but got 1`. The helper counts the arguments, because a `never` value is assignable to each parameter type. Put a `@ts-expect-error` on the line before the name `expectType`.
+- `expectType<Expected, Actual>(value)` makes a type error when `Actual` is not identical to `Expected`. The call then needs a second argument of the type `never`, and TypeScript reports TS2554: `Expected 2 arguments, but got 1`. The helper counts the arguments, because a `never` value is assignable to each parameter type. In a `.ts` or `.tsx` file, put the `@ts-expect-error` of a call that must fail on the line before the name `expectType`.
 
 The hydration helpers:
 

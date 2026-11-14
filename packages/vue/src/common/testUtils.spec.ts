@@ -31,3 +31,5 @@ expectType<string, typeof unknownValue>(unknownValue);
 expectType<string, typeof unionValue>(unionValue);
 // @ts-expect-error A union is not a wider union.
 expectType<string | number | boolean, typeof unionValue>(unionValue);
+// @ts-expect-error A second argument does not hide a mismatch.
+expectType<string, typeof unionValue>(unionValue, unionValue);
