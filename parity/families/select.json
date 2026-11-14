@@ -6,54 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/select/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Select. It comes in the last pull request of the family, so the package exports nothing of Select before then."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow` and `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow` and `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
-    },
-    {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "describe": ["<Select.Root />", "server-side rendering"],
       "title": "does not link Select.Label before hydration",
@@ -72,12 +24,6 @@
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The file imports the entry point of Select, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "describe": ["<Select.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "replaced",
@@ -91,22 +37,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
       "reason": "Vase UI does not have the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "scroll locking", "interaction type tracking (openMethod)"],
-      "title": "recomputes positioning before the popup becomes visible again after touch dismiss",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "prop: actionsRef"],
-      "title": "clears scroll arrow visibility when manually unmounted (strict: %s)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case renders `Select.ScrollUpArrow` and `Select.ScrollDownArrow`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
@@ -133,14 +63,6 @@
       "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the case dispatches one."
     },
     {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "does not resize the positioner when the list scrolls before the popup is placed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case renders `Select.ScrollUpArrow`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/select/store.test.tsx",
       "describe": ["select store synchronization"],
       "title": "synchronizes an updated disabled prop after descendant ref callbacks",
@@ -151,229 +73,23 @@
     {
       "upstream": "docs/src/app/(docs)/react/components/select/types.md",
       "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Value",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Value`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Icon",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Icon`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "List",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.List`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Item`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Group`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "GroupLabel",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.GroupLabel`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Separator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Separator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "Label",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.Label`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "ItemText",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.ItemText`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "ItemIndicator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports `Select.ItemIndicator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "ScrollUpArrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "ScrollDownArrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectIconDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Icon`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectItemDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Item`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectItemIndicatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.ItemIndicator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the variable names of `Select.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectScrollDownArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectScrollUpArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
-      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectSeparatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Separator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
-      "entry": "SelectValueDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/index.ts",
-      "reason": "The entry point of Select exports the attribute names of `Select.Value`. Vase UI does not have that entry point."
+      "prop": "multiple",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `false`. The prop has no declared default, because `withDefaults` refuses a default for a prop of the generic type `Multiple & boolean` (TS2322). Vue gives an absent Boolean prop the value `false`, and the JSDoc has `@default false` for the API reference."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "id",
+      "reason": "The part reads `id` to give the trigger its own id, which the labels of the select and of the field name, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "GroupLabel",
+      "prop": "id",
+      "reason": "The part gives `id` to the group for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the group label, and `types.md` has no row for a native attribute."
+    }
+  ],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
 }

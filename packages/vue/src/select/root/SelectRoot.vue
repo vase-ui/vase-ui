@@ -191,6 +191,7 @@ import {
   usePopupInteractionProps,
 } from '../../utils/popups/popupStoreUtils';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../../utils/popups/store';
+import { getMaxScrollOffset, normalizeScrollOffset } from '../../utils/scrollEdges';
 import { SelectStore, selectors } from '../store';
 import { SelectRootContext } from './SelectRootContext';
 
@@ -333,6 +334,7 @@ const {
         isItemEqualToValue: comparer.value,
         setValue: () => false,
         handleScrollArrowVisibility: NOOP,
+        registerScrollArrow: () => NOOP,
         listRef: shallowRef([]),
         labelsRef: shallowRef([]),
         valuesRef: shallowRef([]),
@@ -477,6 +479,31 @@ function setValue(nextValue: any, eventDetails: SelectRootChangeEventDetails) {
 }
 
 store.context.setValue = setValue;
+
+store.context.handleScrollArrowVisibility = (scroller) => {
+  const maxScrollTop = getMaxScrollOffset(scroller.scrollHeight, scroller.clientHeight);
+  const scrollTop = normalizeScrollOffset(scroller.scrollTop, maxScrollTop);
+
+  store.update({
+    scrollUpArrowVisible: scrollTop > 0,
+    scrollDownArrowVisible: scrollTop < maxScrollTop,
+  });
+};
+
+let scrollArrowCount = 0;
+
+store.context.registerScrollArrow = () => {
+  scrollArrowCount += 1;
+  store.set('hasScrollArrows', true);
+
+  return () => {
+    scrollArrowCount -= 1;
+    if (scrollArrowCount === 0) {
+      store.set('hasScrollArrows', false);
+    }
+  };
+};
+
 watch(comparer, (nextComparer) => {
   store.context.isItemEqualToValue = nextComparer;
 });
