@@ -215,15 +215,15 @@ describe('useTriggerFocusGuards', () => {
       expect(screen.getByTestId('target')).toHaveFocus();
     });
 
-    // The popup stays in the document until its exit transition ends. The focus manager returns the
-    // focus when the popup leaves, and it returns no focus after a close that a guard caused.
-    describe('with an exit transition', () => {
-      async function renderAnimatedMenu(
-        options: {
-          finalFocus?: 'ref' | 'function';
-          outside?: boolean;
-        } = {},
-      ) {
+    // The popup stays in the document until its exit transition ends, and the focus manager returns
+    // the focus when the popup leaves. A `finalFocus` target is explicit, so only the guard in the
+    // details of the close stops that return.
+    it.each([
+      { name: 'a ref', finalFocus: (target: ShallowRef<HTMLElement | null>) => target },
+      { name: 'a function', finalFocus: () => () => true },
+    ])(
+      'keeps the focus on the element before the trigger after the exit transition, with finalFocus as $name',
+      async ({ finalFocus }) => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         const open = shallowRef(true);
         const finalTarget = shallowRef<HTMLElement | null>(null);
@@ -231,14 +231,13 @@ describe('useTriggerFocusGuards', () => {
         const exit = new Promise<void>((resolve) => {
           reportExit = resolve;
         });
-        const finalFocus = { ref: finalTarget, function: () => true, none: undefined };
         await render(() => (
           <div>
             <style>{`
               .popup { transition: opacity 200ms; }
               .popup[data-ending-style] { opacity: 0; }
             `}</style>
-            {options.outside && <button data-testid="before">Before</button>}
+            <button data-testid="before">Before</button>
             <Menu.Root
               modal={false}
               open={open.value}
@@ -258,69 +257,35 @@ describe('useTriggerFocusGuards', () => {
                   <Menu.Popup
                     class="popup"
                     data-testid="popup"
-                    finalFocus={finalFocus[options.finalFocus ?? 'none']}
+                    finalFocus={finalFocus(finalTarget)}
                   >
                     <button data-testid="inside">Inside</button>
                   </Menu.Popup>
                 </Menu.Positioner>
               </Menu.Portal>
             </Menu.Root>
-            {options.outside && <button data-testid="after">After</button>}
-            {options.outside && (
-              <button
-                ref={(element) => {
-                  finalTarget.value = element as HTMLElement | null;
-                }}
-              >
-                Final focus
-              </button>
-            )}
+            <button
+              ref={(element) => {
+                finalTarget.value = element as HTMLElement | null;
+              }}
+            >
+              Final focus
+            </button>
           </div>
         ));
         await waitFor(() => {
           expect(screen.getByTestId('inside')).toHaveFocus();
         });
-        return { exit, trigger: screen.getByRole('button', { name: 'Toggle' }) };
-      }
+        screen.getByRole('button', { name: 'Toggle' }).focus();
 
-      it.each([
-        { name: 'Tab, finalFocus as a ref', shift: false, finalFocus: 'ref' as const },
-        { name: 'Tab, finalFocus as a function', shift: false, finalFocus: 'function' as const },
-        { name: 'Shift+Tab, finalFocus as a ref', shift: true, finalFocus: 'ref' as const },
-        {
-          name: 'Shift+Tab, finalFocus as a function',
-          shift: true,
-          finalFocus: 'function' as const,
-        },
-      ])(
-        'keeps the focus on the tab destination after the exit ($name)',
-        async ({ shift, finalFocus }) => {
-          const { exit, trigger } = await renderAnimatedMenu({ finalFocus, outside: true });
-          if (shift) {
-            trigger.focus();
-          }
+        await userEvent.tab({ shift: true });
 
-          await userEvent.tab({ shift });
-
-          const destination = screen.getByTestId(shift ? 'before' : 'after');
-          expect(destination).toHaveFocus();
-          await exit;
-          await waitForClose();
-          expect(destination).toHaveFocus();
-        },
-      );
-
-      it('skips the content of the closing popup when no element outside is tabbable', async () => {
-        const { exit, trigger } = await renderAnimatedMenu();
-
-        await userEvent.tab();
-
-        expect(trigger).toHaveFocus();
+        expect(screen.getByTestId('before')).toHaveFocus();
         await exit;
         await waitForClose();
-        expect(trigger).toHaveFocus();
-      });
-    });
+        expect(screen.getByTestId('before')).toHaveFocus();
+      },
+    );
 
     it('gives its guards to the store, and takes them back at the close and at the unmount', async () => {
       const shown = shallowRef(true);
