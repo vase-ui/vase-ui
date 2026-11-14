@@ -374,7 +374,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
   });
 
   it('leaves plain menu items alone, which navigate with real focus', async () => {
-    await render(
+    const { user } = await render(
       <Menu.Root defaultOpen>
         <Menu.Trigger>Actions</Menu.Trigger>
         <Menu.Portal>
@@ -387,6 +387,16 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
       </Menu.Root>,
     );
 
-    expect(screen.getByRole('menuitem', { name: 'Apple' })).not.toHaveAttribute('aria-selected');
+    const apple = screen.getByRole('menuitem', { name: 'Apple' });
+    expect(apple).not.toHaveAttribute('aria-selected');
+
+    await waitFor(() => {
+      expect(screen.getByRole('menu')).toHaveFocus();
+    });
+    await user.keyboard('[ArrowDown]');
+    await waitFor(() => {
+      expect(apple).toHaveAttribute('data-highlighted');
+    });
+    expect(apple).not.toHaveAttribute('aria-selected');
   });
 });
