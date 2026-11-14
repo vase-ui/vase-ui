@@ -346,7 +346,8 @@ export function useCollapsiblePanel(
   function completeClose() {
     // The effect aborts the wait only when it runs again, and the `finished` promise of an
     // animation can resolve before that. `animationend` also comes at the end of an enter
-    // animation. In both cases the panel can be open, and an unmount removes an open panel.
+    // animation. In both cases the panel can be open. A write of `mounted` `false` then starts
+    // the enter of the panel again.
     if (isOpen()) {
       return;
     }
@@ -740,7 +741,8 @@ export interface UseCollapsiblePanelParameters {
 export interface UseCollapsiblePanelReturnValue {
   height: ComputedRef<number | undefined>;
   /**
-   * `hidden`, `id`, the kept `data-starting-style` and the `beforematch` listener.
+   * `hidden`, `id`, the kept `data-starting-style`, and the `animationend` and `beforematch`
+   * listeners.
    */
   props: ComputedRef<Record<string, any>>;
   /**

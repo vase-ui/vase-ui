@@ -87,15 +87,7 @@ describe('probeFrameAfterExitBeforeRead', () => {
     isGone: boolean;
   }
 
-  // A probe that cannot see a late removal proves nothing.
-  it.each<RemovalRow>([
-    { name: 'at the end', remove: (element) => element.remove(), isGone: true },
-    {
-      name: 'in a later task',
-      remove: (element) => setTimeout(() => element.remove()),
-      isGone: false,
-    },
-  ])('reports the removal of the element $name', async ({ remove, isGone }) => {
+  function appendElementWithExit() {
     const style = document.createElement('style');
     style.textContent = `
       @keyframes probe-exit { from { opacity: 1; } to { opacity: 0; } }
@@ -108,6 +100,19 @@ describe('probeFrameAfterExitBeforeRead', () => {
       style.remove();
       element.remove();
     });
+    return element;
+  }
+
+  // A probe that cannot see a late removal proves nothing.
+  it.each<RemovalRow>([
+    { name: 'at the end', remove: (element) => element.remove(), isGone: true },
+    {
+      name: 'in a later task',
+      remove: (element) => setTimeout(() => element.remove()),
+      isGone: false,
+    },
+  ])('reports the removal of the element $name', async ({ remove, isGone }) => {
+    const element = appendElementWithExit();
     element.addEventListener('animationend', () => remove(element));
 
     const result = await probeFrameAfterExitBeforeRead(
@@ -117,5 +122,23 @@ describe('probeFrameAfterExitBeforeRead', () => {
     );
 
     expect(result).toEqual({ isGone, isReadBeforeEnd: false, isSameFrame: true });
+  });
+
+  // A probe that cannot see a read before the end proves nothing. The browser runs the callbacks
+  // of a frame in sequence, with a microtask checkpoint after each callback. The probe moves the
+  // exit in the checkpoint after the first callback, so the second callback reads before the end.
+  it('reports a read of the animations before the end of the exit', async () => {
+    const element = appendElementWithExit();
+
+    const result = await probeFrameAfterExitBeforeRead(
+      element,
+      () => !element.isConnected,
+      () => {
+        requestAnimationFrame(() => element.setAttribute('data-ending-style', ''));
+        requestAnimationFrame(() => element.getAnimations());
+      },
+    );
+
+    expect(result).toEqual({ isGone: false, isReadBeforeEnd: true, isSameFrame: true });
   });
 });

@@ -308,7 +308,7 @@ describe('<Collapsible.Panel /> transitions', () => {
       20_000,
     );
 
-    async function openPanel(open: { value: boolean }, className: string) {
+    async function renderOpenPanel(open: { value: boolean }, className: string) {
       const { container, getPanel, isGone } = await renderPanel(
         open,
         `${className} ${LONG_EXIT}`,
@@ -330,7 +330,7 @@ describe('<Collapsible.Panel /> transitions', () => {
     // after the update that the listener of the part makes.
     it('keeps the panel until the last of its exit animations ends', async () => {
       const open = shallowRef(false);
-      const { container, panel, isGone } = await openPanel(open, `${ANIMATION} ${TWO_EXITS}`);
+      const { container, panel, isGone } = await renderOpenPanel(open, `${ANIMATION} ${TWO_EXITS}`);
 
       const [first, second] = await nextAnimationsRead(panel, {
         action: () => closeInTimerTask(open),
@@ -350,7 +350,10 @@ describe('<Collapsible.Panel /> transitions', () => {
       { name: '::before', pseudoElement: '::before' },
     ])('keeps the panel when an animation of $name ends', async ({ pseudoElement }) => {
       const open = shallowRef(false);
-      const { container, panel, isGone } = await openPanel(open, `${TRANSITION} ${OTHER_EXITS}`);
+      const { container, panel, isGone } = await renderOpenPanel(
+        open,
+        `${TRANSITION} ${OTHER_EXITS}`,
+      );
 
       const closed = new Promise<void>((resolve) => {
         new MutationObserver((_, observer) => {
@@ -358,22 +361,23 @@ describe('<Collapsible.Panel /> transitions', () => {
           resolve();
         }).observe(panel, { attributes: true, attributeFilter: ['data-closed'] });
       });
-      closeInTimerTask(open);
+      const read = nextAnimationsRead(panel, { action: () => closeInTimerTask(open) });
       await closed;
       // The part waits only for the animations of the panel itself. The case ends the other
-      // animation before the exit of the panel starts.
-      const other = panel.getAnimations({ subtree: true }).find((animation) => {
+      // animation before the exit of the panel starts. It reads the animations of the document,
+      // because a read on the panel ends the wait of `nextAnimationsRead`.
+      const child = panel.querySelector(`.${CHILD}`);
+      const other = document.getAnimations().find((animation) => {
         const effect = animation.effect as KeyframeEffect;
         return pseudoElement === null
-          ? effect.target !== panel
-          : effect.pseudoElement === pseudoElement;
+          ? effect.target === child
+          : effect.target === panel && effect.pseudoElement === pseudoElement;
       })!;
       const otherEnd = nextEvent(container, 'animationend').then(() => panel.isConnected);
       other.finish();
       expect(await otherEnd).toBe(true);
 
-      const animations = await nextAnimationsRead(panel);
-      animations.forEach((animation) => animation.finish());
+      (await read).forEach((animation) => animation.finish());
       await waitFor(() => {
         expect(isGone()).toBe(true);
       });
