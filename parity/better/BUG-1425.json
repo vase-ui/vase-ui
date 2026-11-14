@@ -1,6 +1,6 @@
 {
   "id": "BUG-1425",
   "evidence": ["https://github.com/mui/base-ui/issues/1425"],
-  "behavior": "A required Select and a required Radio Group are invalid after blur when they have no value.",
-  "dueWith": "packages/react/src/select/popup/SelectPopup.tsx"
+  "behavior": "When `validationMode` is `onBlur`, a required Radio Group with no value is invalid after the focus leaves it. The group or its field needs a `name`. Base UI shows no error until the form is submitted.",
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
 }

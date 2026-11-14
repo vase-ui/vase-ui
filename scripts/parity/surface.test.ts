@@ -352,6 +352,24 @@ test('a surfaceAdditions row accepts a prop with no upstream row, and the check 
   assert.deepEqual(check().problems, []);
 });
 
+const EXTRA_REASON = "'trigger-press' | 'escape-key' | 'none' | 'extra'";
+const EXTRA_REASON_ROW = {
+  entry: 'Root',
+  changeEventReason: 'extra',
+  reason: 'The part has the reason, and Base UI lacks it.',
+};
+
+test('a surfaceAdditions row accepts a change reason that Base UI lacks, and the check needs it', () => {
+  const family = makeFamily();
+  const withRow = { ...family, surfaceAdditions: [...family.surfaceAdditions, EXTRA_REASON_ROW] };
+  const edits: [string, string][] = [["'trigger-press' | 'escape-key' | 'none'", EXTRA_REASON]];
+
+  assert.deepEqual(withEdits(ROOT, edits, () => check(family)).problems, [
+    'sample: surface difference sample/Root: reason `extra` of `SampleRootChangeEventReason` is not in Base UI. Remove it.',
+  ]);
+  assert.deepEqual(withEdits(ROOT, edits, () => check(withRow)).problems, []);
+});
+
 const staleAdditions: {
   name: string;
   row: FamilyFile['surfaceAdditions'][number];
@@ -375,6 +393,18 @@ const staleAdditions: {
     row: { entry: 'Ghost', emit: 'x', reason: 'A reason.' },
     place: 'Ghost, emit x',
     message: 'the extract has no part `Ghost`',
+  },
+  {
+    name: 'a change reason that the type does not have',
+    row: EXTRA_REASON_ROW,
+    place: 'Root, changeEventReason extra',
+    message: 'the change reasons of the part have no `extra` that Base UI lacks',
+  },
+  {
+    name: 'a change reason that Base UI has',
+    row: { entry: 'Root', changeEventReason: 'none', reason: 'A reason.' },
+    place: 'Root, changeEventReason none',
+    message: 'the change reasons of the part have no `none` that Base UI lacks',
   },
 ];
 
