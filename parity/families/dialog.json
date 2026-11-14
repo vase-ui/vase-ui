@@ -49,7 +49,7 @@
       "describe": ["<Dialog.Root />", "handle-backed root ownership"],
       "title": "does not attach a replacement root store from an abandoned transition render",
       "kind": "not-applicable",
-      "reason": "The case tests a render that React starts with `startTransition` and then drops. Vue has no `startTransition` and no render that it drops."
+      "reason": "The case tests a render that React starts with `startTransition` and then drops. Vue has no `startTransition`."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
