@@ -254,6 +254,69 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       },
     );
 
+    it('highlights the first item while keeping input focus when opened with the keyboard', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      trigger.focus();
+      await flushMicrotasks();
+      await user.keyboard('[Enter]');
+
+      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      expect(input).not.toHaveAttribute('data-highlighted');
+      expect(input).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('menuitem', { name: 'Rename' }).id,
+      );
+    });
+
+    it('marks the input focus-visible when the menu is opened with a pointer', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+
+      const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      expect(input).toHaveAttribute('data-highlighted');
+    });
+
     describe('prop: autoHighlight', () => {
       it('automatically highlights the first match after the user types', async () => {
         const { user } = await render(
@@ -951,6 +1014,69 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       });
     });
 
+    it.skipIf(isJSDOM)(
+      'does not highlight the first item while closing from the trigger with a pointer',
+      async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const { user } = await render(
+          <>
+            <style>{`
+              @keyframes filter-menu-pointer-close-test {
+                to { opacity: 0; }
+              }
+              .filter-menu-pointer-close-test[data-ending-style] {
+                animation: filter-menu-pointer-close-test 100s linear;
+              }
+            `}</style>
+            <Menu.FilterProvider>
+              <Menu.Root>
+                <Menu.Trigger>Actions</Menu.Trigger>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup data-testid="popup" class="filter-menu-pointer-close-test">
+                      <Menu.Input aria-label="Filter actions" />
+                      <Menu.List>
+                        <Menu.Item>Rename</Menu.Item>
+                      </Menu.List>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </Menu.FilterProvider>
+          </>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Actions' });
+        await user.click(trigger);
+        const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+        const item = screen.getByRole('menuitem', { name: 'Rename' });
+        expect(item).not.toHaveAttribute('data-highlighted');
+
+        // Pressing the trigger can move focus before its close handler runs in Safari.
+        trigger.focus();
+        await flushMicrotasks();
+        expect(item).not.toHaveAttribute('data-highlighted');
+
+        const popup = screen.getByTestId('popup');
+        // The popup reads its animations in a frame after the open. That read must not be the read
+        // that the close takes.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        await nextAnimationsRead(popup, { action: () => user.click(trigger) });
+
+        expect(popup).toHaveAttribute('data-ending-style');
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+        expect(item).not.toHaveAttribute('data-highlighted');
+
+        // The exit runs for 100s, so re-check past the first frames of it.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+        expect(item).not.toHaveAttribute('data-highlighted');
+      },
+    );
+
     it('moves focus past the menu when tabbing from the input', async () => {
       const { user } = await render(
         <div>
@@ -1504,6 +1630,133 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       );
     }
 
+    it('closes a pointer-opened filterable submenu and moves focus forward when tabbing', async () => {
+      // Exit transitions keep the closing popups mounted while focus relocates.
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+      const { user } = await render(
+        <div>
+          <style>{`
+            .filter-popup { transition: opacity 50ms; opacity: 1; }
+            .filter-popup[data-ending-style] { opacity: 0; }
+          `}</style>
+          <input />
+          <Menu.FilterProvider>
+            <Menu.Root modal={false}>
+              <Menu.Trigger>Actions</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup class="filter-popup">
+                    <Menu.Input aria-label="Filter actions" />
+                    <Menu.List>
+                      <Menu.FilterProvider>
+                        <Menu.SubmenuRoot>
+                          <Menu.SubmenuTrigger openOnHover={false}>Share</Menu.SubmenuTrigger>
+                          <Menu.Portal>
+                            <Menu.Positioner>
+                              <Menu.Popup class="filter-popup">
+                                <Menu.Input aria-label="Filter sharing options" />
+                                <Menu.List>
+                                  <Menu.Item>Email</Menu.Item>
+                                </Menu.List>
+                              </Menu.Popup>
+                            </Menu.Positioner>
+                          </Menu.Portal>
+                        </Menu.SubmenuRoot>
+                      </Menu.FilterProvider>
+                    </Menu.List>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menu.FilterProvider>
+          <input data-testid="after" />
+        </div>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+
+      const submenuTrigger = await screen.findByRole('menuitem', { name: 'Share' });
+      await user.click(submenuTrigger);
+
+      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      await waitFor(() => {
+        expect(submenuInput).toHaveFocus();
+      });
+
+      // The exit of the parent popup ends with no time limit. Its read gives the transitions.
+      const parentPopup = screen
+        .getByRole('searchbox', { name: 'Filter actions' })
+        .closest<HTMLElement>('.filter-popup')!;
+      const animations = await nextAnimationsRead(parentPopup, { action: () => user.tab() });
+      const finished = animations.map((animation) => animation.finished);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('after')).toHaveFocus();
+      });
+      await Promise.all(finished);
+      await waitFor(() => {
+        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
+      });
+    });
+
+    it('focuses a click-opened filterable submenu input so typing filters the submenu', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.FilterProvider>
+                      <Menu.SubmenuRoot>
+                        <Menu.SubmenuTrigger openOnHover={false}>Share</Menu.SubmenuTrigger>
+                        <Menu.Portal>
+                          <Menu.Positioner>
+                            <Menu.Popup>
+                              <Menu.Input aria-label="Filter sharing options" />
+                              <Menu.List>
+                                <Menu.Item>Email</Menu.Item>
+                                <Menu.Item>Link</Menu.Item>
+                              </Menu.List>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.SubmenuRoot>
+                    </Menu.FilterProvider>
+                    <Menu.Item>Delete</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+
+      const submenuTrigger = await screen.findByRole('menuitem', { name: 'Share' });
+      await user.click(submenuTrigger);
+
+      const submenuInput = await screen.findByRole('searchbox', { name: 'Filter sharing options' });
+      await waitFor(() => {
+        expect(submenuInput).toHaveFocus();
+      });
+
+      await user.keyboard('em');
+
+      expect(submenuInput).toHaveValue('em');
+      await waitFor(() => {
+        expect(screen.queryByRole('menuitem', { name: 'Link' })).toBe(null);
+      });
+      expect(screen.getByRole('menuitem', { name: 'Email' })).toBeVisible();
+      // The parent list did not filter: its own items are all still present.
+      expect(screen.getByRole('menuitem', { name: 'Share' })).toBeVisible();
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+    });
+
     it('uses dialog semantics for a filterable submenu', async () => {
       const { user } = await render(<FilterableSubmenu />);
       const submenuTrigger = screen.getByRole('menuitem', { name: 'Move to folder' });
@@ -1825,6 +2078,82 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(input).not.toHaveAttribute('aria-activedescendant');
       await user.keyboard('[Enter]');
       expect(onAppleClick).not.toHaveBeenCalled();
+    });
+
+    it('supports a detached trigger in a filterable menu', async () => {
+      const Test = defineComponent(() => {
+        const handle = new Menu.Handle();
+
+        return () => (
+          <>
+            <Menu.FilterProvider>
+              <Menu.Root handle={handle}>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup>
+                      <Menu.Input aria-label="Filter fruit" />
+                      <Menu.List data-testid="list">
+                        <Menu.Item>Apple</Menu.Item>
+                      </Menu.List>
+                      <Menu.Empty>No fruit found</Menu.Empty>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </Menu.FilterProvider>
+            <Menu.Trigger id="fruit-trigger" handle={handle}>
+              Fruit
+            </Menu.Trigger>
+          </>
+        );
+      });
+
+      const { user } = await render(<Test />);
+      const trigger = screen.getByRole('button', { name: 'Fruit' });
+
+      expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+
+      await user.click(trigger);
+
+      const popup = await screen.findByRole('dialog', { name: 'Fruit' });
+      const list = screen.getByTestId('list');
+      const input = screen.getByRole('searchbox', { name: 'Filter fruit' });
+
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+      expect(popup).toHaveAttribute('aria-labelledby', trigger.id);
+      expect(list).toHaveAttribute('aria-labelledby', trigger.id);
+      expect(screen.queryByRole('status')).toBe(null);
+
+      await user.type(input, 'zz');
+
+      await waitFor(() => {
+        expect(screen.getByRole('status')).toHaveTextContent('No fruit found');
+      });
+    });
+
+    it('uses an explicit popup label instead of the trigger label', async () => {
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Fruit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup aria-label="Available commands">
+                  <Menu.Input aria-label="Filter fruit" />
+                  <Menu.List>
+                    <Menu.Item>Apple</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Fruit' }));
+
+      const popup = await screen.findByRole('dialog', { name: 'Available commands' });
+      expect(popup).not.toHaveAttribute('aria-labelledby');
     });
 
     it('releases a popup id override when the prop is removed', async () => {
@@ -2629,6 +2958,81 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await waitFor(() => {
         expect(firstItem).toHaveFocus();
       });
+    });
+
+    it('filters items and selects the active item while focus remains on the input', async () => {
+      const onClick = vi.fn();
+      const { user } = await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Fruit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter fruit" />
+                  <Menu.List data-testid="list">
+                    <Menu.Item>Apple</Menu.Item>
+                    <Menu.Item onClick={onClick} closeOnClick={false}>
+                      Banana
+                    </Menu.Item>
+                  </Menu.List>
+                  <Menu.Empty>No fruit found</Menu.Empty>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Fruit' });
+      await user.click(trigger);
+
+      const popup = await screen.findByRole('dialog');
+      const list = screen.getByTestId('list');
+      const input = screen.getByRole('searchbox', { name: 'Filter fruit' });
+
+      expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+      expect(popup).toContainElement(list);
+
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+
+      const firstItem = screen.getByText('Apple');
+      expect(firstItem).not.toHaveAttribute('data-highlighted');
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+
+      await waitFor(() => {
+        expect(screen.getByText('Apple')).toHaveAttribute('tabindex', '-1');
+      });
+      await waitFor(() => {
+        expect(screen.getByText('Banana')).toHaveAttribute('tabindex', '-1');
+      });
+
+      await user.type(input, 'ban');
+
+      expect(screen.queryByRole('menuitem', { name: 'Apple' })).toBe(null);
+      expect(screen.getByText('Banana')).toBeVisible();
+
+      if (isJSDOM) {
+        Object.defineProperty(list, 'scrollTo', {
+          configurable: true,
+          value: vi.fn(),
+        });
+      }
+
+      await user.keyboard('{ArrowDown}');
+
+      expect(input).toHaveFocus();
+      const activeItem = screen.getByRole('menuitem', { name: 'Banana' });
+      expect(activeItem).toHaveAttribute('data-highlighted', '');
+      expect(activeItem).toHaveAttribute('tabindex', '-1');
+      expect(input).toHaveAttribute('aria-activedescendant', activeItem.id);
+      expect(popup).not.toHaveAttribute('aria-activedescendant');
+
+      await user.keyboard('{Enter}');
+
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('does not activate the highlighted item when Enter commits an IME composition', async () => {
