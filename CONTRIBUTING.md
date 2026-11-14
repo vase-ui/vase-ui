@@ -790,12 +790,30 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - A focus that the user moved outside the popup before the close stays there, unless the target is explicit. A `returnFocus` that is not a boolean is explicit. `explicitReturnFocus` can set the value.
 - After a press outside the popup, the part returns the focus only when the browser supports the `preventScroll` option of `focus()`. A virtual press, a nested popup and an explicit target do not need that support.
 - The part returns no focus after a close that a focus guard caused, and after a `mouseleave` event that closed a hover popup.
+- A popup that is not modal closes when the focus moves from its reference or its popup element to an element outside the popup. The reason is `focus-out`, and the part returns no focus. `closeOnFocusOut` set to `false` stops this close.
+- These elements count as inside the popup: the reference, the popup element and each element that contains it, the portal, the triggers of the store, the guards and the elements of `getInsideElements`.
+- The popup element and the reference of a node below the popup in the popup tree also count as inside, with their content. For a node above the popup, only the popup element itself and the reference itself count as inside. `externalTree` replaces the tree above the part.
+- A typeable reference with `role="combobox"` and `initialFocus` set to `false` closes its popup in the same way, also when the popup is modal.
+- A focus change in the task of a press on the reference, or on an element with `data-vase-ui-click-trigger`, does not close the popup.
+- In a `FloatingPortal`, a focus that leaves the popup element closes the popup only between the `pointerdown` and the `pointerup` of a press outside it. The guards of the portal close it for the Tab key.
+- With `restoreFocus`, the part moves the focus back into the popup when a removal or a hidden element in the popup leaves the focus on the body. This also needs `closeOnFocusOut`.
+- `true` focuses the last tabbable element that had the focus, or else the last tabbable element, or else the popup element. `'popup'` focuses the popup element.
+- Firefox and WebKit send no `focusout` when they remove the focused element. A `MutationObserver` on the popup element thus also starts the restore (`VUE-47`).
+- While a popup is open, the part gives `data-vase-ui-inert` to the elements outside it. While a modal popup is open, it also gives them `aria-hidden="true"`. A popup with a typeable combobox reference and `initialFocus` set to `false` also gives them `aria-hidden`. `markOthers.ts` writes the attributes.
+- `aria-hidden` skips live regions, their ancestors, scripts, the guards, the portals in the portal of the popup, and the elements of `getInsideElements`, `previousFocusableElement` and `nextFocusableElement`.
+- `aria-hidden` also skips the typeable combobox reference of the popup when `initialFocus` is `false`, and the typeable combobox reference of a popup above it in the tree.
+- With `outsideElementsInert`, a modal popup also gives `inert` to each element that gets `aria-hidden` (`BUG-4678`). The Tab key and a press then cannot reach those elements.
+- An element keeps an attribute that it had before the marks. The release of the marks leaves that attribute.
+- A popup that opens later lifts the marks of the earlier popups from its own elements and their ancestors (`BUG-5577`). The children of such an ancestor that hold none of its elements keep the marks.
+- A focus manager takes its marks again each time a focus manager above it takes marks. A popup in the content of another popup thus has the later marks.
+- The marks of all popups are in one registry on `globalThis[Symbol.for('vase-ui.modal-marks')]`. Two copies of the library share it.
 - When the `role` of the popup element contains `dialog`, the part sets `tabindex` and `data-tabindex` on it. Both are `0` while the popup has no tabbable element, and `-1` while it has one.
 - `data-tabindex` marks a value that the part wrote. A `tabindex` with no `data-tabindex` is the value of the consumer, and the part keeps it.
+- While `closeOnFocusOut` is `true`, the part sets the two attributes again when the focus leaves the reference.
 - The part keeps its effects in one list. `update` runs each effect whose sources changed, in the sequence of the list: first its last cleanup, then its setup. `onMounted` and one `watch` with `flush: 'post'` call `update`.
 - Two `watch` calls of one component with `flush: 'post'` run in the sequence of the writes to their sources. They do not run in the sequence of the calls. The list gives the sequence of the effects of Base UI.
 - A server calls no `onMounted` and runs no `watch` with `flush: 'post'`, so no effect runs there.
-- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document, and takes them back.
+- Under `KeepAlive`, the two hooks only set a flag, because the portal has not put the popup back at `onActivated`. The `update` after the DOM update of the hook then releases the listeners of the document and the marks, and takes them back.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
 - The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
 - The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
@@ -880,6 +898,20 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A popup takes its number in `onBeforeMount` when it is open at the mount, and in a `watch` of `open` with the default flush when it opens later. `onBeforeMount` runs for a parent before its child, and `onMounted` does not. A server does not call `onBeforeMount`, so a server render takes no number.
 - `open` of the context of a tree node is the open state of the last DOM update. The popup above reads it in the event in which the child closes, and it must still see the child as open. Thus the writer of the context sets `open` in a `watch` with `flush: 'post'`. With a getter that reads the state at the moment of the read, the listener of the child runs first and closes the child. The popup above then finds no child that blocks it, and it closes in the same press.
 - Base UI ignores Escape for a short time after `compositionend`: 5 ms in WebKit, and a 0 ms timer in the other engines. Only WebKit sends `compositionend` before the `keydown` that ends a composition. The other engines send that `keydown` first, with `isComposing`, and the handler checks it. A window there drops an Escape press that comes before its timer (`BUG-6158`). Thus the window exists only in WebKit.
+
+### Scroll lock
+
+The scroll lock stops the scroll of the page under a modal popup. The code is in `src/common/useScrollLock.ts`, `src/utils/popups/useAnchoredPopupScrollLock.ts` and `src/utils/popups/InternalBackdrop.vue`.
+
+- Call `useAnchoredPopupScrollLock` in `setup` of the positioner of an anchored popup. Call `useScrollLock` in `setup` of the root of a Dialog.
+- Each parameter of the two composables is a value, a ref or a getter. `useScrollLock` is on when its first argument is left out. A ref or a getter that gives `undefined` means that the lock is off.
+- A lock exists only while the part is enabled, is mounted and is not held by `KeepAlive`. A server render takes no lock.
+- The lock reads the scrollbars from the window of the document that it locks (`VUE-37`).
+- One plain object on `globalThis[Symbol.for('vase-ui.scroll-lock')]` holds the state. Its fields are `version`, `lockCount`, `restore` and `stableGutter`. Two copies of the library then share one count (`VUE-6`). Each copy keeps its own timers.
+- The probe for `scrollbar-gutter` writes styles and reads the layout. In WebKit, that can stop a transition that runs on the page. Thus each document gets one probe, and `stableGutter` keeps the result (`BUG-6119`).
+- `InternalBackdrop.vue` has the form of `FocusGuard.vue`: `inheritAttrs: false`, no `as`, no `#render` slot and no default slot. It exposes `element`.
+- The clip path of the backdrop follows its `cutout` through `autoUpdate`. React measures the cutout when the positioner renders. A Vue child does not render with its parent.
+- A test of the lock uses a document of its own from `createScrollDocument` in `test/fixtures/scrollDocument.ts`. A case that needs scrollbars that take space asks `probeStrategy`. It runs only in an engine that has them. A case of the gutter way sets `mockedScrollbarWidth`, so that the window reports a scrollbar. It then runs in each engine.
 
 ### Popup click
 
@@ -1131,6 +1163,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Base UI adds some listeners to the element of the part with `addEventListener`. Give such a handler in the props of the part. An example is `onBeforematch` of `Collapsible.Panel`. The element of a `#render` slot then gets the listener too.
 - A listener that Base UI adds with `{ passive: false }` also goes in the props. An example is the `wheel` listener of `ScrollArea.Scrollbar`. Vue adds the listener of an element with no `passive` option. A browser makes a `wheel` listener passive by default only on the window, the document, the root element and the body.
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
+- React adds the listener of `onTouchStart` as a passive listener. A part gives such a handler the suffix `Passive` too: `usePressAndHold` binds `onTouchstartPassive`. Without the suffix, the browser waits for the handler before it starts a scroll.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example. The hidden input of `OTPField.Root` does this for the value of the root, also when the root is not controlled.
 - A text input part can refuse a change. `NumberField.Input` is an example. No render follows a refused change, so the part writes the text of its state to the input in the `input` handler. The part does not write while the event has `isComposing`, because a write stops the composition. After `compositionend` it writes in a 0 ms timeout, because WebKit sends the last `input` event of a composition after `compositionend`.
@@ -1323,6 +1356,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - Vue's JSX types declare no `Capture` attribute. Vue reads the suffix at run time.
 - A helper component of a test can spread its props on a part. Give these props the type of the props of the instance, such as `InstanceType<typeof NumberField.Root>['$props']`. The type `NumberField.Root.Props` has no listener of an emit, such as `onValueChange`.
 - A Vue handler gets the DOM event. It has no `nativeEvent`.
+- React derives `which` of a keydown event from `keyCode`, and a Vue handler reads the native `which`. A constructed event gets `which` from `keyCode` in Chromium and not in Firefox and WebKit. A case that sets `keyCode` thus sets `which` to the same value.
 - Vue binds a `ref` to the component whose render function makes the vnode. A vnode from the body of a test has no such component, so Vue drops its `ref`.
 - Vue has no ref forwarding. `resolveElement` reads the `element` that the `Wrapper` exposes.
 - Vue sets a ref object after the render, and it calls a function ref during the patch. A part reads the exposed `element` during its own patch.
@@ -1372,6 +1406,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `popupConformanceTests` gives a hover trigger `pointer-events: none`, because the real pointer of the browser can rest on it.
 - `createComponent` of `positionerConformanceTests` gives `render` of the positioner props to the `#render` slot of the part. Under that slot, the part renders no popup.
 - `createFormDataSpy(name)` returns a `vi.fn` for a `submit` listener. The spy calls `preventDefault()` on the event. It returns the entry of the form for `name`, or `null` when the form has no such entry. Read the last result with `spy.mock.results.at(-1)?.value`.
+- `pasteText(target, value)` dispatches a `paste` event whose `clipboardData` gives `value` as `text/plain`, and it resolves as `fireEvent` does. Chromium and WebKit refuse a plain object as the `clipboardData` of `fireEvent.paste`, so the helper makes the event itself.
 - `hiddenInputSizeTests({ render, createComponent })` is a shared suite for a part with a hidden input that has no `name`. `createComponent` gets `{ required }` and returns a vnode. The suite makes the input invalid and asserts that it has zero size. After `reportValidity()` and `await flushMicrotasks()`, it asserts that the input is 1px by 1px.
 - `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
 - A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
@@ -1388,7 +1423,7 @@ The hydration helpers:
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
 - `test/fixtures/FocusManagerPart.vue` is a focus manager with a store of its own. The tests of the portal use it.
-- `test/fixtures/HydrationFixture.vue`, `StyledElement.vue` and `ClassedElement.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
+- `test/fixtures/HydrationFixture.vue`, `StyledElement.vue`, `ClassedElement.vue` and `LabelForControl.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
 - The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.
 - To assert on the server HTML before the hydration, parse it in a `<template>` element. That parse has no side effect.
@@ -1398,7 +1433,7 @@ The hydration helpers:
 - After mount and two ticks, it fails the test on a Vue warning or a console call. It also fails the test when the hydrated DOM differs from a client-only render.
 - The comparison ignores comments and the order of the attributes.
 - It compares the `style` of each element as the browser parses it, so `border:0` is equal to `border: 0px`. An empty `style` or `class` attribute is equal to no attribute.
-- `hydrate` mounts two apps in one document, so each generated id is in the document two times. Do not make a hydration test depend on `getElementById` or on a `<label>` that names a control with `for`.
+- `hydrate` mounts the client-only render first, and removes it before it hydrates. The document thus holds one app at a time, as a page does.
 - To test what an inline script of the server HTML does before the app starts, insert the HTML with a fragment of a range, as `hydrate` does. Make the assertions before a mount. `internals/PrehydrationScript.test.tsx` is the model.
 - To test a nonce, load an `<iframe>` whose document has a `Content-Security-Policy` in a `<meta>` element. Insert the server HTML into the document of the frame, and collect its `securitypolicyviolation` events.
 
@@ -1454,6 +1489,7 @@ The hydration helpers:
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
+- A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
 - A test that replaces one child of `KeepAlive` with another child of the same component gives each child its own `key`. `KeepAlive` then keeps both children and deactivates the one that the other child replaces.

@@ -684,6 +684,45 @@ describe('useDismiss', () => {
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
 
+    it('outsidePress ignored for third party elements', async () => {
+      const App = defineComponent({
+        setup() {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {isOpen.value && (
+                <FloatingFocusManager store={context.rootStore}>
+                  <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
+                </FloatingFocusManager>
+              )}
+            </>
+          );
+        },
+      });
+
+      const { user } = await render(<App />);
+      await flushMicrotasks();
+
+      const thirdParty = document.createElement('div');
+      thirdParty.setAttribute('data-testid', 'third-party');
+      document.body.append(thirdParty);
+      await user.click(thirdParty);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      thirdParty.remove();
+    });
+
     it('dismisses when clicking outside a shared shadow root', async () => {
       const App = defineComponent({
         props: { shadowRoot: { type: Object as PropType<ShadowRoot>, required: true } },
