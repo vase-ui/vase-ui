@@ -80,6 +80,7 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
 import type { UseMenuItemMetadata } from '../item/useMenuItem';
@@ -132,27 +133,24 @@ let focusReturnedThroughGuard = false;
 
 // The listener sees the focus leave the guard in the positioner. When the portal is in a shadow
 // root, the focus event of the trigger can report the shadow host as `relatedTarget`, not the guard.
-watch(
-  [open, () => store.select('positionerElement')] as const,
-  ([isOpen, positionerElement], _previous, onCleanup) => {
-    if (!isOpen || !positionerElement) {
-      return;
-    }
+useDomEffect([open, () => store.select('positionerElement')], () => {
+  const positionerElement = store.select('positionerElement');
+  if (!open.value || !positionerElement) {
+    return undefined;
+  }
 
-    function handleGuardFocusOut(event: FocusEvent) {
-      if (getTarget(event) === store.context.beforeContentFocusGuardRef.value) {
-        focusReturnedThroughGuard = event.relatedTarget === triggerElement.value;
-      }
+  function handleGuardFocusOut(event: FocusEvent) {
+    if (getTarget(event) === store.context.beforeContentFocusGuardRef.value) {
+      focusReturnedThroughGuard = event.relatedTarget === triggerElement.value;
     }
+  }
 
-    positionerElement.addEventListener('focusout', handleGuardFocusOut, true);
-    onCleanup(() => {
-      focusReturnedThroughGuard = false;
-      positionerElement.removeEventListener('focusout', handleGuardFocusOut, true);
-    });
-  },
-  { immediate: true },
-);
+  positionerElement.addEventListener('focusout', handleGuardFocusOut, true);
+  return () => {
+    focusReturnedThroughGuard = false;
+    positionerElement.removeEventListener('focusout', handleGuardFocusOut, true);
+  };
+});
 
 watch(
   () => props.closeDelay,
