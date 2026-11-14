@@ -396,6 +396,28 @@ describe('<NumberField.Input />', () => {
     expect(onValueChange.mock.lastCall?.[0]).toBe(2.5);
   });
 
+  it('keeps dirty-input authority after a non-mutating key so a button step uses dirty text', async () => {
+    const onValueChange = vi.fn();
+
+    await render(
+      <NumberField.Root value={0} onValueChange={onValueChange}>
+        <NumberField.Input />
+        <NumberField.Increment />
+      </NumberField.Root>,
+    );
+
+    const input = screen.getByRole('textbox');
+    input.focus();
+    await flushMicrotasks();
+
+    await fireEvent.input(input, { target: { value: '1.5' } });
+    await fireEvent.keyDown(input, { key: 'ArrowLeft' });
+
+    // The button commits the dirty text before stepping, so it must step from 1.5, not 0.
+    await fireEvent.click(screen.getByLabelText('Increase'));
+    expect(onValueChange.mock.lastCall?.[0]).toBe(2.5);
+  });
+
   it('commits dirty text on blur after a cursor key when the controlled value does not mirror it', async () => {
     const onValueChange = vi.fn();
 
@@ -708,6 +730,92 @@ describe('<NumberField.Input />', () => {
     // numeric value: the display is purely visual formatting.
     expect(input).toHaveValue((1.23456).toLocaleString());
     expect(onValueChange.mock.calls.length).toBe(0);
+  });
+
+  it('should update input value after increment/decrement followed by external value change', async () => {
+    const onValueChange = vi.fn();
+
+    const Controlled = defineComponent(() => {
+      const value = shallowRef<number | null>(0);
+      return () => (
+        <NumberField.Root
+          value={value.value}
+          onValueChange={(val) => {
+            onValueChange(val);
+            value.value = val;
+          }}
+        >
+          <NumberField.Input />
+          <NumberField.Increment />
+          <NumberField.Decrement />
+          <button
+            onClick={() => {
+              value.value = 1.23456;
+            }}
+          >
+            external
+          </button>
+        </NumberField.Root>
+      );
+    });
+
+    const { user } = await render(<Controlled />);
+    const input = screen.getByRole('textbox');
+    const incrementButton = screen.getByLabelText('Increase');
+
+    expect(input).toHaveValue('0');
+
+    await user.click(incrementButton);
+
+    expect(input).toHaveValue('1');
+    expect(onValueChange.mock.calls.length).toBe(1);
+
+    await user.click(screen.getByText('external'));
+
+    expect(input).toHaveValue((1.23456).toLocaleString());
+  });
+
+  it('should update input value after decrement followed by external value change', async () => {
+    const onValueChange = vi.fn();
+
+    const Controlled = defineComponent(() => {
+      const value = shallowRef<number | null>(5);
+      return () => (
+        <NumberField.Root
+          value={value.value}
+          onValueChange={(val) => {
+            onValueChange(val);
+            value.value = val;
+          }}
+        >
+          <NumberField.Input />
+          <NumberField.Increment />
+          <NumberField.Decrement />
+          <button
+            onClick={() => {
+              value.value = 2.98765;
+            }}
+          >
+            external
+          </button>
+        </NumberField.Root>
+      );
+    });
+
+    const { user } = await render(<Controlled />);
+    const input = screen.getByRole('textbox');
+    const decrementButton = screen.getByLabelText('Decrease');
+
+    expect(input).toHaveValue('5');
+
+    await user.click(decrementButton);
+
+    expect(input).toHaveValue('4');
+    expect(onValueChange.mock.calls.length).toBe(1);
+
+    await user.click(screen.getByText('external'));
+
+    expect(input).toHaveValue((2.98765).toLocaleString());
   });
 
   it('should allow typing after default formatting on blur', async () => {
@@ -1354,6 +1462,53 @@ describe('<NumberField.Input />', () => {
 
     expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.234567890123456);
     expect(input).toHaveValue((1.234567890123456).toLocaleString());
+  });
+
+  it('keeps full numeric precision across no-edit focus/blur cycles and subsequent stepping', async () => {
+    const onValueChange = vi.fn();
+    const onValueCommitted = vi.fn();
+
+    const Controlled = defineComponent(() => {
+      const value = shallowRef<number | null>(null);
+      return () => (
+        <NumberField.Root
+          value={value.value}
+          onValueChange={(val) => {
+            onValueChange(val);
+            value.value = val;
+          }}
+          onValueCommitted={onValueCommitted}
+        >
+          <NumberField.Input />
+          <NumberField.Increment />
+        </NumberField.Root>
+      );
+    });
+
+    const { user } = await render(<Controlled />);
+    const input = screen.getByRole('textbox');
+
+    input.focus();
+    await flushMicrotasks();
+    await user.keyboard('1.23456');
+    await fireEvent.focusOut(input);
+
+    // Display rounds to the Intl default; the committed numeric value keeps full precision.
+    expect(input).toHaveValue((1.23456).toLocaleString());
+    expect(onValueCommitted.mock.lastCall?.[0]).toBe(1.23456);
+
+    // Re-focusing and blurring without edits must not re-parse the rounded display text and
+    // collapse the stored value, so no new commit fires.
+    input.focus();
+    await flushMicrotasks();
+    input.blur();
+    await flushMicrotasks();
+    expect(onValueCommitted.mock.calls.length).toBe(1);
+
+    // Stepping advances from the full-precision numeric value (2.23456), not the rounded
+    // display, which would have yielded 2.235.
+    await user.click(screen.getByLabelText('Increase'));
+    expect(onValueChange.mock.lastCall?.[0]).toBe(2.23456);
   });
 
   it('commits parsed value on blur and normalizes display for fr-FR', async () => {

@@ -3,21 +3,10 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/focus/markOthers.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/focus/FloatingFocusManager.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/floating-ui-tests/Navigation.tsx",
       "reason": "The file imports the test component `Navigation`, which Vase UI does not have. The pull request that adds `Navigation.tsx` ports the last cases of the file and removes this row."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/focus/markOthers.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
-      "reason": "The file tests `markOthers.ts`."
     }
   ],
   "surfaceAdditions": [],

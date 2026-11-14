@@ -1,0 +1,8 @@
+{
+  "id": "VUE-47",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L599"
+  ],
+  "behavior": "With `restoreFocus`, the focus manager moves the focus back into the popup when the focused element in the popup is removed, in each engine. Firefox and WebKit send no `focusout` for the removal, so a `MutationObserver` on the popup element also starts the restore.",
+  "dueWith": "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx"
+}
