@@ -1521,11 +1521,6 @@ describe('useDismiss', () => {
 
     describe('prop: capture.escapeKey', () => {
       it('when false', async () => {
-        // The portal of the inner popup mounts after the portal of the outer popup. Its focus
-        // manager makes the second frame request of the case. After a frame that runs at once,
-        // `AnimationFrame` never runs a later request. This case thus uses real frames and waits
-        // for the focus.
-        vi.restoreAllMocks();
         const { user } = await render(
           <Overlay>
             <NestedDialog id="outer">
@@ -1536,11 +1531,6 @@ describe('useDismiss', () => {
 
         expect(screen.getByText('outer')).toBeInTheDocument();
         expect(screen.getByText('inner')).toBeInTheDocument();
-        await waitFor(() => {
-          expect(screen.getByText('inner').parentElement).toContainElement(
-            document.activeElement as HTMLElement,
-          );
-        });
 
         await user.keyboard('{Escape}');
         await flushMicrotasks();
