@@ -10,7 +10,8 @@ import { mergeProps } from '../../src/merge-props';
 
 // The cases of the root use this part in place of `Combobox.Input`, so that they test the root
 // alone. It writes the input to the store, gives it the props of the root and the input value, and
-// handles the `input` event. It has no composition, no keys of its own and no chips.
+// handles the `input` event. It has no composition, no keys of its own and no chips. With
+// `insidePopup`, it is an input in the popup, which `Combobox.Input` is only in a positioner.
 const props = defineProps<{ insidePopup?: boolean | undefined }>();
 
 const store = useComboboxRootContext();

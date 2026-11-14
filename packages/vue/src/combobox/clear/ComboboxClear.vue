@@ -100,13 +100,13 @@ const visible = computed(() => {
   return store.select('hasSelectionChips');
 });
 
-const disabled = computed(() =>
+const isDisabled = computed(() =>
   Boolean(fieldDisabled.value || store.select('disabled') || props.disabled),
 );
 
 const { buttonRef, getButtonProps } = useButton({
   native: () => props.nativeButton,
-  disabled,
+  disabled: isDisabled,
 });
 
 // The element is in the DOM until the exit animation ends.
@@ -119,7 +119,7 @@ const { mounted, transitionStatus, setMounted } = useTransitionStatus(
 );
 
 const state = computed<ComboboxClearState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   visible: visible.value,
   open: store.select('open'),
   transitionStatus: transitionStatus.value,
@@ -147,7 +147,7 @@ function setClearElement(element: HTMLElement | null) {
 }
 
 function handleClick(event: MouseEvent) {
-  if (disabled.value || store.select('readOnly')) {
+  if (isDisabled.value || store.select('readOnly')) {
     return;
   }
 

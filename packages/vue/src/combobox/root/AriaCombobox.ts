@@ -1268,8 +1268,10 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
 
     // Without `items`, look the selection up in the live registry of mounted item
-    // values. Mounted items re-assert the index themselves when their registration moves;
-    // when nothing is mounted the lookup resolves to `null` and each item re-registers
+    // values (the list stays mounted while closed when closed-state features need
+    // it — trigger interaction and rendered-label autofill force-mount it). Mounted
+    // items re-assert the index themselves when their registration moves; when
+    // nothing is mounted the lookup resolves to `null` and each item re-registers
     // the index on the next open.
     // Keep the selected index in the coordinates of the list that is actually rendered.
     const registry: readonly any[] = hasItems.value ? flatFilteredValues.value : valuesRef.value;

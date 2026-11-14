@@ -26,12 +26,13 @@ import { useComboboxInputValueContext, useComboboxRootContext } from './Combobox
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 
-// No part of this family renders the list or the items yet. The cases use the fixture parts in
-// their place, and they test the root. Most cases also use the fixture input, which handles only
-// the `input` event, so that they test the root alone. The Base UI cases of this file render those parts,
-// so the pull requests that add the parts port them. A ported case then replaces the case of this
-// file that tests the same thing: the order of the events, a canceled change, the controlled
-// values, the hidden inputs, the autofill, the field and the server render.
+// No part of this family renders the positioner, the list or the items yet. The cases use the
+// fixture parts in their place, and they test the root. Most cases also use the fixture input. It
+// handles only the `input` event, and its `insidePopup` prop stands for a positioner around it.
+// The Base UI cases of this file render those parts, so the pull requests that add the parts port
+// them. A ported case then replaces the case of this file that tests the same thing: the order of
+// the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
+// and the server render.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];

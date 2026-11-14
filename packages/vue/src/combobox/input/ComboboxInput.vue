@@ -117,11 +117,11 @@ const autoHighlightMode = computed(() => store.select('autoHighlight'));
 const inline = computed(() => store.select('inline'));
 const popupSide = usePopupSide(store);
 const listEmpty = useListEmpty();
-const disabled = computed(() =>
+const isDisabled = computed(() =>
   Boolean(fieldDisabled.value || store.select('disabled') || props.disabled),
 );
 
-const setFocused = useSetFieldFocused(disabled, () => store.context.inputRef.value);
+const setFocused = useSetFieldFocused(isDisabled, () => store.context.inputRef.value);
 
 const isInsidePopup = computed(() => hasPositionerParent || inline.value);
 const focusManagerModal = computed(() => !isInsidePopup.value || store.select('modal'));
@@ -131,7 +131,7 @@ const id = computed(() => (isInsidePopup.value ? generatedId.value : store.selec
 const state = computed<ComboboxInputState>(() => ({
   ...(hasPositionerParent ? DEFAULT_FIELD_STATE_ATTRIBUTES : fieldState.value),
   open: open.value,
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   readOnly: readOnly.value,
   popupSide: popupSide.value,
   listEmpty: listEmpty.value,
@@ -274,7 +274,7 @@ function handleInput(event: Event) {
   const shouldOpenOnInput = isComposing || !autofillLikeInput;
 
   function maybeOpenOnInput(trimmed: string) {
-    if (readOnly.value || disabled.value || !trimmed || !shouldOpenOnInput) {
+    if (readOnly.value || isDisabled.value || !trimmed || !shouldOpenOnInput) {
       return;
     }
 
@@ -410,7 +410,7 @@ function handleKeydown(event: KeyboardEvent) {
   const state = toRaw(store.state);
   const isOpen = state.open;
 
-  if (disabled.value || state.readOnly) {
+  if (isDisabled.value || state.readOnly) {
     // Browsing can highlight an item, and Enter there must not submit the form.
     if (state.readOnly && event.key === 'Enter' && isOpen && state.activeIndex !== null) {
       stopEvent(event);
@@ -534,7 +534,7 @@ const { element, elementProps } = useRenderElement('input', props, {
         'aria-readonly': readOnly.value || undefined,
         'aria-required': required || undefined,
         'aria-labelledby': fieldLabelId.value,
-        disabled: disabled.value ? '' : undefined,
+        disabled: isDisabled.value ? '' : undefined,
         readonly: readOnly.value ? '' : undefined,
         required: selectionMode.value === 'none' && required ? '' : undefined,
         form: store.select('form'),
@@ -552,7 +552,7 @@ const { element, elementProps } = useRenderElement('input', props, {
       elementAttrs,
       hasPositionerParent
         ? undefined
-        : (merged) => validation.getValidationProps(disabled.value, merged),
+        : (merged) => validation.getValidationProps(isDisabled.value, merged),
     ];
   },
   stateAttributesMapping: triggerStateAttributesMapping,
