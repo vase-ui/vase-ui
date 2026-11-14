@@ -322,13 +322,9 @@ describe('FloatingPortalLite', () => {
 
       await hydrate(FloatingPortalLiteHydration, { serverHtml });
 
-      // `hydrate` mounts two apps, so the document holds two portal elements.
-      const portals = screen.getAllByTestId('portal');
-      expect(portals).toHaveLength(2);
-      for (const portal of portals) {
-        expect(portal.parentElement).toBe(document.body);
-        expect(portal).toContainElement(portal.querySelector('[data-testid="content"]'));
-      }
+      const portal = screen.getByTestId('portal');
+      expect(portal.parentElement).toBe(document.body);
+      expect(portal).toContainElement(screen.getByTestId('content'));
     });
   });
 });
