@@ -504,8 +504,8 @@ describe('useTriggerFocusGuards', () => {
     };
   }
 
-  // The search for the next element leaves out the guards of the portal, so no guard of the portal
-  // sends the focus back into the popup.
+  // The search for the next element skips the guards of the portal, so no guard of the portal sends
+  // the focus back into the popup.
   function expectNoReentry(focus: ReturnType<typeof trackFocus>) {
     expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
     expect(focus.portalGuards).toEqual([]);
@@ -640,5 +640,46 @@ describe('useTriggerFocusGuards', () => {
       expect(reasons).toEqual([REASONS.focusOut]);
       expectNoReentry(focus);
     });
+  });
+
+  // The search skips only the outside guards of a portal. The inside guards of the outer popup then
+  // take the focus on to the element after the outer trigger.
+  it('VUE-63: goes past the outer popup to the element after its trigger for Tab from a nested trigger', async () => {
+    const reasons: string[] = [];
+    await render(() => (
+      <div>
+        <Popover.Root defaultOpen defaultTriggerId="outer">
+          <Popover.Trigger id="outer">Outer</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup initialFocus={false}>
+                <Popover.Root
+                  open
+                  triggerId="inner"
+                  onOpenChange={(_open, details) => reasons.push(details.reason)}
+                >
+                  <Popover.Trigger id="inner">Inner</Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Positioner>
+                      <Popover.Popup initialFocus={false}>Text</Popover.Popup>
+                    </Popover.Positioner>
+                  </Popover.Portal>
+                </Popover.Root>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+        <button data-testid="after">After</button>
+      </div>
+    ));
+    await flushMicrotasks();
+    screen.getByRole('button', { name: 'Inner' }).focus();
+    const focus = trackFocus();
+
+    await pressTab();
+
+    expect(screen.getByTestId('after')).toHaveFocus();
+    expect(reasons).toEqual([REASONS.focusOut]);
+    expectNoReentry(focus);
   });
 });
