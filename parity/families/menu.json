@@ -163,6 +163,11 @@
       "reason": "Vase UI does not have this file of the `group` folder of Menu. The pull request that adds the part ports it."
     },
     {
+      "upstream": "packages/react/src/menu/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Menu. It comes in the last pull request of the family, so the package exports nothing of Menu before then."
+    },
+    {
       "upstream": "packages/react/src/menu/input/MenuInput.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
@@ -538,19 +543,19 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
-      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+      "reason": "Each case renders the portal, the positioner and the popup of Menu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
-      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+      "reason": "Each case renders the portal, the positioner and the popup of Menu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
-      "reason": "Each case renders the trigger, the portal, the positioner and the popup of Menu, which Vase UI does not have."
+      "reason": "Each case renders the portal, the positioner and the popup of Menu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
@@ -581,6 +586,13 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",
       "reason": "The file tests a part that Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `Menu.Root`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
@@ -752,6 +764,20 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "createHandle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `Menu.createHandle`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
+      "entry": "Handle",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `Menu.Handle`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "MenuArrowDataAttributes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/arrow/MenuArrowDataAttributes.ts",
@@ -846,7 +872,7 @@
       "entry": "MenuSeparatorDataAttributes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/popup/MenuPopup.tsx",
-      "reason": "Vase UI does not have the file that `MenuSeparatorDataAttributes` comes from."
+      "reason": "Menu does not export `MenuSeparatorDataAttributes` yet. The export has a use only with the popup, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
@@ -881,16 +907,10 @@
       "entry": "useFilter",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
-      "reason": "Vase UI does not have the file that `useFilter` comes from."
+      "reason": "Menu does not export `useFilter` yet. The export is for the filter parts of Menu, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [],
-  "returnTypeDifferences": [
-    {
-      "entry": "createHandle",
-      "returns": "MenuHandle<Payload>",
-      "reason": "`Menu.Handle` is the class `MenuHandle`, and the check prints the name of the class."
-    }
-  ],
+  "returnTypeDifferences": [],
   "notApplicableCommits": []
 }
