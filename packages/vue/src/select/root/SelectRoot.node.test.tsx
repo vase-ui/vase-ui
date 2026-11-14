@@ -57,7 +57,7 @@ describe('<Select.Root /> on a server', () => {
     expect(html).toContain('<input type="hidden" name="tags" value="c">');
   });
 
-  describe('VUE-38: a label of the select', () => {
+  describe('VUE-51: a label of the select', () => {
     it.each([
       { name: 'before the trigger', label: 'before' },
       { name: 'after the trigger', label: 'after' },

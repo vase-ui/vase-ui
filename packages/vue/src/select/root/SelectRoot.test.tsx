@@ -727,8 +727,8 @@ describe('<Select.Root />', () => {
     });
   });
 
-  describe('VUE-39: prop: items', () => {
-    it('VUE-39: follows a key that the consumer adds in place to a reactive items record', async () => {
+  describe('VUE-52: prop: items', () => {
+    it('VUE-52: follows a key that the consumer adds in place to a reactive items record', async () => {
       const items = reactive<Record<string, string>>({ sans: 'Sans-serif' });
       await render(() => (
         <Select.Root defaultValue="mono" items={items}>

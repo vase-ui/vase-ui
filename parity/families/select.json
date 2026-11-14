@@ -246,7 +246,7 @@
       "title": "does not link Select.Label before hydration",
       "kind": "replaced",
       "test": "packages/vue/src/select/root/SelectRoot.node.test.tsx",
-      "reason": "The case renders on a server only. Vase UI links the label in the server HTML (VUE-38). The block \"VUE-38: a label of the select\" asserts `aria-labelledby` in the server HTML, with the label before and after the trigger."
+      "reason": "The case renders on a server only. Vase UI links the label in the server HTML (VUE-51). The block \"VUE-51: a label of the select\" asserts `aria-labelledby` in the server HTML, with the label before and after the trigger."
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
