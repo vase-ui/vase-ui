@@ -23,7 +23,8 @@ export interface PreviewCardPortalProps
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 import { usePreviewCardRootContext } from '../root/PreviewCardContext';
 import { PreviewCardPortalContext } from './PreviewCardPortalContext';
@@ -37,7 +38,7 @@ const props = withDefaults(defineProps<PreviewCardPortalProps>(), {
 
 defineSlots<{
   default(props: { state: PreviewCardPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, PreviewCardPortalState>;
+  render(props: { props: HTMLProps; state: PreviewCardPortalState; children: Component }): unknown;
 }>();
 
 const store = usePreviewCardRootContext();

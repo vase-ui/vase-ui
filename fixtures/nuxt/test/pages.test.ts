@@ -894,7 +894,8 @@ async function readSliderPage(page: Page) {
     return {
       volumeRoot: read(all('volume')[0], ['role', 'aria-labelledby']),
       volumeLabelId: all('volume-label')[0].id,
-      volumeInput: read(input(volumeThumb), ['aria-labelledby', 'aria-valuenow', 'name']),
+      volumeInput: read(input(volumeThumb), ['id', 'aria-labelledby', 'aria-valuenow', 'name']),
+      volumeValue: [all('volume-value')[0].textContent, all('volume-value')[0].getAttribute('for')],
       priceRoot: read(all('price')[0], ['aria-labelledby']),
       priceLabelId: all('price-label')[0].id,
       priceInputs: all('price-thumb').map((thumb) =>
@@ -940,6 +941,8 @@ async function expectSliderPage(page: Page) {
   expect(result.priceRoot['aria-labelledby']).toBe(result.priceLabelId);
   // A thumb that has a name of its own does not use the label.
   expect(result.priceInputs.map((input) => input['aria-labelledby'])).toEqual([null, null]);
+  // The output names the inputs only after the mount, as in Base UI.
+  expect(result.volumeValue).toEqual(['30', null]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
@@ -952,6 +955,7 @@ async function expectHydratedSliderPage(page: Page) {
   ]);
   expect(result.priceIndicator).toEqual(['', '30%', '40%']);
   expect(result.scripts).toEqual([]);
+  expect(result.volumeValue).toEqual(['30', result.volumeInput.id]);
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
@@ -1116,6 +1120,48 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+const PREVIEW_CARD_LINK_ATTRIBUTES = [
+  'href',
+  'data-popup-open',
+  'role',
+  'aria-expanded',
+  'tabindex',
+];
+
+// The link is a native link: the part adds no ARIA attribute, no `role` and no `tabindex`.
+async function expectPreviewCardLinks(page: Page) {
+  expect(await readElement(page.getByTestId('closed-link'), PREVIEW_CARD_LINK_ATTRIBUTES)).toEqual({
+    tag: 'a',
+    text: 'Closed link',
+    attributes: {
+      href: '#closed',
+      'data-popup-open': null,
+      role: null,
+      'aria-expanded': null,
+      tabindex: null,
+    },
+  });
+  expect(await readAttributes(page.getByTestId('open-link'), ['id', 'data-popup-open'])).toEqual({
+    id: 'open-link',
+    'data-popup-open': '',
+  });
+}
+
+// The portal renders after the mount, so the server HTML has no popup.
+async function expectPreviewCardPageOnServer(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
+}
+
+// After the mount, the card that is open by default shows the payload of its link in the viewport.
+async function expectHydratedPreviewCardPage(page: Page) {
+  await expectPreviewCardLinks(page);
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('open-viewport').locator('[data-current]').textContent()).toBe(
+    'Open preview',
+  );
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1200,6 +1246,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
   },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
+  {
+    path: '/preview-card',
+    expectPage: expectPreviewCardPageOnServer,
+    expectHydratedPage: expectHydratedPreviewCardPage,
+  },
 ];
 
 const MODES = [
@@ -1522,6 +1573,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await page.keyboard.press('Shift+ArrowRight');
 
     expect(await page.getByTestId('volume-model').textContent()).toBe('41');
+    expect(await page.getByTestId('volume-value').textContent()).toBe('41');
 
     const box = (await page.getByTestId('volume-control').boundingBox())!;
     await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
@@ -1704,6 +1756,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await waitForTwoFrames(page);
 
     expect(await page.getByTestId('wide').textContent()).toBe('false');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the card of /preview-card on a hover of its link after hydration', async () => {
+    const page = await createPage('/preview-card');
+    const messages = collectMessages(page);
+    const link = page.getByTestId('closed-link');
+
+    await link.hover();
+    await page.getByTestId('closed-popup').waitFor();
+
+    expect(await link.getAttribute('data-popup-open')).toBe('');
+    expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
     expect(messages).toEqual([]);
   });
 
