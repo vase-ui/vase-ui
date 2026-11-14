@@ -40,14 +40,6 @@
     {
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "describe": ["<Select.Item />"],
-      "title": "should select the item and close popup when clicked",
-      "kind": "replaced",
-      "test": "packages/vue/src/select/item/SelectItem.test.tsx",
-      "reason": "The case renders `Select.Item` in `Select.Positioner` with no `Select.Popup`. The popup root unmounts after the exit animations of the popup element, so with no popup element the positioner stays mounted and visible after the close. The case \"selects the item with a click and hides the positioner after the popup closes\" renders the popup."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
       "title": "should highlight a hovered item and commit it with a mouse click",
       "kind": "engine",
       "engine": "webkit",

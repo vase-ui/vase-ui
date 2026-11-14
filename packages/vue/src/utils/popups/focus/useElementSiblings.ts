@@ -3,20 +3,22 @@ import type { MaybeRefOrGetter } from 'vue';
 import { ownerWindow } from '../../../common/owner';
 
 export interface ElementSiblings {
-  /** The nodes before the element, in the order of the document. */
+  /** The nodes before the anchor, in the order of the document. */
   before?: readonly ChildNode[] | undefined;
-  /** The nodes after the element, in the order of the document. */
+  /** The nodes after the anchor, in the order of the document. */
   after?: readonly ChildNode[] | undefined;
 }
 
 /**
- * Keeps nodes that the caller made beside the element of a part. The part then has one root node,
- * so the scope id, the directives and the `Transition` of a consumer apply to its element.
+ * Keeps nodes that the caller made beside `anchor`, a node of a part, such as its element or the
+ * start node of its `Teleport`. The part then has one root node. Vue gives the scope id, the
+ * directives and the `Transition` of a consumer to a root element. Vue 3.5.41 and later also give
+ * the `Transition` to the element in a root `Teleport`. In Vue 3.6, they do this from 3.6.0-rc.3.
  *
  * `siblings` gives the same object while the nodes do not change. `null` removes the nodes.
  */
 export function useElementSiblings(
-  element: MaybeRefOrGetter<HTMLElement | null>,
+  anchor: MaybeRefOrGetter<ChildNode | null>,
   siblings: MaybeRefOrGetter<ElementSiblings | null>,
 ): void {
   let placed: readonly ChildNode[] = [];
@@ -34,7 +36,7 @@ export function useElementSiblings(
   }
 
   function place() {
-    const target = toValue(element);
+    const target = toValue(anchor);
     const next = toValue(siblings);
     const parent = target?.parentNode ?? null;
     if (!target || !parent || !next) {
@@ -71,8 +73,8 @@ export function useElementSiblings(
       reference = node;
     }
 
-    // Vue moves only the element when a parent moves the part or `KeepAlive` holds it, and Vue
-    // puts a new node of a list immediately before the element. The observer then puts the nodes
+    // Vue moves only its own nodes when a parent moves the part or `KeepAlive` holds it, and Vue
+    // puts a new node of a list immediately before the anchor. The observer then puts the nodes
     // back in a microtask of the same DOM update.
     if (observedParent !== parent) {
       observer?.disconnect();
@@ -82,9 +84,9 @@ export function useElementSiblings(
     }
   }
 
-  watch([() => toValue(element), () => toValue(siblings)], place, { flush: 'post' });
+  watch([() => toValue(anchor), () => toValue(siblings)], place, { flush: 'post' });
 
-  // Vue reads the node after the element as the place of a part that replaces this part, and it
+  // Vue reads the node after the part as the place of a part that replaces this part, and it
   // inserts the new part after the `onBeforeUnmount` hooks and after the effect scope stops. The
   // nodes thus stay until the DOM update is complete.
   onUnmounted(remove);

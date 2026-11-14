@@ -39,7 +39,7 @@ const { state: fieldState, disabled: rootDisabled } = useFieldRootContext(false)
 const isDisabled = computed(() => (rootDisabled.value ?? false) || props.disabled);
 const state = computed<FieldItemState>(() => ({ ...fieldState.value, disabled: isDisabled.value }));
 
-provideLabelableContext();
+provideLabelableContext(() => element.value);
 provide(FieldItemContext, { disabled: isDisabled });
 
 const { element, elementProps } = useRenderElement('div', props, {

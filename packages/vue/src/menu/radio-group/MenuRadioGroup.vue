@@ -61,6 +61,10 @@ const emit = defineEmits<{
    * Function called when the selected value changes.
    */
   valueChange: [value: any, eventDetails: MenuRadioGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: any];
 }>();
 

@@ -236,6 +236,10 @@ const emit = defineEmits<{
    * - `'scrub'` for scrub area drags
    */
   valueChange: [value: number | null, eventDetails: NumberFieldRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: number | null];
   /**
    * Callback function that is fired when the value is committed.
