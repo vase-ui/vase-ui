@@ -2488,7 +2488,7 @@ describe('nested tooltips', () => {
     expect(screen.getByTestId('outer-popup')).not.toBe(null);
   });
 
-  it('does not report the open again when the reopen of an open outer tooltip fires', async () => {
+  it('should not re-announce an open outer tooltip when the pending reopen fires', async () => {
     const delay = 100;
     const onOpenChange = vi.fn();
 
@@ -2541,6 +2541,7 @@ describe('nested tooltips', () => {
     await fireEvent.pointerEnter(innerTrigger, { pointerType: 'mouse', clientX: 50, clientY: 10 });
     await fireEvent.mouseEnter(innerTrigger);
     await fireEvent.mouseOver(innerTrigger);
+    await fireEvent.mouseMove(innerTrigger, { clientX: 50, clientY: 10 });
 
     // The move back to the parent area starts the reopen of the outer tooltip, which is not due yet.
     await fireEvent.mouseOut(innerTrigger, { relatedTarget: outerArea });

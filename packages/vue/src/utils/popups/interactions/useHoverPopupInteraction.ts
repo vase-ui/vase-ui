@@ -64,14 +64,19 @@ export function useHoverPopupInteraction(
     useDomEffect([intent, ...sources], () => run(intent.value));
   }
 
-  // A popup can close while `KeepAlive` holds the part, so this effect also runs then.
-  function resetClosedIntent() {
-    if (!open.value) {
+  // An outside control can open the popup while an open timer or a rest timer waits. The timer
+  // would then report the open again. Base UI stops the timer in an effect cleanup that only
+  // Strict Mode runs at the mount. A popup can change while `KeepAlive` holds the part, so this
+  // effect also runs then.
+  function settleIntent() {
+    if (open.value) {
+      intent.value.cancelPendingOpen();
+    } else {
       intent.value.reset();
     }
   }
-  onMounted(resetClosedIntent);
-  watch([intent, open], resetClosedIntent, { flush: 'post' });
+  onMounted(settleIntent);
+  watch([intent, open], settleIntent, { flush: 'post' });
 
   // The store owns the intent, and the triggers use it too. This part stops what is in flight when
   // it unmounts, when its store changes and when `KeepAlive` deactivates it.
