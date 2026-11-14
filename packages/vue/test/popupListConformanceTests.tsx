@@ -142,6 +142,12 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
     await flushMicrotasks();
   }
 
+  // In WebKit, the list ignores a `mousemove` with no movement, and `user.hover` gives none.
+  async function hoverItem(user: UserEvent, item: HTMLElement) {
+    await user.hover(item);
+    await fireEvent.mouseMove(item, { movementX: 1 });
+  }
+
   async function openWithMouse(user: UserEvent) {
     await user.click(getTrigger());
     await waitForOpen();
@@ -228,7 +234,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         const { user } = await renderList();
         await openWithMouse(user);
 
-        await user.hover(getItem(2));
+        await hoverItem(user, getItem(2));
 
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(2);
@@ -241,7 +247,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         const { user } = await renderList(spies.options);
         await openWithMouse(user);
 
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(1);
         });
@@ -261,7 +267,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('continues keyboard navigation from the hovered item', async () => {
         const { user } = await renderList();
         await openWithMouse(user);
-        await user.hover(getItem(4));
+        await hoverItem(user, getItem(4));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(4);
         });
@@ -278,7 +284,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         const spies = createSpies();
         const { user } = await renderList(spies.options);
         await openWithMouse(user);
-        await user.hover(getItem(6));
+        await hoverItem(user, getItem(6));
         await expectFocusOnItem(6);
 
         await user.keyboard('{Enter}');
@@ -296,7 +302,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         const start = await openWithKeyboard(user);
         await navigateTo(user, start, 3);
 
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
 
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(1);
@@ -307,7 +313,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('keeps the highlight when a touch scroll starts on the highlighted item', async () => {
         const { user } = await renderList();
         await openWithMouse(user);
-        await user.hover(getItem(2));
+        await hoverItem(user, getItem(2));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(2);
         });
@@ -328,7 +334,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('keeps the highlight when the pointer moves straight onto content inside another item', async () => {
         const { user } = await renderList();
         await openWithMouse(user);
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(1);
         });
@@ -347,7 +353,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
       it('clears the highlight when the pointer leaves an item to outside the document', async () => {
         const { user } = await renderList();
         await openWithMouse(user);
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(1);
         });
@@ -440,7 +446,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
           expect(scroller.scrollTop).toBe(0);
 
           // Item 3 spans 90-120px, so only its top 10px are visible.
-          await user.hover(getItem(3));
+          await hoverItem(user, getItem(3));
           await waitFor(() => {
             expect(getHighlightedIndex()).toBe(3);
           });
@@ -451,7 +457,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
           scroller.scrollTop = 45;
           await waitSingleFrame();
           await flushMicrotasks();
-          await user.hover(getItem(1));
+          await hoverItem(user, getItem(1));
           await waitFor(() => {
             expect(getHighlightedIndex()).toBe(1);
           });
@@ -993,7 +999,7 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
         const spies = createSpies();
         const { user } = await renderList(spies.options);
         await openWithMouse(user);
-        await user.hover(getItem(1));
+        await hoverItem(user, getItem(1));
         await waitFor(() => {
           expect(getHighlightedIndex()).toBe(1);
         });
