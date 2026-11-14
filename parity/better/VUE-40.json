@@ -1,0 +1,10 @@
+{
+  "id": "VUE-40",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/viewport/usePopupViewport.tsx#L221-L224",
+    "https://html.spec.whatwg.org/multipage/dom.html#the-id-attribute",
+    "https://html.spec.whatwg.org/multipage/input.html#radio-button-group"
+  ],
+  "behavior": "The picture of the old content has no `id` on an HTML element and no `name` on a control. Two elements with one id then never exist during a morph, so `aria-labelledby` of the popup names the live title. A checked radio of the picture does not uncheck the live radio. Base UI keeps both in its picture.",
+  "dueWith": "packages/react/src/utils/popups/viewport/usePopupViewport.tsx"
+}
