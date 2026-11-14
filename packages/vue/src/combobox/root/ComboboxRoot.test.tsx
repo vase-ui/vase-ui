@@ -2366,6 +2366,7 @@ describe('<Combobox.Root />', () => {
           });
 
           // Deselecting must not jump the highlight (and scroll) to the other selected item.
+          await moveOver(date);
           await user.click(date);
 
           await waitFor(() => {
@@ -3879,6 +3880,7 @@ describe('<Combobox.Root />', () => {
         await waitFor(() => {
           expect(appleItem).toHaveAttribute('data-highlighted');
         });
+        await moveOver(bananaItem);
         await user.click(bananaItem);
 
         await waitFor(() => {
