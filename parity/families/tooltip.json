@@ -33,7 +33,7 @@
       "title": "should not re-announce an open outer tooltip when the pending reopen fires",
       "kind": "replaced",
       "test": "packages/vue/src/tooltip/root/TooltipRoot.test.tsx",
-      "reason": "The case passes in Base UI only in the Strict Mode of React. Its move on the inner trigger starts the rest timer of the outer trigger. Strict Mode mounts the outer popup two times, and the first cleanup of `useHoverPopupInteraction` cancels that timer. Vue has no Strict Mode, so the timer announces the open tooltip again. React with no Strict Mode does the same. The case `does not announce an open outer tooltip again when the nested reopen fires` makes no move, and it asserts the guard of the nested reopen."
+      "reason": "Base UI renders the case in Strict Mode. There the popup runs the cleanup of its effects at its mount, and that cleanup stops the rest timer that the move on the inner trigger started. Vue has no Strict Mode, so that timer calls `onOpenChange` again, as Base UI does without Strict Mode. The case `does not report the open again when the reopen of an open outer tooltip fires` has no move on the inner trigger, so only the reopen of the outer trigger waits."
     }
   ],
   "surfaceAdditions": [
