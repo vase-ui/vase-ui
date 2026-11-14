@@ -1,7 +1,7 @@
 export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
-export { createRenderer } from './createRenderer';
+export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
