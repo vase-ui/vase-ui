@@ -500,6 +500,40 @@ describe('<Tooltip.Trigger />', () => {
     });
   });
 
+  it('does not report an open to the outer tooltip when a nested trigger gets the focus', async () => {
+    const onOuterOpenChange = vi.fn();
+    await render(
+      <Tooltip.Provider delay={0}>
+        <Tooltip.Root onOpenChange={onOuterOpenChange}>
+          <Tooltip.Trigger as="div">
+            row label
+            <Tooltip.Root>
+              <Tooltip.Trigger data-testid="inner-trigger">button with tooltip</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup data-testid="inner-popup">inner popup</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>outer popup</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>,
+    );
+
+    screen.getByTestId('inner-trigger').focus();
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('inner-popup')).toHaveAttribute('data-open');
+    // The delay group closes an outer tooltip that opens in the same flush. The DOM then shows no
+    // leak, so the case reads `onOpenChange` of the outer root.
+    expect(onOuterOpenChange).not.toHaveBeenCalled();
+  });
+
   it('keeps a tooltip that follows the cursor open when a trigger with `closeOnClick` false is pressed', async () => {
     const handle = Tooltip.createHandle();
     await render(
