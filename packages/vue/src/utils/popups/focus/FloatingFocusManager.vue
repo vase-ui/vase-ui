@@ -136,7 +136,7 @@ export interface FloatingFocusManagerProps {
    * Additional elements that should be treated as part of the floating subtree
    * even if they are rendered outside the floating element itself.
    */
-  getInsideElements?: (() => Array<Element | null | undefined>) | undefined;
+  getInsideElements?: (() => (Element | null | undefined)[]) | undefined;
 }
 
 // The floating element of the focus manager above. A popup that has no node in the popup tree, such
@@ -981,7 +981,7 @@ effect(
         }
       }
 
-      const tabbableContent = getTabbableContent(floatingFocusEl) as Array<Element | null>;
+      const tabbableContent = getTabbableContent(floatingFocusEl) as (Element | null)[];
       const prevTabbable = lastFocusedTabbable;
       const nodeToFocus =
         (prevTabbable && tabbableContent.includes(prevTabbable) ? prevTabbable : null) ||
