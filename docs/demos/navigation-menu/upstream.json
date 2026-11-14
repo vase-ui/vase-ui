@@ -1,0 +1,16 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/navigation-menu/demos",
+  "files": {
+    "hero/css-modules/index.module.css": "9acfb34f5f2def02faa41490985ddecd6fb1100c5fc1c42d70db795b6021db6a",
+    "hero/css-modules/index.tsx": "e409571e719bab9bda62fb9da398f934999607f62bda48f1b8523bfeeeac53b1",
+    "nested-inline/css-modules/index.module.css": "d9d480d1ca2649916bf426d31fb171ccebf8b0e264d32b2ff5f78cc55a95b916",
+    "nested-inline/css-modules/index.tsx": "767568ec5376de5888d9fdcbe950ca44f2c1f9030cd4b5198688d29410c0b60b",
+    "nested-inline/data.ts": "7f08b6195b27ddf9a9a85c231c31114d4de40f106f3833774f64105d9fd0598a",
+    "nested/css-modules/index.module.css": "180a47548e0bcdfa10bcab553854e146c369545f68ee42ac2def9fb5456a3fc1",
+    "nested/css-modules/index.tsx": "ff12303c6906e8d5372eb74c1988352c3441daf7c8782109ee1a4a4cf7e7bde5"
+  },
+  "entryPoints": {
+    "nested-inline": ["unstable-use-media-query"]
+  }
+}

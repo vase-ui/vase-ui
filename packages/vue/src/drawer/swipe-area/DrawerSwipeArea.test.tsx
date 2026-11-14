@@ -14,7 +14,6 @@ import {
 } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
@@ -211,34 +210,6 @@ const PopupHeightReport = defineComponent({
   setup(props) {
     useDrawerRootContext().onPopupHeightChange(props.height);
     return () => null;
-  },
-});
-
-// A popup that renders the swipe movement in its style, as `Drawer.Popup` renders the drag styles
-// of the viewport.
-const MovementStylePopup = defineComponent({
-  inheritAttrs: false,
-  setup(_props, { attrs }) {
-    const store = useDialogRootContext();
-    let ownElement: HTMLElement | null = null;
-    function setPopupElement(element: unknown) {
-      const popup = element as HTMLElement | null;
-      if (popup === ownElement) {
-        return;
-      }
-      ownElement = popup;
-      store.context.popupRef.value = popup;
-      store.set('popupElement', popup);
-    }
-
-    return () => (
-      <div
-        {...attrs}
-        ref={setPopupElement}
-        hidden={store.select('mounted') ? undefined : true}
-        style={{ '--drawer-swipe-movement-y': '0px' }}
-      />
-    );
   },
 });
 
@@ -577,6 +548,48 @@ describe('<Drawer.SwipeArea />', () => {
     await hydrate(DrawerSwipeAreaHydration, { serverHtml });
   });
 
+  it('VUE-57: removes the swipe styles of the gesture when it unmounts during the gesture', async () => {
+    const shown = shallowRef(true);
+    await render(() => (
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        <Drawer.Root modal={false}>
+          {shown.value && <Drawer.SwipeArea data-testid="swipe-area" />}
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport>
+              <Drawer.Popup data-testid="popup" style={{ height: '100px' }}>
+                Drawer
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </Drawer.Provider>
+    ));
+
+    await startOpeningSwipe(screen.getByTestId('swipe-area'));
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    const indent = screen.getByTestId('indent');
+    expect(popup).toHaveAttribute('data-swiping', '');
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('60px');
+    expect(popup.style.transition).toBe('none');
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.6');
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.4');
+
+    shown.value = false;
+    await flushMicrotasks();
+
+    expect(popup).toBeVisible();
+    expect(popup).not.toHaveAttribute('data-swiping');
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    expect(popup.style.transition).toBe('');
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+  });
+
   describe('with a test popup', () => {
     it('renders a presentation element with the touch action of its direction, and takes no pointer event while it cannot open the drawer', async () => {
       const open = shallowRef(false);
@@ -830,48 +843,6 @@ describe('<Drawer.SwipeArea />', () => {
       expect(handleOpenChange).not.toHaveBeenCalledWith(false, expect.anything());
       expect(popup).not.toHaveAttribute('data-swiping');
       expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('');
-    });
-
-    it('keeps the movement on the popup when the open renders the popup again', async () => {
-      await render(
-        <Drawer.Root>
-          <Drawer.SwipeArea data-testid="swipe-area" />
-          <MovementStylePopup data-testid="popup" />
-        </Drawer.Root>,
-      );
-      const swipeArea = screen.getByTestId('swipe-area');
-      const popup = screen.getByTestId('popup');
-      setSize(popup, { offsetHeight: 100 });
-
-      await firePointer.down(swipeArea, {
-        button: 0,
-        buttons: 1,
-        pointerId: 1,
-        clientX: 10,
-        clientY: 120,
-        pointerType: 'mouse',
-        timeStamp: 1,
-      });
-      await firePointer.move(swipeArea, {
-        buttons: 1,
-        pointerId: 1,
-        clientX: 10,
-        clientY: 119,
-        pointerType: 'mouse',
-        timeStamp: 17,
-      });
-
-      expect(swipeArea).toHaveAttribute('data-open', '');
-      expect(popup).not.toHaveAttribute('hidden');
-      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('99px');
-
-      await firePointer.up(swipeArea, {
-        pointerId: 1,
-        clientX: 10,
-        clientY: 119,
-        pointerType: 'mouse',
-        timeStamp: 33,
-      });
     });
 
     it.each([

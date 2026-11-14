@@ -14,8 +14,8 @@ import {
   waitFor,
   within,
 } from '#test-utils';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
-import * as NavigationMenu from '../index.parts';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
 import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';

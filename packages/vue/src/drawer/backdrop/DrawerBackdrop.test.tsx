@@ -9,7 +9,6 @@ import {
   renderOnServer,
   screen,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
@@ -35,7 +34,11 @@ describe('<Drawer.Backdrop />', () => {
     await render(() => (
       <Drawer.Root open={open.value}>
         <Drawer.Backdrop data-testid="backdrop" />
-        <DialogPopupPart />
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
       </Drawer.Root>
     ));
     const backdrop = screen.getByTestId('backdrop');
@@ -94,7 +97,11 @@ describe('<Drawer.Backdrop />', () => {
     await render(() => (
       <Drawer.Root open={open.value}>
         <Drawer.Backdrop data-testid="backdrop" />
-        <DialogPopupPart />
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
       </Drawer.Root>
     ));
     const backdrop = screen.getByTestId('backdrop');

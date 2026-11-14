@@ -1,10 +1,8 @@
 {
   "id": "VUE-57",
   "evidence": [
-    "https://vuejs.org/api/sfc-css-features.html#child-component-root-elements",
-    "https://vuejs.org/guide/reusability/custom-directives.html#usage-on-components",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx#L713-L777"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx#L431-L436"
   ],
-  "behavior": "A trigger that has focus guards beside its element has one root node. A rule of `<style scoped>`, `v-show`, a custom directive and `<Transition>` of the consumer thus apply to the element of the trigger, also while the guards are in the document.",
-  "dueWith": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx"
+  "behavior": "When `Drawer.SwipeArea` unmounts during a gesture that opens the drawer, it removes the swipe movement, `data-swiping` and `transition: none` from the popup. It also removes the swipe progress from the backdrop and from `Drawer.Provider`. The drawer is then fully open. In Base UI, the swipe area only lets an outside press close the drawer again. The popup then stays at the position of the gesture, and the indent stays at the progress of the gesture.",
+  "dueWith": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.tsx"
 }
