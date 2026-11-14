@@ -40,8 +40,7 @@
     }
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "next"
+    "access": "public"
   },
   "scripts": {
     "build": "tsdown",
@@ -77,6 +76,7 @@
     "motion-v": "2.12.0",
     "playwright": "1.65.0",
     "publint": "0.3.25",
+    "temporal-polyfill": "1.0.8",
     "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "unplugin-vue": "8.0.1",

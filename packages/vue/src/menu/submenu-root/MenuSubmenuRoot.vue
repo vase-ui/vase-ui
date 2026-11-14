@@ -41,6 +41,10 @@ const emit = defineEmits<{
    * Event handler called when the menu is opened or closed.
    */
   openChange: [open: boolean, eventDetails: MenuSubmenuRootChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the menu is opened or closed.

@@ -160,7 +160,7 @@ describe('<Popover.Popup />', () => {
         <Toolbar.Root>
           <Toolbar.Button>First</Toolbar.Button>
           <Popover.Root>
-            <Popover.Trigger as={Toolbar.Button}>Open</Popover.Trigger>
+            <Toolbar.Button as={Popover.Trigger}>Open</Toolbar.Button>
             <Popover.Portal>
               <Popover.Positioner>
                 <Popover.Popup>{slots.default?.()}</Popover.Popup>
@@ -316,7 +316,7 @@ describe('<Popover.Popup />', () => {
       <Toolbar.Root>
         <Toolbar.Button>First</Toolbar.Button>
         <Popover.Root defaultOpen>
-          <Popover.Trigger as={Toolbar.Button}>Open</Popover.Trigger>
+          <Toolbar.Button as={Popover.Trigger}>Open</Toolbar.Button>
           <Popover.Portal container={container}>
             <Popover.Positioner>
               <Popover.Popup>

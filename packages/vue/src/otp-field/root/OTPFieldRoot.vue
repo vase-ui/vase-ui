@@ -215,6 +215,10 @@ const emit = defineEmits<{
    * - `'none'` for a native reset of the form
    */
   valueChange: [value: string, eventDetails: OTPFieldRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string];
   /**
    * Callback fired when entered text contains characters that are rejected by validation or
