@@ -1,5 +1,13 @@
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { computed, createSSRApp, defineComponent, inject, reactive, shallowRef } from 'vue';
+import {
+  computed,
+  createSSRApp,
+  defineComponent,
+  inject,
+  nextTick,
+  reactive,
+  shallowRef,
+} from 'vue';
 import type { PropType } from 'vue';
 import type { VirtualElement } from '@floating-ui/vue';
 import {
@@ -22,7 +30,7 @@ import { usePopupPositioner } from './popupPositioner';
 import type { PopupPositionerState } from './popupPositioner';
 import PopupPositionerHydration from './PopupPositionerHydration.test.vue';
 import PopupPositionerReplace from './PopupPositionerReplace.test.vue';
-import { provideFloatingTree } from './tree/FloatingTree';
+import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from './tree/FloatingTree';
 import { FloatingTreeStore } from './tree/FloatingTreeStore';
 
 type Place = { left: number; top: number };
@@ -91,6 +99,18 @@ const TreeScope = defineComponent({
     return () => slots.default?.();
   },
 });
+
+/** A part that has a node in the tree and provides it, as a detached trigger does. */
+function createNodeOwner(tree: FloatingTreeStore, onId: (id: string) => void) {
+  return defineComponent({
+    setup(_, { slots }) {
+      const id = useFloatingNodeId(tree);
+      onId(id);
+      provideFloatingNode(id);
+      return () => slots.default?.();
+    },
+  });
+}
 
 async function waitForPlace(element: Element, expected: Place) {
   await waitFor(() => {
@@ -319,6 +339,58 @@ describe('usePopupPositioner', () => {
     expect(popup).toHaveAttribute('data-side', 'top');
     expect(popup).toHaveAttribute('data-extra', 'state');
     expect(popup).toHaveStyle({ pointerEvents: 'none' });
+  });
+
+  it('gives a node id getter and a tree getter of the part to the positioning context', async () => {
+    const first = new FloatingTreeStore();
+    const second = new FloatingTreeStore();
+    const ids: Record<string, string> = {};
+    const NodeInFirst = createNodeOwner(first, (id) => {
+      ids.first = id;
+    });
+    const NodeInSecond = createNodeOwner(second, (id) => {
+      ids.second = id;
+    });
+    const place = shallowRef<{ tree: FloatingTreeStore; nodeId: string | undefined }>({
+      tree: first,
+      nodeId: undefined,
+    });
+    let store!: PopupFixtureStore<unknown>;
+    const Positioner = defineComponent({
+      setup() {
+        store = inject(PopupFixtureContext)!;
+        const props = reactive({});
+        const { elementProps } = usePopupPositioner(store, props, {
+          keepMounted: false,
+          positioning: {
+            nodeId: () => place.value.nodeId,
+            externalTree: () => place.value.tree,
+          },
+        });
+        return () => <div {...elementProps()} />;
+      },
+    });
+    await render(
+      <>
+        <NodeInFirst />
+        <NodeInSecond />
+        <PopupRootPart open>
+          <Positioner />
+        </PopupRootPart>
+      </>,
+    );
+    const contexts = () => [first, second].map((tree) => tree.nodesRef.value[0].context);
+
+    place.value = { tree: first, nodeId: ids.first };
+    await nextTick();
+    const context = store.context.positioning!;
+    expect(context.nodeId).toBe(ids.first);
+    expect(contexts()).toEqual([context, undefined]);
+
+    place.value = { tree: second, nodeId: ids.second };
+    await nextTick();
+    expect(context.nodeId).toBe(ids.second);
+    expect(contexts()).toEqual([undefined, context]);
   });
 
   it('gives the positioning context of the popup to the store and to the tree', async () => {

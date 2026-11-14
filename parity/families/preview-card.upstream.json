@@ -1,0 +1,1607 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/preview-card/**",
+    "docs/src/app/(docs)/react/components/preview-card/**"
+  ],
+  "sources": [
+    "packages/react/src/preview-card/arrow/PreviewCardArrow.tsx",
+    "packages/react/src/preview-card/arrow/PreviewCardArrowDataAttributes.ts",
+    "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.tsx",
+    "packages/react/src/preview-card/backdrop/PreviewCardBackdropDataAttributes.ts",
+    "packages/react/src/preview-card/index.parts.ts",
+    "packages/react/src/preview-card/index.ts",
+    "packages/react/src/preview-card/popup/PreviewCardPopup.tsx",
+    "packages/react/src/preview-card/popup/PreviewCardPopupDataAttributes.ts",
+    "packages/react/src/preview-card/portal/PreviewCardPortal.tsx",
+    "packages/react/src/preview-card/portal/PreviewCardPortalContext.ts",
+    "packages/react/src/preview-card/positioner/PreviewCardPositioner.tsx",
+    "packages/react/src/preview-card/positioner/PreviewCardPositionerContext.ts",
+    "packages/react/src/preview-card/positioner/PreviewCardPositionerCssVars.ts",
+    "packages/react/src/preview-card/positioner/PreviewCardPositionerDataAttributes.ts",
+    "packages/react/src/preview-card/root/PreviewCardContext.ts",
+    "packages/react/src/preview-card/root/PreviewCardRoot.tsx",
+    "packages/react/src/preview-card/store/PreviewCardHandle.ts",
+    "packages/react/src/preview-card/store/PreviewCardStore.ts",
+    "packages/react/src/preview-card/trigger/PreviewCardTrigger.tsx",
+    "packages/react/src/preview-card/trigger/PreviewCardTriggerDataAttributes.ts",
+    "packages/react/src/preview-card/utils/constants.ts",
+    "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
+    "packages/react/src/preview-card/viewport/PreviewCardViewportCssVars.ts",
+    "packages/react/src/preview-card/viewport/PreviewCardViewportDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/preview-card/positioner/PreviewCardPositioner.spec.tsx",
+    "packages/react/src/preview-card/root/PreviewCardRoot.spec.tsx",
+    "packages/react/src/preview-card/trigger/PreviewCardTrigger.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/preview-card/arrow/PreviewCardArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Arrow />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Backdrop />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Backdrop />"
+          ],
+          "title": "sets `pointer-events: none` style"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/popup/PreviewCardPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <PreviewCard.Root>"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <PreviewCard.Positioner>"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Popup />"
+          ],
+          "title": "should render the children"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/portal/PreviewCardPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Portal />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <PreviewCard.Portal>"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />"
+          ],
+          "suite": "positionerConformanceTests"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "positions the popup relative to the hovered line of a multiline trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger",
+            "with delayed opening"
+          ],
+          "title": "uses the latest hovered line",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "keeps the popup aligned after page scroll",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "stays anchored to the opened line while already open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "re-anchors to a newly entered line while reopening during close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "positions the popup relative to the side-aligned rect when open is controlled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "clears hovered-line coords after close before controlled reopen of the same trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "ignores stale hovered coords when a controlled trigger switch reuses the popup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "uses the hovered line with a custom anchor in a clipped keepMounted portal",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "positions the popup relative to the side-aligned rect when opened via focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Positioner />",
+            "multiline inline trigger"
+          ],
+          "title": "clears hovered-line coords when opened via focus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/root/PreviewCardRoot.detached-triggers.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Root />"
+          ],
+          "suite": "detachedTriggersConformanceTests"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when opened and closed imperatively"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when the popup moves to another trigger"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when focus opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when hover opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "keeps a default-open root open while a detached trigger migrates after the initial commit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should open the preview card immediately when hovering another trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should open again after escape when focusing another trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should switch immediately when focusing another trigger while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should close when the active trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should remain open when the active trigger unmount close is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should reposition to a different trigger when reopened with keepMounted=true",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should close when the active detached trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "opens immediately when entering trigger B during trigger A close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "still respects trigger B open delay after trigger A close transition finishes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "reopens immediately when re-hovering trigger A during its close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "respects open delay on later same-trigger hovers after close lifecycle finishes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/root/PreviewCardRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Root />"
+          ],
+          "title": "keeps the payload while a controlled reopen moves to another trigger"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "data-instant"
+          ],
+          "title": "is focus when the card opens from trigger focus"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "data-instant"
+          ],
+          "title": "is dismiss when Escape closes the card"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should open when the trigger is hovered"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should close when the trigger is unhovered"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should open when the trigger is focused"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should close when the trigger is blurred"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "should call onOpenChange when the open state changes"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "does not close after hovering out of a popup opened externally"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "closes after hovering out of a popup opened by its trigger"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: onOpenChange"
+          ],
+          "title": "does not call onOpenChange again when the trigger is re-hovered while open"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: defaultOpen"
+          ],
+          "title": "closes when the trigger is unhovered after opening by default"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: defaultOpen"
+          ],
+          "title": "does not close after hovering out of a popup opened without trigger hover"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: delay"
+          ],
+          "title": "should open after delay with rest type by default"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: closeDelay"
+          ],
+          "title": "should close after delay"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "reopens on hover after Escape closes it"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts the preview card when the `unmount` method is called",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "closes the preview card when the `close` method is called",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "nested preview card interactions"
+          ],
+          "title": "keeps the parent preview card open when clicking nested trigger"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "nested preview card interactions"
+          ],
+          "title": "keeps the parent preview card open when press starts in nested popup and ends outside"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "nested preview card interactions"
+          ],
+          "title": "keeps the parent preview card open when hovering nested trigger"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "nested preview card interactions",
+            "race condition between close timers and hover-open logic"
+          ],
+          "title": "keeps the parent open and re-opens the child when re-entering after partial close"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "nested preview card interactions",
+            "synchronized closing"
+          ],
+          "title": "parent popup closes as soon as the child popup closes"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Root />",
+            "close requests"
+          ],
+          "title": "reports the active trigger for an Escape close"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/trigger/PreviewCardTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Trigger />"
+          ],
+          "title": "throws without PreviewCard.Root or a handle"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Trigger />"
+          ],
+          "title": "stays closed when focus returns to the trigger after leaving the window, once the card has unmounted"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/preview-card/viewport/PreviewCardViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<PreviewCard.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Viewport />"
+          ],
+          "suite": "viewportConformanceTests"
+        },
+        {
+          "describe": [
+            "<PreviewCard.Viewport />"
+          ],
+          "title": "throws a descriptive error when rendered outside <PreviewCard.Positioner>"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/preview-card/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: PreviewCard.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<PreviewCard.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "PreviewCard.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardRootState",
+            "fields": [],
+            "code": "type PreviewCardRootState = {};"
+          },
+          "actions": {
+            "name": "PreviewCardRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type PreviewCardRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "PreviewCardRootChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type PreviewCardRootChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'escape-key' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "PreviewCardRootChangeEventDetails",
+            "code": "type PreviewCardRootChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "a",
+          "props": [
+            {
+              "name": "handle",
+              "required": false,
+              "type": "PreviewCard.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "600"
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": "300"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, state: PreviewCard.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type PreviewCardTriggerState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardPortalState",
+            "fields": [],
+            "code": "type PreviewCardPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type PreviewCardBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'focus' | undefined"
+              }
+            ],
+            "code": "type PreviewCardPositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    instant: 'dismiss' | 'focus' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-height",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'focus' | undefined"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type PreviewCardPopupState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    instant: 'dismiss' | 'focus' | undefined;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type PreviewCardArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: PreviewCard.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: PreviewCard.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: PreviewCard.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "PreviewCardViewportState",
+            "fields": [
+              {
+                "name": "activationDirection",
+                "optional": false,
+                "type": "string | undefined"
+              },
+              {
+                "name": "transitioning",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'focus' | undefined"
+              }
+            ],
+            "code": "type PreviewCardViewportState = {\n    activationDirection: string | undefined;\n    transitioning: boolean;\n    instant: 'dismiss' | 'focus' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-activation-direction",
+              "type": "`${'left' | 'right' | ''} ${'down' | 'up' | ''}`"
+            },
+            {
+              "name": "data-current",
+              "type": null
+            },
+            {
+              "name": "data-instant",
+              "type": "'dismiss' | 'focus'"
+            },
+            {
+              "name": "data-previous",
+              "type": null
+            },
+            {
+              "name": "data-transitioning",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--popup-height",
+              "type": "``"
+            },
+            {
+              "name": "--popup-width",
+              "type": "``"
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = PreviewCard.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "PreviewCardArrowDataAttributes",
+          "code": "declare namespace PreviewCardArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardBackdropDataAttributes",
+          "code": "declare namespace PreviewCardBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardPopupDataAttributes",
+          "code": "declare namespace PreviewCardPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardPositionerCssVariables",
+          "code": "declare namespace PreviewCardPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n    const positionerWidth: '--positioner-width';\n    const positionerHeight: '--positioner-height';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            },
+            {
+              "name": "positionerWidth",
+              "value": "--positioner-width"
+            },
+            {
+              "name": "positionerHeight",
+              "value": "--positioner-height"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardPositionerDataAttributes",
+          "code": "declare namespace PreviewCardPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardTriggerDataAttributes",
+          "code": "declare namespace PreviewCardTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardViewportCssVariables",
+          "code": "declare namespace PreviewCardViewportCssVariables {\n    const popupWidth: '--popup-width';\n    const popupHeight: '--popup-height';\n}",
+          "constants": [
+            {
+              "name": "popupWidth",
+              "value": "--popup-width"
+            },
+            {
+              "name": "popupHeight",
+              "value": "--popup-height"
+            }
+          ]
+        },
+        {
+          "name": "PreviewCardViewportDataAttributes",
+          "code": "declare namespace PreviewCardViewportDataAttributes {\n    const current: 'data-current';\n    const previous: 'data-previous';\n    const activationDirection: 'data-activation-direction';\n    const transitioning: 'data-transitioning';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "current",
+              "value": "data-current"
+            },
+            {
+              "name": "previous",
+              "value": "data-previous"
+            },
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "transitioning",
+              "value": "data-transitioning"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        },
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/preview-card/page.mdx",
+      "referenceTags": [
+        "TypesPreviewCard.Root",
+        "TypesPreviewCard.Trigger",
+        "TypesPreviewCard.Portal",
+        "TypesPreviewCard.Backdrop",
+        "TypesPreviewCard.Positioner",
+        "TypesPreviewCard.Popup",
+        "TypesPreviewCard.Viewport",
+        "TypesPreviewCard.Arrow",
+        "TypesPreviewCard.createHandle",
+        "TypesPreviewCard.Handle"
+      ]
+    }
+  ]
+}
