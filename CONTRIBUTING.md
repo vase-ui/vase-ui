@@ -2070,7 +2070,7 @@ To make a release:
 2. Merge a pull request that changes `version` in `packages/vue/package.json` and adds the section of that version to `CHANGELOG.md`.
 3. Make sure that CI passes on that commit of `main`. The workflow does not run `pnpm test`.
 4. As an organization admin, push the tag of that commit: `git tag v2026.12.0 <commit>`, then `git push origin v2026.12.0`.
-5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public.
+5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public. When more than one version is staged, approve them in order, from the lowest version to the highest.
 6. Make the GitHub Release of the tag. Its text is the section of that version in `CHANGELOG.md`.
 
 ## Text
