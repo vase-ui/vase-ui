@@ -515,7 +515,7 @@ describe('<AlertDialog.Root />', () => {
       expect(Object.keys(alertDialogHandle)).toEqual(Object.keys(dialogHandle));
     });
 
-    it('releases its handle and the Escape key while KeepAlive holds it, and takes them back after', async () => {
+    it('detaches from its handle and the document while KeepAlive holds it, and attaches again after', async () => {
       const handle = AlertDialog.createHandle();
       const handleOpenChange = vi.fn();
       const show = shallowRef(true);
