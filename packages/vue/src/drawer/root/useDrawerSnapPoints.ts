@@ -78,8 +78,8 @@ export function closestSnapPointIndex(values: number[], target: number): number 
   let closestIndex = -1;
   let closestDistance = Infinity;
 
-  for (let index = 0; index < values.length; index += 1) {
-    const distance = Math.abs(values[index] - target);
+  for (const [index, value] of values.entries()) {
+    const distance = Math.abs(value - target);
     if (distance < closestDistance) {
       closestDistance = distance;
       closestIndex = index;
@@ -203,7 +203,8 @@ export function useDrawerSnapPoints(): UseDrawerSnapPointsReturnValue {
     const seenHeights: number[] = [];
 
     for (let index = resolved.length - 1; index >= 0; index -= 1) {
-      const point = resolved[index];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
+      const point = resolved[index]!;
       const isDuplicate = seenHeights.some((height) => Math.abs(height - point.height) <= 1);
       if (isDuplicate) {
         continue;

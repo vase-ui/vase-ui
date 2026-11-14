@@ -179,7 +179,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     };
   };
 
-  removeToast(toastId: string, skipOnRemove: boolean = false) {
+  removeToast(toastId: string, skipOnRemove = false) {
     const index = selectors.toastIndex(this.current, toastId);
     if (index === -1) {
       return;
@@ -260,8 +260,8 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
   updateToastInternal = <Data extends object>(
     id: string,
     updates: ToastInternalUpdateOptions<Data>,
-    resetTimer: boolean = false,
-    markUpdated: boolean = false,
+    resetTimer = false,
+    markUpdated = false,
   ) => {
     const { timeout, toasts } = this.current;
     const prevToast = selectors.toast(this.current, id);
@@ -374,7 +374,7 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
 
         return result;
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         const errorOptions = resolvePromiseOptions(options.error, error);
         this.updateToast(id, {
           ...errorOptions,
@@ -382,12 +382,13 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
           timeout: errorOptions.timeout,
         });
 
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- The promise of the consumer gave this reason, and the handler passes it on.
         return Promise.reject(error);
       });
 
     // Private API used exclusively by `Manager` to handoff the promise
     // back to the manager after it's handled here.
-    if ({}.hasOwnProperty.call(options, 'setPromise')) {
+    if (Object.hasOwn(options, 'setPromise')) {
       (options as any).setPromise(handledPromise);
     }
 
@@ -556,10 +557,12 @@ export class ToastStore extends ReactiveStore<State, {}, typeof selectors> {
     // A toast that was `limited` stays `inert` until Vue updates the DOM, so it can't take focus yet.
     const scan = (from: number, step: number) => {
       for (let index = from; index >= 0 && index < toasts.length; index += step) {
-        const element = toasts[index].ref?.value;
-        if (toasts[index].transitionStatus !== 'ending' && element && !element.inert) {
+        /* eslint-disable @typescript-eslint/no-non-null-assertion -- The loop condition proves the index. */
+        const element = toasts[index]!.ref?.value;
+        if (toasts[index]!.transitionStatus !== 'ending' && element && !element.inert) {
           return element;
         }
+        /* eslint-enable @typescript-eslint/no-non-null-assertion */
       }
       return null;
     };

@@ -37,7 +37,7 @@ describe('useRender', () => {
       <TestComponent
         v-slots={{
           render: ({ props, state }: { props: HTMLProps; state: {} }) => (
-            <span {...props} class={`my-span ${props.class ?? ''}`} {...state} />
+            <span {...props} class={['my-span', props.class]} {...state} />
           ),
         }}
       />,

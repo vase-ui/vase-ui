@@ -262,6 +262,7 @@ watch(
       // Set the restore target before focusing: consumer focus handlers may close the toasts.
       store.set('prevFocusElement', activeElement(doc) as HTMLElement | null);
       // `handleFocusin` pauses only on visible focus, which script focus doesn't get everywhere.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The watcher returns above when `viewport` is `null`, and a function declaration keeps no narrowing.
       viewport!.focus({ preventScroll: true, focusVisible: true });
     }
 

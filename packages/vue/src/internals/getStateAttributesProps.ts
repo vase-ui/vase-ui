@@ -12,6 +12,7 @@ export function getStateAttributesProps<State extends Record<string, any>>(
     const value = state[key];
 
     if (customMapping && Object.hasOwn(customMapping, key)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above finds the key in the mapping, and a mapping gives a function for each key.
       const customProps = customMapping[key]!(value);
       if (customProps != null) {
         Object.assign(props, customProps);

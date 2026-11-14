@@ -167,7 +167,7 @@ export function parseNumber(
 
   // Strips a matched sign (leading "-12" / trailing "1234-") or the opening parenthesis of an
   // accounting negative ("(12)") while recording negativity.
-  const takeSign = (match: string, sign: string) => {
+  const takeSign = (_match: string, sign: string) => {
     if (sign !== '+') {
       isNegative = true;
     }

@@ -112,8 +112,8 @@ const resolvedProps = computed(() => {
   let alignOffset = props.alignOffset;
   let align = props.align;
   if (currentParent.type === 'context-menu') {
-    anchor = anchor ?? currentParent.context.anchor;
-    align = align ?? 'start';
+    anchor ??= currentParent.context.anchor;
+    align ??= 'start';
     if (!props.side && align !== 'center') {
       alignOffset = props.alignOffset ?? 2;
       sideOffset = props.sideOffset ?? -5;
@@ -122,12 +122,11 @@ const resolvedProps = computed(() => {
 
   let side = props.side;
   if (currentParent.type === 'menu') {
-    side = side ?? 'inline-end';
-    align = align ?? 'start';
+    side ??= 'inline-end';
+    align ??= 'start';
   } else if (currentParent.type === 'menubar') {
-    side =
-      side ?? (currentParent.context.orientation.value === 'vertical' ? 'inline-end' : 'bottom');
-    align = align ?? 'start';
+    side ??= currentParent.context.orientation.value === 'vertical' ? 'inline-end' : 'bottom';
+    align ??= 'start';
   }
 
   const defaultCollisionAvoidance =

@@ -26,7 +26,7 @@ describe('getActivationDirection', () => {
     { offset: { horizontal: 5.5, vertical: -5.5 }, expected: ['right', 'up'] },
     { offset: { horizontal: 6, vertical: 6 }, expected: ['right', 'down'] },
     { offset: { horizontal: -6, vertical: -6 }, expected: ['left', 'up'] },
-  ] satisfies Array<{ offset: Offset; expected: string[] }>)(
+  ] satisfies { offset: Offset; expected: string[] }[])(
     'returns [$expected] for $offset.horizontal, $offset.vertical',
     ({ offset, expected }) => {
       expect(getActivationDirection(offset)?.split(' ').filter(Boolean)).toEqual(expected);
@@ -78,12 +78,12 @@ describe('calculateRelativePosition', () => {
       to: [25, 25, 50, 50],
       expected: { horizontal: 0, vertical: 0 },
     },
-  ] satisfies Array<{
+  ] satisfies {
     name: string;
     from: [number, number, number, number];
     to: [number, number, number, number];
     expected: Offset;
-  }>)('$name', ({ from, to, expected }) => {
+  }[])('$name', ({ from, to, expected }) => {
     expect(
       calculateRelativePosition(createElementWithRect(...from), createElementWithRect(...to)),
     ).toEqual(expected);

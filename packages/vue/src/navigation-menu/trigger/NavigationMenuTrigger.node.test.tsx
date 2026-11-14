@@ -4,7 +4,7 @@ import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.tes
 
 // The attribute order in the HTML is not part of the test.
 function readTag(html: string, testId: string) {
-  return html.match(new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`))?.[0] ?? '';
+  return new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0] ?? '';
 }
 
 function countGuards(html: string) {

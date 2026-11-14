@@ -1686,7 +1686,7 @@ describe('<Dialog.Root />', () => {
     ];
 
     // `undefined` means the portal's default: the parent portal's node, else the body.
-    const portalSetups: Array<{ outer: PortalContainer; nested: PortalContainer }> = [
+    const portalSetups: { outer: PortalContainer; nested: PortalContainer }[] = [
       { outer: 'shadow root', nested: undefined },
       { outer: 'shadow root', nested: 'shadow root' },
       { outer: 'shadow root', nested: 'body' },

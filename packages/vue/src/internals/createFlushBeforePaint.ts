@@ -7,11 +7,11 @@
  * callers that read DOM or state that another caller can change need their own queue.
  */
 export function createFlushBeforePaint() {
-  let pendingCallbacks: Array<() => void> | null = null;
+  let pendingCallbacks: (() => void)[] | null = null;
 
   return function flushBeforePaint(fn: () => void) {
     if (!pendingCallbacks) {
-      const callbacks: Array<() => void> = [];
+      const callbacks: (() => void)[] = [];
       pendingCallbacks = callbacks;
       queueMicrotask(() => {
         pendingCallbacks = null;

@@ -62,8 +62,8 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
   function syncRefs(items: readonly CompositeListItem<Metadata>[]) {
     const nextMap = new Map<Element, CompositeMetadata<Metadata>>();
     // An explicit index can leave an empty slot.
-    const elements: Array<HTMLElement | null> = [];
-    const labels: Array<string | null> = [];
+    const elements: (HTMLElement | null)[] = [];
+    const labels: (string | null)[] = [];
 
     items.forEach((item) => {
       nextMap.set(item.element, {
@@ -134,7 +134,8 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
     // at the boundary. A pair with no common ancestor has no observer, and its items still register.
     const roots = new Set<Element>();
     for (let i = 1; i < sortedNodes.length; i += 1) {
-      const root = getCommonAncestor(sortedNodes[i - 1], sortedNodes[i]);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from 1 to the last index, so `i - 1` and `i` are indexes of `sortedNodes`.
+      const root = getCommonAncestor(sortedNodes[i - 1]!, sortedNodes[i]!);
       if (root) {
         roots.add(root);
       }
@@ -153,10 +154,10 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
     // snapshots resolved from them.
     const previous = previousItems;
     const changed =
-      !previous ||
-      previous.length !== items.length ||
+      previous?.length !== items.length ||
       items.some((item, index) => {
-        const previousItem = previous[index];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The length check above proves the index.
+        const previousItem = previous[index]!;
         return (
           item.index !== previousItem.index ||
           item.element !== previousItem.element ||
@@ -273,8 +274,8 @@ function getCommonAncestor(firstNode: Element, lastNode: Element) {
 
 function hasMovedNode(entries: MutationRecord[]) {
   for (const entry of entries) {
-    for (let i = 0; i < entry.removedNodes.length; i += 1) {
-      if (entry.removedNodes[i].isConnected) {
+    for (const node of entry.removedNodes) {
+      if (node.isConnected) {
         return true;
       }
     }
@@ -304,12 +305,12 @@ export interface UseCompositeListParameters<Metadata> {
    * Explicit indexes can leave empty slots in the array.
    * The list gives the ref a new array on each sort.
    */
-  elementsRef: ShallowRef<Array<HTMLElement | null>>;
+  elementsRef: ShallowRef<(HTMLElement | null)[]>;
   /**
    * The labels of the items, ordered by their index.
    * The list gives the ref a new array on each sort.
    */
-  labelsRef?: ShallowRef<Array<string | null>> | undefined;
+  labelsRef?: ShallowRef<(string | null)[]> | undefined;
   /**
    * Called with the new map when an index, an element, an explicit index or a metadata value
    * changes.
