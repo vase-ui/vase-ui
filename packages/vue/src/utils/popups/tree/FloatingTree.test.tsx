@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, Teleport } from 'vue';
 import type { ComputedRef, PropType, ShallowRef } from 'vue';
 import { createRenderer } from '#test-utils';
-import type { FloatingNodeType, PopupPositioningContext } from '../types';
+import type { FloatingNodeType, FloatingTreeType, PopupPositioningContext } from '../types';
 import {
   provideFloatingNode,
   provideFloatingTree,
+  removeNodeContext,
   useFloatingNodeId,
   useFloatingParentNodeId,
   useFloatingTree,
@@ -192,6 +193,38 @@ describe('FloatingTree', () => {
     expect(openNodesBelowTop()).toEqual(['before', 'parent', 'child', 'after']);
   });
 
+  it('removes a context from a node only when the node holds it, also while its part is deactivated', async () => {
+    const tree = new FloatingTreeStore();
+    const another = { open: true } as PopupPositioningContext;
+    const plain: FloatingNodeType = { id: 'plain', parentId: null, context: OPEN_CONTEXT };
+    const showPart = shallowRef(true);
+    await render(() => (
+      <TreeScope tree={tree}>
+        <KeepAlive>
+          {showPart.value ? <NodePart key="part" name="part" /> : <span key="other" />}
+        </KeepAlive>
+      </TreeScope>
+    ));
+    const [kept] = tree.nodesRef.value;
+    expect(kept.context).toBe(OPEN_CONTEXT);
+
+    showPart.value = false;
+    await nextTick();
+    removeNodeContext(kept, another);
+    removeNodeContext(plain, another);
+    showPart.value = true;
+    await nextTick();
+    expect([kept.context, plain.context]).toEqual([OPEN_CONTEXT, OPEN_CONTEXT]);
+
+    showPart.value = false;
+    await nextTick();
+    removeNodeContext(kept, OPEN_CONTEXT);
+    removeNodeContext(plain, OPEN_CONTEXT);
+    showPart.value = true;
+    await nextTick();
+    expect([kept.context, plain.context]).toEqual([undefined, undefined]);
+  });
+
   it('gives a node the parent id that the part above provides at the time of the read', async () => {
     const tree = new FloatingTreeStore();
     const providedId = shallowRef<string | undefined>('first');
@@ -261,6 +294,69 @@ describe('FloatingTree', () => {
     expect(contextTree.nodesRef.value).toEqual([node]);
   });
 
+  it('gives the parts below the new tree when the tree of the provider changes, and moves their nodes', async () => {
+    const first = new FloatingTreeStore();
+    const second = new FloatingTreeStore();
+    const current = shallowRef(first);
+    let treeBelow!: ComputedRef<FloatingTreeType | null>;
+    const Provider = defineComponent({
+      setup(_, { slots }) {
+        provideFloatingTree(() => current.value);
+        return () => slots.default?.();
+      },
+    });
+    const Reader = defineComponent({
+      setup() {
+        treeBelow = useFloatingTree();
+        return () => null;
+      },
+    });
+    await render(
+      <Provider>
+        <NodePart name="outer">
+          <NodePart name="inner" />
+          <Reader />
+        </NodePart>
+      </Provider>,
+    );
+    expect(treeBelow.value).toBe(first);
+    expect(namesOf(first.nodesRef.value)).toEqual(['outer', 'inner']);
+
+    current.value = second;
+
+    // A read is current at once. The nodes move in the flush.
+    expect(treeBelow.value).toBe(second);
+    expect(namesOf(first.nodesRef.value)).toEqual(['outer', 'inner']);
+
+    await nextTick();
+
+    expect(first.nodesRef.value).toEqual([]);
+    expect(namesOf(second.nodesRef.value)).toEqual(['outer', 'inner']);
+    expect(second.nodesRef.value.map((node) => node.context)).toEqual([OPEN_CONTEXT, OPEN_CONTEXT]);
+    expect(parentsOf(second)).toEqual({ outer: null, inner: 'outer' });
+  });
+
+  it('provides one tree of its own when its source gives no tree', async () => {
+    const external = new FloatingTreeStore();
+    const source = shallowRef<FloatingTreeStore | undefined>(undefined);
+    let provided!: ComputedRef<FloatingTreeStore>;
+    const Provider = defineComponent({
+      setup() {
+        provided = provideFloatingTree(source);
+        return () => null;
+      },
+    });
+    await render(<Provider />);
+    const own = provided.value;
+    expect(own).toBeInstanceOf(FloatingTreeStore);
+
+    source.value = external;
+    expect(provided.value).toBe(external);
+
+    source.value = undefined;
+    expect(provided.value).toBe(own);
+  });
+
   it('returns the tree that it provides, and a part does not get its own tree or node', async () => {
     const outerTree = new FloatingTreeStore();
     const externalTree = new FloatingTreeStore();
@@ -268,7 +364,7 @@ describe('FloatingTree', () => {
     const Root = defineComponent({
       props: { tree: Object as PropType<FloatingTreeStore> },
       setup(props, { slots }) {
-        seen.provided = provideFloatingTree(props.tree);
+        seen.provided = provideFloatingTree(props.tree).value;
         seen.treeOfRoot = useFloatingTree().value;
         provideFloatingNode('root');
         seen.parentOfRoot = useFloatingParentNodeId().value;
