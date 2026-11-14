@@ -882,7 +882,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - The result is one plain object with `reference` and `floating`. The two members are one object of listeners, which `setup` makes one time. Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state.
 - `listRef` is a ref of the array of the labels, such as `labelsRef` of the item registry. `elementsRef` is a ref of the array of the item elements. The composable reads the two refs only in a handler.
 - `onMatch` and `onTyping` are plain functions. `disabledIndices` is a plain member, and the composable reads it one time, so a function is the form that follows a change. Each other option is a value, a ref or a getter.
-- When `open` or `selectedIndex` changes, a `watch` ends the session, as the effect of Base UI does. A server render starts no timer and calls no callback.
+- When `open` or `selectedIndex` changes, a `watch` ends the session, as the effect of Base UI does. The `watch` does nothing while the popup is closed and an item is selected. Each key on the trigger of a closed Select changes the selected item, and the session must continue. A server render starts no timer and calls no callback.
 - `KeepAlive` can take the list out of the document with no `focusout`. Thus the deactivation ends the session, and `onTyping` gets `false`.
 
 ### Toast store

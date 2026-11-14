@@ -76,7 +76,8 @@ export function useTypeahead(
 
   const timeout = useTimeout();
   let typed = '';
-  let prevIndex: number | null = getSelectedIndex() ?? getActiveIndex() ?? -1;
+  // The first key of a session writes the index, so `setup` reads no option.
+  let prevIndex: number | null = -1;
   let matchIndex: number | null = null;
 
   function onKeydown(event: KeyboardEvent) {
