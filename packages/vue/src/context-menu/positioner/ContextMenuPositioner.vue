@@ -108,10 +108,12 @@ import MenuPositioner from '../../menu/positioner/MenuPositioner.vue';
 
 defineOptions({ inheritAttrs: false });
 
-// `side`, `align`, the offsets and `arrowPadding` have no default here, because `Menu.Positioner`
-// gives each of them a default from the parent of the menu.
+// `side`, the offsets and `arrowPadding` have no default here, because `Menu.Positioner` gives each
+// of them a default from the parent of the menu. The offsets of a root context menu need an absent
+// `side`, and a submenu takes `'inline-end'`.
 const props = withDefaults(defineProps<ContextMenuPositionerProps>(), {
   as: 'div',
+  align: 'start',
   collisionBoundary: 'clipping-ancestors',
   collisionPadding: 5,
   sticky: false,

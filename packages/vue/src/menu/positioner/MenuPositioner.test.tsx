@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, Teleport, computed, defineComponent, nextTick, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
+import { ContextMenu } from '@vase-ui/vue/context-menu';
 import { Menubar } from '@vase-ui/vue/menubar';
-import * as ContextMenu from '../../context-menu/index.parts';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -636,6 +636,23 @@ describe('<Menu.Positioner />', () => {
         sideOffset: 11,
         alignOffset: 13,
       });
+    });
+
+    it('uses the visual viewport for a context menu submenu', async () => {
+      await render(
+        <ContextMenu.Root open>
+          <ContextMenu.SubmenuRoot defaultOpen>
+            <ContextMenu.Portal>
+              <ContextMenu.Positioner>
+                <ContextMenu.Popup>Popup</ContextMenu.Popup>
+              </ContextMenu.Positioner>
+            </ContextMenu.Portal>
+          </ContextMenu.SubmenuRoot>
+        </ContextMenu.Root>,
+      );
+
+      expect(useAnchorPositioningSpy).toHaveBeenCalled();
+      expect(readLastOptions().shift).toBe(undefined);
     });
   });
 
