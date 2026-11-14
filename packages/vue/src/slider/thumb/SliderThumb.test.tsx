@@ -1082,13 +1082,13 @@ describe('<Slider.Thumb />', () => {
           options?: ResizeObserverOptions,
         ) {
           observedTargets.set(this, [...(observedTargets.get(this) ?? []), target]);
-          return originalObserve.call(this, target, options);
+          originalObserve.call(this, target, options);
         });
         const disconnectSpy = vi.spyOn(proto, 'disconnect').mockImplementation(function disconnect(
           this: ResizeObserver,
         ) {
           disconnected.add(this);
-          return originalDisconnect.call(this);
+          originalDisconnect.call(this);
         });
         onTestFinished(() => {
           observeSpy.mockRestore();

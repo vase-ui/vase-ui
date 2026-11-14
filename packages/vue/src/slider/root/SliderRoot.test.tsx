@@ -158,12 +158,12 @@ describe('<Slider.Root />', () => {
   });
 
   describe('keyboard interactions', () => {
-    const keyboardCases: Array<{
+    const keyboardCases: {
       direction: TextDirection;
       orientation: Orientation;
       decrementKeys: string[];
       incrementKeys: string[];
-    }> = [
+    }[] = [
       {
         direction: 'ltr',
         orientation: 'horizontal',
