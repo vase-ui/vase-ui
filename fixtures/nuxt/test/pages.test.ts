@@ -782,7 +782,6 @@ async function expectNumberFieldPage(page: Page) {
   expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
 }
 
-// The portal renders after the mount, so the server HTML has no portal element.
 async function readSliderPage(page: Page) {
   return page.evaluate(() => {
     const all = (testId: string) =>
@@ -857,6 +856,7 @@ async function expectHydratedSliderPage(page: Page) {
   expect(result.formData).toEqual(['volume=30', 'price=25', 'price=75']);
 }
 
+// The portal renders after the mount, so the server HTML has no portal element.
 async function expectPortalPageOnServer(page: Page) {
   expect(await page.getByTestId('trigger').count()).toBe(1);
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
