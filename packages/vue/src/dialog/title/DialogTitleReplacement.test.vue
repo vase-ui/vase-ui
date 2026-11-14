@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import * as Dialog from '../index.parts';
 
 defineProps<{ first: boolean }>();
@@ -7,9 +6,11 @@ defineProps<{ first: boolean }>();
 
 <template>
   <Dialog.Root default-open :modal="false">
-    <DialogPopupPart>
-      <Dialog.Title v-if="!first">Title 2</Dialog.Title>
-      <Dialog.Title v-if="first">Title 1</Dialog.Title>
-    </DialogPopupPart>
+    <Dialog.Portal>
+      <Dialog.Popup>
+        <Dialog.Title v-if="!first">Title 2</Dialog.Title>
+        <Dialog.Title v-if="first">Title 1</Dialog.Title>
+      </Dialog.Popup>
+    </Dialog.Portal>
   </Dialog.Root>
 </template>

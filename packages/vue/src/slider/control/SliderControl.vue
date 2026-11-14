@@ -25,6 +25,7 @@ import {
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { isTouchLikePointerType } from '../../internals/usePressAndHold';
 import { useRenderElement } from '../../internals/useRenderElement';
 import type {
   SliderRootChangeEventDetails,
@@ -76,13 +77,6 @@ function getControlOffset(styles: CSSStyleDeclaration | null, vertical: boolean)
     start: parseSize(styles[`border${start}Width`]) + parseSize(styles[`padding${start}`]),
     end: parseSize(styles[`border${end}Width`]) + parseSize(styles[`padding${end}`]),
   };
-}
-
-// Treat pen as touch-like to avoid forcing the software keyboard on stylus taps.
-// Linux Chrome may emit "pen" historically for mouse usage due to a bug, but the touch path
-// still works with minor behavioral differences.
-function isTouchLikePointerType(pointerType: string) {
-  return pointerType === 'touch' || pointerType === 'pen';
 }
 
 const {

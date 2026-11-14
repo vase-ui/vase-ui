@@ -13,6 +13,7 @@ function readId(html: string, testId: string) {
 
 const GROUP = /<div[^>]*role="group"[^>]*>/;
 const CONTROL = /<div[^>]*data-testid="control"[^>]*>/;
+const INPUTS = /<input [^>]*>/g;
 
 describe('<Slider.Root /> on a server', () => {
   it('renders the group with its id, and the id that its label will have', async () => {
@@ -88,6 +89,32 @@ describe('<Slider.Root /> on a server', () => {
     expect(descriptionId).toBeTruthy();
     expect(tag(html, GROUP)).toContain(` aria-describedby="${descriptionId}"`);
   });
+
+  it.each([
+    { name: 'before the control', label: 'before' as const },
+    { name: 'after the control', label: 'after' as const },
+  ])(
+    'VUE-29: links the label to the root and to the input of each thumb, with the label $name',
+    async ({ label }) => {
+      const sliderLabel = <Slider.Label data-testid="label">Price</Slider.Label>;
+      const html = await renderToString(
+        <Slider.Root id="price" defaultValue={[25, 75]}>
+          {label === 'before' ? sliderLabel : null}
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+          {label === 'after' ? sliderLabel : null}
+        </Slider.Root>,
+      );
+
+      expect(readId(html, 'label')).toBe('price-label');
+      expect(tag(html, GROUP)).toContain(' aria-labelledby="price-label"');
+      const inputs = html.match(INPUTS) ?? [];
+      expect(inputs).toHaveLength(2);
+      expect(inputs.every((input) => input.includes(' aria-labelledby="price-label"'))).toBe(true);
+    },
+  );
 
   it('marks the control for the script of an edge thumb', async () => {
     const html = await renderToString(

@@ -1,5 +1,5 @@
-import { expect, describe, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { expect, describe, it, vi, afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+import { defineComponent, shallowRef } from 'vue';
 import type { CDPSession } from '@vitest/browser-playwright';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
@@ -19,6 +19,7 @@ import {
   within,
 } from '#test-utils';
 import { platform } from '../../common/platform';
+import { REASONS } from '../../internals/reasons';
 import {
   ARROW_RIGHT,
   ARROW_LEFT,
@@ -28,8 +29,10 @@ import {
   END,
 } from '../../internals/composite/composite';
 import type { Orientation } from '../../internals/types';
+import { createTouches, getHorizontalSliderRect } from '../utils/test-utils';
 import SliderRootHydration from './SliderRootHydration.test.vue';
 
+const isWebKit = platform.engine.webkit;
 const isBlink = platform.engine.blink;
 
 const USD_NUMBER_FORMAT: Intl.NumberFormatOptions = {
@@ -37,7 +40,45 @@ const USD_NUMBER_FORMAT: Intl.NumberFormatOptions = {
   currency: 'USD',
 };
 
+// The browser resets the controls after the listeners of the event, and the slider follows the
+// reset in a 0 ms timeout.
+async function settleReset() {
+  vi.advanceTimersByTime(0);
+  await flushMicrotasks();
+}
+
 describe('<Slider.Root />', () => {
+  const pointerCaptureMethods = [
+    'setPointerCapture',
+    'hasPointerCapture',
+    'releasePointerCapture',
+  ] as const;
+  const pointerCaptureDescriptors = pointerCaptureMethods.map((method) =>
+    Object.getOwnPropertyDescriptor(Element.prototype, method),
+  );
+
+  beforeAll(() => {
+    // Synthetic pointer events have no active pointer to capture. Preserve PointerEvent so
+    // gesture tests still exercise their pointerType and pointerId.
+    pointerCaptureMethods.forEach((method) => {
+      Object.defineProperty(Element.prototype, method, {
+        configurable: true,
+        value: vi.fn(() => false),
+      });
+    });
+  });
+
+  afterAll(() => {
+    pointerCaptureMethods.forEach((method, index) => {
+      const descriptor = pointerCaptureDescriptors[index];
+      if (descriptor) {
+        Object.defineProperty(Element.prototype, method, descriptor);
+      } else {
+        Reflect.deleteProperty(Element.prototype, method);
+      }
+    });
+  });
+
   const { render } = createRenderer();
 
   describeConformance(<Slider.Root defaultValue={50} />, () => ({
@@ -67,7 +108,241 @@ describe('<Slider.Root />', () => {
     });
   });
 
+  describe('prop: disabled', () => {
+    it('does not drag a thumb disabled via the `disabled` prop', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Slider.Root defaultValue={[20, 80]} onValueChange={handleValueChange}>
+          <Slider.Control data-testid="control">
+            <Slider.Track>
+              <Slider.Indicator />
+              <Slider.Thumb index={0} data-testid="thumb-0" />
+              <Slider.Thumb index={1} disabled data-testid="thumb-1" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const disabledInput = screen.getByTestId('thumb-1').querySelector('input')!;
+      expect(disabledInput).toBeDisabled();
+
+      await fireEvent.pointerDown(screen.getByTestId('thumb-1'), { buttons: 1, clientX: 80 });
+      await fireEvent.pointerMove(document.body, { buttons: 1, clientX: 40 });
+      await fireEvent.pointerUp(document.body, { buttons: 1, clientX: 40 });
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(disabledInput).toHaveAttribute('aria-valuenow', '80');
+    });
+
+    it.skipIf(isJSDOM || isWebKit)('does not drag a disabled thumb with touch events', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Slider.Root defaultValue={[20, 80]} onValueChange={handleValueChange}>
+          <Slider.Control data-testid="control">
+            <Slider.Track>
+              <Slider.Indicator />
+              <Slider.Thumb index={0} data-testid="thumb-0" />
+              <Slider.Thumb index={1} disabled data-testid="thumb-1" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const [enabledInput, disabledInput] = screen.getAllByRole('slider');
+      expect(disabledInput).toBeDisabled();
+
+      await fireEvent.touchStart(
+        screen.getByTestId('thumb-1'),
+        createTouches([{ identifier: 1, clientX: 80, clientY: 0 }]),
+      );
+      await fireEvent.touchMove(
+        document.body,
+        createTouches([{ identifier: 1, clientX: 40, clientY: 0 }]),
+      );
+      await fireEvent.touchEnd(
+        document.body,
+        createTouches([{ identifier: 1, clientX: 40, clientY: 0 }]),
+      );
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(enabledInput).toHaveAttribute('aria-valuenow', '20');
+      expect(disabledInput).toHaveAttribute('aria-valuenow', '80');
+    });
+
+    it('does not change a single disabled thumb when pressing the track', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Slider.Root defaultValue={20} onValueChange={handleValueChange}>
+          <Slider.Control data-testid="control">
+            <Slider.Track>
+              <Slider.Indicator />
+              <Slider.Thumb disabled />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const input = screen.getByRole('slider');
+      expect(input).toBeDisabled();
+
+      await fireEvent.pointerDown(control, { buttons: 1, clientX: 80 });
+      await fireEvent.pointerUp(control, { buttons: 1, clientX: 80 });
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(input).toHaveAttribute('aria-valuenow', '20');
+    });
+
+    // Requires layout: track-press picks the closest thumb from measurements.
+    it.skipIf(isJSDOM)('does not select a disabled thumb when pressing the track', async () => {
+      await render(
+        <Slider.Root
+          defaultValue={[20, 80]}
+          thumbCollisionBehavior="none"
+          style={{ width: '1000px' }}
+        >
+          <Slider.Control data-testid="control">
+            <Slider.Track>
+              <Slider.Indicator />
+              <Slider.Thumb index={0} data-testid="thumb-0" />
+              <Slider.Thumb index={1} disabled data-testid="thumb-1" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(() =>
+        getHorizontalSliderRect(1000),
+      );
+
+      const [, disabledInput] = screen.getAllByRole('slider');
+      expect(disabledInput).toBeDisabled();
+
+      // Press the track closest to the disabled thumb (rendered around 800px).
+      await fireEvent.pointerDown(control, { buttons: 1, clientX: 950 });
+      await fireEvent.pointerUp(control, { buttons: 1, clientX: 950 });
+
+      // The enabled thumb is selected instead, so the disabled thumb stays put.
+      expect(disabledInput).toHaveAttribute('aria-valuenow', '80');
+    });
+
+    it('does not keep the focus on a thumb that becomes disabled', async () => {
+      const disabled = shallowRef(false);
+      await render(() => (
+        <Slider.Root defaultValue={30} disabled={disabled.value}>
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>
+      ));
+      const input = screen.getByRole('slider');
+      input.focus();
+      expect(input).toHaveFocus();
+
+      disabled.value = true;
+      await flushMicrotasks();
+
+      expect(input).not.toHaveFocus();
+    });
+  });
+
   describe('prop: onValueCommitted', () => {
+    it('single value', async () => {
+      const handleValueCommitted = vi.fn(
+        (newValue: number, eventDetails: Slider.Root.CommitEventDetails) => ({
+          newValue,
+          reason: eventDetails.reason,
+        }),
+      );
+
+      await render(
+        <Slider.Root onValueCommitted={handleValueCommitted} defaultValue={0}>
+          <Slider.Control data-testid="control">
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const sliderControl = screen.getByTestId('control');
+
+      vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const slider = screen.getByRole('slider');
+
+      await fireEvent.pointerDown(sliderControl, {
+        buttons: 1,
+        clientX: 10,
+      });
+      await fireEvent.pointerUp(sliderControl, {
+        buttons: 1,
+        clientX: 10,
+      });
+
+      expect(handleValueCommitted.mock.calls.length).toBe(1);
+      expect(handleValueCommitted.mock.results.at(-1)?.value.newValue).toBe(10);
+      expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.trackPress);
+
+      slider.focus();
+      await flushMicrotasks();
+
+      await fireEvent.change(slider, { target: { value: 23 } });
+      expect(handleValueCommitted.mock.calls.length).toBe(2);
+      expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.inputChange);
+    });
+
+    it.each(['touch', 'pen'])('commits a %s track tap', async (pointerType) => {
+      const handleValueCommitted = vi.fn();
+
+      const ControlledSlider = defineComponent(() => {
+        const value = shallowRef(0);
+        return () => (
+          <Slider.Root
+            value={value.value}
+            onValueChange={(newValue: number) => {
+              value.value = newValue;
+            }}
+            onValueCommitted={handleValueCommitted}
+          >
+            <Slider.Control data-testid="control">
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+        );
+      });
+
+      await render(<ControlledSlider />);
+
+      const sliderControl = screen.getByTestId('control');
+
+      vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const touches = createTouches([{ identifier: 1, clientX: 50, clientY: 0 }]);
+
+      // Browsers fire pointer events before the compatibility touch events, including for
+      // Apple Pencil.
+      await fireEvent.pointerDown(sliderControl, {
+        pointerType,
+        pointerId: 1,
+        buttons: 1,
+        clientX: 50,
+      });
+      await fireEvent.touchStart(sliderControl, touches);
+      await fireEvent.pointerUp(sliderControl, { pointerType, pointerId: 1, clientX: 50 });
+      await fireEvent.touchEnd(document.body, touches);
+
+      expect(handleValueCommitted.mock.calls.length).toBe(1);
+      expect(handleValueCommitted.mock.calls[0][0]).toBe(50);
+    });
+
     // Real touch input, so the browser decides the pointer and compatibility touch event order.
     it.skipIf(isJSDOM || !isBlink)('commits a real touch track tap', async () => {
       const { cdp } = await import('vitest/browser');
@@ -100,6 +375,212 @@ describe('<Slider.Root />', () => {
         expect(handleValueCommitted.mock.calls.length).toBe(1);
       });
       expect(handleValueCommitted.mock.calls[0][0]).toBe(50);
+    });
+
+    it('keeps tracking a touch drag with touch listeners after the browser cancels the pointer', async () => {
+      const handleValueCommitted = vi.fn();
+
+      await render(
+        <Slider.Root defaultValue={0} onValueCommitted={handleValueCommitted}>
+          <Slider.Control data-testid="control">
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const sliderControl = screen.getByTestId('control');
+
+      vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      await fireEvent.pointerDown(sliderControl, {
+        pointerType: 'touch',
+        pointerId: 1,
+        buttons: 1,
+        clientX: 50,
+      });
+      await fireEvent.touchStart(
+        sliderControl,
+        createTouches([{ identifier: 1, clientX: 50, clientY: 0 }]),
+      );
+      // Without `touch-action: none`, the browser cancels the pointer once it starts panning.
+      await fireEvent.pointerCancel(sliderControl, { pointerType: 'touch', pointerId: 1 });
+      await fireEvent.touchMove(
+        document.body,
+        createTouches([{ identifier: 1, clientX: 70, clientY: 0 }]),
+      );
+      await fireEvent.touchEnd(
+        document.body,
+        createTouches([{ identifier: 1, clientX: 70, clientY: 0 }]),
+      );
+
+      expect(handleValueCommitted.mock.calls.length).toBe(1);
+      expect(handleValueCommitted.mock.calls[0][0]).toBe(70);
+    });
+
+    it.each(['mouse', 'pen', 'touch'])(
+      'handles a touch press normally after a cancelled %s gesture',
+      async (pointerType) => {
+        const handleValueChange = vi.fn();
+        const handleValueCommitted = vi.fn();
+        let preventPointerDown = false;
+
+        await render(
+          <Slider.Root
+            defaultValue={0}
+            onValueChange={handleValueChange}
+            onValueCommitted={handleValueCommitted}
+          >
+            <Slider.Control
+              data-testid="control"
+              onPointerdown={(event: PointerEvent) => {
+                if (preventPointerDown) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const sliderControl = screen.getByTestId('control');
+        vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(
+          getHorizontalSliderRect,
+        );
+
+        await fireEvent.pointerDown(sliderControl, {
+          pointerType,
+          pointerId: 1,
+          buttons: 1,
+          clientX: 50,
+        });
+        if (pointerType === 'touch') {
+          await fireEvent.touchStart(
+            sliderControl,
+            createTouches([{ identifier: 1, clientX: 50, clientY: 0 }]),
+          );
+        }
+        expect(handleValueChange.mock.calls.at(-1)?.[0]).toBe(50);
+        await fireEvent.pointerCancel(sliderControl, { pointerType, pointerId: 1 });
+        if (pointerType === 'touch') {
+          await fireEvent.touchCancel(document.body);
+        }
+
+        handleValueCommitted.mockClear();
+
+        // Harness only: a prevented pointerdown still resets the flag but leaves the press to the
+        // touch handler. Whether touch should respect the prevented pointerdown isn't pinned here.
+        preventPointerDown = true;
+        await fireEvent.pointerDown(sliderControl, {
+          pointerType: 'touch',
+          pointerId: 2,
+          buttons: 1,
+          clientX: 30,
+        });
+        const touches = createTouches([{ identifier: 2, clientX: 30, clientY: 0 }]);
+        await fireEvent.touchStart(sliderControl, touches);
+        expect(handleValueChange.mock.calls.at(-1)?.[0]).toBe(30);
+
+        await fireEvent.pointerUp(sliderControl, {
+          pointerType: 'touch',
+          pointerId: 2,
+          clientX: 30,
+        });
+        await fireEvent.touchEnd(document.body, touches);
+        expect(handleValueCommitted.mock.calls.length).toBe(1);
+        expect(handleValueCommitted.mock.calls[0][0]).toBe(30);
+      },
+    );
+
+    it.each(['touch', 'pen'])(
+      'does not change the value on a %s tap on the thumb',
+      async (pointerType) => {
+        const handleValueChange = vi.fn();
+
+        await render(
+          <Slider.Root defaultValue={100} step={3} onValueChange={handleValueChange}>
+            <Slider.Control data-testid="control">
+              <Slider.Thumb data-testid="thumb" />
+            </Slider.Control>
+          </Slider.Root>,
+        );
+
+        const sliderControl = screen.getByTestId('control');
+        const thumb = screen.getByTestId('thumb');
+
+        vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(
+          getHorizontalSliderRect,
+        );
+        vi.spyOn(thumb, 'getBoundingClientRect').mockImplementation(
+          () => new DOMRect(95, 0, 10, 10),
+        );
+
+        const touches = createTouches([{ identifier: 1, clientX: 100, clientY: 0 }]);
+
+        await fireEvent.pointerDown(thumb, {
+          pointerType,
+          pointerId: 1,
+          buttons: 1,
+          clientX: 100,
+        });
+        await fireEvent.touchStart(thumb, touches);
+        await fireEvent.pointerUp(thumb, { pointerType, pointerId: 1, clientX: 100 });
+        await fireEvent.touchEnd(document.body, touches);
+
+        expect(handleValueChange.mock.calls.length).toBe(0);
+      },
+    );
+
+    // Requires layout: the range drag relies on real thumb measurements.
+    it.skipIf(isJSDOM)('array value', async () => {
+      const handleValueCommitted = vi.fn(
+        (newValue: number[], eventDetails: Slider.Root.CommitEventDetails) => ({
+          newValue,
+          reason: eventDetails.reason,
+        }),
+      );
+
+      await render(
+        <Slider.Root onValueCommitted={handleValueCommitted} defaultValue={[10, 20]}>
+          <Slider.Control data-testid="control">
+            <Slider.Thumb index={0} />
+            <Slider.Thumb index={1} />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const sliderControl = screen.getByTestId('control');
+
+      vi.spyOn(sliderControl, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+
+      const [thumb1, thumb2] = screen.getAllByRole('slider');
+
+      await fireEvent.pointerDown(thumb2, {
+        buttons: 1,
+        clientX: 20,
+      });
+
+      await fireEvent.pointerMove(thumb2, {
+        buttons: 1,
+        clientX: 30,
+      });
+
+      expect(handleValueCommitted.mock.calls.length).toBe(0);
+
+      await fireEvent.pointerUp(thumb2, {
+        buttons: 1,
+        clientX: 30,
+      });
+
+      expect(handleValueCommitted.mock.calls.length).toBe(1);
+      expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.drag);
+
+      thumb1.focus();
+      await flushMicrotasks();
+
+      await fireEvent.change(thumb1, { target: { value: 23 } });
+      expect(handleValueCommitted.mock.calls.length).toBe(2);
+      expect(handleValueCommitted.mock.results.at(-1)?.value.reason).toBe(REASONS.inputChange);
     });
 
     it('does not commit a canceled change', async () => {
@@ -154,6 +635,46 @@ describe('<Slider.Root />', () => {
       expect(handleValueChange).not.toHaveBeenCalled();
       expect(handleValueCommitted).not.toHaveBeenCalled();
       expect(slider).toHaveAttribute('aria-valuenow', '100');
+    });
+
+    it.skipIf(isJSDOM)('does not commit when thumb press leaves the value unchanged', async () => {
+      const handleValueChange = vi.fn();
+      const handleValueCommitted = vi.fn();
+
+      await render(
+        <Slider.Root
+          defaultValue={50}
+          onValueChange={handleValueChange}
+          onValueCommitted={handleValueCommitted}
+        >
+          <Slider.Control data-testid="control">
+            <Slider.Thumb data-testid="thumb" />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const control = screen.getByTestId('control');
+      const thumb = screen.getByTestId('thumb');
+
+      vi.spyOn(control, 'getBoundingClientRect').mockImplementation(getHorizontalSliderRect);
+      vi.spyOn(thumb, 'getBoundingClientRect').mockImplementation(() => ({
+        width: 0,
+        height: 0,
+        bottom: 0,
+        left: 50,
+        right: 50,
+        top: 0,
+        x: 50,
+        y: 0,
+        toJSON() {},
+      }));
+
+      await fireEvent.pointerDown(thumb, { buttons: 1, clientX: 50 });
+      await fireEvent.pointerUp(document.body, { buttons: 1, clientX: 50 });
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(handleValueCommitted).not.toHaveBeenCalled();
+      expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '50');
     });
   });
 
@@ -1418,6 +1939,77 @@ describe('<Slider.Root />', () => {
       );
     });
 
+    it('Slider.Label', async () => {
+      await render(
+        <Slider.Root>
+          <Slider.Label data-testid="label" />
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      expect(screen.getByRole('slider')).toHaveAttribute(
+        'aria-labelledby',
+        screen.getByTestId('label').id,
+      );
+    });
+
+    it('Slider.Label focuses slider on click', async () => {
+      const { user } = await render(
+        <Slider.Root>
+          <Slider.Label data-testid="label">Volume</Slider.Label>
+          <Slider.Control>
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      await user.click(screen.getByTestId('label'));
+
+      expect(screen.getByRole('slider')).toHaveFocus();
+    });
+
+    it('Slider.Label does not focus a thumb on click for range sliders', async () => {
+      const { user } = await render(
+        <Slider.Root defaultValue={[20, 80]}>
+          <Slider.Label data-testid="label">Price range</Slider.Label>
+          <Slider.Control>
+            <Slider.Track>
+              <Slider.Thumb aria-label="Minimum price" />
+              <Slider.Thumb aria-label="Maximum price" />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      await user.click(screen.getByTestId('label'));
+
+      const [minimumSlider, maximumSlider] = screen.getAllByRole('slider');
+      expect(minimumSlider).not.toHaveFocus();
+      expect(maximumSlider).not.toHaveFocus();
+    });
+
+    it('does not set aria-labelledby when getAriaLabel is provided', async () => {
+      await render(
+        <Slider.Root defaultValue={[20, 80]}>
+          <Slider.Label>Price range</Slider.Label>
+          <Slider.Control>
+            <Slider.Track>
+              <Slider.Thumb getAriaLabel={() => 'Minimum price'} />
+              <Slider.Thumb getAriaLabel={() => 'Maximum price'} />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      const [minimumSlider, maximumSlider] = screen.getAllByRole('slider');
+      expect(minimumSlider).toHaveAttribute('aria-label', 'Minimum price');
+      expect(maximumSlider).toHaveAttribute('aria-label', 'Maximum price');
+      expect(minimumSlider).not.toHaveAttribute('aria-labelledby');
+      expect(maximumSlider).not.toHaveAttribute('aria-labelledby');
+    });
+
     it('does not set fallback aria-labelledby when no label is rendered', async () => {
       await render(
         <Slider.Root>
@@ -1428,6 +2020,31 @@ describe('<Slider.Root />', () => {
       );
 
       expect(screen.getByRole('slider')).not.toHaveAttribute('aria-labelledby');
+    });
+
+    it('updates Slider.Label linkage when root id changes', async () => {
+      const { setProps } = await render(
+        <Slider.Root id="first" defaultValue={30} data-testid="root">
+          <Slider.Label data-testid="label">Volume</Slider.Label>
+          <Slider.Control>
+            <Slider.Track>
+              <Slider.Thumb />
+            </Slider.Track>
+          </Slider.Control>
+        </Slider.Root>,
+      );
+
+      await setProps({ id: 'second' });
+
+      const slider = screen.getByRole('slider');
+      await waitFor(() => {
+        expect(slider).toHaveAttribute('aria-labelledby', 'second-label');
+      });
+
+      const root = screen.getByTestId('root');
+      expect(root).toHaveAttribute('id', 'second');
+      expect(screen.getByTestId('label')).toHaveAttribute('id', 'second-label');
+      expect(root).toHaveAttribute('aria-labelledby', 'second-label');
     });
 
     it('Field.Description', async () => {
@@ -1443,6 +2060,326 @@ describe('<Slider.Root />', () => {
       expect(screen.getByTestId('slider')).toHaveAttribute(
         'aria-describedby',
         `external-description ${screen.getByTestId('description').id}`,
+      );
+    });
+  });
+
+  describe('in a native form', () => {
+    function getFormData() {
+      return [...new FormData(screen.getByTestId<HTMLFormElement>('form')).entries()];
+    }
+
+    function getInputs() {
+      return screen.getAllByRole<HTMLInputElement>('slider');
+    }
+
+    it('submits no entry for a disabled slider', async () => {
+      await render(
+        <form data-testid="form">
+          <Slider.Root name="volume" defaultValue={30}>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+          <Slider.Root name="balance" defaultValue={5} disabled>
+            <Slider.Control>
+              <Slider.Thumb />
+            </Slider.Control>
+          </Slider.Root>
+        </form>,
+      );
+
+      expect(getFormData()).toEqual([['volume', '30']]);
+    });
+
+    it('writes its state to the inputs after a `pageshow` event, because a browser can restore the form state after the mount', async () => {
+      await render(
+        <Slider.Root defaultValue={[20, 80]}>
+          <Slider.Control>
+            <Slider.Thumb />
+            <Slider.Thumb />
+          </Slider.Control>
+        </Slider.Root>,
+      );
+      const [first, second] = getInputs();
+      first.value = '55';
+
+      window.dispatchEvent(new PageTransitionEvent('pageshow'));
+
+      expect([first.value, second.value]).toEqual(['20', '80']);
+    });
+
+    describe('BUG-6206: a native reset', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it.each([
+        { name: 'a single value', defaultValue: 30, data: [['price', '30']] },
+        {
+          name: 'a range',
+          defaultValue: [20, 80],
+          data: [
+            ['price', '20'],
+            ['price', '80'],
+          ],
+        },
+      ])(
+        'puts an uncontrolled slider back to its default, $name',
+        async ({ defaultValue, data }) => {
+          const handleValueChange = vi.fn();
+          const handleValueCommitted = vi.fn();
+          await render(
+            <form data-testid="form">
+              <Slider.Root
+                name="price"
+                defaultValue={defaultValue}
+                onValueChange={handleValueChange}
+                onValueCommitted={handleValueCommitted}
+              >
+                <Slider.Control>
+                  {Array.isArray(defaultValue) ? (
+                    <>
+                      <Slider.Thumb />
+                      <Slider.Thumb />
+                    </>
+                  ) : (
+                    <Slider.Thumb />
+                  )}
+                </Slider.Control>
+              </Slider.Root>
+            </form>,
+          );
+          await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+          expect(getFormData()[0]).toEqual(['price', '55']);
+          handleValueChange.mockClear();
+          handleValueCommitted.mockClear();
+
+          screen.getByTestId<HTMLFormElement>('form').reset();
+          await settleReset();
+
+          expect(getFormData()).toEqual(data);
+          expect(getInputs().map((input) => input.getAttribute('aria-valuenow'))).toEqual(
+            data.map(([, value]) => value),
+          );
+          expect(handleValueChange).toHaveBeenCalledTimes(1);
+          expect(handleValueChange.mock.lastCall?.[1].reason).toBe(REASONS.none);
+          expect(handleValueChange.mock.lastCall?.[1].event.type).toBe('reset');
+          expect(handleValueCommitted).toHaveBeenCalledTimes(1);
+          expect(handleValueCommitted.mock.lastCall?.[1].reason).toBe(REASONS.none);
+
+          // A reset with nothing to change.
+          screen.getByTestId<HTMLFormElement>('form').reset();
+          await settleReset();
+
+          expect(handleValueChange).toHaveBeenCalledTimes(1);
+          expect(handleValueCommitted).toHaveBeenCalledTimes(1);
+        },
+      );
+
+      it('keeps the value of a controlled slider', async () => {
+        const handleValueChange = vi.fn();
+        const value = shallowRef(40);
+        await render(() => (
+          <form data-testid="form">
+            <Slider.Root
+              name="price"
+              value={value.value}
+              onValueChange={handleValueChange}
+              {...{ 'onUpdate:value': (next: number) => (value.value = next) }}
+            >
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          </form>
+        ));
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        handleValueChange.mockClear();
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(handleValueChange).not.toHaveBeenCalled();
+        expect(getFormData()).toEqual([['price', '55']]);
+      });
+
+      it.each([
+        {
+          name: 'a slider whose form cancels the reset',
+          renderForm: () => (
+            <form data-testid="form" onReset={(event: Event) => event.preventDefault()}>
+              <Slider.Root name="price" defaultValue={30}>
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+            </form>
+          ),
+        },
+        {
+          name: 'a slider of another form',
+          renderForm: () => (
+            <div>
+              <form data-testid="form" />
+              <form id="other" />
+              <Slider.Root name="price" defaultValue={30} form="other">
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+            </div>
+          ),
+        },
+      ])('keeps the value of $name', async ({ renderForm }) => {
+        await render(renderForm());
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+      });
+
+      it('keeps the value of a slider whose listener cancels the change of the reset, and commits nothing', async () => {
+        const handleValueCommitted = vi.fn();
+        await render(
+          <form data-testid="form">
+            <Slider.Root
+              name="price"
+              defaultValue={30}
+              onValueChange={(_value: number, details: Slider.Root.ChangeEventDetails) => {
+                if (details.event.type === 'reset') {
+                  details.cancel();
+                }
+              }}
+              onValueCommitted={handleValueCommitted}
+            >
+              <Slider.Control>
+                <Slider.Thumb />
+              </Slider.Control>
+            </Slider.Root>
+          </form>,
+        );
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        handleValueCommitted.mockClear();
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(handleValueCommitted).not.toHaveBeenCalled();
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '55');
+        expect(getFormData()).toEqual([['price', '55']]);
+      });
+    });
+
+    describe('VUE-21: a native reset removes the error of the field', () => {
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      function expectNeutralField() {
+        expect(screen.queryByTestId('error')).toBe(null);
+        expect(screen.getByTestId('root')).not.toHaveAttribute('data-invalid');
+        expect(getInputs()[0]).not.toHaveAttribute('aria-invalid');
+        expect(getInputs()[0].validationMessage).toBe('');
+      }
+
+      it('VUE-21: removes the error when the reset changes the value, and validates no default value', async () => {
+        const validate = vi.fn((value: unknown) => (value === 30 ? null : 'Too high'));
+        await render(
+          <Form data-testid="form">
+            <Field.Root
+              data-testid="root"
+              name="price"
+              validate={validate}
+              validationMode="onChange"
+            >
+              <Slider.Root defaultValue={30}>
+                <Slider.Control>
+                  <Slider.Thumb />
+                </Slider.Control>
+              </Slider.Root>
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>,
+        );
+        await fireEvent.change(getInputs()[0], { target: { value: '55' } });
+        expect(screen.getByTestId('error')).toHaveTextContent('Too high');
+        validate.mockClear();
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '30');
+        expect(validate).not.toHaveBeenCalled();
+        expectNeutralField();
+
+        // The next change validates again.
+        await fireEvent.change(getInputs()[0], { target: { value: '60' } });
+
+        expect(validate).toHaveBeenCalledTimes(1);
+        expect(screen.getByTestId('error')).toHaveTextContent('Too high');
+      });
+
+      it.each([
+        {
+          name: 'the validation of the field',
+          renderForm: () => (
+            <Form data-testid="form">
+              <Field.Root
+                data-testid="root"
+                name="price"
+                validate={(value: unknown) => (value === 30 ? 'Pick another value' : null)}
+              >
+                <Slider.Root defaultValue={30}>
+                  <Slider.Control>
+                    <Slider.Thumb />
+                  </Slider.Control>
+                </Slider.Root>
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          ),
+          makeInvalid: () => fireEvent.submit(screen.getByTestId('form')),
+        },
+        {
+          name: 'the form',
+          renderForm: () => (
+            <Form data-testid="form" errors={{ price: 'Server error' }}>
+              <Field.Root data-testid="root" name="price">
+                <Slider.Root defaultValue={30}>
+                  <Slider.Control>
+                    <Slider.Thumb />
+                  </Slider.Control>
+                </Slider.Root>
+                <Field.Error data-testid="error" />
+              </Field.Root>
+            </Form>
+          ),
+          makeInvalid: undefined,
+        },
+      ])(
+        'VUE-21: removes the error of $name when the reset leaves the value as it is',
+        async ({ renderForm, makeInvalid }) => {
+          await render(renderForm());
+          await makeInvalid?.();
+          expect(screen.getByTestId('error')).toBeInTheDocument();
+
+          screen.getByTestId<HTMLFormElement>('form').reset();
+          await settleReset();
+
+          expect(getInputs()[0]).toHaveAttribute('aria-valuenow', '30');
+          expectNeutralField();
+        },
       );
     });
   });
