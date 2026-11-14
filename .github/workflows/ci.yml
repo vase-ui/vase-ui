@@ -154,6 +154,56 @@ jobs:
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm test:chromium
 
+  measure-viewport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [webkit, firefox]
+        copy-set: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    env:
+      FORM: main
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps ${{ matrix.engine }}
+      - if: env.FORM == 'main'
+        run: |
+          git fetch --depth=1 origin main
+          git show FETCH_HEAD:packages/vue/test/viewportConformanceTests.tsx > packages/vue/test/viewportConformanceTests.tsx
+          git diff --stat
+      - working-directory: packages/vue
+        run: |
+          for entry in tooltip:TooltipViewport popover:PopoverViewport menu:MenuViewport preview-card:PreviewCardViewport; do
+            family=${entry%%:*}
+            name=${entry##*:}
+            mkdir -p "src/$family/measure"
+            for i in $(seq 1 25); do
+              cp "src/$family/viewport/$name.test.tsx" "src/$family/measure/$name$i.test.tsx"
+            done
+          done
+          if [ "${{ matrix.engine }}" = firefox ]; then
+            for i in $(seq 1 25); do
+              cp src/tooltip/provider/TooltipProvider.test.tsx "src/tooltip/measure/TooltipProvider$i.test.tsx"
+            done
+          fi
+      - working-directory: packages/vue
+        run: |
+          yes > /dev/null &
+          yes > /dev/null &
+          nproc
+          pnpm exec vitest run --project ${{ matrix.engine }} src/tooltip/measure src/popover/measure src/menu/measure src/preview-card/measure
+
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner
     # and holds the concurrency group, so the run of the new commit starts no job.
