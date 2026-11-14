@@ -3,10 +3,19 @@ import type { InputHTMLAttributes } from 'vue';
 import type { FilterDropdownInputState } from '../../src/filter-dropdown/input/FilterDropdownInput';
 import type { HTMLProps, VaseUIComponentProps, WithVaseUIEvent } from '../../src/internals/types';
 
+// The type of `autocomplete` in `InputHTMLAttributes` is a union that is too large for vue-tsc.
+interface FilterDropdownInputPartAutocomplete {
+  autocomplete?: string | undefined;
+}
+
 export interface FilterDropdownInputPartProps
   extends
     VaseUIComponentProps<FilterDropdownInputState>,
-    /* @vue-ignore */ WithVaseUIEvent<Omit<InputHTMLAttributes, 'id' | 'disabled'>> {
+    /* @vue-ignore */ Omit<
+      WithVaseUIEvent<InputHTMLAttributes>,
+      'autocomplete' | 'disabled' | 'id'
+    >,
+    /* @vue-ignore */ FilterDropdownInputPartAutocomplete {
   /** The `id` of the input. */
   id?: string | undefined;
   /** Whether the input ignores user interaction. */
@@ -28,7 +37,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<FilterDropdownInputPartProps>(), { as: 'input' });
 
 defineSlots<{
-  render: ComponentRenderFn<HTMLProps, FilterDropdownInputState>;
+  render: ComponentRenderFn<InputHTMLAttributes & Pick<HTMLProps, 'ref'>, FilterDropdownInputState>;
 }>();
 
 const input = useFilterDropdownInput({

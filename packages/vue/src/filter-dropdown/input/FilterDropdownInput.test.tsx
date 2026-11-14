@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { shallowRef } from 'vue';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, fireEvent, screen } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
 import type { FilterDropdownRootChangeEventDetails } from '../root/FilterDropdownRootContext';
@@ -12,7 +12,7 @@ describe('useFilterDropdownInput', () => {
     const onValueChange = vi.fn((_value: string, details: FilterDropdownRootChangeEventDetails) =>
       details.cancel(),
     );
-    const { user } = await render(
+    await render(
       <FilterDropdown.Root
         open
         value="ca"
@@ -26,7 +26,8 @@ describe('useFilterDropdownInput', () => {
     );
     const input = screen.getByRole('searchbox', { name: 'Filter' });
 
-    await user.type(input, 'n');
+    // A key press would also change the keyboard state, and that render writes the value too.
+    await fireEvent.input(input, { target: { value: 'can' } });
 
     expect(onValueChange).toHaveBeenCalledWith('can', expect.anything());
     expect(input).toHaveValue('ca');

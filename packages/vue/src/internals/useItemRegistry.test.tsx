@@ -25,7 +25,9 @@ describe('useItemRegistry', () => {
 
         return () => {
           snapshots.push(registeredItems.value);
-          return props.items.map((item) => <Item key={item} id={item} registerItem={registerItem} />);
+          return props.items.map((item) => (
+            <Item key={item} id={item} registerItem={registerItem} />
+          ));
         };
       },
       { props: ['items'] },

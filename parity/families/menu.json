@@ -5,102 +5,102 @@
     {
       "upstream": "packages/react/src/menu/clear/MenuClear.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/clear/MenuClearDataAttributes.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/empty/MenuEmpty.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderContext.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-provider/MenuFilterProviderOptions.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterContext.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterDropdown.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterGroup.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterImpl.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterList.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterPopup.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/MenuFilterRoot.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/moveHighlightFrom.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterKeyDown.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterRoot.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterSubmenuTrigger.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-root/useVirtualFocusParentHandoff.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/filter-submenu-root/MenuFilterSubmenuRoot.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/index.ts",
@@ -110,12 +110,12 @@
     {
       "upstream": "packages/react/src/menu/input/MenuInput.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/input/MenuInputDataAttributes.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
+      "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
       "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",

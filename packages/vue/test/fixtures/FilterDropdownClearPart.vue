@@ -31,7 +31,12 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, FilterDropdownClearState>;
 }>();
 
-const { visible, state, ref: clearRef, props: clearProps } = useFilterDropdownClear({
+const {
+  visible,
+  state,
+  ref: clearRef,
+  props: clearProps,
+} = useFilterDropdownClear({
   disabled: () => props.disabled,
   nativeButton: () => props.nativeButton,
 });

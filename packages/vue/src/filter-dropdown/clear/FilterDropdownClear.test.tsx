@@ -84,12 +84,7 @@ describe('<FilterDropdown.Clear />', () => {
       <ControlledFilterDropdownRoot initialValue="can" onValueChange={onValueChange}>
         <FilterDropdown.Popup id={undefined}>
           <FilterDropdown.Input aria-label="Filter countries" />
-          <FilterDropdown.Clear
-            aria-label="Clear filter"
-            disabled
-            nativeButton={false}
-            as="div"
-          />
+          <FilterDropdown.Clear aria-label="Clear filter" disabled nativeButton={false} as="div" />
         </FilterDropdown.Popup>
       </ControlledFilterDropdownRoot>,
     );
@@ -105,8 +100,7 @@ const ControlledFilterDropdownRoot = defineComponent(
     props: {
       initialValue?: string | undefined;
       onValueChange?:
-        | ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void)
-        | undefined;
+        ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void) | undefined;
     },
     { slots },
   ) => {

@@ -121,7 +121,7 @@ export function useFilterDropdownInput(
     void nextTick(writeValueToInput);
   }
 
-  const listeners: HTMLProps = {
+  const listeners = {
     onCompositionstart: handleCompositionstart,
     onCompositionend: handleCompositionend,
     onInput: handleInput,

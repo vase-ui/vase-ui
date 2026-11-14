@@ -134,7 +134,8 @@ export function useFilterDropdownItem(
   function setHiddenText(text: string) {
     const previousText = hiddenText;
     hiddenText = text;
-    // The first text after the element went away is the text that the element showed.
+    // The first text after the element goes away is only a baseline: the cached text of the
+    // element wins until the slot text changes.
     if (previousText === undefined || text === previousText || toValue(params.label) != null) {
       return;
     }

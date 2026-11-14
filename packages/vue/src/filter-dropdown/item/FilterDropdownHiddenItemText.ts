@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- Only a render function reads the vnodes of a slot without rendering them. A slot of Vapor mode gives DOM nodes, and it mounts the components of the slot.
 import { Comment, defineComponent, isVNode, onMounted, onUpdated, Static } from 'vue';
 import type { PropType } from 'vue';
 
@@ -39,6 +40,7 @@ export const FilterDropdownHiddenItemText = defineComponent({
     onUpdated(() => props.setText(text));
 
     return () => {
+      // eslint-disable-next-line no-restricted-syntax -- The call is in a render function, so Vue gives no warning and renders this component again when the slot reads a changed value.
       text = slotText(slots.default?.());
       return null;
     };

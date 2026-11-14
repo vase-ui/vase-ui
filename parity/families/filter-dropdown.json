@@ -7,6 +7,38 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />"],
+      "title": "keeps focus on the input when the list or popup background is clicked",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "reason": "The case presses or enters the popup of the shared suite. Its listeners come from `useMenuFilterPopup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />"],
+      "title": "focuses the input when the pointer enters or the popup itself receives focus",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "reason": "The case presses or enters the popup of the shared suite. Its listeners come from `useMenuFilterPopup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />"],
+      "title": "does not focus a parent input when the pointer enters a portalled nested popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "reason": "The case presses or enters the popup of the shared suite. Its listeners come from `useMenuFilterPopup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />"],
+      "title": "does not focus a parent input when the pointer enters an inline nested popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
+      "reason": "The case presses or enters the popup of the shared suite. Its listeners come from `useMenuFilterPopup`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
       "describe": ["<FilterDropdown.Root />", "prop: filter with null"],
       "title": "clears a stale highlight when the item set changes",
       "kind": "waits-on",

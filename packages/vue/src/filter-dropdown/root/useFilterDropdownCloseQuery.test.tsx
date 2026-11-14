@@ -41,7 +41,10 @@ describe('useFilterDropdownCloseQuery', () => {
 
     expect(screen.getByTestId('query').textContent).toBe('can');
     expect(onValueChange).toHaveBeenCalledTimes(1);
-    expect(onValueChange).toHaveBeenCalledWith('', expect.objectContaining({ reason: 'popup-close' }));
+    expect(onValueChange).toHaveBeenCalledWith(
+      '',
+      expect.objectContaining({ reason: 'popup-close' }),
+    );
   });
 
   it('settles the reset when the popup opens again before the unmount', async () => {
@@ -54,7 +57,10 @@ describe('useFilterDropdownCloseQuery', () => {
     await setProps({ open: true });
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
-    expect(onValueChange).toHaveBeenCalledWith('', expect.objectContaining({ reason: 'popup-close' }));
+    expect(onValueChange).toHaveBeenCalledWith(
+      '',
+      expect.objectContaining({ reason: 'popup-close' }),
+    );
   });
 
   it('clears the query one time when the host unmounts while the popup closes', async () => {
@@ -67,6 +73,9 @@ describe('useFilterDropdownCloseQuery', () => {
     unmount();
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
-    expect(onValueChange).toHaveBeenCalledWith('', expect.objectContaining({ reason: 'popup-close' }));
+    expect(onValueChange).toHaveBeenCalledWith(
+      '',
+      expect.objectContaining({ reason: 'popup-close' }),
+    );
   });
 });

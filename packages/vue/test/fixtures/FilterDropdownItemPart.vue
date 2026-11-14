@@ -34,7 +34,11 @@ defineSlots<{
 const state: FilterDropdownItemPartState = EMPTY_OBJECT;
 
 // An item of a menu-shaped host. It renders its element only while the query keeps it.
-const { visible, ref: itemRef, setHiddenText } = useFilterDropdownItem({
+const {
+  visible,
+  ref: itemRef,
+  setHiddenText,
+} = useFilterDropdownItem({
   label: () => props.label,
   retainGroup: () => props.retainGroup,
 });

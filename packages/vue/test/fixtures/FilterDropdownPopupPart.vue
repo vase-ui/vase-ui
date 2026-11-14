@@ -1,3 +1,15 @@
+<script lang="ts">
+import type { HTMLAttributes } from 'vue';
+import type { WithVaseUIEvent } from '../../src/internals/types';
+
+export interface FilterDropdownPopupPartProps extends /* @vue-ignore */ WithVaseUIEvent<
+  Omit<HTMLAttributes, 'id'>
+> {
+  /** The `id` of the popup. */
+  id?: string | undefined;
+}
+</script>
+
 <script setup lang="ts">
 import { useAttrs } from 'vue';
 import { useFilterDropdownRootContext } from '../../src/filter-dropdown/root/FilterDropdownRootContext';
@@ -6,10 +18,7 @@ import { mergeProps } from '../../src/merge-props';
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<{
-  /** The `id` of the popup. */
-  id?: string | undefined;
-}>();
+const props = defineProps<FilterDropdownPopupPartProps>();
 
 defineSlots<{ default(): unknown }>();
 

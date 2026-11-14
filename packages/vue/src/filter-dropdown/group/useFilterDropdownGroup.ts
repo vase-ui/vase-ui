@@ -3,7 +3,10 @@ import type { ComputedRef } from 'vue';
 import { useItemRegistry } from '../../internals/useItemRegistry';
 import { useFilterDropdownItemContext } from '../root/FilterDropdownRootContext';
 import type { State as StoreState } from '../store';
-import { FilterDropdownGroupContext, useFilterDropdownGroupContext } from './FilterDropdownGroupContext';
+import {
+  FilterDropdownGroupContext,
+  useFilterDropdownGroupContext,
+} from './FilterDropdownGroupContext';
 
 function isGroupHidden(state: StoreState, items: ReadonlyMap<symbol, boolean>) {
   // A group with no members hasn't been filtered out, it hasn't registered yet.

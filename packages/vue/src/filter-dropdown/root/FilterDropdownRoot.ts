@@ -250,8 +250,7 @@ export interface UseFilterDropdownRootParameters {
    * Event handler called when the filter input value changes.
    */
   onValueChange?:
-    | ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void)
-    | undefined;
+    ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void) | undefined;
   /**
    * Custom filter logic used when filtering items. Pass `null` to turn filtering off.
    * A ref or a getter, because a plain function is the filter itself.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, shallowRef, Teleport } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
@@ -48,106 +48,6 @@ describe('<FilterDropdown.Root />', () => {
     expect(list).toHaveAttribute('tabindex', '-1');
     expect(input).toHaveAttribute('aria-controls', list.id);
     expect(input).not.toHaveAttribute('aria-activedescendant');
-  });
-
-  it('keeps focus on the input when the list or popup background is clicked', async () => {
-    const { user } = await render(
-      <TestFilterDropdownRoot open value="">
-        <FilterDropdown.Popup id={undefined} data-testid="popup">
-          <FilterDropdown.Input aria-label="Filter countries" />
-          <FilterDropdown.List id={undefined} />
-        </FilterDropdown.Popup>
-      </TestFilterDropdownRoot>,
-    );
-
-    const input = screen.getByRole('searchbox', { name: 'Filter countries' });
-    const list = screen.getByRole('menu');
-
-    await user.click(input);
-    await user.click(list);
-    expect(input).toHaveFocus();
-
-    await user.click(screen.getByTestId('popup'));
-
-    expect(input).toHaveFocus();
-  });
-
-  it('focuses the input when the pointer enters or the popup itself receives focus', async () => {
-    const { user } = await render(
-      <TestFilterDropdownRoot open value="">
-        <FilterDropdown.Popup id={undefined} data-testid="popup" tabindex={-1}>
-          <FilterDropdown.Input aria-label="Filter countries" />
-          <FilterDropdown.List id={undefined}>
-            <div role="menuitem">Canada</div>
-          </FilterDropdown.List>
-        </FilterDropdown.Popup>
-        <button type="button">Outside</button>
-      </TestFilterDropdownRoot>,
-    );
-
-    const input = screen.getByRole('searchbox', { name: 'Filter countries' });
-    const outside = screen.getByRole('button', { name: 'Outside' });
-    const popup = screen.getByTestId('popup');
-
-    outside.focus();
-    await flushMicrotasks();
-    await user.hover(popup);
-    expect(input).toHaveFocus();
-
-    outside.focus();
-    popup.focus();
-    await flushMicrotasks();
-    expect(input).toHaveFocus();
-  });
-
-  it('does not focus a parent input when the pointer enters a portalled nested popup', async () => {
-    const { user } = await render(
-      <TestFilterDropdownRoot open value="">
-        <FilterDropdown.Popup id={undefined} data-testid="parent-popup">
-          <FilterDropdown.Input aria-label="Filter parent items" />
-          <TestFilterDropdownRoot open value="">
-            <Teleport to={document.body}>
-              <FilterDropdown.Popup id={undefined} data-testid="child-popup">
-                <FilterDropdown.Input aria-label="Filter child items" />
-              </FilterDropdown.Popup>
-            </Teleport>
-          </TestFilterDropdownRoot>
-        </FilterDropdown.Popup>
-      </TestFilterDropdownRoot>,
-    );
-
-    const parentInput = screen.getByRole('searchbox', { name: 'Filter parent items' });
-    const childInput = screen.getByRole('searchbox', { name: 'Filter child items' });
-
-    parentInput.focus();
-    await flushMicrotasks();
-    await user.hover(screen.getByTestId('child-popup'));
-
-    expect(childInput).toHaveFocus();
-  });
-
-  it('does not focus a parent input when the pointer enters an inline nested popup', async () => {
-    const { user } = await render(
-      <TestFilterDropdownRoot open value="">
-        <FilterDropdown.Popup id={undefined} data-testid="parent-popup">
-          <FilterDropdown.Input aria-label="Filter parent items" />
-          <TestFilterDropdownRoot open value="">
-            <FilterDropdown.Popup id={undefined} data-testid="child-popup">
-              <FilterDropdown.Input aria-label="Filter child items" />
-            </FilterDropdown.Popup>
-          </TestFilterDropdownRoot>
-        </FilterDropdown.Popup>
-      </TestFilterDropdownRoot>,
-    );
-
-    const parentInput = screen.getByRole('searchbox', { name: 'Filter parent items' });
-    const childInput = screen.getByRole('searchbox', { name: 'Filter child items' });
-
-    parentInput.focus();
-    await flushMicrotasks();
-    await user.hover(screen.getByTestId('child-popup'));
-
-    expect(childInput).toHaveFocus();
   });
 
   it('updates relationships when id props change', async () => {
@@ -291,8 +191,7 @@ const TestFilterDropdownRoot = defineComponent(
       value: string;
       triggerId?: string | undefined;
       onValueChange?:
-        | ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void)
-        | undefined;
+        ((value: string, eventDetails: FilterDropdownRootChangeEventDetails) => void) | undefined;
     },
     { slots },
   ) => {
