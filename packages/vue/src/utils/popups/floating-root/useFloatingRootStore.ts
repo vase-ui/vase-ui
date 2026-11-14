@@ -20,8 +20,7 @@ export interface UseFloatingRootStoreOptions {
   /**
    * Called when an interaction composable requests an open change.
    */
-  onOpenChange?:
-    ((open: boolean, eventDetails: VaseUIChangeEventDetails<string>) => void) | undefined;
+  onOpenChange?(open: boolean, eventDetails: VaseUIChangeEventDetails<string>): void;
   /**
    * The elements to copy into the store. A source that gives `undefined` keeps the current value of
    * the store.
@@ -49,6 +48,7 @@ export interface UseFloatingRootStoreOptions {
  * Call it in `setup`.
  */
 export function useFloatingRootStore(options: UseFloatingRootStoreOptions): FloatingRootStore {
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- The store calls `onOpenChange` as a plain callback. The method form keeps its parameters bivariant, as in Base UI.
   const { open, onOpenChange, elements = {} } = options;
 
   const defaultPopupId = useId();
