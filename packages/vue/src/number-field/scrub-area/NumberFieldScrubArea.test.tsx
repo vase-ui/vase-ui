@@ -1,6 +1,6 @@
 import { expect, vi, describe, it, onTestFinished } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { KeepAlive, shallowRef } from 'vue';
+import { KeepAlive, nextTick, shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
@@ -71,13 +71,26 @@ describe('<NumberField.ScrubArea />', () => {
   });
 
   describe('touch input', () => {
-    // Firefox has no `Touch` and no `TouchEvent` on a desktop, and WebKit refuses `new Touch()`.
-    // The case thus gives the touches to a plain event, as `pasteText` gives `clipboardData`.
+    // A browser refuses a plain object as a `Touch`. Firefox on a desktop has no `TouchEvent`, and
+    // WebKit on a desktop refuses `new Touch()`. Those engines get an `Event` that has the list.
     function fireTouchStart(target: HTMLElement, touchCount: number) {
-      const event = new Event('touchstart', { bubbles: true, cancelable: true });
-      Object.defineProperty(event, 'touches', {
-        value: Array.from({ length: touchCount }, () => ({ clientX: 0, clientY: 0 })),
-      });
+      const points = Array.from({ length: touchCount }, (_, identifier) => ({
+        identifier,
+        target,
+        clientX: 0,
+        clientY: 0,
+      }));
+      let event: Event;
+      try {
+        event = new TouchEvent('touchstart', {
+          bubbles: true,
+          cancelable: true,
+          touches: points.map((point) => new Touch(point)),
+        });
+      } catch {
+        event = new Event('touchstart', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'touches', { value: points });
+      }
       return fireEvent(target, event);
     }
 
@@ -158,6 +171,72 @@ describe('<NumberField.ScrubArea />', () => {
       expect(input).toHaveFocus();
       expect(input.selectionStart).toBe(0);
       expect(input.selectionEnd).toBe(input.value.length);
+    });
+  });
+
+  describe('KeepAlive', () => {
+    it('VUE-53: ends the scrub with no commit when KeepAlive deactivates the scrub area', async () => {
+      const onValueCommitted = vi.fn();
+      const visible = shallowRef(true);
+
+      await render(() => (
+        <KeepAlive>
+          {visible.value ? (
+            <NumberField.Root
+              defaultValue={0}
+              data-testid="root"
+              onValueCommitted={onValueCommitted}
+            >
+              <NumberField.Input />
+              <NumberField.ScrubArea data-testid="scrub-area" />
+            </NumberField.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+
+      const scrubArea = screen.getByTestId('scrub-area');
+      scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
+      await flushMicrotasks();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-scrubbing');
+
+      visible.value = false;
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
+
+      await releasePointer();
+
+      expect(onValueCommitted).not.toHaveBeenCalled();
+    });
+
+    it('does not click a scrub area that KeepAlive deactivates after the release', async () => {
+      const handleClick = vi.fn();
+      const visible = shallowRef(true);
+
+      await render(() => (
+        <KeepAlive>
+          {visible.value ? (
+            <NumberField.Root defaultValue={0}>
+              <NumberField.Input />
+              <NumberField.ScrubArea data-testid="scrub-area" onClick={handleClick} />
+            </NumberField.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+
+      const scrubArea = screen.getByTestId('scrub-area');
+      scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
+      await flushMicrotasks();
+
+      // The deactivation comes in the task of the release, before the timer of the click.
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      visible.value = false;
+      await nextTick();
+      await wait(50);
+
+      expect(handleClick).not.toHaveBeenCalled();
     });
   });
 
@@ -456,22 +535,18 @@ describe('<NumberField.ScrubArea />', () => {
       expect(screen.getByRole('textbox')).toHaveValue('10');
     });
 
-    it('VUE-53: ends the scrub with no commit when KeepAlive deactivates the scrub area', async () => {
-      const onValueCommitted = vi.fn();
+    it('VUE-53: takes the cursor out of the document and ends the pointer lock when KeepAlive deactivates the scrub area', async () => {
       const visible = shallowRef(true);
       const pointerLock = vi
         .spyOn(document.body, 'requestPointerLock')
         .mockImplementation(() => Promise.resolve());
+      const exitPointerLock = vi.spyOn(document, 'exitPointerLock').mockImplementation(() => {});
 
       try {
         await render(() => (
           <KeepAlive>
             {visible.value ? (
-              <NumberField.Root
-                defaultValue={0}
-                data-testid="root"
-                onValueCommitted={onValueCommitted}
-              >
+              <NumberField.Root defaultValue={0}>
                 <NumberField.Input />
                 <NumberField.ScrubArea data-testid="scrub-area">
                   <NumberField.ScrubAreaCursor data-testid="cursor" />
@@ -485,24 +560,22 @@ describe('<NumberField.ScrubArea />', () => {
         scrubArea.dispatchEvent(createPointerDownEvent(scrubArea));
         await flushMicrotasks();
         expect(screen.getByTestId('cursor')).not.toBe(null);
+        expect(exitPointerLock).not.toHaveBeenCalled();
 
         visible.value = false;
         await flushMicrotasks();
 
         // `KeepAlive` takes the area out of the document, but not the teleported cursor.
         expect(screen.queryByTestId('cursor')).toBe(null);
+        expect(exitPointerLock).toHaveBeenCalledTimes(1);
 
         visible.value = true;
         await flushMicrotasks();
 
-        expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
         expect(screen.queryByTestId('cursor')).toBe(null);
-
-        await releasePointer();
-
-        expect(onValueCommitted).not.toHaveBeenCalled();
       } finally {
         pointerLock.mockRestore();
+        exitPointerLock.mockRestore();
       }
     });
   });

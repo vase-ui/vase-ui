@@ -290,8 +290,12 @@ function cancelScrub() {
 
 onScopeDispose(cancelScrub);
 
-// `KeepAlive` sends no pointer release, and it leaves the teleported cursor in the document.
-onDeactivated(cancelScrub);
+// `KeepAlive` sends no pointer release, and it leaves the teleported cursor in the document. A
+// click that waits for its timer would go to an area that is out of the document.
+onDeactivated(() => {
+  syntheticClickTimeout.clear();
+  cancelScrub();
+});
 
 // Prevent scrolling using touch input when scrubbing.
 function onTouchstart(event: TouchEvent) {
