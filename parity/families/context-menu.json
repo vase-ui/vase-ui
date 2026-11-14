@@ -17,7 +17,7 @@
       "title": "returns focus to the focused surface when closing with Shift+Tab",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case needs the focus management of the menu: the focus moves into the popup at the open, Tab closes the menu, and the focus goes back to the trigger. `Menu.Popup` has no focus management yet."
+      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
     },
     {
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
@@ -25,7 +25,7 @@
       "title": "returns focus to the focused surface when closing with Tab",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case needs the focus management of the menu: the focus moves into the popup at the open, Tab closes the menu, and the focus goes back to the trigger. `Menu.Popup` has no focus management yet."
+      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -41,14 +41,6 @@
       "prop": "side",
       "kind": "not-applicable",
       "reason": "The row gives the default `'bottom'`. The part has no Vue default: a prop that is absent lets `Menu.Positioner` take `'bottom'` for a root context menu and `'inline-end'` for a submenu, as in Base UI. Only an absent `side` gives a root context menu the offsets `-5` and `2`. With a Vue default, a submenu opens below its trigger and a root context menu loses those offsets."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Popup",
-      "prop": "finalFocus",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "`Menu.Popup` has no focus management yet, so it does not declare `finalFocus`."
     }
   ],
   "surfaceAdditions": [
