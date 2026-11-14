@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest';
-import { defineComponent, onMounted, shallowRef, watch } from 'vue';
-import type { MaybeRefOrGetter, PropType } from 'vue';
+import { describe, expect, test, vi } from 'vitest';
+import { defineComponent, h, onMounted, shallowRef, watch } from 'vue';
+import type { Component, MaybeRefOrGetter, PropType } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { useFloating } from '../../../../test/fixtures/useFloating';
@@ -8,6 +8,8 @@ import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
 import FloatingPortal from './FloatingPortal.vue';
 import FloatingPortalLite from './FloatingPortalLite.vue';
 import type { FloatingPortalContainer } from './useFloatingPortalNode';
+
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 const App = defineComponent({
   props: {
@@ -187,6 +189,42 @@ describe('FloatingPortal', () => {
     await flushMicrotasks();
 
     expect(document.querySelector('[aria-owns]')).toHaveAttribute('aria-owns', 'custom-portal');
+  });
+
+  test('puts the content of children in the portal element of the #render slot', async () => {
+    await render(
+      <FloatingPortal
+        v-slots={{
+          render: ({ props, children }: RenderSlotProps) => (
+            <section {...props} data-testid="portal-element">
+              {h(children, null, () => (
+                <div data-testid="content" />
+              ))}
+            </section>
+          ),
+        }}
+      />,
+    );
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('portal-element')).toContainElement(screen.getByTestId('content'));
+  });
+
+  test('warns when the #render slot does not mount children', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await render(
+      <FloatingPortal
+        v-slots={{
+          render: ({ props }: RenderSlotProps) => (
+            <section {...props} data-testid="portal-element" />
+          ),
+        }}
+      />,
+    );
+    await flushMicrotasks();
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain('The `#render` slot did not mount `children`');
   });
 
   test('FloatingPortalLite forwards HTML props to the portal element', async () => {
