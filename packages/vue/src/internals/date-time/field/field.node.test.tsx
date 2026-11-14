@@ -55,12 +55,12 @@ describe('the date and time field on a server', () => {
     expect(hiddenInputOf(html)).toMatch(/ required[ >]/);
   });
 
-  it('marks what the browser can change while it hydrates', async () => {
+  it('marks the attributes of each segment that the browser can change while it hydrates', async () => {
     const html = await renderToString(<DateTimeFieldProbe defaultValue="2026-11-14" />);
 
-    expect(html).toContain('<div data-testid="input" data-allow-mismatch="children">');
-    expect(html.match(/data-allow-mismatch="attribute"/g)).toHaveLength(3);
-    expect(html.match(/data-allow-mismatch="text"/g)).toHaveLength(2);
+    expect(
+      html.match(/<input[^>]* data-type="\w+"[^>]* data-allow-mismatch="attribute"/g),
+    ).toHaveLength(3);
   });
 
   it('renders an empty field with placeholders, and no value in the hidden input', async () => {

@@ -352,8 +352,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of `indeterminate`. A click on the input clears the property, and the write in the tick after an accepted click sets it again. A script that writes `checked` does not clear the property. A server cannot write it, because HTML has no attribute for it.
 - A part with a `value` input does not write its state after the mount, because hydration writes `value`. It writes its state on each `pageshow` event, and in the tick after each `input` and `change` event of the input. `NumberField.Root`, `OTPField.Root` and `useDateTimeFieldRoot` do this.
 - The hidden input of a date or time field has the type of its value: `date`, `datetime-local` or `time`. Its `min` and `max` give `rangeUnderflow` and `rangeOverflow` to the field, and `required` gives `valueMissing`.
-- A zoned value and a year and month have `type="text"`. Only Chromium has `type="month"`, and no engine has an input for a zoned value. The root checks their range with `setCustomValidity`.
-- A date that is not available, and a field with some segments empty, are also a `customError` of the input. The error ends when the user fills each segment.
+- A zoned value and a year and month have `type="text"`. Of the three test engines, only Chromium has `type="month"`, and no engine has an input for a zoned value.
+- The root sets a `customError` on the input for what the type cannot check: the range of a zoned value and of a year and month, `minTime` and `maxTime` for a value that has a date, a date that `unavailableDates` matches, and a field with some segments empty. Each error ends when its cause ends.
 - The text of the input is ISO 8601 in the ISO calendar. A zoned value has the RFC 9557 text, such as `2026-11-14T15:04+09:00[Asia/Tokyo]`. A year and month of another calendar names that calendar.
 - The input of a control with no native input, such as `Select.Root`, has the type that `getHiddenInputType` of `src/internals` gives. It is `type="hidden"` while the control has no `name`, no `autoComplete`, no `required` and no field. A password manager then skips the input.
 - Base UI also keeps a text input when the consumer gives `inputRef`. A part cannot know if a consumer reads its exposed `inputElement`, so `getHiddenInputType` has no parameter for it.
@@ -730,10 +730,11 @@ The state of a field:
 A date or time field and the `Intl` data of the server:
 
 - Each engine has its own `Intl` data for a locale. Chromium has no data for `is-IS` and uses `en-US`. The server and the browser then give another layout.
-- A layout can differ in the order of the segments, in the text of a literal and in the hour cycle.
-- While the field hydrates, `Input` binds `data-allow-mismatch="children"`. A segment binds `attribute`, and a literal binds `text`. Each part calls `useIsHydrating()` itself.
-- Vue writes no attribute while it hydrates. In `onMounted`, the root compares the `data-type` of each child of `Input` with its layout. On a difference, the root changes `listKey`, and the parts make the elements again.
-- A layout with another number of segments is not a mismatch that `data-allow-mismatch` covers. Vue then logs `Hydration completed but contains mismatches`. The DOM follows the layout of the browser.
+- A layout can differ in the order of the segments, in the number of segments, in the text of a literal and in the hour cycle.
+- While the field hydrates, the part that renders the segments binds `data-allow-mismatch="children"` on `Input`, `attribute` on a segment and `text` on a literal. `useDateTimeFieldSegment` binds the one of a segment. Each part calls `useIsHydrating()` itself. `test/fixtures/DateTimeFieldProbe.vue` is the model.
+- Vue changes the text of a literal itself. It writes no `aria-*` attribute while it hydrates, and it does not change the attributes of a server element that it reuses for another segment.
+- After the mount, the root compares the attributes that `getSegmentAttributes` gives with the DOM. On a difference, it changes `listKey`, and the parts make the elements again.
+- A layout with another number of segments makes Vue log `Hydration completed but contains mismatches` one time, also under `data-allow-mismatch`. The DOM is then equal to a client-only render.
 
 ### What Vue replaces
 
