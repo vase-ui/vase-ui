@@ -21,6 +21,7 @@ export { detachedTriggersConformanceTests } from './detachedTriggersConformanceT
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
+export { popupFocusPropsTests } from './popupFocusPropsTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';

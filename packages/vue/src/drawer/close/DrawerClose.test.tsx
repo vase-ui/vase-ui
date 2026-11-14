@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createRenderer, screen } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { REASONS } from '../../internals/reasons';
 import * as Drawer from '../index.parts';
 
@@ -11,9 +10,13 @@ describe('<Drawer.Close />', () => {
     const handleOpenChange = vi.fn();
     const { user } = await render(
       <Drawer.Root defaultOpen modal={false} onOpenChange={handleOpenChange}>
-        <DialogPopupPart>
-          <Drawer.Close>Close</Drawer.Close>
-        </DialogPopupPart>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <Drawer.Close>Close</Drawer.Close>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
       </Drawer.Root>,
     );
 
