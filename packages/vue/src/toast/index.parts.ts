@@ -1,5 +1,7 @@
 import ToastAction from './action/ToastAction.vue';
 import type { ToastActionProps, ToastActionState } from './action/ToastAction.vue';
+import ToastArrow from './arrow/ToastArrow.vue';
+import type { ToastArrowProps, ToastArrowState } from './arrow/ToastArrow.vue';
 import ToastClose from './close/ToastClose.vue';
 import type { ToastCloseProps, ToastCloseState } from './close/ToastClose.vue';
 import ToastContent from './content/ToastContent.vue';
@@ -11,6 +13,8 @@ import type {
 } from './description/ToastDescription.vue';
 import ToastPortal from './portal/ToastPortal.vue';
 import type { ToastPortalProps, ToastPortalState } from './portal/ToastPortal.vue';
+import ToastPositioner from './positioner/ToastPositioner.vue';
+import type { ToastPositionerProps, ToastPositionerState } from './positioner/ToastPositioner.vue';
 import ToastProvider from './provider/ToastProvider.vue';
 import type { ToastProviderProps, ToastProviderState } from './provider/ToastProvider.vue';
 import ToastRoot from './root/ToastRoot.vue';
@@ -114,6 +118,26 @@ export const Portal: typeof ToastPortal = ToastPortal;
 export namespace Portal {
   export type State = ToastPortalState;
   export type Props = ToastPortalProps;
+}
+
+/**
+ * Positions the toast against the anchor.
+ * Renders a `<div>` element.
+ */
+export const Positioner: typeof ToastPositioner = ToastPositioner;
+export namespace Positioner {
+  export type State = ToastPositionerState;
+  export type Props = ToastPositionerProps;
+}
+
+/**
+ * Displays an element positioned against the toast anchor.
+ * Renders a `<div>` element.
+ */
+export const Arrow: typeof ToastArrow = ToastArrow;
+export namespace Arrow {
+  export type State = ToastArrowState;
+  export type Props = ToastArrowProps;
 }
 
 export { useToastManager } from './useToastManager';
