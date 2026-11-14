@@ -70,11 +70,16 @@ function createTreeProvider() {
   return { TreeProvider, getTree: () => tree!.value };
 }
 
+// The backdrop of an open menu leaves the box of the menubar free. A menubar that is narrower than
+// its triggers would leave the last trigger under the backdrop, so the box is at least as wide as
+// its content.
+const menubarStyle = { maxWidth: '25vw', minWidth: 'max-content', display: 'flex' };
+
 type TestMenubarProps = { loopFocus?: boolean; disabled?: boolean };
 
 const ContainedTriggerMenubar = defineComponent(
   (props: TestMenubarProps) => () => (
-    <Menubar {...props} style={{ maxWidth: '25vw', display: 'flex' }}>
+    <Menubar {...props} style={menubarStyle}>
       <Menu.Root>
         <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
         <Menu.Portal>
@@ -291,7 +296,7 @@ const DetachedTriggerMenubar = defineComponent(
     const menuHandle = Menu.createHandle<MenuDefinition>();
     return () => (
       <>
-        <Menubar {...props} style={{ maxWidth: '25vw', display: 'flex' }}>
+        <Menubar {...props} style={menubarStyle}>
           {menus.map((menu) => (
             <Menu.Trigger
               handle={menuHandle}
@@ -312,7 +317,7 @@ const DetachedTriggerMenubar = defineComponent(
 
 const MultipleContainedTriggersMenubar = defineComponent(
   (props: TestMenubarProps) => () => (
-    <Menubar {...props} style={{ maxWidth: '25vw', display: 'flex' }}>
+    <Menubar {...props} style={menubarStyle}>
       <DynamicMenu>
         {menus.map((menu) => (
           <Menu.Trigger payload={menu} key={menu.label} data-testid={menu.triggerTestId}>
