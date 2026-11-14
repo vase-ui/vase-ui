@@ -1,6 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { toRaw } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
@@ -91,6 +92,27 @@ describe('<Combobox.List />', () => {
     );
 
     expect(screen.getByRole('listbox')).not.toHaveAttribute('aria-readonly');
+  });
+
+  // `Autocomplete.Portal`, `Autocomplete.Positioner`, `Autocomplete.Popup` and `Autocomplete.List`
+  // are these parts of Combobox under other names, and the Autocomplete entry does not export them
+  // yet. The case asserts only the list.
+  it('sets aria-readonly on the Autocomplete listbox when the root is readOnly', async () => {
+    await render(
+      <Autocomplete.Root readOnly defaultOpen>
+        <Combobox.Portal>
+          <Combobox.Positioner>
+            <Combobox.Popup>
+              <Combobox.List>
+                <Combobox.Item value="a">a</Combobox.Item>
+              </Combobox.List>
+            </Combobox.Popup>
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Autocomplete.Root>,
+    );
+
+    expect(screen.getByRole('listbox')).toHaveAttribute('aria-readonly', 'true');
   });
 
   it('does not prevent Enter when no item is highlighted', async () => {

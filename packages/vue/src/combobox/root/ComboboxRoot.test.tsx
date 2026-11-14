@@ -25,14 +25,13 @@ import { useComboboxInputValueContext, useComboboxRootContext } from './Combobox
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 
-// No part of this family renders the positioner, the list or the items yet. The cases use the
-// fixture parts in their place, and they test the root. Most cases also use the fixture input. It
-// handles only the `input` event, and its `insidePopup` prop stands for a positioner around it.
-// The Base UI cases of this file render those parts, so the pull requests that add the parts port
-// them. A ported case then replaces the case of this file that tests the same thing: the order of
-// the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
-// and the server render. One Base UI case of this file renders only the root. It is in the block
-// `coverage edge cases`.
+// Most cases use the fixture parts in place of the positioner, the list and the items, and they
+// test the root. Most cases also use the fixture input. It handles only the `input` event, and its
+// `insidePopup` prop stands for a positioner around it. The Base UI cases of this file render the
+// parts of the family. A ported case replaces the case of this file that tests the same thing: the
+// order of the events, a canceled change, the controlled values, the hidden inputs, the autofill,
+// the field and the server render. One Base UI case of this file renders only the root. It is in
+// the block `coverage edge cases`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -1336,6 +1335,33 @@ describe('<Combobox.Root />', () => {
       await user.click(document.body);
 
       await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Pick a city'));
+    });
+
+    // The user can empty a combobox, so it counts a missing value as a text input does: only after
+    // a change. Base UI does the same.
+    it('counts no missing value at a blur with no change before', async () => {
+      const { user } = await render(
+        <div>
+          <Field.Root validationMode="onBlur" data-testid="field">
+            <Combobox.Root required items={cities}>
+              <Combobox.Input />
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+
+      getInput().focus();
+      await user.tab();
+      await flushMicrotasks();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(getInput()).not.toHaveAttribute('aria-invalid');
     });
   });
 

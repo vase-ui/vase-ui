@@ -126,8 +126,8 @@ defineExpose({ element });
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
   <component :is="as" v-else v-bind="elementProps()"
     ><ComboboxCollection v-if="$slots.item"
-      ><template #default="slotProps"><slot name="item" v-bind="slotProps" /></template
-    ></ComboboxCollection
+      ><template #default="slotProps"
+        ><slot name="item" v-bind="slotProps" /></template></ComboboxCollection
     ><slot v-else :state="state"
   /></component>
 </template>

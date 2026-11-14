@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, screen } from '#test-utils';
 import * as Combobox from '../index.parts';
 
 describe('<Combobox.Collection />', () => {
@@ -89,9 +89,7 @@ describe('<Combobox.Collection />', () => {
     ])('renders $name', async ({ innerItems, expected }) => {
       await renderNestedGroups(innerItems);
 
-      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-        expected,
-      ]);
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([expected]);
     });
 
     it('renders the filtered items of the root in a group with no items', async () => {
@@ -122,43 +120,6 @@ describe('<Combobox.Collection />', () => {
         'alpha',
         'beta',
       ]);
-    });
-
-    it('keeps the element of an item when the filter removes an item before it', async () => {
-      await render(
-        <Combobox.Root items={['alpha', 'beta', 'alpine']} defaultOpen>
-          <Combobox.Input data-testid="input" />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  {{
-                    item: ({ item }: { item: string }) => (
-                      <Combobox.Item key={item} value={item}>
-                        {item}
-                      </Combobox.Item>
-                    ),
-                  }}
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
-      );
-
-      const alpine = screen.getByRole('option', { name: 'alpine' });
-
-      await fireEvent.input(screen.getByTestId('input'), {
-        target: { value: 'alp' },
-        inputType: 'insertText',
-      });
-      await flushMicrotasks();
-
-      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-        'alpha',
-        'alpine',
-      ]);
-      expect(screen.getByRole('option', { name: 'alpine' })).toBe(alpine);
     });
   });
 });

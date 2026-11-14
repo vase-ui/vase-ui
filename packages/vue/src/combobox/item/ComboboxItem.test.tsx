@@ -10,6 +10,7 @@ import {
   waitFor,
 } from '#test-utils';
 import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
+import type { HTMLProps } from '../../internals/types';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxItemRenders from './ComboboxItemRenders.test.vue';
@@ -365,8 +366,14 @@ describe('<Combobox.Item />', () => {
             <Combobox.Positioner>
               <Combobox.Popup>
                 <Combobox.List>
-                  <Combobox.Item value="one" as="a" href="/somewhere" data-testid="link-one">
-                    one
+                  <Combobox.Item value="one" data-testid="link-one">
+                    {{
+                      render: ({ props }: { props: HTMLProps }) => (
+                        <a {...props} href="/somewhere">
+                          one
+                        </a>
+                      ),
+                    }}
                   </Combobox.Item>
                   <Combobox.Item value="two">two</Combobox.Item>
                 </Combobox.List>
@@ -394,8 +401,14 @@ describe('<Combobox.Item />', () => {
             <Combobox.Positioner>
               <Combobox.Popup>
                 <Combobox.List>
-                  <Combobox.Item value="one" as="a" href="#section" data-testid="link-hash">
-                    one
+                  <Combobox.Item value="one" data-testid="link-hash">
+                    {{
+                      render: ({ props }: { props: HTMLProps }) => (
+                        <a {...props} href="#section">
+                          one
+                        </a>
+                      ),
+                    }}
                   </Combobox.Item>
                   <Combobox.Item value="two">two</Combobox.Item>
                 </Combobox.List>

@@ -230,16 +230,10 @@ const { element, elementProps } = useRenderElement('div', props, {
         }
       },
       onMouseup(event: MouseEvent) {
-        const pointerStartedOnItem =
-          store.context.pointerDownItemRef.value === event.currentTarget;
+        const pointerStartedOnItem = store.context.pointerDownItemRef.value === event.currentTarget;
         store.context.pointerDownItemRef.value = null;
 
-        if (
-          !isInteractive() ||
-          event.button !== 0 ||
-          pointerStartedOnItem ||
-          !highlighted.value
-        ) {
+        if (!isInteractive() || event.button !== 0 || pointerStartedOnItem || !highlighted.value) {
           return;
         }
 
