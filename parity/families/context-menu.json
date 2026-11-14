@@ -127,28 +127,28 @@
       "entry": "Item",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Item`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.Item`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "LinkItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.LinkItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.LinkItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Group",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Group`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.Group`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "GroupLabel",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.GroupLabel`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.GroupLabel`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -162,49 +162,49 @@
       "entry": "CheckboxItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.CheckboxItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "CheckboxItemIndicator",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItemIndicator`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.CheckboxItemIndicator`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioGroup",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioGroup`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioGroup`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioItemIndicator",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItemIndicator`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioItemIndicator`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "SubmenuRoot",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuRoot`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.SubmenuRoot`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "SubmenuTrigger",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuTrigger`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.SubmenuTrigger`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
