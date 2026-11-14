@@ -1,5 +1,8 @@
 import DialogBackdrop from '../dialog/backdrop/DialogBackdrop.vue';
-import type { DialogBackdropProps, DialogBackdropState } from '../dialog/backdrop/DialogBackdrop.vue';
+import type {
+  DialogBackdropProps,
+  DialogBackdropState,
+} from '../dialog/backdrop/DialogBackdrop.vue';
 import DialogClose from '../dialog/close/DialogClose.vue';
 import type { DialogCloseProps, DialogCloseState } from '../dialog/close/DialogClose.vue';
 import DialogDescription from '../dialog/description/DialogDescription.vue';
@@ -14,7 +17,10 @@ import type { DialogPortalProps, DialogPortalState } from '../dialog/portal/Dial
 import DialogTitle from '../dialog/title/DialogTitle.vue';
 import type { DialogTitleProps, DialogTitleState } from '../dialog/title/DialogTitle.vue';
 import DialogViewport from '../dialog/viewport/DialogViewport.vue';
-import type { DialogViewportProps, DialogViewportState } from '../dialog/viewport/DialogViewport.vue';
+import type {
+  DialogViewportProps,
+  DialogViewportState,
+} from '../dialog/viewport/DialogViewport.vue';
 import AlertDialogRoot from './root/AlertDialogRoot.vue';
 import type {
   AlertDialogRootActions,
