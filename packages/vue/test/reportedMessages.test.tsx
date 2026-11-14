@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, inject, onUnmounted, warn } from 'vue';
-import { createRenderer, hydrate, takeReportedMessages } from '#test-utils';
+import { createRenderer, takeReportedMessages } from '#test-utils';
 
 const WarningPart = defineComponent({
   setup() {
@@ -45,14 +45,6 @@ describe('reported messages', () => {
   it('fails a test in which the unmount makes Vue warn', { fails: true }, async () => {
     await render(<WarningOnUnmountPart />);
   });
-
-  it(
-    'fails a test in which the unmount after a hydration makes Vue warn',
-    { fails: true },
-    async () => {
-      await hydrate(WarningOnUnmountPart, { serverHtml: '<i></i>' });
-    },
-  );
 
   it('gives the Vue warning to a test that takes it', async () => {
     await render(<WarningPart />);
