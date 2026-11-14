@@ -21,7 +21,7 @@
       "describe": ["<ContextMenu.Root />"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "Each case renders `ContextMenu.Item` or a submenu, which Vase UI does not have."
+      "reason": "Each case renders `ContextMenu.Item`, or `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`. The Context Menu family does not export these parts of Menu again yet."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -29,7 +29,7 @@
       "title": "keeps the root menu open when the context-menu gesture ends in a portaled submenu",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which Vase UI does not have. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
+      "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which the Context Menu family does not export again yet. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -197,14 +197,14 @@
       "entry": "SubmenuRoot",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuRoot`, which Vase UI does not have."
+      "reason": "The part is `Menu.SubmenuRoot`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "SubmenuTrigger",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuTrigger`, which Vase UI does not have."
+      "reason": "The part is `Menu.SubmenuTrigger`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -260,7 +260,7 @@
       "entry": "ContextMenuSubmenuTriggerDataAttributes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "reason": "The constants are those of `Menu.SubmenuTrigger`. The Context Menu family does not export them again yet."
     }
   ],
   "surfaceAdditions": [],
