@@ -1,5 +1,6 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
+import type { OTPFieldInputState } from '../input/OTPFieldInput.vue';
 import type {
   OTPFieldRootChangeEventDetails,
   OTPFieldRootInvalidEventDetails,
@@ -50,4 +51,17 @@ export function useOTPFieldRootContext(): OTPFieldRootContext {
   }
 
   return context;
+}
+
+export function getOTPFieldInputState(
+  state: OTPFieldRootState,
+  value: string,
+  index: number,
+): OTPFieldInputState {
+  return {
+    ...state,
+    value,
+    index,
+    filled: value !== '',
+  };
 }
