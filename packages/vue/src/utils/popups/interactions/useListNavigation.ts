@@ -817,13 +817,9 @@ export function useListNavigation(
       const details = createChangeEventDetails(REASONS.focusOut, event);
       store.setOpen(false, details);
 
-      // A canceled close keeps the popup open. The key still moves the focus out of the popup, as
-      // Tab does through the guards. A list that closes for Tab is in a modal popup, and a modal
-      // popup that stays open keeps the focus.
-      if (details.isCanceled && shouldCloseOnTab()) {
-        return;
-      }
-
+      // A canceled close keeps the popup open, and the key still moves the focus out of the popup,
+      // as Tab does through the guards. A root context menu has no anchor element, so the focus
+      // stays in its modal popup.
       const returnElement = toValue(props.nestedReturnFocusRef) ?? anchorElement;
       if (isHTMLElement(returnElement)) {
         returnElement.focus();
