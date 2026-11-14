@@ -296,9 +296,8 @@ onActivated(() => {
   isDeactivated.value = false;
 });
 
-// `KeepAlive` runs the `onActivated` hooks of one branch from the last part to the first part. A
-// registration in a hook would reverse the order of the inputs, and the order decides which input
-// the form focuses first. The watcher runs after the hooks, in the order of the parts.
+// `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
+// the hook would reverse the order of the inputs. A watcher runs in the order of the parts.
 watch(isDeactivated, (deactivated) => {
   if (!deactivated) {
     updateInputRegistration();

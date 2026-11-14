@@ -2961,7 +2961,7 @@ describe('<CheckboxGroup />', () => {
         </CheckboxGroup>
       ));
       const App = defineComponent(() => () => (
-        <Form>
+        <Form onSubmit={(event: SubmitEvent) => event.preventDefault()}>
           <Field.Root name="fruits">
             <KeepAlive>{shown.value ? <Fruits key="fruits" /> : <Blank key="blank" />}</KeepAlive>
           </Field.Root>
