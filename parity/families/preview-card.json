@@ -35,7 +35,7 @@
       "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. Many of them need the focus of the trigger or the hover of the popup. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
+      "reason": "The other cases of the file open the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.detached-triggers.test.tsx",
