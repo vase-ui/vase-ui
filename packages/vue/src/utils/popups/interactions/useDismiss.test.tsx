@@ -9,6 +9,7 @@ import {
   flushMicrotasks,
   screen,
   useTestInteractions,
+  wait,
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
@@ -118,7 +119,8 @@ interface Change {
 
 /**
  * A popup with a trigger that toggles it. `teleport` moves the popup element to `<body>`.
- * `portalContainer` renders it in a portal in that element.
+ * `portalContainer` renders it in a portal in that element, and `portalBackdrop` adds a backdrop
+ * to that portal.
  */
 const Popup = defineComponent({
   props: {
@@ -126,6 +128,7 @@ const Popup = defineComponent({
     defaultOpen: { type: Boolean, default: true },
     teleport: { type: Boolean, default: false },
     portalContainer: { type: Object as PropType<HTMLElement>, default: undefined },
+    portalBackdrop: { type: Boolean, default: false },
     node: { type: Boolean, default: false },
     dismiss: { type: Object as PropType<UseDismissProps>, default: () => ({}) },
     toggleOn: { type: String as PropType<'click' | 'pointerdown'>, default: 'click' },
@@ -183,7 +186,10 @@ const Popup = defineComponent({
           </button>
           {props.teleport && <Teleport to="body">{popup}</Teleport>}
           {props.portalContainer && (
-            <FloatingPortalLite container={props.portalContainer}>{popup}</FloatingPortalLite>
+            <FloatingPortalLite container={props.portalContainer}>
+              {props.portalBackdrop && <div data-testid={`${props.name}-backdrop`} />}
+              {popup}
+            </FloatingPortalLite>
           )}
           {!props.teleport && !props.portalContainer && popup}
         </>
@@ -248,6 +254,31 @@ async function pressAndClick(target: Element) {
   await fireEvent.pointerUp(target, mouse);
   await fireEvent.mouseUp(target);
   await fireEvent.click(target, { detail: 1 });
+}
+
+// A swipe of more than 10 pixels dismisses at once. A swipe of 6 to 10 pixels dismisses at the end.
+// The wait lets the marker of the move go, so only a listener of the end can mark the end.
+async function swipe(target: Element, distance: number) {
+  const start = { clientX: 10, clientY: 10 };
+  const end = { clientX: 10 + distance, clientY: 10 };
+  await fireTouch.start(target, { touches: [start], changedTouches: [start] });
+  await fireTouch.move(target, { touches: [end], changedTouches: [end] });
+  await wait(10);
+  await fireTouch.end(target, { touches: [], changedTouches: [end] });
+}
+
+// A click that no press began, such as a click of the keyboard.
+async function clickWithNoPress(target: Element) {
+  await fireEvent.click(target, { detail: 0 });
+}
+
+// The press begins outside, and the browser sends the click to the common ancestor of both ends.
+async function dragOnto(target: Element) {
+  await fireEvent.pointerDown(document.body, mouse);
+  await fireEvent.mouseDown(document.body);
+  await fireEvent.pointerUp(target, mouse);
+  await fireEvent.mouseUp(target);
+  await fireEvent.click(document.body, { detail: 1 });
 }
 
 const App = defineComponent({
@@ -931,6 +962,44 @@ describe('useDismiss', () => {
       await user.click(screen.getByRole('button'));
       await flushMicrotasks();
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('does not dismiss when clicking portaled children', async () => {
+      const AppWithPortaledChildren = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div {...getFloatingProps({ ref: refs.setFloating })}>
+                  <FloatingPortal>
+                    <button data-testid="portaled-button" />
+                  </FloatingPortal>
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<AppWithPortaledChildren />);
+
+      await fireEvent.pointerDown(screen.getByTestId('portaled-button'), { bubbles: true });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portaled-button')).toBeInTheDocument();
     });
 
     it('outsidePress function guard', async () => {
@@ -2116,6 +2185,34 @@ describe('useDismiss', () => {
       await fireEvent.click(document.body);
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
+
+    // Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
+    // listener got that event. The frozen clock puts the open and the press in one millisecond.
+    it('keeps a popup in a portal open for a drag out of it in the millisecond of its open', async () => {
+      const outside = addOutsideElement();
+      await render(
+        <Popup
+          name="popup"
+          defaultOpen={false}
+          portalContainer={document.body}
+          dismiss={{ outsidePressEvent: 'intentional' }}
+        />,
+      );
+      const dateNow = vi.spyOn(Date, 'now').mockReturnValue(Date.now());
+      onTestFinished(() => dateNow.mockRestore());
+
+      await fireEvent.click(screen.getByTestId('popup-trigger'));
+      await flushMicrotasks();
+      const popup = screen.getByTestId('popup');
+      await fireEvent.pointerDown(popup, mouse);
+      await fireEvent.mouseDown(popup);
+      await fireEvent.pointerUp(outside, mouse);
+      await fireEvent.mouseUp(outside);
+      await fireEvent.click(document.body, { detail: 1 });
+      await flushMicrotasks();
+
+      expect(isOpen('popup')).toBe(true);
+    });
   });
 
   it('nested floating elements with different portal containers', async () => {
@@ -2475,6 +2572,82 @@ describe('useDismiss', () => {
       await pressAndClick(screen.getByTestId('grandchild'));
 
       expect(['parent', 'child', 'grandchild'].map(isOpen)).toEqual([true, true, true]);
+    });
+
+    it.each<{
+      name: string;
+      dismiss: UseDismissProps;
+      press: (target: Element) => Promise<void>;
+    }>([
+      { name: 'a mouse press', dismiss: {}, press: pressAndClick },
+      {
+        name: 'a click',
+        dismiss: { outsidePressEvent: 'intentional' },
+        press: pressAndClick,
+      },
+      {
+        name: 'a click with no press',
+        dismiss: { outsidePressEvent: 'intentional' },
+        press: clickWithNoPress,
+      },
+      {
+        name: 'a drag that ends',
+        dismiss: { outsidePressEvent: 'intentional' },
+        press: dragOnto,
+      },
+      { name: 'a swipe', dismiss: {}, press: (target) => swipe(target, 12) },
+      { name: 'a short swipe', dismiss: {}, press: (target) => swipe(target, 8) },
+    ])(
+      'VUE-4: $name on the backdrop of a child popup closes only the child',
+      async ({ dismiss, press }) => {
+        const outside = addOutsideElement();
+        const childChanges: Change[] = [];
+        await render(
+          <Popup name="parent" dismiss={dismiss}>
+            <Popup
+              name="child"
+              portalContainer={document.body}
+              portalBackdrop
+              dismiss={dismiss}
+              onChange={(change: Change) => childChanges.push(change)}
+            />
+          </Popup>,
+        );
+
+        await press(screen.getByTestId('child-backdrop'));
+        await flushMicrotasks();
+
+        expect({ parent: isOpen('parent'), child: isOpen('child') }).toEqual({
+          parent: true,
+          child: false,
+        });
+        expect(childChanges.map(({ reason }) => reason)).toEqual([REASONS.outsidePress]);
+
+        // The press leaves no marker behind.
+        await userEvent.click(outside);
+        await flushMicrotasks();
+        expect(isOpen('parent')).toBe(false);
+      },
+    );
+
+    it('VUE-4: a press in a portal that no popup owns does not close the popup above', async () => {
+      const outside = addOutsideElement();
+      await render(
+        <Popup name="parent">
+          <FloatingPortal>
+            <button type="button" data-testid="portaled" />
+          </FloatingPortal>
+        </Popup>,
+      );
+      expect(screen.getByTestId('parent').contains(screen.getByTestId('portaled'))).toBe(false);
+
+      await pressAndClick(screen.getByTestId('portaled'));
+      await flushMicrotasks();
+      expect(isOpen('parent')).toBe(true);
+
+      await userEvent.click(outside);
+      await flushMicrotasks();
+      expect(isOpen('parent')).toBe(false);
     });
 
     it('writes no marker to the frozen store of a popup that is above and never opens', async () => {

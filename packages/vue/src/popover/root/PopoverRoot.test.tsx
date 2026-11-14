@@ -20,10 +20,12 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import * as Combobox from '../../combobox/index.parts';
+import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps } from '../../internals/types';
+import * as Menu from '../../menu/index.parts';
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import * as Popover from '../index.parts';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
@@ -739,6 +741,117 @@ describe('<Popover.Root />', () => {
           addEventListenerSpy.mockRestore();
           removeEventListenerSpy.mockRestore();
         }
+      });
+    });
+
+    describe('nested menu interactions', () => {
+      it('keeps the popover open when a nested menu opens via Enter using a shared container', async () => {
+        const Test = defineComponent(() => {
+          const dialogNode = shallowRef<HTMLDialogElement | null>(null);
+
+          return () => (
+            <dialog
+              open
+              ref={(node) => {
+                if (node) {
+                  dialogNode.value = node as HTMLDialogElement;
+                }
+              }}
+            >
+              <TestPopover
+                portalProps={{ container: dialogNode.value ?? undefined }}
+                popupProps={{
+                  children: () => (
+                    <Menu.Root>
+                      <Menu.Trigger>Open nested</Menu.Trigger>
+                      <Menu.Portal container={dialogNode.value ?? undefined}>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="menu-popup">Nested Menu</Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.Root>
+                  ),
+                }}
+              />
+            </dialog>
+          );
+        });
+
+        const { user } = await render(<Test />);
+
+        const popoverTrigger = screen.getByRole('button', { name: 'Toggle' });
+
+        popoverTrigger.focus();
+        await flushMicrotasks();
+
+        await user.keyboard('{Enter}');
+        await screen.findByTestId('popover-popup');
+
+        const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
+
+        nestedTrigger.focus();
+        await flushMicrotasks();
+
+        await user.keyboard('{Enter}');
+        await screen.findByTestId('menu-popup');
+
+        expect(screen.getByTestId('popover-popup')).not.toBe(null);
+      });
+
+      it('keeps the popover open when a nested menu opens via pointer using a shared container', async () => {
+        const Test = defineComponent(() => {
+          const dialogNode = shallowRef<HTMLDialogElement | null>(null);
+
+          return () => (
+            <dialog
+              open
+              ref={(node) => {
+                if (node) {
+                  dialogNode.value = node as HTMLDialogElement;
+                }
+              }}
+            >
+              <TestPopover
+                portalProps={{ container: dialogNode.value ?? undefined }}
+                popupProps={{
+                  children: () => (
+                    <Menu.Root>
+                      <Menu.Trigger>Open nested</Menu.Trigger>
+                      <Menu.Portal container={dialogNode.value ?? undefined}>
+                        <Menu.Positioner>
+                          <Menu.Popup data-testid="menu-popup">
+                            <Menu.Item closeOnClick={false}>Item</Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.Root>
+                  ),
+                }}
+              />
+            </dialog>
+          );
+        });
+
+        const { user } = await render(<Test />);
+
+        const popoverTrigger = screen.getByRole('button', { name: 'Toggle' });
+        await user.click(popoverTrigger);
+        await screen.findByTestId('popover-popup');
+
+        const nestedTrigger = await screen.findByRole('button', { name: 'Open nested' });
+        await user.click(nestedTrigger);
+        await screen.findByTestId('menu-popup');
+
+        const item = await screen.findByText('Item');
+        // In WebKit, a list ignores a pointer move with no movement, so the item has no focus when
+        // the press starts.
+        await user.hover(item);
+        await fireEvent.mouseMove(item, { movementX: 1 });
+        await user.click(item);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('popover-popup')).not.toBe(null);
+        });
       });
     });
 
@@ -1624,6 +1737,55 @@ describe('<Popover.Root />', () => {
 
         expect(screen.queryByRole('dialog')).toBe(null);
       });
+
+      it.skipIf(isJSDOM)(
+        'moves focus to the next element when tabbing out of a nested menu inside the popover',
+        async () => {
+          const { user } = await render(
+            <div>
+              <TestPopover
+                rootProps={{ defaultOpen: true }}
+                portalProps={{ keepMounted: true }}
+                popupProps={{
+                  children: () => (
+                    <>
+                      <button type="button" data-testid="before">
+                        Before
+                      </button>
+                      <Menu.Root>
+                        <Menu.Trigger>Menu</Menu.Trigger>
+                        <Menu.Portal>
+                          <Menu.Positioner>
+                            <Menu.Popup>
+                              <Menu.Item>Item</Menu.Item>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.Root>
+                      <button type="button" data-testid="after">
+                        After
+                      </button>
+                    </>
+                  ),
+                }}
+              />
+            </div>,
+          );
+
+          await user.click(screen.getByRole('button', { name: 'Menu' }));
+
+          const menu = await screen.findByRole('menu');
+          await waitFor(() => {
+            expect(menu).toHaveFocus();
+          });
+
+          await user.tab();
+
+          expect(screen.getByTestId('after')).toHaveFocus();
+          expect(screen.queryByRole('menu')).toBe(null);
+          expect(screen.getByTestId('popover-popup')).toBeVisible();
+        },
+      );
 
       describe.skipIf(isJSDOM)('during the exit animation', () => {
         beforeEach(() => {
@@ -2719,6 +2881,48 @@ describe('<Popover.Root />', () => {
         expect(screen.queryByTestId('child-popup')).toBe(null);
       });
     });
+  });
+
+  it('keeps the popover open when Escape closes a nested dialog after a backdrop press', async () => {
+    const onPopoverOpenChange = vi.fn();
+    const { user } = await render(
+      <Popover.Root defaultOpen onOpenChange={onPopoverOpenChange}>
+        <Popover.Trigger>Popover trigger</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup data-testid="popover">
+              <Dialog.Root disablePointerDismissal>
+                <Dialog.Trigger>Open dialog</Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Backdrop data-testid="backdrop" />
+                  <Dialog.Popup data-testid="dialog">
+                    <input data-testid="input" />
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open dialog' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('input')).toHaveFocus();
+    });
+
+    // `disablePointerDismissal` keeps the dialog open, but the press still moves focus to the body.
+    await user.click(screen.getByTestId('backdrop'));
+    expect(document.activeElement).toBe(document.body);
+    expect(screen.queryByTestId('dialog')).not.toBe(null);
+
+    await user.keyboard('[Escape]');
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('dialog')).toBe(null);
+    });
+    expect(screen.queryByTestId('popover')).not.toBe(null);
+    expect(onPopoverOpenChange).not.toHaveBeenCalled();
   });
 
   describe('preventUnmountOnClose()', () => {

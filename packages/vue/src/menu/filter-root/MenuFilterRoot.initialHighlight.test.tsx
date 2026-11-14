@@ -41,6 +41,32 @@ const Test = defineComponent(
 describe('filterable menu initial highlight', () => {
   const { render } = createRenderer();
 
+  it('highlights the first enabled action and keeps the input in the arrow loop', async () => {
+    const { user } = await render(<Test />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await flushMicrotasks();
+    await user.keyboard('[Enter]');
+
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    const rename = screen.getByRole('menuitem', { name: 'Rename' });
+    const deleteItem = screen.getByRole('menuitem', { name: 'Delete' });
+    await waitFor(() => expect(input).toHaveFocus());
+    expect(input).toHaveAttribute('aria-activedescendant', rename.id);
+
+    await user.keyboard('[ArrowDown]');
+    expect(input).toHaveAttribute('aria-activedescendant', deleteItem.id);
+    await user.keyboard('[ArrowDown]');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(input).toHaveAttribute('data-highlighted');
+
+    await user.keyboard('[ArrowUp]');
+    expect(input).toHaveAttribute('aria-activedescendant', deleteItem.id);
+    await user.keyboard('[ArrowUp][ArrowUp][ArrowUp]');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(input).toHaveFocus();
+  });
+
   it.each([
     { key: 'ArrowDown', position: 'first', name: 'Rename' },
     { key: 'ArrowUp', position: 'last', name: 'Delete' },
@@ -57,6 +83,57 @@ describe('filterable menu initial highlight', () => {
     expect(input).toHaveAttribute('aria-activedescendant', item.id);
   });
 
+  it('clears the initial highlight when typing and permits an empty result', async () => {
+    const { user } = await render(<Test />);
+    screen.getByRole('button', { name: 'Actions' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[Enter]');
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(input).toHaveFocus());
+
+    await user.keyboard('Del');
+    expect(input).toHaveValue('Del');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
+
+    await user.keyboard('[ArrowDown]');
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('menuitem', { name: 'Delete' }).id,
+    );
+
+    await user.keyboard('x');
+    expect(input).toHaveValue('Delx');
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+    expect(await screen.findByText('No actions found.')).toBeVisible();
+    expect(input).toHaveFocus();
+  });
+
+  it.each(['mouse', 'touch', 'pen'])('handles opening with %s', async (pointerType) => {
+    const onInputFocus = vi.fn();
+    await render(<Test onInputFocus={onInputFocus} />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await flushMicrotasks();
+    await firePointer.down(trigger, { pointerType, timeStamp: 10 });
+    await fireEvent.mouseDown(trigger, { detail: 1 });
+    await firePointer.up(trigger, { pointerType, timeStamp: 20 });
+    await fireEvent.mouseUp(trigger, { detail: 1 });
+    await fireEvent.click(trigger, { detail: 1 });
+
+    const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+    await waitSingleFrame();
+    const shouldFocus = pointerType === 'mouse';
+    // Only a mouse press moves the focus, so a touch or pen press asserts the absence directly.
+    if (shouldFocus) {
+      await waitFor(() => expect(input.matches(':focus')).toBe(true));
+    } else {
+      expect(input.matches(':focus')).toBe(false);
+    }
+    expect(onInputFocus.mock.calls.length > 0).toBe(shouldFocus);
+    expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
   // iOS VoiceOver presses with a touch whose contact is under a pixel and carries no pressure.
   async function pressLikeIOSVoiceOver(element: HTMLElement) {
     const init = { pointerType: 'touch', width: 0.333, height: 0.333, pressure: 0 };
@@ -66,6 +143,18 @@ describe('filterable menu initial highlight', () => {
     await fireEvent.mouseUp(element, { detail: 1 });
     await fireEvent.click(element, { detail: 1 });
   }
+
+  it.skipIf(isJSDOM)('focuses the input when a screen reader press opens the menu', async () => {
+    await render(<Test />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await flushMicrotasks();
+
+    await pressLikeIOSVoiceOver(trigger);
+
+    const input = await screen.findByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(input).toHaveFocus());
+  });
 
   it.skipIf(isJSDOM)(
     'focuses a submenu input when a screen reader press opens the submenu',
@@ -104,6 +193,34 @@ describe('filterable menu initial highlight', () => {
     },
   );
 
+  it.skipIf(isJSDOM)(
+    'does not focus the input when an item is tapped after a touch open',
+    async () => {
+      const onInputFocus = vi.fn();
+      await render(<Test onInputFocus={onInputFocus} />);
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      const touch = { pointerType: 'touch' };
+      await firePointer.down(trigger, { ...touch, timeStamp: 10 });
+      await fireEvent.mouseDown(trigger, { detail: 1 });
+      await firePointer.up(trigger, { ...touch, timeStamp: 20 });
+      await fireEvent.mouseUp(trigger, { detail: 1 });
+      await fireEvent.click(trigger, { detail: 1 });
+
+      const item = await screen.findByRole('menuitem', { name: 'Rename' });
+      await waitSingleFrame();
+
+      // A tap fires compatibility mouse events, including a `mousemove`, before its `mousedown`.
+      await firePointer.down(item, { ...touch, timeStamp: 30 });
+      await firePointer.up(item, { ...touch, timeStamp: 40 });
+      await fireEvent.mouseOver(item);
+      await fireEvent.mouseMove(item);
+      await waitSingleFrame();
+
+      expect(screen.getByRole('searchbox', { name: 'Filter actions' })).not.toHaveFocus();
+      expect(onInputFocus).not.toHaveBeenCalled();
+    },
+  );
+
   it('does not focus the input when opened on hover', async () => {
     const onInputFocus = vi.fn();
     const { user } = await render(<Test openOnHover onInputFocus={onInputFocus} />);
@@ -114,6 +231,26 @@ describe('filterable menu initial highlight', () => {
     await waitSingleFrame();
     expect(input).not.toHaveFocus();
     expect(onInputFocus).not.toHaveBeenCalled();
+  });
+
+  it('highlights the first action again when reopening', async () => {
+    const { user } = await render(<Test />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await flushMicrotasks();
+    await user.keyboard('[Enter]');
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(input).toHaveFocus());
+    await user.keyboard('[ArrowDown][Escape]');
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await user.keyboard('[Enter]');
+
+    const reopenedInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(reopenedInput).toHaveFocus());
+    expect(reopenedInput).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('menuitem', { name: 'Rename' }).id,
+    );
   });
 
   it('does not highlight an item when a controlled open follows a keyboard open', async () => {

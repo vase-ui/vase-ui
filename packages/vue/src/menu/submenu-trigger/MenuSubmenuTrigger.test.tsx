@@ -14,6 +14,7 @@ import {
   waitFor,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuStore } from '../store/MenuStore';
 
@@ -165,18 +166,6 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     expect(await screen.findByTestId('submenu')).not.toBe(null);
   });
 
-  it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
-    await renderSubmenu({ trigger: { delay: 0 } });
-    const trigger = screen.getByRole('menuitem', { name: 'More' });
-    await hover(trigger);
-    await screen.findByTestId('submenu');
-
-    await fireEvent.click(trigger, { detail: 0 });
-    await waitForAnimationFrame();
-
-    expect(screen.queryByTestId('submenu')).not.toBe(null);
-  });
-
   it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {
     await renderSubmenu({ trigger: { delay: 0 } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
@@ -282,6 +271,47 @@ describe('<Menu.SubmenuTrigger />', () => {
 
   afterEach(waitForAnimationFrame);
 
+  it.skipIf(isJSDOM).each(['Enter', 'Space'])(
+    'keeps a hover-opened submenu open when pressing %s',
+    async (key) => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="parent-menu">
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup data-testid="submenu">
+                        <Menu.Item>Alpha</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      const trigger = await screen.findByRole('menuitem', { name: 'More' });
+      await user.hover(trigger);
+      await screen.findByTestId('submenu');
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+
+      await user.keyboard(`[${key}]`);
+      await waitForAnimationFrame();
+
+      expect(screen.getByTestId('submenu')).not.toBe(null);
+      expect(screen.getByTestId('parent-menu')).not.toBe(null);
+    },
+  );
+
   it.skipIf(isJSDOM)('closes a touch-opened submenu on a second tap', async () => {
     const { user } = await render(
       <Menu.Root defaultOpen>
@@ -316,6 +346,145 @@ describe('<Menu.SubmenuTrigger />', () => {
     });
     expect(screen.getByTestId('parent-menu')).not.toBe(null);
   });
+
+  it('keeps a submenu open on direct trigger focus but closes it on guard return', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="parent-menu">
+              <Menu.SubmenuRoot>
+                <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup data-testid="submenu">
+                      <Menu.Item>Alpha</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+              <Menu.Item>Play Next</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    await user.keyboard('[Tab][Enter]');
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+    await user.keyboard('[ArrowRight]');
+    const item = screen.getByRole('menuitem', { name: 'Alpha' });
+    await waitFor(() => {
+      expect(item).toHaveFocus();
+    });
+
+    trigger.focus();
+    await flushMicrotasks();
+    expect(screen.getByTestId('submenu')).not.toBe(null);
+
+    item.focus();
+    await flushMicrotasks();
+
+    const submenu = screen.getByTestId('submenu');
+    const guard = submenu.parentElement?.querySelector<HTMLElement>(
+      `[${createAttribute('focus-guard')}][data-type="inside"]`,
+    );
+    expect(guard).toBeTruthy();
+
+    guard?.focus();
+    await flushMicrotasks();
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
+    expect(screen.getByTestId('parent-menu')).not.toBe(null);
+
+    await user.keyboard('[ArrowDown]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Play Next' })).toHaveFocus();
+    });
+  });
+
+  it.skipIf(isJSDOM)(
+    'closes a submenu when its focus guard is in a shadow-root portal',
+    async () => {
+      const host = document.createElement('div');
+      document.body.append(host);
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+
+      try {
+        const { user } = await render(
+          <Menu.Root>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="parent-menu">
+                  <Menu.SubmenuRoot>
+                    <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                    <Menu.Portal container={shadowRoot}>
+                      <Menu.Positioner>
+                        <Menu.Popup data-testid="submenu">
+                          <Menu.Item>Alpha</Menu.Item>
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                  <Menu.Item>Play Next</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>,
+        );
+
+        await user.keyboard('[Tab][Enter]');
+        const trigger = screen.getByRole('menuitem', { name: 'More' });
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+        await user.keyboard('[ArrowRight]');
+        await waitFor(() => {
+          expect(shadowRoot.activeElement?.textContent).toBe('Alpha');
+        });
+
+        const submenu = shadowRoot.querySelector<HTMLElement>('[data-testid="submenu"]');
+        const guard = submenu?.parentElement?.querySelector<HTMLElement>(
+          `[${createAttribute('focus-guard')}][data-type="inside"]`,
+        );
+        expect(guard).toBeTruthy();
+
+        const item = shadowRoot.querySelector<HTMLElement>('[role="menuitem"]');
+        trigger.focus();
+        await flushMicrotasks();
+        expect(shadowRoot.querySelector('[data-testid="submenu"]')).not.toBe(null);
+
+        item?.focus();
+        await flushMicrotasks();
+        guard?.focus();
+        await flushMicrotasks();
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+        await waitFor(() => {
+          expect(shadowRoot.querySelector('[data-testid="submenu"]')).toBe(null);
+        });
+        expect(screen.getByTestId('parent-menu')).not.toBe(null);
+
+        await user.keyboard('[ArrowDown]');
+        await waitFor(() => {
+          expect(screen.getByRole('menuitem', { name: 'Play Next' })).toHaveFocus();
+        });
+      } finally {
+        host.remove();
+      }
+    },
+  );
 
   describeConformance(<Menu.SubmenuTrigger />, () => ({
     refInstanceof: window.HTMLDivElement,

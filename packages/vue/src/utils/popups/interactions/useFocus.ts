@@ -19,7 +19,9 @@ const isMacSafari = () => platform.os.mac && platform.engine.webkit;
 
 export interface UseFocusProps {
   /**
-   * Whether the composable is enabled, including its window listeners and its event handlers.
+   * Whether the composable is enabled, including its event handlers and its listener for the blur
+   * of the window. In Safari on a Mac, the listeners that track the input modality also run while
+   * it is not enabled.
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -70,15 +72,35 @@ export function useFocus(
     }
   });
 
+  function onWindowKeydown() {
+    keyboardModality = true;
+  }
+
+  function onWindowPointerdown() {
+    keyboardModality = false;
+  }
+
   let stopWindowListeners: (() => void) | undefined;
   function listenToWindow() {
     stopWindowListeners?.();
     stopWindowListeners = undefined;
-    if (!enabled() || deactivated) {
+    if (deactivated) {
       return;
     }
 
     const win = ownerWindow(currentStore().select('anchorElement'));
+    // Base UI tracks the modality only while the composable is enabled. A trigger of a menubar is
+    // enabled only while a menu of the menubar is open, so it would miss the press that opened the
+    // menu.
+    const trackModality = isMacSafari();
+    const stopTrackingModality = mergeCleanups(
+      trackModality && addEventListener(win, 'keydown', onWindowKeydown, true),
+      trackModality && addEventListener(win, 'pointerdown', onWindowPointerdown, true),
+    );
+    if (!enabled()) {
+      stopWindowListeners = stopTrackingModality;
+      return;
+    }
 
     // If the reference was focused and the user left the tab/window, and the
     // floating element was not open, the focus should be blocked when they
@@ -96,19 +118,9 @@ export function useFocus(
       }
     }
 
-    function onWindowKeydown() {
-      keyboardModality = true;
-    }
-
-    function onWindowPointerdown() {
-      keyboardModality = false;
-    }
-
-    const trackModality = isMacSafari();
     stopWindowListeners = mergeCleanups(
       addEventListener(win, 'blur', onWindowBlur),
-      trackModality && addEventListener(win, 'keydown', onWindowKeydown, true),
-      trackModality && addEventListener(win, 'pointerdown', onWindowPointerdown, true),
+      stopTrackingModality,
     );
   }
   onMounted(listenToWindow);

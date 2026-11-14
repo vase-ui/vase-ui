@@ -7,6 +7,13 @@ on:
 
 permissions: {}
 
+# Vitest collects the garbage of Chromium after a test file only when less than this number of GB is
+# free in the temporary folder. A number larger than any disk makes it collect after each test file.
+# Without that, a long Chromium run can lose its connection. CONTRIBUTING.md, "Where a test runs",
+# gives the reason, and "Tool versions" says when to remove the variable.
+env:
+  VITEST_CHROMIUM_GC_DISK_THRESHOLD_GB: '1000000'
+
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
