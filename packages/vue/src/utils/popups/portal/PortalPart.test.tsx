@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { h, nextTick, render as renderVNode } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as Combobox from '../../../combobox/index.parts';
 import * as Dialog from '../../../dialog/index.parts';
@@ -10,6 +11,23 @@ import * as Select from '../../../select/index.parts';
 import * as Toast from '../../../toast/index.parts';
 import * as Tooltip from '../../../tooltip/index.parts';
 import PortalPartContent from './PortalPartContent.test.vue';
+import PropReadsSlotVariable from './PropReadsSlotVariable.test.vue';
+
+// A compiler before Vue 3.5.21 makes the slots of a part dynamic when a prop of the part reads a
+// slot variable (https://github.com/vuejs/core/pull/9427). `<component :is="children">` in a
+// `#render` slot has such a prop, so the parts in `children` then render again with their parent.
+async function rendersInnerPartAgain() {
+  const onInnerRender = vi.fn();
+  const container = document.createElement('div');
+  renderVNode(h(PropReadsSlotVariable, { active: false, onInnerRender }), container);
+  onInnerRender.mockClear();
+  renderVNode(h(PropReadsSlotVariable, { active: true, onInnerRender }), container);
+  await nextTick();
+  renderVNode(null, container);
+  return onInnerRender.mock.calls.length > 0;
+}
+
+const keepsSlotsStable = !(await rendersInnerPartAgain());
 
 const open = { defaultOpen: true };
 
@@ -72,7 +90,21 @@ describe('portal part of each family', () => {
     },
   );
 
-  it.each(portalParts)('$name does not render the inner part with a #render slot', async (part) => {
-    expect(await renderOuterAgain(part, true)).not.toHaveBeenCalled();
+  describe.runIf(keepsSlotsStable)('with a compiler from Vue 3.5.21', () => {
+    it.each(portalParts)(
+      '$name does not render the inner part with a #render slot',
+      async (part) => {
+        expect(await renderOuterAgain(part, true)).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  describe.runIf(!keepsSlotsStable)('with a compiler before Vue 3.5.21', () => {
+    it.each(portalParts)(
+      '$name renders the inner part again with a #render slot, because `children` has dynamic slots',
+      async (part) => {
+        expect(await renderOuterAgain(part, true)).toHaveBeenCalled();
+      },
+    );
   });
 });
