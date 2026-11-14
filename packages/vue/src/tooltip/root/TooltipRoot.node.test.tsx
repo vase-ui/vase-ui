@@ -6,40 +6,55 @@ function button(id: string, attributes: string) {
   return `<button ${attributes} type="button"><!--[-->${id}<!--]--></button>`;
 }
 
-function tooltip(rootProps: Record<string, unknown>) {
+function tooltip(rootProps: Record<string, unknown>, portalProps: Record<string, unknown>) {
   return (
     <Tooltip.Root {...rootProps}>
       <Tooltip.Trigger id="one">one</Tooltip.Trigger>
       <Tooltip.Trigger id="two">two</Tooltip.Trigger>
+      <Tooltip.Portal {...portalProps}>
+        <Tooltip.Positioner>
+          <Tooltip.Popup>Content</Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
     </Tooltip.Root>
   );
 }
 
 describe('<Tooltip.Root />', () => {
   describe('server render', () => {
+    // The portal renders after the mount, so it writes one comment in each state.
     it.each([
-      { name: 'a closed tooltip', root: {}, two: 'id="two"' },
+      { name: 'a closed tooltip', root: {}, portal: {}, two: 'id="two"' },
       {
         name: 'an open tooltip with no trigger id',
         root: { defaultOpen: true },
+        portal: {},
         two: 'id="two"',
       },
       {
         name: 'an open tooltip with a trigger id',
         root: { defaultOpen: true, defaultTriggerId: 'two' },
+        portal: {},
         two: 'data-popup-open id="two"',
       },
       {
         name: 'a disabled tooltip',
         root: { disabled: true },
+        portal: {},
         two: 'id="two" data-trigger-disabled',
       },
-    ])('writes the triggers of $name', async ({ root, two }) => {
+      {
+        name: 'a closed tooltip that stays mounted',
+        root: {},
+        portal: { keepMounted: true },
+        two: 'id="two"',
+      },
+    ])('writes the triggers and one comment for the portal of $name', async ({ root, portal, two }) => {
       const one = two.replace('data-popup-open ', '').replace('"two"', '"one"');
 
       expect(typeof document).toBe('undefined');
-      expect(await renderToString(tooltip(root))).toBe(
-        `<!--[-->${button('one', one)}${button('two', two)}<!--]-->`,
+      expect(await renderToString(tooltip(root, portal))).toBe(
+        `<!--[-->${button('one', one)}${button('two', two)}<!----><!--]-->`,
       );
     });
 

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
 import * as Tooltip from '../index.parts';
 import {
@@ -523,6 +523,63 @@ describe('<Tooltip.Root />', () => {
     });
   });
 
+  describe('instant type', () => {
+    function renderKeptTooltip(showFirst = shallowRef(true)) {
+      const App = defineComponent({
+        setup: () => () => (
+          <Tooltip.Root defaultOpen defaultTriggerId="one">
+            {showFirst.value ? <Tooltip.Trigger id="one">One</Tooltip.Trigger> : null}
+            <Tooltip.Trigger id="two">Two</Tooltip.Trigger>
+            <Tooltip.Portal keepMounted>
+              <Tooltip.Positioner>
+                <Tooltip.Popup data-testid="popup">Content</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        ),
+      });
+      return render(<App />);
+    }
+
+    it('marks a kept popup as instant while it closes because its active trigger unmounts', async () => {
+      const showFirst = shallowRef(true);
+      await renderKeptTooltip(showFirst);
+      const popup = await screen.findByTestId('popup');
+      await flushMicrotasks();
+      expect(popup).not.toHaveAttribute('data-instant');
+
+      // The mark lasts only for the exit, so an observer records each value that it replaces.
+      const replacedValues: Array<string | null> = [];
+      const observer = new MutationObserver((records) => {
+        replacedValues.push(...records.map((record) => record.oldValue));
+      });
+      observer.observe(popup, { attributeFilter: ['data-instant'], attributeOldValue: true });
+      onTestFinished(() => observer.disconnect());
+
+      showFirst.value = false;
+      await waitFor(() => {
+        expect(isInaccessible(popup)).toBe(true);
+      });
+      await flushMicrotasks();
+
+      expect(replacedValues).toEqual([null, 'delay']);
+      expect(popup).not.toHaveAttribute('data-instant');
+    });
+
+    it('marks a kept popup as instant after an Escape close', async () => {
+      const { user } = await renderKeptTooltip();
+      const popup = await screen.findByTestId('popup');
+      await flushMicrotasks();
+
+      await user.keyboard('[Escape]');
+      await waitFor(() => {
+        expect(isInaccessible(popup)).toBe(true);
+      });
+
+      expect(popup).toHaveAttribute('data-instant', 'dismiss');
+    });
+  });
+
   describe('actions', () => {
     it('exposes `close` and `unmount`', async () => {
       let root: Tooltip.Root.Actions | undefined;
@@ -573,6 +630,7 @@ describe('<Tooltip.Root />', () => {
         props: { defaultOpen: true, defaultTriggerId: 'two' },
         payload: 'second',
       },
+      { name: 'a closed tooltip that stays mounted', props: { keepMounted: true }, payload: 'none' },
     ])('hydrates the server HTML of $name', async ({ props, payload }) => {
       const serverHtml = await renderOnServer('src/tooltip/root/TooltipHydration.test.vue', props);
 
