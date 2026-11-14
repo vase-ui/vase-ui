@@ -2814,6 +2814,50 @@ describe('<RadioGroup />', () => {
         ]);
       });
 
+      it('follows each reset of the form, not only the first', async () => {
+        const handleChange = vi.fn();
+        await render(
+          <form data-testid="form">
+            <RadioGroup name="fruit" defaultValue="a" onValueChange={handleChange}>
+              {renderRadios()}
+            </RadioGroup>
+          </form>,
+        );
+
+        await fireEvent.click(screen.getByTestId('c'));
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+        await fireEvent.click(screen.getByTestId('b'));
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expectChecked([true, false, false]);
+        expect(getFormData()).toEqual(['a']);
+        expect(handleChange).toHaveBeenCalledTimes(4);
+        expect(handleChange.mock.lastCall?.[0]).toBe('a');
+        expect(handleChange.mock.lastCall?.[1].event.type).toBe('reset');
+      });
+
+      it('exposes the first enabled input when a reset leaves the group with no value', async () => {
+        const group = shallowRef<RadioGroupInstance | null>(null);
+        await render(() => (
+          <form data-testid="form">
+            <RadioGroup ref={group} name="fruit">
+              {renderRadios()}
+            </RadioGroup>
+          </form>
+        ));
+        const inputs = getInputs();
+
+        await fireEvent.click(screen.getByTestId('c'));
+        expect(group.value?.inputElement).toBe(inputs[2]);
+
+        screen.getByTestId<HTMLFormElement>('form').reset();
+        await settleReset();
+
+        expect(group.value?.inputElement).toBe(inputs[0]);
+      });
+
       it('resets a group outside the form that its `form` prop names', async () => {
         await render(
           <div>

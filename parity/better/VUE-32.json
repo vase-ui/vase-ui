@@ -1,0 +1,10 @@
+{
+  "id": "VUE-32",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/keep-alive.html",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useFocus.ts#L121-L178",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useFocus.ts#L180-L228"
+  ],
+  "behavior": "When `KeepAlive` deactivates a trigger, the trigger stops its open delay. A popup that focus opened and that the trigger anchors then closes with the reason `trigger-focus`. This is the exception to the open state that a popup keeps under `KeepAlive`. The focused trigger leaves the document, and Firefox and WebKit send no `focusout` for it, so the popup would stay open after the activation with no focus on its trigger. Base UI has no counterpart of `KeepAlive`.",
+  "dueWith": "packages/react/src/utils/popups/interactions/useFocus.ts"
+}
