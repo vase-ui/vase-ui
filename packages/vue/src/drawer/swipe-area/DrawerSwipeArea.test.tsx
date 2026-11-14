@@ -1717,7 +1717,11 @@ describe('<Drawer.SwipeArea />', () => {
     expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
   });
 
-  it('opens at the release of a fast swipe shorter than half the popup', async () => {
+  it.each([
+    { name: 'a slow swipe shorter than half the popup', endY: 130, timeStepMs: 100, open: false },
+    { name: 'a slow swipe of half the popup', endY: 100, timeStepMs: 100, open: true },
+    { name: 'a fast swipe shorter than half the popup', endY: 170, timeStepMs: 16, open: true },
+  ])('decides the open at the release of $name', async ({ endY, timeStepMs, open }) => {
     const handleOpenChange = vi.fn();
     await render(
       <Drawer.Root onOpenChange={handleOpenChange}>
@@ -1730,12 +1734,22 @@ describe('<Drawer.SwipeArea />', () => {
       </Drawer.Root>,
     );
 
-    await swipeUp(screen.getByTestId('swipe-area'), 200, 170);
+    await swipeUp(screen.getByTestId('swipe-area'), 200, endY, { timeStepMs });
 
-    expect(screen.getByTestId('swipe-area')).toHaveAttribute('data-open', '');
+    expect(screen.getByTestId('swipe-area')).toHaveAttribute(
+      open ? 'data-open' : 'data-closed',
+      '',
+    );
     expect(
       handleOpenChange.mock.calls.map(([nextOpen, details]) => [nextOpen, details.reason]),
-    ).toEqual([[true, 'swipe']]);
+    ).toEqual(
+      open
+        ? [[true, 'swipe']]
+        : [
+            [true, 'swipe'],
+            [false, 'swipe'],
+          ],
+    );
   });
 
   it('VUE-5: ends the gesture and lets an outside press close the drawer while KeepAlive holds the swipe area', async () => {
