@@ -102,7 +102,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 <<< ../examples/forms/ConstraintValidation.vue{7}
 
-Vase UI form components use a hidden input to take part in native form submission and validation. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component a `name`. Then wrap the control in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
+A form component such as `Switch` or `Checkbox` uses a hidden input to take part in native form submission and validation. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component, or its `Field.Root`, a `name`. Then wrap the control in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
 
 <<< ../examples/forms/PositionedInput.vue{7,8}
 

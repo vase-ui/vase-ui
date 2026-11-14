@@ -71,7 +71,7 @@ To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](
 
 ## Controlling components with state
 
-Change listeners let you control a part with your own state.
+You can control a part with your own state.
 
 Parts are uncontrolled by default. They manage their own state internally.
 

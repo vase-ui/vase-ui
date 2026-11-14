@@ -169,7 +169,7 @@ function onFormSubmit(formValues: Record<string, unknown>) {
             <Fieldset.Legend :class="fieldStyles.Label">Allowed network protocols</Fieldset.Legend>
             <div :class="$style.Protocols">
               <Field.Item v-for="protocol in protocols" :key="protocol">
-                <Field.Label :class="[checkboxGroupStyles.Item, $style.Uppercase]">
+                <Field.Label :class="checkboxGroupStyles.Item">
                   <Checkbox.Root :value="protocol" :class="checkboxGroupStyles.Checkbox">
                     <Checkbox.Indicator :class="checkboxGroupStyles.Indicator">
                       <svg
@@ -184,7 +184,7 @@ function onFormSubmit(formValues: Record<string, unknown>) {
                       </svg>
                     </Checkbox.Indicator>
                   </Checkbox.Root>
-                  {{ protocol }}
+                  {{ protocol.toUpperCase() }}
                 </Field.Label>
               </Field.Item>
             </div>
@@ -241,9 +241,5 @@ function onFormSubmit(formValues: Record<string, unknown>) {
 .Protocols {
   display: flex;
   gap: 1rem;
-}
-
-.Uppercase {
-  text-transform: uppercase;
 }
 </style>

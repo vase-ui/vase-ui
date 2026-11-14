@@ -50,7 +50,7 @@ A part or a utility can also export other types. The list below is not complete.
   <<< ../examples/typescript/Actions.vue{5-10,15}
 
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `Toast.Root.ToastObject` gives access to this interface.
-- A part that renders an element has the props `as`, `stateClass` and `stateStyle`. `useRender.ComponentProps` gives access to these props. See [useRender](/utils/use-render#typescript).
+- A part that renders an element has the props `as`, `stateClass` and `stateStyle`. `useRender.ComponentProps` gives a component that you build the same props. See [useRender](/utils/use-render#typescript).
 
 ## Generic components
 

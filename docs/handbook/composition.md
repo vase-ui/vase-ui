@@ -31,7 +31,7 @@ In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, and `Dialog.Trigger`
 
 ## How props are merged
 
-With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the part that you render in its slot. The toolbar then keeps the element in its keyboard navigation.
+With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the component that you give to `as` or render in its slot. The toolbar then keeps the element in its keyboard navigation.
 
 With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`.
 
