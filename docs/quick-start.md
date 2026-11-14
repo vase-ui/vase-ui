@@ -86,4 +86,6 @@ A selector can use these attributes, as the two examples above do.
 
 The `stateClass` and `stateStyle` props give a class or a style that depends on the state.
 
+The [styling guide](/handbook/styling) has more on styling.
+
 The [parity page](/parity) shows the state of Vase UI against Base UI.
