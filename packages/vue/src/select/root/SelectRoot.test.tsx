@@ -13,10 +13,12 @@ import {
   hiddenInputTypeTests,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
   nextEvent,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
+  randomStringValue,
   renderOnServer,
   screen,
   wait,
@@ -163,6 +165,133 @@ describe('<Select.Root />', () => {
       expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
       );
+    });
+  });
+
+  describe('VUE-72: a select with no popup', () => {
+    function createCompletions() {
+      const opened = Promise.withResolvers<void>();
+      const closed = Promise.withResolvers<void>();
+      return {
+        opened: opened.promise,
+        closed: closed.promise,
+        onOpenChangeComplete(open: boolean) {
+          if (open) {
+            opened.resolve();
+          } else {
+            closed.resolve();
+          }
+        },
+      };
+    }
+
+    function createExitStyle(selector: string) {
+      const animationName = randomStringValue();
+      return `
+        @keyframes ${animationName} { to { opacity: 0; } }
+        ${selector} { animation: ${animationName} 100s; }
+      `;
+    }
+
+    function renderWithoutPopup(onOpenChangeComplete: (open: boolean) => void, style = '') {
+      return render(
+        <div>
+          <style>{style}</style>
+          <Select.Root onOpenChangeComplete={onOpenChangeComplete}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Positioner data-testid="positioner" class="positioner">
+              <Select.Item value="one">one</Select.Item>
+            </Select.Positioner>
+          </Select.Root>
+        </div>,
+      );
+    }
+
+    it('hides the positioner and completes the close', async () => {
+      const completions = createCompletions();
+      const { user } = await renderWithoutPopup(completions.onOpenChangeComplete);
+      const positioner = screen.getByTestId('positioner');
+
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(positioner).toHaveAttribute('data-open');
+      });
+
+      await user.keyboard('{Escape}');
+      await completions.closed;
+
+      expect(positioner).toHaveAttribute('hidden');
+    });
+
+    it('waits for the exit animation of the positioner', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const completions = createCompletions();
+      const { user } = await renderWithoutPopup(
+        completions.onOpenChangeComplete,
+        createExitStyle('.positioner[data-closed]'),
+      );
+      const positioner = screen.getByTestId('positioner');
+
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(positioner).toHaveAttribute('data-open');
+      });
+
+      const animations = await nextAnimationsRead(positioner, {
+        action: () => user.keyboard('{Escape}'),
+      });
+
+      expect(animations).toHaveLength(1);
+      expect(positioner).not.toHaveAttribute('hidden');
+
+      animations.forEach((animation) => {
+        animation.finish();
+      });
+      await completions.closed;
+
+      expect(positioner).toHaveAttribute('hidden');
+    });
+
+    it('waits for the exit animation of the popup when a popup renders', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const completions = createCompletions();
+      const { user } = await render(
+        <div>
+          <style>{createExitStyle('.popup[data-ending-style]')}</style>
+          <Select.Root onOpenChangeComplete={completions.onOpenChangeComplete}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Positioner data-testid="positioner">
+              <Select.Popup data-testid="popup" class="popup">
+                <Select.Item value="one">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Root>
+        </div>,
+      );
+      const positioner = screen.getByTestId('positioner');
+      const popup = screen.getByTestId('popup');
+
+      await user.click(screen.getByTestId('trigger'));
+      // The popup reads its animations after the open. That read must not be the read of the close.
+      await completions.opened;
+
+      const animations = await nextAnimationsRead(popup, {
+        action: () => user.keyboard('{Escape}'),
+      });
+
+      expect(animations).toHaveLength(1);
+      expect(positioner).not.toHaveAttribute('hidden');
+
+      animations.forEach((animation) => {
+        animation.finish();
+      });
+      await completions.closed;
+
+      expect(positioner).toHaveAttribute('hidden');
     });
   });
 
