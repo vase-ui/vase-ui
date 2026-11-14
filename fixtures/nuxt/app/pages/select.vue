@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Field } from '@vase-ui/vue/field';
-// No entry point of the package exports Select yet.
+// No entry point of the package exports Select yet, so the page imports its source. The field comes
+// from the source too: a part of the built package and a part of the source do not share a context.
+import * as Field from '../../../../packages/vue/src/field/index.parts';
 import * as Select from '../../../../packages/vue/src/select/index.parts';
 
 const FONTS = { sans: 'Sans-serif', serif: 'Serif', mono: 'Monospace' };

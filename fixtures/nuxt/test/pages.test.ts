@@ -1168,7 +1168,8 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('font-trigger').getAttribute('aria-expanded')).toBe('true');
 
     await page.getByRole('option', { name: 'Monospace' }).click();
-    await popup.waitFor({ state: 'detached' });
+    // The focus of the trigger keeps the items mounted, so the closed popup stays in the body.
+    await popup.waitFor({ state: 'hidden' });
 
     expect(await page.getByTestId('font-value').textContent()).toBe('Monospace');
     expect(await readFormData(page)).toEqual(['font=mono', 'size=', 'tags=b']);
