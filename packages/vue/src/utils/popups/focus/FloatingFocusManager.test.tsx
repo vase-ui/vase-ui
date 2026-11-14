@@ -225,6 +225,8 @@ function captureStore() {
   };
 }
 
+// `toHaveFocus` reads only the document of the element. This helper also asks each frame element
+// above it, so it tells whether an element in a frame has the focus of the page.
 function isFocused(element: Element): boolean {
   let doc = element.ownerDocument;
   let current: Element = element;

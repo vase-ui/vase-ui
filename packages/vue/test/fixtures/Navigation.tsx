@@ -14,7 +14,8 @@ import { useTestInteractions } from '../useTestInteractions';
 import { useFloating } from './useFloating';
 
 // The rules of the style sheet of Base UI, as style objects. The package has no type for a CSS
-// module.
+// module. The media rule of the container has no counterpart, because a style object holds no
+// media query.
 const styles = {
   Heading: { marginBottom: '2rem', fontSize: '3rem', fontWeight: 700 },
   Container: {
