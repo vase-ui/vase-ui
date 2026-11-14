@@ -423,6 +423,19 @@ describe('<Drawer.Root />', () => {
 
       child.notifyParentFrontmostHeight?.(0);
       expect(parent.frontmostHeight.value).toBe(320);
+
+      // A popup that is not mounted reports a height of 0. The frontmost height does not change.
+      parent.onPopupHeightChange(0);
+      expect(parent.popupHeight.value).toBe(0);
+      expect(parent.frontmostHeight.value).toBe(320);
+
+      child.notifyParentFrontmostHeight?.(120);
+      expect(parent.frontmostHeight.value).toBe(120);
+
+      // A nested drawer reports 0 when it closes. The popup of the parent has no height. The
+      // frontmost height does not change.
+      child.notifyParentFrontmostHeight?.(0);
+      expect(parent.frontmostHeight.value).toBe(120);
     });
 
     it('tells each drawer above it that a nested drawer is present or swiped', async () => {
