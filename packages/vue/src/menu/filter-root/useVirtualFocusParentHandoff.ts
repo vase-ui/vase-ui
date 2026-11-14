@@ -22,8 +22,9 @@ function isStopped(event: Event) {
  * The handoff between a popup and a filterable parent. A plain submenu returns the focus and the
  * highlight to the input of the parent when it closes: the parent keeps real focus on its input,
  * so its trigger never blurs, and its return focus waits for the exit animation of this popup.
- * A popup of any kind also gives its focus and its keys to the popups above through the popup
- * tree, because Vue sends the events of a teleported popup only to its own DOM ancestors.
+ * A submenu popup also gives its focus to the popups above through the popup tree, and so does it
+ * with its keys when the parent is filterable, because Vue sends the events of a teleported popup
+ * only to its own DOM ancestors.
  *
  * Call it in `setup` of the popup.
  */

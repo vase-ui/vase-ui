@@ -806,7 +806,11 @@ describe('nested popups of a filterable menu', () => {
       </Menu.FilterProvider>,
     );
 
-    await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rename');
+    // A press in the popup of the parent closes the submenu, so the query comes from the keyboard.
+    const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
+    parentInput.focus();
+    await flushMicrotasks();
+    await user.keyboard('rename');
 
     await waitFor(() => {
       expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
