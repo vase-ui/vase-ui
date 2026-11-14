@@ -60,7 +60,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [chromium, firefox, webkit]
+        # Firefox runs one test file at a time, so one job for all its files takes more than half
+        # of the time limit. The number after the slash is the number of Firefox shards. When you
+        # add or remove a shard, change that number in each Firefox shard.
+        include:
+          - engine: chromium
+          - engine: firefox
+            shard: 1/3
+          - engine: firefox
+            shard: 2/3
+          - engine: firefox
+            shard: 3/3
+          - engine: webkit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -72,7 +83,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps ${{ matrix.engine }}
-      - run: pnpm test:${{ matrix.engine }}
+      - run: pnpm test:${{ matrix.engine }} ${{ matrix.shard && format('--shard={0}', matrix.shard) }}
 
   test-vue-floor:
     runs-on: ubuntu-latest
