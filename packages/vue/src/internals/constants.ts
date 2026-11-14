@@ -1,5 +1,24 @@
 import type { CSSProperties } from 'vue';
 
+export const DISABLED_TRANSITIONS_STYLE = { style: { transition: 'none' } };
+
+/**
+ * The collision avoidance of a regular popup. Such a popup is usually not scrollable, so it can
+ * flip to each axis of placement.
+ */
+export const POPUP_COLLISION_AVOIDANCE = {
+  fallbackAxisSide: 'end',
+} as const;
+
+/**
+ * The time in milliseconds after a hover open in which a press of the trigger keeps the popup
+ * open.
+ */
+export const PATIENT_CLICK_THRESHOLD = 500;
+
+/**
+ * The attribute that marks a trigger that opens its popup with a press.
+ */
 export const CLICK_TRIGGER_IDENTIFIER = 'data-vase-ui-click-trigger';
 
 /**
