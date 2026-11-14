@@ -1,4 +1,5 @@
 import { dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { docsFolderOf } from '../parity/checkSurface.ts';
 import type { FamilyExtract } from '../parity/parityFiles.ts';
 import { VASE_SOURCE_ROOT } from '../parity/paths.ts';
@@ -134,6 +135,36 @@ export function buildApiParts(
   });
 }
 
+/** A `types.md` with the entry file of the family that its folder names. */
+interface EntryTypesFile {
+  entryFile: string;
+  file: SurfaceFile;
+}
+
+/**
+ * The entry file that exports `part`. It is `entryFile`, the entry file of the family of the
+ * `types.md`, when that file exports the part. A `types.md` can repeat a part of another family: the
+ * `types.md` of Radio Group has `Root` and `Indicator` of Radio. The entry file of the family whose
+ * `types.md` has the same part, with the same text, then exports it. When no file exports the part,
+ * the result is `entryFile`.
+ */
+function findEntryFileOfPart(
+  project: VaseProject,
+  entryFile: string,
+  part: SurfacePart,
+  typesFiles: EntryTypesFile[],
+): string {
+  if (project.findExports(entryFile, part.name).length > 0) {
+    return entryFile;
+  }
+  const repeated = typesFiles.find(
+    ({ entryFile: otherEntryFile, file }) =>
+      file.parts.some((candidate) => isDeepStrictEqual(candidate, part)) &&
+      project.findExports(otherEntryFile, part.name).length > 0,
+  );
+  return repeated?.entryFile ?? entryFile;
+}
+
 /**
  * The functions of a `types.md`: the names of its parts, then of its functions, in their sequence.
  * A name with no export in the entry file is left out. So is an export that is a component or has
@@ -213,14 +244,25 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
       );
     }
     const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
+    const entryFileOf = (file: SurfaceFile): string =>
+      join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts');
     const build = <T>(
       read: (project: VaseProject, entryFile: string, file: SurfaceFile) => T[],
-    ): T[] =>
-      typesFiles.flatMap((file) =>
-        read(vaseProject, join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts'), file),
-      );
+    ): T[] => typesFiles.flatMap((file) => read(vaseProject, entryFileOf(file), file));
+    const allTypesFiles = families.flatMap(({ extract }) =>
+      (extract?.surface ?? []).map((file) => ({ entryFile: entryFileOf(file), file })),
+    );
     return {
-      parts: build(buildApiParts),
+      // A part is read from the entry file that exports it. The parts keep the sequence of the file.
+      parts: typesFiles.flatMap((file) =>
+        file.parts.flatMap((part) =>
+          buildApiParts(
+            vaseProject,
+            findEntryFileOfPart(vaseProject, entryFileOf(file), part, allTypesFiles),
+            { ...file, parts: [part] },
+          ),
+        ),
+      ),
       functions: build(buildApiFunctions),
       types: build(buildApiTypes),
     };
