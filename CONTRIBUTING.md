@@ -1691,9 +1691,9 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
 - `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
-- Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css` and `docs/src/components`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
+- Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
 - Base UI uses a commercial font. The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
-- `markdown.colorReplacements` in `docs/.vitepress/config.ts` gives each color of the GitHub themes of Shiki the syntax color of Base UI.
+- `markdown.colorReplacements` in `docs/.vitepress/config.ts` changes the colors of the GitHub themes of Shiki to the syntax colors of Base UI.
 - `postcssIsolateStyles` in `docs/.vitepress/config.ts` also covers each style sheet in `docs/.vitepress/theme`, so a rule there does not reach a demo. For the same reason, a rule there cannot style the frame of a demo. Put that rule in `DemoFrame.vue`.
 - The text of a page follows [Voice](#voice).
 

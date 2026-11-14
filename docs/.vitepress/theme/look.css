@@ -1,5 +1,5 @@
-/* The rules come from the style sheets of the Base UI docs, in docs/src/components and
-   docs/src/app/(docs)/layout.css. A rule here sets what a variable of the default theme cannot. */
+/* The rules come from the style sheets of the Base UI docs, in docs/src/css, docs/src/components
+   and docs/src/app/(docs)/layout.css. A rule here sets what a variable of the default theme cannot. */
 
 /* `.Layout` is the root of the site. A popup of a demo is outside it, in the portal container. */
 .Layout ::selection {
@@ -299,7 +299,6 @@
 
 /* Code blocks */
 
-/* Base UI scales its code font to 13.5/14 of the size. The sizes below include that scale. */
 .vp-doc div[class*='language-'],
 .vp-doc li div[class*='language-'] {
   margin: 1.25rem 0;

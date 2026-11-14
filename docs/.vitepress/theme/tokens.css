@@ -85,7 +85,9 @@
   --vp-nav-divider-color: transparent;
   --vp-local-nav-divider-color: var(--vase-color-border);
 
-  --vp-code-font-size: 0.96875em;
+  /* Base UI scales its code font to 13.5/14 of the size.
+     Each code size in this folder includes that scale. */
+  --vp-code-font-size: 0.9375em;
   --vp-code-color: var(--vase-color-blue);
   --vp-code-link-color: var(--vase-color-blue);
   --vp-code-link-hover-color: var(--vase-color-blue);

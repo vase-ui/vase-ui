@@ -12,8 +12,8 @@ const manifest: { description: string } = JSON.parse(
 const { nav, sidebar } = readNavigation(docsRoot);
 const readApiReference = createApiReferenceReader();
 
-// Each color of the GitHub themes of Shiki becomes the syntax color that the Base UI docs give to
-// the same token. `docs/.vitepress/theme/tokens.css` sets these colors for light and dark.
+// These colors of the GitHub themes of Shiki become the syntax colors that the Base UI docs give to
+// the same tokens. `docs/.vitepress/theme/tokens.css` sets these colors for light and dark.
 const SYNTAX_ROLES = {
   text: ['#24292e', '#e1e4e8'],
   comment: ['#6a737d', '#6a737d'],
