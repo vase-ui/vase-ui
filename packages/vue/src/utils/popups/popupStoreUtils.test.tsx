@@ -829,7 +829,12 @@ describe('popupId selector', () => {
       const popupElement = document.createElement('div');
       popupElement.id = 'popup-id';
 
-      store.update({ open: true, defaultPopupId: 'generated-popup-id', triggerCount: 1, popupElement });
+      store.update({
+        open: true,
+        defaultPopupId: 'generated-popup-id',
+        triggerCount: 1,
+        popupElement,
+      });
       expect(store.select('triggerPopupId', 'trigger')).toBe('popup-id');
 
       store.set('openedWithoutTrigger', true);
