@@ -4,6 +4,7 @@ import { renderToString } from 'vue/server-renderer';
 import * as Drawer from '../index.parts';
 import { DrawerProviderContext } from '../provider/DrawerProviderContext';
 import { useDrawerRootContext } from './DrawerRootContext';
+import { useDrawerSnapPoints } from './useDrawerSnapPoints';
 
 // With `android` set, a root that made its close watcher in `setup` would read `window` here.
 vi.mock('../../common/platform', async () => {
@@ -62,6 +63,32 @@ describe('<Drawer.Root /> on a server', () => {
     );
 
     expect(html).toContain('snap:100px direction:right height:0');
+  });
+
+  it('resolves no snap point, because a server has no viewport to measure', async () => {
+    const Probe = defineComponent({
+      setup() {
+        const { resolvedSnapPoints, activeSnapPointOffset, viewportHeight } = useDrawerSnapPoints();
+        return () => (
+          <p>
+            points:{resolvedSnapPoints.value.length} offset:{String(activeSnapPointOffset.value)}{' '}
+            viewport:{viewportHeight.value}
+          </p>
+        );
+      },
+    });
+
+    const html = await renderToString(
+      createSSRApp({
+        render: () => (
+          <Drawer.Root defaultOpen snapPoints={['100px', 1]}>
+            <Probe />
+          </Drawer.Root>
+        ),
+      }),
+    );
+
+    expect(html).toContain('points:0 offset:null viewport:0');
   });
 
   it('reports nothing to a provider, and reads no window for a close watcher', async () => {

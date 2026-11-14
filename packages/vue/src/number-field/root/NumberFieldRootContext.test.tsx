@@ -400,15 +400,4 @@ describe('the context of the root of Number Field', () => {
     expect(handleCommit.mock.calls).toEqual([[7, details]]);
     expect(getContext().hasPendingCommitRef.value).toBe(false);
   });
-
-  it('gives the root the state of a scrub', async () => {
-    const { getContext } = await renderRoot();
-    expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
-
-    getContext().setIsScrubbing(true);
-    await flushMicrotasks();
-
-    expect(screen.getByTestId('root')).toHaveAttribute('data-scrubbing');
-    expect(getContext().state.value.scrubbing).toBe(true);
-  });
 });

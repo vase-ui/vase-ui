@@ -825,6 +825,52 @@ async function expectCheckboxGroupPage(page: Page, { hydrated }: { hydrated: boo
   });
 }
 
+function readOTPSlots(page: Page, testId: string, attributeName: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input')
+    .evaluateAll((inputs, name) => inputs.map((input) => input.getAttribute(name)), attributeName);
+}
+
+function readOTPSlotValues(page: Page, testId: string) {
+  return page
+    .getByTestId(testId)
+    .locator('input')
+    .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+}
+
+// The label of the first field comes after the field, and the server HTML names the group and each
+// slot with it. The first empty slot is the tab stop. Only the hidden input has a name.
+async function expectOTPFieldPage(page: Page) {
+  const labelId = await page.getByTestId('code-label').getAttribute('id');
+  const firstSlotId = await page.getByTestId('code-1').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(firstSlotId).toBeTruthy();
+  expect(await page.getByTestId('code-label').getAttribute('for')).toBe(firstSlotId);
+  expect(await page.getByTestId('code').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await readOTPSlots(page, 'code', 'aria-labelledby')).toEqual(Array(4).fill(labelId));
+  expect(await readOTPSlotValues(page, 'code')).toEqual(['1', '2', '', '']);
+  expect(await readOTPSlots(page, 'code', 'tabindex')).toEqual(['-1', '-1', '0', '-1']);
+  expect(await readFormData(page)).toEqual(['code=12']);
+  expect(await readOTPSlots(page, 'pin', 'type')).toEqual(Array(4).fill('password'));
+  expect(await readOTPSlotValues(page, 'pin')).toEqual(['5', '6', '', '']);
+}
+
+async function expectOTPFieldPageOnServer(page: Page) {
+  await expectOTPFieldPage(page);
+  // A server has no DOM, so it cannot find a native label.
+  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(null);
+  expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(null));
+}
+
+async function expectHydratedOTPFieldPage(page: Page) {
+  await expectOTPFieldPage(page);
+  const labelId = await page.getByTestId('pin-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('pin').getAttribute('aria-labelledby')).toBe(labelId);
+  expect(await readOTPSlots(page, 'pin', 'aria-labelledby')).toEqual(Array(4).fill(labelId));
+}
+
 // The label and the messages name the input in the server HTML, in each order of the parts. The
 // hidden input has the number and not the text.
 async function expectNumberFieldPage(page: Page) {
@@ -930,6 +976,11 @@ const PAGES: PageCase[] = [
   { path: '/field', expectPage: expectFieldPage, expectHydratedPage: expectHydratedFieldPage },
   { path: '/tabs', expectPage: expectTabsPage, expectHydratedPage: expectHydratedTabsPage },
   { path: '/input', expectPage: expectInputPage },
+  {
+    path: '/otp-field',
+    expectPage: expectOTPFieldPageOnServer,
+    expectHydratedPage: expectHydratedOTPFieldPage,
+  },
   { path: '/number-field', expectPage: expectNumberFieldPage },
   { path: '/providers', expectPage: expectProvidersPage },
   { path: '/use-render', expectPage: expectUseRenderPage },
@@ -1166,6 +1217,27 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('output').textContent()).toBe('a@b.c');
     expect(await error.count()).toBe(0);
     expect(page.url()).toBe(url('/field'));
+    expect(messages).toEqual([]);
+  });
+
+  it('types a code into /otp-field, and focuses the first slot on a click on a native label, after hydration', async () => {
+    const page = await createPage('/otp-field');
+    const messages = collectMessages(page);
+    const readFocusedTestId = () =>
+      page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+
+    await page.getByTestId('code-3').click();
+    await page.keyboard.type('34');
+
+    expect(await readOTPSlotValues(page, 'code')).toEqual(['1', '2', '3', '4']);
+    expect(await page.getByTestId('code-value').textContent()).toBe('1234');
+    expect(await readFormData(page)).toEqual(['code=1234']);
+    expect(await page.getByTestId('code').getAttribute('data-complete')).toBe('');
+    expect(await readFocusedTestId()).toBe('code-4');
+
+    await page.getByTestId('pin-label').click();
+
+    expect(await readFocusedTestId()).toBe('pin-1');
     expect(messages).toEqual([]);
   });
 
