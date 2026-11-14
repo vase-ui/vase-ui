@@ -1,0 +1,8 @@
+{
+  "upstreamPaths": ["docs/src/app/(docs)/react/handbook/styling/**"],
+  "matchedCommit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
+  "exceptions": [],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

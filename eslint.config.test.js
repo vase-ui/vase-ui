@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict';
-import { dirname } from 'node:path';
+import { globSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
+
+const ROOT = import.meta.dirname;
 
 // The samples are not files, so no TypeScript project has them. The tests are for rules that read
 // only the syntax. Many samples have one path. With `CI` set, typescript-eslint takes the second
 // sample of a path for a step of a fix, and it gives that sample a program. A rule of the Vue
 // plugin then reads types and fails.
 const eslint = new ESLint({
-  cwd: dirname(fileURLToPath(import.meta.url)),
+  cwd: ROOT,
   overrideConfig: [
     tseslint.configs.disableTypeChecked,
     { languageOptions: { parserOptions: { disallowAutomaticSingleRunInference: true } } },
@@ -20,6 +22,31 @@ const eslint = new ESLint({
 async function lint(filePath, code) {
   const [{ messages }] = await eslint.lintText(code, { filePath });
   return messages.map(({ ruleId, message }) => ({ ruleId, message }));
+}
+
+const DOCS_SFC = 'docs/.vitepress/components/Sample.vue';
+const DOCS_MODULE = 'docs/.vitepress/components/sample.ts';
+const PAGE = 'docs/sample.md';
+
+const HTML_DECLARATIONS = 'declare const element: HTMLElement;\ndeclare const html: string;';
+const HTML_HINT = 'text interpolation';
+
+function docsSfc(script, template = '<div />') {
+  return `<script setup lang="ts">\n${script}\n</script>\n\n<template>\n  ${template}\n</template>\n`;
+}
+
+// VitePress reads an include in this form. A region (`#name`) or a range (`{2,8}`) can end the
+// path. A path that starts with `@` is in `docs`.
+const INCLUDE = /<!--\s*@include:\s*(.*?)\s*-->/g;
+
+function includedFile(page, include) {
+  const path = include.replace(/\{\d*,\d*\}$/, '').replace(/#[^\s{]+$/, '');
+  return path.startsWith('@') ? join('docs', path.slice(1)) : join(dirname(page), path);
+}
+
+// The body is on line 13 of the page.
+function page(body) {
+  return `---\norder: 1\n---\n\n<script setup lang="ts">\nimport { data } from './parity.data.ts';\n</script>\n\n# Sample\n\n{{ data.title }}\n\n${body}\n`;
 }
 
 const SRC = 'packages/vue/src/dialog';
@@ -314,6 +341,133 @@ const reported = [
     ruleId: 'no-restricted-syntax',
     hint: 'text interpolation',
   },
+  ...[
+    [':srcdoc', '<iframe :srcdoc="html" />'],
+    [':srcDoc', '<iframe :srcDoc="html" />'],
+    [':src-doc.camel', '<iframe :src-doc.camel="html" />'],
+  ].map(([name, template]) => ({
+    name: `${name} in a documentation component`,
+    file: DOCS_SFC,
+    code: docsSfc(HTML_DECLARATIONS, template),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: HTML_HINT,
+  })),
+  {
+    name: 'a dynamic argument of v-bind in a documentation component',
+    file: DOCS_SFC,
+    code: docsSfc("const name = 'title';\ndeclare const html: string;", '<div :[name]="html" />'),
+    ruleId: 'vue/no-restricted-syntax',
+    hint: 'name of the attribute',
+  },
+  ...[
+    ['an innerHTML key in quotes', 'const attrs = { "innerHTML": html };'],
+    ['an outerHTML key in a template literal', 'const attrs = { [`outerHTML`]: html };'],
+    ['a srcdoc key', 'const attrs = { srcdoc: html };'],
+    ['a srcDoc key', 'const attrs = { srcDoc: html };'],
+  ].map(([name, script]) => ({
+    name: `${name} in script setup of a documentation component`,
+    file: DOCS_SFC,
+    code: docsSfc(`${HTML_DECLARATIONS}\n${script}`, '<div v-bind="attrs" />'),
+    ruleId: 'no-restricted-syntax',
+    hint: HTML_HINT,
+  })),
+  ...[
+    ['an assignment to a computed innerHTML member', 'element["innerHTML"] = html;'],
+    ['an assignment to an innerHTML member in a template literal', 'element[`innerHTML`] = html;'],
+    ['an assignment to srcdoc', 'declare const frame: HTMLIFrameElement;\nframe.srcdoc = html;'],
+    ['an innerHTML target of a destructuring assignment', '[element.innerHTML] = [html];'],
+    ['an innerHTML target with a non-null assertion', 'element.innerHTML! = html;'],
+    ['a read of an innerHTML member', 'void element.innerHTML;'],
+    ['setAttribute with srcdoc', 'element.setAttribute("srcdoc", html);'],
+    ['setAttributeNS with srcdoc', 'element.setAttributeNS(null, "srcdoc", html);'],
+    ['setHTML', 'element.setHTML(html);'],
+    ['setHTMLUnsafe', 'element.setHTMLUnsafe(html);'],
+    ['parseHTML', 'void Document.parseHTML(html);'],
+    ['parseHTMLUnsafe', 'void Document.parseHTMLUnsafe(html);'],
+    ['createContextualFragment', 'void document.createRange().createContextualFragment(html);'],
+    ['parseFromString', 'void new DOMParser().parseFromString(html, "text/html");'],
+    ['execCommand', 'document.execCommand("insertHTML", false, html);'],
+    ['writeln', 'document.writeln(html);'],
+    ['write on document', 'document.write(html);'],
+    ['write on an owner document', 'element.ownerDocument.write(html);'],
+    [
+      'write on the result of ownerDocument',
+      'declare function ownerDocument(node: Node): Document;\nownerDocument(element).write(html);',
+    ],
+  ].map(([name, script]) => ({
+    name: `${name} in script setup of a documentation component`,
+    file: DOCS_SFC,
+    code: docsSfc(`${HTML_DECLARATIONS}\n${script}`),
+    ruleId: 'no-restricted-syntax',
+    hint: HTML_HINT,
+  })),
+  ...['createStaticVNode', 'Static'].map((name) => ({
+    name: `an import of ${name} in a documentation component`,
+    file: DOCS_SFC,
+    code: docsSfc(`import { ${name} } from 'vue';\n\nvoid ${name};`),
+    ruleId: 'no-restricted-imports',
+    hint: HTML_HINT,
+  })),
+  {
+    name: 'an innerHTML key in a module of the documentation components',
+    file: DOCS_MODULE,
+    code: `${HTML_DECLARATIONS}\nexport const attrs = { innerHTML: html };\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: HTML_HINT,
+  },
+  ...[
+    ['v-html on an element', '<div v-html="data.text"></div>', 'vue/no-v-html', 'XSS'],
+    [
+      'v-html in the attributes of a heading',
+      '## Title {v-html="data.text"}',
+      'vue/no-v-html',
+      'XSS',
+    ],
+    [
+      'an innerHTML assignment in a fence that Vue reads',
+      '```js-vue\n{{ data.element.innerHTML = data.text }}\n```',
+      'vue/no-restricted-syntax',
+      HTML_HINT,
+    ],
+    [
+      'an innerHTML assignment in a fence that Vue reads and that has an option',
+      '```js-vue{1}\n{{ data.element.innerHTML = data.text }}\n```',
+      'vue/no-restricted-syntax',
+      HTML_HINT,
+    ],
+    [
+      'an innerHTML assignment in a fence that Vue reads and that has capital letters',
+      '```JS-VUE\n{{ data.element.innerHTML = data.text }}\n```',
+      'vue/no-restricted-syntax',
+      HTML_HINT,
+    ],
+    [
+      'an innerHTML assignment in a fence that Vue reads and whose language starts with a sign',
+      '```+js-vue\n{{ data.element.innerHTML = data.text }}\n```',
+      'vue/no-restricted-syntax',
+      HTML_HINT,
+    ],
+  ].map(([name, body, ruleId, hint]) => ({
+    name: `${name} in a page`,
+    file: PAGE,
+    code: page(body),
+    ruleId,
+    hint,
+  })),
+  {
+    name: 'an innerHTML assignment in the script of a page',
+    file: PAGE,
+    code: `<script setup lang="ts">\n${HTML_DECLARATIONS}\nelement.innerHTML = html;\n</script>\n\n# Sample\n`,
+    ruleId: 'no-restricted-syntax',
+    hint: HTML_HINT,
+  },
+  {
+    name: 'v-html in a file that a page includes',
+    file: 'README.md',
+    code: '# Sample\n\n<div v-html="$frontmatter.text"></div>\n',
+    ruleId: 'vue/no-v-html',
+    hint: 'XSS',
+  },
   {
     name: 'a style block in a demo',
     file: 'docs/demos/sample/hero/css-modules/index.vue',
@@ -419,6 +573,51 @@ const passed = [
     file: 'docs/.vitepress/components/Sample.vue',
     code: '<script setup lang="ts">\ndeclare const element: HTMLElement;\nconst { innerHTML } = element;\nconst length = innerHTML.length;\n</script>\n\n<template>\n  <div>{{ length }}</div>\n</template>\n',
   },
+  {
+    name: 'a dynamic argument of an event and of a slot in a documentation component',
+    file: DOCS_SFC,
+    code: docsSfc(
+      "import Frame from './Frame.vue';\n\nconst name = 'click';\nfunction handle() {}",
+      '<Frame @[name]="handle"><template #[name]>{{ name }}</template></Frame>',
+    ),
+  },
+  {
+    name: 'a bound attribute that has a static name in a documentation component',
+    file: DOCS_SFC,
+    code: docsSfc('const title = "a";', '<div :title="title" />'),
+  },
+  {
+    name: 'setAttribute with srcdoc as the value in a documentation component',
+    file: DOCS_SFC,
+    code: docsSfc(`${HTML_DECLARATIONS}\nelement.setAttribute("title", "srcdoc");\nvoid html;`),
+  },
+  {
+    name: 'a write to the clipboard and to a stream in a module of the documentation components',
+    file: DOCS_MODULE,
+    code: 'declare const stream: { write(text: string): void };\nstream.write("text");\nvoid navigator.clipboard.write([]);\n',
+  },
+  {
+    name: 'text interpolation in a page',
+    file: PAGE,
+    code: page('Text {{ data.text }} and <span>{{ data.text }}</span>.'),
+  },
+  {
+    name: 'the braces of JSX in a fence of a page',
+    file: PAGE,
+    code: page(
+      '```tsx\n<div style={{ color: "red" }} dangerouslySetInnerHTML={{ __html: html }} />\n```',
+    ),
+  },
+  {
+    name: 'a code file that a page shows',
+    file: PAGE,
+    code: page('<<< ./examples/quick-start/ButtonExample.vue'),
+  },
+  {
+    name: 'a page that has no text',
+    file: PAGE,
+    code: '---\norder: 1\n---\n',
+  },
 ];
 
 for (const { name, file, code, ruleId, hint } of reported) {
@@ -438,4 +637,64 @@ for (const { name, file, code } of passed) {
 
 test('does not lint a file that has a test name and is not a script', async () => {
   assert.equal(await eslint.calculateConfigForFile('packages/vue/tsconfig.test.json'), undefined);
+});
+
+test('reports a form of a page at the line of the form', async () => {
+  for (const [body, column] of [
+    ['<div v-html="data.text"></div>', 6],
+    ['## Title {v-html="data.text"}', 11],
+  ]) {
+    const [{ messages }] = await eslint.lintText(page(body), { filePath: PAGE });
+    assert.deepEqual(
+      messages
+        .filter(({ ruleId }) => ruleId === 'vue/no-v-html')
+        .map(({ line, column, endLine, endColumn }) => ({ line, column, endLine, endColumn })),
+      [{ line: 13, column, endLine: undefined, endColumn: undefined }],
+      body,
+    );
+  }
+});
+
+test('reports a form that the page does not hold at line 1', async () => {
+  // `v-html` on a heading replaces the link that VitePress adds to the heading. The page has no
+  // text for the report of `vue/no-child-content` about that link.
+  const [{ messages }] = await eslint.lintText(page('## Title {v-html="data.text"}'), {
+    filePath: PAGE,
+  });
+  const { line, column } = messages.find(({ ruleId }) => ruleId === 'vue/no-child-content');
+  assert.deepEqual({ line, column }, { line: 1, column: 1 });
+});
+
+test('does not write a fix into a page', async () => {
+  const fixer = new ESLint({ cwd: ROOT, fix: true });
+  const code = `<script setup lang="ts">\nimport { type Ref } from 'vue';\n\ndeclare const value: Ref<string>;\n</script>\n\n# Sample\n\n{{ value }}\n`;
+  const [{ output, messages }] = await fixer.lintText(code, { filePath: PAGE });
+  assert.equal(output, undefined);
+  assert.ok(
+    messages.some(({ ruleId }) => ruleId === '@typescript-eslint/no-import-type-side-effects'),
+  );
+});
+
+test('reads each file that a page includes', async () => {
+  const files = globSync('docs/**/*.md', { cwd: ROOT, exclude: ['**/node_modules/**'] });
+  const included = new Set();
+  // An included file can include a file too, so the loop also reads each file that it adds.
+  for (const file of files) {
+    for (const [, include] of readFileSync(join(ROOT, file), 'utf8').matchAll(INCLUDE)) {
+      const path = includedFile(file, include);
+      if (!included.has(path)) {
+        included.add(path);
+        files.push(path);
+      }
+    }
+  }
+  assert.notEqual(included.size, 0);
+  for (const file of included) {
+    const messages = await lint(file, '<div v-html="$frontmatter.text"></div>\n');
+    assert.deepEqual(
+      messages.map(({ ruleId }) => ruleId),
+      ['vue/no-v-html'],
+      file,
+    );
+  }
 });

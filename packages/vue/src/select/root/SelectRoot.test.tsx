@@ -13,10 +13,12 @@ import {
   hiddenInputTypeTests,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
   nextEvent,
   popupConformanceTests,
   popupListConformanceTests,
   pressWithTouch,
+  randomStringValue,
   renderOnServer,
   screen,
   wait,
@@ -120,7 +122,12 @@ describe('<Select.Root />', () => {
     });
 
     it('finishes closing when a layout effect closes it right after a press opens it', async () => {
-      const onOpenChangeComplete = vi.fn();
+      const closed = Promise.withResolvers<void>();
+      const onOpenChangeComplete = vi.fn((open: boolean) => {
+        if (!open) {
+          closed.resolve();
+        }
+      });
 
       const App = defineComponent(() => {
         const open = shallowRef(false);
@@ -156,13 +163,164 @@ describe('<Select.Root />', () => {
       const { user } = await render(<App />);
       await user.click(screen.getByTestId('trigger'));
 
-      await waitFor(() => {
-        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
-      });
+      // The trigger opens the select in the frame after the press. A busy machine can hold that
+      // frame for more than the limit of `waitFor`, so the case waits for the event.
+      await closed.promise;
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       // The press mounts the list while closed so its items can register; it isn't left closing.
       expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
       );
+    });
+  });
+
+  describe('VUE-72: a select with no popup', () => {
+    function createListeners() {
+      const opened = Promise.withResolvers<void>();
+      const openCompleted = Promise.withResolvers<void>();
+      const closeCompleted = Promise.withResolvers<void>();
+      return {
+        opened: opened.promise,
+        openCompleted: openCompleted.promise,
+        closeCompleted: closeCompleted.promise,
+        onOpenChange(open: boolean) {
+          if (open) {
+            opened.resolve();
+          }
+        },
+        onOpenChangeComplete(open: boolean) {
+          if (open) {
+            openCompleted.resolve();
+          } else {
+            closeCompleted.resolve();
+          }
+        },
+      };
+    }
+
+    function createExitStyle(selector: string) {
+      const animationName = randomStringValue();
+      return `
+        @keyframes ${animationName} { to { opacity: 0; } }
+        ${selector} { animation: ${animationName} 100s; }
+      `;
+    }
+
+    function renderWithoutPopup(listeners: ReturnType<typeof createListeners>, style = '') {
+      return render(
+        <div>
+          <style>{style}</style>
+          <Select.Root
+            onOpenChange={listeners.onOpenChange}
+            onOpenChangeComplete={listeners.onOpenChangeComplete}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Positioner data-testid="positioner" class="positioner">
+              <Select.Item value="one">one</Select.Item>
+            </Select.Positioner>
+          </Select.Root>
+        </div>,
+      );
+    }
+
+    // The trigger opens the select in the frame after the press, and a busy machine can hold that
+    // frame for more than the limit of `waitFor`. The `openChange` event has no limit.
+    async function openWithClick(
+      user: Awaited<ReturnType<typeof renderWithoutPopup>>['user'],
+      opened: Promise<void>,
+    ) {
+      await user.click(screen.getByTestId('trigger'));
+      await opened;
+      await flushMicrotasks();
+    }
+
+    it('hides the positioner and completes the close', async () => {
+      const listeners = createListeners();
+      const { user } = await renderWithoutPopup(listeners);
+      const positioner = screen.getByTestId('positioner');
+
+      await openWithClick(user, listeners.opened);
+      expect(positioner).toHaveAttribute('data-open');
+      expect(positioner).not.toHaveAttribute('hidden');
+
+      await user.keyboard('{Escape}');
+      await listeners.closeCompleted;
+
+      expect(positioner).toHaveAttribute('hidden');
+    });
+
+    it('waits for the exit animation of the positioner', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const listeners = createListeners();
+      const { user } = await renderWithoutPopup(
+        listeners,
+        createExitStyle('.positioner[data-closed]'),
+      );
+      const positioner = screen.getByTestId('positioner');
+
+      await openWithClick(user, listeners.opened);
+      expect(positioner).toHaveAttribute('data-open');
+
+      const animations = await nextAnimationsRead(positioner, {
+        action: () => user.keyboard('{Escape}'),
+      });
+      // A close that does not wait for these animations ends in the microtasks after the read.
+      await flushMicrotasks();
+
+      expect(animations).toHaveLength(1);
+      expect(positioner).not.toHaveAttribute('hidden');
+
+      animations.forEach((animation) => {
+        animation.finish();
+      });
+      await listeners.closeCompleted;
+
+      expect(positioner).toHaveAttribute('hidden');
+    });
+
+    it('waits for the exit animation of the popup when a popup renders', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const listeners = createListeners();
+      const { user } = await render(
+        <div>
+          <style>{createExitStyle('.popup[data-ending-style]')}</style>
+          <Select.Root onOpenChangeComplete={listeners.onOpenChangeComplete}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Positioner data-testid="positioner">
+              <Select.Popup data-testid="popup" class="popup">
+                <Select.Item value="one">one</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Root>
+        </div>,
+      );
+      const positioner = screen.getByTestId('positioner');
+      const popup = screen.getByTestId('popup');
+
+      await user.click(screen.getByTestId('trigger'));
+      // The popup reads its animations after the open. That read must not be the read of the close.
+      await listeners.openCompleted;
+
+      const animations = await nextAnimationsRead(popup, {
+        action: () => user.keyboard('{Escape}'),
+      });
+      // `Select.Popup` reads these animations in the same microtask as the close wait of the root.
+      // A close that does not wait for the popup thus ends before the next task.
+      await flushMicrotasks();
+
+      expect(animations).toHaveLength(1);
+      expect(positioner).not.toHaveAttribute('hidden');
+
+      animations.forEach((animation) => {
+        animation.finish();
+      });
+      await listeners.closeCompleted;
+
+      expect(positioner).toHaveAttribute('hidden');
     });
   });
 
@@ -3617,6 +3775,7 @@ describe('<Select.Root />', () => {
   });
 
   it('resets selected index when value is set to null without a null item', async () => {
+    const onOpenChangeComplete = vi.fn();
     const App = defineComponent(() => {
       const value = shallowRef<string | null>(null);
       return () => (
@@ -3650,6 +3809,7 @@ describe('<Select.Root />', () => {
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
             }}
+            onOpenChangeComplete={onOpenChangeComplete}
           >
             <Select.Trigger data-testid="trigger">
               <Select.Value
@@ -3683,10 +3843,17 @@ describe('<Select.Root />', () => {
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
 
-    await user.click(screen.getByTestId('trigger'));
-    await waitFor(() => {
-      expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
+    // The trigger opens the select in the frame after the press. A busy machine can hold that
+    // frame for more than the limit of `waitFor`, so the case waits for the event.
+    const opened = Promise.withResolvers<void>();
+    onOpenChangeComplete.mockImplementation((open: boolean) => {
+      if (open) {
+        opened.resolve();
+      }
     });
+    await user.click(screen.getByTestId('trigger'));
+    await opened.promise;
+    expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
   });
 
   it('does not force-mount the popup on a programmatic value change', async () => {

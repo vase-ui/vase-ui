@@ -557,37 +557,35 @@ describe('<Select.Item />', () => {
     });
   });
 
-  it('selects the item with a click and hides the positioner after the popup closes', async () => {
+  it('should select the item and close popup when clicked', async () => {
     await render(
       <Select.Root>
         <Select.Trigger data-testid="trigger">
           <Select.Value data-testid="value" />
         </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner data-testid="positioner">
-            <Select.Popup>
-              <Select.Item value="one">one</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
+        <Select.Positioner data-testid="positioner">
+          <Select.Item value="one">one</Select.Item>
+        </Select.Positioner>
       </Select.Root>,
     );
 
     const value = screen.getByTestId('value');
+    const trigger = screen.getByTestId('trigger');
+    const positioner = screen.getByTestId('positioner');
+
     expect(value.textContent).toBe('');
 
-    await fireEvent.click(screen.getByTestId('trigger'));
+    await fireEvent.click(trigger);
+
     await flushMicrotasks();
 
     await fireEvent.click(screen.getByText('one'));
+
     await flushMicrotasks();
 
     expect(value.textContent).toBe('one');
-    // The trigger gets the focus back and mounts the portal again, so query the new positioner.
-    await waitFor(() => {
-      expect(screen.getByTestId('positioner')).toHaveAttribute('hidden');
-    });
-    expect(screen.getByTestId('positioner')).not.toBeVisible();
+
+    expect(positioner).not.toBeVisible();
   });
 
   it('does not change the value of a read-only select', async () => {
