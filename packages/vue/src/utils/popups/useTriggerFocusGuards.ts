@@ -39,21 +39,39 @@ export function useTriggerFocusGuards(
   triggerElement: MaybeRefOrGetter<HTMLElement | null>,
   enabled: MaybeRefOrGetter<boolean>,
 ): void {
+  let movesFocus = false;
+
   async function closeAndFocus(
     event: FocusEvent,
     direction: 1 | -1,
     positionerElement: HTMLElement | null,
   ) {
     const guard = event.currentTarget as HTMLElement;
+    if (movesFocus) {
+      // The popup did not close, for example because its `open` prop did not change. The guards of
+      // its portal then sent the focus into the popup, and the popup had no tabbable element to
+      // keep it. A new search would give the same guards with no end, so the trigger keeps the
+      // focus.
+      toValue(triggerElement)?.focus();
+      return;
+    }
     toValue(store).setOpen(false, createChangeEventDetails(REASONS.focusOut, event, guard));
     // The close can change the tab order. The search below reads the DOM after the update.
     await nextTick();
     // The close removes the guard. The trigger is then the anchor, also when its tab index is -1.
-    getTabbableNearElement(
+    const target = getTabbableNearElement(
       guard.isConnected ? guard : toValue(triggerElement),
       direction,
       positionerElement,
-    )?.focus();
+    );
+    movesFocus = true;
+    try {
+      // Each guard that gets the focus moves it in its `focusin` listener, so the call returns
+      // after the last of these moves.
+      target?.focus();
+    } finally {
+      movesFocus = false;
+    }
   }
 
   function handlePreFocusGuardFocus(event: FocusEvent) {
