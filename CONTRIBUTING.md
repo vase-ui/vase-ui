@@ -1810,6 +1810,9 @@ The hydration helpers:
 - `hydrate` mounts the client-only render first, and removes it before it hydrates. The document thus holds one app at a time, as a page does.
 - To test what an inline script of the server HTML does before the app starts, insert the HTML with a fragment of a range, as `hydrate` does. Make the assertions before a mount. `internals/PrehydrationScript.test.tsx` is the model.
 - To test a nonce, load an `<iframe>` whose document has a `Content-Security-Policy` in a `<meta>` element. Insert the server HTML into the document of the frame, and collect its `securitypolicyviolation` events.
+- The browser sends each `securitypolicyviolation` event in a later task, in the order of the violations. A wait for animation frames does not wait for that task.
+- To show that a part causes no violation, insert a control element with no nonce after the part. Wait for the event of the control with `nextEvent`, then assert the whole list of events. `scroll-area/root/ScrollAreaRoot.test.tsx`, "sets the nonce, so that a policy that needs the nonce accepts the style element", is the model.
+- Collect the events with a capture listener on the document of the frame. `nextEvent` resolves in the listener of the target, and the case continues before a bubble listener of the document gets the event.
 
 `hydrate` cannot test a part that hydrates after the two ticks, such as an async component in `<Suspense>`. Hydrate such a part by hand, as `progress/value/ProgressValue.test.tsx` does:
 
