@@ -803,9 +803,15 @@ effect(
   () => [isDisabled(), floatingFocusElement.value],
   () => {
     const floatingFocusEl = floatingFocusElement.value;
-    if (!isDisabled() && floatingFocusEl) {
-      handleTabIndex(floatingFocusEl);
+    if (isDisabled() || !floatingFocusEl) {
+      return undefined;
     }
+
+    handleTabIndex(floatingFocusEl);
+
+    return () => {
+      queueMicrotask(clearDisconnectedPreviouslyFocusedElements);
+    };
   },
 );
 
