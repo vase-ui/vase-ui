@@ -1,0 +1,298 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/autocomplete/**",
+    "docs/src/app/(docs)/react/components/autocomplete/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/autocomplete/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Autocomplete. It exports the parts of Combobox under the names of Autocomplete, and Vase UI does not have all of those parts yet."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Combobox.Item`, which `Autocomplete.Item` exports under another name."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Autocomplete.Item`, whose attributes the file names."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/separator/AutocompleteSeparator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Autocomplete.Separator`, which exports `ListboxSeparator` under another name. The part comes with the list parts of Autocomplete."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Combobox.Trigger`, which `Autocomplete.Trigger` exports under another name."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTriggerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Autocomplete.Trigger`, whose attributes the file names."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case renders `Autocomplete.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case that is left renders a part that Vase UI does not have, such as `Autocomplete.List`, `Autocomplete.Item` or `Autocomplete.Trigger`."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case renders `Autocomplete.List` and `Autocomplete.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Value",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Value`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Input",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Input`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Icon",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Icon`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Clear",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Clear`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "List",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.List`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Portal`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Backdrop",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Backdrop`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Positioner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Positioner`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Popup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Arrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Arrow`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Item",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Item`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Group`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "GroupLabel",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.GroupLabel`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Separator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Separator`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Status",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Status`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Empty",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Empty`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Collection",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Collection`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "Row",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.Row`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "InputGroup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.InputGroup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "useFilter",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.useFilter`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "useFilteredItems",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports `Autocomplete.useFilteredItems`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Arrow`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteBackdropDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Backdrop`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteClearDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Clear`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteInputDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Input`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteInputGroupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.InputGroup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Item`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Popup`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePositionerCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the CSS variable names of `Autocomplete.Positioner`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompletePositionerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Positioner`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteSeparatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Separator`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "entry": "AutocompleteTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/autocomplete/index.ts",
+      "reason": "The entry point of Autocomplete exports the attribute names of `Autocomplete.Trigger`. Vase UI does not have that entry point."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
