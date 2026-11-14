@@ -49,6 +49,7 @@ function isStationaryWebKitPointer(event: MouseEvent | PointerEvent) {
 }
 
 function doSwitch(orientation: Orientation | undefined, vertical: boolean, horizontal: boolean) {
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- The `default` case covers `both` and no orientation, as in Base UI.
   switch (orientation) {
     case 'vertical':
       return vertical;
@@ -392,7 +393,7 @@ export function useListNavigation(
       : (callback: () => void) => focusFrame.request(callback);
 
     scheduler(() => {
-      const waitedItem = listRef.value[index] || initialItem;
+      const waitedItem = listRef.value[index] ?? initialItem;
 
       if (!waitedItem) {
         return;
@@ -656,6 +657,7 @@ export function useListNavigation(
     // don't appear to suffer from this. `event.isComposing` is avoided due to
     // Safari not supporting it properly (although it's not needed in the first
     // place for Safari, just avoiding any possible issues).
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- The key code 229 is the IME workaround of Base UI, and the code keeps it.
     if (event.keyCode === 229) {
       return;
     }
@@ -836,6 +838,7 @@ export function useListNavigation(
       if (isEnabled()) {
         handleFloatingKeydown(event, floatingFocusElement);
       }
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }
@@ -914,6 +917,7 @@ export function useListNavigation(
       if (isEnabled()) {
         handleFloatingKeydown(event, event.currentTarget as Element | null);
       }
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }
