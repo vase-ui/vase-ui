@@ -25,12 +25,14 @@ import { useComboboxInputValueContext, useComboboxRootContext } from './Combobox
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 
-// No part of this family renders the input, the list or the items yet. The cases use the fixture
-// parts in their place, and they test the root. The Base UI cases of this file render those parts,
-// so the pull requests that add the parts port them. A ported case then replaces the case of this
-// file that tests the same thing: the order of the events, a canceled change, the controlled
-// values, the hidden inputs, the autofill, the field and the server render. One Base UI case of
-// this file renders only the root. It is in the block `coverage edge cases`.
+// No part of this family renders the positioner, the list or the items yet. The cases use the
+// fixture parts in their place, and they test the root. Most cases also use the fixture input. It
+// handles only the `input` event, and its `insidePopup` prop stands for a positioner around it.
+// The Base UI cases of this file render those parts, so the pull requests that add the parts port
+// them. A ported case then replaces the case of this file that tests the same thing: the order of
+// the events, a canceled change, the controlled values, the hidden inputs, the autofill, the field
+// and the server render. One Base UI case of this file renders only the root. It is in the block
+// `coverage edge cases`.
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
@@ -380,6 +382,161 @@ describe('<Combobox.Root />', () => {
       await flushMicrotasks();
 
       expect(getOptions()).toEqual(['Malmö', 'Malta', 'Oslo']);
+    });
+  });
+
+  describe('highlight', () => {
+    async function renderList(props: Record<string, unknown> = {}) {
+      const handleItemHighlighted = vi.fn();
+      const view = await render(
+        <Combobox.Root
+          id="city"
+          items={cities}
+          onItemHighlighted={handleItemHighlighted}
+          {...props}
+        >
+          <Combobox.Input />
+          <ComboboxListPart />
+        </Combobox.Root>,
+      );
+      const highlights = () =>
+        handleItemHighlighted.mock.calls.map(
+          ([value, details]) => `${value}:${details.index}:${details.reason}`,
+        );
+      return { ...view, handleItemHighlighted, highlights };
+    }
+
+    function getOptionId(label: string) {
+      return screen.getByRole('option', { name: label }).id;
+    }
+
+    async function press(key: string) {
+      await fireEvent.keyDown(getInput(), { key });
+      await flushMicrotasks();
+    }
+
+    it('highlights the first item for typed text with autoHighlight', async () => {
+      const { highlights } = await renderList({ autoHighlight: true });
+
+      await type('ma');
+
+      expect(highlights()).toEqual(['Malmö:0:none']);
+      expect(getInput()).toHaveAttribute('aria-activedescendant', getOptionId('Malmö'));
+      expect(getInput()).toHaveAttribute('aria-controls', 'city-list');
+    });
+
+    it('emits itemHighlighted one time for each change, with the reason keyboard for an arrow key', async () => {
+      const { highlights } = await renderList({ autoHighlight: true });
+
+      await type('ma');
+      await press('ArrowDown');
+      await type('mal');
+      await type('o');
+
+      expect(highlights()).toEqual([
+        'Malmö:0:none',
+        'Malta:1:keyboard',
+        'Malmö:0:none',
+        'Oslo:0:none',
+      ]);
+    });
+
+    it('clears the highlight when no item matches', async () => {
+      const { highlights } = await renderList({ autoHighlight: true });
+
+      await type('ma');
+      await type('zzz');
+
+      expect(highlights()).toEqual(['Malmö:0:none', 'undefined:-1:none']);
+      expect(getInput()).not.toHaveAttribute('aria-activedescendant');
+    });
+
+    it('highlights the first item at the open with autoHighlight always', async () => {
+      const { highlights } = await renderList({ autoHighlight: 'always' });
+
+      await fireEvent.mouseDown(getInput());
+      await flushMicrotasks();
+
+      expect(getInput()).toHaveAttribute('aria-expanded', 'true');
+      expect(highlights()).toEqual(['Malmö:0:none']);
+      expect(getInput()).toHaveAttribute('aria-activedescendant', getOptionId('Malmö'));
+    });
+
+    it('does not highlight for autofill text', async () => {
+      const { highlights } = await renderList({ autoHighlight: true });
+      await fireEvent.mouseDown(getInput());
+      await flushMicrotasks();
+      expect(getInput()).toHaveAttribute('aria-expanded', 'true');
+
+      await fireEvent.input(getInput(), {
+        target: { value: 'ma' },
+        inputType: 'insertReplacementText',
+      });
+      await flushMicrotasks();
+
+      expect(getOptions()).toEqual(['Malmö', 'Malta']);
+      expect(highlights()).toEqual([]);
+    });
+
+    it('returns the highlight to the selected item after a clear by a pick (input in the popup, multiple)', async () => {
+      const { highlights } = await renderList({
+        inline: true,
+        open: true,
+        multiple: true,
+        defaultValue: ['Malmö'],
+        autoHighlight: true,
+      });
+      getInput().focus();
+
+      await type('mal');
+      expect(highlights()).toEqual(['Malmö:0:none']);
+
+      await pick('Malta');
+
+      expect(getInput().value).toBe('');
+      expect(getOptions()).toEqual(cities);
+      expect(highlights()).toEqual(['Malmö:0:none', 'Malta:1:none']);
+      expect(getInput()).toHaveAttribute('aria-activedescendant', getOptionId('Malta'));
+    });
+
+    it('aria-activedescendant names the active item and the input keeps the focus', async () => {
+      await renderList();
+      getInput().focus();
+
+      await type('ma');
+      expect(getInput()).not.toHaveAttribute('aria-activedescendant');
+
+      await press('ArrowDown');
+
+      expect(getInput()).toHaveAttribute('aria-activedescendant', getOptionId('Malmö'));
+      expect(getInput()).toHaveFocus();
+    });
+
+    it('emits no highlight while the popup closes', async () => {
+      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+      const { container, highlights } = await renderList({ defaultValue: 'Malta' });
+      // The popup of the fixture list is the parent of the list. Its animation holds the close.
+      const style = document.createElement('style');
+      style.textContent =
+        '@keyframes hold { to { opacity: 0.5; } } div:has(> #city-list) { animation: hold 100s; }';
+      container.append(style);
+      getInput().focus();
+      await fireEvent.mouseDown(getInput());
+      await flushMicrotasks();
+      expect(getOptions()).toEqual(cities);
+
+      await press('Escape');
+      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
+      expect(getOptions()).toEqual(cities);
+
+      await press('ArrowDown');
+
+      expect(getInput()).toHaveAttribute('aria-expanded', 'true');
+      expect(highlights()).toEqual([]);
+
+      for (const animation of document.getAnimations()) {
+        animation.finish();
+      }
     });
   });
 
@@ -890,6 +1047,37 @@ describe('<Combobox.Root />', () => {
       expect(validate).toHaveBeenCalledTimes(2);
       expect(screen.getByTestId('error')).toHaveTextContent('Not Malta');
     });
+
+    it('VUE-21: starts no validation for the change of a reset when the root part holds the input value', async () => {
+      const validate = vi.fn((value: unknown) => (value === 'Malta' ? 'Not Malta' : null));
+      await render(
+        <Form data-testid="form">
+          <Field.Root
+            data-testid="field"
+            name="search"
+            validate={validate}
+            validationMode="onChange"
+          >
+            <AutocompleteRootPart items={cities} defaultInputValue="ma">
+              <ComboboxInputPart />
+            </AutocompleteRootPart>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+      await type('Malta');
+      vi.advanceTimersByTime(0);
+      await flushMicrotasks();
+      expect(screen.getByTestId('error')).toHaveTextContent('Not Malta');
+      expect(validate).toHaveBeenCalledTimes(1);
+
+      await reset();
+
+      expect(getInput().value).toBe('ma');
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-invalid');
+    });
   });
 
   describe('autofill', () => {
@@ -1190,6 +1378,42 @@ describe('<Combobox.Root />', () => {
       expect(handleInputValueChange.mock.lastCall?.[0]).toBe('Malta');
       expect(getInput().value).toBe('Malta');
       expect(getHiddenInput().value).toBe('Malta');
+    });
+
+    it('keeps the highlight and gives no itemHighlighted while deactivated', async () => {
+      const shown = shallowRef(true);
+      const handleItemHighlighted = vi.fn();
+      await render(() => (
+        <KeepAlive>
+          {shown.value ? (
+            <Combobox.Root
+              key="root"
+              items={cities}
+              autoHighlight
+              onItemHighlighted={handleItemHighlighted}
+            >
+              <Combobox.Input />
+              <ComboboxListPart />
+            </Combobox.Root>
+          ) : null}
+        </KeepAlive>
+      ));
+      getInput().focus();
+      await type('ma');
+      await fireEvent.keyDown(getInput(), { key: 'ArrowDown' });
+      await flushMicrotasks();
+      const activeId = screen.getByRole('option', { name: 'Malta' }).id;
+      expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
+      handleItemHighlighted.mockClear();
+
+      shown.value = false;
+      await flushMicrotasks();
+      shown.value = true;
+      await flushMicrotasks();
+
+      expect(handleItemHighlighted).toHaveBeenCalledTimes(0);
+      expect(getInput()).toHaveAttribute('aria-expanded', 'true');
+      expect(getInput()).toHaveAttribute('aria-activedescendant', activeId);
     });
   });
 

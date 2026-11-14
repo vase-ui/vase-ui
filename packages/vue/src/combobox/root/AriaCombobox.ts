@@ -16,7 +16,7 @@ import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useIsHydrating } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
-import { closest, contains, getTarget } from '../../common/shadowDom';
+import { activeElement, closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
 import { visuallyHiddenInput, visuallyHiddenInputPinned } from '../../common/visuallyHidden';
 import {
@@ -27,6 +27,7 @@ import type {
   VaseUIChangeEventDetails,
   VaseUIHighlightEventDetails,
 } from '../../internals/createBaseUIEventDetails';
+import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useRegisterFieldControl } from '../../internals/field-register-control';
 import { useClearFieldError, useFieldRootContext } from '../../internals/field-root-context';
 import { getFilter } from '../../internals/filter';
@@ -34,7 +35,9 @@ import { useFormContext } from '../../internals/form-context';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { handleHiddenInputInvalid } from '../../internals/handleHiddenInputInvalid';
 import {
+  compareItemEquality,
   defaultItemEquality,
+  findItemIndex,
   findSelectionIndex,
   isSelectedValueDirty,
   removeItem,
@@ -50,11 +53,15 @@ import {
   stringifyAsValue,
 } from '../../internals/resolveValueLabel';
 import type { Group } from '../../internals/resolveValueLabel';
+import type { VaseUIEvent } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
+import { getHighlightReason } from '../../utils/getHighlightReason';
+import { gridNavigation } from '../../utils/popups/interactions/gridNavigation';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
 import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
 import {
@@ -77,7 +84,7 @@ import {
 import type { ComboboxInputElementValue } from './ComboboxRootContext';
 import { createCollatorItemFilter } from './utils';
 import type { FilterItemToString } from './utils';
-import { INITIAL_LAST_HIGHLIGHT } from './utils/constants';
+import { INITIAL_LAST_HIGHLIGHT, NO_ACTIVE_VALUE } from './utils/constants';
 
 export namespace AriaCombobox {
   export type Props<Value, Mode extends SelectionMode = 'none', Item = Value> = AriaComboboxProps<
@@ -425,6 +432,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   } = useFieldRootContext();
 
   const id = useLabelableId({ id: () => props.id });
+  const direction = useDirection();
   const locale = useFormatLocale(() => props.locale);
   const collatorFilter = computed(() => getFilter({ locale: locale.value }));
 
@@ -543,9 +551,17 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
   const queryChangedAfterOpen = shallowRef(false);
   const closeQuery = shallowRef<string | null>(null);
+  let previousCloseQuery = closeQuery.value;
 
   let hadInputClear = false;
   let lastHighlight = INITIAL_LAST_HIGHLIGHT;
+  let pendingQueryHighlight: null | {
+    hasQuery: boolean;
+    selection?: boolean | undefined;
+    // The value a selection-driven clear just added, so the restore can keep it
+    // highlighted instead of returning to the open anchor.
+    toggledValue?: any;
+  } = null;
   const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 
   function getDefaultSelectedValue() {
@@ -598,6 +614,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const emptyRef = shallowRef<HTMLDivElement | null>(null);
   const clearRef = shallowRef<HTMLButtonElement | null>(null);
   const chipsContainerRef = shallowRef<HTMLDivElement | null>(null);
+  const pointerDownItemRef = shallowRef<Element | null>(null);
   const selectionEventRef = shallowRef<MouseEvent | PointerEvent | KeyboardEvent | null>(null);
 
   // Support composing the Dialog component around an inline combobox: its transitions wait for
@@ -605,7 +622,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // below points it at that element.
   const animatedPopup = shallowRef<HTMLElement | null>(null);
 
-  const { store, open, actions } = useSingleAnchorPopupRoot(
+  const { store, open, transitionStatus, actions } = useSingleAnchorPopupRoot(
     props,
     (initialState, defaultPopupId) =>
       new ComboboxStore(
@@ -677,7 +694,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           chipsContainerRef,
           clearRef,
           valuesRef,
-          pointerDownItemRef: shallowRef(null),
+          pointerDownItemRef,
           selectionEventRef,
         },
         selectors,
@@ -930,6 +947,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
     // A canceled selection clear must not suppress close-completion cleanup.
     hadInputClear = eventDetails.reason === REASONS.inputClear;
+    const state = toRaw(store.state);
 
     // If user is typing, ensure we don't auto-highlight on open due to a race
     // with the post-open effect that sets this flag.
@@ -947,14 +965,17 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
         event.type === 'compositionend' ||
         (inputType != null && inputType !== '' && inputType !== 'insertReplacementText');
       if (isTypedInput) {
-        if (next.trim() !== '') {
+        const hasQuery = next.trim() !== '';
+        if (hasQuery) {
           queryChangedAfterOpen.value = true;
         }
+        // Defer index updates until after the filtered items have been derived to ensure
+        // `itemHighlighted` receives the latest item.
+        pendingQueryHighlight = { hasQuery };
 
         // Virtualized lists own their scroller. Reset regular lists directly so a stale
         // composite registry cannot select a reordered item and scrolling cannot escape
         // the popup.
-        const state = toRaw(store.state);
         const list = state.listElement;
         if (!state.virtualized && list) {
           const popup = popupRef.value;
@@ -971,7 +992,24 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             }
           }
         }
+
+        if (
+          hasQuery &&
+          autoHighlightMode.value &&
+          state.activeIndex == null &&
+          (open.value || state.inline)
+        ) {
+          store.set('activeIndex', 0);
+        }
       }
+    } else if (
+      eventDetails.reason === REASONS.inputClear &&
+      next === '' &&
+      state.inputInsidePopup
+    ) {
+      // A programmatic clear of an active query (e.g. after selecting an item with the
+      // input inside the popup): restore the highlight to the selected item.
+      pendingQueryHighlight = { hasQuery: false, selection: true };
     }
 
     setInputValueUnwrapped(next);
@@ -1018,6 +1056,16 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
 
     callbacks.onOpenChange(nextOpen, eventDetails);
+
+    // A typed request must not highlight a later open: discard it when its own open is
+    // rejected, or when any other open change goes through.
+    if (
+      pendingQueryHighlight?.hasQuery &&
+      (eventDetails.reason === REASONS.inputChange) === eventDetails.isCanceled
+    ) {
+      pendingQueryHighlight = null;
+    }
+
     if (eventDetails.isCanceled) {
       return;
     }
@@ -1133,6 +1181,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
             isItemPress: true,
           }),
         );
+        // A newly selected item stays highlighted through the clear; a deselection
+        // falls back to the standard selection anchor.
+        if (pendingQueryHighlight && !isCurrentlySelected) {
+          pendingQueryHighlight.toggledValue = itemValue;
+        }
       } else {
         store.setOpen(false, eventDetails);
       }
@@ -1194,17 +1247,60 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   // `[role="dialog"]` is more interoperable than using a context, e.g. it can work
   // with third-party modal libraries, though the limitation is that the closest
   // `role=dialog` part must be the animated element.
+  function getResolvedPopup() {
+    const positioner = toRaw(store.state).positionerElement;
+    return inline.value && positioner
+      ? closest<HTMLElement>(positioner, '[role="dialog"]')
+      : popupRef.value;
+  }
   function syncAnimatedPopup() {
-    const positioner = store.select('positionerElement');
-    animatedPopup.value =
-      inline.value && positioner
-        ? closest<HTMLElement>(positioner, '[role="dialog"]')
-        : popupRef.value;
+    animatedPopup.value = getResolvedPopup();
   }
   onMounted(syncAnimatedPopup);
   watch([inline, () => store.select('positionerElement'), popupRef], syncAnimatedPopup, {
     flush: 'post',
   });
+
+  // The blocks below are the layout effects of Base UI, in the sequence of its source. The
+  // highlight blocks are `post` watchers, so they run after the items of the render wrote their
+  // registry. A flush runs the watchers in the sequence of the writes to their sources.
+  function syncSelectedIndex() {
+    const closeQueryReleased = previousCloseQuery !== null && closeQuery.value === null;
+    previousCloseQuery = closeQuery.value;
+
+    // Closing indexes against the frozen filtered list. Reopening releases that query, so its
+    // rendered coordinates must be synchronized again even though the popup is already open.
+    if (open.value && (!closeQueryReleased || !hasItems.value)) {
+      return;
+    }
+
+    // State-driven (not tied to the internal event path) so controlled closes
+    // also clear a pointerdown that never received a matching item mouseup.
+    if (!open.value) {
+      pointerDownItemRef.value = null;
+    }
+
+    if (selectionMode.value === 'none') {
+      return;
+    }
+
+    // Without `items`, look the selection up in the live registry of mounted item
+    // values (the list stays mounted while closed when closed-state features need
+    // it — trigger interaction and rendered-label autofill force-mount it). Mounted
+    // items re-assert the index themselves when their registration moves; when
+    // nothing is mounted the lookup resolves to `null` and each item re-registers
+    // the index on the next open.
+    // Keep the selected index in the coordinates of the list that is actually rendered.
+    const registry: readonly any[] = hasItems.value ? flatFilteredValues.value : valuesRef.value;
+    setIndices({
+      selectedIndex: findSelectionIndex(
+        registry,
+        selectedValue.value,
+        isItemEqualToValue.value,
+        multiple.value,
+      ),
+    });
+  }
 
   // An item part reads `valuesRef` when it renders, so this copy has the default flush. It runs
   // before the render of the parts.
@@ -1214,8 +1310,198 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       listRef.value.length = flatFilteredValues.value.length;
     }
   }
+
+  function dropPendingHighlightOnClose() {
+    // Controlled closes can bypass `setOpen`, and their exit animation may be interrupted.
+    if (!open.value && pendingQueryHighlight?.hasQuery) {
+      pendingQueryHighlight = null;
+    }
+  }
+
+  function syncHighlight() {
+    // A kept-mounted dialog hides its inline list on close. Discard query-clear restoration
+    // before it can overwrite the cleared highlight or report an item from the unfiltered list.
+    if (!open.value && inline.value && getResolvedPopup()) {
+      pendingQueryHighlight = null;
+      return;
+    }
+
+    const state = toRaw(store.state);
+    const candidateItems =
+      hasItems.value || hasFilteredItemsProp.value ? flatFilteredValues.value : valuesRef.value;
+    const pendingHighlight = pendingQueryHighlight;
+    if (pendingHighlight) {
+      // A directly rendered list remains visible when the popup state is closed, while a
+      // kept-mounted Positioner is hidden and should stay inert.
+      const listIsNavigable =
+        open.value || inline.value || state.positionerElement?.hidden === false;
+      if (pendingHighlight.hasQuery) {
+        const input = inputRef.value;
+        // Keep the request while results or a controlled popup opening are pending,
+        // but do not restore an inline highlight after focus has left the input.
+        if (
+          !autoHighlightMode.value ||
+          String(inputValue.value).trim() === '' ||
+          (inline.value &&
+            autoHighlightMode.value !== 'always' &&
+            (!input || activeElement(input.ownerDocument) !== input))
+        ) {
+          pendingQueryHighlight = null;
+        } else if (
+          listIsNavigable &&
+          // Individually rendered items register without re-running this effect, and their
+          // registry has holes mid-reindex, so resolve their request immediately.
+          (candidateItems[0] !== undefined || (!hasItems.value && !hasFilteredItemsProp.value))
+        ) {
+          store.set('activeIndex', 0);
+          pendingQueryHighlight = null;
+        }
+      } else if (String(inputValue.value).trim() === '') {
+        // Only handle the clear once it has committed (a controlled input may reject it),
+        // so a restore cannot fire while a query is still active.
+        pendingQueryHighlight = null;
+        if (listIsNavigable) {
+          const clearedBySelection = pendingHighlight.selection;
+          if (
+            autoHighlightMode.value === 'always' &&
+            !clearedBySelection &&
+            state.selectionMode === 'none'
+          ) {
+            // There is no selection to restore in Autocomplete. Keep the first-item reset
+            // synchronous so list navigation sees it before a directly rendered list closes.
+            store.set('activeIndex', 0);
+          }
+
+          // Items re-mounted by the clear publish their composite indices in a follow-up
+          // commit, so the item registries are mid-update here.
+          queueMicrotask(() => {
+            const current = toRaw(store.state);
+            if (
+              (!current.open && (!current.inline || getResolvedPopup())) ||
+              (inputRef.value && inputRef.value.value.trim() !== '')
+            ) {
+              return;
+            }
+
+            // Return the highlight to the selected item, the same anchor the popup uses
+            // when it first opens.
+            const currentSelectedValue = current.selectedValue;
+            const isMultiple = current.selectionMode === 'multiple';
+            const hasSelection =
+              isMultiple && Array.isArray(currentSelectedValue)
+                ? currentSelectedValue.length > 0
+                : current.selectionMode !== 'none' && currentSelectedValue != null;
+
+            if (hasSelection) {
+              const registry =
+                hasItems.value || hasFilteredItemsProp.value
+                  ? flatFilteredValues.value
+                  : valuesRef.value;
+              // A selection-driven clear keeps the just-selected item highlighted;
+              // otherwise return to the open anchor. A selection that is no longer in
+              // the list drops the highlight rather than leaving it on whichever item
+              // now occupies that index.
+              // `findItemIndex` resolves to -1 when no value was toggled.
+              const toggledIndex = findItemIndex(
+                registry,
+                pendingHighlight.toggledValue,
+                current.isItemEqualToValue,
+              );
+              store.set(
+                'activeIndex',
+                toggledIndex !== -1
+                  ? toggledIndex
+                  : findSelectionIndex(
+                      registry,
+                      currentSelectedValue,
+                      current.isItemEqualToValue,
+                      isMultiple,
+                    ),
+              );
+            } else if (clearedBySelection) {
+              store.set('activeIndex', null);
+            } else if (autoHighlightMode.value === 'always') {
+              store.set('activeIndex', 0);
+            }
+          });
+        }
+      }
+    }
+
+    if (!open.value && !inline.value) {
+      return;
+    }
+
+    const storeActiveIndex = state.activeIndex;
+
+    if (storeActiveIndex == null) {
+      if (autoHighlightMode.value === 'always' && candidateItems.length > 0) {
+        store.set('activeIndex', 0);
+        return;
+      }
+      emitHighlight(undefined, -1, REASONS.none);
+      return;
+    }
+
+    if (storeActiveIndex >= candidateItems.length) {
+      emitHighlight(undefined, -1, REASONS.none);
+      store.set('activeIndex', null);
+      return;
+    }
+
+    const itemValue = candidateItems[storeActiveIndex];
+    const previouslyHighlightedItemValue = lastHighlight.value;
+    const isSameItem =
+      previouslyHighlightedItemValue !== NO_ACTIVE_VALUE &&
+      compareItemEquality(itemValue, previouslyHighlightedItemValue, state.isItemEqualToValue);
+
+    if (lastHighlight.index !== storeActiveIndex || !isSameItem) {
+      emitHighlight(itemValue, storeActiveIndex, REASONS.none);
+    }
+  }
+
+  const activeIndex = computed(() => store.select('activeIndex'));
+  const selectedIndex = computed(() => store.select('selectedIndex'));
+
+  onMounted(() => {
+    syncSelectedIndex();
+    dropPendingHighlightOnClose();
+    syncHighlight();
+  });
+  watch(
+    [
+      open,
+      closeQuery,
+      selectedValue,
+      selectionMode,
+      hasItems,
+      flatFilteredValues,
+      isItemEqualToValue,
+    ],
+    syncSelectedIndex,
+    { flush: 'post' },
+  );
   syncValuesRef();
   watch([items, flatFilteredValues], syncValuesRef);
+  watch(open, dropPendingHighlightOnClose, { flush: 'post' });
+  watch(
+    [
+      activeIndex,
+      autoHighlightMode,
+      hasFilteredItemsProp,
+      hasItems,
+      flatFilteredValues,
+      inline,
+      open,
+      // The resolved popup of an inline list is the dialog around its positioner.
+      () => (inline.value ? store.select('positionerElement') : null),
+      // Reruns the effect when the query changes without affecting the deps above, such as
+      // clearing the input when no items are filtered out (individually rendered items).
+      inputValue,
+    ],
+    syncHighlight,
+    { flush: 'post' },
+  );
 
   const filled = computed(() => {
     if (selectionMode.value === 'none') {
@@ -1226,6 +1512,18 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   });
   setFilled(filled.value);
   watch(filled, setFilled);
+
+  // Ensures that the active index is not set to 0 when the list is empty.
+  // This avoids needing to press ArrowDown twice under certain conditions.
+  watch(
+    [hasItems, autoHighlightMode, () => flatFilteredValues.value.length],
+    () => {
+      if (hasItems.value && autoHighlightMode.value && flatFilteredValues.value.length === 0) {
+        setIndices({ activeIndex: null });
+      }
+    },
+    { flush: 'post' },
+  );
 
   // The change of a reset reaches `useValueChanged` after the reset timeout. The timeout sets this
   // flag, and the callback clears the field and starts no validation.
@@ -1378,17 +1676,78 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     },
   });
 
-  const inputProps = computed(() => mergeProps(dismiss.reference, click.reference, role.value));
+  const listNavigation = useListNavigation(store.interactions, {
+    enabled: () => !disabled.value,
+    id,
+    listRef,
+    activeIndex,
+    selectedIndex,
+    virtual: true,
+    loopFocus: () => props.loopFocus ?? true,
+    allowEscape: () => (props.loopFocus ?? true) && !autoHighlightMode.value,
+    focusItemOnOpen: () =>
+      queryChangedAfterOpen.value || (selectionMode.value === 'none' && !autoHighlightMode.value)
+        ? false
+        : 'auto',
+    focusItemOnHover: () => props.highlightItemOnHover ?? true,
+    resetOnPointerLeave: () => !(props.keepHighlight ?? false),
+    orientation: () => (grid.value ? 'horizontal' : undefined),
+    rtl: () => direction.value === 'rtl',
+    disabledIndices: EMPTY_ARRAY as number[],
+    grid: () => (grid.value ? gridNavigation : undefined),
+    onNavigate(nextActiveIndex, event) {
+      // Ignore automatic navigation while closed, including selected-index sync for inline lists.
+      // Inline lists remain navigable while `open` is false, so still allow resets (clearing the
+      // highlight when an unbound inline list unmounts, e.g. in a closed dialog).
+      if (
+        (!event && !open.value && !(inline.value && nextActiveIndex === null)) ||
+        transitionStatus.value === 'ending'
+      ) {
+        return;
+      }
+      setIndices({ activeIndex: nextActiveIndex, type: getHighlightReason(event), event });
+    },
+  });
+
+  const inputProps = computed(() =>
+    mergeProps(
+      listNavigation.value.reference,
+      {
+        onKeydown(event: VaseUIEvent<KeyboardEvent>) {
+          // In grid mode the navigation hook treats ArrowLeft/ArrowRight as horizontal
+          // grid movement. When the input has focus and no item is highlighted the user
+          // is still editing the query, so let the input keep its native caret behavior.
+          if (
+            grid.value &&
+            toRaw(store.state).activeIndex == null &&
+            (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+          ) {
+            event.preventVaseUIHandler();
+          }
+        },
+      },
+      dismiss.reference,
+      click.reference,
+      role.value,
+    ),
+  );
   const popupProps = mergeProps(FOCUSABLE_POPUP_PROPS, dismiss.floating);
-  const listProps: HTMLAttributes = { role: 'presentation' };
-  const itemRoot = computed(() => ({
-    props: EMPTY_OBJECT as HTMLAttributes,
-    id: id.value,
-    selectionMode: selectionMode.value,
-    disabled: disabled.value,
-    readOnly: readOnly.value,
-    isItemEqualToValue: isItemEqualToValue.value,
-  }));
+  const listProps = computed(() =>
+    mergeProps(listNavigation.value.floating, { role: 'presentation' }),
+  );
+  const itemRoot = computed(() => {
+    // Combobox keeps focus on the input; item focus would incorrectly sync
+    // list navigation state from DOM focus.
+    const { onFocusin: _onFocusin, ...itemProps } = listNavigation.value.item;
+    return {
+      props: itemProps as HTMLAttributes,
+      id: id.value,
+      selectionMode: selectionMode.value,
+      disabled: disabled.value,
+      readOnly: readOnly.value,
+      isItemEqualToValue: isItemEqualToValue.value,
+    };
+  });
 
   // The call writes the state at once, so each part reads it in its first render. It then writes
   // one time for each flush in which a source changed.
@@ -1398,7 +1757,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     items: storeItems.value as readonly any[] | undefined,
     inline: inlineProp.value,
     popupProps,
-    listProps,
+    listProps: listProps.value,
     inputProps: inputProps.value,
     activeTriggerProps: triggerProps,
     inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
