@@ -9,6 +9,7 @@ import {
   flushMicrotasks,
   screen,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 
 describe('<Select.Item />', () => {
@@ -47,6 +48,7 @@ describe('<Select.Item />', () => {
 
     const option = await screen.findByRole('option', { name: 'one' });
     expect(option).toHaveAttribute('aria-selected', 'false');
+    await waitForLaterMillisecond();
 
     await user.click(option);
 
@@ -151,7 +153,9 @@ describe('<Select.Item />', () => {
     );
 
     await user.click(screen.getByTestId('trigger'));
-    await user.click(await screen.findByRole('option', { name: 'two' }));
+    const option = await screen.findByRole('option', { name: 'two' });
+    await waitForLaterMillisecond();
+    await user.click(option);
 
     expect(handleValueChange).not.toHaveBeenCalled();
     expect(screen.getByTestId('value').textContent).toBe('');
@@ -262,6 +266,8 @@ describe('<Select.Item />', () => {
     async function openWithMouseDown(trigger: HTMLElement) {
       await fireEvent.mouseDown(trigger);
       await waitFor(() => expect(screen.queryByRole('listbox')).not.toBe(null));
+      // Vue skips a listener of an item for an event that comes in the millisecond of its mount.
+      await waitForLaterMillisecond();
     }
 
     it('calls onClick once for a click made after the opening delay', async () => {
