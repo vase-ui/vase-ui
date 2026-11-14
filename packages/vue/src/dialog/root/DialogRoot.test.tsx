@@ -1593,7 +1593,11 @@ describe('<Dialog.Root />', () => {
     expect(screen.queryByTestId('a')).not.toBe(null);
   });
 
-  it('BUG-6037: closes a popover opened during a nested dialog on Escape, with the focus in the parent popup', async () => {
+  it.each([
+    { name: 'the parent that has the focus', focusInParent: true },
+    { name: 'the newer popover, with no focus', focusInParent: false },
+  ])('BUG-6037: closes $name on Escape after a nested dialog closes', async ({ focusInParent }) => {
+    const onParentOpenChange = vi.fn();
     const onPopoverOpenChange = vi.fn();
 
     const Test = defineComponent({
@@ -1605,7 +1609,7 @@ describe('<Dialog.Root />', () => {
         // The parent dialog stops handling Escape while its nested dialog is open.
         return () => (
           <>
-            <Dialog.Root defaultOpen modal={false}>
+            <Dialog.Root defaultOpen modal={false} onOpenChange={onParentOpenChange}>
               <Dialog.Portal>
                 <Dialog.Popup initialFocus={false} data-testid="parent">
                   <Dialog.Root open={props.nestedOpen} modal={false}>
@@ -1639,16 +1643,24 @@ describe('<Dialog.Root />', () => {
       expect(screen.queryByTestId('nested')).toBe(null);
     });
     // The parent popup has no tabbable element, so it takes the focus itself.
+    const parent = screen.getByTestId('parent');
     await waitFor(() => {
-      expect(screen.getByTestId('parent')).toHaveFocus();
+      expect(parent).toHaveFocus();
     });
+    if (!focusInParent) {
+      parent.blur();
+      expect(document.activeElement).toBe(document.body);
+    }
 
     await user.keyboard('[Escape]');
 
-    expect(onPopoverOpenChange.mock.calls.length).toBe(1);
-    expect(onPopoverOpenChange.mock.calls[0][0]).toBe(false);
-    expect(onPopoverOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
-    expect(screen.queryByTestId('parent')).not.toBe(null);
+    const [closed, open] = focusInParent
+      ? [onParentOpenChange, onPopoverOpenChange]
+      : [onPopoverOpenChange, onParentOpenChange];
+    expect(closed.mock.calls.length).toBe(1);
+    expect(closed.mock.calls[0][0]).toBe(false);
+    expect(closed.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+    expect(open).not.toHaveBeenCalled();
   });
 
   describe('closed shadow root', () => {

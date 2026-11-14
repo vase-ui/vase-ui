@@ -84,7 +84,7 @@
       "title": "closes a popover opened during a nested dialog, not the parent, on Escape after the nested dialog closes",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/root/DialogRoot.test.tsx",
-      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037). The case `BUG-6037: closes a popover opened during a nested dialog on Escape, with the focus in the parent popup` tests the Escape key with that focus."
+      "reason": "The case expects the focus on `<body>` after the nested dialog closes. Vase UI moves it into the parent popup (BUG-6037), so Escape there closes the parent. The case `BUG-6037: closes $name on Escape after a nested dialog closes` tests Escape with that focus, and the popover that closes when no popup has the focus."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
