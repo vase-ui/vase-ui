@@ -42,7 +42,7 @@ Import the component and assemble its parts:
 
 <<< ./toast/Anatomy.vue
 
-`Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider, and render a `Toast.Root` for each toast of the list. The demos have such a component, `ToastList.vue`.
+`Toast.useToastManager()` reads the toasts of the nearest `<Toast.Provider>`. Call it in a component inside the provider, and render a `Toast.Root` for each toast of the list. Most demos have such a component, `ToastList.vue`.
 
 ## General usage
 
