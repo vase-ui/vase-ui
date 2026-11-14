@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 describe('<NavigationMenu.Portal />', () => {
   const { render } = createRenderer();
