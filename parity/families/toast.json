@@ -53,22 +53,6 @@
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
-      "title": "keeps timers paused when a hovered toast is clicked while nothing had focus",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
-      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
-      "title": "keeps timers paused when the window regains focus while a toast is hovered",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
-      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Positioner",
       "prop": "disableAnchorTracking",

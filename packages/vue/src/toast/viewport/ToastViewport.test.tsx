@@ -19,6 +19,7 @@ import {
   renderOnServer,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   within,
 } from '#test-utils';
@@ -2179,6 +2180,75 @@ describe('<Toast.Viewport />', () => {
       disable(origin);
 
       expect(await fireEvent.keyDown(viewport, { key: 'F6' })).toBe(true);
+    });
+
+    it('keeps timers paused when a hovered toast is clicked while nothing had focus', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+
+      await render(
+        <Toast.Provider toastManager={manager} timeout={300}>
+          <Toast.Viewport>
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      manager.add({ id: 'toast', title: 'title' });
+      await flushMicrotasks();
+      expect(document.activeElement).toBe(document.body);
+
+      await userEvent.click(screen.getByTestId('toast-title'));
+      await flushMicrotasks();
+      expect(screen.getByTestId('toast')).toHaveFocus();
+
+      await wait(600);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('toast')).toBeInTheDocument();
+    });
+
+    it('keeps timers paused when the window regains focus while a toast is hovered', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+
+      await render(
+        <Toast.Provider toastManager={manager} timeout={300}>
+          <Toast.Viewport data-testid="viewport">
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      manager.add({ id: 'toast', title: 'title' });
+      await flushMicrotasks();
+
+      await userEvent.hover(screen.getByTestId('toast'));
+      await flushMicrotasks();
+      expect(screen.getByTestId('viewport')).toHaveAttribute('data-expanded');
+
+      // Focusing an element in the parent frame blurs this window for real.
+      const parentInput = window.parent.document.createElement('input');
+      // Keep the parent layout unchanged so the pointer stays over the toast.
+      parentInput.style.position = 'fixed';
+      parentInput.style.left = '-1000px';
+      window.parent.document.body.appendChild(parentInput);
+      onTestFinished(() => parentInput.remove());
+
+      parentInput.focus();
+      await wait(50);
+      await flushMicrotasks();
+      expect(document.hasFocus()).toBe(false);
+
+      window.focus();
+      await wait(50);
+      await flushMicrotasks();
+      expect(document.hasFocus()).toBe(true);
+
+      await wait(600);
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('toast')).toBeInTheDocument();
     });
 
     it('moves focus to a visible toast when the next one was limited', async () => {
