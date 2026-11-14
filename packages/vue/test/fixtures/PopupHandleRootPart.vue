@@ -16,7 +16,9 @@ const store = new PopupHandleFixtureStore({
 provide(PopupHandleFixtureContext, store);
 
 let detach: (() => void) | undefined;
-// A server does not call `onBeforeMount`, so a server render never attaches the store.
+// This root attaches before the parts after it render. A trigger that hydrates after a mounted
+// root gets the same state. A server does not call the hook, so a server render never attaches the
+// store.
 onBeforeMount(() => {
   detach = props.handle?.attachStore(store);
 });

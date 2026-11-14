@@ -33,8 +33,9 @@ const open: TriggerValues = {
 };
 
 describe('usePopupRoot on a server', () => {
-  // A server calls no ref callback, no `onMounted` hook and no `onBeforeMount` hook. It registers
-  // no trigger, and no root attaches its store to a handle.
+  // A server calls no ref callback and no `onMounted` hook. It runs no `watch` with a callback
+  // unless the `watch` has `immediate` or `flush: 'sync'`. It registers no trigger, and no root
+  // attaches its store to a handle.
   it.each<{ name: string; props: Record<string, unknown>; triggers: TriggerValues[] }>([
     {
       name: 'closed with a trigger id',

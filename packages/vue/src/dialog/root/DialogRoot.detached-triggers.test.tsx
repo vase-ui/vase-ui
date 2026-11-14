@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { createSSRApp, defineComponent, onMounted, shallowRef } from 'vue';
+import { Suspense, createSSRApp, defineComponent, onMounted, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   detachedTriggersConformanceTests,
+  fireEvent,
   flushMicrotasks,
   isJSDOM,
   renderOnServer,
@@ -535,6 +536,101 @@ describe('<Dialog.Root />', () => {
       expect(screen.getByTestId('payload').textContent).toBe('No payload');
     });
 
+    it('does not attach a replacement root store from an abandoned transition render', async () => {
+      const handle = Dialog.createHandle<number>();
+      const replacementRender = vi.fn();
+      const never = new Promise<void>(() => {});
+      const showReplacement = shallowRef(false);
+
+      const SuspendingReplacement = defineComponent({
+        async setup() {
+          replacementRender();
+          await never;
+          return () => null;
+        },
+      });
+
+      const App = defineComponent(() => () => (
+        <>
+          <Dialog.Trigger handle={handle} id="trigger" payload={5}>
+            Trigger
+          </Dialog.Trigger>
+          <button
+            type="button"
+            onClick={() => {
+              showReplacement.value = true;
+            }}
+          >
+            Start replacement
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              showReplacement.value = false;
+            }}
+          >
+            Cancel replacement
+          </button>
+
+          <Dialog.Root handle={handle} modal={false} disablePointerDismissal>
+            {{
+              default: ({ payload }: NumberPayload) => (
+                <Dialog.Portal>
+                  <Dialog.Popup>
+                    Current dialog
+                    <span data-testid="payload">{payload ?? 'No payload'}</span>
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              ),
+            }}
+          </Dialog.Root>
+
+          <Suspense>
+            {{
+              default: () =>
+                showReplacement.value ? (
+                  <Dialog.Root handle={handle} modal={false} disablePointerDismissal>
+                    <SuspendingReplacement />
+                    <Dialog.Portal>
+                      <Dialog.Popup>Replacement dialog</Dialog.Popup>
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                ) : null,
+              fallback: () => <div>Loading</div>,
+            }}
+          </Suspense>
+        </>
+      ));
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Trigger' });
+
+      await user.click(trigger);
+      await waitFor(() => {
+        expect(screen.getByText('Current dialog')).toBeVisible();
+      });
+      expect(screen.getByTestId('payload').textContent).toBe('5');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(handle.isOpen).toBe(true);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Start replacement' }));
+      expect(replacementRender).toHaveBeenCalled();
+
+      expect(screen.queryByText('Replacement dialog')).toBe(null);
+      expect(screen.getByText('Current dialog')).toBeVisible();
+      expect(screen.getByTestId('payload').textContent).toBe('5');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(handle.isOpen).toBe(true);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Cancel replacement' }));
+
+      expect(screen.queryByText('Replacement dialog')).toBe(null);
+      expect(screen.getByText('Current dialog')).toBeVisible();
+      expect(screen.getByTestId('payload').textContent).toBe('5');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(handle.isOpen).toBe(true);
+    });
+
     it('attaches a fresh root store when the handle prop changes to a previously dirtied handle', async () => {
       const handleA = Dialog.createHandle<number>();
       const handleB = Dialog.createHandle<number>();
@@ -774,8 +870,8 @@ describe('<Dialog.Root />', () => {
 
       const OpenOnMount = defineComponent({
         setup() {
-          // `onMounted` runs after the root attached its store in `onBeforeMount`, but before the
-          // detached triggers registered again in the store of the root.
+          // This `onMounted` hook runs after the root attached its store, but before the detached
+          // triggers registered again in the store of the root.
           onMounted(() => {
             handle.open('trigger');
           });

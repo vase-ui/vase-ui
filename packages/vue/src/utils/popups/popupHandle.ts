@@ -56,7 +56,7 @@ export interface PopupHandleStoreWithOpen extends PopupHandleStoreWithTriggers {
  * development warning for overlapping roots.
  *
  * All apps and all server requests can share a handle that a module makes. A server writes nothing
- * to it, because a root attaches its store in `onBeforeMount`, which a server does not call.
+ * to it, because a root attaches its store in a post-flush effect, which a server does not run.
  *
  * @template HandleStore The store shape that a detached trigger sees.
  * @template Store The store that the root of the component attaches.

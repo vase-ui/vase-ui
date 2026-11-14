@@ -1,5 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, onMounted, provide, shallowRef } from 'vue';
+import {
+  KeepAlive,
+  Suspense,
+  defineComponent,
+  nextTick,
+  onBeforeMount,
+  onMounted,
+  provide,
+  shallowRef,
+} from 'vue';
 import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
   createRenderer,
@@ -29,6 +38,7 @@ import {
   useSingleAnchorPopupRoot,
 } from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
+import PopupRootIsOpenHydration from './PopupRootIsOpenHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
@@ -578,6 +588,18 @@ const TriggerAndPopup = () => (
 );
 
 const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+
+// Calls `close()` of the handle in a lifecycle hook of a part of a consumer.
+const CloseOnHook = defineComponent({
+  props: {
+    hook: { type: Function as PropType<(callback: () => void) => unknown>, required: true },
+    handle: { type: Object as PropType<{ close(): void }>, required: true },
+  },
+  setup(props) {
+    props.hook(() => props.handle.close());
+    return () => null;
+  },
+});
 
 function createAnimation() {
   let finish!: () => void;
@@ -1300,6 +1322,151 @@ describe('usePopupRoot', () => {
       expect(first.store).toBe(first.serverStore);
       expect(second.store).toBe(root.current.store);
     });
+
+    it('gives the handle to a new root before the onMounted hook of a part below it, while an older root is mounted', async () => {
+      // A development build warns one frame after two roots took one handle. Fake timers hold
+      // that frame.
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+      const handle = createPopupFixtureHandle<string>();
+      const older = createRootRef();
+      const newer = createRootRef();
+      const show = shallowRef(false);
+      await render(() => (
+        <>
+          <PopupRootPart ref={older.ref} handle={handle} defaultOpen />
+          {show.value ? (
+            <PopupRootPart ref={newer.ref} handle={handle} defaultOpen>
+              <CloseOnHook hook={onMounted} handle={handle} />
+            </PopupRootPart>
+          ) : null}
+        </>
+      ));
+
+      show.value = true;
+      await flushMicrotasks();
+
+      expect(newer.current.open).toBe(false);
+      expect(older.current.open).toBe(true);
+    });
+
+    it('ignores close() in the onBeforeMount hook of a part below the root, and warns', async () => {
+      const handle = createPopupFixtureHandle<string>();
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(() => (
+        <PopupRootPart handle={handle} defaultOpen>
+          <CloseOnHook hook={onBeforeMount} handle={handle} />
+        </PopupRootPart>
+      ));
+
+      const messages = consoleWarn.mock.calls.map(([message]) => String(message));
+      consoleWarn.mockRestore();
+      expect(messages).toEqual([
+        expect.stringContaining('no root that uses this handle is mounted'),
+      ]);
+      expect(handle.isOpen).toBe(true);
+    });
+
+    describe('VUE-64: a root in a pending Suspense branch', () => {
+      function createGate() {
+        let open!: () => void;
+        const promise = new Promise<void>((resolve) => {
+          open = resolve;
+        });
+        return { promise, open };
+      }
+
+      function createPendingPart(promise: Promise<void>) {
+        return defineComponent({
+          async setup() {
+            await promise;
+            return () => null;
+          },
+        });
+      }
+
+      it.each([
+        { name: 'a new branch of a resolved Suspense', isNewSuspense: false },
+        { name: 'a new Suspense', isNewSuspense: true },
+      ])(
+        'keeps the handle on the mounted root, also after Vue drops the branch: $name',
+        async ({ isNewSuspense }) => {
+          const handle = createPopupFixtureHandle<string>();
+          const mounted = createRootRef();
+          const show = shallowRef(false);
+          const Pending = createPendingPart(new Promise<void>(() => {}));
+          const replacement = () => (
+            <PopupRootPart handle={handle}>
+              <Pending />
+              <PopupPart>replacement</PopupPart>
+            </PopupRootPart>
+          );
+          const { getByText, getByRole } = await render(() => (
+            <>
+              <PopupTriggerPart id="detached" handle={handle} payload="from detached">
+                detached
+              </PopupTriggerPart>
+              <PopupRootPart
+                ref={mounted.ref}
+                handle={handle}
+                v-slots={{
+                  default: ({ payload }: { payload: string | undefined }) => (
+                    <PopupPart>payload: {payload}</PopupPart>
+                  ),
+                }}
+              />
+              {isNewSuspense ? (
+                show.value && <Suspense>{{ default: replacement }}</Suspense>
+              ) : (
+                <Suspense>{{ default: () => (show.value ? replacement() : null) }}</Suspense>
+              )}
+            </>
+          ));
+          handle.open('detached');
+          await flushMicrotasks();
+
+          function expectMountedRootOpen() {
+            expect(handle.store).toBe(mounted.current.store);
+            expect(handle.isOpen).toBe(true);
+            expect(getByText('detached')).toHaveAttribute('aria-expanded', 'true');
+            expect(getByRole('dialog')).toHaveTextContent('payload: from detached');
+          }
+          expectMountedRootOpen();
+
+          show.value = true;
+          await flushMicrotasks();
+          expectMountedRootOpen();
+
+          show.value = false;
+          await flushMicrotasks();
+          expectMountedRootOpen();
+        },
+      );
+
+      it('attaches the first root of a handle when the branch resolves, before the onMounted hook of a part below it', async () => {
+        const handle = createPopupFixtureHandle<string>();
+        const root = createRootRef();
+        const gate = createGate();
+        const Pending = createPendingPart(gate.promise);
+        await render(() => (
+          <Suspense>
+            <PopupRootPart ref={root.ref} handle={handle} defaultOpen>
+              <CloseOnHook hook={onMounted} handle={handle} />
+              <Pending />
+            </PopupRootPart>
+          </Suspense>
+        ));
+        expect(handle.store).toBe(handle.serverStore);
+
+        gate.open();
+        await flushMicrotasks();
+        expect(handle.store).toBe(root.current.store);
+        expect(root.current.open).toBe(false);
+      });
+    });
   });
 
   describe('with KeepAlive', () => {
@@ -1612,6 +1779,18 @@ describe('usePopupRoot', () => {
       const controls = triggers.find((trigger) => trigger.open)?.controls;
       const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
       expect(popups).toEqual(controls ? [controls] : []);
+    });
+
+    // A root that attaches before the first render of a part after it gives that part a value
+    // that the server HTML does not have.
+    it('hydrates a part that renders isOpen of the handle after an open root', async () => {
+      const file = 'src/utils/popups/PopupRootIsOpenHydration.test.vue';
+      const serverHtml = await renderOnServer(file);
+      expect(serverHtml).toContain('<output>closed</output>');
+
+      const { container } = await hydrate(PopupRootIsOpenHydration, { serverHtml });
+
+      expect(container.querySelector('output')).toHaveTextContent('open');
     });
   });
 });
