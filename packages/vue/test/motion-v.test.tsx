@@ -10,6 +10,7 @@ import {
   waitFor,
 } from '#test-utils';
 import MotionVDialog from './MotionVDialog.test.vue';
+import MotionVPanel from './MotionVPanel.test.vue';
 
 // `probeFrameAfterExit` needs an exit of 100 s.
 const LONG_EXIT = 100;
@@ -85,6 +86,37 @@ describe('a popup with a motion-v component', () => {
       });
     },
   );
+
+  // A probe that cannot see a late removal proves nothing.
+  it('finds a motion-v panel in the frame when its removal comes in a later task', async () => {
+    const open = shallowRef(true);
+    const onOpenChangeComplete = vi.fn();
+    await render(() => (
+      <MotionVPanel
+        open={open.value}
+        duration={LONG_EXIT}
+        onOpenChangeComplete={onOpenChangeComplete}
+      />
+    ));
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
+    });
+    const panel = screen.getByTestId('panel');
+
+    const result = await probeFrameAfterExit(
+      panel,
+      () => !panel.isConnected,
+      () => {
+        open.value = false;
+      },
+    );
+
+    expect(result).toEqual({ isGone: false, isSameFrame: true });
+    await waitFor(() => {
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+    });
+    expect(panel.isConnected).toBe(false);
+  });
 
   it('finds no animation for a value that motion-v animates in JavaScript', async () => {
     const { open, onOpenChangeComplete, popup } = await renderOpenDialog({
