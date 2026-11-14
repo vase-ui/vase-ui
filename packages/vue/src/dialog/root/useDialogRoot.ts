@@ -10,6 +10,7 @@ import {
 } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
+import { useScrollLock } from '../../common/useScrollLock';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
@@ -17,8 +18,8 @@ import { popupStoreSelectors } from '../../utils/popups/store';
 import type { DialogStore } from '../store/DialogStore';
 
 /**
- * Gives a dialog its dismissal, the count of the open dialogs below it, and the registries of its
- * titles and its descriptions. Call it in `setup` of the root.
+ * Gives a dialog its dismissal, its scroll lock, the count of the open dialogs below it, and the
+ * registries of its titles and its descriptions. Call it in `setup` of the root.
  */
 export function useDialogInteractions({
   store,
@@ -95,6 +96,11 @@ export function useDialogInteractions({
     },
     escapeKey: isTopmost,
   });
+
+  useScrollLock(
+    () => open.value && store.select('modal') === true,
+    () => store.select('popupElement'),
+  );
 
   // Listen for nested open/close events on this store to maintain the counts.
   // A close notification is an open notification with zeroed counts.

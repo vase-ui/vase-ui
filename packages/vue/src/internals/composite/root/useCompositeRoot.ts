@@ -11,7 +11,8 @@ import {
 import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 import { EMPTY_ARRAY } from '../../../common/empty';
 import { isElementDisabled } from '../../../common/isElementDisabled';
-import { getTarget } from '../../../common/shadowDom';
+import { ownerDocument } from '../../../common/owner';
+import { activeElement, contains, getTarget } from '../../../common/shadowDom';
 import { useControlled } from '../../../common/useControlled';
 import { useDirection } from '../../direction-context/DirectionContext';
 import type { HTMLProps } from '../../types';
@@ -57,6 +58,11 @@ export function useCompositeRoot<Metadata>(
   let highlightedElement: HTMLElement | null = null;
   let tabStopObserver: MutationObserver | null = null;
   let canHaveUnmountedTabStop = true;
+  let lastActiveItem: { item: HTMLElement | null; canHoldTabStop: boolean } = {
+    item: null,
+    canHoldTabStop: false,
+  };
+  let activeItemObserver: MutationObserver | null = null;
 
   const id = useId();
   const hasUnmountedTabStop = shallowRef(false);
@@ -115,6 +121,10 @@ export function useCompositeRoot<Metadata>(
       } else if (nextIndex !== highlightedIndex.value) {
         onHighlightedIndexChange(nextIndex);
       }
+
+      // A new map can bring an active item: an item that mounts late, or the items of a
+      // `KeepAlive` that is active again.
+      moveTabStopToActiveItem();
       return;
     }
 
@@ -143,7 +153,87 @@ export function useCompositeRoot<Metadata>(
       }
     }
 
+    lastActiveItem = readActiveItem(elementsRef.value);
+
     scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
+  }
+
+  // An item that is disabled or hidden must not be the entry point, as in `Tabs.Tab` of Base UI.
+  // `isListIndexDisabled` reads `aria-disabled` only when the root has no `disabledIndices`.
+  function canHoldTabStop(elements: ReadonlyArray<HTMLElement | null>, index: number) {
+    const element = elements[index];
+    return (
+      element != null &&
+      !isElementDisabled(element) &&
+      !isListIndexDisabled(elements, index, toValue(params.disabledIndices))
+    );
+  }
+
+  function readActiveItem(elements: ReadonlyArray<HTMLElement | null>) {
+    const index = elements.findIndex((element) => element?.hasAttribute(ACTIVE_COMPOSITE_ITEM));
+    return {
+      item: elements[index] ?? null,
+      index,
+      canHoldTabStop: canHoldTabStop(elements, index),
+    };
+  }
+
+  function highlightIndex(index: number) {
+    if (index !== -1 && index !== highlightedIndex.value) {
+      onHighlightedIndexChange(index);
+    }
+  }
+
+  // A reset of a form and a controlled value change the active item while the composite does not
+  // have the focus. The tab stop then moves to the active item, so the Tab key enters the
+  // composite on that item, as it does for a native radio group. If the change leaves no active
+  // item that can hold the tab stop, the tab stop moves to the first item that can hold it, as the
+  // APG radio pattern says for a group with no checked radio. While the composite has the focus,
+  // the highlight stays on the item that the user chose, and the keys continue from it.
+  // Limit: the observer and the focus test cover the element of the root only, as the search for
+  // the tab stop of the server HTML does.
+  function moveTabStopToActiveItem() {
+    const elements = elementsRef.value;
+    // `KeepAlive` empties the list. The map of the next activation starts the move again.
+    if (elements.length === 0) {
+      return;
+    }
+
+    const activeItem = readActiveItem(elements);
+    const hasChanged =
+      activeItem.item !== lastActiveItem.item ||
+      activeItem.canHoldTabStop !== lastActiveItem.canHoldTabStop;
+    // An active item that leaves the list is a removal, and `onMapChange` has already moved the
+    // tab stop for it, as in Base UI.
+    const isRemoval = lastActiveItem.item !== null && !elements.includes(lastActiveItem.item);
+    lastActiveItem = activeItem;
+
+    if (contains(rootElement, activeElement(ownerDocument(rootElement)))) {
+      return;
+    }
+
+    if (activeItem.canHoldTabStop) {
+      highlightIndex(activeItem.index);
+      return;
+    }
+
+    // With no change of the active item, the composite keeps the tab stop of the user.
+    if (hasChanged && !isRemoval) {
+      highlightIndex(elements.findIndex((_, index) => canHoldTabStop(elements, index)));
+    }
+  }
+
+  // The APG radio and tabs patterns put the focus on the active item when the focus enters the
+  // composite. A composite with no active item keeps the item that had the focus last.
+  function onFocusout(event: FocusEvent) {
+    if (contains(rootElement, event.relatedTarget as Element | null)) {
+      return;
+    }
+
+    const activeItem = readActiveItem(elementsRef.value);
+    if (activeItem.canHoldTabStop) {
+      highlightIndex(activeItem.index);
+    }
   }
 
   useCompositeList<Metadata>({
@@ -414,6 +504,8 @@ export function useCompositeRoot<Metadata>(
   onScopeDispose(() => {
     tabStopObserver?.disconnect();
     tabStopObserver = null;
+    activeItemObserver?.disconnect();
+    activeItemObserver = null;
   });
 
   provide(CompositeRootContext, {
@@ -427,9 +519,27 @@ export function useCompositeRoot<Metadata>(
   });
 
   return {
-    props: { onFocusin, onKeydown },
+    props: { onFocusin, onFocusout, onKeydown },
     rootRef(element) {
+      // Vue calls a function ref again on each patch. A new observer for the same element would
+      // drop the records of that patch.
+      if (element === rootElement) {
+        return;
+      }
       rootElement = element;
+
+      // A part writes the active state and the disabled state of its item as attributes, and the
+      // root reads them from the DOM. The observer tells the root when one of them changes.
+      activeItemObserver?.disconnect();
+      activeItemObserver = null;
+      if (element && typeof MutationObserver === 'function') {
+        activeItemObserver = new MutationObserver(moveTabStopToActiveItem);
+        activeItemObserver.observe(element, {
+          attributes: true,
+          attributeFilter: [ACTIVE_COMPOSITE_ITEM, 'disabled', 'aria-disabled'],
+          subtree: true,
+        });
+      }
     },
     highlightedIndex,
   };
@@ -559,7 +669,7 @@ export interface UseCompositeRootParameters<Metadata> {
 
 export interface UseCompositeRootReturnValue {
   /**
-   * The listeners of the composite: `onFocusin` and `onKeydown`.
+   * The listeners of the composite: `onFocusin`, `onFocusout` and `onKeydown`.
    * The part puts this object first in the `props` of `useRenderElement`.
    */
   props: Omit<HTMLProps, 'ref'>;
