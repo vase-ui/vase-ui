@@ -47,6 +47,7 @@ import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
+import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -55,7 +56,6 @@ import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import type { MenuRootChangeEventReason } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
-import { resolvePopupLabel } from '../utils/resolvePopupLabel';
 
 defineOptions({ inheritAttrs: false });
 

@@ -18,11 +18,11 @@ export interface MenuListProps
 <script setup lang="ts">
 import { toRaw, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
+import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useMenuRootContext } from '../root/MenuRootContext';
-import { resolvePopupLabel } from '../utils/resolvePopupLabel';
 
 defineOptions({ inheritAttrs: false });
 
