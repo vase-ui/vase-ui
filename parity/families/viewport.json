@@ -4,13 +4,7 @@
     "packages/react/test/viewportConformanceTests.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [
-    {
-      "upstream": "packages/react/test/viewportConformanceTests.tsx",
-      "kind": "waits-on",
-      "reason": "The suite needs the parts of a popup family. The pull request of the first family with a Viewport part ports the suite with `resetBrowserPointer`."
-    }
-  ],
+  "exceptions": [],
   "surfaceAdditions": [],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
