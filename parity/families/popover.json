@@ -6,17 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/popover/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Popover. It exports the parts. Vase UI does not have all of them."
-    },
-    {
-      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The cases of the file that are not ported yet have no counterpart. Vase UI ports them with the entry point of Popover."
-    },
-    {
       "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
       "describe": ["<Popover.Root />", "when using $name", "nested menu interactions"],
       "kind": "waits-on",
@@ -32,167 +21,62 @@
       "reason": "The case presses the trigger of a nested menu to open it. The trigger of Menu in Vase UI has no press yet."
     },
     {
+      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
+      "describe": ["<Popover.Root />"],
+      "title": "keeps the popover open when Escape closes a nested dialog after a backdrop press",
+      "kind": "not-applicable",
+      "reason": "React sends the press of a portal up the React tree, so the popover counts a press on the backdrop of the nested dialog as inside. A Vue press goes up the DOM only. Vase UI counts a press in a child popup as inside through the capture listeners of the popup element of the child, and `Dialog.Backdrop` has no such listeners. The portal of the dialog puts the backdrop outside the popup of the popover, so a press on it closes the popover."
+    },
+    {
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The cases of the file that are not ported yet have no counterpart. Vase UI ports them with the entry point of Popover."
+      "describe": ["<Popover.Root />"],
+      "title": "hands off hover between detached triggers when the rendered component retains a stale ref",
+      "kind": "not-applicable",
+      "reason": "The case renders a component that keeps the first ref callback that it got. A part gives its ref callbacks one time, in `setup`, and the callback of a trigger only writes the element to a ref. A watcher on the element, the id and the store then registers the trigger on the store that it has at that time. A callback that a component keeps thus cannot register the trigger on the store that the trigger left."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Root`. Vase UI does not have that entry point."
+      "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
+      "describe": ["<Popover.Root />"],
+      "title": "keeps registration on the attached store when a stale-ref component swaps its host node",
+      "kind": "not-applicable",
+      "reason": "The case renders a component that keeps the first ref callback that it got, and swaps its host node. A part gives its ref callbacks one time, in `setup`, and the callback of a trigger only writes the element to a ref. The watcher of the registration then moves the registration to the new element on the store that the trigger has at that time."
     },
     {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Title`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Description`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Close",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "createHandle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.createHandle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "Handle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports `Popover.Handle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverPopupCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverViewportCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the CSS variable names of `Popover.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
-      "entry": "PopoverViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/index.ts",
-      "reason": "The entry point of Popover exports the attribute names of `Popover.Viewport`. Vase UI does not have that entry point."
+      "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
+      "describe": ["<Popover.Root />"],
+      "title": "does not detach the consumer ref when the handle attaches to a root",
+      "kind": "not-applicable",
+      "reason": "The case counts the calls of the ref callback of a consumer. Base UI merges that callback with the ref callbacks of the part. A new merged ref for a change of the store would give the consumer a call with `null` and a new call, and the case guards against it. A part gives its own ref callbacks one time, in `setup`, and Vue does not merge the ref of a consumer with them. A change of the store thus changes no ref."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Title",
+      "prop": "id",
+      "reason": "The part reads `id` to register it with the root for `aria-labelledby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Description",
+      "prop": "id",
+      "reason": "The part reads `id` to register it with the root for `aria-describedby` of the popup, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Close",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "PopoverHandle<Payload>",
+      "reason": "`Popover.Handle` is the class `PopoverHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
   "notApplicableCommits": []
 }
