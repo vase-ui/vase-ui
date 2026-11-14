@@ -1146,9 +1146,8 @@ effect(
 
 // Hide everything outside the floating tree from assistive tech while open. The portal renders
 // its outside guards one update after it gets the state, so they are sources too. A focus manager
-// above can take its marks after this one: at the mount of two open popups, at a `KeepAlive`
-// activation, or when it becomes enabled. Its count is thus a source, and this effect then takes
-// its marks again.
+// above can take its marks after this one, for example at a `KeepAlive` activation or when it
+// becomes enabled. Its count is thus a source, and this effect then takes its marks again.
 effect(
   () => [
     open.value,
