@@ -1172,7 +1172,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 - `Menu.Root` calls `useOpenMethodTriggerProps`, because its trigger props hold the listeners.
 - A trigger that listens on its document for the release of a press, as `Menu.Trigger` does, keeps that document and the `mousedown` event of the press in variables. It removes the listener and clears both variables when it unmounts and when `KeepAlive` deactivates it.
-- `Menu.Trigger`, `Select.Trigger` and `Combobox.Trigger` close the popup for a release off the trigger and off the popup, with the reason `cancel-open`, as in Base UI. `Combobox.Trigger` listens for the release only while the input is in the popup.
+- `Menu.Trigger`, `Select.Trigger` and `Combobox.Trigger` close the popup for a release more than 5 px off the trigger and off the popup, with the reason `cancel-open`, as in Base UI. `Combobox.Trigger` listens for the release only while the input is in the popup.
 - These triggers keep the popup open when the release comes within 5 px of the point of the press on each axis (`VUE-68`). The popup opens in the frame after the press, and a layout change in that frame can move the trigger. `isReleaseAtPressPoint` of `src/utils/popups/isReleaseAtPressPoint.ts` compares the two events. The listener that `Menu.Trigger` adds after a hover open has no press, so it does not make this check.
 
 ### Popup list navigation

@@ -235,7 +235,6 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
 
 // The document that holds the `mouseup` listener, so that the unmount and `KeepAlive` remove it.
 let mouseUpDocument: Document | undefined;
-// A hover open adds the listener with no press.
 let press: MouseEvent | null = null;
 
 function listenForMouseUp(doc: Document, pressEvent: MouseEvent | null) {
