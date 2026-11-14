@@ -1884,7 +1884,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       if (matchingIndex === -1) {
         matchingIndex = valuesRef.value.findIndex((_, index) => {
           const renderedLabel = labelsRef.value[index];
-          return renderedLabel?.toLowerCase() === nextValueLower;
+          // eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- The text is the text of Base UI, and no test reaches this line.
+          return renderedLabel != null && renderedLabel.toLowerCase() === nextValueLower;
         });
       }
 
