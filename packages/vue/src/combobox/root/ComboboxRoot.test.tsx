@@ -6042,7 +6042,7 @@ describe('<Combobox.Root />', () => {
         // A later highlight must not consume a typed-input reset that should already be cleared.
         list.scrollTop = 40;
         const visibleOption = screen.getByRole('option', { name: 'beta-5' });
-        await fireEvent.mouseMove(visibleOption, { movementX: 1 });
+        await moveOver(visibleOption);
         await waitFor(() => {
           expect(visibleOption).toHaveAttribute('data-highlighted');
         });
@@ -6258,8 +6258,8 @@ describe('<Combobox.Root />', () => {
         const dialog = screen.getByTestId('dialog');
         const viewport = screen.getByTestId('viewport');
         await user.click(input);
-        // Firefox scrolls the container once more in the frame after the click. That scroll would
-        // replace the position that the case sets next.
+        // In the frame after the click, Firefox can scroll the dialog again. That scroll replaces
+        // the position that the case sets.
         await waitSingleFrame();
         dialog.scrollTop = 150;
         viewport.scrollTop = 40;
@@ -6317,6 +6317,9 @@ describe('<Combobox.Root />', () => {
       const input = screen.getByTestId('input');
       const dialog = screen.getByTestId('dialog');
       await user.click(input);
+      // In the frame after the click, Firefox can scroll the dialog again. That scroll replaces
+      // the position that the case sets.
+      await waitSingleFrame();
       expect(dialog).toContainElement(screen.getByRole('listbox'));
       dialog.scrollTop = dialog.scrollHeight;
       const dialogScrollTop = dialog.scrollTop;
