@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
 import { createRenderer, screen, waitFor } from '#test-utils';
-import * as Autocomplete from '../index.parts';
 
 type ItemSlotProps = { item: string };
 
