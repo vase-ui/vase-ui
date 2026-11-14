@@ -3,8 +3,8 @@ import type { VNodeChild } from 'vue';
 import { flushMicrotasks } from './flushMicrotasks';
 
 /**
- * Renders a branch in `KeepAlive`, and mounts a part in that branch while `KeepAlive` holds it.
- * `KeepAlive` mounts such a part in an element that is not in the document. The part gets no
+ * Makes `HeldBranch`, a branch in `KeepAlive`. `mountWhileHeld` mounts a part in that branch while
+ * `KeepAlive` holds it. `KeepAlive` mounts such a part in an element that is not in the document. The part gets no
  * `onDeactivated` call, and its first `onActivated` call comes at the next show.
  */
 export function createHeldBranch(renderPart: () => VNodeChild) {
