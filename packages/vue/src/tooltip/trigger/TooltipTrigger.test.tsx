@@ -77,6 +77,15 @@ describe('<Tooltip.Trigger />', () => {
       expect(onOpenChange.mock.calls[0][1].reason).toBe('trigger-hover');
       expect(onOpenChange.mock.calls[0][1].trigger).toBe(trigger);
     });
+
+    it('does not open while the trigger is disabled', async () => {
+      const { trigger, onOpenChange } = await renderTooltip({ delay: 0, disabled: true });
+
+      await enter(trigger);
+      await tick(OPEN_DELAY);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
   });
 
   it('closes a tooltip that the pointer opened when `KeepAlive` deactivates the trigger', async () => {
