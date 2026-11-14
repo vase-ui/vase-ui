@@ -1,11 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { shallowRef, watchEffect } from 'vue';
+import { defineComponent, shallowRef, watchEffect } from 'vue';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { defaultItemEquality } from '../internals/itemEquality';
 import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/popups/store';
+import * as Combobox from './index.parts';
+import { useComboboxRootContext } from './root/ComboboxRootContext';
 import { ComboboxStore, selectors } from './store';
 import type { ComboboxStoreContext, State } from './store';
 
@@ -84,6 +87,70 @@ function createComboboxStore(initialState: Partial<State> = {}) {
   };
   return new ComboboxStore(state, context, selectors);
 }
+
+describe('combobox store synchronization', () => {
+  const { render } = createRenderer();
+
+  describe('interaction anchor', () => {
+    it('follows the input, and returns to it after a trigger press or a change of open state', async () => {
+      let store!: ComboboxStore;
+
+      const Probe = defineComponent(() => {
+        store = useComboboxRootContext();
+        return () => null;
+      });
+
+      const { user } = await render(
+        <Combobox.Root items={['apple', 'banana']}>
+          <Probe />
+          <Combobox.Input data-testid="input" />
+          <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+      const trigger = screen.getByTestId('trigger');
+
+      expect(store.select('anchorElement')).toBe(input);
+
+      // A trigger press opens the popup, and the anchor stays on the input.
+      await fireEvent.mouseDown(trigger);
+      await screen.findByRole('listbox');
+      await waitFor(() => {
+        expect(store.select('anchorElement')).toBe(input);
+      });
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+      expect(store.select('anchorElement')).toBe(input);
+
+      // Positioning clears the anchor while a closed popup stays mounted; reopening restores it.
+      store.clearPositioning();
+      await flushMicrotasks();
+      expect(store.select('anchorElement')).toBe(null);
+      await user.click(input);
+      await screen.findByRole('listbox');
+      expect(store.select('anchorElement')).toBe(input);
+    });
+  });
+});
 
 describe('the store with no root', () => {
   it('anchors to the input, and to the trigger when the input is in the popup', () => {

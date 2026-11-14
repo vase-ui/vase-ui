@@ -44,7 +44,7 @@ const overviewLinks = [
 
 const handbookLinks = [
   {
-    href: `${base}quick-start#style-a-part`,
+    href: `${base}handbook/styling`,
     title: 'Styling',
     description:
       'Vase UI components can be styled with plain CSS, CSS Modules, or utility classes.',
@@ -56,7 +56,7 @@ const handbookLinks = [
       'Vase UI components can be animated with CSS transitions, CSS animations, or JavaScript.',
   },
   {
-    href: `${base}utils/use-render`,
+    href: `${base}handbook/composition`,
     title: 'Composition',
     description: 'Vase UI components can be replaced and composed with your own components.',
   },

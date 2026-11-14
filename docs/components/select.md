@@ -32,7 +32,7 @@ A common form component for choosing a predefined value in a dropdown menu.
 
 - **Use Combobox for a long list**: Select has no filter. The keyboard typeahead only finds an item that matches the typed text. When the list is long enough to need a filter, use Combobox.
 - **Special positioning**: By default, the popup overlaps its trigger, so that the text of the selected item is over the value text of the trigger. See [Positioning](#positioning) to turn this off or to change it.
-- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when the select has no visible label. See [Labeling a select](#labeling-a-select).
+- **Form controls must have an accessible name**: Use `<Select.Label>`, or give `<Select.Trigger>` an `aria-label` when the select has no visible label. See [Labeling a select](#labeling-a-select) and the [forms guide](/handbook/forms).
 - **Closing animations**: The popup stays rendered until its closing animation ends. See [JavaScript animations](/handbook/animation#javascript-animations) to animate it with `motion-v` and to unmount it yourself.
 
 ## Anatomy
