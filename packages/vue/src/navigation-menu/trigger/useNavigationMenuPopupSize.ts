@@ -51,7 +51,7 @@ function watchAfterMount(sources: WatchSource[], effect: () => (() => void) | un
  * Call it in the `setup` of the trigger.
  */
 export function useNavigationMenuPopupSize(
-  itemValue: ComputedRef<any>,
+  itemValue: ComputedRef,
   isActiveItem: ComputedRef<boolean>,
 ) {
   const {
