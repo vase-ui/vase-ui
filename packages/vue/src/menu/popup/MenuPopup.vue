@@ -3,6 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
 
 export interface MenuPopupState {
   /**
@@ -39,6 +40,16 @@ export interface MenuPopupProps
    * @ignore
    */
   id?: string | undefined;
+  /**
+   * Determines the element to focus when the menu is closed.
+   *
+   * - `false`: Do not move focus.
+   * - `true`: Move focus based on the default behavior (trigger or previously focused element).
+   * - An element, a component, or a ref of one: Move focus to that element.
+   * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
+   *   Return an element to focus, `true` to use the default behavior, or `false`/`undefined` to do nothing.
+   */
+  finalFocus?: FocusOption | undefined;
 }
 </script>
 
@@ -47,10 +58,12 @@ import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
+import { REASONS } from '../../internals/reasons';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
+import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
@@ -59,7 +72,7 @@ import { useMenuRootContext } from '../root/MenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<MenuPopupProps>(), { as: 'div' });
+const props = withDefaults(defineProps<MenuPopupProps>(), { as: 'div', finalFocus: undefined });
 
 defineSlots<{
   default(props: { state: MenuPopupState }): unknown;
@@ -73,6 +86,12 @@ const insideToolbar = useToolbarRootContext(true) !== undefined;
 const open = computed(() => store.select('open'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
+const mounted = computed(() => store.select('mounted'));
+const parent = computed(() => store.select('parent'));
+// The store types a trigger as an `Element`. A trigger part renders an `HTMLElement`.
+const activeTriggerElement = computed(
+  () => store.select('activeTriggerElement') as HTMLElement | null,
+);
 
 const popupId = computed(() => props.id ?? generatedPopupId);
 
@@ -163,10 +182,64 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
+const initialFocus = computed<FocusOption>(() => {
+  if (parent.value.type === 'menu') {
+    return false;
+  }
+  const listElement = store.select('listElement');
+  if (!listElement) {
+    return true;
+  }
+  return () => {
+    // A keyboard or screen reader open highlights an item, which list navigation focuses.
+    if (toRaw(store.state).activeIndex !== null) {
+      return false;
+    }
+    // The list holds the `menu` role, so a pointer open lands focus on it rather than on the
+    // presentational popup.
+    return listElement;
+  };
+});
+
+const returnFocus = computed(() => {
+  const { type } = parent.value;
+  return (
+    activeTriggerElement.value != null ||
+    type === undefined ||
+    type === 'context-menu' ||
+    (type === 'menubar' && store.select('lastOpenChangeReason') !== REASONS.outsidePress)
+  );
+});
+
+// The trigger writes its guards to the store after the popup opens, so the focus manager reads the
+// refs when it needs them.
+function getInsideElements() {
+  return [store.context.beforeTriggerFocusGuardRef.value];
+}
+
+function getNextFocusableElement() {
+  return store.context.triggerFocusTargetRef.value;
+}
+
 defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <FloatingFocusManager
+    :store="store"
+    :open-interaction-type="store.select('openMethod')"
+    :modal="parent.type === 'context-menu'"
+    :disabled="!mounted"
+    :return-focus="finalFocus ?? returnFocus"
+    :initial-focus="initialFocus"
+    restore-focus
+    :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"
+    :external-tree="parent.type !== 'menubar' ? floatingTreeRoot : undefined"
+    :previous-focusable-element="activeTriggerElement"
+    :next-focusable-element="parent.type === undefined ? getNextFocusableElement : undefined"
+    :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
+  >
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  </FloatingFocusManager>
 </template>
