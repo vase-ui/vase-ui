@@ -737,20 +737,6 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('focus-out');
       expect(screen.getByTestId('outside')).toHaveFocus();
     });
-
-    it('does not make the viewport inert when the focus leaves it for the active trigger', async () => {
-      await render(<Menu />);
-      const one = screen.getByTestId('trigger-one');
-      const viewport = screen.getByTestId('viewport');
-
-      await fireEvent.click(one);
-      const link = screen.getByRole('link', { name: 'First link of one' });
-      link.focus();
-      one.focus();
-      await flushMicrotasks();
-
-      expect(viewport).not.toHaveAttribute('inert');
-    });
   });
 
   describe('hydration', () => {

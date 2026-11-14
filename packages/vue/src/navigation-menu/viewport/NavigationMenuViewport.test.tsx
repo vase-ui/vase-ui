@@ -19,12 +19,17 @@ describe('<NavigationMenu.Viewport />', () => {
     },
   }));
 
-  function renderMenu(viewportProps: Record<string, unknown> = {}) {
+  function renderMenu(
+    viewportProps: Record<string, unknown> = {},
+    triggerProps: NavigationMenu.Trigger.Props = {},
+  ) {
     return render(
       <NavigationMenu.Root>
         <NavigationMenu.List>
           <NavigationMenu.Item value="one">
-            <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            <NavigationMenu.Trigger data-testid="trigger" {...triggerProps}>
+              One
+            </NavigationMenu.Trigger>
             <NavigationMenu.Content>
               <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
               <NavigationMenu.Link href="#second">Second link</NavigationMenu.Link>
@@ -86,6 +91,23 @@ describe('<NavigationMenu.Viewport />', () => {
     await flushMicrotasks();
 
     expect(screen.getByRole('link', { name: 'First link' })).toHaveFocus();
+  });
+
+  it('does not become inert when the focus goes from its content to the active trigger', async () => {
+    // The trigger also makes the viewport interactive when it gets the focus. The listener of the
+    // consumer stops that handler, so that only the viewport decides.
+    await renderMenu({}, { onFocusin: (event) => event.preventVaseUIHandler() });
+    const trigger = screen.getByTestId('trigger');
+    const viewport = screen.getByTestId('viewport');
+    await fireEvent.click(trigger);
+    screen.getByRole('link', { name: 'First link' }).focus();
+    expect(viewport).not.toHaveAttribute('inert');
+
+    trigger.focus();
+    await flushMicrotasks();
+
+    expect(trigger).toHaveFocus();
+    expect(viewport).not.toHaveAttribute('inert');
   });
 
   describe('in a positioner', () => {
