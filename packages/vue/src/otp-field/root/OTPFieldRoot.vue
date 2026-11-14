@@ -40,10 +40,7 @@ export interface OTPFieldRootState extends FieldRootState {
 export interface OTPFieldRootProps
   extends
     VaseUIComponentProps<OTPFieldRootState>,
-    /* @vue-ignore */ Omit<
-      WithVaseUIEvent<HTMLAttributes>,
-      'id' | 'aria-labelledby' | 'inputmode' | 'onChange'
-    > {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'inputmode' | 'onChange'> {
   /**
    * The id of the first input element.
    * Subsequent inputs derive their ids from it (`{id}-2`, `{id}-3`, and so on).
@@ -472,10 +469,7 @@ function setValue(nextValue: string, details: OTPFieldRootChangeEventDetails) {
     canComplete &&
     normalizedValue.length === length &&
     (otpValue.value.length !== length || details.reason === REASONS.inputPaste)
-      ? createGenericEventDetails(
-          details.reason as OTPFieldRootCompleteEventReason,
-          details.event as never,
-        )
+      ? createGenericEventDetails(details.reason, details.event)
       : null;
 
   if (normalizedValue === otpValue.value) {
@@ -609,13 +603,13 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
-// The value that the hidden input had after the last event that the root handled, after the last
-// write of the root and after the last write of Vue.
+// The value that the root last saw in the hidden input. The root sets it after each event that it
+// handles, after each write of its own and after each write of Vue.
 let handledHiddenValue: string | undefined;
 
 // Vue writes `value` to an input only when the root renders. The root does not render when a
-// listener cancels the change, when the parent keeps its value, or when the browser restores the
-// form state of a page, which sends no event to the inputs.
+// listener cancels the change or when the parent keeps its value. It also does not render when the
+// browser restores the form state of a page, which sends no event to the inputs.
 function writeValueToInputs() {
   const hiddenInput = hiddenInputElement.value;
   if (hiddenInput && hiddenInput.value !== otpValue.value) {
@@ -636,7 +630,7 @@ function handleHiddenInput(event: Event) {
   const rawValue = (event.currentTarget as HTMLInputElement).value;
   handledHiddenValue = rawValue;
 
-  if (!isDisabled.value && !props.readOnly) {
+  if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
     const [normalizedValue, didRejectCharacters] = normalizeOTPValueWithDetails(
       rawValue,
       props.length,
