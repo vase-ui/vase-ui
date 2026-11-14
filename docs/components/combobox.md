@@ -34,7 +34,7 @@ An input combined with a list of predefined items to select.
 
 ## Usage guidelines
 
-- **Combobox is a Select with a filter**: Use Combobox to pick one predefined item from a long list that needs a filter. It works like [Select](/components/select), but the user types in an input to filter the items.
+- **Combobox is a Select with a filter**: Use Combobox when the value must be one of a set of predefined items. It works like [Select](/components/select), but the user types in an input to filter the items. Prefer Combobox to Select when the list is long enough to need a filter.
 - **Avoid for search widgets**: Combobox does not accept free-form text. For a search widget, use [Autocomplete](/components/autocomplete).
 - **Avoid when there is no input**: Use [Select](/components/select) when the combobox has no input. Select has the accessibility features of a listbox with no input.
 - **Form controls must have an accessible name**: If `<Combobox.Input>` is the form control, label it with a native `<label>` or with `<Field.Label>`. When no label is visible, give it an `aria-label`. `<Combobox.Label>` labels `<Combobox.Trigger>`. Use it for the [input inside popup](#input-inside-popup) pattern, where the trigger is the form control. See the [forms guide](/handbook/forms).
@@ -124,9 +124,9 @@ Add the `multiple` prop to `<Combobox.Root>` to let the user select more than on
 
 :::
 
-Screen readers must announce how to reach and remove the chips. Give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`. Give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
+To let screen readers announce how to reach and remove the chips, give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`. Also give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
 
-The types of Vue do not list `aria-description`, so `strictTemplates` refuses it on a part. Give it with `v-bind`, as the demo does.
+The types of Vue do not list `aria-description`, so vue-tsc with `strictTemplates` refuses it on a part. Give it with `v-bind`, as the demo does.
 
 To limit the visible chips, slice the selected values that `<Combobox.Value>` gives to its slot:
 
@@ -134,7 +134,7 @@ To limit the visible chips, slice the selected values that `<Combobox.Value>` gi
 
 #### Keeping the filter after selection
 
-In `multiple` mode, a selection clears the filter that the user typed. When the input is outside the popup, the selection also closes the popup. To let the user pick more than one result of a query, cancel the change request that does this.
+In `multiple` mode, a selection clears the filter that the user typed. When the input is outside the popup, that selection also closes the popup. To let the user pick more than one result of a query, cancel the change request that does this.
 
 The request to cancel depends on where the input is. When the input is outside the popup, cancel the close request in `openChange`. That request has the reason `item-press`:
 
