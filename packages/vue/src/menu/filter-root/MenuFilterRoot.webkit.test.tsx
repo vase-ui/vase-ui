@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef, watch } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import type { HTMLProps } from '../../internals/types';
+import { createRenderer, flushMicrotasks, screen, waitFor, waitSingleFrame } from '#test-utils';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuFilterRoot.test.tsx`.
 vi.mock('../../common/platform', async () => {
@@ -19,25 +19,23 @@ vi.mock('../../common/platform', async () => {
 });
 
 // React focuses an `autoFocus` element when it mounts, before it gives the element to its ref. This
-// `#render` slot does the same one time, because Vue calls a function ref again on each patch.
-function autoFocusSlots() {
-  let focused = false;
-
-  return {
-    render: ({ props }: { props: HTMLProps }) => (
-      <input
-        {...props}
-        ref={(element: unknown) => {
-          if (element instanceof HTMLElement && !focused) {
-            focused = true;
-            element.focus();
-          }
-          props.ref(element as Element | null);
-        }}
-      />
-    ),
-  };
-}
+// `#render` slot does the same one time for each element, because Vue calls a function ref again on
+// each patch.
+const autoFocusedElements = new WeakSet<Element>();
+const autoFocusSlots = {
+  render: ({ props }: { props: HTMLProps }) => (
+    <input
+      {...props}
+      ref={(element: unknown) => {
+        if (element instanceof HTMLElement && !autoFocusedElements.has(element)) {
+          autoFocusedElements.add(element);
+          element.focus();
+        }
+        props.ref(element as Element | null);
+      }}
+    />
+  ),
+};
 
 const Test = defineComponent(
   (props: { autoFocus?: boolean; inputKey?: string; showInput?: boolean }) => () => (
@@ -51,7 +49,7 @@ const Test = defineComponent(
                 <Menu.Input
                   key={props.inputKey}
                   aria-label="Filter actions"
-                  v-slots={props.autoFocus ? autoFocusSlots() : {}}
+                  v-slots={props.autoFocus ? autoFocusSlots : {}}
                 />
               )}
               <Menu.List>
@@ -397,6 +395,60 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider> (WebKit)', () 
     await waitFor(() => {
       expect(apple).toHaveAttribute('data-highlighted');
     });
+    expect(apple).not.toHaveAttribute('aria-selected');
+  });
+});
+
+describe('focus listeners of Menu.Input', () => {
+  const { render } = createRenderer();
+
+  it('shows the focus ring of an input that replaces a focused input', async () => {
+    const { setProps } = await render(<Test autoFocus inputKey="first" />);
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(input).toHaveFocus());
+    await waitFor(() => expect(input).toHaveAttribute('data-highlighted'));
+
+    await setProps({ inputKey: 'second', autoFocus: false });
+    const replacement = screen.getByRole('searchbox', { name: 'Filter actions' });
+    expect(replacement).not.toBe(input);
+    await waitSingleFrame();
+
+    // Engines differ in whether they restore focus after removing the old input.
+    expect(replacement.hasAttribute('data-highlighted')).toBe(replacement.matches(':focus'));
+  });
+
+  it('lets a focusin listener of the consumer stop the focus listeners of the input', async () => {
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input
+                  aria-label="Filter actions"
+                  onFocusin={(event: VaseUIEvent<FocusEvent>) => {
+                    event.preventVaseUIHandler();
+                  }}
+                />
+                <Menu.List>
+                  <Menu.Item>Apple</Menu.Item>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => expect(input).toHaveFocus());
+    await flushMicrotasks();
+    expect(input).not.toHaveAttribute('data-highlighted');
+
+    await user.keyboard('[ArrowDown]');
+    const apple = screen.getByRole('menuitem', { name: 'Apple' });
+    expect(input).toHaveAttribute('aria-activedescendant', apple.id);
     expect(apple).not.toHaveAttribute('aria-selected');
   });
 });
