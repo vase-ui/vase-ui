@@ -188,6 +188,35 @@ describe('<NumberField.ScrubArea />', () => {
     expect(input).toHaveValue('-7');
   });
 
+  it('places the cursor at the pointer before the pointer lock request resolves', async () => {
+    const pointerLock = vi
+      .spyOn(document.body, 'requestPointerLock')
+      .mockImplementation(() => new Promise(() => {}));
+
+    try {
+      await render(
+        <NumberField.Root defaultValue={0}>
+          <NumberField.Input />
+          <NumberField.ScrubArea data-testid="scrub-area">
+            <NumberField.ScrubAreaCursor data-testid="cursor" />
+          </NumberField.ScrubArea>
+        </NumberField.Root>,
+      );
+
+      screen
+        .getByTestId('scrub-area')
+        .dispatchEvent(
+          new PointerEvent('pointerdown', { bubbles: true, clientX: 30, clientY: 40 }),
+        );
+      await flushMicrotasks();
+
+      expect(pointerLock).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('cursor').style.transform).toMatch(/^translate3d\(30px, ?40px,/);
+    } finally {
+      pointerLock.mockRestore();
+    }
+  });
+
   it('tracks visual viewport scale and removes scrub listeners after pointer lock exits', async () => {
     const visualViewport = window.visualViewport;
     if (!visualViewport) {
