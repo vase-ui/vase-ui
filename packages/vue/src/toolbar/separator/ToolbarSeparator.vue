@@ -36,6 +36,9 @@ const separatorOrientation = computed(
 
 // As in Base UI, this part renders `Separator` and makes no element of its own. The two parts then
 // share the role, the attributes and the state.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of `Separator` dynamic. Vue then renders `Separator` and each part in its
+// content again each time this part renders.
 const separatorRef = useTemplateRef('separator');
 const element = computed(() => separatorRef.value?.element ?? null);
 
@@ -43,11 +46,21 @@ defineExpose({ element });
 </script>
 
 <template>
-  <Separator ref="separator" v-bind="{ ...$attrs, ...props, orientation: separatorOrientation }">
-    <template v-if="$slots.render" #render="slotProps">
+  <Separator
+    v-if="$slots.render"
+    ref="separator"
+    v-bind="{ ...$attrs, ...props, orientation: separatorOrientation }"
+  >
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
+  </Separator>
+  <Separator
+    v-else
+    ref="separator"
+    v-bind="{ ...$attrs, ...props, orientation: separatorOrientation }"
+  >
+    <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </Separator>

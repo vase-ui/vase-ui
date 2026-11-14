@@ -33,7 +33,7 @@ import { useSelectItemContext } from '../item/SelectItemContext';
 
 defineOptions({ inheritAttrs: false });
 
-withDefaults(defineProps<SelectItemIndicatorProps>(), { as: 'span' });
+const props = withDefaults(defineProps<SelectItemIndicatorProps>(), { as: 'span' });
 
 defineSlots<{
   default(props: { state: SelectItemIndicatorState }): unknown;
@@ -42,8 +42,13 @@ defineSlots<{
 
 const { selected } = useSelectItemContext();
 
+const shouldRender = computed(() => props.keepMounted || selected.value);
+
 // As in Base UI, this part renders `ItemIndicator` and makes no element of its own. It mounts that
 // part only while the item is selected or `keepMounted` is set.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of `ItemIndicator` dynamic. Vue then renders `ItemIndicator` and each part in its
+// content again each time this part renders.
 const indicator = useTemplateRef('indicator');
 const element = computed(() => indicator.value?.element ?? null);
 
@@ -52,15 +57,22 @@ defineExpose({ element });
 
 <template>
   <ItemIndicator
-    v-if="keepMounted || selected"
+    v-if="shouldRender && $slots.render"
     ref="indicator"
     v-bind="{ ...$attrs, as, stateClass, stateStyle }"
     :selected="selected"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
+  </ItemIndicator>
+  <ItemIndicator
+    v-else-if="shouldRender"
+    ref="indicator"
+    v-bind="{ ...$attrs, as, stateClass, stateStyle }"
+    :selected="selected"
+  >
+    <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </ItemIndicator>
