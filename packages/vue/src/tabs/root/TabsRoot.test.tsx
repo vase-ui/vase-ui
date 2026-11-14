@@ -1,5 +1,6 @@
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef, Transition } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import { Tabs } from '@vase-ui/vue/tabs';
@@ -14,6 +15,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
   within,
 } from '#test-utils';
@@ -1983,6 +1985,46 @@ describe('<Tabs.Root />', () => {
         '0',
         '-1',
       ]);
+    });
+  });
+
+  describe('popups', () => {
+    it('works inside Dialog', async () => {
+      const { user } = await render(
+        <Dialog.Root>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Tabs.Root defaultValue="overview">
+                <Tabs.List>
+                  <Tabs.Tab value="overview">Overview</Tabs.Tab>
+                  <Tabs.Tab value="projects">Projects</Tabs.Tab>
+                  <Tabs.Tab value="account">Account</Tabs.Tab>
+                </Tabs.List>
+                <Tabs.Panel value="overview" />
+                <Tabs.Panel value="projects" />
+                <Tabs.Panel value="account" />
+              </Tabs.Root>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+
+      await user.click(trigger);
+
+      const tab1 = screen.getByRole('tab', { name: 'Overview' });
+      await waitFor(() => {
+        expect(tab1).toHaveFocus();
+      });
+      await waitForLaterMillisecond();
+      await user.keyboard('{ArrowRight}');
+
+      const tab2 = screen.getByRole('tab', { name: 'Projects' });
+      await waitFor(() => {
+        expect(tab2).toHaveFocus();
+      });
     });
   });
 

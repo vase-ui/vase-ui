@@ -1,6 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { computed, defineComponent, provide, shallowRef } from 'vue';
 import type { PropType } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Switch } from '@vase-ui/vue/switch';
 import { Toggle } from '@vase-ui/vue/toggle';
@@ -489,6 +490,152 @@ describe('<Toolbar.Button />', () => {
 
         expect(onOpenChange).toHaveBeenCalledTimes(0);
         expect(onValueChange).toHaveBeenCalledTimes(0);
+      });
+    });
+
+    describe('Dialog', () => {
+      it('renders a dialog trigger', async () => {
+        await render(
+          <Toolbar.Root>
+            <Dialog.Root modal={false}>
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Dialog.Trigger {...props} data-testid="trigger" />
+                  ),
+                }}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.getByTestId('trigger')).toBe(screen.getByRole('button'));
+      });
+
+      it('handles interactions', async () => {
+        const onOpenChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Dialog.Root modal={false} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Dialog.Trigger {...props} />
+                  ),
+                }}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByText('title text')).toBe(null);
+
+        const trigger = screen.getByRole('button');
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+
+        await user.keyboard('[Enter]');
+        expect(screen.queryByText('title text')).not.toBe(null);
+        expect(onOpenChange).toHaveBeenCalledTimes(1);
+        expect(onOpenChange).toHaveBeenNthCalledWith(1, true, expect.anything());
+
+        await user.keyboard('[Escape]');
+        expect(screen.queryByText('title text')).toBe(null);
+        expect(onOpenChange).toHaveBeenCalledTimes(2);
+        expect(onOpenChange).toHaveBeenNthCalledWith(2, false, expect.anything());
+
+        await waitFor(() => {
+          expect(trigger).toHaveFocus();
+        });
+      });
+
+      it('disabled state', async () => {
+        const onOpenChange = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Dialog.Root modal={false} onOpenChange={onOpenChange}>
+              <Toolbar.Button
+                disabled
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Dialog.Trigger {...props} />
+                  ),
+                }}
+              />
+              <Dialog.Portal>
+                <Dialog.Backdrop />
+                <Dialog.Popup>
+                  <Dialog.Title>title text</Dialog.Title>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByText('title text')).toBe(null);
+
+        const trigger = screen.getByRole('button');
+        expect(trigger).not.toHaveAttribute('disabled');
+        expect(trigger).toHaveAttribute('data-disabled');
+        expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+
+        await user.keyboard('[Enter]');
+        await user.keyboard('[Space]');
+        await user.keyboard('[ArrowUp]');
+        await user.keyboard('[ArrowDown]');
+        expect(onOpenChange).toHaveBeenCalledTimes(0);
+      });
+
+      it('prevents composite keydowns from escaping', async () => {
+        const { user } = await render(
+          <Toolbar.Root>
+            <Dialog.Root modal={false}>
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Dialog.Trigger {...props}>dialog</Dialog.Trigger>
+                  ),
+                }}
+              />
+              <Dialog.Portal>
+                <Dialog.Popup />
+              </Dialog.Portal>
+            </Dialog.Root>
+
+            <Toolbar.Button>empty</Toolbar.Button>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.queryByRole('dialog')).toBe(null);
+
+        const trigger = screen.getByRole('button', { name: 'dialog' });
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toHaveFocus();
+        });
+
+        await user.keyboard('{ArrowRight}');
+
+        expect(screen.getByRole('dialog')).toHaveFocus();
+        expect(screen.getByRole('button', { name: 'empty' })).not.toHaveFocus();
       });
     });
 
