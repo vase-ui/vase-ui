@@ -1953,6 +1953,60 @@ describe('<Select.Popup />', () => {
     expect(changes).toEqual([[false, 'window-resize']]);
   });
 
+  it('VUE-5: keeps a popup that is placed over the trigger when KeepAlive deactivates it in the flush of a placement', async () => {
+    const changes: [boolean, string][] = [];
+    const Page = defineComponent({
+      name: 'Page',
+      setup() {
+        return () => (
+          <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+            <Select.Root
+              defaultOpen
+              defaultValue="a"
+              onOpenChange={(open: boolean, details: Select.Root.OpenChangeEventDetails) => {
+                changes.push([open, details.reason]);
+              }}
+            >
+              <Select.Trigger>
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner data-testid="positioner">
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        );
+      },
+    });
+    const visible = shallowRef(true);
+    const direction = shallowRef<'ltr' | 'rtl'>('ltr');
+    await render(() => (
+      <DirectionProvider direction={direction.value}>
+        <KeepAlive>{visible.value ? <Page key="page" /> : <p key="other">other</p>}</KeepAlive>
+      </DirectionProvider>
+    ));
+    await waitFor(() => {
+      expect(screen.getByTestId('positioner').style.maxHeight).toBe('none');
+    });
+
+    // The provider updates before KeepAlive deactivates the page, so the direction queues the
+    // placement first. The placement then runs with the trigger out of the document.
+    direction.value = 'rtl';
+    visible.value = false;
+    await flushMicrotasks();
+    visible.value = true;
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+    await fireEvent(window, new UIEvent('resize'));
+    expect(changes).toEqual([[false, 'window-resize']]);
+  });
+
   it('VUE-5: keeps its open state under KeepAlive and hears no Escape while deactivated', async () => {
     const changes: [boolean, string][] = [];
     const Page = defineComponent({
