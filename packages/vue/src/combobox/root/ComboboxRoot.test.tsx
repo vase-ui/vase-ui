@@ -2481,6 +2481,8 @@ describe('<Combobox.Root />', () => {
           const apple = await screen.findByRole('option', { name: 'apple' });
           await user.hover(apple);
           await moveOver(apple);
+          // A `pointerleave` resets the highlight only after a `pointermove` with movement.
+          await fireEvent.pointerMove(apple, { pointerType: 'mouse', movementX: 1 });
 
           await waitFor(() => {
             expect(apple).toHaveAttribute('data-highlighted');
