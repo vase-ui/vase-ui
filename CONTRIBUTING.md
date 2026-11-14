@@ -1737,6 +1737,7 @@ The hydration helpers:
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
+- `fireTouch` gives no `timeStamp`, so the browser stamps a touch event with its own clock, and a stalled run makes a fast swipe slow. A touch case that depends on the speed of a swipe gives each event a fixed stamp. See `stampEventTimes` in `drawer/viewport/DrawerViewport.test.tsx`.
 - A case that presses a key or clicks in a popup in the millisecond of the open first waits for a later millisecond with `waitForLaterMillisecond()`, as `render` does after a mount. The portal of a popup that is not modal and the popup element of `useDismiss` have capture listeners, so an event of such a press reaches a second listener. See [Test helpers](#test-helpers).
 - A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
