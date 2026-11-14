@@ -187,7 +187,7 @@ A family can land in more than one pull request. Its `index.ts` then comes in th
 
 A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type, the state type and the data attributes of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps`, `OTPFieldSeparatorState` and `OTPFieldSeparatorDataAttributes`. `pnpm parity:check` needs the last two, because the `types.md` of the family names them.
 
-Where Base UI gives such a part a file of its own, that file exports the part under the new name with `typeof`. `drawer/close/DrawerClose.ts` is the model. The state type of that file omits the keys that the Base UI type leaves out: `AutocompleteItemState` omits `selected`.
+Where Base UI gives such a part a file of its own, that file exports the part under the new name with `typeof`. `drawer/close/DrawerClose.ts` is the model. The Base UI state type of that file can have fewer keys than the state type of the original part. The Vase UI type then omits the other keys: `AutocompleteItemState` omits `selected`.
 
 ## API convention
 
@@ -1592,7 +1592,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - Vue sets a ref object after the render, and it calls a function ref during the patch. A part reads the exposed `element` during its own patch.
 - `act` is a React function. `flushMicrotasks` is one of the test helpers.
 - A function in `setup` reads the current props, so it needs no `useStableCallback`.
-- In WebKit, a list ignores a `pointermove` with no movement, as it ignores a `mousemove` with no movement. A case that needs the pointer modality of a list sends `fireEvent.pointerMove(element, { pointerType: 'mouse', movementX: 1 })` after `user.hover`.
+- In WebKit, a list ignores a `pointermove` with no movement, as it ignores a `mousemove` with no movement. After a key press, the list then ignores a `pointerleave` event, and the highlight stays. A case that needs the highlight to clear on `pointerleave` sends `fireEvent.pointerMove(element, { pointerType: 'mouse', movementX: 1 })` after `user.hover`.
 - A case that changes a prop between `0` and `-0` writes a `shallowRef` that the composable reads. Vue compares vnode props with `!==`.
 - Vue has no `Profiler`. A `MutationObserver` gets one call for the DOM changes of one Vue flush.
 - Vue puts empty text nodes around a fragment. `childNodes` has them. `children` does not.
