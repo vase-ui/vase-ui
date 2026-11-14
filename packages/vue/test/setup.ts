@@ -31,6 +31,12 @@ if (typeof document !== 'undefined') {
     { capture: true },
   );
 
+  // Whether a browser gives a pointer lock to the page of a test depends on the engine and on the
+  // platform. With a lock, Firefox puts a second pointer in the page. The move below does not take
+  // that pointer off the page, and it gives hover events to each later test file of the page.
+  Element.prototype.requestPointerLock = () =>
+    Promise.reject(new DOMException('The test setup refuses a pointer lock.', 'NotSupportedError'));
+
   // A test in a browser ends with one wait, so that the next test starts in a new task. Without the
   // wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the
   // browser. Vitest runs the `onTestFinished` hooks after the `afterEach` hooks and in reverse
