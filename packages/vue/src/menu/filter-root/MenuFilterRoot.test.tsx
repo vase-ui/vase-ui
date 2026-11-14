@@ -1523,6 +1523,12 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
 
       let addApricot = () => {};
       let closeSubmenu = () => {};
+      let endExit = () => {};
+      // A busy machine can stall the page for some seconds, so the wait for the end of the exit
+      // has no time limit.
+      const exitEnded = new Promise<void>((resolve) => {
+        endExit = resolve;
+      });
 
       const Test = defineComponent(() => {
         const open = shallowRef(true);
@@ -1554,6 +1560,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
                         open={open.value}
                         onOpenChange={(nextOpen: boolean) => {
                           open.value = nextOpen;
+                        }}
+                        onOpenChangeComplete={(nextOpen: boolean) => {
+                          if (!nextOpen) {
+                            endExit();
+                          }
                         }}
                       >
                         <Menu.SubmenuTrigger>Fruit</Menu.SubmenuTrigger>
@@ -1594,15 +1605,13 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(input).toHaveValue('ap');
       addApricot();
       await flushMicrotasks();
-      await waitFor(() => {
-        expect(screen.getByRole('menuitem', { name: 'Apricot' })).toBeVisible();
-      });
+      expect(screen.getByRole('menuitem', { name: 'Apricot' })).toBeVisible();
       expect(screen.queryByRole('menuitem', { name: 'Banana' })).toBe(null);
 
       popup.getAnimations().forEach((animation) => animation.finish());
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      await exitEnded;
+      await flushMicrotasks();
+      expect(screen.queryByTestId('popup')).toBe(null);
 
       await user.click(screen.getByRole('menuitem', { name: 'Fruit' }));
       expect(await screen.findByRole('searchbox', { name: 'Filter fruit' })).toHaveValue('');
