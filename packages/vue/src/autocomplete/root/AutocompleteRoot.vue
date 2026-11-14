@@ -268,7 +268,7 @@ const inputValue = computed<ComboboxInputElementValue>(() => {
 });
 
 const collator = useCoreFilter(() => ({ locale: props.locale }));
-const filter = computed(() => {
+const resolvedFilter = computed(() => {
   if (staticItems.value || props.filter === null) {
     return null;
   }
@@ -338,7 +338,7 @@ const { actions, inputElement, hiddenInputProps } = useAriaCombobox<ItemValue, '
       return props.filteredItems;
     },
     get filter() {
-      return filter.value;
+      return resolvedFilter.value;
     },
     get filterQuery() {
       // An inline completion changes the input and not the query of the filter.

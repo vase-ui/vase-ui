@@ -228,6 +228,19 @@ describe('useCoreFilter', () => {
     expect(filter.endsWith('Crème brûlée', 'creme')).toBe(false);
   });
 
+  it('gives the other options to the collator', async () => {
+    let filter!: Filter;
+    const TestFilter = defineComponent(() => {
+      filter = useCoreFilter({ locale: 'en', sensitivity: 'accent' });
+      return () => null;
+    });
+
+    await render(<TestFilter />);
+
+    expect(filter.contains('Malmö', 'malmö')).toBe(true);
+    expect(filter.contains('Malmö', 'malmo')).toBe(false);
+  });
+
   it('a computed of the consumer follows a change of the locale', async () => {
     const locale = shallowRef('en');
 

@@ -179,6 +179,29 @@ describe('<Autocomplete.Root />', () => {
         'update:open:true',
       ]);
     });
+
+    it('a canceled openChange emits no update:open and keeps the popup closed', async () => {
+      const events: string[] = [];
+      await render(
+        <Autocomplete.Root
+          items={cities}
+          onOpenChange={(open, details) => {
+            events.push(`openChange:${open}`);
+            details.cancel();
+          }}
+          {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
+        >
+          <Autocomplete.Input />
+          <ComboboxListPart />
+        </Autocomplete.Root>,
+      );
+
+      await type('ma');
+
+      expect(events).toEqual(['openChange:true']);
+      expect(getInput()).toHaveAttribute('aria-expanded', 'false');
+      expect(getInput().value).toBe('ma');
+    });
   });
 
   describe('mode', () => {
@@ -296,6 +319,26 @@ describe('<Autocomplete.Root />', () => {
       expect(handleItemHighlighted.mock.lastCall?.[0]).toBe('Malmö');
       expect(handleItemHighlighted.mock.lastCall?.[1].reason).toBe('pointer');
       expect(getInput().value).toBe('ma');
+    });
+
+    it('itemToStringValue gives the text of an object item to the filter and to the inline text', async () => {
+      const countries = [
+        { code: 'SE', label: 'Sweden' },
+        { code: 'MT', label: 'Malta' },
+      ];
+      await render(
+        <Autocomplete.Root mode="both" items={countries} itemToStringValue={(item) => item.code}>
+          <Autocomplete.Input />
+          <ComboboxListPart />
+        </Autocomplete.Root>,
+      );
+      getInput().focus();
+      await type('mt');
+      expect(getOptions()).toEqual(['Malta']);
+
+      await pressArrowDown();
+
+      expect(getInput().value).toBe('MT');
     });
 
     it('a change of the controlled value from outside replaces the inline text', async () => {

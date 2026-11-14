@@ -23,7 +23,7 @@
     {
       "upstream": "packages/react/src/autocomplete/separator/AutocompleteSeparator.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Separator`, which `Autocomplete.Separator` exports under another name."
+      "reason": "Vase UI does not have `Autocomplete.Separator`, which exports `ListboxSeparator` under another name. The part comes with the list parts of Autocomplete."
     },
     {
       "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
