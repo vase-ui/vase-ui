@@ -3,6 +3,7 @@ import type { UserEvent } from '@testing-library/user-event';
 import { expect, vi, describe, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import * as Dialog from '../src/dialog/index.parts';
+import { platform } from '../src/common/platform';
 import { isJSDOM } from '../src/common/testUtils';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
@@ -77,6 +78,15 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
 
   function getItem(index: number) {
     return screen.getByRole(itemRole, { name: ITEMS[index] });
+  }
+
+  function getItemAt(x: number, y: number) {
+    const hit = document.elementFromPoint(x, y);
+    const item = screen.getAllByRole(itemRole).find((candidate) => candidate.contains(hit));
+    if (!item) {
+      throw new Error(`Popup list conformance: no item is at ${x}, ${y}.`);
+    }
+    return item;
   }
 
   function getHighlightedIndex() {
@@ -424,6 +434,9 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
           const { user } = await renderList();
           await openWithMouse(user);
 
+          const hoveredRect = getItem(1).getBoundingClientRect();
+          const pointerX = hoveredRect.x + hoveredRect.width / 2;
+          const pointerY = hoveredRect.y + hoveredRect.height / 2;
           await userEvent.hover(getItem(1));
           // The first real move into the page has no movement, and WebKit's list ignores it.
           await fireEvent.mouseMove(getItem(1), { movementX: 1 });
@@ -436,6 +449,30 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
           await settle();
 
           expect(getHighlightedIndex()).toBe(9);
+
+          const underPointer = getItemAt(pointerX, pointerY);
+          const underPointerIndex = ITEMS.indexOf(underPointer.textContent ?? '');
+          expect(underPointerIndex).not.toBe(9);
+
+          if (platform.engine.webkit) {
+            // WebKit sends a `pointermove` and a `mousemove` with no movement to the item under
+            // the pointer, some frames after the scroll. An assertion that follows the scroll at
+            // once runs before them, so it passes when the list does not ignore them. The case
+            // sends them itself.
+            await fireEvent.pointerMove(underPointer, { pointerType: 'mouse' });
+            await fireEvent.mouseMove(underPointer);
+            await settle();
+
+            expect(getHighlightedIndex()).toBe(9);
+          }
+
+          // A move with movement is the user pointing, and the highlight follows it. In WebKit,
+          // this shows that the list ignored the moves above for their lack of movement.
+          await fireEvent.mouseMove(underPointer, { movementX: 1 });
+
+          await waitFor(() => {
+            expect(getHighlightedIndex()).toBe(underPointerIndex);
+          });
         },
       );
 
