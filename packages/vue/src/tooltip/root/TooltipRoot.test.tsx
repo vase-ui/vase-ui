@@ -2227,6 +2227,7 @@ describe('nested tooltips', () => {
     await fireEvent.mouseMove(innerTrigger, { clientX: 50, clientY: 10 });
 
     await tick(delay);
+    await flushMicrotasks();
 
     await fireEvent.mouseOut(innerTrigger, { relatedTarget: outerArea });
     await fireEvent.mouseOver(outerArea);
@@ -2328,6 +2329,7 @@ describe('nested tooltips', () => {
     await fireEvent.mouseMove(innerTrigger, { clientX: 50, clientY: 10 });
 
     await tick(delay);
+    await flushMicrotasks();
 
     await fireEvent.mouseOut(innerTrigger, { relatedTarget: outerArea });
     await fireEvent.mouseOver(outerArea);

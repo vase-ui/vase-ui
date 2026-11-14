@@ -68,7 +68,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef } from 'vue';
+import { computed, onDeactivated, shallowRef } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -249,6 +249,10 @@ function resetNestedTriggerHover() {
   nestedTriggerOpenTimeout.clear();
   pointerType = undefined;
 }
+
+// `KeepAlive` sends no leave event. A reopen that waits would then open the tooltip of a trigger
+// that is not in the document.
+onDeactivated(resetNestedTriggerHover);
 
 function setPointerType(event: PointerEvent) {
   pointerType = event.pointerType;
