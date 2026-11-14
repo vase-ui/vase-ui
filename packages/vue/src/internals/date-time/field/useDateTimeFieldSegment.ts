@@ -103,37 +103,41 @@ export function useDateTimeFieldSegment(
     }
   }
 
-  // Takes one character. It gives `true` when the segment is full and the focus goes on.
-  function typeCharacter(character: string, event: Event): boolean {
+  // Takes the characters of a text, and gives one change for the text. A segment that is full gets
+  // no more characters, and the focus goes on to the next segment.
+  function typeText(text: string, event: Event) {
     const segmentType = type.value;
     const details = createChangeEventDetails(REASONS.inputChange, event);
-    if (!isNumericType(segmentType)) {
-      const dayPeriod = dayPeriodOfLetter(character, context.dayPeriodTexts.value);
+    let isFull = false;
+    if (isNumericType(segmentType)) {
+      const { min, max } = view.value;
+      let number: number | undefined;
+      for (const character of text) {
+        const digit = digitOf(character, context.digits.value);
+        if (digit !== undefined) {
+          const typed = typeDigit(typedDigits, digit, { min, max });
+          typedDigits = typed.digits;
+          number = typed.number ?? number;
+          isFull = typed.advance;
+        }
+        if (isFull) {
+          break;
+        }
+      }
+      if (number !== undefined) {
+        context.setNumber(segmentType, number, details);
+      }
+    } else {
+      const dayPeriod = [...text]
+        .map((character) => dayPeriodOfLetter(character, context.dayPeriodTexts.value))
+        .find((period) => period !== undefined);
       if (dayPeriod !== undefined) {
         context.setDayPeriod(dayPeriod, details);
+        isFull = true;
       }
-      return dayPeriod !== undefined;
     }
-    const digit = digitOf(character, context.digits.value);
-    if (digit === undefined) {
-      return false;
-    }
-    const { min, max } = view.value;
-    const typed = typeDigit(typedDigits, digit, { min, max });
-    typedDigits = typed.digits;
-    if (typed.number !== undefined) {
-      context.setNumber(segmentType, typed.number, details);
-    }
-    return typed.advance;
-  }
-
-  function typeText(text: string, event: Event) {
-    for (const character of text) {
-      // The characters after a full segment belong to the next segment, which gets none of them.
-      if (typeCharacter(character, event)) {
-        moveFocus(1);
-        return;
-      }
+    if (isFull) {
+      moveFocus(1);
     }
   }
 
