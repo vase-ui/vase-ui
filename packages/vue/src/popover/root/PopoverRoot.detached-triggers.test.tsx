@@ -1246,7 +1246,6 @@ describe('<Popover.Root />', () => {
         ).toBeLessThanOrEqual(1);
       });
     });
-
   });
 
   describe('VUE-75: an outside button that toggles the popover', () => {
