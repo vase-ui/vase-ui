@@ -9,11 +9,9 @@ const TestCase = defineComponent({
     return () => (
       <Drawer.Provider>
         <Drawer.IndentBackground data-testid="bg" />
-        <Drawer.Indent data-testid="indent">
-          <Drawer.Root open={props.open}>
-            <Drawer.Trigger>Open</Drawer.Trigger>
-          </Drawer.Root>
-        </Drawer.Indent>
+        <Drawer.Root open={props.open}>
+          <Drawer.Trigger>Open</Drawer.Trigger>
+        </Drawer.Root>
       </Drawer.Provider>
     );
   },

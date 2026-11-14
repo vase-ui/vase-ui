@@ -23,7 +23,11 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getEmptyRootStore } from '../../utils/popups/floating-root/getEmptyRootStore';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
-import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
+import {
+  useNavigationMenuRootContext,
+  useNavigationMenuTreeContext,
+} from '../root/NavigationMenuRootContext';
 import { NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
 import { NavigationMenuDismissContext } from './NavigationMenuDismissContext';
 
@@ -36,14 +40,33 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, NavigationMenuListState>;
 }>();
 
-const { orientation, open, nested, floatingRootStore, positionerElement, value } =
-  useNavigationMenuRootContext();
+const nodeId = useNavigationMenuTreeContext();
 
-// The root points at the store of the active trigger. Until a trigger is active, the composable
-// reads a closed store.
+const {
+  orientation,
+  open,
+  nested,
+  floatingRootStore,
+  positionerElement,
+  viewportElement,
+  value,
+  closeDelay,
+} = useNavigationMenuRootContext();
+
+// The root points at the store of the active trigger. Until a trigger is active, the composables
+// read a closed store.
 const fallbackStore = getEmptyRootStore();
+const store = () => floatingRootStore.value ?? fallbackStore;
 
-const dismiss = useDismiss(() => floatingRootStore.value ?? fallbackStore, {
+useHoverPopupInteraction(store, {
+  enabled: () =>
+    floatingRootStore.value != null &&
+    (positionerElement.value != null || viewportElement.value != null || value.value == null),
+  closeDelay,
+  nodeId,
+});
+
+const dismiss = useDismiss(store, {
   enabled: () => positionerElement.value != null || value.value == null,
   outsidePressEvent: 'intentional',
   outsidePress(event) {

@@ -11,6 +11,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import type { VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';
 
 function stubElementFromPoint(root: Document | ShadowRoot, getElement: () => Element | null) {
@@ -412,6 +413,51 @@ describe('<Drawer.Viewport />', () => {
       expect(open).toBe(false);
       expect(details.reason).toBe(REASONS.swipe);
       expect(popup).toHaveAttribute('data-swipe-dismiss', '');
+    });
+
+    it('VUE-58: lets a pointer listener of the consumer stop the swipe of the viewport', async () => {
+      let stopSwipe = true;
+      const handlePointerDown = vi.fn((event: VaseUIEvent<PointerEvent>) => {
+        if (stopSwipe) {
+          event.preventVaseUIHandler();
+        }
+      });
+      await render(
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal>
+            <Drawer.Viewport onPointerdown={handlePointerDown}>
+              <Drawer.Popup data-testid="popup" style={{ height: '100px' }}>
+                Drawer
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const popup = screen.getByTestId('popup');
+      const { left, top } = popup.getBoundingClientRect();
+      const pointer = { pointerType: 'mouse', pointerId: 1, clientX: left + 10 };
+      let timeStamp = 1;
+      function nextEvent(buttons: number, offset: number) {
+        timeStamp += 16;
+        return { ...pointer, buttons, clientY: top + offset, timeStamp };
+      }
+      async function drag() {
+        await firePointer.down(popup, { ...nextEvent(1, 10), button: 0 });
+        await firePointer.move(popup, nextEvent(1, 20));
+        await firePointer.move(popup, nextEvent(1, 30));
+      }
+
+      await drag();
+      expect(handlePointerDown).toHaveBeenCalledTimes(1);
+      expect(popup).not.toHaveAttribute('data-swiping');
+      await firePointer.up(popup, { ...nextEvent(0, 30), button: 0 });
+
+      stopSwipe = false;
+      await drag();
+      expect(handlePointerDown).toHaveBeenCalledTimes(2);
+      expect(popup).toHaveAttribute('data-swiping', '');
+      await firePointer.up(popup, { ...nextEvent(0, 30), button: 0 });
     });
 
     it('gives the viewport no nested dialog attribute while a nested drawer is open', async () => {

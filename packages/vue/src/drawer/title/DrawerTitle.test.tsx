@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { createRenderer, screen } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import * as Drawer from '../index.parts';
 
 describe('<Drawer.Title />', () => {
@@ -9,9 +8,13 @@ describe('<Drawer.Title />', () => {
   it('renders a heading that names the popup of the drawer', async () => {
     await render(
       <Drawer.Root open modal={false}>
-        <DialogPopupPart>
-          <Drawer.Title data-testid="title">Title</Drawer.Title>
-        </DialogPopupPart>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <Drawer.Title data-testid="title">Title</Drawer.Title>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
       </Drawer.Root>,
     );
 
