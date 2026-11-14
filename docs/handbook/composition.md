@@ -15,15 +15,15 @@ For example, most triggers render a `<button>` by default. The sample below uses
 
 <<< ../examples/composition/CustomTrigger.vue{9-11}
 
-Give the component to `as` when it needs no props of its own: `:as="MyButton"`. Use `#render` when it has props of its own, such as `size`. With `strictTemplates`, the type check refuses an attribute on the part when its element does not have that attribute.
+Give the component to `as` when it needs no props of its own: `:as="MyButton"`. Use `#render` when it has props of its own, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
 
-The custom component needs one root element that takes the attributes. Vue does this by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element.
+The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element.
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
 ## Composing multiple components
 
-When you compose more than one part with your own components, nest the `#render` slots as deeply as you need. Tooltip is a common example.
+To compose more than one part with your own components, nest the `#render` slots as deeply as you need. Tooltip is a common example.
 
 <<< ../examples/composition/NestedTriggers.vue{11-17}
 
@@ -31,21 +31,21 @@ In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, and `Dialog.Trigger`
 
 ## How props are merged
 
-With `as`, a part gives one set of attributes to the tag or component. Each part reads the props that it declares. The element gets the other attributes. For example, a part reads its own `disabled`. Set `disabled` on `Toolbar.Button`, not on the part in its `#render` slot. The toolbar then keeps the element in its keyboard navigation.
+With `as`, a part has one set of attributes. The part takes the props that it declares. It gives the other attributes to the tag or component. For example, `Toolbar.Button` declares `disabled`. Set `disabled` on `Toolbar.Button`, and not on the part that you render in its slot. The toolbar then keeps the element in its keyboard navigation.
 
 With `#render`, the slot gets `props`. It holds the attributes, the listeners, the state data attributes, the class, the style and the `ref` setter. Bind it on your element with `v-bind="props"`.
 
 Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
 
-To use the rules of the parts, merge with [`mergeProps`](/utils/merge-props#how-merging-works). Your listener then runs first, and [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a toggle:
+For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a toggle:
 
 <<< ../examples/composition/MergedProps.vue{13-17,21-25}
 
 The rendered `<button>` gets:
 
-- `class="toggle toolbar-button"`: class names are combined, starting with the rightmost set.
+- `class="toggle toolbar-button"`: class names are combined, and the rightmost set comes first.
 - `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, starting with `handleToggleClick`. Calling `event.preventVaseUIHandler()` skips every listener that runs after it, so calling it in `handleToggleClick` also skips `handleToolbarClick`. Some parts call it internally.
+- Both click listeners, and `handleToggleClick` runs first. `event.preventVaseUIHandler()` skips every listener that runs after it. When `handleToggleClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
 
 An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call `props.ref` in a function ref: `:ref="(element) => { props.ref(element); own = element }"`.
 
@@ -57,7 +57,7 @@ For example, `<Accordion.Header>` renders an `<h3>` element by default. The samp
 
 <<< ../examples/composition/HeadingLevel.vue{8}
 
-Each Vase UI part renders the most fitting element by default. In most cases, render a different element only when you have a reason for it.
+Each Vase UI part renders the most appropriate element by default. In most cases, render a different element only when you have a reason for it.
 
 ## The render slot
 
@@ -65,6 +65,6 @@ The `#render` slot gives you complete control over where `props` go. It also let
 
 <<< ../examples/composition/RenderSlot.vue{8-13}
 
-The default slot also gets `{ state }`. A part that has nodes of its own, such as `Slider.Thumb` with its range input, gives `#render` a third slot prop, `children`. Mount `children` in your element. A development build shows a warning when the slot does not mount it.
+The default slot also gets `{ state }`. Some parts have nodes of their own. `Slider.Thumb` has a range input. Such a part gives `#render` a third slot prop, `children`. Mount `children` in your element. A development build shows a warning when the slot does not mount it.
 
 <<< ../examples/composition/RenderChildren.vue{10-12}

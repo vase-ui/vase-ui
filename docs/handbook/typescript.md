@@ -18,7 +18,7 @@ Each type also has a flat name, such as `TooltipRootProps` and `TooltipRootState
 
 ### Props
 
-When you create a wrapping component, use the `Props` type to accept all of the props of the part that you wrap.
+To make a component that wraps a part, use the `Props` type to accept all of the props of that part. The sample takes the flat name in `defineProps`.
 
 <<< ../examples/typescript/MyTooltip.vue{5}
 
@@ -43,23 +43,24 @@ The namespace of a part also exports the types of the custom events.
 
 ### Other accessible types
 
-Depending on the API, a part or a utility exports other types. The list below is not complete. Each type is documented where it is needed.
+A part or a utility can also export other types. The list below is not complete. Each type is documented where it is needed.
 
-- A popup root exposes methods, and you read them through a template ref. For example, `Tooltip.Root.Actions` is the type of the methods that `Tooltip.Root` exposes.
+- A popup root exposes methods, and you read them through a template ref. `Tooltip.Root.Actions` is the type of the methods that `Tooltip.Root` exposes.
+
+  <<< ../examples/typescript/Actions.vue{5-10,15}
+
 - The `toast` object of `<Toast.Root>` is a complex object with many properties. `Toast.Root.ToastObject` gives access to this interface.
-- A part that renders an element has `as`, `stateClass` and `stateStyle`. `useRender.ComponentProps` gives access to these props. See [useRender](/utils/use-render#typescript).
-
-<<< ../examples/typescript/Actions.vue{5-10,15}
+- A part that renders an element has the props `as`, `stateClass` and `stateStyle`. `useRender.ComponentProps` gives access to these props. See [useRender](/utils/use-render#typescript).
 
 ## Generic components
 
 A part whose types follow a value or a payload is a generic component. Its type parameter comes from its props.
 
-- `RadioGroup`, `ToggleGroup`, `Slider.Root` and `Accordion.Root` take the type of their value from `value` or `default-value`.
+- `RadioGroup`, `ToggleGroup`, `Slider.Root` and `Accordion.Root` take their type parameter from `value` or `default-value`.
 - A popup root and its trigger, such as `Tooltip.Root` and `Tooltip.Trigger`, take the type of their payload from `handle`. See [Multiple triggers](/components/tooltip#multiple-triggers).
 
-In this sample, the type of `value` follows `default-value`: a number for one thumb, and an array of numbers for a range.
+In this sample, the type of the listener follows `default-value`: a number for one thumb, and an array of numbers for a range. The type check refuses a listener with another type.
 
 <<< ../examples/typescript/GenericValue.vue
 
-The type check refuses a generic component as the value of `as`. Give the part `props` in the `#render` slot instead.
+The type check refuses a generic component as the value of `as`. Render it in the `#render` slot of the other part, and bind `props` on it.

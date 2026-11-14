@@ -63,7 +63,7 @@ If no visible label is rendered, give `aria-label` to the part that is the form 
 
 ### Labeling control groups
 
-Compose `<Fieldset.Root>` with the group when you label a group of controls, such as a range slider with more than one thumb or a section that combines several inputs. Render the group in the `#render` slot of `Fieldset.Root`, and keep the group label in `<Fieldset.Legend>`:
+To label a group of controls, compose `<Fieldset.Root>` with the group. A range slider with more than one thumb is an example. Render the group in the `#render` slot of `Fieldset.Root`. Keep the group label in `<Fieldset.Legend>`:
 
 <<< ../examples/forms/RangeInFieldset.vue{11-14,17-18}
 
@@ -102,7 +102,7 @@ Vase UI form components support the native HTML validation attributes for many v
 
 <<< ../examples/forms/ConstraintValidation.vue{7}
 
-Vase UI form components use a hidden input to take part in native form submission and validation. A hidden input that has a `name` is `position: absolute`. To place it near its control, so that the native validation message points at the right area, give the component a `name`. Then wrap the control in a container with `position: relative`. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
+Vase UI form components use a hidden input to take part in native form submission and validation. A hidden input that has a `name` is `position: absolute`. To place it near its control, give the component a `name`. Then wrap the control in a container with `position: relative`. The native validation message then points at the control. A hidden input with no `name` is `position: fixed` at the top left of the viewport.
 
 <<< ../examples/forms/PositionedInput.vue{7,8}
 
@@ -112,9 +112,9 @@ You can add custom validation logic with a synchronous or an asynchronous functi
 
 Use the `validationMode` prop to set when the validation runs:
 
-- `onSubmit` (default) validates the fields when the containing `<Form>` is submitted. Afterward, the fields validate again when their value changes.
+- `onSubmit` (default) validates the fields when the parent `<Form>` is submitted. Afterward, the fields validate again when their value changes.
 - `onBlur` validates the field when the focus moves away.
-- `onChange` validates the field when its value changes, for example after each key press in a text field or when a checkbox is checked or unchecked.
+- `onChange` validates the field when its value changes. A key press in a text field is an example. So is a click on a checkbox.
 
 `validationDebounceTime` sets, in milliseconds, how long to wait between `validate` calls in `onChange` mode. Use it for asynchronous requests and for text fields that validate on change.
 

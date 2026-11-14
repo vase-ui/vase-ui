@@ -25,7 +25,7 @@ The element gets the classes in this order: `class`, the result of `stateClass`,
 
 ### Data attributes
 
-A part sets data attributes designed for styling its states. For example, you can style [Switch](/components/switch) with its `[data-checked]` and `[data-unchecked]` attributes, among others.
+A part sets data attributes for its states. For example, you can style [Switch](/components/switch) with its `[data-checked]` and `[data-unchecked]` attributes, among others.
 
 ```css
 .SwitchThumb[data-checked] {
@@ -35,7 +35,7 @@ A part sets data attributes designed for styling its states. For example, you ca
 
 ### CSS variables
 
-A part exposes CSS variables to help with styling. They often hold dynamic numeric values for sizing or transform calculations. For example, `Tooltip.Positioner` of [Tooltip](/components/tooltip) sets `--available-height` and `--anchor-width`. A rule on the popup can read them.
+A part exposes CSS variables to help you style it. They often hold dynamic numeric values for size or transform calculations. For example, `Tooltip.Positioner` of [Tooltip](/components/tooltip) sets `--available-height` and `--anchor-width`. A rule on the popup can read them.
 
 ```css
 .Popup {

@@ -24,7 +24,7 @@ const { toasts } = Toast.useToastManager();
 .Values {
   margin: 0.5rem 0 0;
   padding: 0.5rem;
-  border: 1px solid currentcolor;
+  border: 1px solid;
   font-size: 0.75rem;
   white-space: pre-wrap;
   -webkit-user-select: text;
