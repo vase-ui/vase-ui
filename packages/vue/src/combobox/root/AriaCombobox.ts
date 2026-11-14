@@ -1382,7 +1382,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           queueMicrotask(() => {
             const current = toRaw(store.state);
             if (
-              (!current.open && (!current.inline || getResolvedPopup())) ||
+              (!open.value && (!current.inline || getResolvedPopup())) ||
               (inputRef.value && inputRef.value.value.trim() !== '')
             ) {
               return;

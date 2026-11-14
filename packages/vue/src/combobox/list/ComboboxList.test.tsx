@@ -1,6 +1,13 @@
 import { expect, vi, describe, it } from 'vitest';
 import { toRaw } from 'vue';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+} from '#test-utils';
+import ComboboxListReplacement from '../../../test/fixtures/ComboboxListReplacement.vue';
 import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
@@ -94,9 +101,9 @@ describe('<Combobox.List />', () => {
     expect(screen.getByRole('listbox')).not.toHaveAttribute('aria-readonly');
   });
 
-  // `Autocomplete.Portal`, `Autocomplete.Positioner`, `Autocomplete.Popup` and `Autocomplete.List`
-  // are these parts of Combobox under other names, and the Autocomplete entry does not export them
-  // yet. The case asserts only the list.
+  // `Autocomplete.Portal`, `Autocomplete.Positioner`, `Autocomplete.Popup`, `Autocomplete.List` and
+  // `Autocomplete.Item` are these parts of Combobox under other names, and the Autocomplete entry
+  // does not export them yet. The case asserts only the list.
   it('sets aria-readonly on the Autocomplete listbox when the root is readOnly', async () => {
     await render(
       <Autocomplete.Root readOnly defaultOpen>
@@ -296,6 +303,82 @@ describe('<Combobox.List />', () => {
 
       expect(screen.getAllByRole('option')).toHaveLength(2);
       expect(store!.context.labelsRef.value).toEqual([]);
+    });
+
+    it('clears the labels of the rendered items when the list unmounts', async () => {
+      let store: ComboboxStore | undefined;
+      await render(
+        <Combobox.Root defaultOpen>
+          <StoreProbe onStore={(value) => (store = value)} />
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="a">Apple</Combobox.Item>
+                  <Combobox.Item value="b">Banana</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+      expect(store!.context.labelsRef.value).toEqual(['Apple', 'Banana']);
+
+      await fireEvent.click(screen.getByRole('option', { name: 'Banana' }));
+      await flushMicrotasks();
+
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(store!.context.labelsRef.value).toEqual([]);
+    });
+
+    it('keeps the labels that the root made from its items when the list unmounts', async () => {
+      let store: ComboboxStore | undefined;
+      await render(
+        <Combobox.Root items={['a', 'b']} defaultOpen>
+          <StoreProbe onStore={(value) => (store = value)} />
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {`Label ${item}`}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      store!.context.forceMount();
+      expect(store!.context.labelsRef.value).toEqual(['a', 'b']);
+
+      await fireEvent.click(screen.getByRole('option', { name: 'Label b' }));
+      await flushMicrotasks();
+
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(store!.context.labelsRef.value).toEqual(['a', 'b']);
+    });
+
+    it('keeps the elements of a list that mounts before the old list unmounts', async () => {
+      let store!: ComboboxStore;
+      const { setProps } = await render(
+        <ComboboxListReplacement first onStore={(value: ComboboxStore) => (store = value)} />,
+      );
+      expect(toRaw(store.state).listElement).toBe(screen.getByTestId('first-list'));
+
+      await setProps({ first: false });
+
+      const list = screen.getByTestId('second-list');
+      expect(screen.queryByTestId('first-list')).toBe(null);
+      expect(toRaw(store.state).listElement).toBe(list);
+      expect(toRaw(store.state).positionerElement).toBe(list);
     });
   });
 });

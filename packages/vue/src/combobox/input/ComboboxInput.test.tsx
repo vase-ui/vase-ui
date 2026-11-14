@@ -494,5 +494,22 @@ describe('<Combobox.Input />', () => {
       expect(handleOpenChange.mock.lastCall?.[0]).toBe(false);
       expect(handleOpenChange.mock.lastCall?.[1].reason).toBe('close-press');
     });
+
+    it('selects the highlighted item with Enter in a root that the consumer opens', async () => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Combobox.Root open items={cities} onValueChange={handleValueChange}>
+          <Combobox.Input />
+          <ComboboxListPart />
+        </Combobox.Root>,
+      );
+
+      getInput().focus();
+      await fireEvent.keyDown(getInput(), { key: 'ArrowDown' });
+      await fireEvent.keyDown(getInput(), { key: 'Enter' });
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.lastCall?.[0]).toBe('Malmö');
+    });
   });
 });

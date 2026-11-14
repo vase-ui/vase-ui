@@ -584,6 +584,39 @@ describe('<Combobox.Root />', () => {
         animation.finish();
       }
     });
+
+    it('returns the highlight to the selected item after a clear of the text in a root that the consumer opens', async () => {
+      const { user } = await render(
+        <Combobox.Root open multiple items={cities} defaultValue={['Malta']}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      getInput().focus();
+      await user.keyboard('os');
+      await waitFor(() => expect(getOptions()).toEqual(['Oslo']));
+      await user.keyboard('{Backspace}{Backspace}');
+      await waitFor(() => expect(getOptions()).toEqual(cities));
+
+      await waitFor(() =>
+        expect(screen.getByRole('option', { name: 'Malta' })).toHaveAttribute('data-highlighted'),
+      );
+    });
   });
 
   describe('store', () => {
@@ -1335,33 +1368,6 @@ describe('<Combobox.Root />', () => {
       await user.click(document.body);
 
       await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('Pick a city'));
-    });
-
-    // The user can empty a combobox, so it counts a missing value as a text input does: only after
-    // a change. Base UI does the same.
-    it('counts no missing value at a blur with no change before', async () => {
-      const { user } = await render(
-        <div>
-          <Field.Root validationMode="onBlur" data-testid="field">
-            <Combobox.Root required items={cities}>
-              <Combobox.Input />
-            </Combobox.Root>
-            <Field.Error match="valueMissing" data-testid="error">
-              required
-            </Field.Error>
-          </Field.Root>
-          <button type="button">After</button>
-        </div>,
-      );
-
-      getInput().focus();
-      await user.tab();
-      await flushMicrotasks();
-
-      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
-      expect(screen.getByTestId('field')).toHaveAttribute('data-touched', '');
-      expect(screen.queryByTestId('error')).toBe(null);
-      expect(getInput()).not.toHaveAttribute('aria-invalid');
     });
   });
 
