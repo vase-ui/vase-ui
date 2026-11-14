@@ -34,14 +34,6 @@
       "reason": "Base UI runs its browser tests only in Chromium, and the case asserts pixel sizes of the default font of Chromium. Firefox and WebKit have other default fonts. The Vase UI case compares the size variable of the positioner with the measured size of the content, so it runs in each engine."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
-      "describe": ["<NavigationMenu.Trigger />"],
-      "title": "releases the pointer-events lock on the list when the open trigger unmounts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The case needs the hover interaction of the popup, which blocks the pointer events of the list after a hover open. Vase UI does not have that interaction in Navigation Menu. The entry point of Navigation Menu comes last in the family, so the row names it."
-    },
-    {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/navigation-menu/index.ts",
@@ -51,92 +43,6 @@
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",
       "kind": "not-applicable",
       "reason": "The cases assert the `displayName` of a React context. A Vue injection key has no such name."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />"],
-      "title": "does not apply aria-orientation to the top-level list or root element",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The case renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />"],
-      "title": "does not apply aria-orientation to nested lists or root elements",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "The case renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "interactions"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "patient click threshold"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: defaultValue"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: onValueChange"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: delay"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: closeDelay"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: disabled"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: actionsRef"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "prop: side"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "tabbing"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
@@ -165,13 +71,6 @@
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
       "describe": ["<NavigationMenu.Root />", "nested menus"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/navigation-menu/index.ts",
-      "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["initial open"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/navigation-menu/index.ts",
       "reason": "Each case of the block renders the parts of Navigation Menu from the entry point of Navigation Menu. Vase UI does not have that entry point."

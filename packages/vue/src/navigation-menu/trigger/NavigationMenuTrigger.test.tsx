@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -8,6 +8,7 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   waitFor,
@@ -146,6 +147,64 @@ const TestNavigationMenuRapidHoverSizing = defineComponent(() => {
       </NavigationMenu.Portal>
     </NavigationMenu.Root>
   );
+});
+
+const TestActiveItemDropsTrigger = defineComponent({
+  props: {
+    registerNavigate: {
+      type: Function as PropType<(navigate: () => void) => void>,
+      required: true,
+    },
+  },
+  setup(props) {
+    const value = shallowRef<string | null>(null);
+    const aIsActive = shallowRef(false);
+
+    onMounted(() => {
+      props.registerNavigate(() => {
+        // Batched: close the menu and drop A's trigger (A becomes the active item rendered inline).
+        value.value = null;
+        aIsActive.value = true;
+      });
+    });
+
+    return () => (
+      <NavigationMenu.Root
+        value={value.value}
+        onValueChange={(nextValue) => {
+          value.value = nextValue;
+        }}
+      >
+        <NavigationMenu.List data-testid="list">
+          {aIsActive.value ? (
+            <NavigationMenu.Item value="a">
+              <a href="#a">A active</a>
+            </NavigationMenu.Item>
+          ) : (
+            <NavigationMenu.Item value="a">
+              <NavigationMenu.Trigger>A</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#a">A link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          )}
+          <NavigationMenu.Item value="b">
+            <NavigationMenu.Trigger>B</NavigationMenu.Trigger>
+            <NavigationMenu.Content>
+              <NavigationMenu.Link href="#b">B link</NavigationMenu.Link>
+            </NavigationMenu.Content>
+          </NavigationMenu.Item>
+        </NavigationMenu.List>
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <NavigationMenu.Popup>
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      </NavigationMenu.Root>
+    );
+  },
 });
 
 function getPopupWidthCalls(calls: Array<[property: string, value: string, priority?: string]>) {
@@ -1310,6 +1369,46 @@ describe('<NavigationMenu.Trigger />', () => {
 
     setPositionerPropertySpy.mockRestore();
   });
+
+  it.skipIf(isJSDOM)(
+    'releases the pointer-events lock on the list when the open trigger unmounts',
+    async () => {
+      let navigate = () => {};
+
+      const { user: rendererUser } = await render(
+        <TestActiveItemDropsTrigger
+          registerNavigate={(fn) => {
+            navigate = fn;
+          }}
+        />,
+      );
+
+      // The safe-polygon lock sets `pointer-events: none` on the list while hovering.
+      const user = rendererUser.setup({ pointerEventsCheck: 0 });
+
+      const list = screen.getByTestId('list');
+      const triggerA = screen.getByRole('button', { name: 'A' });
+
+      // Opening A's flyout by hovering the trigger locks the list with `pointer-events: none` (safe polygon),
+      // while the pointer stays on the trigger rather than the popup.
+      await user.pointer([{ target: triggerA }]);
+      await waitFor(() => {
+        expect(screen.getByRole('link', { name: 'A link' })).toBeVisible();
+      });
+      await waitFor(() => {
+        expect(list.style.pointerEvents).toBe('none');
+      });
+
+      // Drop A's trigger and close the menu in one update, while the pointer is still on the trigger, so none
+      // of the trigger-scoped release paths run before the trigger unmounts.
+      navigate();
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(list.style.pointerEvents).toBe('');
+      });
+    },
+  );
 
   it('releases the pointer-events lock when the pointer sweeps across a trigger without the menu opening', async () => {
     const { user: rendererUser } = await render(
