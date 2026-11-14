@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef, watch } from 'vue';
 import * as Menu from '../index.parts';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
-import { actOnElement } from '../../../test/fixtures/actOnElement';
+import type { HTMLProps } from '../../internals/types';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuFilterRoot.test.tsx`.
 vi.mock('../../common/platform', async () => {
@@ -18,6 +18,27 @@ vi.mock('../../common/platform', async () => {
   };
 });
 
+// React focuses an `autoFocus` element when it mounts, before it gives the element to its ref. This
+// `#render` slot does the same one time, because Vue calls a function ref again on each patch.
+function autoFocusSlots() {
+  let focused = false;
+
+  return {
+    render: ({ props }: { props: HTMLProps }) => (
+      <input
+        {...props}
+        ref={(element: unknown) => {
+          if (element instanceof HTMLElement && !focused) {
+            focused = true;
+            element.focus();
+          }
+          props.ref(element as Element | null);
+        }}
+      />
+    ),
+  };
+}
+
 const Test = defineComponent(
   (props: { autoFocus?: boolean; inputKey?: string; showInput?: boolean }) => () => (
     <Menu.FilterProvider>
@@ -30,11 +51,7 @@ const Test = defineComponent(
                 <Menu.Input
                   key={props.inputKey}
                   aria-label="Filter actions"
-                  // A browser focuses only the first `autofocus` element of a document, and a part
-                  // that mounts later needs a call to `focus()`.
-                  v-slots={
-                    props.autoFocus ? actOnElement('input', (element) => element.focus()) : {}
-                  }
+                  v-slots={props.autoFocus ? autoFocusSlots() : {}}
                 />
               )}
               <Menu.List>

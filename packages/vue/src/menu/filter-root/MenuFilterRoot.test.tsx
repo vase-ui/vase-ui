@@ -683,6 +683,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     await waitFor(() => {
       expect(screen.queryByText('No actions found')).toBe(null);
     });
+    // The text of a message that appears again has a marker for a moment, so the text query alone
+    // cannot see that the message is still there.
+    expect(screen.queryByRole('status')).toBe(null);
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
   });
 
@@ -1312,6 +1315,9 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
         submenuInput.focus();
         await flushMicrotasks();
         expect(submenuInput).toHaveFocus();
+        // A Vue event of a teleported popup does not reach the parent popup, so the tap also goes
+        // to the parent popup, which then knows the pointer type of the tap.
+        await firePointer.down(rootInput, { pointerType: 'touch', timeStamp: 11 });
 
         // A mouse entering fires `pointerover` and `mouseover` before any `pointermove`.
         await fireEvent.pointerOver(submenuTrigger, { pointerType: 'mouse' });

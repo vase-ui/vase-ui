@@ -101,15 +101,6 @@ export function useMenuFilterSubmenuRoot(options: MenuFilterRootOptions): MenuFi
       if (!nextOpen) {
         if (details.reason === REASONS.escapeKey && isHTMLElement(details.trigger)) {
           highlightTrigger(details.trigger, details.event);
-          // `Menu.Popup` returns the focus with `getReturnElement`, so point it at the element
-          // that can hold real focus: the input of the parent, not its trigger, which the focus
-          // cannot reach.
-          parentReference = {
-            reference: parent.virtualFocus
-              ? (parentStore.context.virtualFocusRef?.value ?? details.trigger)
-              : details.trigger,
-            trigger: details.trigger,
-          };
         }
         return;
       }

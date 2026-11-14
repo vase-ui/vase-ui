@@ -76,10 +76,10 @@ const input = useFilterDropdownInput({
 
 let stopListeningToFocus: (() => void) | undefined;
 
-// A change of the element covers the removal of the input without a blur event. The input listens
-// to the focus with the browser, because Vue skips a listener for an event that comes in the
-// millisecond when Vue attached it, and a popup can move the focus to a new input in that
-// millisecond.
+// A change of the element covers the removal of the input without a blur event.
+// The input listens to the focus with the browser. Vue skips the second and later listeners of an
+// event that occurs in the millisecond when Vue attached them. A popup can move the focus to a new
+// input in that millisecond.
 function setInputFocused(element: HTMLInputElement | null) {
   stopListeningToFocus?.();
   stopListeningToFocus = undefined;
