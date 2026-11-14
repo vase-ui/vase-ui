@@ -12,7 +12,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
-import type { VaseUIEvent } from '../../internals/types';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';
 
 type Point = { clientX: number; clientY: number };
@@ -44,6 +44,26 @@ function setHeight(element: HTMLElement | null, value: number) {
   if (element) {
     Object.defineProperty(element, 'offsetHeight', { configurable: true, value });
   }
+}
+
+// The viewport and the popup measure their height with `offsetHeight`. The function ref of the
+// `#render` slot gives the element its height before the part measures it.
+function renderWithHeight(height: number, children: () => VNodeChild) {
+  let measured: Element | null = null;
+  return ({ props }: { props: HTMLProps }) => (
+    <div
+      {...props}
+      ref={(element) => {
+        props.ref(element);
+        if (element instanceof HTMLElement && element !== measured) {
+          measured = element;
+          setHeight(element, height);
+        }
+      }}
+    >
+      {children()}
+    </div>
+  );
 }
 
 function createNativeTouchMove(target: EventTarget, point: Point) {
@@ -1628,6 +1648,838 @@ describe('<Drawer.Viewport />', () => {
     await flushMicrotasks();
 
     expect(moveAllowed).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('keeps damped snap-point styles when a duplicate-coordinate pointermove arrives', async () => {
+    await render(
+      <Drawer.Root open snapPoints={['100px', 1]}>
+        <Drawer.Portal>
+          <Drawer.Backdrop />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    // The first move only re-anchors the drag origin.
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 0,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+
+    // Drag upward past the fully-open edge; the snap-point progress handler replaces the raw
+    // frozen transform with square-root-damped movement on every processed move.
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(popup.style.transform).toBe('');
+    const dampedMovementY = popup.style.getPropertyValue('--drawer-swipe-movement-y');
+    expect(dampedMovementY).toBe('-10px');
+
+    // A cursor pinned at a screen edge during an off-screen drag produces
+    // duplicate-coordinate moves. They must not reinstate the raw frozen transform, which
+    // would jump the popup to the undamped position.
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(popup.style.transform).toBe('');
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe(dampedMovementY);
+
+    // Only vertical directions are enabled, so horizontal jitter while the vertical
+    // position is pinned leaves the drag offset unchanged. Such moves must not reinstate
+    // the raw frozen transform either.
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      buttons: 1,
+      clientX: 5,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(popup.style.transform).toBe('');
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe(dampedMovementY);
+  });
+
+  it('does not start an opposite-direction swipe from scroll right edge for right drawers', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowX: 'auto', maxWidth: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+    scroll.scrollLeft = 80;
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 40, clientY: 0 }] });
+    const moveAllowed = await fireTouch.move(scroll, { touches: [{ clientX: 20, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(moveAllowed).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('starts swipe-to-dismiss after a scrollable container reaches the dismiss edge', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    scroll.scrollTop = 30;
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 30 }] });
+    const firstMovePrevented = await fireTouch.move(scroll, {
+      touches: [{ clientX: 0, clientY: 40 }],
+    });
+
+    expect(firstMovePrevented).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+
+    scroll.scrollTop = 0;
+
+    const secondMovePrevented = await fireTouch.move(scroll, {
+      touches: [{ clientX: 0, clientY: 50 }],
+    });
+
+    expect(secondMovePrevented).toBe(false);
+
+    await flushMicrotasks();
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+  });
+
+  it('dismisses from a top-edge scroll container with a touch swipe down', async () => {
+    const handleOpenChange = vi.fn();
+
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange} swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    scroll.scrollTop = 0;
+
+    Object.defineProperty(popup, 'offsetHeight', { value: 200, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 140 }] });
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 0, clientY: 140 }] });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'swipe' }),
+    );
+  });
+
+  it('dismisses from a bottom-edge scroll container with a touch swipe up', async () => {
+    const handleOpenChange = vi.fn();
+
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange} swipeDirection="up">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    scroll.scrollTop = 80;
+
+    Object.defineProperty(popup, 'offsetHeight', { value: 200, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 140 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'swipe' }),
+    );
+  });
+
+  it('dismisses from a left-edge horizontal scroll container with a touch swipe right', async () => {
+    const handleOpenChange = vi.fn();
+
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange} swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowX: 'auto', maxWidth: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+    scroll.scrollLeft = 0;
+
+    Object.defineProperty(popup, 'offsetWidth', { value: 200, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 140, clientY: 0 }] });
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 140, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'swipe' }),
+    );
+  });
+
+  it('dismisses from a right-edge horizontal scroll container with a touch swipe left', async () => {
+    const handleOpenChange = vi.fn();
+
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange} swipeDirection="left">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowX: 'auto', maxWidth: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+    scroll.scrollLeft = 80;
+
+    Object.defineProperty(popup, 'offsetWidth', { value: 200, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 140, clientY: 0 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({ reason: 'swipe' }),
+    );
+  });
+
+  it.each(['HTML scroller', 'SVG scroller', 'axis ignore marker'] as const)(
+    'expands a collapsed sheet when the first move from a %s leaves the popup',
+    async (kind) => {
+      const handleSnapPointChange = vi.fn();
+      await render(
+        <Drawer.Root
+          defaultOpen
+          swipeDirection="down"
+          snapPoints={['100px', '200px']}
+          defaultSnapPoint="100px"
+          onSnapPointChange={handleSnapPointChange}
+        >
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithHeight(400, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{
+                      render: renderWithHeight(200, () => (
+                        <div
+                          data-testid="scroll"
+                          data-vase-ui-swipe-ignore={kind === 'axis ignore marker' ? 'x' : undefined}
+                          style={kind === 'axis ignore marker' ? undefined : { overflowX: 'auto' }}
+                        >
+                          {kind === 'SVG scroller' ? (
+                            <svg>
+                              <rect data-testid="target" width="120" height="40" />
+                            </svg>
+                          ) : (
+                            <div data-testid="target">Swipe here</div>
+                          )}
+                        </div>
+                      )),
+                    }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const popup = screen.getByTestId('popup');
+      const backdrop = screen.getByTestId('backdrop');
+      const viewport = screen.getByTestId('viewport');
+      const scroll = screen.getByTestId('scroll');
+      const target = screen.getByTestId('target');
+      if (kind !== 'axis ignore marker') {
+        Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+        Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+      }
+
+      await waitFor(() =>
+        expect(popup.style.getPropertyValue('--drawer-snap-point-offset')).toBe('100px'),
+      );
+
+      // The popup starts at y=300. Touch events keep their original target after leaving it.
+      stubElementFromPoint(document, (_x, y) => (y >= 300 ? target : viewport));
+
+      await fireTouch.start(target, { touches: [{ clientX: 100, clientY: 305 }] });
+      expect(backdrop).not.toHaveAttribute('data-swiping');
+
+      await fireTouch.move(target, { touches: [{ clientX: 100, clientY: 275 }] });
+      expect(backdrop).toHaveAttribute('data-swiping');
+
+      await fireTouch.move(target, { touches: [{ clientX: 100, clientY: 125 }] });
+      expect(parseFloat(popup.style.getPropertyValue('--drawer-swipe-movement-y'))).toBeLessThan(
+        0,
+      );
+
+      await fireTouch.end(target, { changedTouches: [{ clientX: 100, clientY: 125 }] });
+      await flushMicrotasks();
+
+      expect(handleSnapPointChange).toHaveBeenCalledWith(
+        '200px',
+        expect.objectContaining({ reason: 'swipe' }),
+      );
+
+      // The next touch starts and stays outside; it must not inherit the previous eligibility.
+      handleSnapPointChange.mockClear();
+      await fireTouch.start(viewport, { touches: [{ clientX: 100, clientY: 275 }] });
+      await fireTouch.move(viewport, { touches: [{ clientX: 100, clientY: 125 }] });
+      expect(backdrop).not.toHaveAttribute('data-swiping');
+      await fireTouch.end(viewport, { changedTouches: [{ clientX: 100, clientY: 125 }] });
+      await flushMicrotasks();
+      expect(handleSnapPointChange).not.toHaveBeenCalled();
+    },
+  );
+
+  it('allows horizontal swipe dismiss from a vertical scroll container', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    scroll.scrollTop = 20;
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 20 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 20, clientY: 20 }] });
+    await flushMicrotasks();
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+  });
+
+  it('does not prevent a sub-slop first touchmove over cross-axis scrollable content', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 100, clientY: 100 }] });
+
+    // Below the axis-attribution slop the gesture cannot be claimed yet: preventing the first
+    // cancelable touchmove on iOS cancels native scrolling for the entire gesture.
+    const firstMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 100, clientY: 97 }],
+    });
+    expect(firstMoveDispatched).toBe(true);
+
+    // Past the slop on the cross axis, native vertical scrolling stays preserved.
+    const secondMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 100, clientY: 60 }],
+    });
+    expect(secondMoveDispatched).toBe(true);
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 100, clientY: 60 }] });
+    await flushMicrotasks();
+  });
+
+  it('claims the gesture once the drawer axis passes the slop over cross-axis scrollable content', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 100, clientY: 100 }] });
+
+    const ambiguousMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 103, clientY: 101 }],
+    });
+    expect(ambiguousMoveDispatched).toBe(true);
+
+    const drawerAxisMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 112, clientY: 101 }],
+    });
+    expect(drawerAxisMoveDispatched).toBe(false);
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 112, clientY: 101 }] });
+    await flushMicrotasks();
+  });
+
+  it('yields the gesture when the browser commits to a native cross-axis scroll', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 100, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 100, clientY: 97 }] });
+
+    // A non-cancelable touchmove (still below the slop) means the browser committed the
+    // gesture to a native scroll.
+    const nonCancelableMove = new Event('touchmove', { bubbles: true, cancelable: false });
+    Object.defineProperty(nonCancelableMove, 'touches', {
+      value: [createTouch(scroll, { clientX: 100, clientY: 96 })],
+      configurable: true,
+    });
+    scroll.dispatchEvent(nonCancelableMove);
+
+    // Even a decisive drawer-axis move afterwards must not be claimed.
+    const drawerAxisMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 140, clientY: 96 }],
+    });
+    expect(drawerAxisMoveDispatched).toBe(true);
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 140, clientY: 96 }] });
+    await flushMicrotasks();
+  });
+
+  it('keeps tracking the finger when a claimed drag returns inside the slop', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 100, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 120, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 150, clientY: 100 }] });
+
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-x')).toBe('30px');
+
+    // The slop is measured from the touch origin, so a claimed drag that travels back inside it
+    // must not be re-arbitrated: the popup has to keep following the finger.
+    const inSlopMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 103, clientY: 100 }],
+    });
+    expect(inSlopMoveDispatched).toBe(false);
+    expect(
+      Number.parseFloat(popup.style.getPropertyValue('--drawer-swipe-movement-x')),
+    ).toBeLessThan(0);
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 103, clientY: 100 }] });
+    await flushMicrotasks();
+  });
+
+  it('keeps driving a claimed drag through a non-cancelable touchmove', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">
+              <div data-testid="scroll" style={{ overflowY: 'auto', maxHeight: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const popup = screen.getByTestId('popup');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 100, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 150, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 200, clientY: 100 }] });
+
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-x')).toBe('50px');
+
+    // Once the drawer axis owns the gesture, a non-cancelable move no longer means the browser
+    // took it for a native scroll, so the drag must not be abandoned.
+    const nonCancelableMove = new Event('touchmove', { bubbles: true, cancelable: false });
+    Object.defineProperty(nonCancelableMove, 'touches', {
+      value: [createTouch(scroll, { clientX: 250, clientY: 100 })],
+      configurable: true,
+    });
+    scroll.dispatchEvent(nonCancelableMove);
+    await flushMicrotasks();
+
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-x')).toBe('100px');
+
+    const laterMoveDispatched = await fireTouch.move(scroll, {
+      touches: [{ clientX: 300, clientY: 100 }],
+    });
+    expect(laterMoveDispatched).toBe(false);
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-x')).toBe('150px');
+
+    await fireTouch.end(scroll, { changedTouches: [{ clientX: 300, clientY: 100 }] });
+    await flushMicrotasks();
+  });
+
+  it('does not lock vertical swipe after minor cross-axis jitter in down drawers', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowX: 'auto', width: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+    scroll.scrollLeft = 0;
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 4, clientY: 3 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 4, clientY: 28 }] });
+    await flushMicrotasks();
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+  });
+
+  it('does not hijack cross-axis gestures from mixed-axis scroll containers', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div
+                data-testid="scroll"
+                style={{ overflow: 'auto', width: '40px', height: '40px' }}
+              >
+                <div style={{ width: '120px', height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+    Object.defineProperty(scroll, 'scrollHeight', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientHeight', { value: 40, configurable: true });
+    Object.defineProperty(scroll, 'scrollWidth', { value: 120, configurable: true });
+    Object.defineProperty(scroll, 'clientWidth', { value: 40, configurable: true });
+    scroll.scrollTop = 0;
+    scroll.scrollLeft = 40;
+    stubElementFromPoint(document, () => scroll);
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 40, clientY: 0 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 10, clientY: 20 }] });
+    await flushMicrotasks();
+
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('does not block vertical scrolling in right drawers when only vertical overflow exists', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="right">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', height: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 20 }] });
+    const dispatched = await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(dispatched).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('does not block vertical scrolling in left drawers when only vertical overflow exists', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="left">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto', height: '40px' }}>
+                <div style={{ height: '120px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 20 }] });
+    const dispatched = await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(dispatched).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('does not block horizontal scrolling in down drawers when only horizontal overflow exists', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowX: 'auto', width: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 20, clientY: 0 }] });
+    const dispatched = await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(dispatched).toBe(true);
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('does not block horizontal scrolling in up drawers when only horizontal overflow exists', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="up">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowX: 'auto', width: '40px' }}>
+                <div style={{ width: '120px', height: '40px' }}>Scrollable content</div>
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const backdrop = screen.getByTestId('backdrop');
+
+    await fireTouch.start(scroll, { touches: [{ clientX: 20, clientY: 0 }] });
+    const dispatched = await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 0 }] });
+    await flushMicrotasks();
+
+    expect(dispatched).toBe(true);
     expect(backdrop).not.toHaveAttribute('data-swiping');
   });
 
