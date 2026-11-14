@@ -22,7 +22,6 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import { isScrollLocked } from '../../test/fixtures/scrollDocument';
-import { platform } from '../common/platform';
 import type { Orientation } from '../internals/types';
 import * as Menu from '../menu/index.parts';
 import type { MenuRootChangeEventReason } from '../menu/root/MenuRoot.vue';
@@ -34,8 +33,6 @@ import MenubarHydration from './MenubarHydration.test.vue';
 import MenubarMockMenu from './MenubarMockMenu.test.vue';
 
 const HYDRATION_FIXTURE = 'src/menubar/MenubarHydration.test.vue';
-
-const isWebKit = platform.engine.webkit;
 
 type MockMenu = InstanceType<typeof MenubarMockMenu>;
 
@@ -980,40 +977,6 @@ describe('<Menubar />', () => {
     });
   });
 
-  it('renders contained top-level portal ownership as an allowed menubar child', async () => {
-    const { user } = await render(<ContainedTriggerMenubar />);
-
-    await user.click(screen.getByTestId('file-trigger'));
-
-    const fileMenu = await screen.findByTestId('file-menu');
-    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
-    const fileMenuPortalId = fileMenuPortal?.id ?? '';
-    const owner = screen.getByRole('menubar').querySelector('span[aria-owns]');
-
-    expect(fileMenuPortalId).not.toBe('');
-    expect(owner).toHaveAttribute('role', 'group');
-    expect(owner).not.toHaveAttribute('aria-hidden');
-    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
-  });
-
-  it('renders detached top-level portal ownership without an accessibility role', async () => {
-    const { user } = await render(<DetachedTriggerMenubar />);
-
-    await user.click(screen.getByTestId('file-trigger'));
-
-    const fileMenu = await screen.findByTestId('file-menu');
-    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
-    const fileMenuPortalId = fileMenuPortal?.id ?? '';
-    const owner = fileMenu.ownerDocument.querySelector('span[aria-owns]');
-
-    expect(fileMenuPortalId).not.toBe('');
-    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
-    // The portal renders outside the menubar, so the `group` workaround would only add a stray
-    // accessible group.
-    expect(screen.getByRole('menubar')).not.toContainElement(owner as HTMLElement | null);
-    expect(owner).not.toHaveAttribute('role');
-  });
-
   it('keeps focus on an outside target when a triggerless menubar menu closes', async () => {
     const TestComponent = defineComponent(() => {
       const open = shallowRef(true);
@@ -1060,11 +1023,6 @@ describe('<Menubar />', () => {
     { name: 'detached triggers', Component: DetachedTriggerMenubar },
     { name: 'multiple contained triggers', Component: MultipleContainedTriggersMenubar },
   ])('when using $name', ({ Component: TestMenubar }) => {
-    // WebKit does not focus a button on a click (https://bugs.webkit.org/show_bug.cgi?id=22261).
-    // When a hover opens the next menu, the focus returns to the first trigger and opens the first
-    // menu again. A menubar with one menu for all triggers has no first menu to open again.
-    const skipsContainedInWebKit = isWebKit && TestMenubar === ContainedTriggerMenubar;
-
     describe.skipIf(isJSDOM)('click interactions', () => {
       it('should open the menu after clicking on its trigger and close it when clicking again', async () => {
         await render(<TestMenubar />);
@@ -1093,45 +1051,42 @@ describe('<Menubar />', () => {
         expect(screen.queryByTestId('file-menu')).toBe(null);
       });
 
-      it.skipIf(skipsContainedInWebKit)(
-        'should open submenus on hover when another submenu is already open',
-        async () => {
-          await render(<TestMenubar />);
+      it('should open submenus on hover when another submenu is already open', async () => {
+        await render(<TestMenubar />);
 
-          // First click to open the file menu
-          const fileTrigger = screen.getByTestId('file-trigger');
-          await userEvent.click(fileTrigger);
+        // First click to open the file menu
+        const fileTrigger = screen.getByTestId('file-trigger');
+        await userEvent.click(fileTrigger);
 
-          await screen.findByTestId('file-menu');
-          await waitFor(() => {
-            expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
-          });
+        await screen.findByTestId('file-menu');
+        await waitFor(() => {
+          expect(screen.getByRole('menubar')).toHaveAttribute('data-has-submenu-open');
+        });
 
-          // Now hover over the edit trigger, it should open because a submenu is already open
-          const editTrigger = screen.queryByTestId('edit-trigger');
-          expect(editTrigger).not.toBe(null);
+        // Now hover over the edit trigger, it should open because a submenu is already open
+        const editTrigger = screen.queryByTestId('edit-trigger');
+        expect(editTrigger).not.toBe(null);
 
-          await userEvent.hover(editTrigger as HTMLElement);
+        await userEvent.hover(editTrigger as HTMLElement);
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('edit-menu')).not.toBe(null);
-          });
+        await waitFor(() => {
+          expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+        });
 
-          // The file menu should now be closed
-          expect(screen.queryByTestId('file-menu')).toBe(null);
+        // The file menu should now be closed
+        expect(screen.queryByTestId('file-menu')).toBe(null);
 
-          // Continue hovering to the view trigger
-          const viewTrigger = screen.getByTestId('view-trigger');
-          await userEvent.hover(viewTrigger);
+        // Continue hovering to the view trigger
+        const viewTrigger = screen.getByTestId('view-trigger');
+        await userEvent.hover(viewTrigger);
 
-          await waitFor(() => {
-            expect(screen.queryByTestId('view-menu')).not.toBe(null);
-          });
+        await waitFor(() => {
+          expect(screen.queryByTestId('view-menu')).not.toBe(null);
+        });
 
-          // The edit menu should now be closed
-          expect(screen.queryByTestId('edit-menu')).toBe(null);
-        },
-      );
+        // The edit menu should now be closed
+        expect(screen.queryByTestId('edit-menu')).toBe(null);
+      });
 
       it('should open nested submenus on hover when parent menu is open', async () => {
         await render(<TestMenubar />);
@@ -1243,34 +1198,31 @@ describe('<Menubar />', () => {
       });
 
       // https://github.com/mui/base-ui/issues/2092
-      it.skipIf(skipsContainedInWebKit)(
-        'should respect closeOnClick on nested items when the menu was opened on hover',
-        async () => {
-          await render(<TestMenubar />);
+      it('should respect closeOnClick on nested items when the menu was opened on hover', async () => {
+        await render(<TestMenubar />);
 
-          const fileTrigger = screen.getByTestId('file-trigger');
-          const viewTrigger = screen.getByTestId('view-trigger');
+        const fileTrigger = screen.getByTestId('file-trigger');
+        const viewTrigger = screen.getByTestId('view-trigger');
 
-          await userEvent.click(fileTrigger, { delay: 30 });
-          await screen.findByTestId('file-menu');
+        await userEvent.click(fileTrigger, { delay: 30 });
+        await screen.findByTestId('file-menu');
 
-          await userEvent.hover(viewTrigger);
-          await screen.findByTestId('view-menu');
+        await userEvent.hover(viewTrigger);
+        await screen.findByTestId('view-menu');
 
-          const layoutTrigger = screen.getByTestId('layout-trigger');
-          await userEvent.hover(layoutTrigger);
+        const layoutTrigger = screen.getByTestId('layout-trigger');
+        await userEvent.hover(layoutTrigger);
 
-          await screen.findByTestId('layout-menu');
+        await screen.findByTestId('layout-menu');
 
-          const layoutItem2 = screen.getByTestId('layout-item-2');
-          await userEvent.click(layoutItem2, { delay: 30 });
+        const layoutItem2 = screen.getByTestId('layout-item-2');
+        await userEvent.click(layoutItem2, { delay: 30 });
 
-          // The layout menu should not close after clicking an item
-          await waitFor(() => {
-            expect(screen.queryByTestId('layout-menu')).not.toBe(null);
-          });
-        },
-      );
+        // The layout menu should not close after clicking an item
+        await waitFor(() => {
+          expect(screen.queryByTestId('layout-menu')).not.toBe(null);
+        });
+      });
     });
 
     describe('keyboard interactions', () => {
@@ -1889,7 +1841,7 @@ describe('<Menubar />', () => {
       });
     });
 
-    it.skipIf(isJSDOM || skipsContainedInWebKit)(
+    it.skipIf(isJSDOM)(
       'correctly opens new menu on hover after clicking on its trigger and entering from hover (#2222)',
       async () => {
         await render(<TestMenubar />);
@@ -2026,6 +1978,40 @@ describe('<Menubar />', () => {
         expect(menuItems).toHaveLength(3);
       });
     });
+  });
+
+  it('renders contained top-level portal ownership as an allowed menubar child', async () => {
+    const { user } = await render(<ContainedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = screen.getByRole('menubar').querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('role', 'group');
+    expect(owner).not.toHaveAttribute('aria-hidden');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+  });
+
+  it('renders detached top-level portal ownership without an accessibility role', async () => {
+    const { user } = await render(<DetachedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = fileMenu.ownerDocument.querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+    // The portal renders outside the menubar, so the `group` workaround would only add a stray
+    // accessible group.
+    expect(screen.getByRole('menubar')).not.toContainElement(owner as HTMLElement | null);
+    expect(owner).not.toHaveAttribute('role');
   });
 
   describe('disabled state', () => {
