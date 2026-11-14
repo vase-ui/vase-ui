@@ -6,9 +6,7 @@ import type { FloatingPortalContainer } from '../../utils/popups/portal/useFloat
 export interface MenuPortalState {}
 
 export interface MenuPortalProps
-  extends
-    VaseUIComponentProps<MenuPortalState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  extends VaseUIComponentProps<MenuPortalState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the portal mounted in the DOM while the popup is hidden.
    * @default false

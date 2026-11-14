@@ -130,7 +130,9 @@ describe('<Menu.Positioner />', () => {
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`,
+        );
       });
     });
 
@@ -165,7 +167,9 @@ describe('<Menu.Positioner />', () => {
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`,
+        );
       });
     });
 
@@ -200,7 +204,9 @@ describe('<Menu.Positioner />', () => {
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 
       await waitFor(() => {
-        expect(getTransform()).toBe(`translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`);
+        expect(getTransform()).toBe(
+          `translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`,
+        );
       });
     });
 
@@ -382,24 +388,27 @@ describe('<Menu.Positioner />', () => {
     it.each([
       { name: 'horizontal', orientation: 'horizontal' as const, side: 'bottom' },
       { name: 'vertical', orientation: 'vertical' as const, side: 'inline-end' },
-    ])('uses the side of a $name menubar and aligns to its start', async ({ orientation, side }) => {
-      useAnchorPositioningSpy.mockClear();
-      await render(
-        <MenubarProvider
-          context={createMenubarContext({ orientation: computed(() => orientation) })}
-        >
-          <Menu.Root open>
-            <Menu.Portal>
-              <Menu.Positioner>
-                <Menu.Popup />
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-        </MenubarProvider>,
-      );
+    ])(
+      'uses the side of a $name menubar and aligns to its start',
+      async ({ orientation, side }) => {
+        useAnchorPositioningSpy.mockClear();
+        await render(
+          <MenubarProvider
+            context={createMenubarContext({ orientation: computed(() => orientation) })}
+          >
+            <Menu.Root open>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup />
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </MenubarProvider>,
+        );
 
-      expect(readLastOptions()).toMatchObject({ side, align: 'start' });
-    });
+        expect(readLastOptions()).toMatchObject({ side, align: 'start' });
+      },
+    );
 
     it('uses the anchor, the offsets and the fixed method of a context menu', async () => {
       const context = createContextMenuContext();

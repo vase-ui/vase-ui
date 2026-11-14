@@ -95,7 +95,10 @@ useOpenChangeComplete({
 watch(
   floatingTreeRoot,
   (tree, _previous, onCleanup) => {
-    function handleClose(event: { domEvent: Event | undefined; reason: MenuRootChangeEventReason }) {
+    function handleClose(event: {
+      domEvent: Event | undefined;
+      reason: MenuRootChangeEventReason;
+    }) {
       store.setOpen(false, createChangeEventDetails(event.reason, event.domEvent));
     }
 

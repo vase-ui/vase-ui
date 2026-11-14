@@ -353,6 +353,7 @@ Rules:
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
 
 - A popup trigger, such as `Menu.Trigger`, is a generic SFC, so that the types of its `payload` and its `handle` are checked. A consumer gives another part to the `as` prop or to the `#render` slot of the trigger: `<Menu.Trigger :as="Toolbar.Button">`. A consumer does not give the trigger to `as` of the other part.
+
 ### State and `v-model`
 
 Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each trio `x`, `defaultX`, `onXChange`:

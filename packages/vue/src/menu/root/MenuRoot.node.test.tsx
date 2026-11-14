@@ -54,7 +54,7 @@ describe('<Menu.Root /> on a server', () => {
     );
 
     expect(html).toMatch(
-      /^<!--\[--><button id="trigger" type="button" aria-haspopup="menu" aria-expanded="true" aria-controls="[^"]+" data-popup-open="" data-pressed="">Open<\/button><!--\]-->$/,
+      /^<!--\[--><button data-popup-open data-pressed type="button" tabindex="0" aria-haspopup="menu" aria-expanded="true" aria-controls="[^"]+" id="trigger"><!--\[-->Open<!--\]--><\/button><!--\]-->$/,
     );
   });
 
@@ -70,7 +70,8 @@ describe('<Menu.Root /> on a server', () => {
       </div>,
     );
 
-    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).not.toContain('aria-expanded');
     expect(html).not.toContain('data-popup-open');
     expect(handle.isOpen).toBe(false);
     expect(handle.store).toBe(handle.serverStore);

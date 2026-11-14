@@ -822,7 +822,11 @@ async function expectMenuPageOnServer(page: Page) {
 async function expectHydratedMenuPage(page: Page) {
   const popup = page.getByTestId('open-popup');
   expect(await popup.count()).toBe(1);
-  expect(await popup.evaluate((element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName)).toBe('body');
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
   expect(await popup.getAttribute('role')).toBe('menu');
   expect(await popup.getAttribute('aria-labelledby')).toBe('open-trigger');
   expect(await popup.getAttribute('data-open')).toBe('');

@@ -69,7 +69,8 @@ const { element, elementProps } = useRenderElement('div', props, {
       role: 'presentation',
       hidden: store.select('mounted') ? undefined : true,
       style: {
-        pointerEvents: store.select('lastOpenChangeReason') === REASONS.triggerHover ? 'none' : undefined,
+        pointerEvents:
+          store.select('lastOpenChangeReason') === REASONS.triggerHover ? 'none' : undefined,
         userSelect: 'none',
         '-webkit-user-select': 'none',
       },

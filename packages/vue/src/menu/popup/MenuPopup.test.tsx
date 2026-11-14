@@ -220,7 +220,9 @@ describe('<Menu.Popup />', () => {
         <Menu.Root open>
           <probe.Probe />
           <Menu.Portal>
-            <Menu.Positioner>{mounted.value ? <Menu.Popup id="custom-popup" /> : null}</Menu.Positioner>
+            <Menu.Positioner>
+              {mounted.value ? <Menu.Popup id="custom-popup" /> : null}
+            </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
       ));

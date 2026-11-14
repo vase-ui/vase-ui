@@ -11,10 +11,7 @@ import {
   waitFor,
 } from '#test-utils';
 import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
-import {
-  MenubarProvider,
-  createMenubarContext,
-} from '../../../test/fixtures/MenuParentFixture';
+import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
@@ -107,6 +104,7 @@ describe('<Menu.Trigger />', () => {
       expect(trigger).not.toHaveAttribute('aria-controls');
       expect(trigger).not.toHaveAttribute('data-popup-open');
       expect(trigger).not.toHaveAttribute('data-pressed');
+      expect(trigger).not.toHaveAttribute('role');
     });
 
     it('has the attributes of the trigger that owns an open menu', async () => {
@@ -294,7 +292,6 @@ describe('<Menu.Trigger />', () => {
       expect(detachedTree.nodesRef.value.map((node) => node.id)).toContain(
         probe.store.select('floatingNodeId'),
       );
-
     });
 
     it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {

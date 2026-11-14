@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Menu } from '@vase-ui/vue/menu';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-} from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
@@ -61,7 +56,10 @@ describe('<Menu.Backdrop />', () => {
       </Menu.Root>,
     );
 
-    probe.store.setOpen(true, createChangeEventDetails(testCase.reason, new MouseEvent('mousedown')));
+    probe.store.setOpen(
+      true,
+      createChangeEventDetails(testCase.reason, new MouseEvent('mousedown')),
+    );
     await flushMicrotasks();
 
     expect(screen.getByTestId('backdrop').style.pointerEvents).toBe(testCase.pointerEvents);

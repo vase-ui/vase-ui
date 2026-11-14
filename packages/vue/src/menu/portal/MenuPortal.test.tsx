@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Menu } from '@vase-ui/vue/menu';
 import { createRenderer, describeConformance, screen } from '#test-utils';
-import {
-  MenubarProvider,
-  createMenubarContext,
-} from '../../../test/fixtures/MenuParentFixture';
+import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import FocusManagerPart from '../../../test/fixtures/FocusManagerPart.vue';
 import { createAttribute } from '../../utils/popups/createAttribute';
 
@@ -69,7 +66,12 @@ describe('<Menu.Portal />', () => {
   describe('rendering', () => {
     it.each([
       { name: 'a closed menu', open: false, keepMounted: false, rendered: false },
-      { name: 'a closed menu that is kept mounted', open: false, keepMounted: true, rendered: true },
+      {
+        name: 'a closed menu that is kept mounted',
+        open: false,
+        keepMounted: true,
+        rendered: true,
+      },
       { name: 'an open menu', open: true, keepMounted: false, rendered: true },
     ])('renders the portal element for $name only when it is mounted', async (testCase) => {
       await render(
