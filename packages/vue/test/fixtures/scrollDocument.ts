@@ -151,32 +151,32 @@ export async function probeStrategy(css = ''): Promise<ScrollLockStrategy> {
 }
 
 // The viewport takes its overflow from <html> when it has one, and from <body> otherwise.
-function getViewportScroller({ win, html, body }: ScrollDocument) {
+function getViewportScroller({ win, html, body }: Pick<ScrollDocument, 'win' | 'html' | 'body'>) {
   const { overflow, overflowX, overflowY } = win.getComputedStyle(html);
   return /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX) ? html : body;
 }
 
 /**
- * Whether the scroll lock holds the document. It is the `isScrollLocked` helper of the Base UI
- * tests, for a case that locks the page of the test.
+ * Says if the scroll lock holds the page of `doc`. With overlay scrollbars and with a gutter, the
+ * element that the viewport follows is hidden. With scrollbars that take space, the lock sets its
+ * marker and gives the body a fixed size. A ported case calls it in place of `isScrollLocked` of
+ * Base UI.
  */
 export function isScrollLocked(doc: Document = document) {
+  const page = {
+    win: doc.defaultView as ScrollWindow,
+    html: doc.documentElement,
+    body: doc.body,
+  };
   return (
-    doc.documentElement.style.overflow === 'hidden' ||
-    doc.documentElement.hasAttribute('data-vase-ui-scroll-locked') ||
-    doc.body.style.overflow === 'hidden'
+    /hidden|clip/.test(page.win.getComputedStyle(getViewportScroller(page)).overflowY) ||
+    page.html.hasAttribute('data-vase-ui-scroll-locked')
   );
 }
 
 /**
- * Says if the scroll lock holds the page. With overlay scrollbars and with a gutter, the element
- * that the viewport follows is hidden. With scrollbars that take space, the lock sets its marker
- * and gives the body a fixed size.
+ * Says if the scroll lock holds the document of a frame from `createScrollDocument`.
  */
 export function isPageLocked(scrollDocument: ScrollDocument) {
-  const scroller = getViewportScroller(scrollDocument);
-  return (
-    /hidden|clip/.test(scrollDocument.win.getComputedStyle(scroller).overflowY) ||
-    scrollDocument.html.hasAttribute('data-vase-ui-scroll-locked')
-  );
+  return isScrollLocked(scrollDocument.doc);
 }

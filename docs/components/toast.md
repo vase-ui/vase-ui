@@ -351,3 +351,13 @@ The `loading` state accepts the options of the `add` method. The `success` and `
 <<< ./toast/ManagerMethods.vue#promise-options{ts}
 
 Give `loading.id` to update or close the toast with that id. An id that the list has updates that toast in place, and the list gets no second toast.
+
+## Additional types
+
+### ToastManagerAddOptions
+
+<ApiReference name="ToastManagerAddOptions" />
+
+### ToastManagerUpdateOptions
+
+<ApiReference name="ToastManagerUpdateOptions" />

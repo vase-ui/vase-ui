@@ -3,6 +3,7 @@ import { Teleport, defineComponent } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { createRenderer, fireEvent, flushMicrotasks, screen, within } from '#test-utils';
+import * as Combobox from '../../combobox/index.parts';
 import * as Select from '../../select/index.parts';
 import LabelableControl from '../../../test/fixtures/LabelableControl.vue';
 import LabelableLabel from '../../../test/fixtures/LabelableLabel.vue';
@@ -25,6 +26,88 @@ function createShadowContainer(parent: Node = document.body) {
 
 describe('useLabel', () => {
   const { render } = createRenderer();
+
+  describe.each(['Select.Label', 'Combobox.Label', 'Field.Label'])('%s', (labelType) => {
+    const TestControl = defineComponent(() => () => {
+      if (labelType === 'Combobox.Label') {
+        return (
+          <Field.Root name="country">
+            <Combobox.Root>
+              <Combobox.Label>Country</Combobox.Label>
+              <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.Input aria-label="Search countries" />
+                    <Combobox.List>
+                      <Combobox.Item value="fr">France</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </Field.Root>
+        );
+      }
+
+      return (
+        <Field.Root name="country">
+          {labelType === 'Field.Label' && (
+            <Field.Label nativeLabel={false} as="div">
+              Country
+            </Field.Label>
+          )}
+          <Select.Root>
+            {labelType === 'Select.Label' && <Select.Label>Country</Select.Label>}
+            <Select.Trigger id="country">Choose a country</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.List>
+                    <Select.Item value="fr">
+                      <Select.ItemText>France</Select.ItemText>
+                    </Select.Item>
+                  </Select.List>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </Field.Root>
+      );
+    });
+
+    it('focuses the trigger without opening the popup in the document', async () => {
+      const { user } = await render(<TestControl />);
+      const trigger = screen.getByRole('combobox', { name: 'Country' });
+
+      await user.click(screen.getByText('Country'));
+
+      expect(trigger).toHaveFocus();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it.each([false, true])(
+      'focuses the trigger in its shadow root without opening the popup (outer matching ID: %s)',
+      async (outerMatchingId) => {
+        const { host, shadowRoot, container } = createShadowContainer();
+        const { user } = await render(
+          <>
+            {outerMatchingId && <input id="country" aria-label="Unrelated control" />}
+            <Teleport to={container}>
+              <TestControl />
+            </Teleport>
+          </>,
+        );
+        const trigger = within(container).getByRole('combobox', { name: 'Country' });
+
+        await user.click(within(container).getByText('Country'));
+
+        expect(shadowRoot.activeElement).toBe(trigger);
+        expect(document.activeElement).toBe(host);
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      },
+    );
+  });
 
   it('does not throw when a label is clicked in a detached React root', async () => {
     const container = document.createElement('div');
@@ -116,6 +199,41 @@ describe('useLabel', () => {
     await user.click(within(container).getByText('Name'));
 
     expect(shadowRoot.activeElement).toBe(control);
+  });
+
+  it('focuses a control in the light DOM from a label in a shadow root', async () => {
+    const { container } = createShadowContainer();
+    const { user } = await render(
+      <Combobox.Root>
+        <Teleport to={container}>
+          <Combobox.Label>Country</Combobox.Label>
+        </Teleport>
+        <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+      </Combobox.Root>,
+    );
+
+    await user.click(within(container).getByText('Country'));
+
+    expect(screen.getByRole('combobox')).toHaveFocus();
+  });
+
+  it('focuses a control in an ancestor shadow root from a label in a nested shadow root', async () => {
+    const outer = createShadowContainer();
+    const inner = createShadowContainer(outer.shadowRoot);
+    const { user } = await render(
+      <Combobox.Root>
+        <Teleport to={inner.container}>
+          <Combobox.Label>Country</Combobox.Label>
+        </Teleport>
+        <Teleport to={outer.container}>
+          <Combobox.Trigger id="country">Choose a country</Combobox.Trigger>
+        </Teleport>
+      </Combobox.Root>,
+    );
+
+    await user.click(within(inner.container).getByText('Country'));
+
+    expect(outer.shadowRoot.activeElement).toBe(within(outer.container).getByRole('combobox'));
   });
 
   describe('with a fixture label and control', () => {
