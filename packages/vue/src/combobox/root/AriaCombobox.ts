@@ -1245,8 +1245,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     flush: 'post',
   });
 
-  // The blocks below are the layout effects of Base UI in its order. The highlight blocks are
-  // `post` watchers, so they run after the items of the render wrote their registry.
+  // The blocks below are the layout effects of Base UI, in the sequence of its source. The
+  // highlight blocks are `post` watchers, so they run after the items of the render wrote their
+  // registry. A flush runs the watchers in the sequence of the writes to their sources.
   function syncSelectedIndex() {
     const closeQueryReleased = previousCloseQuery !== null && closeQuery.value === null;
     previousCloseQuery = closeQuery.value;

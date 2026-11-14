@@ -315,14 +315,15 @@ describe('<Combobox.Input />', () => {
 
       await fireEvent.compositionStart(getInput());
       await type('ma', 'insertCompositionText');
-      // WebKit sends the last `input` event of a composition after `compositionend`, before the
-      // input renders again.
+      // WebKit writes the committed text, sends `compositionend`, and then sends the last `input`
+      // event, before the input renders again.
+      getInput().value = 'マ';
       const ended = fireEvent.compositionEnd(getInput());
-      await type('ma', 'insertCompositionText');
+      await type('マ', 'insertCompositionText');
       await ended;
 
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
-      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('ma');
+      expect(handleInputValueChange.mock.lastCall?.[0]).toBe('マ');
       expect(handleInputValueChange.mock.lastCall?.[1].reason).toBe('input-change');
       expect(handleInputValueChange.mock.lastCall?.[1].event.type).toBe('compositionend');
     });

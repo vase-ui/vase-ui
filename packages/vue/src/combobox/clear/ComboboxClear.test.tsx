@@ -172,6 +172,36 @@ describe('<Combobox.Clear />', () => {
     expect(store.context.clearRef.value).toBe(screen.getByTestId('second-clear'));
   });
 
+  it('the clear button runs its enter transition when it becomes visible', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+    const value = shallowRef<string | null>(null);
+    const counter = createTransitionRunCounter(() => value.value !== null);
+    const { container } = await render(() => (
+      <>
+        <style>{`.clear { transition: opacity 100ms; } .clear[data-starting-style] { opacity: 0; }`}</style>
+        <Combobox.Root value={value.value}>
+          <Combobox.Input />
+          <Combobox.Clear
+            class="clear"
+            data-testid="clear"
+            onTransitionrun={counter.onTransitionrun}
+          />
+        </Combobox.Root>
+      </>
+    ));
+    expect(screen.queryByTestId('clear')).toBe(null);
+
+    // The button mounts with the change, so the wait is on its container.
+    await nextEvent(container, 'transitionend', {
+      after: 'transitionrun',
+      action: () => {
+        value.value = 'a';
+      },
+    });
+
+    expect(counter.counts).toEqual({ enter: 1, exit: 0 });
+  });
+
   it('the clear button is in the DOM until its exit animation ends', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const value = shallowRef<string | null>('a');
