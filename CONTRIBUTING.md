@@ -219,7 +219,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - TSX and templates then accept the native attributes and listeners, with their types.
-- `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this, and TypeScript then reports TS2320 for the props interface of each part.
+- `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this. Without the omit, TypeScript reports TS2320 for the props interface of each part.
 - The SFC compiler ignores the extended type, so the run-time props are only the declared props. A native attribute stays in `$attrs`.
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).

@@ -8,6 +8,7 @@ import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import ManualUnmount from '../examples/animation/demos/manual-unmount/index.vue';
 import MotionKeepMounted from '../examples/animation/demos/motion-keep-mounted/index.vue';
 import MotionPopup from '../examples/animation/demos/motion-popup/index.vue';
+import MotionSelect from '../demos/handbook-animation/animated-select-motion/css-modules/index.vue';
 </script>
 
 # Animation
@@ -102,7 +103,7 @@ Vase UI ends the exit when the animation that it finds ends. If it finds none, i
 
 ### Animate a popup with motion-v
 
-The examples use [Dialog](/components/dialog).
+The examples use [Dialog](/components/dialog) and [Select](/components/select).
 
 1. Give `motion.div` to the `#render` slot of `Dialog.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
 2. Set `initial` to the closed style.
@@ -140,6 +141,22 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 :::
 
+### Animate a Select popup
+
+`Select.Portal` has no `keepMounted` prop. The popup stays in the DOM after its first open, and it is hidden while the select is closed. The same code animates it.
+
+<DemoFrame>
+  <MotionSelect />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/handbook-animation/animated-select-motion/css-modules/index.vue{46,48-50}
+
+<<< ../demos/handbook-animation/animated-select-motion/css-modules/index.module.css
+
+:::
+
 ### Manual unmounting
 
 Use this when Vase UI cannot find the exit animation. Use it also when something other than an animation must end the exit. `motion-v` runs some values in JavaScript, such as `height`. Vase UI cannot find such an animation, so it removes the popup in the next frame, before the exit shows.
@@ -161,7 +178,7 @@ The root then emits `openChangeComplete` with `false`. `keepMounted` still decid
 
 To wait for something before the popup closes, control `open` and keep it `true` while you wait. After the wait, call `details.preventUnmountOnClose()`. Then set `open` to `false`. When the exit ends, call `unmount()`.
 
-The request lasts until the popup opens again or unmounts, also when more close requests come during the wait. A request to open the popup clears it, so call `details.preventUnmountOnClose()` after the wait, not before. A close that you cancel with `details.cancel()` before the wait makes no request.
+The request lasts until the popup opens again or unmounts, also when more close requests come during the wait. A request to open the popup clears it, so call `details.preventUnmountOnClose()` after the wait, not before. A close that you cancel with `details.cancel()` before the `await` makes no request.
 
 <<< ../examples/animation/ManualUnmountAfterAwait.vue#listener{6-8 ts}
 
