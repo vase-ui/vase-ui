@@ -1,3 +1,8 @@
+import NavigationMenuContent from './content/NavigationMenuContent.vue';
+import type {
+  NavigationMenuContentProps,
+  NavigationMenuContentState,
+} from './content/NavigationMenuContent.vue';
 import NavigationMenuIcon from './icon/NavigationMenuIcon.vue';
 import type {
   NavigationMenuIconProps,
@@ -26,6 +31,16 @@ import type {
   NavigationMenuRootProps,
   NavigationMenuRootState,
 } from './root/NavigationMenuRoot.vue';
+import NavigationMenuTrigger from './trigger/NavigationMenuTrigger.vue';
+import type {
+  NavigationMenuTriggerProps,
+  NavigationMenuTriggerState,
+} from './trigger/NavigationMenuTrigger.vue';
+import NavigationMenuViewport from './viewport/NavigationMenuViewport.vue';
+import type {
+  NavigationMenuViewportProps,
+  NavigationMenuViewportState,
+} from './viewport/NavigationMenuViewport.vue';
 
 /**
  * Groups all parts of the navigation menu.
@@ -59,6 +74,43 @@ export const Item: typeof NavigationMenuItem = NavigationMenuItem;
 export namespace Item {
   export type State = NavigationMenuItemState;
   export type Props = NavigationMenuItemProps;
+}
+
+/**
+ * A container for the content of the navigation menu item that is moved into the popup
+ * when the item is active.
+ * Renders a `<div>` element.
+ */
+export const Content: typeof NavigationMenuContent = NavigationMenuContent;
+export namespace Content {
+  export type State = NavigationMenuContentState;
+  export type Props = NavigationMenuContentProps;
+}
+
+/**
+ * Opens the navigation menu popup when hovered or clicked, revealing the
+ * associated content.
+ * Renders a `<button>` element. While its item is active, it also renders two focus guards and
+ * an owner `<span>` beside the button.
+ *
+ * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
+ * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ */
+export const Trigger: typeof NavigationMenuTrigger = NavigationMenuTrigger;
+export namespace Trigger {
+  export type State = NavigationMenuTriggerState;
+  export type Props = NavigationMenuTriggerProps;
+}
+
+/**
+ * The clipping viewport of the navigation menu's current content.
+ * Renders a `<div>` element that holds a `<div>` for the content of the active item. While an item
+ * is active, it also holds two focus guards.
+ */
+export const Viewport: typeof NavigationMenuViewport = NavigationMenuViewport;
+export namespace Viewport {
+  export type State = NavigationMenuViewportState;
+  export type Props = NavigationMenuViewportProps;
 }
 
 /**
