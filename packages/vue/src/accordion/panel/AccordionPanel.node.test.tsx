@@ -1,4 +1,5 @@
 import { expect, describe, it } from 'vitest';
+import { defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { Accordion } from '@vase-ui/vue/accordion';
 
@@ -65,6 +66,34 @@ describe('<Accordion.Panel />', () => {
       );
       expect(animationNames.at(-1)).toEqual(['animation-name', 'none']);
       expect(readPanelDeclarations(html)).toContainEqual(['animation-duration', '100ms']);
+    });
+  });
+
+  describe('VUE-80: the server HTML of a panel names only a trigger that exists', () => {
+    // The trigger registers its id after the server wrote the panel.
+    it('has no aria-labelledby when the trigger comes after the panel below an async setup', async () => {
+      const HeaderAfterAsyncSetup = defineComponent({
+        async setup() {
+          await Promise.resolve();
+          return () => (
+            <Accordion.Header>
+              <Accordion.Trigger id="custom-trigger-id">Trigger</Accordion.Trigger>
+            </Accordion.Header>
+          );
+        },
+      });
+
+      const html = await renderToString(
+        <Accordion.Root defaultValue={[0]}>
+          <Accordion.Item value={0}>
+            <Accordion.Panel data-testid="panel">{PANEL_CONTENT}</Accordion.Panel>
+            <HeaderAfterAsyncSetup />
+          </Accordion.Item>
+        </Accordion.Root>,
+      );
+
+      expect(html).toContain(' id="custom-trigger-id"');
+      expect(html).not.toContain('aria-labelledby');
     });
   });
 });
