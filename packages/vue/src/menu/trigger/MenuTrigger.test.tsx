@@ -906,6 +906,37 @@ describe('<Menu.Trigger />', () => {
       expect(items.map((item) => item.textContent)).toEqual(['File', 'Edit']);
       expect(items.map((item) => item.getAttribute('tabindex'))).toEqual(['0', '-1']);
     });
+
+    it('keeps its menu open for the click that ends the press that opened it', async () => {
+      await render(
+        <Menubar>
+          <Menu.Root>
+            <Menu.Trigger>File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="file-menu" />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+      const trigger = screen.getByRole('menuitem', { name: 'File' });
+
+      // The open trigger of a menubar closes its menu on `click`, so a slow press ends with a
+      // click after the open.
+      await fireEvent.mouseDown(trigger);
+      await screen.findByTestId('file-menu');
+      await fireEvent.mouseUp(trigger);
+      await fireEvent.click(trigger);
+      await waitSingleFrame();
+      await flushMicrotasks();
+
+      expect(trigger).toHaveAttribute('data-popup-open');
+
+      await fireEvent.click(trigger);
+
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+    });
   });
 
   describe('prop: openOnHover', () => {
