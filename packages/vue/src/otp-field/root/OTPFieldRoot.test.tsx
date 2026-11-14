@@ -47,7 +47,6 @@ describe('<OTPField.Root />', () => {
 
   describeConformance(<OTPFieldBase.Root length={1} />, () => ({
     refInstanceof: window.HTMLDivElement,
-    testRenderPropWith: 'div',
     render,
   }));
 
@@ -631,6 +630,27 @@ describe('<OTPField.Root />', () => {
         expect(hiddenInput.value).toBe('12');
         expect(handleValueChange).not.toHaveBeenCalled();
         expect(handleValueInvalid).not.toHaveBeenCalled();
+      });
+
+      it('ignores a code that a prevented event reports', async () => {
+        const handleValueChange = vi.fn();
+        const { container } = await render(
+          <OTPFieldBase.Root
+            length={OTP_LENGTH}
+            name="otp"
+            defaultValue="12"
+            onValueChange={handleValueChange}
+          />,
+        );
+        const hiddenInput = getHiddenInput(container);
+        container.addEventListener('input', (event) => event.preventDefault(), { capture: true });
+        hiddenInput.value = '123456';
+
+        hiddenInput.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        await flushMicrotasks();
+
+        expect(handleValueChange).not.toHaveBeenCalled();
+        expect(hiddenInput.value).toBe('12');
       });
 
       it('writes the value to the hidden input again on `pageshow`', async () => {
