@@ -18,10 +18,7 @@
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": [
-        "<Dialog.Popup />",
-        "prop: finalFocus"
-      ],
+      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
       "title": "respects finalFocus when initialFocus points outside the popup",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
@@ -29,10 +26,7 @@
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": [
-        "<Dialog.Popup />",
-        "prop: finalFocus"
-      ],
+      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
       "title": "moves final focus to trigger if initialFocus points outside the popup and finalFocus is not specified",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
@@ -40,10 +34,7 @@
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
-      "describe": [
-        "<Dialog.Portal />",
-        "Suspense integration"
-      ],
+      "describe": ["<Dialog.Portal />", "Suspense integration"],
       "title": "should not throw \"Maximum update depth exceeded\" when Suspense boundary is outside Portal",
       "kind": "not-applicable",
       "reason": "The case guards a render loop of React (issue 3695) while a `Suspense` boundary outside the portal waits for a lazy component in the popup. The portal of Vase UI renders its content after the mount, so a Vue `<Suspense>` around it does not wait for that content and shows no fallback."
