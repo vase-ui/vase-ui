@@ -6,47 +6,22 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/dialog/backdrop/DialogBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Backdrop`."
-    },
-    {
       "upstream": "packages/react/src/dialog/backdrop/DialogBackdrop.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Backdrop`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/backdrop/DialogBackdropDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/dialog/close/DialogClose.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Close`."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases of `prop: forceRender` render `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/close/DialogClose.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Close` and other parts of Dialog, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/close/DialogCloseDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Close`."
-    },
-    {
-      "upstream": "packages/react/src/dialog/description/DialogDescription.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Description`."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/description/DialogDescription.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Description` and other parts of Dialog, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/index.ts",
@@ -70,11 +45,6 @@
       "reason": "Vase UI does not have `Dialog.Popup`."
     },
     {
-      "upstream": "packages/react/src/dialog/popup/DialogPopupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Popup`."
-    },
-    {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Dialog.Portal`."
@@ -84,11 +54,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
       "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Portal` and other parts of Dialog, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/portal/DialogPortalContext.ts",
-      "kind": "waits-on",
-      "reason": "Only the portal, the popup and the viewport use the context, and Vase UI does not have them. The pull request that adds the first of them adds the context."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
@@ -109,15 +74,10 @@
       "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case that has no counterpart renders `Dialog.Trigger`, `Dialog.Portal` or `Dialog.Popup`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/dialog/title/DialogTitle.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Title`."
-    },
-    {
       "upstream": "packages/react/src/dialog/title/DialogTitle.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Title` and other parts of Dialog, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
@@ -136,25 +96,10 @@
       "reason": "Vase UI does not have `Dialog.Trigger`."
     },
     {
-      "upstream": "packages/react/src/dialog/utils/stateAttributesMapping.ts",
-      "kind": "waits-on",
-      "reason": "Only `Dialog.Popup` and `Dialog.Viewport` use the mapping, and Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/dialog/viewport/DialogViewport.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Viewport`."
-    },
-    {
       "upstream": "packages/react/src/dialog/viewport/DialogViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Viewport` and other parts of Dialog, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/viewport/DialogViewportDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Viewport`."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
