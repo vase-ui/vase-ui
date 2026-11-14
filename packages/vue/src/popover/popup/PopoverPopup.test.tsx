@@ -1,11 +1,15 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
-import { shallowRef } from 'vue';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { defineComponent, shallowRef } from 'vue';
+import type { VNodeChild } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import { REASONS } from '../../internals/reasons';
 import * as Popover from '../index.parts';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
+  popupFocusPropsTests,
   screen,
   takeReportedMessages,
   waitFor,
@@ -45,6 +49,182 @@ describe('<Popover.Popup />', () => {
     await flushMicrotasks();
 
     expect(screen.getByText('Content')).not.toBe(null);
+  });
+
+  popupFocusPropsTests({
+    render,
+    createComponent: ({ children, ...focusProps }) => (
+      <Popover.Root>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup {...focusProps}>
+              {children}
+              <Popover.Close>Close</Popover.Close>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
+  });
+
+  it('focuses the popup when the active element becomes display:none', async () => {
+    const TestComponent = defineComponent(() => {
+      const hidden = shallowRef(false);
+      return () => (
+        <Popover.Root open>
+          <Popover.Trigger>Open</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">
+                <button
+                  data-testid="hide-button"
+                  style={{ display: hidden.value ? 'none' : undefined }}
+                  onClick={() => (hidden.value = true)}
+                >
+                  Hide
+                </button>
+                <input />
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      );
+    });
+
+    const { user } = await render(<TestComponent />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('hide-button')).toHaveFocus();
+    });
+
+    await user.click(screen.getByTestId('hide-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toHaveFocus();
+    });
+  });
+
+  describe('openOnHover: delay + click', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('returns focus to the trigger if opened by click before the hover delay completes', async () => {
+      await render(
+        <Popover.Root>
+          <Popover.Trigger openOnHover delay={300}>
+            Open
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>
+                <Popover.Close>Close</Popover.Close>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+
+      const trigger = screen.getByText('Open');
+
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+
+      vi.advanceTimersByTime(100);
+      await flushMicrotasks();
+
+      await fireEvent.click(trigger);
+      await flushMicrotasks();
+
+      expect(screen.getByText('Close')).not.toBe(null);
+
+      vi.advanceTimersByTime(1000);
+      await flushMicrotasks();
+
+      await fireEvent.click(screen.getByText('Close'));
+      await flushMicrotasks();
+
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  describe('inside a toolbar', () => {
+    const ToolbarPopover = defineComponent((_props, { slots }) => {
+      return (): VNodeChild => (
+        <Toolbar.Root>
+          <Toolbar.Button>First</Toolbar.Button>
+          <Popover.Root>
+            <Popover.Trigger as={Toolbar.Button}>Open</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup>{slots.default?.()}</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+          <Toolbar.Button>Last</Toolbar.Button>
+        </Toolbar.Root>
+      );
+    });
+
+    it('does not relay composite keys from the popup to the toolbar', async () => {
+      const { user } = await render(
+        <ToolbarPopover>
+          <button type="button">Inside</button>
+        </ToolbarPopover>,
+      );
+
+      // The toolbar itself still navigates with the same key, so a passing assertion below can't
+      // come from an inert toolbar.
+      await user.keyboard('[Tab]');
+      expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
+      await user.keyboard('[ArrowRight]');
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+
+      await user.keyboard('[Enter]');
+      const insideButton = screen.getByRole('button', { name: 'Inside' });
+      await waitFor(() => {
+        expect(insideButton).toHaveFocus();
+      });
+
+      await user.keyboard('[ArrowRight]');
+      await flushMicrotasks();
+
+      expect(insideButton).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Last' })).not.toHaveFocus();
+    });
+
+    // Shielding the toolbar must not disable the keys inside the popup: only propagation is
+    // stopped, so native caret movement in popup content keeps working.
+    it('keeps composite keys working inside the popup content', async () => {
+      const { user } = await render(
+        <ToolbarPopover>
+          <input value="ab" />
+        </ToolbarPopover>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Open' }));
+
+      const input = screen.getByRole('textbox') as HTMLInputElement;
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+
+      input.setSelectionRange(0, 0);
+      await flushMicrotasks();
+
+      await user.keyboard('[ArrowRight]');
+
+      expect(input.selectionStart).toBe(1);
+      expect(screen.getByRole('button', { name: 'Last' })).not.toHaveFocus();
+    });
   });
 
   it('has the attributes of a dialog that the trigger controls', async () => {
@@ -221,6 +401,103 @@ describe('<Popover.Popup />', () => {
     await user.keyboard('[Escape]');
     await waitFor(() => {
       expect(screen.queryByTestId('new')).toBe(null);
+    });
+  });
+
+  it('focuses the popup itself and not its field after a touch open', async () => {
+    await render(
+      <Popover.Root>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup data-testid="popup">
+              <input data-testid="input" />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+    await fireEvent.click(trigger, { detail: 1 });
+
+    // The focus on a field would open the virtual keyboard.
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toHaveFocus();
+    });
+    expect(screen.getByTestId('input')).not.toHaveFocus();
+  });
+
+  it('moves the focus from the popup to the trigger with Shift+Tab, past an element between them', async () => {
+    const { user } = await render(
+      <Popover.Root>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <button type="button">Between</button>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <input data-testid="input" />
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Open' });
+
+    await user.click(trigger);
+    await waitFor(() => {
+      expect(screen.getByTestId('input')).toHaveFocus();
+    });
+
+    await user.tab({ shift: true });
+
+    expect(trigger).toHaveFocus();
+    expect(trigger).toHaveAttribute('data-popup-open');
+  });
+
+  describe('hover', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('closes after the `closeDelay` of its trigger when the pointer leaves it', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Popover.Root onOpenChange={onOpenChange}>
+          <Popover.Trigger openOnHover delay={0} closeDelay={100}>
+            Open
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner data-testid="positioner">
+              <Popover.Popup>Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await fireEvent.pointerEnter(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseEnter(trigger);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+
+      await fireEvent.mouseEnter(positioner);
+      await fireEvent.mouseLeave(positioner);
+      vi.advanceTimersByTime(99);
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(1);
+      await flushMicrotasks();
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        false,
+        expect.objectContaining({ reason: REASONS.triggerHover }),
+      );
     });
   });
 
