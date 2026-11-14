@@ -7,6 +7,7 @@
     "packages/react/test/popupStoreTestUtils.tsx",
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/detachedTriggersConformanceTests.tsx",
+    "packages/react/test/dialogRootSharedTests.tsx",
     "packages/react/test/popupFocusPropsTests.tsx"
   ],
   "sources": [
@@ -37,6 +38,7 @@
     "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
     "packages/react/src/utils/popups/value-popup/ValuePopupStore.ts",
     "packages/react/test/detachedTriggersConformanceTests.tsx",
+    "packages/react/test/dialogRootSharedTests.tsx",
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/popupFocusPropsTests.tsx",
     "packages/react/test/popupStoreTestUtils.tsx"
@@ -1274,6 +1276,53 @@
           "conditions": [
             "skipIf(isJSDOM)"
           ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/dialogRootSharedTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "prop: onOpenChange"
+          ],
+          "title": "reports the trigger and reason when opened by a trigger and closed by a close button"
+        },
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "prop: onOpenChange"
+          ],
+          "title": "reports the trigger the popup was opened from for an Escape close"
+        },
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts the popup when the `unmount` method is called"
+        },
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "prop: actionsRef"
+          ],
+          "title": "clears manual unmount state after the `unmount` method is called"
+        },
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "prop: actionsRef"
+          ],
+          "title": "closes the popup when the `close` method is called"
+        },
+        {
+          "describe": [
+            "Dialog root shared behavior",
+            "imperative actions on the handle"
+          ],
+          "title": "opens with a payload set programmatically"
         }
       ]
     },
