@@ -1,0 +1,9 @@
+{
+  "id": "VUE-42",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L119-L124",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/checkbox/root/CheckboxRoot.tsx#L148"
+  ],
+  "behavior": "A `Checkbox.Root` that has no `value` and no name, in a `CheckboxGroup` that has `allValues`, shows its own state. Base UI shows the `checked` prop of such a checkbox. After a click, its `aria-checked` stays `false` while its input is on.",
+  "dueWith": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts"
+}
