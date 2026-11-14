@@ -39,6 +39,16 @@ function listPlaceOfTrigger(host: Element) {
   );
 }
 
+// A menu opens in the frame after the press, and it closes when the pointer is released off its
+// trigger. A control that appears or goes before the trigger on the screen moves the trigger in
+// that frame. The case then fails when the frame comes before the release. In a backward case the
+// controls come before the trigger in the DOM. A flex row in reverse order shows them after it.
+const triggerFirstRow = {
+  display: 'flex',
+  flexDirection: 'row-reverse',
+  justifyContent: 'flex-end',
+} as const;
+
 describe('useTriggerFocusGuards', () => {
   const { render } = createRenderer();
 
@@ -194,7 +204,7 @@ describe('useTriggerFocusGuards', () => {
               }
 
               return (
-                <div>
+                <div style={direction === 'backward' ? triggerFirstRow : undefined}>
                   {direction === 'backward' && controls.reverse()}
                   {renderTestPopup({
                     tabindex: -1,
@@ -210,7 +220,11 @@ describe('useTriggerFocusGuards', () => {
           });
 
           await render(<Fixture />);
+          const trigger = screen.getByRole('button', { name: 'Toggle' });
+          const placeBeforeOpen = trigger.getBoundingClientRect().toJSON();
           await focusTabOrigin(await openPopup());
+          // The release of the press must land on the trigger.
+          expect(trigger.getBoundingClientRect().toJSON()).toEqual(placeBeforeOpen);
           await userEvent.tab({ shift: direction === 'backward' });
 
           expect(screen.getByTestId('target')).toHaveFocus();
