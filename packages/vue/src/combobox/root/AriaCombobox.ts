@@ -80,6 +80,13 @@ import type { FilterItemToString } from './utils';
 import { INITIAL_LAST_HIGHLIGHT } from './utils/constants';
 
 export namespace AriaCombobox {
+  export type Props<Value, Mode extends SelectionMode = 'none', Item = Value> = AriaComboboxProps<
+    Value,
+    Mode,
+    Item
+  >;
+  export type State = AriaComboboxState;
+
   export interface Actions {
     unmount: () => void;
     close: () => void;
@@ -226,8 +233,9 @@ export interface AriaComboboxProps<Value, Mode extends SelectionMode = 'none', I
    */
   defaultInputValue?: ComboboxInputElementValue;
   /**
-   * INTERNAL: Whether the consumer controls the input value. A root part that makes `inputValue`
-   * from a state of its own gives this prop. With `undefined`, the input value is controlled when
+   * INTERNAL: Whether the consumer controls the input value. A native reset changes no controlled
+   * value. A root part that makes `inputValue` from a state of its own gives this prop, because
+   * its `inputValue` is never `undefined`. With `undefined`, the input value is controlled when
    * `inputValue` is not `undefined`.
    */
   inputValueControlled?: boolean | undefined;
@@ -1016,7 +1024,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
 
     if (nextOpen && closeQuery.value !== null) {
       // `ComboboxInput` calls `setInputValue` before `setOpen`, so on an input-change reopen
-      // `inputValue` is still the pre-keystroke value and the typed filter always survives.
+      // `inputValue` already has the typed text. That reopen clears no input, and the typed filter
+      // always survives.
       handleInterruptedReopen(eventDetails.reason === REASONS.inputChange);
     }
 
@@ -1411,9 +1420,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     isItemEqualToValue: isItemEqualToValue.value,
     submitOnItemClick: props.submitOnItemClick ?? false,
     hasInputValue: hasInputValue.value,
-    // The input part writes `inputInsidePopup` in its `ref` callback. This key follows it in the
-    // same write. Until the root is mounted, it keeps the value of the first state, because a
-    // server calls no `ref` callback.
+    // The input part writes `inputInsidePopup` in its `ref` callback. The getter reads that key, so
+    // this key follows in the next write. Until the root is mounted, it keeps the value of the
+    // first state, because a server calls no `ref` callback.
     inputOwnsFormValue:
       selectionMode.value === 'none' &&
       (isHydrating.value || inlineProp.value || !inputInsidePopup.value),
