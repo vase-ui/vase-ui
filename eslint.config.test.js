@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { globSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
@@ -35,8 +35,14 @@ function docsSfc(script, template = '<div />') {
   return `<script setup lang="ts">\n${script}\n</script>\n\n<template>\n  ${template}\n</template>\n`;
 }
 
-// The path of an include stops before a region, a range, a space or the end of the comment.
-const INCLUDE = /<!--\s*@include:\s*([^#{\s]+?)(?=[#{\s]|-->)/g;
+// VitePress reads an include in this form. A region (`#name`) or a range (`{2,8}`) can end the
+// path. A path that starts with `@` is in `docs`.
+const INCLUDE = /<!--\s*@include:\s*(.*?)\s*-->/g;
+
+function includedFile(page, include) {
+  const path = include.replace(/\{\d*,\d*\}$/, '').replace(/#[^\s{]+$/, '');
+  return path.startsWith('@') ? join('docs', path.slice(1)) : join(dirname(page), path);
+}
 
 // The body is on line 13 of the page.
 function page(body) {
@@ -435,6 +441,12 @@ const reported = [
       'vue/no-restricted-syntax',
       HTML_HINT,
     ],
+    [
+      'an innerHTML assignment in a fence that Vue reads and whose language starts with a sign',
+      '```+js-vue\n{{ data.element.innerHTML = data.text }}\n```',
+      'vue/no-restricted-syntax',
+      HTML_HINT,
+    ],
   ].map(([name, body, ruleId, hint]) => ({
     name: `${name} in a page`,
     file: PAGE,
@@ -664,13 +676,18 @@ test('does not write a fix into a page', async () => {
 });
 
 test('reads each file that a page includes', async () => {
-  const included = new Set(
-    globSync('docs/**/*.md', { cwd: ROOT, exclude: ['**/node_modules/**'] }).flatMap((file) =>
-      [...readFileSync(join(ROOT, file), 'utf8').matchAll(INCLUDE)].map(([, path]) =>
-        relative(ROOT, resolve(ROOT, dirname(file), path)),
-      ),
-    ),
-  );
+  const files = globSync('docs/**/*.md', { cwd: ROOT, exclude: ['**/node_modules/**'] });
+  const included = new Set();
+  // An included file can include a file too, so the loop also reads each file that it adds.
+  for (const file of files) {
+    for (const [, include] of readFileSync(join(ROOT, file), 'utf8').matchAll(INCLUDE)) {
+      const path = includedFile(file, include);
+      if (!included.has(path)) {
+        included.add(path);
+        files.push(path);
+      }
+    }
+  }
   assert.notEqual(included.size, 0);
   for (const file of included) {
     const messages = await lint(file, '<div v-html="$frontmatter.text"></div>\n');

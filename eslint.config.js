@@ -242,8 +242,9 @@ const RESTRICTED_HTML_SCRIPT_SYNTAX = [
 
 const RESTRICTED_HTML_TEMPLATE_SYNTAX = [
   {
-    // `:innerHTML`, `v-bind:innerHTML`, `.innerHTML` and `:inner-h-t-m-l.camel`. The `camel` modifier
-    // turns the last one into `innerHTML`, so the pattern allows a hyphen between the letters.
+    // `:innerHTML`, `v-bind:innerHTML`, `.innerHTML` and `:inner-h-t-m-l.camel`. The `camel`
+    // modifier turns the last one into `innerHTML`, so the pattern allows a hyphen between the
+    // letters.
     selector:
       "VAttribute[directive=true][key.name.name='bind'][key.argument.rawName=/^(?:(?:inner|outer)-?h-?t-?m-?l|src-?doc)$/i]",
     message: MESSAGES.html,
@@ -268,10 +269,11 @@ const RESTRICTED_HTML_IMPORTS = [
 const PAGE_FILES = ['docs/**/*.md', 'README.md', 'THANKS.md'];
 const SFC_OF_PAGE_FILES = PAGE_FILES.map((page) => `${page}/*.vue`);
 
-// Vue reads `{{ }}` in a fence only when the language ends in `-vue`. As the site does, this takes
-// the letters, digits, `_` and `-` at the start of the language, and it ignores the case.
+// Vue reads `{{ }}` in a fence only when the language ends in `-vue`. As the site does, this reads
+// the letters, digits, `_` and `-` at the start of the language in lower case. When the language
+// starts with another character, it reads the full language.
 function isVueFence(lang) {
-  return /^[\w-]*/.exec(lang)[0].toLowerCase().endsWith('-vue');
+  return (/^[\w-]+/.exec(lang)?.[0].toLowerCase() ?? lang).endsWith('-vue');
 }
 
 // ESLint renders a page with the VitePress of `docs`, the one that builds the site. The root
