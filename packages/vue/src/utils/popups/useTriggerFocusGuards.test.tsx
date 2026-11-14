@@ -504,8 +504,8 @@ describe('useTriggerFocusGuards', () => {
     };
   }
 
-  // The search for the next element skips the guards of the portal, so no guard of the portal sends
-  // the focus back into the popup.
+  // While the popup stays open, the search for the next element skips the guards of the portal, so
+  // no guard of the portal sends the focus back into the popup.
   function expectNoReentry(focus: ReturnType<typeof trackFocus>) {
     expect(focus.moves).toBeLessThan(FOCUS_MOVE_LIMIT);
     expect(focus.portalGuards).toEqual([]);
@@ -681,5 +681,46 @@ describe('useTriggerFocusGuards', () => {
     expect(screen.getByTestId('after')).toHaveFocus();
     expect(reasons).toEqual([REASONS.focusOut]);
     expectNoReentry(focus);
+  });
+
+  // The search skips the outside guards of a portal only while the popup stays open. The popup of
+  // this trigger closes, so the outside guard of the other popup takes the focus into that popup.
+  it('VUE-63: goes into the next open popup for Tab from the trigger of a popup that closes', async () => {
+    const reasons: string[] = [];
+    await render(() => (
+      <div>
+        <Popover.Root
+          defaultOpen
+          defaultTriggerId="closes"
+          onOpenChange={(_open, details) => reasons.push(details.reason)}
+        >
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup initialFocus={false}>Text</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+          <Popover.Trigger id="closes">Closes</Popover.Trigger>
+        </Popover.Root>
+        <Popover.Root open triggerId="open">
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup initialFocus={false}>
+                <button data-testid="inside">Inside</button>
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+          <Popover.Trigger id="open">Open</Popover.Trigger>
+        </Popover.Root>
+      </div>
+    ));
+    await flushMicrotasks();
+    const trigger = screen.getByRole('button', { name: 'Closes' });
+    trigger.focus();
+
+    await pressTab();
+
+    expect(screen.getByTestId('inside')).toHaveFocus();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(reasons).toEqual([REASONS.focusOut]);
   });
 });

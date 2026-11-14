@@ -58,11 +58,14 @@ export function useTriggerFocusGuards(
     toValue(store).setOpen(false, createChangeEventDetails(REASONS.focusOut, event, guard));
     // The close can change the tab order. The search below reads the DOM after the update.
     await nextTick();
-    // A popup that did not close keeps its guards, and a guard of its portal sends the focus back
-    // into the popup. The search thus skips the guards of the trigger and the content of the popup.
-    // The trigger has no reference to the guards of its portal, so the search skips the outside
-    // guards of each portal. The search starts at the trigger, also when the `tabindex` of the
-    // trigger is -1, so the trigger keeps the focus when no other element is tabbable.
+    // The guards of the trigger follow the `open` state. A guard that is still in the document thus
+    // shows that the popup stayed open, and a guard of its portal can send the focus back into the
+    // popup. The trigger has no reference to the guards of its portal, so the search then skips the
+    // outside guards of each portal. After a close, the outside guard of another open popup is a
+    // real next element. The search always skips the guards of the trigger and the content of the
+    // popup. It starts at the trigger, also when the `tabindex` of the trigger is -1, so the
+    // trigger keeps the focus when no other element is tabbable.
+    const stayedOpen = guard.isConnected;
     getTabbableNearElement(
       toValue(triggerElement),
       direction,
@@ -70,7 +73,7 @@ export function useTriggerFocusGuards(
         contains(positionerElement, element) ||
         element === guards?.before ||
         element === guards?.after ||
-        isPortalGuard(element),
+        (stayedOpen && isPortalGuard(element)),
     )?.focus();
   }
 
