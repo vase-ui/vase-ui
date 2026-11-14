@@ -114,9 +114,16 @@ const state = computed<DialogPopupState>(() => ({
   nestedDialogOpen: nestedOpenDialogCount.value > 0,
 }));
 
-function setPopupElement(element: HTMLElement | null) {
-  store.context.popupRef.value = element;
-  store.set('popupElement', element);
+let popupElement: HTMLElement | null = null;
+
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old one then must
+  // not clear the element of the new one.
+  if (popup !== null || store.context.popupRef.value === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
 }
 
 // The modal marks would set `inert` on the internal backdrop while the dialog is open. Their release

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import {
   createRenderer,
   describeConformance,
@@ -10,8 +10,11 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import * as Dialog from '../index.parts';
+import type { DialogStore } from '../store/DialogStore';
+import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
 
 describe('<Dialog.Popup />', () => {
   const { render } = createRenderer();
@@ -405,6 +408,96 @@ describe('<Dialog.Popup />', () => {
       expect(outside.closest('[inert]') !== null).toBe(inert);
       expect(screen.getByRole('button', { name: 'Inside' }).closest('[inert]')).toBe(null);
     });
+
+    // Base UI moves the initial focus to an element outside a modal dialog. That element is inert
+    // here, so only the return of the focus is the same.
+    it.each([
+      { name: 'the trigger', withFinalFocus: false, getFocused: () => screen.getByText('Open') },
+      {
+        name: 'the element of finalFocus',
+        withFinalFocus: true,
+        getFocused: () => screen.getByTestId('final-outside'),
+      },
+    ])(
+      'BUG-4678: keeps the initial focus off an inert element, and returns the focus to $name',
+      async ({ withFinalFocus, getFocused }) => {
+        const TestComponent = defineComponent(() => {
+          const initialRef = shallowRef<HTMLInputElement | null>(null);
+          const finalRef = shallowRef<HTMLInputElement | null>(null);
+          return () => (
+            <div>
+              <input data-testid="initial-outside" ref={initialRef} />
+              <Dialog.Root>
+                <Dialog.Trigger>Open</Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Popup
+                    initialFocus={initialRef}
+                    finalFocus={withFinalFocus ? finalRef : undefined}
+                  >
+                    <Dialog.Close>Close</Dialog.Close>
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              </Dialog.Root>
+              <input data-testid="final-outside" ref={finalRef} />
+            </div>
+          );
+        });
+        const { user } = await render(<TestComponent />);
+        const initial = screen.getByTestId('initial-outside');
+
+        await user.click(screen.getByText('Open'));
+        await waitFor(() => {
+          expect(initial.closest('[inert]')).not.toBe(null);
+        });
+        // The initial focus moves one frame after the DOM update of the open.
+        await waitSingleFrame();
+        await flushMicrotasks();
+        expect(initial).not.toHaveFocus();
+
+        await user.click(screen.getByText('Close'));
+
+        await waitFor(() => {
+          expect(getFocused()).toHaveFocus();
+        });
+      },
+    );
+
+    it('releases the marks while KeepAlive holds the dialog, and takes them back after', async () => {
+      const show = shallowRef(true);
+      const ModalDialog = defineComponent({
+        name: 'ModalDialog',
+        setup: () => () => (
+          <Dialog.Root defaultOpen>
+            <Dialog.Portal>
+              <Dialog.Popup>
+                <button>Inside</button>
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        ),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <div>
+          <button>Outside</button>
+          <KeepAlive>{show.value ? <ModalDialog key="dialog" /> : <Other key="other" />}</KeepAlive>
+        </div>
+      ));
+      const outside = screen.getByRole('button', { name: 'Outside', hidden: true });
+      await waitFor(() => {
+        expect(outside.closest('[inert]')).not.toBe(null);
+      });
+
+      show.value = false;
+      await flushMicrotasks();
+      expect(outside.closest('[inert]')).toBe(null);
+      expect(outside.closest('[aria-hidden="true"]')).toBe(null);
+
+      show.value = true;
+      await waitFor(() => {
+        expect(outside.closest('[inert]')).not.toBe(null);
+      });
+    });
   });
 
   describe('focus', () => {
@@ -498,11 +591,27 @@ describe('<Dialog.Popup />', () => {
     }
   });
 
+  // The compiled template of the fixture mounts the new popup before it unmounts the old popup. A
+  // render function in TSX reuses the popup component, so it does not show this order.
+  it('keeps the element of the new popup in the store when a template replaces the popup', async () => {
+    let store!: DialogStore<unknown>;
+    const { setProps } = await render(
+      <DialogPopupReplacement first onStore={(value) => (store = value)} />,
+    );
+    expect(store.select('popupElement')).toBe(screen.getByTestId('first'));
+
+    await setProps({ first: false });
+
+    const popup = screen.getByTestId('second');
+    expect(store.select('popupElement')).toBe(popup);
+    expect(store.context.popupRef.value).toBe(popup);
+  });
+
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case of the file then gets a warning about a slot.
   it('throws a descriptive error when rendered outside <Dialog.Root>', async () => {
     await expect(render(<Dialog.Popup />)).rejects.toThrow(
-      'Vase UI: DialogRootContext is missing.',
+      'Vase UI: DialogRootContext is missing. Without it a Dialog part has no dialog to read. Put the Dialog parts inside <Dialog.Root>.',
     );
 
     // Vue also warns about the error of `setup`.

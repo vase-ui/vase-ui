@@ -274,6 +274,7 @@ describe('<Dialog.Root />', () => {
     expect(trigger2).toHaveAttribute('aria-expanded', 'false');
     expect(trigger2).not.toHaveAttribute('aria-controls');
   });
+
   describe('open state', () => {
     it('emits openChange and then update:open', async () => {
       const calls: string[] = [];
@@ -502,23 +503,29 @@ describe('<Dialog.Root />', () => {
       });
       const handleOpenChange = vi.fn();
       await render(
-        <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
-          <Dialog.Portal data-testid="portal">
-            {backdrop ? (
-              <Dialog.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: '0px' }} />
-            ) : null}
-            <Dialog.Popup style={{ position: 'fixed', top: '0px', left: '0px', width: '10px' }}>
-              Dialog
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>,
+        <div data-testid="page">
+          <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
+            <Dialog.Portal data-testid="portal">
+              {backdrop ? (
+                <Dialog.Backdrop
+                  data-testid="backdrop"
+                  style={{ position: 'fixed', inset: '0px' }}
+                />
+              ) : null}
+              <Dialog.Popup style={{ position: 'fixed', top: '0px', left: '0px', width: '10px' }}>
+                Dialog
+              </Dialog.Popup>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>,
       );
       const target = backdrop
         ? screen.getByTestId('backdrop')
         : screen.getByTestId('portal').querySelector<HTMLElement>('[role="presentation"]')!;
       await waitFor(() => {
-        expect(target.closest('[inert]') !== null).toBe(backdrop);
+        expect(screen.getByTestId('page').closest('[inert]')).not.toBe(null);
       });
+      expect(target.closest('[inert]') !== null).toBe(backdrop);
 
       await userEvent.click(target, { force: true });
 
