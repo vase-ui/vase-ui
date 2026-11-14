@@ -1882,6 +1882,7 @@ describe('<Select.Popup />', () => {
     await waitFor(() => {
       expect(readSharedStyles()).toHaveLength(1);
     });
+    await flushMicrotasks();
     expect(container.querySelector('style')).toBe(null);
     // A mismatch makes Vue discard the server nodes and render new nodes.
     expect(container.querySelector('[data-testid="popup"]')).toBe(popup);
