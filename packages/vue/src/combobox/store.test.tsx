@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { shallowRef, watchEffect } from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { defaultItemEquality } from '../internals/itemEquality';
@@ -8,7 +8,8 @@ import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/
 import { ComboboxStore, selectors } from './store';
 import type { ComboboxStoreContext, State } from './store';
 
-// The first state and the context that the root gives to the store when it has no props.
+// A store with the first state of a combobox that selects one value, and a context whose commands
+// do nothing.
 function createComboboxStore(initialState: Partial<State> = {}) {
   const state: State = {
     ...createInitialPopupStoreState(),
@@ -105,6 +106,27 @@ describe('the store with no root', () => {
 
     expect(handleOpenChange).toHaveBeenCalledOnce();
     expect(store.select('open')).toBe(true);
+  });
+
+  // `setOpen` is a write method of the store, and a write method adds no dependency to the effect
+  // that calls it. A tracked read of the open state would run the effect again at each open change.
+  it('adds no dependency to an effect that requests an open state', () => {
+    const store = createComboboxStore();
+    let runs = 0;
+    const stop = watchEffect(
+      () => {
+        runs += 1;
+        store.setOpen(true, createChangeEventDetails(REASONS.inputChange));
+      },
+      { flush: 'sync' },
+    );
+    onTestFinished(stop);
+    expect(runs).toBe(1);
+
+    store.setOpen(false, createChangeEventDetails(REASONS.escapeKey));
+
+    expect(runs).toBe(1);
+    expect(store.select('open')).toBe(false);
   });
 
   it('shows an inline list as open to the interactions, and keeps the positioner element for them', () => {
