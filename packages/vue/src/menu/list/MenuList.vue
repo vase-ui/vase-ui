@@ -9,7 +9,7 @@ export interface MenuListProps
     VaseUIComponentProps<MenuListState>,
     /* @vue-ignore */ WithVaseUIEvent<Omit<HTMLAttributes, 'id'>> {
   /**
-   * The id of the list. The triggers of the menu use it for `aria-controls`.
+   * The id of the list. The active trigger of the menu uses it for `aria-controls`.
    */
   id?: string | undefined;
 }
@@ -39,7 +39,7 @@ const listId = useVaseUiId(() => props.id);
 
 let listElement: HTMLElement | null = null;
 
-// The triggers read `aria-controls` from the id in the store, so a change of the id goes there too.
+// `aria-controls` of the trigger reads the id from the store, so a change of the id goes there too.
 watch(listId, (id) => {
   if (listElement !== null && toRaw(store.state).listElement === listElement) {
     store.set('listElementId', id);
