@@ -41,7 +41,7 @@ export default defineConfig({
   lang: 'en-US',
   title: 'Vase UI',
   description: manifest.description,
-  base: '/vase-ui/',
+  base: '/',
   cleanUrls: true,
   // A demo is inside an element with the class `vp-raw`. This plugin keeps the styles of the theme
   // out of it, so the style sheet of the demo is the only one that styles it.
