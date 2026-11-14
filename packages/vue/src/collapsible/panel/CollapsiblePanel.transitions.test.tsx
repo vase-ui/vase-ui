@@ -146,8 +146,8 @@ describe('<Collapsible.Panel /> transitions', () => {
             expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
           });
 
-          // A busy machine can stall the page for some seconds, so the wait for the end of the exit
-          // has no time limit.
+          // A busy machine can stall the page for some seconds, so the wait for the end of the
+          // animations of the exit has no time limit.
           const read = nextAnimationsRead(getPanel()!);
           closeInTimerTask(open);
           await Promise.all((await read).map((animation) => animation.finished));
