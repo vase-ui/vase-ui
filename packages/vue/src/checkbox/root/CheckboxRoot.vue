@@ -288,6 +288,8 @@ function setInputElement(value: unknown) {
 
 onDeactivated(() => {
   isDeactivated.value = true;
+  unregisterInput?.();
+  unregisterInput = undefined;
 });
 
 onActivated(() => {
@@ -298,10 +300,7 @@ onActivated(() => {
 // registration in a hook would reverse the order of the inputs, and the order decides which input
 // the form focuses first. The watcher runs after the hooks, in the order of the parts.
 watch(isDeactivated, (deactivated) => {
-  if (deactivated) {
-    unregisterInput?.();
-    unregisterInput = undefined;
-  } else {
+  if (!deactivated) {
     updateInputRegistration();
   }
 });
