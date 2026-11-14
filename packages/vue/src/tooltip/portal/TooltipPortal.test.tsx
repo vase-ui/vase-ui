@@ -1,7 +1,7 @@
 import { expect, describe, it, onTestFinished } from 'vitest';
 import { h, shallowRef } from 'vue';
 import type { Component } from 'vue';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   describeConformance,

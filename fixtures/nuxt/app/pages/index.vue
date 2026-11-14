@@ -33,6 +33,7 @@
       <li><NuxtLink to="/menu">Menu</NuxtLink></li>
       <li><NuxtLink to="/preview-card">Preview Card</NuxtLink></li>
       <li><NuxtLink to="/popover">Popover</NuxtLink></li>
+      <li><NuxtLink to="/tooltip">Tooltip</NuxtLink></li>
     </ul>
   </main>
 </template>

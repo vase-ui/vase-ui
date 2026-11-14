@@ -21,6 +21,8 @@ import type {
 } from './root/TooltipRoot.vue';
 import TooltipTrigger from './trigger/TooltipTrigger.vue';
 import type { TooltipTriggerProps, TooltipTriggerState } from './trigger/TooltipTrigger.vue';
+import TooltipViewport from './viewport/TooltipViewport.vue';
+import type { TooltipViewportProps, TooltipViewportState } from './viewport/TooltipViewport.vue';
 
 /**
  * Groups all parts of the tooltip.
@@ -94,6 +96,18 @@ export const Provider: typeof TooltipProvider = TooltipProvider;
 export namespace Provider {
   export type State = TooltipProviderState;
   export type Props = TooltipProviderProps;
+}
+
+/**
+ * A viewport for displaying content transitions.
+ * This component is only required if one popup can be opened by multiple triggers, its content
+ * changes based on the trigger, and switching between them is animated.
+ * Renders a `<div>` element.
+ */
+export const Viewport: typeof TooltipViewport = TooltipViewport;
+export namespace Viewport {
+  export type State = TooltipViewportState;
+  export type Props = TooltipViewportProps;
 }
 
 export {
