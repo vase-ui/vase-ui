@@ -42,14 +42,6 @@
       "reason": "The cases assert the `displayName` of a React context. A Vue injection key has no such name."
     },
     {
-      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
-      "describe": ["<NavigationMenu.Root />", "nested popups"],
-      "title": "keeps the menu open when interacting with a nested popover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
       "entry": "Root",
       "prop": "render",

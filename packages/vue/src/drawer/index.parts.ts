@@ -41,6 +41,11 @@ import { DrawerTrigger } from './trigger/DrawerTrigger';
 import type { DrawerTriggerProps, DrawerTriggerState } from './trigger/DrawerTrigger';
 import DrawerViewport from './viewport/DrawerViewport.vue';
 import type { DrawerViewportProps, DrawerViewportState } from './viewport/DrawerViewport.vue';
+import DrawerVirtualKeyboardProvider from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
+import type {
+  DrawerVirtualKeyboardProviderProps,
+  DrawerVirtualKeyboardProviderState,
+} from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
 
 /**
  * An overlay displayed beneath the popup.
@@ -188,6 +193,16 @@ export const Viewport: typeof DrawerViewport = DrawerViewport;
 export namespace Viewport {
   export type Props = DrawerViewportProps;
   export type State = DrawerViewportState;
+}
+
+/**
+ * Provides keyboard-aware focus and scroll handling for bottom-sheet drawers with form fields.
+ */
+export const VirtualKeyboardProvider: typeof DrawerVirtualKeyboardProvider =
+  DrawerVirtualKeyboardProvider;
+export namespace VirtualKeyboardProvider {
+  export type State = DrawerVirtualKeyboardProviderState;
+  export type Props = DrawerVirtualKeyboardProviderProps;
 }
 
 export { createDrawerHandle as createHandle, DrawerHandle as Handle } from './handle';
