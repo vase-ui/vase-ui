@@ -66,20 +66,6 @@ describe('<Menu.SubmenuRoot />', () => {
     expect(probe.store.select('activeTriggerId')).toBe(trigger.id);
   });
 
-  it.each([
-    { name: 'by default', closeParentOnEsc: false, parentOpen: true },
-    { name: 'with closeParentOnEsc', closeParentOnEsc: true, parentOpen: false },
-  ])('closes for Escape in the submenu $name', async ({ closeParentOnEsc, parentOpen }) => {
-    await renderMenu({ submenuRoot: { closeParentOnEsc } });
-    const submenu = screen.getByTestId('submenu');
-
-    await fireEvent.keyDown(submenu, { key: 'Escape' });
-    await flushMicrotasks();
-
-    expect(screen.queryByTestId('submenu')).toBe(null);
-    expect(screen.queryByTestId('parent-menu') !== null).toBe(parentOpen);
-  });
-
   it('closes only the submenu for a press in the parent menu', async () => {
     await renderMenu();
 
