@@ -132,6 +132,66 @@ const MultipleContainedTriggersMenubar = defineComponent(() => () => (
   </Menubar>
 ));
 
+// Base UI has this block after `<Menubar />`. It comes first here, because the case that throws in
+// `setup` must be the last case of the file.
+describe('filterable menubar menus', () => {
+  const { render } = createRenderer();
+
+  it.each(['horizontal', 'vertical'] as const)(
+    'preserves %s trigger navigation',
+    async (orientation) => {
+      const { user } = await render(
+        <Menubar orientation={orientation}>
+          <Menu.FilterProvider>
+            <Menu.Root>
+              <Menu.Trigger>File</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Input aria-label="Filter file actions" />
+                    <Menu.List>
+                      <Menu.Item>New file</Menu.Item>
+                      <Menu.Item>Open file</Menu.Item>
+                    </Menu.List>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menu.FilterProvider>
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Copy</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>,
+      );
+      const file = screen.getByRole('menuitem', { name: 'File' });
+      const edit = screen.getByRole('menuitem', { name: 'Edit' });
+      const nextKey = orientation === 'vertical' ? '[ArrowDown]' : '[ArrowRight]';
+      const openKey = orientation === 'vertical' ? '[ArrowRight]' : '[ArrowDown]';
+      file.focus();
+      await flushMicrotasks();
+      await user.keyboard(nextKey);
+      await waitFor(() => expect(edit).toHaveFocus());
+      expect(screen.queryByRole('searchbox')).toBe(null);
+
+      file.focus();
+      await flushMicrotasks();
+      await user.keyboard(openKey);
+      const input = await screen.findByRole('searchbox');
+      await waitFor(() => expect(input).toHaveFocus());
+      expect(screen.getByRole('menuitem', { name: 'New file' })).toHaveAttribute(
+        'data-highlighted',
+      );
+    },
+  );
+});
+
 describe('<Menubar />', () => {
   const { render } = createRenderer();
 

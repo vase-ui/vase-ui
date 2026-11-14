@@ -17,9 +17,14 @@ export type MenuSubmenuRootChangeEventDetails = MenuRootChangeEventDetails;
 </script>
 
 <script setup lang="ts">
+import { inject, provide } from 'vue';
+import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import type { MenuRootHighlightEventDetails } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useMenuRoot } from '../root/useMenuRoot';
+import { MenuSubmenuRootContext } from './MenuSubmenuRootContext';
+
+const EMPTY_SUBMENU_ROOT_CONTEXT = {};
 
 const props = withDefaults(defineProps<MenuSubmenuRootProps>(), {
   open: undefined,
@@ -68,13 +73,23 @@ defineSlots<{
 // Throws when the submenu isn't inside a menu.
 useMenuRootContext();
 
-const { actions } = useMenuRoot(props, {
+// A provider makes only the submenu root directly inside it filterable, so a plain
+// `Menu.SubmenuRoot` inside a filterable submenu stays plain.
+const filterProvider = inject(MenuFilterProviderContext, null);
+if (filterProvider !== null) {
+  provide(MenuFilterProviderContext, null);
+}
+const filterRoot = filterProvider?.useSubmenuRoot();
+
+const { actions, context } = useMenuRoot(props, {
   isSubmenu: true,
+  ...filterRoot?.rootOptions,
   onOpenChange(nextOpen, details) {
     emit('openChange', nextOpen, details);
     if (!details.isCanceled) {
       emit('update:open', nextOpen);
     }
+    filterRoot?.onOpenChange(nextOpen, details);
   },
   onOpenChangeComplete(nextOpen) {
     emit('openChangeComplete', nextOpen);
@@ -83,6 +98,12 @@ const { actions } = useMenuRoot(props, {
     emit('itemHighlighted', highlightedItem, details);
   },
 });
+
+if (filterRoot) {
+  filterRoot.provideDropdown(context);
+} else {
+  provide(MenuSubmenuRootContext, EMPTY_SUBMENU_ROOT_CONTEXT);
+}
 
 defineExpose(actions);
 </script>
