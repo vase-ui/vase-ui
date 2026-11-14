@@ -451,7 +451,7 @@ describe('<NumberField.ScrubArea />', () => {
       expect(screen.getByRole('textbox')).toHaveValue('10');
     });
 
-    it('VUE-51: ends the scrub with no commit when KeepAlive deactivates the scrub area', async () => {
+    it('VUE-53: ends the scrub with no commit when KeepAlive deactivates the scrub area', async () => {
       const onValueCommitted = vi.fn();
       const visible = shallowRef(true);
       const pointerLock = vi
