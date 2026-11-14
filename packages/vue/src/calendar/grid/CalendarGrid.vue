@@ -27,16 +27,15 @@ defineSlots<{
 }>();
 
 const { state, multiselectable } = useCalendarRootContext();
-const { text, getAriaLabelledBy } = useCalendarMonthContext();
+const { text } = useCalendarMonthContext();
 
 const { element, elementProps } = useRenderElement('table', props, {
   state,
   props: (attrs) => [
     {
       role: 'grid',
-      // A caption that names the grid wins over the name of the month, when the caption is there.
-      'aria-labelledby': getAriaLabelledBy(attrs),
-      'aria-label': text.value,
+      // The label that the consumer gives replaces the name of the month.
+      'aria-label': attrs['aria-labelledby'] === undefined ? text.value : undefined,
       'aria-multiselectable': multiselectable.value ? true : undefined,
       'aria-readonly': state.value.readOnly ? true : undefined,
       'aria-disabled': state.value.disabled ? true : undefined,

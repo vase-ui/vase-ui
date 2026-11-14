@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  takeReportedMessages,
-  waitFor,
-} from '#test-utils';
+import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
 import * as Calendar from '../index.parts';
-import CalendarMonthLabelProbe from '../month/CalendarMonthLabelProbe.test.vue';
 import CalendarAncestors from '../root/CalendarAncestors.test.vue';
 
 const monthName = new Intl.DateTimeFormat('en-US', {
@@ -26,46 +18,30 @@ describe('<Calendar.Grid />', () => {
     render: (node) => render(<CalendarAncestors level="month">{node}</CalendarAncestors>),
   }));
 
-  it('names the grid by the month when no part names it', async () => {
+  it('names the grid by the month', async () => {
     await render(
       <CalendarAncestors level="month">
         <Calendar.Grid />
       </CalendarAncestors>,
     );
 
-    // The grid assumes a caption until it is mounted, and the first flush after the mount drops it.
-    await flushMicrotasks();
-
-    expect(screen.getByRole('grid')).not.toHaveAttribute('aria-labelledby');
     expect(screen.getByRole('grid')).toHaveAccessibleName(monthName);
   });
 
-  it('names the grid by a part that registers its id as a caption does', async () => {
+  it.each([
+    { name: 'an aria-label', props: { 'aria-label': 'Departure' }, expected: 'Departure' },
+    { name: 'an aria-labelledby', props: { 'aria-labelledby': 'title' }, expected: null },
+  ])('lets $name of the consumer replace the name of the month', async ({ props, expected }) => {
     await render(
       <CalendarAncestors level="month">
-        <Calendar.Grid>
-          <CalendarMonthLabelProbe />
-        </Calendar.Grid>
+        <span id="title">Departure</span>
+        <Calendar.Grid {...props} />
       </CalendarAncestors>,
     );
 
-    await waitFor(() => {
-      expect(screen.getByRole('grid')).toHaveAttribute(
-        'aria-labelledby',
-        screen.getByTestId('caption').id,
-      );
-    });
-    expect(screen.getByRole('grid')).toHaveAccessibleName('Custom caption');
-  });
-
-  it('lets the name of the consumer replace the name of the month', async () => {
-    await render(
-      <CalendarAncestors level="month">
-        <Calendar.Grid aria-label="Departure" />
-      </CalendarAncestors>,
-    );
-
-    expect(screen.getByRole('grid')).toHaveAccessibleName('Departure');
+    const grid = screen.getByRole('grid');
+    expect(grid.getAttribute('aria-label')).toBe(expected);
+    expect(grid).toHaveAccessibleName('Departure');
   });
 
   // This case is the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current

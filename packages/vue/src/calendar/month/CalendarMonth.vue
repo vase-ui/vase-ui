@@ -28,7 +28,6 @@ import { formatText } from '../../internals/date-time/calendar/formatText';
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { useLabelId } from '../../utils/useRegisteredLabelId';
 import { useCalendarRootContext } from '../root/CalendarRootContext';
 import { CalendarMonthContext } from './CalendarMonthContext';
 import * as CalendarMonthDataAttributes from './CalendarMonthDataAttributes';
@@ -43,7 +42,6 @@ defineSlots<{
 }>();
 
 const { state: rootState, pages, locale } = useCalendarRootContext();
-const { defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
 
 const month = computed(() => props.month);
 
@@ -57,9 +55,6 @@ provide(CalendarMonthContext, {
   text: computed(() =>
     formatText(props.month.yearMonth, { month: 'long', year: 'numeric' }, locale.value),
   ),
-  defaultLabelId,
-  setLabelId,
-  getAriaLabelledBy,
 });
 
 // The default mapping leaves out the index `0`.

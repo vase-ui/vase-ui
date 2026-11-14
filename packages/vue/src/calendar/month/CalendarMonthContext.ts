@@ -1,15 +1,11 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey } from 'vue';
 import type { CalendarPage } from '../../internals/date-time/calendar/monthGrid';
-import type { UseLabelIdReturnValue } from '../../utils/useRegisteredLabelId';
 
-export interface CalendarMonthContext extends Pick<
-  UseLabelIdReturnValue,
-  'defaultLabelId' | 'setLabelId' | 'getAriaLabelledBy'
-> {
+export interface CalendarMonthContext {
   /** The page that the month shows. */
   month: ComputedRef<CalendarPage>;
-  /** The name of the month. A grid that no caption names has it as its `aria-label`. */
+  /** The name of the month. The grid of the month has it as its `aria-label`. */
   text: ComputedRef<string>;
 }
 
