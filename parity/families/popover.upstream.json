@@ -1,5 +1,5 @@
 {
-  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "commit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
   "upstreamPaths": [
     "packages/react/src/popover/**",
     "docs/src/app/(docs)/react/components/popover/**"
@@ -1320,6 +1320,20 @@
             "<Popover.Root />"
           ],
           "title": "keeps the popover open when Escape closes a nested dialog after a backdrop press"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "outside press in a dialog outside its React tree"
+          ],
+          "title": "stays open when $name inside a modal dialog opened after it"
+        },
+        {
+          "describe": [
+            "<Popover.Root />",
+            "outside press in a dialog outside its React tree"
+          ],
+          "title": "closes when pressing inside a modal dialog opened before it"
         },
         {
           "describe": [
