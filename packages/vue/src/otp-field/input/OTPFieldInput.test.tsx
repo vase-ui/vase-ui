@@ -1,5 +1,6 @@
 import { expect, vi, describe, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { userEvent } from 'vitest/browser';
+import { nextTick, shallowRef } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Field } from '@vase-ui/vue/field';
 import { OTPField } from '@vase-ui/vue/otp-field';
@@ -8,11 +9,14 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
   pasteText,
+  renderOnServer,
   screen,
   takeReportedMessages,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import OTPFieldRootHydration from '../root/OTPFieldRootHydration.test.vue';
 
 describe('<OTPField.Input />', () => {
   const { render } = createRenderer();
@@ -1135,6 +1139,204 @@ describe('<OTPField.Input />', () => {
       } finally {
         warnSpy.mockRestore();
       }
+    });
+  });
+
+  describe('a real keyboard and pointer', () => {
+    function getSlots() {
+      return Array.from(screen.getByRole('group').querySelectorAll<HTMLInputElement>('input'));
+    }
+
+    function getSlotValues() {
+      return getSlots().map((input) => input.value);
+    }
+
+    it('types a code, refuses a character, replaces a selected character and deletes', async () => {
+      const onValueInvalid = vi.fn();
+
+      await render(<OTPFieldTest onValueInvalid={onValueInvalid} />);
+
+      const inputs = getSlots();
+
+      await userEvent.click(inputs[0]);
+      await userEvent.keyboard('12x');
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '', '', '', '']);
+      expect(onValueInvalid.mock.calls.map((call) => call[0])).toEqual(['x']);
+      expect(document.activeElement).toBe(inputs[2]);
+
+      await userEvent.keyboard('3456');
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '3', '4', '5', '6']);
+      expect(document.activeElement).toBe(inputs[5]);
+
+      await userEvent.keyboard('{ArrowLeft}{ArrowLeft}9');
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '3', '9', '5', '6']);
+      expect(document.activeElement).toBe(inputs[4]);
+
+      await userEvent.keyboard('{Backspace}');
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '3', '9', '6', '']);
+      expect(document.activeElement).toBe(inputs[3]);
+
+      await userEvent.keyboard('{Delete}');
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '3', '6', '', '']);
+      expect(document.activeElement).toBe(inputs[3]);
+
+      await userEvent.keyboard('{Home}');
+
+      expect(document.activeElement).toBe(inputs[0]);
+
+      await userEvent.keyboard('{End}');
+
+      expect(document.activeElement).toBe(inputs[4]);
+    });
+
+    it('selects the character of a slot on a click, and moves a click after the first empty slot to that slot', async () => {
+      await render(<OTPFieldTest defaultValue="123" />);
+
+      const inputs = getSlots();
+
+      await userEvent.click(inputs[1]);
+
+      expect(document.activeElement).toBe(inputs[1]);
+      expect([inputs[1].selectionStart, inputs[1].selectionEnd]).toEqual([0, 1]);
+
+      await userEvent.click(inputs[5]);
+
+      expect(document.activeElement).toBe(inputs[3]);
+    });
+
+    it('moves the focus out with Tab, and back to the tab stop with Shift+Tab', async () => {
+      // WebKit does not move the focus to a button with the Tab key, so the neighbors are inputs.
+      await render(
+        <div>
+          <input aria-label="Before" />
+          <OTPFieldTest defaultValue="123" />
+          <input aria-label="After" />
+        </div>,
+      );
+
+      const inputs = getSlots();
+      const after = screen.getByRole('textbox', { name: 'After' });
+
+      screen.getByRole('textbox', { name: 'Before' }).focus();
+      await userEvent.keyboard('{Tab}');
+
+      expect(document.activeElement).toBe(inputs[3]);
+
+      await userEvent.keyboard('{Tab}');
+
+      expect(document.activeElement).toBe(after);
+
+      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+      expect(document.activeElement).toBe(inputs[3]);
+    });
+
+    it('takes a code from a real paste, and reports the characters that it refuses', async () => {
+      const onValueChange = vi.fn();
+      const onValueInvalid = vi.fn();
+
+      await render(
+        <div>
+          <input aria-label="Source" value="12 34-56" />
+          <OTPFieldTest onValueChange={onValueChange} onValueInvalid={onValueInvalid} />
+        </div>,
+      );
+
+      const inputs = getSlots();
+      const source = screen.getByRole<HTMLInputElement>('textbox', { name: 'Source' });
+
+      source.focus();
+      source.select();
+      await userEvent.copy();
+      await userEvent.click(inputs[0]);
+      await userEvent.paste();
+      await flushMicrotasks();
+
+      expect(getSlotValues()).toEqual(['1', '2', '3', '4', '5', '6']);
+      expect(onValueInvalid).toHaveBeenCalledTimes(1);
+      expect(onValueInvalid.mock.calls[0]?.[0]).toBe('12 34-56');
+      expect(onValueInvalid.mock.calls[0]?.[1].reason).toBe(REASONS.inputPaste);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueChange.mock.calls[0]?.[0]).toBe('123456');
+      expect(onValueChange.mock.calls[0]?.[1].reason).toBe(REASONS.inputPaste);
+      expect(onValueChange.mock.calls[0]?.[1].event).toBeInstanceOf(ClipboardEvent);
+      expect(document.activeElement).toBe(inputs[5]);
+    });
+
+    it('focuses the first slot on a click on a native label', async () => {
+      await render(
+        <div>
+          <label for="verification-code">Verification code</label>
+          <OTPFieldTest id="verification-code" defaultValue="12" />
+        </div>,
+      );
+
+      await userEvent.click(screen.getByText('Verification code'));
+
+      expect(document.activeElement).toBe(getSlots()[0]);
+    });
+  });
+
+  describe('a composition', () => {
+    it('commits one time when the last `input` event comes after `compositionend`', async () => {
+      const onValueChange = vi.fn();
+      const onValueInvalid = vi.fn();
+
+      await render(<OTPFieldTest onValueChange={onValueChange} onValueInvalid={onValueInvalid} />);
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+
+      inputs[0].focus();
+      await flushMicrotasks();
+
+      inputs[0].dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+      inputs[0].value = '1a';
+      inputs[0].dispatchEvent(
+        new CompositionEvent('compositionend', { bubbles: true, data: '1a' }),
+      );
+      // A browser runs the microtasks between two events that it sends.
+      await nextTick();
+      inputs[0].dispatchEvent(new InputEvent('input', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(inputs.map((input) => input.value)).toEqual(['1', '', '', '', '', '']);
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(onValueInvalid.mock.calls.map((call) => call[0])).toEqual(['1a']);
+      expect(document.activeElement).toBe(inputs[1]);
+    });
+  });
+
+  describe('hydration', () => {
+    it.each([
+      { name: 'an empty field', props: {} },
+      { name: 'a field with a value', props: { defaultValue: '12', name: 'otp' } },
+      { name: 'a controlled complete field', props: { value: '1234', name: 'otp' } },
+      { name: 'a masked field', props: { defaultValue: '12', mask: true } },
+      {
+        name: 'a disabled, read-only and required field',
+        props: { disabled: true, readOnly: true, required: true },
+      },
+      { name: 'a field with a label before it', props: { label: 'before', description: true } },
+      { name: 'a field with a label after it', props: { label: 'after', description: true } },
+      { name: 'a field in a native label', props: { label: 'native' } },
+    ])('hydrates the slots of $name with no mismatch', async ({ props }) => {
+      const fixtureProps = { ...props, inputs: 4 };
+      const serverHtml = await renderOnServer(
+        'src/otp-field/root/OTPFieldRootHydration.test.vue',
+        fixtureProps,
+      );
+
+      await hydrate(OTPFieldRootHydration, { serverHtml, props: fixtureProps });
     });
   });
 

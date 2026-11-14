@@ -1,0 +1,17 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/otp-field/demos",
+  "files": {
+    "alphanumeric/css-modules/index.module.css": "f56fc7e7375acb0bfc2e132bed3f2e5f04311adc710f7346c4f091d85c116211",
+    "alphanumeric/css-modules/index.tsx": "d701ed2466fb0510b8491f399901b5abafa38486529bc8961493baf5223e43dc",
+    "custom-sanitize/css-modules/index.module.css": "903765ee347d3a72e0c68cd55b422cd5e19f830bfdba9ea310f59e3459d4f653",
+    "custom-sanitize/css-modules/index.tsx": "8da4db2b1c40f5ba03a81344594fb35e815197fe1d0a357b04b2c5e44cbe3d29",
+    "custom-sanitize/useInvalidFeedback.ts": "a91fa4a1da40b81bb51fbcacc57a274844629923d2735ffa64d8d097e2e7fe6b",
+    "grouped/css-modules/index.module.css": "eaafcb35805a2a0ec8978f792d64b56829a4d5c2ac2a924f7b9dad8915b9cb3a",
+    "grouped/css-modules/index.tsx": "4ed09aa8249b49388c961652ba0d3d8c70183e9037a2f54e69721f5b96ba7e87",
+    "hero/css-modules/index.module.css": "768d9f6c2805786cc3d72b332b6c18ce31660bbc3158eebbab4c2bf70f81a16a",
+    "hero/css-modules/index.tsx": "4dc60bc51aedd54f9838f00b46527d8fe91ae233e0f379c35264541cb8d29541",
+    "password/css-modules/index.module.css": "cd14b140729aba5f9702822e9d1c10d66f20a659d24e8b59c9972004c191124f",
+    "password/css-modules/index.tsx": "7b945d323b831092e3dd422df7fbc0e4e32073f4d809d4c680b24cb0bc496651"
+  }
+}
