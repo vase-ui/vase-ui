@@ -105,9 +105,6 @@ Creates a handle that connects an `AlertDialog.Root` with detached `AlertDialog.
 
 `AlertDialog.Handle` is the class of the handle. The types of `AlertDialog.Root` and `AlertDialog.Trigger` accept only a handle of this class, and not a handle from `Dialog.createHandle()`.
 
-- `open(triggerId)` opens the alert dialog for the `AlertDialog.Trigger` that has that `id` and the same handle. When no such trigger exists, it opens the alert dialog with no trigger, and a development build shows a warning. Give `null` to open it with no trigger.
-- `openWithPayload(payload)` opens the alert dialog with that payload and with no trigger.
-- `close()` closes the alert dialog.
-- `isOpen` is `true` while the alert dialog is open, and `false` while no root is mounted. A `computed` that reads it follows the open state.
+<ApiReference name="AlertDialog.Handle" />
 
-Call `open()`, `openWithPayload()` and `close()` only in an event handler or an effect, and not in a render.
+When no trigger has the `id` that `open()` gets, it opens the alert dialog with no trigger, and a development build shows a warning. A `computed` that reads `isOpen` follows the open state.

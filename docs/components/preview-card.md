@@ -146,8 +146,6 @@ Creates a handle that connects a `PreviewCard.Root` with detached `PreviewCard.T
 
 `PreviewCard.Handle` is the class of the handle.
 
-- `open(triggerId)` opens the preview card for the `PreviewCard.Trigger` that has that `id` and the same handle. While a root is mounted, it throws when the handle has no such trigger.
-- `close()` closes the preview card.
-- `isOpen` is `true` while the preview card is open, and `false` while no root is mounted. A `computed` that reads it follows the open state.
+<ApiReference name="PreviewCard.Handle" />
 
-Call `open()` and `close()` only in an event handler or an effect, and not in a render.
+While a root is mounted, `open()` throws when the handle has no trigger with that `id`.
