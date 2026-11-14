@@ -13,10 +13,11 @@ import { useCompositeListContext } from '../../internals/composite/list/Composit
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import { mergeProps } from '../../merge-props';
-import { isMainOrientationKey } from '../../utils/popups/interactions/useListNavigation';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuFilterList, MenuFilterListParameters } from './MenuFilterContext';
+import { isPlainMainOrientationKey } from './isPlainMainOrientationKey';
 import { moveHighlightFrom } from './moveHighlightFrom';
+import { NESTED_KEYDOWN, useNestedPopupEventListener } from './nestedPopupEvents';
 import { useMenuFilterKeyDown } from './useMenuFilterKeyDown';
 
 /**
@@ -35,23 +36,17 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
   const handleInputKeydown = useMenuFilterKeyDown(menuContext, () => value.value !== '');
   const list = useFilterDropdownList({ id: params.id });
 
-  function handleKeydown(event: KeyboardEvent) {
+  // The key of a popup below the list comes through the popup tree, because Vue does not give the
+  // event of a teleported popup to the list. `fromNestedPopup` is then `true`.
+  function handleKeydown(event: KeyboardEvent, fromTree = false) {
     const owner = focusOwnerRef.value;
     const target = getTarget(event) as Element;
     const ownerFocused = owner != null && activeElement(ownerDocument(owner)) === owner;
-    const fromNestedPopup = !contains(event.currentTarget as Element, target);
+    const fromNestedPopup = fromTree || !contains(event.currentTarget as Element, target);
     // Keys the input forwards to its highlighted item arrive here while the input still holds
-    // focus, and the keys of a nested popup that is not teleported bubble from outside the list.
+    // focus, and the keys of a nested popup arrive from outside the list.
     if (owner == null || ownerFocused || fromNestedPopup) {
-      if (
-        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Base UI reads `which` to find the key of an IME composition.
-        event.which !== 229 &&
-        !event.shiftKey &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey &&
-        isMainOrientationKey(event.key, orientation.value)
-      ) {
+      if (isPlainMainOrientationKey(event, orientation.value)) {
         // Keep main-axis keys from reaching this popup's own list navigation, which lost its
         // place while the nested popup held focus. A plain submenu that closes on the key hands
         // focus back and lets it through, so move on from its trigger as a plain parent would.
@@ -94,6 +89,8 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
     });
   }
 
+  useNestedPopupEventListener<KeyboardEvent>(NESTED_KEYDOWN, (event) => handleKeydown(event, true));
+
   // `null` distinguishes the initial registration from a list emptied by filtering.
   let previousItems: readonly (HTMLElement | null)[] | null = null;
 
@@ -124,7 +121,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
             role: 'menu',
             'aria-labelledby': resolvePopupLabel(attrs, null, triggerId.value ?? null),
             'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,
-            onKeydown: handleKeydown,
+            onKeydown: (event: KeyboardEvent) => handleKeydown(event),
           },
           attrs,
         ),

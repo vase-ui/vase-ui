@@ -40,4 +40,62 @@ describe('filtered menu groups', () => {
     });
     expect(screen.queryByText('Sort by')).not.toBeVisible();
   });
+
+  it('hides a group whose kept-mounted filterable submenu has its own groups', async () => {
+    const { user } = await render(
+      <Menu.FilterProvider>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter actions" />
+                <Menu.List>
+                  <Menu.Group data-testid="organize-group">
+                    <Menu.GroupLabel>Organize</Menu.GroupLabel>
+                    <Menu.FilterProvider>
+                      <Menu.SubmenuRoot>
+                        <Menu.SubmenuTrigger>Move to</Menu.SubmenuTrigger>
+                        <Menu.Portal keepMounted>
+                          <Menu.Positioner>
+                            <Menu.Popup>
+                              <Menu.Input aria-label="Filter folders" />
+                              <Menu.List>
+                                <Menu.Group>
+                                  <Menu.GroupLabel>Folders</Menu.GroupLabel>
+                                  <Menu.Item>Projects</Menu.Item>
+                                </Menu.Group>
+                              </Menu.List>
+                            </Menu.Popup>
+                          </Menu.Positioner>
+                        </Menu.Portal>
+                      </Menu.SubmenuRoot>
+                    </Menu.FilterProvider>
+                  </Menu.Group>
+                  <Menu.Group>
+                    <Menu.GroupLabel>Other</Menu.GroupLabel>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.Group>
+                </Menu.List>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    const group = screen.getByTestId('organize-group');
+    expect(group).not.toHaveAttribute('hidden');
+
+    // The group of the submenu must register with the query of the submenu, not with the group
+    // around the submenu.
+    await user.type(screen.getByRole('searchbox', { name: 'Filter actions' }), 'rena');
+
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
+    });
+    await waitFor(() => {
+      expect(group).toHaveAttribute('hidden');
+    });
+  });
 });

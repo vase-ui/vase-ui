@@ -86,6 +86,12 @@ export interface UseMenuRootOptions {
    * @default true
    */
   resetOnPointerLeave?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Whether the root is disabled in addition to its `disabled` prop. It is a value, a ref or a
+   * getter. A filterable submenu follows the state of its parent menu.
+   * @default false
+   */
+  disabled?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 /**
@@ -127,6 +133,10 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   const generatedPopupId = useVaseUiId();
   const renderedPopupId = shallowRef<string | undefined>(undefined);
 
+  function isDisabled() {
+    return (props.disabled ?? false) || (toValue(options.disabled) ?? false);
+  }
+
   // A registered `''` means the popup rendered with an explicitly empty id, so nothing may point
   // at the generated fallback.
   const defaultPopupId = computed(
@@ -157,7 +167,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         {
           ...initialState,
           parent: parentFromContext,
-          disabled: props.disabled ?? false,
+          disabled: isDisabled(),
           highlightItemOnHover: props.highlightItemOnHover ?? true,
           modal: parentFromContext.type === undefined ? props.modal : undefined,
           rootId: rootId.value,
@@ -209,7 +219,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   watch(
     () => ({
-      disabled: props.disabled ?? false,
+      disabled: isDisabled(),
       highlightItemOnHover: props.highlightItemOnHover ?? true,
       modal: parent.value.type === undefined ? props.modal : undefined,
       rootId: rootId.value,
