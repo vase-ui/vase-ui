@@ -72,13 +72,8 @@ describe('<Tooltip.Positioner />', () => {
     ),
   });
 
-  it('throws a descriptive error when rendered outside <Tooltip.Root>', async () => {
-    await expect(render(<Tooltip.Positioner />)).rejects.toThrow(
-      'Vase UI: A part of Tooltip must be inside <Tooltip.Root>.',
-    );
-    expect(takeReportedMessages()).toHaveLength(1);
-  });
-
+  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later slot then
+  // gives a warning. The case that renders no slot thus comes last.
   it('throws a descriptive error when rendered outside <Tooltip.Portal>', async () => {
     await expect(
       render(
@@ -87,6 +82,13 @@ describe('<Tooltip.Positioner />', () => {
         </Tooltip.Root>,
       ),
     ).rejects.toThrow('Vase UI: <Tooltip.Positioner> must be inside <Tooltip.Portal>.');
+    expect(takeReportedMessages()).toHaveLength(1);
+  });
+
+  it('throws a descriptive error when rendered outside <Tooltip.Root>', async () => {
+    await expect(render(<Tooltip.Positioner />)).rejects.toThrow(
+      'Vase UI: A part of Tooltip must be inside <Tooltip.Root>.',
+    );
     expect(takeReportedMessages()).toHaveLength(1);
   });
 });

@@ -156,13 +156,17 @@ describe('<Tooltip.Root />', () => {
       await screen.findByTestId('positioner');
 
       await user.click(screen.getByRole('button', { name: 'Close tooltip' }));
-      await flushMicrotasks();
+      // The positioner stays mounted, so the attribute of its closed state stays too.
+      await waitFor(() => {
+        expect(screen.getByTestId('positioner')).toHaveAttribute('data-closed');
+      });
       expect(trigger).not.toHaveAttribute('data-popup-open');
       expect(screen.queryByTestId('positioner')).not.toBe(null);
 
       await user.click(screen.getByRole('button', { name: 'Unmount root' }));
-      await flushMicrotasks();
-      expect(screen.queryByTestId('positioner')).toBe(null);
+      await waitFor(() => {
+        expect(screen.queryByTestId('positioner')).toBe(null);
+      });
 
       await user.click(screen.getByRole('button', { name: 'Remount open' }));
       await waitFor(() => {

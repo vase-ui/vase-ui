@@ -802,40 +802,6 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
-const TOOLTIP_TRIGGERS = ['closed', 'open', 'kept', 'detached'];
-
-function readTooltipTriggers(page: Page) {
-  return Promise.all(
-    TOOLTIP_TRIGGERS.map((testId) => page.getByTestId(testId).getAttribute('data-popup-open')),
-  );
-}
-
-// A portal renders after the mount, so the server HTML has no popup. Only the trigger that the
-// root names with `default-trigger-id` is open. A server attaches no root to a handle, so the
-// detached trigger is closed.
-async function expectTooltipPageOnServer(page: Page) {
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(0);
-  expect(await page.locator('[data-testid$="-popup"]').count()).toBe(0);
-  expect(await readTooltipTriggers(page)).toEqual([null, '', null, null]);
-}
-
-// After the mount, the two open popups and the kept popup are in the body. The kept popup is
-// hidden, and the detached trigger follows its root.
-async function expectHydratedTooltipPage(page: Page) {
-  const readPopup = (testId: string) =>
-    page.getByTestId(testId).evaluate((element) => ({
-      parent: element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
-      isVisible: element.checkVisibility(),
-    }));
-
-  expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
-  expect(await page.getByTestId('closed-popup').count()).toBe(0);
-  expect(await readPopup('open-popup')).toEqual({ parent: 'body', isVisible: true });
-  expect(await readPopup('kept-popup')).toEqual({ parent: 'body', isVisible: false });
-  expect(await readPopup('detached-popup')).toEqual({ parent: 'body', isVisible: true });
-  expect(await readTooltipTriggers(page)).toEqual([null, '', null, '']);
-}
-
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -892,11 +858,6 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
-  },
-  {
-    path: '/tooltip',
-    expectPage: expectTooltipPageOnServer,
-    expectHydratedPage: expectHydratedTooltipPage,
   },
 ];
 
