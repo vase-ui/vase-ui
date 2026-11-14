@@ -56,7 +56,10 @@ async function dispatchTouchCancel(target: Element, point: TouchPoint) {
   await flushMicrotasks();
 }
 
-function stubElementFromPoint(root: Document | ShadowRoot, getElement: () => Element | null) {
+function stubElementFromPoint(
+  root: Document | ShadowRoot,
+  getElement: (x: number, y: number) => Element | null,
+) {
   const originalElementFromPoint = root.elementFromPoint;
   root.elementFromPoint = getElement;
   onTestFinished(() => {
@@ -150,6 +153,15 @@ function mockWindowInnerHeight(innerHeight: number) {
   mockResizableInnerHeight(innerHeight);
 }
 
+function mockWindowScrollY() {
+  const originalDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollY');
+  onTestFinished(() => {
+    if (originalDescriptor) {
+      Object.defineProperty(window, 'scrollY', originalDescriptor);
+    }
+  });
+}
+
 function setScrollSize(element: HTMLElement, clientHeight: number, scrollHeight: number) {
   Object.defineProperties(element, {
     clientHeight: { configurable: true, value: clientHeight },
@@ -214,6 +226,7 @@ const KeyboardDrawer = defineComponent({
   props: {
     open: { type: Boolean, default: true },
     modal: { type: [Boolean, String] as PropType<boolean | 'trap-focus'>, default: false },
+    initialFocus: { type: Boolean, default: undefined },
   },
   setup(props, { slots }) {
     return () => (
@@ -221,7 +234,9 @@ const KeyboardDrawer = defineComponent({
         <Drawer.VirtualKeyboardProvider>
           <Drawer.Portal>
             <Drawer.Viewport data-testid="viewport">
-              <Drawer.Popup data-testid="popup">{slots.default?.()}</Drawer.Popup>
+              <Drawer.Popup data-testid="popup" initialFocus={props.initialFocus}>
+                {slots.default?.()}
+              </Drawer.Popup>
             </Drawer.Viewport>
           </Drawer.Portal>
         </Drawer.VirtualKeyboardProvider>
@@ -1532,5 +1547,729 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     // Pointer-down cancels both the pending frame alignment and delayed passes.
     expect(scrollToSpy).not.toHaveBeenCalled();
+  });
+
+  it('clears keyboard state when a tapped input redirects focus away', async () => {
+    mockWindowInnerHeight(800);
+    mockVisualViewport(500);
+    useFakeTimers();
+
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+        <button data-testid="other" type="button" />
+      </KeyboardDrawer>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const input = screen.getByTestId('input');
+    const other = screen.getByTestId('other');
+
+    // A consumer redirects focus off the field the moment it focuses (validation,
+    // auto-advance, composite focus). Listening on `focusin` at the target matches React's
+    // `onFocus`: it runs after the provider's capture-phase `focusin` has already recorded
+    // the input, so the provider must reconcile when focus lands on a non-keyboard element.
+    input.addEventListener('focusin', () => {
+      other.focus();
+    });
+
+    stubElementFromPoint(document, () => input);
+
+    await fireTouch.start(input, { touches: [{ clientX: 12, clientY: 34 }] });
+
+    await dispatchTouchEnd(input, { clientX: 12, clientY: 34 });
+    await vi.runAllTimersAsync();
+    await flushMicrotasks();
+
+    // Focus stays on the redirected element and the drawer left no keyboard inset
+    // behind for the abandoned input.
+    expect(other).toHaveFocus();
+    expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('0px');
+  });
+
+  it('clears keyboard state when a tapped input blurs itself', async () => {
+    mockWindowInnerHeight(800);
+    mockVisualViewport(500);
+
+    await render(
+      <KeyboardDrawer>
+        <Drawer.Content
+          data-testid="scroll"
+          style={{
+            height: '420px',
+            overflowY: 'auto',
+            overflowAnchor: 'auto',
+            paddingBottom: '20px',
+          }}
+        >
+          <div style={{ height: '900px' }} />
+          <input data-testid="input" type="text" />
+        </Drawer.Content>
+      </KeyboardDrawer>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const scroll = screen.getByTestId('scroll');
+    const input = screen.getByTestId('input');
+
+    setScrollSize(scroll, 420, 1200);
+    scroll.getBoundingClientRect = () => new DOMRect(0, 300, 320, 420);
+    input.getBoundingClientRect = () => new DOMRect(0, 650, 320, 40);
+
+    // A consumer that opens its own picker instead of the software keyboard blurs the field
+    // from `onFocus`. The `focusout` arrives before `.focus()` returns, and focus ends on the
+    // body, so no `focusin` follows to reconcile from: that `focusout` is the provider's only
+    // chance to drop the field. Focus does eventually return to the popup, but only on a
+    // later task, so a retained target keeps aligning against the blurred field until then.
+    input.addEventListener('focusin', () => {
+      input.blur();
+    });
+
+    stubElementFromPoint(document, () => input);
+
+    await fireTouch.start(input, { touches: [{ clientX: 12, clientY: 34 }] });
+
+    input.dispatchEvent(createNativeTouchEvent('touchend', { clientX: 12, clientY: 34 }));
+    // Let the frame-scheduled alignment run: it is what applies the inset and slack to a
+    // target the `focusout` failed to clear.
+    await flushAnimationFrames(3);
+    await flushMicrotasks();
+
+    expect(input).not.toHaveFocus();
+    expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('0px');
+    expect(scroll.style.paddingBottom).toBe('20px');
+    expect(scroll.style.scrollPaddingBottom).toBe('');
+  });
+
+  it('defers the alignment scroll until the destination stops moving', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+    useFakeTimers();
+
+    await render(
+      <KeyboardDrawer>
+        <Drawer.Content data-testid="scroll" style={{ height: '420px', overflowY: 'auto' }}>
+          <div style={{ height: '900px' }} />
+          <input data-testid="input" type="text" />
+        </Drawer.Content>
+      </KeyboardDrawer>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const input = screen.getByTestId('input');
+
+    setScrollSize(scroll, 420, 1200);
+    // The scroller's bottom edge moves after focus (like a footer resizing over a
+    // CSS transition): squeezed at first, settled a frame later.
+    let scrollBottom = 380;
+    scroll.getBoundingClientRect = () => new DOMRect(0, 300, 320, scrollBottom - 300);
+    setFieldTop(input, scroll, 650);
+    const scrollToSpy = vi.fn((options?: ScrollToOptions | number) => {
+      if (typeof options === 'object' && options !== null && options.top !== undefined) {
+        scroll.scrollTop = options.top;
+      }
+    });
+    scroll.scrollTo = scrollToSpy as unknown as typeof scroll.scrollTo;
+
+    visualViewport.resize(500);
+    await flushMicrotasks();
+
+    input.focus();
+    await flushMicrotasks();
+
+    // Let the first alignment check measure the squeezed geometry, then settle it.
+    vi.advanceTimersToNextFrame();
+    scrollBottom = 480;
+    await vi.runAllTimersAsync();
+    await flushMicrotasks();
+
+    // Squeezed destination: visible band [316, 364] → center 340, input center 670
+    // → scrollTop 330. Settled: band [316, 464] → center 390 → scrollTop 280. The
+    // squeezed destination must never be scrolled to.
+    expect(scroll.scrollTop).toBe(280);
+    expect(scrollToSpy).toHaveBeenCalledTimes(1);
+    expect(scrollToSpy).not.toHaveBeenCalledWith(expect.objectContaining({ top: 330 }));
+  });
+
+  it('eventually aligns when geometry never settles', async () => {
+    mockWindowInnerHeight(800);
+    mockVisualViewport(500);
+    useFakeTimers();
+
+    await render(
+      <KeyboardDrawer initialFocus={false}>
+        <div data-testid="scroll" style={{ height: '420px', overflowY: 'auto' }}>
+          <input data-testid="input" type="text" />
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const input = screen.getByTestId('input');
+    let geometryTick = 0;
+    setScrollSize(scroll, 420, 1200);
+    scroll.getBoundingClientRect = () => {
+      geometryTick += 1;
+      return new DOMRect(0, geometryTick % 2 === 0 ? 100 : 200, 320, 300);
+    };
+    input.getBoundingClientRect = () => new DOMRect(0, 650, 320, 40);
+    const scrollToSpy = vi.fn();
+    scroll.scrollTo = scrollToSpy as unknown as typeof scroll.scrollTo;
+
+    input.focus();
+    for (let index = 0; index < 65; index += 1) {
+      vi.advanceTimersToNextFrame();
+    }
+    await flushMicrotasks();
+
+    expect(scrollToSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('realigns a tapped field in the scrollable body when the keyboard is already open for a field outside it', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <Drawer.Content data-testid="scroll" style={{ height: '420px', overflowY: 'auto' }}>
+          <div style={{ height: '900px' }} />
+          <textarea data-testid="textarea" />
+        </Drawer.Content>
+        <div>
+          <input data-testid="footer-input" type="text" />
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    const textarea = screen.getByTestId('textarea');
+    const footerInput = screen.getByTestId('footer-input');
+
+    setScrollSize(scroll, 420, 1200);
+    // The scroller is squeezed while the footer field holds focus (the demo footer
+    // grows by the keyboard inset via `:focus-within`); it expands back over a CSS
+    // transition once focus moves into the body.
+    let scrollBottom = 380;
+    scroll.getBoundingClientRect = () => new DOMRect(0, 100, 320, scrollBottom - 100);
+    setFieldTop(textarea, scroll, 650);
+    scrollInstantly(scroll);
+
+    const keyboardViewportHeight = 500;
+    footerInput.focus();
+    visualViewport.resize(keyboardViewportHeight);
+    await flushMicrotasks();
+
+    stubElementFromPoint(document, () => textarea);
+
+    await fireTouch.start(textarea, { touches: [{ clientX: 24, clientY: 300 }] });
+
+    await dispatchTouchEnd(textarea, { clientX: 24, clientY: 300 });
+
+    expect(textarea).toHaveFocus();
+
+    // The frame-scheduled pass centers against the squeezed geometry:
+    // visible band [116, 364] → center 240, textarea center 670 → scrollTop 430.
+    await waitFor(() => {
+      expect(scroll.scrollTop).toBe(430);
+    });
+
+    // The footer's shrink transition settles; only the delayed realign passes see
+    // the expanded scroller (the keyboard stays open, so no viewport events fire).
+    scrollBottom = 480;
+
+    await waitFor(() => {
+      const scrollRect = scroll.getBoundingClientRect();
+      const textareaRect = textarea.getBoundingClientRect();
+      const textareaCenter = (textareaRect.top + textareaRect.bottom) / 2;
+      const visibleCenter =
+        (scrollRect.top + Math.min(scrollRect.bottom, keyboardViewportHeight)) / 2;
+      expect(textareaCenter).toBeCloseTo(visibleCenter, 0);
+    });
+  });
+
+  it('does not blur and re-focus for focus changes while the keyboard is closed', async () => {
+    mockWindowInnerHeight(800);
+    mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="first" type="text" />
+        <input data-testid="second" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const first = screen.getByTestId('first');
+    const second = screen.getByTestId('second');
+
+    first.focus();
+    await flushMicrotasks();
+
+    const blurSpy = vi.spyOn(second, 'blur');
+    const focusSpy = vi.spyOn(second, 'focus');
+
+    second.focus();
+    await flushMicrotasks();
+
+    expect(blurSpy).not.toHaveBeenCalled();
+    expect(focusSpy).toHaveBeenCalledTimes(1);
+    expect(second).toHaveFocus();
+  });
+
+  it('restores the page scroll position when a modal drawer page scrolls while the keyboard is open', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+    mockWindowScrollY();
+
+    await render(
+      <KeyboardDrawer modal>
+        <input data-testid="input" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const input = screen.getByTestId('input');
+
+    input.focus();
+    visualViewport.resize(500);
+    await flushMicrotasks();
+
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    onTestFinished(() => {
+      scrollToSpy.mockRestore();
+    });
+
+    // Simulates WebKit's native reveal scroll escaping the scroll lock.
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 });
+    window.dispatchEvent(new Event('scroll'));
+
+    // Must restore instantly so the following measurements read the resting page; the
+    // two-argument form would obey a global `scroll-behavior: smooth` and animate.
+    expect(scrollToSpy).toHaveBeenCalledWith({ left: 0, top: 0, behavior: 'instant' });
+  });
+
+  it('does not restore the page scroll position for a non-modal drawer', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+    mockWindowScrollY();
+
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const input = screen.getByTestId('input');
+
+    input.focus();
+    visualViewport.resize(500);
+    await flushMicrotasks();
+
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    onTestFinished(() => {
+      scrollToSpy.mockRestore();
+    });
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 });
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(scrollToSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not treat a small visual viewport reduction as the software keyboard', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <Drawer.Content
+          data-testid="scroll"
+          style={{ height: '420px', overflowY: 'auto', paddingBottom: '20px' }}
+        >
+          <div style={{ height: '900px' }} />
+          <input data-testid="input" type="text" />
+        </Drawer.Content>
+      </KeyboardDrawer>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const scroll = screen.getByTestId('scroll');
+    const input = screen.getByTestId('input');
+
+    setScrollSize(scroll, 420, 1200);
+
+    // A reduction of 50px is below KEYBOARD_RESIZE_THRESHOLD (60px), so it is treated as
+    // browser chrome movement rather than the software keyboard: no inset, no scroll slack.
+    input.focus();
+    visualViewport.resize(750);
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('0px');
+    });
+    expect(scroll.style.paddingBottom).toBe('20px');
+    expect(scroll.style.overflowAnchor).toBe('');
+  });
+
+  it('computes the keyboard inset from a non-zero visual viewport offset', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const input = screen.getByTestId('input');
+
+    input.focus();
+    // The visual viewport shrinks to 500 and is offset 40px down within the layout viewport.
+    visualViewport.scroll(40, 500);
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      // inset = innerHeight - min(innerHeight, offsetTop + height) = 800 - (40 + 500) = 260.
+      expect(viewport.style.getPropertyValue('--drawer-keyboard-inset')).toBe('260px');
+    });
+  });
+
+  it.each(['explicit', 'implicit'])(
+    'preserves preventScroll after activating an %s label with no input focused',
+    async (association) => {
+      const field = () => <input data-testid="input" id="note" type="text" />;
+      await render(
+        <KeyboardDrawer initialFocus={false}>
+          <label data-testid="label" for={association === 'explicit' ? 'note' : undefined}>
+            <span data-testid="label-text">Note</span>
+            {association === 'implicit' && field()}
+          </label>
+          {association === 'explicit' && field()}
+        </KeyboardDrawer>,
+      );
+
+      const label = screen.getByTestId('label');
+      const input = screen.getByTestId('input');
+      const labelText = screen.getByTestId('label-text');
+      expect(input).not.toHaveFocus();
+      const focusSpy = vi.spyOn(input, 'focus');
+      const onFocus = vi.fn();
+      const onBlur = vi.fn();
+      input.addEventListener('focus', onFocus);
+      input.addEventListener('blur', onBlur);
+      const inputClickEvents: MouseEvent[] = [];
+      let focusCallsDuringActivation = 0;
+      input.addEventListener('click', (clickEvent) => {
+        inputClickEvents.push(clickEvent);
+        focusCallsDuringActivation = focusSpy.mock.calls.length;
+      });
+      const labelClickEvents: MouseEvent[] = [];
+      label.addEventListener('click', (clickEvent) => {
+        if (clickEvent.target === labelText) {
+          labelClickEvents.push(clickEvent);
+        }
+      });
+      stubElementFromPoint(document, () => labelText);
+
+      await fireTouch.start(labelText, { touches: [{ clientX: 24, clientY: 48 }] });
+
+      const touchEnd = await dispatchTouchEnd(labelText, { clientX: 24, clientY: 48 });
+
+      expect(touchEnd.defaultPrevented).toBe(true);
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+      expect(labelClickEvents).toHaveLength(1);
+      expect(labelClickEvents[0].clientX).toBe(24);
+      expect(labelClickEvents[0].clientY).toBe(48);
+      expect(labelClickEvents[0].detail).toBe(1);
+      expect(labelClickEvents[0].defaultPrevented).toBe(false);
+      expect(inputClickEvents).toHaveLength(1);
+      // WebKit's label default action refocuses without preventScroll after forwarding
+      // the click. Reapply it after activation without emitting a new focus/blur cycle.
+      expect(focusCallsDuringActivation).toBe(1);
+      expect(focusSpy).toHaveBeenCalledTimes(2);
+      expect(focusSpy).toHaveBeenLastCalledWith({ preventScroll: true });
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onBlur).not.toHaveBeenCalled();
+      expect(input).toHaveFocus();
+    },
+  );
+
+  it('preserves a focus change from a label click handler', async () => {
+    await render(
+      <KeyboardDrawer initialFocus={false}>
+        <label data-testid="label" for="note">
+          Note
+        </label>
+        <input data-testid="input" id="note" />
+        <button data-testid="other" type="button">
+          Other
+        </button>
+      </KeyboardDrawer>,
+    );
+
+    const label = screen.getByTestId('label');
+    const input = screen.getByTestId('input');
+    const other = screen.getByTestId('other');
+    label.addEventListener('click', (event) => {
+      event.preventDefault();
+      other.focus();
+    });
+    const focusSpy = vi.spyOn(input, 'focus');
+    stubElementFromPoint(document, () => label);
+
+    await fireTouch.start(label, { touches: [{ clientX: 24, clientY: 48 }] });
+    await dispatchTouchEnd(label, { clientX: 24, clientY: 48 });
+
+    expect(other).toHaveFocus();
+    expect(focusSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('focuses a contentEditable element on touchend', async () => {
+    await render(
+      <KeyboardDrawer>
+        <div data-testid="editor" contenteditable="true">
+          Edit me
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const editor = screen.getByTestId('editor');
+    const focusSpy = vi.spyOn(editor, 'focus');
+    stubElementFromPoint(document, () => editor);
+
+    await fireTouch.start(editor, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    const touchEnd = await dispatchTouchEnd(editor, { clientX: 0, clientY: 0 });
+
+    expect(touchEnd.defaultPrevented).toBe(true);
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  it('focuses the editing host when tapping a nested element inside a contentEditable', async () => {
+    await render(
+      <KeyboardDrawer>
+        <div data-testid="editor" contenteditable="true">
+          <span data-testid="inner">Edit me</span>
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const editor = screen.getByTestId('editor');
+    const inner = screen.getByTestId('inner');
+    // Taps on rich-text content land on inherited-editable descendants, which are
+    // not focusable themselves; the editing host must receive focus instead.
+    stubElementFromPoint(document, () => inner);
+
+    await fireTouch.start(inner, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    const touchEnd = await dispatchTouchEnd(inner, { clientX: 0, clientY: 0 });
+
+    expect(touchEnd.defaultPrevented).toBe(true);
+    expect(editor).toHaveFocus();
+  });
+
+  it('probes nearby points to resolve a keyboard input retargeted on touchend', async () => {
+    await render(
+      <KeyboardDrawer>
+        <div data-testid="wrapper" style={{ padding: '20px' }}>
+          <input data-testid="input" type="text" />
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const wrapper = screen.getByTestId('wrapper');
+    const input = screen.getByTestId('input');
+    const focusSpy = vi.spyOn(input, 'focus');
+    // The tap point resolves to the wrapper; only a point 16px below resolves to the input,
+    // so the input can only be found via the hit-slop probe (not the native event target).
+    stubElementFromPoint(document, (x, y) => (y === 16 ? input : wrapper));
+
+    await fireTouch.start(wrapper, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    const touchEnd = await dispatchTouchEnd(wrapper, { clientX: 0, clientY: 0 });
+
+    expect(touchEnd.defaultPrevented).toBe(true);
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+  });
+
+  it('does not focus a keyboard input when the touch moves past the tap threshold', async () => {
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const input = screen.getByTestId('input');
+    const focusSpy = vi.spyOn(input, 'focus');
+    stubElementFromPoint(document, () => input);
+
+    await fireTouch.start(input, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    // Moving past INPUT_TAP_MOVE_THRESHOLD (10px) marks the gesture as a scroll, not a tap.
+    await fireTouch.move(input, { touches: [{ clientX: 0, clientY: 80 }] });
+
+    const touchEnd = await dispatchTouchEnd(input, { clientX: 0, clientY: 80 });
+
+    expect(touchEnd.defaultPrevented).toBe(false);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    await fireTouch.start(input, { touches: [{ clientX: 0, clientY: 0 }] });
+    await fireTouch.move(input, { touches: [{ clientX: 0, clientY: 5 }] });
+    const shortMoveTouchEnd = await dispatchTouchEnd(input, { clientX: 0, clientY: 5 });
+
+    expect(shortMoveTouchEnd.defaultPrevented).toBe(true);
+    expect(input).toHaveFocus();
+  });
+
+  it('restores the previous scroll slack when focus moves to a different scroll container', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <div
+          data-testid="scroll1"
+          style={{ height: '200px', overflowY: 'auto', paddingBottom: '10px' }}
+        >
+          <div style={{ height: '600px' }} />
+          <input data-testid="input1" type="text" />
+        </div>
+        <div
+          data-testid="scroll2"
+          style={{ height: '200px', overflowY: 'auto', paddingBottom: '10px' }}
+        >
+          <div style={{ height: '600px' }} />
+          <input data-testid="input2" type="text" />
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const scroll1 = screen.getByTestId('scroll1');
+    const scroll2 = screen.getByTestId('scroll2');
+    const input1 = screen.getByTestId('input1');
+    const input2 = screen.getByTestId('input2');
+
+    const rectFor = (top: number) => () => new DOMRect(0, top, 320, 40);
+
+    for (const scroll of [scroll1, scroll2]) {
+      setScrollSize(scroll, 200, 800);
+    }
+    // Both containers extend below the reduced viewport bottom (500), so each needs slack.
+    scroll1.getBoundingClientRect = rectFor(520);
+    scroll2.getBoundingClientRect = rectFor(560);
+    input1.getBoundingClientRect = rectFor(540);
+    input2.getBoundingClientRect = rectFor(580);
+
+    input1.focus();
+    visualViewport.resize(500);
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(Number.parseFloat(scroll1.style.paddingBottom)).toBeGreaterThan(10);
+    });
+
+    input2.focus();
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(Number.parseFloat(scroll2.style.paddingBottom)).toBeGreaterThan(10);
+    });
+    expect(scroll1.style.paddingBottom).toBe('10px');
+    expect(scroll1.style.overflowAnchor).toBe('');
+  });
+
+  it('does not steal a tap that lands on an interactive element near a keyboard input', async () => {
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+        <button data-testid="clear" type="button">
+          Clear
+        </button>
+      </KeyboardDrawer>,
+    );
+
+    const input = screen.getByTestId('input');
+    const clear = screen.getByTestId('clear');
+    const focusSpy = vi.spyOn(input, 'focus');
+    // The tap lands exactly on the button; only the hit-slop probe points
+    // resolve to the input. The probe must not steal the button's tap.
+    stubElementFromPoint(document, (x, y) => (x === 0 && y === 0 ? clear : input));
+
+    await fireTouch.start(clear, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    const touchEnd = await dispatchTouchEnd(clear, { clientX: 0, clientY: 0 });
+
+    expect(touchEnd.defaultPrevented).toBe(false);
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
+  it('preserves native taps on keyboard inputs while pinch-zoomed', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(800);
+
+    await render(
+      <KeyboardDrawer>
+        <input data-testid="input" type="text" />
+      </KeyboardDrawer>,
+    );
+
+    const input = screen.getByTestId('input');
+    const focusSpy = vi.spyOn(input, 'focus');
+    stubElementFromPoint(document, () => input);
+
+    visualViewport.setScale(1.5);
+    await flushMicrotasks();
+
+    await fireTouch.start(input, { touches: [{ clientX: 0, clientY: 0 }] });
+
+    const touchEnd = await dispatchTouchEnd(input, { clientX: 0, clientY: 0 });
+
+    expect(touchEnd.defaultPrevented).toBe(false);
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
+  it('restores slack from a removed scroll container before adjusting a new one', async () => {
+    mockWindowInnerHeight(800);
+    const visualViewport = mockVisualViewport(500);
+
+    await render(
+      <KeyboardDrawer initialFocus={false}>
+        <div data-testid="scroll1" style={{ overflowY: 'auto', paddingBottom: '10px' }}>
+          <input data-testid="input1" type="text" />
+        </div>
+        <div data-testid="scroll2" style={{ overflowY: 'auto' }}>
+          <input data-testid="input2" type="text" />
+        </div>
+      </KeyboardDrawer>,
+    );
+
+    const scroll1 = screen.getByTestId('scroll1');
+    const scroll2 = screen.getByTestId('scroll2');
+    const input1 = screen.getByTestId('input1');
+    const input2 = screen.getByTestId('input2');
+    const rect = (top: number, bottom: number) => new DOMRect(0, top, 320, bottom - top);
+
+    for (const scroll of [scroll1, scroll2]) {
+      setScrollSize(scroll, 200, 800);
+      scroll.getBoundingClientRect = () => rect(300, 700);
+    }
+    input1.getBoundingClientRect = () => rect(620, 660);
+    input2.getBoundingClientRect = () => rect(620, 660);
+
+    input1.focus();
+    visualViewport.resize(500);
+    await flushMicrotasks();
+    await waitFor(() => {
+      expect(Number.parseFloat(scroll1.style.paddingBottom)).toBeGreaterThan(10);
+    });
+
+    Object.defineProperty(scroll1, 'isConnected', { configurable: true, value: false });
+    input2.focus();
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(Number.parseFloat(scroll2.style.paddingBottom)).toBeGreaterThan(0);
+    });
+    expect(scroll1.style.paddingBottom).toBe('10px');
+    expect(scroll1.style.overflowAnchor).toBe('');
   });
 });
