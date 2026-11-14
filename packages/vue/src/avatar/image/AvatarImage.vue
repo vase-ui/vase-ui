@@ -19,7 +19,7 @@ export interface AvatarImageProps
       'crossorigin' | 'referrerpolicy' | 'sizes' | 'src' | 'srcset'
     > {
   // The part reads these five attributes to load the image before it renders the element.
-  // `$attrs` is not reactive, so each of them is a declared prop.
+  // The Vue documentation says that `$attrs` is not reactive, so each of them is a declared prop.
   /**
    * The URL of the image.
    */
