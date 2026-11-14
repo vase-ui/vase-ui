@@ -5,11 +5,25 @@ description: An unstyled Vue toolbar component that groups a set of buttons and 
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoToolbarHero from '../demos/toolbar/hero/css-modules/index.vue';
 </script>
 
 # Toolbar
 
 A container that groups a set of buttons and controls.
+
+<DemoFrame>
+  <DemoToolbarHero />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/toolbar/hero/css-modules/index.vue
+
+<<< ../demos/toolbar/hero/css-modules/index.module.css
+
+:::
 
 ## Usage guidelines
 
@@ -32,6 +46,8 @@ Give a part of another component to the `as` prop of a toolbar part. The two par
 <<< ./toolbar/ToggleGroupInToolbar.vue{10,13}
 
 When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it. Set `disabled` on the toolbar part, not on the other part. The element then stays in the keyboard navigation of the toolbar.
+
+Render a generic part, such as `Select.Trigger`, in the `#render` slot too. The type of `as` does not accept a generic component. The demo at the top of this page does this.
 
 See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
 

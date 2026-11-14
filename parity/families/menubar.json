@@ -34,7 +34,7 @@
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "Most cases of the block press a trigger of the menubar, or they move the focus or the highlight with the keys. The trigger of Vase UI has no press yet, and Menu has no keys yet."
+      "reason": "Most cases of the block press a trigger of the menubar. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
@@ -56,8 +56,8 @@
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["filterable menubar menus"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
-      "reason": "The case of the block renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The file imports the entry point of Menu, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [

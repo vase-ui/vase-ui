@@ -42,6 +42,16 @@ import type {
   SelectRootProps,
   SelectRootState,
 } from './root/SelectRoot.vue';
+import SelectScrollDownArrow from './scroll-down-arrow/SelectScrollDownArrow.vue';
+import type {
+  SelectScrollDownArrowProps,
+  SelectScrollDownArrowState,
+} from './scroll-down-arrow/SelectScrollDownArrow.vue';
+import SelectScrollUpArrow from './scroll-up-arrow/SelectScrollUpArrow.vue';
+import type {
+  SelectScrollUpArrowProps,
+  SelectScrollUpArrowState,
+} from './scroll-up-arrow/SelectScrollUpArrow.vue';
 import SelectSeparator from './separator/SelectSeparator.vue';
 import type { SelectSeparatorProps, SelectSeparatorState } from './separator/SelectSeparator.vue';
 import SelectTrigger from './trigger/SelectTrigger.vue';
@@ -195,6 +205,26 @@ export const Arrow: typeof SelectArrow = SelectArrow;
 export namespace Arrow {
   export type Props = SelectArrowProps;
   export type State = SelectArrowState;
+}
+
+/**
+ * An element that scrolls the select popup down when hovered. Does not render when using touch input.
+ * Renders a `<div>` element.
+ */
+export const ScrollDownArrow: typeof SelectScrollDownArrow = SelectScrollDownArrow;
+export namespace ScrollDownArrow {
+  export type Props = SelectScrollDownArrowProps;
+  export type State = SelectScrollDownArrowState;
+}
+
+/**
+ * An element that scrolls the select popup up when hovered. Does not render when using touch input.
+ * Renders a `<div>` element.
+ */
+export const ScrollUpArrow: typeof SelectScrollUpArrow = SelectScrollUpArrow;
+export namespace ScrollUpArrow {
+  export type Props = SelectScrollUpArrowProps;
+  export type State = SelectScrollUpArrowState;
 }
 
 /**
