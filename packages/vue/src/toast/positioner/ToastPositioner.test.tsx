@@ -10,6 +10,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import type { ToastManagerAddOptions } from '../useToastManager';
 
@@ -206,6 +207,74 @@ describe('<Toast.Positioner />', () => {
       expect(newest.style.getPropertyValue('--toast-index')).toBe('0');
       expect(oldest.style.getPropertyValue('--toast-index')).toBe('0');
     });
+  });
+
+  it('takes a Boolean prop that the positioner does not set from the toast', async () => {
+    const manager = Toast.createToastManager();
+    // Vue gives an absent Boolean prop the value `false`, and a prop that is `undefined` keeps it.
+    // The positioner of `untracked` thus gets no `disableAnchorTracking` key at all.
+    const List = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toastItem) => (
+            <Toast.Positioner
+              key={toastItem.id}
+              toast={toastItem}
+              data-testid={toastItem.id}
+              {...(toastItem.id === 'tracking' ? { disableAnchorTracking: false } : {})}
+            >
+              <Toast.Root toast={toastItem}>
+                <Toast.Title />
+              </Toast.Root>
+            </Toast.Positioner>
+          ));
+      },
+    });
+
+    await render(
+      <Toast.Provider toastManager={manager}>
+        <button
+          type="button"
+          data-testid="anchor"
+          style={{ position: 'absolute', top: '200px', left: '100px', width: '80px' }}
+        >
+          anchor
+        </button>
+        <Toast.Viewport>
+          <List />
+        </Toast.Viewport>
+      </Toast.Provider>,
+    );
+
+    const anchor = screen.getByTestId('anchor');
+    const positionerProps = { anchor, side: 'bottom', disableAnchorTracking: true } as const;
+    manager.add({ id: 'untracked', title: 'untracked', positionerProps });
+    manager.add({ id: 'tracking', title: 'tracking', positionerProps });
+    await flushMicrotasks();
+
+    const untracked = screen.getByTestId('untracked');
+    const tracking = screen.getByTestId('tracking');
+    const centerOf = (element: Element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left + rect.width / 2;
+    };
+    const firstCenter = centerOf(anchor);
+    await waitFor(() => {
+      expect(centerOf(untracked)).toBeCloseTo(firstCenter, 0);
+      expect(centerOf(tracking)).toBeCloseTo(firstCenter, 0);
+    });
+
+    anchor.style.width = '200px';
+    const nextCenter = centerOf(anchor);
+
+    // The positioner that tracks the anchor moves. The browser calls the resize observers of the
+    // two positioners in the same frame, so the other one has its final place one frame later.
+    await waitFor(() => {
+      expect(centerOf(tracking)).toBeCloseTo(nextCenter, 0);
+    });
+    await waitSingleFrame();
+    expect(centerOf(untracked)).toBeCloseTo(firstCenter, 0);
   });
 
   // A case that throws in `setup` is the last case of its file.
