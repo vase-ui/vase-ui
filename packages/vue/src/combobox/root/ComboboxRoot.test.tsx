@@ -584,6 +584,39 @@ describe('<Combobox.Root />', () => {
         animation.finish();
       }
     });
+
+    it('returns the highlight to the selected item after a clear of the text in a root that the consumer opens', async () => {
+      const { user } = await render(
+        <Combobox.Root open multiple items={cities} defaultValue={['Malta']}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      getInput().focus();
+      await user.keyboard('os');
+      await waitFor(() => expect(getOptions()).toEqual(['Oslo']));
+      await user.keyboard('{Backspace}{Backspace}');
+      await waitFor(() => expect(getOptions()).toEqual(cities));
+
+      await waitFor(() =>
+        expect(screen.getByRole('option', { name: 'Malta' })).toHaveAttribute('data-highlighted'),
+      );
+    });
   });
 
   describe('store', () => {
