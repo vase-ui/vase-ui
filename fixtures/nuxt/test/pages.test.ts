@@ -1069,6 +1069,57 @@ async function expectNavigationMenuPage(page: Page, { hydrated }: { hydrated: bo
   }
 }
 
+// A server renders no popup and no portal. The trigger of an open root has the open state. The
+// trigger of a handle has the closed form, because a server attaches no store to a handle.
+async function expectMenuPageOnServer(page: Page) {
+  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open', 'data-pressed'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await read('open')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+    'data-pressed': '',
+  });
+  expect(await read('detached')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': null,
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`, and the trigger of the handle
+// follows its root.
+async function expectHydratedMenuPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('menu');
+  expect(await popup.getAttribute('aria-labelledby')).toBe('open-trigger');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBe(
+    await popup.getAttribute('id'),
+  );
+  expect(await popup.textContent()).toBe('Open popup');
+
+  expect(await page.getByTestId('closed').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('detached-popup').count()).toBe(0);
+}
+
 const PREVIEW_CARD_LINK_ATTRIBUTES = [
   'href',
   'data-popup-open',
@@ -1194,6 +1245,7 @@ const PAGES: PageCase[] = [
     expectPage: (page) => expectNavigationMenuPage(page, { hydrated: false }),
     expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
   },
+  { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
   {
     path: '/preview-card',
     expectPage: expectPreviewCardPageOnServer,

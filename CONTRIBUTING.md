@@ -546,7 +546,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
 - `NavigationMenu.Content` teleports into its viewport, and the root gets the element of the viewport only after the mount. The server HTML thus has no content, also for an open item. With `keepMounted`, the content is in its item, hidden.
 - The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does. Such a page imports each other part that shares a context with that part by its path too, because a part of the built package and a part of the source do not share a context. The page `select.vue` does this for `Field`.
-- The type check of the fixture reads the source that a page imports by its path. The package checks its source without `noUncheckedIndexedAccess`, and Nuxt sets that option by default, so `nuxt.config.ts` of the fixture turns it off.
+- The type check of the fixture reads the source that a page imports by its path. The package checks its source without `noUncheckedIndexedAccess` and `noImplicitOverride`, and Nuxt sets both options by default, so `nuxt.config.ts` of the fixture turns them off.
 
 The hydration state:
 
@@ -704,6 +704,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - `getEmptyRootStore()` gives a closed `NullStore`, so a module that all requests share can hold it.
 - Take the innermost registered trigger that contains an event target, because an inner trigger can register after its outer trigger.
 - A trigger part calls `useTriggerDataForwarding(triggerId, store, () => ({ payload: props.payload }))` in `setup`. It gives the `registerTrigger` that the call returns to `useRenderElement` as a `ref`. A trigger that gives no data to the store calls `useTriggerRegistration(triggerId, store)` in the same way.
+- A trigger of a family with a popup tree, such as `Menu.Trigger`, forwards `parent`, `floatingTreeRoot`, `floatingNodeId`, `floatingParentNodeId` and `keyboardEventRelay` with its payload. A trigger with no tree above it makes a tree of its own, one time in `setup`.
 - `registerTrigger` only writes a `shallowRef`. One `watch` with `flush: 'post'` adds the element to the trigger map. It removes the entry when the element, the id or the store changes and when the part unmounts, but only an entry that holds its element.
 - The registration follows the store that a handle gives. A detached trigger moves from the inert store to the store of a root when the root attaches, and back when the root detaches.
 - A server render calls no `ref` callback, so it registers no trigger.
@@ -744,6 +745,8 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
+- A part that listens to an event of `tree.events` adds its listener in a `watch` that has the tree as a source and the option `immediate`. The cleanup of the `watch` removes the listener, so the part listens to the new tree after a change. `Menu.Positioner` and `Menu.Popup` do this.
+- A `Menu.Root` that starts a tree provides the tree of its store. A part below the root thus reads the tree that a detached trigger gave to the store (`VUE-55`).
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
 - Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
@@ -763,6 +766,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
 - Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
+- `Menu.Positioner` registers no node of its own. The root registers the node, and a detached trigger can give another node. The positioner gives the `floatingNodeId` of the store as `nodeId`, and it provides the same id with `provideFloatingNode`.
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - `Select.Positioner` is such a part, because its state has no `instant`. It has `keepMounted: true` and no portal context, so it works outside `Select.Portal`.
