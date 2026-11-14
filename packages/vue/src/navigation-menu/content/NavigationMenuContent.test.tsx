@@ -161,6 +161,9 @@ describe('<NavigationMenu.Content />', () => {
 
     it('holds only the element of the active content when each content is kept', async () => {
       await render(<Menu keepMounted />);
+      await flushMicrotasks();
+      expect(screen.getAllByTestId(/^content-/)).toHaveLength(2);
+      expect(rootContext!.currentContentRef.value).toBe(null);
 
       await fireEvent.click(screen.getByTestId('trigger-one'));
 

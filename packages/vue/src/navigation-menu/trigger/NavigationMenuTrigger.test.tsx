@@ -20,6 +20,12 @@ import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.tes
 
 const HYDRATION_FIXTURE = 'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue';
 
+// The real pointer of the browser can rest where a trigger renders, and it then sends events of its
+// own. A case that dispatches hover events renders its menu in a wrapper with this style. A
+// dispatched event still reaches the trigger. The style is not on the trigger or on the list,
+// because the hover intent writes and removes `pointer-events` on both.
+const NO_REAL_POINTER: CSSProperties = { pointerEvents: 'none' };
+
 // The popup parts give the positioner element and the popup element to the root, and a trigger
 // needs both while its item is active. This part gives the same elements.
 const PopupElements = defineComponent(() => {
@@ -57,25 +63,27 @@ const Menu = defineComponent({
   setup(props) {
     return () => (
       <DirectionProvider direction={props.direction}>
-        <NavigationMenu.Root {...props.rootProps}>
-          <NavigationMenu.List data-testid="list" style={props.listStyle}>
-            <NavigationMenu.Item value="one">
-              <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
-              <NavigationMenu.Content data-testid="content-one">
-                <NavigationMenu.Link href="#one-first">First link of one</NavigationMenu.Link>
-                <NavigationMenu.Link href="#one-second">Second link of one</NavigationMenu.Link>
-              </NavigationMenu.Content>
-            </NavigationMenu.Item>
-            <NavigationMenu.Item value="two">
-              <NavigationMenu.Trigger data-testid="trigger-two">Two</NavigationMenu.Trigger>
-              <NavigationMenu.Content data-testid="content-two">
-                <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
-              </NavigationMenu.Content>
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          <NavigationMenu.Viewport data-testid="viewport" />
-          {props.popup ? <PopupElements /> : null}
-        </NavigationMenu.Root>
+        <div style={NO_REAL_POINTER}>
+          <NavigationMenu.Root {...props.rootProps}>
+            <NavigationMenu.List data-testid="list" style={props.listStyle}>
+              <NavigationMenu.Item value="one">
+                <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
+                <NavigationMenu.Content data-testid="content-one">
+                  <NavigationMenu.Link href="#one-first">First link of one</NavigationMenu.Link>
+                  <NavigationMenu.Link href="#one-second">Second link of one</NavigationMenu.Link>
+                </NavigationMenu.Content>
+              </NavigationMenu.Item>
+              <NavigationMenu.Item value="two">
+                <NavigationMenu.Trigger data-testid="trigger-two">Two</NavigationMenu.Trigger>
+                <NavigationMenu.Content data-testid="content-two">
+                  <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
+                </NavigationMenu.Content>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+            <NavigationMenu.Viewport data-testid="viewport" />
+            {props.popup ? <PopupElements /> : null}
+          </NavigationMenu.Root>
+        </div>
         <button type="button" data-testid="outside">
           Outside
         </button>
@@ -294,7 +302,7 @@ describe('<NavigationMenu.Trigger />', () => {
       { name: 'ArrowDown in a horizontal menu', orientation: 'horizontal', key: 'ArrowDown' },
       { name: 'ArrowRight in a vertical menu', orientation: 'vertical', key: 'ArrowRight' },
       {
-        name: 'ArrowLeft in a vertical menu of a right-to-left page',
+        name: 'ArrowLeft in a vertical RTL menu',
         orientation: 'vertical',
         direction: 'rtl',
         key: 'ArrowLeft',
@@ -454,16 +462,18 @@ describe('<NavigationMenu.Trigger />', () => {
 
     it('does not open its item, and does not block the list, while the trigger is disabled', async () => {
       await render(() => (
-        <NavigationMenu.Root>
-          <NavigationMenu.List data-testid="list">
-            <NavigationMenu.Item value="one">
-              <NavigationMenu.Trigger disabled data-testid="trigger">
-                One
-              </NavigationMenu.Trigger>
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          <NavigationMenu.Viewport />
-        </NavigationMenu.Root>
+        <div style={NO_REAL_POINTER}>
+          <NavigationMenu.Root>
+            <NavigationMenu.List data-testid="list">
+              <NavigationMenu.Item value="one">
+                <NavigationMenu.Trigger disabled data-testid="trigger">
+                  One
+                </NavigationMenu.Trigger>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Root>
+        </div>
       ));
       const trigger = screen.getByTestId('trigger');
 
@@ -546,16 +556,18 @@ describe('<NavigationMenu.Trigger />', () => {
     it('releases the pointer events of the list when the trigger unmounts', async () => {
       const showTrigger = shallowRef(true);
       await render(() => (
-        <NavigationMenu.Root>
-          <NavigationMenu.List data-testid="list">
-            <NavigationMenu.Item value="one">
-              {showTrigger.value ? (
-                <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
-              ) : null}
-            </NavigationMenu.Item>
-          </NavigationMenu.List>
-          <NavigationMenu.Viewport />
-        </NavigationMenu.Root>
+        <div style={NO_REAL_POINTER}>
+          <NavigationMenu.Root>
+            <NavigationMenu.List data-testid="list">
+              <NavigationMenu.Item value="one">
+                {showTrigger.value ? (
+                  <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+                ) : null}
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Root>
+        </div>
       ));
       const list = screen.getByTestId('list');
       await fireEvent.mouseEnter(screen.getByTestId('trigger'));
@@ -571,21 +583,21 @@ describe('<NavigationMenu.Trigger />', () => {
   describe('activation direction', () => {
     it.each([
       {
-        name: 'the triggers are side by side in a horizontal menu',
+        name: 'a horizontal row of triggers',
         orientation: 'horizontal',
         listStyle: { display: 'flex' } satisfies CSSProperties,
         toSecond: 'right',
         toFirst: 'left',
       },
       {
-        name: 'the triggers are one below the other in a vertical menu',
+        name: 'a vertical column of triggers',
         orientation: 'vertical',
         listStyle: { display: 'flex', flexDirection: 'column' } satisfies CSSProperties,
         toSecond: 'down',
         toFirst: 'up',
       },
     ])(
-      'gives the content that enters the side that it came from when $name',
+      'gives the content that enters the side that it came from for $name',
       async ({ orientation, listStyle, toSecond, toFirst }) => {
         await render(<Menu rootProps={{ orientation }} listStyle={listStyle} />);
         const one = screen.getByTestId('trigger-one');

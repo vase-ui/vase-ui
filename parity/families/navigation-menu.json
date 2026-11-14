@@ -125,9 +125,26 @@
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
       "describe": ["<NavigationMenu.Root />", "nested popups"],
+      "title": "keeps a hover-open menu open when pointerdown happens on a nested dialog trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/dialog/popup/DialogPopup.tsx",
+      "reason": "The case renders `Dialog.Trigger`, `Dialog.Portal` and `Dialog.Popup`. It also renders `NavigationMenu.Portal`, `NavigationMenu.Positioner` and `NavigationMenu.Popup`. Vase UI does not have these parts."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested popups"],
+      "title": "keeps the menu open when interacting with a nested dialog",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/dialog/popup/DialogPopup.tsx",
+      "reason": "The case renders `Dialog.Trigger`, `Dialog.Portal` and `Dialog.Popup`. It also renders `NavigationMenu.Portal`, `NavigationMenu.Positioner` and `NavigationMenu.Popup`. Vase UI does not have these parts."
+    },
+    {
+      "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "describe": ["<NavigationMenu.Root />", "nested popups"],
+      "title": "keeps the menu open when interacting with a nested popover",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders the trigger and the popup of Dialog or of Popover inside the menu. Vase UI does not have these parts."
+      "reason": "The case renders `Popover.Trigger`, `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`. It also renders `NavigationMenu.Portal`, `NavigationMenu.Positioner` and `NavigationMenu.Popup`. Vase UI does not have these parts."
     },
     {
       "upstream": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
