@@ -654,6 +654,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
 - `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
 - A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
+- A family store keeps a timer of its own in `context` as a `Timeout`. Its root clears the timer in `onScopeDispose`.
 - A family that picks a value from a list makes a subclass of `ValuePopupStore` from `utils/popups/value-popup`. The subclass gives `getAnchorElement`. The store writes that element to `anchorElement` in each write that changes the anchor, the open state or the positioner element.
 - A selector of a family that replaces a selector of `popupStoreSelectors` has the parameter type `PopupStoreState<unknown>`. With the state type of the family, the store does not fit a root composable.
 - `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
@@ -688,7 +689,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `transitionStatus` and `actions`. Such a root has no handle, no payload and no trigger id.
 - `usePopupRootWithPopupId(props, createStore, defaultPopupId, options)` is `usePopupRoot` for a root that gives its own default popup id. The id is a value, a ref or a getter, and the store follows a change. `Menu.Root` gives the id that its popup registers, or else a generated id.
 - `popupRoot.ts` has `usePopupRoot`, `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`.
-- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose trigger writes `openMethod` with `useOpenMethodTriggerProps` calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
+- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root that `KeepAlive` holds keeps `openMethod`. A root whose trigger writes `openMethod` with `useOpenMethodTriggerProps` calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
@@ -701,6 +702,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
+- A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
