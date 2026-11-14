@@ -1,6 +1,6 @@
 import { toValue } from 'vue';
 import type { CSSProperties, MaybeRefOrGetter } from 'vue';
-import { DISABLED_TRANSITIONS_STYLE } from '../../../internals/constants';
+import { getDisabledMountTransitionStyles } from '../../../internals/getDisabledMountTransitionStyles';
 import { useRenderElement } from '../../../internals/useRenderElement';
 import type {
   UseRenderElementComponentProps,
@@ -61,7 +61,7 @@ export function usePositioner<State extends Record<string, any>>(
           hidden: toValue(options.hidden) ? true : undefined,
           style,
         },
-        toValue(options.transitionStatus) === 'starting' ? DISABLED_TRANSITIONS_STYLE : undefined,
+        getDisabledMountTransitionStyles(toValue(options.transitionStatus)),
         attrs,
       ];
     },
