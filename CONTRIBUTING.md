@@ -240,9 +240,11 @@ A part that Base UI takes from another family is exported again and not copied: 
 - If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
 - The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
 - In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object. It gives no warning.
-- A development build shows a warning when the `#render` slot of a part gives no element.
+- A development build shows a warning when the `#render` slot of a part gives no element and no component to the `ref` setter.
+- A component in the slot can set its exposed `element` later. A component whose exposed `element` is empty at the check thus gets no warning.
 - The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
 - If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
+- The part makes this check after each render. A consumer can give `as` or `#render` after the mount, and the check then shows the warning too.
 - Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
 - A part can have declarations that must win over `style` and `stateStyle`. The part gives them to `useRenderElement` as `overridingStyle`, a function that returns a style object or `undefined`. The composable merges the result last. `undefined` or an empty object adds no `style` key.
 - `Collapsible.Panel` gives `animation-name: none` and its temporary declarations in this way. See [What differs from the React source](#what-differs-from-the-react-source).
@@ -320,6 +322,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
+- The mark of `markChildrenMounted()` ends when `<Part>Children.vue` unmounts. Each later appearance of the slot thus gets the check too.
 - The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`. With no positioner, `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content. In a positioner, it renders only its default slot. The part then keeps the two focus guards before and after its element with `useElementSiblings`, so the part has one root node. See [Focus helpers](#focus-helpers).
 
 <!-- prettier-ignore -->
@@ -392,7 +395,8 @@ One helper, `resolveElement(value)`, changes a value into an element:
 Rules:
 
 - The `ref` setter of a part calls `resolveElement`. Thus `as="RouterLink"` and `<RouterLink v-bind="props">` work.
-- A part calls `resolveElement` again at mount. A component can set its exposed `element` after its render. At mount, the element exists.
+- A part calls `resolveElement` again after each of its renders, in `onMounted` and in `onUpdated`. A component can set its exposed `element` after its render, also in its own `onMounted`. Vue runs the `onMounted` hook of a child before the `onMounted` or `onUpdated` hook of its parent, so the element exists then.
+- A component that sets its exposed `element` later than its own `onMounted`, such as after an `await`, exposes the element as a ref. The `ref` setter of the part reads that ref in the render that patches the component. Vue runs that render again when the ref changes, so the part gets the element.
 - The ref of a component with no `expose` also gives access to its props. `resolveElement` compares `element` with the prop of that name in `$props`. When the two are the same value, it reads `$el`.
 - The SFC compiler adds an empty `expose()` call to a `<script setup>` component with no `defineExpose`. It adds no call when it compiles the template inline, as a production build does. The rule above gives the two builds the same element.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
