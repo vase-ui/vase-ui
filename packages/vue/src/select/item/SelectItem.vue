@@ -100,15 +100,6 @@ function setItemElement(node: HTMLElement | null) {
   }
 }
 
-watch(
-  () => props.value,
-  (value) => {
-    if (itemElement) {
-      store.context.itemValues.set(itemElement, value);
-    }
-  },
-);
-
 function syncValue() {
   const currentIndex = index.value;
   if (currentIndex < 0) {
@@ -117,6 +108,18 @@ function syncValue() {
 
   store.context.valuesRef.value[currentIndex] = props.value;
 }
+
+// The root checks the values in a watcher that runs after the DOM update. That watcher can run
+// before the watchers of the items, so a value that changes in place goes in first.
+watch(
+  () => props.value,
+  (value) => {
+    if (itemElement) {
+      store.context.itemValues.set(itemElement, value);
+    }
+    syncValue();
+  },
+);
 
 function claimSelectedIndex() {
   const currentIndex = index.value;

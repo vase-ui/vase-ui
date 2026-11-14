@@ -1144,6 +1144,8 @@ The item registry:
 - An item with no list is valid. Its index is its explicit index, or `-1`.
 - A family can use the registry only for the index of its items. `Accordion.Root` calls `useCompositeList`, and `Accordion.Item` calls `useCompositeListItem`. The root does not call `useCompositeRoot`, so the items have no roving tab stop and no arrow keys. Base UI removed the arrow keys of the Accordion to follow the APG.
 - `Select.Positioner` calls `useCompositeList` for the items of Select. Each item writes its value to `itemValues` of the context in its first `ref` callback, before the `ref` of `useCompositeListItem`. The key is the element of the item.
+- An item writes a new value to `itemValues` and to `valuesRef` in a `watch` with the default flush.
+- The root checks `valuesRef` in a `watch` with `flush: 'post'`. That `watch` can run before the `watch` calls of the items with `flush: 'post'`, so an item does not wait for them.
 - In `onMapChange`, the positioner first reads the value of each item from its element. Vue can run `onMapChange` before the `onMounted` hooks of the items that an update adds, so a value that the item writes at its mount comes too late.
 - The positioner then checks the value of the select against the values of the items. It makes no check while its element is not in the document. `KeepAlive` takes the items out of the document, and the registry then has no item.
 - When the positioner goes away, it empties the values of the list, as the registry empties the elements and the labels.
