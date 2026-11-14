@@ -68,21 +68,24 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import { closest, contains } from '../../common/shadowDom';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
 import { isMouseLikePointerType } from '../../utils/popups/event';
 import { getHoverIntent } from '../../utils/popups/interactions/hoverIntent';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { getDelay } from '../../utils/popups/interactions/useHoverShared';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
+import { useTooltipProviderContext } from '../provider/TooltipProviderContext';
 import { useTooltipRootContext } from '../root/TooltipRootContext';
 import type { TooltipHandleStore } from '../store/TooltipStore';
 import { OPEN_DELAY } from '../utils/constants';
@@ -130,6 +133,12 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   }),
 );
 
+const providerDelay = useTooltipProviderContext();
+const delayGroup = useDelayGroup(store, { open: isOpenedByThisTrigger });
+watch([store, delayGroup.isInstantPhase], ([currentStore, isInstantPhase]) => {
+  currentStore.set('isInstantPhase', isInstantPhase);
+});
+
 const isDisabled = computed(() => props.disabled || store.value.select('disabled'));
 const trackCursorAxis = computed(() => store.value.select('trackCursorAxis'));
 const disableHoverablePopup = computed(() => store.value.select('disableHoverablePopup'));
@@ -140,7 +149,11 @@ const nestedTriggerOpenTimeout = useTimeout();
 let pointerType: string | undefined;
 
 function getOpenDelay() {
-  return props.delay ?? OPEN_DELAY;
+  // Adjacent tooltips open instantly while the group is active.
+  if (delayGroup.hasProvider && delayGroup.activeId() != null) {
+    return 0;
+  }
+  return props.delay ?? providerDelay?.value ?? OPEN_DELAY;
 }
 
 function isEnabledNestedTriggerTarget(target: Element | null) {
@@ -173,7 +186,12 @@ const hoverProps = useHoverTriggerInteraction(store, {
   handleClose: () =>
     !disableHoverablePopup.value && trackCursorAxis.value !== 'both' ? hoverablePopupClose : null,
   restMs: getOpenDelay,
-  delay: () => ({ close: props.closeDelay ?? 0 }),
+  delay: () => {
+    if (props.closeDelay == null && delayGroup.hasProvider) {
+      return { close: getDelay(delayGroup.delay(), 'close') };
+    }
+    return { close: props.closeDelay ?? 0 };
+  },
   triggerElement,
   isActiveTrigger: isTriggerActive,
   shouldOpen: () => !isNestedTriggerHovered,

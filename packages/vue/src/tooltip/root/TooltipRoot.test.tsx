@@ -635,6 +635,150 @@ describe('<Tooltip.Root />', () => {
     });
 
     describe.skipIf(isJSDOM)('animations', () => {
+      it('toggles instant animations for adjacent tooltips only while opening', async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        // A long transition keeps the exit running until the final assertion, even on slow runs.
+        const style = `
+          .tooltip {
+            transition: opacity 10s;
+          }
+          .tooltip[data-starting-style],
+          .tooltip[data-ending-style] {
+            opacity: 0;
+          }
+
+          .tooltip[data-instant] {
+            transition: none;
+          }
+        `;
+
+        const { user } = await render(
+          <Tooltip.Provider>
+            <style>{style}</style>
+            <Tooltip.Root>
+              <Tooltip.Trigger data-testid="trigger-1" delay={0}>
+                First
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup class="tooltip" data-testid="popup-1">
+                    First tooltip
+                  </Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+            <Tooltip.Root>
+              <Tooltip.Trigger data-testid="trigger-2" delay={0}>
+                Second
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup class="tooltip" data-testid="popup-2">
+                    Second tooltip
+                  </Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>,
+        );
+
+        const firstTrigger = screen.getByTestId('trigger-1');
+        const secondTrigger = screen.getByTestId('trigger-2');
+
+        await user.hover(firstTrigger);
+
+        const firstPopup = await screen.findByTestId('popup-1');
+        expect(firstPopup.dataset.instant).toBe(undefined);
+
+        await user.unhover(firstTrigger);
+        await user.hover(secondTrigger);
+
+        const secondPopup = await screen.findByTestId('popup-2');
+
+        await waitFor(() => {
+          expect(secondPopup.dataset.instant).toBe('delay');
+        });
+        expect(secondPopup.getAnimations().length).toBe(0);
+        // Closing from the starting style would exit from `opacity: 0` and never start a transition.
+        // The starting style lasts only one frame, so the case waits for the opacity that stays.
+        await waitFor(() => {
+          expect(getComputedStyle(secondPopup).opacity).toBe('1');
+        });
+
+        // The ending style lasts only while the exit runs, so the case waits for the start of the
+        // exit transition.
+        await nextEvent(secondPopup, 'transitionrun', {
+          action: () => user.unhover(secondTrigger),
+        });
+
+        expect(secondPopup.dataset.endingStyle).toBe('');
+        expect(secondPopup.dataset.instant).toBe(undefined);
+        expect(secondPopup.getAnimations().length).toBe(1);
+      });
+
+      it('unmounts an exiting tooltip when another tooltip opens', async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        const handleFirstOpenChange = vi.fn();
+
+        const style = `
+          .tooltip[data-ending-style] {
+            transition: opacity 10s;
+            opacity: 0;
+          }
+
+          .tooltip[data-instant] {
+            transition: none;
+          }
+        `;
+
+        const { user } = await render(
+          <Tooltip.Provider timeout={30000}>
+            <style>{style}</style>
+            {['First', 'Second'].map((name, index) => (
+              <Tooltip.Root
+                key={name}
+                onOpenChange={index === 0 ? handleFirstOpenChange : undefined}
+              >
+                <Tooltip.Trigger data-testid={`trigger-${index + 1}`} delay={0}>
+                  {name}
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Positioner>
+                    <Tooltip.Popup class="tooltip" data-testid={`popup-${index + 1}`}>
+                      {name} tooltip
+                    </Tooltip.Popup>
+                  </Tooltip.Positioner>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            ))}
+          </Tooltip.Provider>,
+        );
+
+        const firstTrigger = screen.getByTestId('trigger-1');
+        const secondTrigger = screen.getByTestId('trigger-2');
+
+        await user.hover(firstTrigger);
+
+        const firstPopup = await screen.findByTestId('popup-1');
+
+        // The exit runs only while its transition runs, so the case waits for the start of the
+        // transition.
+        await nextEvent(firstPopup, 'transitionrun', {
+          action: () => user.unhover(firstTrigger),
+        });
+        expect(firstPopup.getAnimations().length).toBe(1);
+
+        await user.hover(secondTrigger);
+        await screen.findByTestId('popup-2');
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup-1')).toBe(null);
+        });
+        // The first tooltip was already closing, so it reports only its open and its hover close.
+        expect(handleFirstOpenChange).toHaveBeenCalledTimes(2);
+      });
+
       it('inline opacity: 0 is removed before user CSS transitions run', async () => {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
@@ -1541,6 +1685,106 @@ describe('<Tooltip.Root />', () => {
 
       expect(screen.queryByTestId('popup')).toBe(null);
     });
+  });
+
+  it('keeps the tooltip open when moving across spaced triggers without a closeDelay', async () => {
+    const testTooltip = Tooltip.createHandle();
+    const { user } = await render(
+      <Tooltip.Provider timeout={400}>
+        <div style={{ display: 'flex', gap: '32px' }}>
+          <Tooltip.Trigger handle={testTooltip} delay={0}>
+            Trigger 1
+          </Tooltip.Trigger>
+          <Tooltip.Trigger handle={testTooltip} delay={0}>
+            Trigger 2
+          </Tooltip.Trigger>
+          <Tooltip.Trigger handle={testTooltip} delay={0}>
+            Trigger 3
+          </Tooltip.Trigger>
+        </div>
+
+        <Tooltip.Root handle={testTooltip}>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup data-testid="popup">Tooltip Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>,
+    );
+
+    const [trigger1, trigger2, trigger3] = screen.getAllByRole('button');
+
+    await user.hover(trigger1);
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+
+    await user.unhover(trigger1);
+    await user.hover(trigger2);
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+
+    await fireEvent.mouseLeave(trigger2, {
+      relatedTarget: document.body,
+      clientX: 120,
+      clientY: 0,
+    });
+    await user.hover(trigger3);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+
+    await fireEvent.mouseMove(document.body, { clientX: 300, clientY: 0 });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup')).toBeVisible();
+    });
+  });
+
+  it('closes a tooltip that is still open when another tooltip in the group opens', async () => {
+    const handleFirstOpenChange = vi.fn();
+    const { user } = await render(
+      <Tooltip.Provider>
+        <Tooltip.Root onOpenChange={handleFirstOpenChange}>
+          <Tooltip.Trigger delay={0} closeDelay={10000}>
+            First
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>First tooltip</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+        <Tooltip.Root>
+          <Tooltip.Trigger delay={0}>Second</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>Second tooltip</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>,
+    );
+
+    await user.hover(screen.getByRole('button', { name: 'First' }));
+    await screen.findByText('First tooltip');
+    // The close delay keeps the first tooltip open after the pointer leaves.
+    await user.unhover(screen.getByRole('button', { name: 'First' }));
+    expect(screen.queryByText('First tooltip')).not.toBe(null);
+
+    await user.hover(screen.getByRole('button', { name: 'Second' }));
+    await screen.findByText('Second tooltip');
+
+    await waitFor(() => {
+      expect(screen.queryByText('First tooltip')).toBe(null);
+    });
+    expect(handleFirstOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.objectContaining({ reason: REASONS.none }),
+    );
   });
 
   describe('close requests', () => {
