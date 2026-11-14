@@ -142,9 +142,9 @@ onMounted(closeWhileDisabled);
 watch([() => store.select('open'), () => props.disabled], closeWhileDisabled);
 
 // Animations are instant in two cases: an open in the instant phase of a delay group, where the
-// tooltip of an adjacent trigger opens at once, and a close because another tooltip opened (the
-// reason `none`). An exit for another reason keeps its animation. The watcher keeps the instant
-// type that it replaces, and gives it back when neither case holds.
+// tooltip of an adjacent trigger opens at once, and a close with the reason `none`, for example
+// because another tooltip of the group opened. An exit for another reason keeps its animation.
+// The watcher keeps the instant type that it replaces, and gives it back when neither case holds.
 let previousInstantType: TooltipStoreState<Payload>['instantType'] | null = null;
 watch(
   [
