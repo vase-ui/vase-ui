@@ -430,6 +430,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
+- `menubar/MenubarContext.ts` exports `MenubarContext` and `useMenubarContext` again from the path of Base UI.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.

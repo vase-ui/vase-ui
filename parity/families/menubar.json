@@ -1,0 +1,87 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/menubar/**",
+    "docs/src/app/(docs)/react/components/menubar/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "ignores a delayed touch click immediately after focus opens another menu",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders a test menubar whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`. Vase UI does not have these parts of Menu."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders a test menubar whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`. Vase UI does not have these parts of Menu."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "closes on a touch item click immediately after focus opens another menu",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders a test menubar whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`. Vase UI does not have these parts of Menu."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "keeps focus on an outside target when a triggerless menubar menu closes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders `Menu.Root`, `Menu.Popup` and `Menu.Item` in the menubar. Vase UI does not have these parts of Menu. The cases of this file that render a menu are ported together, when the last part of Menu that the test menubars render is there."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />", "when using $name"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "Each case of the block renders one of three test menubars whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`, or renders `Menu.Trigger` in the menubar. Vase UI does not have these parts of Menu. `Menubar.test.tsx` has cases of its own for the role and for `aria-orientation` of the menubar."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "renders contained top-level portal ownership as an allowed menubar child",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders a test menubar whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`. Vase UI does not have these parts of Menu."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />"],
+      "title": "renders detached top-level portal ownership without an accessibility role",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "The case renders a test menubar whose menus have `Menu.Trigger`, `Menu.Popup`, `Menu.Item` and a submenu with `Menu.SubmenuTrigger`. Vase UI does not have these parts of Menu."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["<Menubar />", "disabled state"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
+      "reason": "Each case of the block renders `Menu.Trigger`, `Menu.Popup` and `Menu.Item` in the menubar. Vase UI does not have these parts of Menu. The cases of this file that render a menu are ported together, when the last part of Menu that the test menubars render is there."
+    },
+    {
+      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
+      "describe": ["filterable menubar menus"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "The case of the block renders `Menu.FilterProvider`, `Menu.Input` and `Menu.List`, which Vase UI does not have."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "Menubar",
+      "prop": "id",
+      "reason": "The part reads `id` to give it to the menus of the menubar as the id of their root, so it is a declared prop. Base UI reads it from the native attributes of the menubar, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
