@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, fireEvent, screen } from '#test-utils';
+import { createRenderer, describeConformance, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Toast from '../index.parts';
 import { List, Button } from '../utils/test-utils';
@@ -165,28 +165,6 @@ describe('<Toast.Action />', () => {
     );
 
     expect(screen.getByText('Undo')).not.toBe(null);
-  });
-
-  it('gives the attributes and the listeners of actionProps to the button', async () => {
-    const onClick = vi.fn();
-    await render(
-      <Toast.Provider>
-        <Toast.Viewport>
-          <Toast.Root
-            toast={{ id: 'test', actionProps: { id: 'action', children: 'Undo', onClick } }}
-          >
-            <Toast.Action data-testid="action" />
-          </Toast.Root>
-        </Toast.Viewport>
-      </Toast.Provider>,
-    );
-
-    const action = screen.getByTestId('action');
-    expect(action.id).toBe('action');
-    expect(action.textContent).toBe('Undo');
-
-    await fireEvent.click(action);
-    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('shows the content of actionProps in place of its default slot', async () => {

@@ -1,8 +1,5 @@
 {
-  "upstreamPaths": [
-    "packages/react/src/toast/**",
-    "docs/src/app/(docs)/react/components/toast/**"
-  ],
+  "upstreamPaths": ["packages/react/src/toast/**", "docs/src/app/(docs)/react/components/toast/**"],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
@@ -42,9 +39,7 @@
     },
     {
       "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
-      "describe": [
-        "<Toast.Action />"
-      ],
+      "describe": ["<Toast.Action />"],
       "title": "renders content passed through the render prop",
       "kind": "not-applicable",
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
@@ -63,28 +58,21 @@
     },
     {
       "upstream": "packages/react/src/toast/provider/ToastProvider.test.tsx",
-      "describe": [
-        "<Toast.Provider />"
-      ],
+      "describe": ["<Toast.Provider />"],
       "title": "does not sync provider props from an abandoned render",
       "kind": "not-applicable",
       "reason": "The case suspends a React transition, and React then abandons a render. Vue has no render that it abandons."
     },
     {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": [
-        "useToast",
-        "in dialog"
-      ],
+      "describe": ["useToast", "in dialog"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
       "reason": "The file imports `Dialog` from the entry point of Dialog, which Vase UI does not have. Each case renders parts of `Dialog`."
     },
     {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
-      "describe": [
-        "hasRenderableChildren"
-      ],
+      "describe": ["hasRenderableChildren"],
       "title": "requires an element whose children are renderable",
       "kind": "replaced",
       "test": "packages/vue/src/toast/utils/useToastLabelPart.test.tsx",
@@ -92,43 +80,28 @@
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": [
-        "useToastLabelPart",
-        "<$name />",
-        "prop: render"
-      ],
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
       "title": "renders content passed through the render prop",
       "kind": "not-applicable",
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": [
-        "useToastLabelPart",
-        "<$name />",
-        "prop: render"
-      ],
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
       "title": "renders content passed through a render function",
       "kind": "not-applicable",
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": [
-        "useToastLabelPart",
-        "<$name />",
-        "prop: render"
-      ],
+      "describe": ["useToastLabelPart", "<$name />", "prop: render"],
       "title": "`wires ${attribute} to a part rendered through the render prop`",
       "kind": "not-applicable",
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": [
-        "<Toast.Viewport />",
-        "real browser input"
-      ],
+      "describe": ["<Toast.Viewport />", "real browser input"],
       "title": "keeps timers paused when a hovered toast is clicked while nothing had focus",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/resetBrowserPointer.ts",
@@ -136,10 +109,7 @@
     },
     {
       "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": [
-        "<Toast.Viewport />",
-        "real browser input"
-      ],
+      "describe": ["<Toast.Viewport />", "real browser input"],
       "title": "keeps timers paused when the window regains focus while a toast is hovered",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/resetBrowserPointer.ts",

@@ -1398,6 +1398,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A module namespace is read-only. A test that must change a flag of `platform` mocks the module, as `utils/popups/event.test.ts` does.
 - Vue calls a function ref again on each patch. A case that asserts the calls of a ref gives the ref to `useRenderElement`, which calls it only when the element changes.
 - Where Base UI polls a state that exists only while an animation runs, a ported case can record that state in a listener. It can also set `VASE_UI_ANIMATIONS_DISABLED` to `false`. The titles stay. See [Test rules](#test-rules).
+- Vitest fakes `requestAnimationFrame` with the other timers. Under fake timers with `VASE_UI_ANIMATIONS_DISABLED` set to `false`, a part thus stays in its exit until the test moves the clock. A jsdom case that asserts a part in its exit uses this.
 
 ### Test helpers
 
@@ -1439,6 +1440,7 @@ The hydration helpers:
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
+- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name, because a TSX component in `src` fails the lint.
 - `test/fixtures/FocusManagerPart.vue` is a focus manager with a store of its own. The tests of the portal use it.
 - `test/fixtures/HydrationFixture.vue`, `StyledElement.vue`, `ClassedElement.vue` and `LabelForControl.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
