@@ -1,5 +1,5 @@
 import { describe } from 'vitest';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, describeConformance } from '#test-utils';
 
 describe('<Select.Arrow />', () => {

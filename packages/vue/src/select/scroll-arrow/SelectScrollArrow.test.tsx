@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Select } from '@vase-ui/vue/select';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
-import * as Select from '../index.parts';
 import {
   createRenderer,
   fireEvent,

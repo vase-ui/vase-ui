@@ -2,10 +2,10 @@ import { afterEach, expect, describe, it, onTestFinished, vi } from 'vitest';
 import { createSSRApp, defineComponent, h, KeepAlive, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import { Select } from '@vase-ui/vue/select';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { platform } from '../../common/platform';
-import * as Select from '../index.parts';
 import {
   createRenderer,
   describeConformance,

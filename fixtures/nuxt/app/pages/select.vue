@@ -16,9 +16,13 @@ const TAGS = ['a', 'b', 'c'];
         <Select.Portal>
           <Select.Positioner>
             <Select.Popup data-testid="font-popup">
-              <Select.Item v-for="(label, value) in FONTS" :key="value" :value="value">
-                <Select.ItemText>{{ label }}</Select.ItemText>
-              </Select.Item>
+              <Select.ScrollUpArrow />
+              <Select.List>
+                <Select.Item v-for="(label, value) in FONTS" :key="value" :value="value">
+                  <Select.ItemText>{{ label }}</Select.ItemText>
+                </Select.Item>
+              </Select.List>
+              <Select.ScrollDownArrow />
             </Select.Popup>
           </Select.Positioner>
         </Select.Portal>

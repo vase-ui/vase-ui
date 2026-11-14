@@ -3,6 +3,7 @@ import { defineComponent, onBeforeUnmount, onMounted, reactive, shallowRef, watc
 import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
+import { Select } from '@vase-ui/vue/select';
 import {
   createRenderer,
   fireEvent,
@@ -26,7 +27,6 @@ import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
-import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
 import SelectRootHydration from './SelectRootHydration.test.vue';
@@ -4853,6 +4853,11 @@ describe('<Select.Root />', () => {
 
       for (const item of [bottomEdgeItem, topEdgeItem]) {
         await user.hover(item);
+        if (isWebKit) {
+          // WebKit gives the hover of user-event a `mousemove` with no movement, and the list
+          // navigation ignores it. See https://github.com/mui/base-ui/issues/4002.
+          await fireEvent.mouseMove(item, { movementX: 1, movementY: 1 });
+        }
         await waitFor(() => {
           expect(item).toHaveAttribute('data-highlighted');
         });
