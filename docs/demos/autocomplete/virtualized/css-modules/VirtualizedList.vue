@@ -29,7 +29,11 @@ const virtualizer = useVirtualizer(
 const totalSize = computed(() => virtualizer.value.getTotalSize());
 const virtualItems = computed(() => virtualizer.value.getVirtualItems());
 
+// Vue calls a function ref again on each patch, and `measure()` makes the next patch.
 function setScrollElement(element: unknown) {
+  if (element === scrollElement.value) {
+    return;
+  }
   scrollElement.value = element as HTMLDivElement | null;
   if (element) {
     virtualizer.value.measure();

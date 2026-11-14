@@ -357,6 +357,9 @@ export namespace Collection {
  * component itself with `display: none`, `hidden`, `aria-hidden`, or conditional
  * rendering. Prefer updating or conditionally rendering its children instead.
  * Renders a `<div>` element.
+ *
+ * The part renders its default slot only while the list is empty. With the `#render` slot, the part
+ * renders no default slot. Put the content in your element, and show it only while the list is empty.
  */
 export const Empty: typeof ComboboxEmpty = ComboboxEmpty;
 export namespace Empty {
