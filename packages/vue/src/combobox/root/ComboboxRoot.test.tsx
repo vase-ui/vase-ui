@@ -16,6 +16,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitSingleFrame,
 } from '#test-utils';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
@@ -38,6 +39,19 @@ import ComboboxRootHydration from './ComboboxRootHydration.test.vue';
 
 const HYDRATION_FILE = 'src/combobox/root/ComboboxRootHydration.test.vue';
 const cities = ['Malmö', 'Malta', 'Oslo'];
+
+// The animation lasts 100 s, so a busy machine cannot end the exit before a case acts.
+const closeAnimationStyle = `
+  @keyframes combobox-close-test {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .animation-test-popup[data-ending-style] {
+    animation: combobox-close-test 100s linear;
+  }
+`;
 
 let store: ComboboxStore;
 const StoreProbe = defineComponent(() => {
@@ -2505,19 +2519,6 @@ describe('<Combobox.Root />', () => {
   });
 
   describe.skipIf(isJSDOM)('reopening during the close animation', () => {
-    // The animation lasts 100 s, so a busy machine cannot end the exit before a case acts.
-    const closeAnimationStyle = `
-      @keyframes combobox-close-test {
-        to {
-          opacity: 0;
-        }
-      }
-
-      .animation-test-popup[data-ending-style] {
-        animation: combobox-close-test 100s linear;
-      }
-    `;
-
     it('shows every item when a controlled reopen interrupts a canceled mirrored-selection clear', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
@@ -2589,6 +2590,10 @@ describe('<Combobox.Root />', () => {
 
       await user.click(screen.getByTestId('open'));
       await waitFor(() => expect(popup).toHaveAttribute('data-open'));
+      // The popup removes the ending style in a frame after the reopen.
+      await waitSingleFrame();
+      await waitSingleFrame();
+      expect(popup).not.toHaveAttribute('data-ending-style');
 
       expect(input).toHaveValue('apple');
       await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
@@ -3587,19 +3592,6 @@ describe('<Combobox.Root />', () => {
   });
 
   describe('prop: multiple', () => {
-    // The animation lasts 100 s, so a busy machine cannot end the exit before a case acts.
-    const closeAnimationStyle = `
-      @keyframes combobox-close-test {
-        to {
-          opacity: 0;
-        }
-      }
-
-      .animation-test-popup[data-ending-style] {
-        animation: combobox-close-test 100s linear;
-      }
-    `;
-
     it('"single" selects and closes, then reopens with selection focused', async () => {
       const { user } = await render(
         <Combobox.Root defaultOpen>
@@ -4376,6 +4368,10 @@ describe('<Combobox.Root />', () => {
         await waitFor(() => {
           expect(popup).toHaveAttribute('data-open');
         });
+        // The popup removes the ending style in a frame after the reopen.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expect(popup).not.toHaveAttribute('data-ending-style');
         expect(screen.getByTestId('input')).toHaveValue('');
         expect(onInputValueChange).toHaveBeenCalledTimes(callsBeforeReopen);
       },
