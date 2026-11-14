@@ -1,0 +1,8 @@
+{
+  "upstreamPaths": ["packages/react/src/utils/popups/delay-group/**"],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
