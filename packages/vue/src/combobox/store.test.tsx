@@ -1,13 +1,24 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef, watchEffect } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { computed, defineComponent, shallowRef, watch, watchEffect } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  hydrate,
+  renderOnServer,
+  screen,
+  waitFor,
+} from '#test-utils';
+import { actOnElement } from '../../test/fixtures/actOnElement';
 import { EMPTY_OBJECT, NOOP } from '../common/empty';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { defaultItemEquality } from '../internals/itemEquality';
 import { createLabelIdRegistry } from '../internals/labelable-provider';
 import { REASONS } from '../internals/reasons';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../utils/popups/store';
-import * as Combobox from './index.parts';
+import ComboboxStoreHydration from './ComboboxStoreHydration.test.vue';
 import { useComboboxRootContext } from './root/ComboboxRootContext';
 import { ComboboxStore, selectors } from './store';
 import type { ComboboxStoreContext, State } from './store';
@@ -90,6 +101,192 @@ function createComboboxStore(initialState: Partial<State> = {}) {
 
 describe('combobox store synchronization', () => {
   const { render } = createRenderer();
+
+  // Every rendered control that has the form name. The controls that can have it are the visible
+  // `combobox` input, the visually hidden `textbox`, and the `type="hidden"` inputs of the
+  // `multiple` mode, which have no role.
+  function namedControls(name: string) {
+    return Array.from(document.querySelectorAll(`[name="${name}"]`));
+  }
+
+  let store!: ComboboxStore;
+  const StoreProbe = defineComponent(() => {
+    store = useComboboxRootContext();
+    return () => null;
+  });
+
+  const observed: string[] = [];
+  const OwnershipProbe = defineComponent(() => {
+    const rootStore = useComboboxRootContext();
+    const inline = computed(() => rootStore.select('inline'));
+    const inputOwnsFormValue = computed(() => rootStore.select('inputOwnsFormValue'));
+    return () => {
+      observed.push(`${inline.value}:${inputOwnsFormValue.value}`);
+      return null;
+    };
+  });
+
+  // `selectionMode` is always `'none'` for `Autocomplete.Root`, and an input in the positioner
+  // makes `inputInsidePopup` true. In that configuration the formula of the root for
+  // `inputOwnsFormValue` differs from the formula that `ComboboxInput` writes from its `ref`
+  // callback, so only here the synchronization is visible.
+  const InlineOwnershipFixture = defineComponent({
+    props: {
+      inline: { type: Boolean, required: true },
+      withPopupInput: { type: Boolean, default: true },
+      withOwnershipProbe: { type: Boolean, default: false },
+    },
+    setup(props) {
+      return () => (
+        <Autocomplete.Root items={['alpha', 'beta']} inline={props.inline} name="search">
+          <StoreProbe />
+          {props.withOwnershipProbe && <OwnershipProbe />}
+          <Autocomplete.Trigger data-testid="trigger" />
+          <Autocomplete.Portal keepMounted>
+            <Autocomplete.Positioner>
+              <Autocomplete.Popup>
+                {props.withPopupInput && <Autocomplete.Input data-testid="popup-input" />}
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>
+      );
+    },
+  });
+
+  it('publishes an inline transition in a single store transaction', async () => {
+    // `keepMounted` is required: a closed `Combobox.Portal` renders nothing, so without it the
+    // popup input never mounts, its `ref` callback never runs, and the case would pass for no
+    // reason.
+    const { setProps } = await render(<InlineOwnershipFixture inline={false} />);
+
+    // A watcher with the default flush does not run between two writes of one function.
+    const snapshots: { inline: boolean; inputOwnsFormValue: boolean }[] = [];
+    const stop = watch(
+      () => ({ inline: store.state.inline, inputOwnsFormValue: store.state.inputOwnsFormValue }),
+      (snapshot) => {
+        snapshots.push(snapshot);
+      },
+    );
+
+    try {
+      await setProps({ inline: true });
+    } finally {
+      stop();
+    }
+
+    // Catches a forward split (inline published before ownership).
+    expect(snapshots.some((snapshot) => snapshot.inline && !snapshot.inputOwnsFormValue)).toBe(
+      false,
+    );
+
+    // Catches a reverse-order split (ownership published before inline), which the assertion
+    // above cannot see. Both assertions are load-bearing; neither subsumes the other.
+    //
+    // The projections are deduplicated on purpose: a notification that changes neither value
+    // does not count.
+    const changed = snapshots.filter(
+      (snapshot, index) =>
+        index === 0 ||
+        snapshot.inline !== snapshots[index - 1].inline ||
+        snapshot.inputOwnsFormValue !== snapshots[index - 1].inputOwnsFormValue,
+    );
+
+    expect(changed).toHaveLength(1);
+  });
+
+  it('settles inputOwnsFormValue through the useStore path when inline is set', async () => {
+    observed.length = 0;
+
+    const { setProps } = await render(<InlineOwnershipFixture inline={false} withOwnershipProbe />);
+
+    observed.length = 0;
+    await setProps({ inline: true });
+
+    // This does NOT detect a split transaction: a `computed` reads only the settled state either
+    // way. The case above guards the shape of the transaction. This case pins that the
+    // subscription path ends with the value that the root computes, and not with the value that
+    // `ComboboxInput` wrote from its `ref` callback.
+    expect(observed[observed.length - 1]).toBe('true:true');
+  });
+
+  it('exposes real commands to a descendant ref callback on the first commit', async () => {
+    // A user interaction happens after the mount and cannot reach the earliest moment that a part
+    // can call a command, so the probe fires from a `ref` callback. The ArrowDown handler of
+    // `Combobox.Trigger` reads the `setOpen` command off the store at call time, so this case
+    // exercises that earliest moment, without naming where the store keeps the command.
+    const handleOpenChange = vi.fn();
+    let dispatched = false;
+
+    await render(
+      <Autocomplete.Root items={['alpha', 'beta']} onOpenChange={handleOpenChange}>
+        <Autocomplete.Trigger
+          data-testid="trigger"
+          v-slots={actOnElement('button', (element) => {
+            dispatched = true;
+            element.dispatchEvent(
+              new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+            );
+          })}
+        />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner>
+            <Autocomplete.Popup>
+              <Autocomplete.Input />
+            </Autocomplete.Popup>
+          </Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>,
+    );
+
+    expect(dispatched).toBe(true);
+    expect(handleOpenChange).toHaveBeenCalled();
+    expect(handleOpenChange.mock.calls[0][0]).toBe(true);
+  });
+
+  it('gives form value ownership to the hidden input when the input is inside the popup', async () => {
+    const { setProps } = await render(<InlineOwnershipFixture inline={false} />);
+
+    expect(store.state.inputInsidePopup).toBe(true);
+    expect(store.state.inputOwnsFormValue).toBe(false);
+    // Ownership is a two-sided invariant: asserting only that the popup input lacks the name
+    // would still pass if the name were dropped from both controls and the form submitted
+    // nothing at all.
+    expect(screen.getByTestId('popup-input')).not.toHaveAttribute('name');
+    expect(namedControls('search')).toHaveLength(1);
+    expect(namedControls('search')[0]).toHaveAttribute('aria-hidden', 'true');
+
+    // Unmounting and mounting the popup input again runs its `ref` callback again, which is the
+    // other writer of `inputOwnsFormValue`.
+    await setProps({ withPopupInput: false });
+    expect(namedControls('search')).toHaveLength(1);
+
+    await setProps({ withPopupInput: true });
+    expect(store.state.inputOwnsFormValue).toBe(false);
+    expect(screen.getByTestId('popup-input')).not.toHaveAttribute('name');
+    expect(namedControls('search')).toHaveLength(1);
+    expect(namedControls('search')[0]).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('keeps form value ownership across hydration', async () => {
+    // The input is not inside a popup here, so it owns the form value itself. The server render
+    // suite of `ComboboxRoot.test.tsx` already covers the ARIA attributes, so this case asserts
+    // the ownership that survives into hydration.
+    const serverHtml = await renderOnServer('src/combobox/ComboboxStoreHydration.test.vue');
+    const template = document.createElement('template');
+    template.innerHTML = serverHtml;
+    const serverInput = template.content.querySelector('[data-testid="input"]');
+
+    expect(serverInput?.getAttribute('role')).toBe('combobox');
+    expect(template.content.querySelectorAll('[name="search"]')).toHaveLength(1);
+    expect(template.content.querySelector('[name="search"]')).toBe(serverInput);
+
+    await hydrate(ComboboxStoreHydration, { serverHtml });
+
+    expect(screen.getByTestId('input')).toHaveAttribute('role', 'combobox');
+    expect(namedControls('search')).toHaveLength(1);
+    expect(namedControls('search')[0]).toBe(screen.getByTestId('input'));
+  });
 
   describe('interaction anchor', () => {
     it('follows the input, and returns to it after a trigger press or a change of open state', async () => {

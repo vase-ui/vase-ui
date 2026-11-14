@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, screen } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Combobox from '../index.parts';
 
 describe('<Combobox.Icon />', () => {
   const { render } = createRenderer();

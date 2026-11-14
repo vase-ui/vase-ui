@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 
 // Vue writes a comment around each fragment and slot.
 function normalize(html: string) {

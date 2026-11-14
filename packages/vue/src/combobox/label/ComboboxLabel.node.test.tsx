@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 
 // The opening tag of the element that has `attribute`.
 function getTag(html: string, attribute: string) {

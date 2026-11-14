@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import { INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY } from '../../internals/useInitialLiveRegionTextMutation';
-import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import ComboboxEmptyReplacement from './ComboboxEmptyReplacement.test.vue';
 
