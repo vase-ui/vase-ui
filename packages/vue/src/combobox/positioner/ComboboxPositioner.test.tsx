@@ -5,6 +5,7 @@ import {
   createRenderer,
   describeConformance,
   flushMicrotasks,
+  isJSDOM,
   positionerConformanceTests,
   screen,
   waitFor,
@@ -92,6 +93,117 @@ describe('<Combobox.Positioner />', () => {
         </Combobox.Portal>
       </Combobox.Root>
     ),
+  });
+
+  // https://github.com/mui/base-ui/issues/5118
+  it.skipIf(isJSDOM)(
+    'keeps the popup on the preferred side when its capped height fits below tall content',
+    async () => {
+      const items = Array.from({ length: 40 }, (_, index) => `item-${index}`);
+
+      await render(
+        // Anchor fixed near the bottom of the viewport: less room below than above,
+        // but still more than the List's capped height.
+        <div style={{ position: 'fixed', bottom: '120px', left: '100px' }}>
+          <Combobox.Root open items={items}>
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner data-testid="positioner" side="bottom" sideOffset={0}>
+                <Combobox.Popup>
+                  <Combobox.List
+                    style={{ maxHeight: 'min(80px, var(--available-height))', overflowY: 'auto' }}
+                  >
+                    {{
+                      item: ({ item }: { item: string }) => (
+                        <Combobox.Item key={item} value={item} style={{ height: '30px' }}>
+                          {item}
+                        </Combobox.Item>
+                      ),
+                    }}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </div>,
+      );
+
+      // The 40-item list (~1200px) overflows the room below the anchor, but the List is
+      // capped to 80px which fits. The `--available-height` var must be seeded before
+      // `size()` runs, otherwise `min(80px, var(--available-height))` is invalid on the
+      // first `flip()` pass, the list is measured at full height, and the popup flips up.
+      await waitFor(() => {
+        expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'bottom');
+      });
+    },
+  );
+
+  describe.skipIf(isJSDOM)('default anchor', () => {
+    it('uses the input when input group is absent', async () => {
+      const inputWidth = 120;
+      const triggerWidth = 240;
+      let anchorWidth = 0;
+      const recordAnchorWidth: OffsetFunction = (data) => {
+        anchorWidth = data.anchor.width;
+        return 0;
+      };
+
+      await render(
+        <Combobox.Root open>
+          <Combobox.Input style={{ width: `${inputWidth}px` }} />
+          <Combobox.Trigger style={{ width: `${triggerWidth}px` }}>Open</Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner sideOffset={recordAnchorWidth}>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="One">One</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      await waitFor(() => {
+        expect(anchorWidth).toBeCloseTo(
+          screen.getByRole('combobox').getBoundingClientRect().width,
+          0,
+        );
+      });
+      expect(anchorWidth).not.toBeCloseTo(triggerWidth, 0);
+    });
+
+    it('uses the input group when present', async () => {
+      const inputGroupWidth = 240;
+      const inputWidth = 120;
+      let anchorWidth = 0;
+      const recordAnchorWidth: OffsetFunction = (data) => {
+        anchorWidth = data.anchor.width;
+        return 0;
+      };
+
+      await render(
+        <Combobox.Root open>
+          <Combobox.InputGroup style={{ width: `${inputGroupWidth}px` }}>
+            <Combobox.Input style={{ width: `${inputWidth}px` }} />
+            <Combobox.Trigger>Open</Combobox.Trigger>
+          </Combobox.InputGroup>
+          <Combobox.Portal>
+            <Combobox.Positioner sideOffset={recordAnchorWidth}>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="One">One</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      await waitFor(() => {
+        expect(anchorWidth).toBeCloseTo(inputGroupWidth, 0);
+      });
+    });
   });
 
   describe('the anchor', () => {
