@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
-import * as Combobox from '../index.parts';
 
 type Part = 'label' | 'input' | 'description';
 

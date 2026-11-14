@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
   describeConformance,
@@ -9,7 +10,6 @@ import {
   waitFor,
   waitForPositioned,
 } from '#test-utils';
-import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxPortalRenders from './ComboboxPortalRenders.test.vue';

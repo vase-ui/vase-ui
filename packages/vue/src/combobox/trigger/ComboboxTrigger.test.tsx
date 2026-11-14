@@ -1,5 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { KeepAlive, defineComponent, onMounted, shallowRef } from 'vue';
+import { Autocomplete } from '@vase-ui/vue/autocomplete';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { Field } from '@vase-ui/vue/field';
 import {
   createRenderer,
@@ -12,9 +14,7 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import * as Autocomplete from '../../autocomplete/index.parts';
 import { REASONS } from '../../internals/reasons';
-import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxTriggerReplacement from './ComboboxTriggerReplacement.test.vue';

@@ -245,11 +245,6 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// Internal defaults, not targets of the consumer: the focus manager keeps a focus that moved.
-const dynamicReturnFocus = computed(
-  () => submenuRootContext.value?.getReturnElement ?? parentHandoff?.parentVirtualFocusRef,
-);
-
 const returnFocus = computed(() => {
   const { type } = parent.value;
   return (
@@ -279,8 +274,7 @@ defineExpose({ element });
     :open-interaction-type="store.select('openMethod')"
     :modal="parent.type === 'context-menu'"
     :disabled="!mounted"
-    :return-focus="finalFocus ?? dynamicReturnFocus ?? returnFocus"
-    :explicit-return-focus="finalFocus === undefined && dynamicReturnFocus ? false : undefined"
+    :return-focus="finalFocus ?? returnFocus"
     :initial-focus="initialFocus"
     restore-focus
     :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"
