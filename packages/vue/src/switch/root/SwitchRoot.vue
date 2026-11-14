@@ -32,10 +32,7 @@ export interface SwitchRootProps
   extends
     NonNativeButtonProps,
     VaseUIComponentProps<SwitchRootState>,
-    /* @vue-ignore */ Omit<
-      WithVaseUIEvent<HTMLAttributes>,
-      'id' | 'aria-label' | 'aria-labelledby' | 'onChange'
-    > {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id' | 'onChange'> {
   /**
    * The id of the hidden input element.
    *
