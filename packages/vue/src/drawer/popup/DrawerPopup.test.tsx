@@ -806,6 +806,53 @@ describe('<Drawer.Popup />', () => {
       });
     });
 
+    it('keeps the movement and the stopped transition of an opening gesture when the popup renders during the gesture', async () => {
+      const label = shallowRef('first');
+      await render(() => (
+        <Drawer.Root modal={false}>
+          <Drawer.SwipeArea data-testid="swipe-area" />
+          <Drawer.Portal keepMounted>
+            <Drawer.Viewport>
+              <Drawer.Popup
+                data-testid="popup"
+                data-label={label.value}
+                style={{ height: '100px', transition: 'transform 1s' }}
+              >
+                Drawer
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ));
+
+      const swipeArea = screen.getByTestId('swipe-area');
+      const popup = screen.getByTestId('popup');
+      const consumerTransition = popup.style.transition;
+      const pointer = { pointerType: 'mouse', pointerId: 1, clientX: 0 };
+      await fireEvent.pointerDown(swipeArea, { ...pointer, button: 0, buttons: 1, clientY: 100 });
+      // The first move opens the drawer. The popup has its size at the second move.
+      await fireEvent.pointerMove(swipeArea, { ...pointer, buttons: 1, clientY: 99 });
+      await fireEvent.pointerMove(swipeArea, { ...pointer, buttons: 1, clientY: 60 });
+      await flushMicrotasks();
+      expect(popup).toHaveAttribute('data-swiping', '');
+      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('60px');
+      expect(popup.style.transition).toBe('none');
+
+      label.value = 'second';
+      await flushMicrotasks();
+
+      expect(popup).toHaveAttribute('data-label', 'second');
+      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('60px');
+      expect(popup.style.transition).toBe('none');
+
+      await fireEvent.pointerUp(swipeArea, { ...pointer, button: 0, buttons: 0, clientY: 60 });
+      await flushMicrotasks();
+
+      expect(popup).not.toHaveAttribute('data-swiping');
+      expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+      expect(popup.style.transition).toBe(consumerTransition);
+    });
+
     it('renders the swipe progress of a nested drawer that the store holds', async () => {
       const NestedProgressReport = defineComponent({
         setup() {
@@ -879,7 +926,7 @@ describe('<Drawer.Popup />', () => {
       shown.value = false;
       await flushMicrotasks();
 
-      expect(parentPopup.style.getPropertyValue('--drawer-frontmost-height')).not.toBe('100px');
+      expect(parentPopup.style.getPropertyValue('--drawer-frontmost-height')).toBe('50px');
       expect(parentPopup.style.getPropertyValue('--drawer-height')).toBe('');
 
       shown.value = true;

@@ -205,6 +205,7 @@ const {
   onPopupHeightChange,
   notifyParentFrontmostHeight,
   notifyParentHasNestedDrawer,
+  swipeAreaActiveRef,
 } = useDrawerRootContext();
 
 const open = computed(() => store.select('open'));
@@ -374,8 +375,28 @@ function getPopupDragStyles(): DragStyles {
   return dragStyles;
 }
 
+let ownPopup: HTMLElement | null = null;
+
+// `Drawer.SwipeArea` writes the movement of an opening gesture to the popup, and the viewport has
+// no drag then. A render during that gesture thus keeps the movement that the popup holds.
+function keepSwipeAreaMovement(movementStyles: DragStyles): DragStyles {
+  if (!swipeAreaActiveRef.value || !ownPopup) {
+    return movementStyles;
+  }
+
+  const kept = { ...movementStyles };
+  for (const name of [DrawerPopupCssVars.swipeMovementX, DrawerPopupCssVars.swipeMovementY]) {
+    const value = ownPopup.style.getPropertyValue(name);
+    if (value !== '') {
+      kept[name] = value;
+    }
+  }
+  return kept;
+}
+
 function popupStyle(): CSSProperties {
-  const { transition, transform, ...movementStyles } = getPopupDragStyles();
+  const { transition, transform, ...dragMovementStyles } = getPopupDragStyles();
+  const movementStyles = keepSwipeAreaMovement(dragMovementStyles);
 
   let popupHeightCssVarValue: string | undefined;
   const shouldUseAutoHeight = !hasNestedDrawer.value && transitionStatus.value !== 'ending';
@@ -409,7 +430,6 @@ function popupStyle(): CSSProperties {
   };
 }
 
-let ownPopup: HTMLElement | null = null;
 function setPopup(popup: HTMLElement | null) {
   // A compiled template can mount a new popup before it unmounts the old one. The old one then
   // must not clear the element of the new one.
@@ -443,8 +463,13 @@ const { element, elementProps } = useRenderElement('div', props, {
     attrs,
   ],
   // A render during a swipe must keep the drag of the swipe, also over a `transform` or a
-  // `transition` of the consumer.
+  // `transition` of the consumer. During an opening gesture, `Drawer.SwipeArea` stops the
+  // transition of the popup, and a render must not start it again.
   overridingStyle: () => {
+    if (swipeAreaActiveRef.value) {
+      return { transition: 'none' };
+    }
+
     if (!swiping.value) {
       return undefined;
     }

@@ -246,6 +246,7 @@ A part that Base UI writes as another part renders that part and no element of i
 - Give the `#render` slot to that part, and the default slot when the part has one. A slot does not reach a child unless the template gives it.
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
+- A part that adds listeners to that part binds `mergeProps(listeners, $attrs)`. A listener of the consumer with the same key then runs first, and `event.preventVaseUIHandler()` stops the listener of the part. `Drawer.Viewport` does this for its swipe listeners (`VUE-58`).
 
 A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
 
@@ -1173,7 +1174,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An effect that needs the element of the part, such as an observer, is a `watch` of the `element` of `useRenderElement` with `flush: 'post'`. Start the observer in the callback. Stop it in `onCleanup`. Vue runs the cleanup when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
 - An effect of Base UI with no dependency list runs after each commit, so it also sees a DOM change of another component. A Vue component with the same props does not render again when its parent renders.
 - Such an effect is a `watch` of its sources with `flush: 'post'`, plus a `MutationObserver` for the DOM change. `useAriaLabelledBy` keeps one observer for each document or shadow root.
-- Base UI can need such an effect only after a render of its own part. Then the effect is an `onUpdated` hook of the part. `Drawer.SwipeArea` writes the swipe movement to the popup again in `onUpdated`, because the render that opens the drawer can replace that movement.
+- Base UI can use such an effect to write a style again after a render of another part replaced it. In Vue, the other part keeps that style in its render, and the effect has no counterpart. `Drawer.SwipeArea` has no such effect, because `Drawer.Popup` keeps the swipe movement.
 - A part of Base UI that measures the layout in each render becomes a `computed` that reads the measurement. Each value that can move the element is a source of the `computed`, such as the orientation. A `ResizeObserver` reports only a change of size, so its listener raises a `shallowRef` count that is one more source. The count replaces `useForcedRerendering`. `Tabs.Indicator` is the model.
 - A watcher that writes state that the render reads keeps the default flush. It runs before the render, so the component renders one time for the change. `useMediaQuery` and `useImageLoadingStatus` do this.
 - `isPositioned` of `useAnchorPositioning` and the copy of `mounted` and `transitionStatus` in `usePopupRoot` are exceptions: their watchers have `flush: 'sync'`.
@@ -1221,6 +1222,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `CollapsiblePanel.vue` gives `animation-name: none` and the record to `useRenderElement` as `overridingStyle`. They then win over `style` and `stateStyle` of the consumer.
 - `getDragStyles()` of `useSwipeDismiss` gives the drag styles at the time of the call. The offset of the drag is not reactive, so a change of the offset renders nothing. A render during a swipe writes the drag styles again. They replace a value that `onProgress` wrote to a movement variable. A `transform` or `transition` key that the part puts after the drag styles replaces the drag in that render.
 - `Drawer.Popup` gives the `transform` and the `transition` of the drag to `useRenderElement` as `overridingStyle` while the drawer is swiping. The drag then wins over a `transform` or a `transition` in the `style` of the consumer.
+- `Drawer.SwipeArea` writes the movement of an opening gesture and `transition: none` to the popup. During that gesture, `Drawer.Popup` renders the movement that its element holds, and it gives `transition: none` as `overridingStyle`. A render of the popup then keeps the gesture.
 - A hidden input that `handleHiddenInputInvalid` grows gets the style constant itself, in a bound object, outside `mergeProps`. That bound object is the only attribute of the input.
 - A root can write a temporary declaration to the element of another part. `ScrollAreaRoot.vue` does this for `scroll-snap-type`, while a thumb drag or a track press is active.
 - The root saves the inline value that it finds, and it restores that value at the end.
@@ -1260,7 +1262,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
 - A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. `ScrollAreaRoot.vue` does this for its hover state.
 - A swipe in progress ends with no dismissal in `onDeactivated`. The browser releases the pointer capture of an element that leaves the document, so no `pointerup` comes to the element. `useSwipeDismiss` does this.
-- `useSwipeDismiss` calls no `onCancel` in `onDeactivated`. A part that keeps a swipe state of its own thus ends that state in its own `onDeactivated` hook. `Drawer.SwipeArea` removes its swipe styles from the popup and the backdrop, and it lets an outside press close the drawer again.
+- `useSwipeDismiss` calls no `onCancel` in `onDeactivated`. A part that keeps a swipe state of its own thus ends that state in its own `onDeactivated` hook. `Drawer.SwipeArea` removes its swipe styles from the popup and the backdrop, and it lets an outside press close the drawer again. It does the same when it unmounts during a gesture, because no release comes then (`VUE-57`).
 - A part that reads `:hover` at mount reads it again in `onActivated`. No enter event comes for a pointer that is already over the part. `ScrollAreaViewport.vue` does this.
 - An effect that reads the DOM stops while the part is deactivated. `onDeactivated` runs the cleanup of the effect, and `onActivated` runs the effect again. `useCollapsiblePanel` does this for its size effect and its close effect.
 - `useUnmountAfterClose` is the exception. A close that is in progress when `KeepAlive` deactivates the root completes, and `onUnmount` runs one time. A wait that starts again at the activation would play a keyframe exit a second time.
