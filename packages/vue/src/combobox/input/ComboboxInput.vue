@@ -47,6 +47,7 @@ import { computed, nextTick, onMounted, provide, shallowRef, toRaw, watch } from
 import type { ComponentPublicInstance } from 'vue';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
+import { addInputFocusListeners } from '../../filter-dropdown/input/FilterDropdownInput';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { DEFAULT_FIELD_STATE_ATTRIBUTES } from '../../internals/field-constants';
@@ -161,8 +162,17 @@ const inputOwnsFormValue = computed(() => selectionMode.value === 'none' && !has
 // A template can mount the input that replaces this input before it unmounts this input. The
 // input then clears the element of the root only when the root holds its own element.
 let ownInput: HTMLInputElement | null = null;
+let removeFocusListeners: (() => void) | undefined;
 function setInputElement(element: HTMLElement | null) {
   const input = element as HTMLInputElement | null;
+  // Chromium sends `focusout` to a focused input that Vue removes, and React drops that event. A
+  // Vue listener stays on the removed input. The function ref thus adds the focus listeners, and
+  // it removes them before Vue removes the input.
+  removeFocusListeners?.();
+  removeFocusListeners =
+    input === null
+      ? undefined
+      : addInputFocusListeners(input, { focusin: handleFocusin, focusout: handleFocusout });
   const state = toRaw(store.state);
   const isOwnInput = state.inputElement === ownInput;
   ownInput = input;
@@ -552,8 +562,6 @@ const { element, elementProps } = useRenderElement('input', props, {
         form: store.select('form'),
         name: inputOwnsFormValue.value && name ? name : undefined,
         id: id.value,
-        onFocusin: handleFocusin,
-        onFocusout: handleFocusout,
         onCompositionstart: handleCompositionstart,
         onCompositionend: handleCompositionend,
         onInput: handleInput,
