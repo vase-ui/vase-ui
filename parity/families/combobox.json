@@ -6,37 +6,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.ChipRemove` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.ChipRemove`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chip/ComboboxChip.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Chip` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chip/ComboboxChip.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Chip`."
-    },
-    {
       "upstream": "packages/react/src/combobox/chips/ComboboxChips.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Chips` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/chips/ComboboxChips.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Chips`."
+      "describe": ["<Combobox.Chips />"],
+      "title": "does not focus the input when pressing content in a nested React portal",
+      "kind": "not-applicable",
+      "reason": "React sends a press in a portal up the React tree, so the chips get it. Vue sends a press only up the DOM, and a `Teleport` puts its content outside the chips. The chips get no such press."
     },
     {
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
@@ -65,12 +39,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips or the trigger, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input/ComboboxInput.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips or the value, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
