@@ -24,6 +24,7 @@ export interface NavigationMenuPortalProps
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
@@ -45,7 +46,10 @@ defineSlots<{
   }): unknown;
 }>();
 
+const state: NavigationMenuPortalState = EMPTY_OBJECT;
+
 const { mounted } = useNavigationMenuRootContext();
+const shouldRender = computed(() => mounted.value || props.keepMounted);
 
 provide(
   NavigationMenuPortalContext,
@@ -53,6 +57,9 @@ provide(
 );
 
 // As in Base UI, this part renders `FloatingPortal` and makes no element of its own.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots dynamic, and each part below it that has slot content then renders again with
+// its parent.
 const portalRef = useTemplateRef('portal');
 const element = computed(() => portalRef.value?.element ?? null);
 
@@ -61,15 +68,19 @@ defineExpose({ element });
 
 <template>
   <FloatingPortal
-    v-if="mounted || keepMounted"
+    v-if="shouldRender && $slots.render"
     ref="portal"
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
-      <slot v-bind="slotProps" />
-    </template>
+  </FloatingPortal>
+  <FloatingPortal
+    v-else-if="shouldRender"
+    ref="portal"
+    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+  >
+    <slot :state="state" />
   </FloatingPortal>
 </template>

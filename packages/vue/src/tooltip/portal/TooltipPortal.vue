@@ -24,6 +24,7 @@ export interface TooltipPortalProps
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue';
 import { useTooltipRootContext } from '../root/TooltipRootContext';
@@ -38,6 +39,8 @@ defineSlots<{
   render(props: { props: HTMLProps; state: TooltipPortalState; children: Component }): unknown;
 }>();
 
+const state: TooltipPortalState = EMPTY_OBJECT;
+
 const store = useTooltipRootContext();
 const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
 
@@ -48,6 +51,9 @@ provide(
 
 // As in Base UI, this part renders `FloatingPortalLite` and makes no element of its own.
 // `keepMounted` is a prop of this part only, so the template gives each other prop by its name.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots dynamic, and each part below it that has slot content then renders again with
+// its parent.
 const portal = useTemplateRef('portal');
 const element = computed(() => portal.value?.element ?? null);
 
@@ -56,15 +62,19 @@ defineExpose({ element });
 
 <template>
   <FloatingPortalLite
-    v-if="shouldRender"
+    v-if="shouldRender && $slots.render"
     ref="portal"
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
-      <slot v-bind="slotProps" />
-    </template>
+  </FloatingPortalLite>
+  <FloatingPortalLite
+    v-else-if="shouldRender"
+    ref="portal"
+    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+  >
+    <slot :state="state" />
   </FloatingPortalLite>
 </template>
