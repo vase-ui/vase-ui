@@ -329,6 +329,45 @@ describe('<Menu.Trigger />', () => {
       expect(probe.store.select('floatingParentNodeId')).toBe('parent');
     });
 
+    it('VUE-54: closes the menu that a trigger in its popup opens when the menu closes', async () => {
+      const outer = Menu.createHandle();
+      const inner = Menu.createHandle();
+      await render(
+        <div>
+          <Menu.Trigger handle={outer} id="outer-trigger">
+            Outer
+          </Menu.Trigger>
+          <Menu.Root handle={outer}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="outer-popup">
+                  <Menu.Trigger handle={inner} id="inner-trigger">
+                    Inner
+                  </Menu.Trigger>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root handle={inner}>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="inner-popup">Inner popup</Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>,
+      );
+      outer.open('outer-trigger');
+      await waitFor(() => expect(screen.getByTestId('outer-popup')).toBeInTheDocument());
+      inner.open('inner-trigger');
+      await waitFor(() => expect(screen.getByTestId('inner-popup')).toBeInTheDocument());
+
+      outer.close();
+
+      await waitFor(() => expect(screen.queryByTestId('outer-popup')).toBe(null));
+      await waitFor(() => expect(screen.queryByTestId('inner-popup')).toBe(null));
+    });
+
     it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {
       const handle = Menu.createHandle();
       const probe = createMenuStoreProbe();
