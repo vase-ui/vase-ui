@@ -3,7 +3,7 @@ import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import type { ToastManager } from '../createToastManager';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 
 describe('<Toast.Provider /> on a server', () => {
   afterEach(() => {

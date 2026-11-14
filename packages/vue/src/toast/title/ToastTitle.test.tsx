@@ -10,7 +10,7 @@ import {
   within,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import ToastTitleHydration from './ToastTitleHydration.test.vue';
 
 const toast = {

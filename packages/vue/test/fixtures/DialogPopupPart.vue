@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 import { useDialogRootContext } from '../../src/dialog/root/DialogRootContext';
 
-// The tests use this part in place of `Dialog.Popup`. It renders the popup element with the props
-// that the root gives.
+// The tests of Drawer use this part in place of `Drawer.Popup`, which Vase UI does not have. It
+// renders the popup element with the props that the root gives.
 defineOptions({ inheritAttrs: false });
 
 withDefaults(defineProps<{ keepMounted?: boolean }>(), { keepMounted: false });

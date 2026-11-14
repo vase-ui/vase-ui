@@ -46,7 +46,7 @@ function createContextMenuEvent(init: MouseEventInit = {}) {
   return new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, ...init });
 }
 
-// Firefox and WebKit on a desktop cannot make a `Touch`, so the event gets a `touches` list by hand.
+// WebKit on a desktop cannot make a `Touch`, so the event gets a `touches` list by hand.
 function fireTouch(
   element: Element,
   type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
