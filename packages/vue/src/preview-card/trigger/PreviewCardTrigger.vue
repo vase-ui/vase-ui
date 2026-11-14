@@ -51,6 +51,7 @@ import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import { useFocus } from '../../utils/popups/interactions/useFocus';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
@@ -111,6 +112,8 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
+const focusProps = useFocus(store, { delay: () => props.delay });
+
 const inlineRectTriggerProps = getInlineRectTriggerProps(
   () => store.value.context.inlineRectCoordsRef,
   isOpenedByThisTrigger,
@@ -129,6 +132,7 @@ const { element, elementProps } = useRenderElement('a', props, {
   stateAttributesMapping: triggerOpenStateMapping,
   props: (attrs) => [
     hoverProps,
+    focusProps,
     rootTriggerProps.value,
     inlineRectTriggerProps,
     { id: thisTriggerId.value },
