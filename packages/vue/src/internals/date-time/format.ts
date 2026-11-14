@@ -47,9 +47,24 @@ function intlCalendar(calendar: string): string {
   return calendar === 'iso8601' ? 'gregory' : calendar;
 }
 
-/** The calendar of a locale, such as `gregory`, `buddhist` or `persian`: its `-u-ca-` keyword, else its default. */
+function isTemporalCalendar(calendar: string): boolean {
+  try {
+    Temporal.PlainDate.from('1970-01-01').withCalendar(calendar);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The calendar of a locale, such as `gregory`, `buddhist` or `persian`: its `-u-ca-` keyword, else
+ * its default. `Intl` and `Temporal` do not have the same calendars. Chromium resolves
+ * `ar-SA-u-ca-islamic` to `islamic`, which `Temporal` refuses, and `temporal-polyfill` without its
+ * `full` entry has only `iso8601` and `gregory`. For such a calendar the result is `gregory`.
+ */
 export function localeCalendar(locale: Intl.LocalesArgument): string {
-  return new Intl.DateTimeFormat(locale).resolvedOptions().calendar;
+  const calendar = new Intl.DateTimeFormat(locale).resolvedOptions().calendar;
+  return isTemporalCalendar(calendar) ? calendar : 'gregory';
 }
 
 export interface WeekInfo {
@@ -76,9 +91,9 @@ function toWeekInfo(info: unknown): WeekInfo | null {
 // The first locale that `Intl` supports, with its keywords such as `-u-fw-mon`, which `resolvedOptions`
 // drops. A locale with no format data gives the week of its region.
 function localeTag(locale: Intl.LocalesArgument): string {
-  const list =
-    typeof locale === 'string' || locale instanceof Intl.Locale ? [locale] : (locale ?? []);
-  const tags = list.map(String);
+  // `instanceof` is `false` for a locale that another realm made.
+  const list: readonly unknown[] = Array.isArray(locale) ? locale : [locale];
+  const tags = list.filter((item) => item !== undefined).map(String);
   return (
     Intl.DateTimeFormat.supportedLocalesOf(tags)[0] ??
     tags[0] ??

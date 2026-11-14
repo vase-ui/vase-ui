@@ -1,5 +1,5 @@
 import { compareDates, isKind, isSameDay } from './temporal';
-import type { DateValue, DayOfWeek } from './temporal';
+import type { DateValue } from './temporal';
 
 /**
  * A rule for the days of a grid. Each form but the function and the list compares by the day:
@@ -7,7 +7,7 @@ import type { DateValue, DayOfWeek } from './temporal';
  * - `{ start, end }` matches the days from `start` to `end`, the two ends included;
  * - `{ before }` and `{ after }` match the days that come before or after that day;
  * - `{ before, after }` matches the days between the two, the two ends excluded;
- * - `{ dayOfWeek }` matches each Monday (1) to Sunday (7) that it names;
+ * - `{ dayOfWeek }` matches each day of the week that it names, from Monday (1) to Sunday (7);
  * - a function matches the days for which it returns `true`;
  * - a list matches the days that one of its matchers matches.
  */
@@ -16,7 +16,7 @@ export type DateMatcher =
   | { start: DateValue; end: DateValue }
   | { before: DateValue; after?: DateValue }
   | { after: DateValue; before?: DateValue }
-  | { dayOfWeek: DayOfWeek | readonly DayOfWeek[] }
+  | { dayOfWeek: number | readonly number[] }
   | ((date: Temporal.PlainDate) => boolean)
   | readonly DateMatcher[];
 

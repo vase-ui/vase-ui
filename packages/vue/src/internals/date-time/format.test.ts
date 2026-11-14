@@ -108,14 +108,25 @@ describe('formatter', () => {
     expect(format.format(epoch)).toBe('November 2026');
   });
 
-  it('replaces the zone and the calendar of the options with those of the value', () => {
+  it.each([
+    { name: 'a date', value: () => day('2026-11-14'), timeZone: 'UTC', calendar: 'gregory' },
+    {
+      name: 'a zoned date and time',
+      value: () => Temporal.ZonedDateTime.from('2026-11-14T10:30[Asia/Tokyo]'),
+      timeZone: 'Asia/Tokyo',
+      calendar: 'gregory',
+    },
+    { name: 'a time', value: () => Temporal.PlainTime.from('10:30'), timeZone: 'UTC' },
+  ])('replaces the zone and the calendar of the options with those of $name', (row) => {
     const [format] = formatter(
-      day('2026-11-14'),
-      { timeZone: 'Asia/Tokyo', calendar: 'persian' },
+      row.value(),
+      { timeZone: 'America/New_York', calendar: 'persian' },
       'en-US',
     );
-    expect(format.resolvedOptions().timeZone).toBe('UTC');
-    expect(format.resolvedOptions().calendar).toBe('gregory');
+    expect(format.resolvedOptions().timeZone).toBe(row.timeZone);
+    if (row.calendar) {
+      expect(format.resolvedOptions().calendar).toBe(row.calendar);
+    }
   });
 });
 
@@ -128,6 +139,20 @@ describe('localeCalendar', () => {
     { locale: ['xx-YY', 'th-TH'], expected: 'buddhist' },
   ])('gives $expected for the locale $locale', ({ locale, expected }) => {
     expect(localeCalendar(locale)).toBe(expected);
+  });
+
+  it.each([
+    'th-TH',
+    'fa-IR',
+    'he-IL-u-ca-hebrew',
+    'en-US-u-ca-japanese',
+    'en-US-u-ca-iso8601',
+    'en-US-u-ca-islamicc',
+    'ar-SA-u-ca-islamic',
+    'en-US-u-ca-islamic-rgsa',
+  ])('gives for the locale %s a calendar that Temporal accepts', (locale) => {
+    const calendar = localeCalendar(locale);
+    expect(Temporal.PlainDate.from('2026-11-14').withCalendar(calendar).calendarId).toBe(calendar);
   });
 
   it('gives the calendar of the runtime locale for no locale', () => {

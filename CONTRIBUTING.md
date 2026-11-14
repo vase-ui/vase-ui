@@ -78,7 +78,7 @@ The site imports the built package. Run `pnpm build` before `pnpm docs:typecheck
 - `@vue/language-core` has a pnpm patch in `patches`. Without the patch, the package changes `//` in an attribute value of a component into a comment in the generated code. The type check of that template then fails.
 - The patch is the correction of [vuejs/language-tools#6241](https://github.com/vuejs/language-tools/pull/6241). When a release of `@vue/language-core` has the correction, run `pnpm patch-remove @vue/language-core@3.3.14`. Then install the `vue-tsc` and `vue-component-meta` of that release. The sample `docs/examples/type-check/AbsoluteUrlAttribute.vue` fails `pnpm docs:typecheck` when the release lacks the correction.
 - `rolldown-plugin-dts` has a pnpm patch in `patches`. `tsdown` uses it to bundle the declarations. Without the patch, it drops each `/// <reference lib="…" />` line, and a date or time entry point loses the line that gives a consumer the `Temporal` types.
-- The patch adds `lib` to the expression `REFERENCE_RE` of `rolldown-plugin-dts`, which keeps only `path` and `types`. When a release of `rolldown-plugin-dts` keeps the `lib` line, run `pnpm patch-remove rolldown-plugin-dts@0.30.1`. Then install that release. The step "Check which declarations name Temporal" of `pnpm check:package` fails when the release lacks the correction.
+- The patch adds `lib` to the expression `REFERENCE_RE` of `rolldown-plugin-dts`, which keeps only `path` and `types`. When a release of `tsdown` uses a `rolldown-plugin-dts` that keeps the `lib` line, run `pnpm patch-remove rolldown-plugin-dts@0.30.1`. Then install that release of `tsdown`. The step "Check the declarations that name Temporal" of `pnpm check:package` fails when the release lacks the correction.
 - `vitepress` stays at exactly `2.0.0-alpha.21`, a prerelease. The stable release, 1.6.4, installs a second Vite from the 5.x line. `pnpm audit` lists advisories for that line, and no 5.x release corrects them. The prerelease uses the Vite of `packages/vue`. Install the stable 2.0 release when VitePress publishes it.
 - The workspace denies the install script of `esbuild` with the `allowBuilds` entry `esbuild: false`. The release job `stage` also installs `esbuild`, as an optional peer of `vite` in `packages/vue`. That job can get an OIDC token. Keep the entry `false`.
 - The lowest version of Vue that the package supports is 3.5.12. Before that version, `useId` can give different ids on the server and in the browser below a component that has `onServerPrefetch` ([vuejs/core#12128](https://github.com/vuejs/core/pull/12128)).
@@ -163,7 +163,7 @@ The package is `@vase-ui/vue`. It is ESM only.
 - `internals`, `utils` and `common` are not entry points.
 - A folder with a name that starts with `unstable-` is an entry point, but the barrel does not include it.
 - A folder whose `index.ts` starts with the Temporal reference line, `/// <reference lib="esnext.temporal" preserve="true" />`, is an entry point, but the barrel does not include it. Its declarations name `Temporal` types, so a consumer needs TypeScript 6.0, or `skipLibCheck`.
-- A project that imports only the barrel then needs no `Temporal` types. `pnpm check:package` fails when a declaration that the barrel reaches names `Temporal`. It also fails when the declaration of an entry point that reaches such a declaration does not start with the reference line.
+- A project that imports only the barrel then needs no `Temporal` types. `pnpm check:package` fails when a declaration that the barrel reaches names `Temporal`. It also fails when an entry point reaches a declaration that names `Temporal` and no declaration that it reaches starts with the reference line.
 
 The entry point of a family exports:
 
@@ -510,7 +510,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
 - `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are also off in the root project and in `docs`, because the scripts do not obey them.
 - `lib` and `target` of the package are ES2024. Each API of ES2024 is Baseline Widely Available, except a resizable `ArrayBuffer`, a growable `SharedArrayBuffer` and `Atomics.waitAsync`. Do not use these three, `using` or `Symbol.dispose`.
-- The package takes the types of `Temporal` from `lib.esnext.temporal`, and from no other `lib` above ES2024. Only the date and time families and `internals/date-time` use `Temporal`. The first line of `internals/date-time/temporal.ts` is the Temporal reference line of [Entry points](#entry-points), which loads that `lib`.
+- `Temporal` is the one API above ES2024 that the source uses. Only the date and time families and `internals/date-time` use it. Its types come from `lib.esnext.temporal`, which the Temporal reference line of [Entry points](#entry-points) loads. That line is the first line of `internals/date-time/temporal.ts`.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
 ### ESLint
@@ -743,12 +743,13 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 
 The date and time families call `Temporal` and `Intl` directly, through the functions of `internals/date-time`. They have no adapter and no provider.
 
-- Tell the kind of a value with `kindOf` or `isKind`. Do not use `instanceof`: an object of another realm or of a polyfill fails it.
+- Tell the kind of a value with `kindOf` or `isKind`. Do not use `instanceof`: it is `false` for an object that another realm or another implementation of `Temporal` made.
 - Format a value only through `formatter()`. `Intl` gets a number, a zone and a calendar, and never a `Temporal` object. Do not call `toLocaleString`.
 - No module reads `Temporal` when it loads: no constant and no default of a prop. The first read is in a function that a part calls, after `assertTemporal` in `setup`.
 - Compare two values with `compareDates`, `Temporal.PlainTime.compare` or `equals`.
-- Make an emitted value with `withDate` or `withTime`. The value then keeps its kind, its calendar, its time and its zone.
-- `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale.
+- Make an emitted value with `withDate` or `withTime`. `withDate` keeps the kind, the calendar, the time and the zone of the value. `withTime` keeps the kind, the calendar, the date and the zone.
+- `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
+- `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
 
 ### Popup store
@@ -1971,7 +1972,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - The status line shows `N of T`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
-- `docs/.vitepress/theme/index.ts` imports `temporal-polyfill/full/global`, so a browser that has no `Temporal` runs a date or time demo. Its line `/// <reference lib="esnext.temporal" />` gives the samples and the demos of the docs project the `Temporal` types.
+- `docs/.vitepress/theme/index.ts` imports `temporal-polyfill/full/global`, so that a browser with no `Temporal` can run the demos of the date and time components. Its line `/// <reference lib="esnext.temporal" />` gives the samples and the demos of the docs project the `Temporal` types.
 - `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
 - `look.css` gives `.Layout`, the root of the site, `isolation: isolate`, as the quick start of Base UI tells an app to do. A popup of a demo is outside `.Layout`, so it shows above each element of the page, the navigation bar included. Without the rule, a code block of VitePress, which has a `z-index`, shows above the popup.
 - Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.

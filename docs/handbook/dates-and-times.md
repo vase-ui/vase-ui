@@ -62,7 +62,7 @@ export default defineNuxtPlugin(() => {});
 
 ## TypeScript
 
-The types of Vase UI use the global `Temporal` types of TypeScript 6.0. The declaration file of each date and time entry point starts with `/// <reference lib="esnext.temporal" preserve="true" />`. A project on TypeScript 6.0 needs no change of its `lib`.
+The types of Vase UI use the global `Temporal` types of TypeScript 6.0. The built declarations of each date and time entry point carry the line `/// <reference lib="esnext.temporal" preserve="true" />`. A project on TypeScript 6.0 needs no change of its `lib`.
 
 The entry point `@vase-ui/vue` does not export the date and time components. A project that imports none of them needs no `Temporal` types, and it can use an earlier version of TypeScript. Import each date or time component from its own entry point.
 
@@ -90,7 +90,7 @@ A component shows a date in the calendar that its `calendar` prop names. With no
 
 Set `calendar="gregory"` to turn the calendar of the locale off. The value that the component gives back keeps its own calendar. A grid of another calendar does not change the calendar of the value.
 
-For a calendar other than ISO and Gregorian in an engine that needs the polyfill, import `temporal-polyfill/full/global`.
+For a calendar other than ISO and Gregorian in an engine that needs the polyfill, import `temporal-polyfill/full/global`. When `Temporal` has no calendar of the locale, the component uses `gregory`. This happens with the plain polyfill, and with a locale such as `ar-SA-u-ca-islamic` in Chrome.
 
 ## Time zones
 
@@ -104,4 +104,4 @@ A server does not know the locale and the time zone of a visitor. With no `local
 
 Give a component that has no value the props `today` and `timeZone`. The server HTML then shows the same day as the first render of the browser.
 
-On Node.js 24 and earlier, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
+On a Node.js version before 26, load the polyfill before the server starts: `node --import temporal-polyfill/global server.js`. In a Nuxt app, the plugin above covers the server.
