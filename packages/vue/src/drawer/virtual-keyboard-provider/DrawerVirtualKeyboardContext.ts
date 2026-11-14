@@ -2,12 +2,12 @@ import { inject } from 'vue';
 import type { InjectionKey } from 'vue';
 
 export interface DrawerVirtualKeyboardContext {
-  onTouchStart: (event: TouchEvent) => void;
+  onTouchstart: (event: TouchEvent) => void;
   // Driven by the viewport's native `touchmove` listener so it still fires when the
   // swipe gesture claims the event with `stopPropagation()`.
-  onTouchMove: (event: TouchEvent) => void;
-  onTouchEnd: (event: TouchEvent) => void;
-  onTouchCancel: () => void;
+  onTouchmove: (event: TouchEvent) => void;
+  onTouchend: (event: TouchEvent) => void;
+  onTouchcancel: () => void;
 }
 
 export const DrawerVirtualKeyboardContext: InjectionKey<DrawerVirtualKeyboardContext> = Symbol();

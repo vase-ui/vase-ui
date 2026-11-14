@@ -192,7 +192,6 @@ function focusElement(element: unknown) {
 
 async function flushAnimationFrames(count: number) {
   for (let i = 0; i < count; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
     await new Promise((resolve) => {
       requestAnimationFrame(resolve);
     });
@@ -222,8 +221,8 @@ const DirectVirtualKeyboardTouchTarget = defineComponent({
       <input
         data-testid="input"
         type="text"
-        onTouchstart={virtualKeyboard?.onTouchStart}
-        onTouchend={virtualKeyboard?.onTouchEnd}
+        onTouchstart={virtualKeyboard?.onTouchstart}
+        onTouchend={virtualKeyboard?.onTouchend}
       />
     );
   },

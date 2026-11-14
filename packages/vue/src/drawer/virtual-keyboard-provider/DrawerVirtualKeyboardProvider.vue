@@ -241,7 +241,15 @@ function findKeyboardScrollTarget(target: HTMLElement, root: HTMLElement): HTMLE
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, provide, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  provide,
+  watch,
+} from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { NOOP } from '../../common/empty';
@@ -911,13 +919,13 @@ onScopeDispose(() => {
   cleanupKeyboardTracking();
 });
 
-function onTouchStart(event: TouchEvent) {
+function handleTouchStart(event: TouchEvent) {
   const touch = event.touches[0];
   pendingKeyboardFocusMoved = false;
   keyboardTouchStart = { x: touch.clientX, y: touch.clientY };
 }
 
-function onTouchMove(event: TouchEvent) {
+function handleTouchMove(event: TouchEvent) {
   const touch = event.touches[0];
   const touchStart = keyboardTouchStart;
 
@@ -935,7 +943,7 @@ function onTouchMove(event: TouchEvent) {
   }
 }
 
-function onTouchEnd(event: TouchEvent) {
+function handleTouchEnd(event: TouchEvent) {
   const root = rootElement.value;
   if (
     !open.value ||
@@ -1029,10 +1037,10 @@ function onTouchEnd(event: TouchEvent) {
 }
 
 provide(DrawerVirtualKeyboardContext, {
-  onTouchStart,
-  onTouchMove,
-  onTouchEnd,
-  onTouchCancel: resetTouchTrackingState,
+  onTouchstart: handleTouchStart,
+  onTouchmove: handleTouchMove,
+  onTouchend: handleTouchEnd,
+  onTouchcancel: resetTouchTrackingState,
 });
 </script>
 

@@ -1013,7 +1013,7 @@ function listenToTouchMove() {
     // It must run even when the swipe gesture below claims the event with
     // `stopPropagation()`, which would otherwise prevent the touch listeners of the elements
     // (and the provider) from ever seeing the move.
-    virtualKeyboard?.onTouchMove(event);
+    virtualKeyboard?.onTouchmove(event);
 
     if (ignoreTouchSwipe) {
       return;
@@ -1213,7 +1213,7 @@ const viewportHandlers = {
       return;
     }
 
-    virtualKeyboard?.onTouchStart(event);
+    virtualKeyboard?.onTouchstart(event);
 
     // `x`/`y` hand touch drags along that axis to the element. Any value other than the
     // cross-axis one ignores the swipe outright; a cross-axis element is arbitrated like a
@@ -1261,12 +1261,12 @@ const viewportHandlers = {
     swipe.touchProps.onTouchstartPassive(event);
   },
   onTouchend(event: TouchEvent) {
-    virtualKeyboard?.onTouchEnd(event);
+    virtualKeyboard?.onTouchend(event);
     resetTouchTrackingState();
     swipe.touchProps.onTouchend(event);
   },
   onTouchcancel(event: TouchEvent) {
-    virtualKeyboard?.onTouchCancel();
+    virtualKeyboard?.onTouchcancel();
     resetTouchTrackingState();
     swipe.touchProps.onTouchcancel(event);
   },
