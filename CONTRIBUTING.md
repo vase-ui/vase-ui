@@ -846,6 +846,10 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The `id` attribute and the `#render` slot can replace the generated `id`. The portal thus reads the `id` after each DOM update.
 - Unless the popup is modal, the portal listens to `focusin` and `focusout` in the capture phase. When the focus moves from the portal to an element outside it, the portal sets `tabindex="-1"` on each tabbable element in the portal.
 - The portal restores those elements when the focus comes back from outside, and when the popup opens. Until then, the Tab key skips them, and it enters the popup only through a guard.
+- The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
+- That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
+- `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
+- The `#render` slot of `FloatingPortal` gets `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 
 ### Popup interactions
 
@@ -938,6 +942,7 @@ The scroll lock stops the scroll of the page under a modal popup. The code is in
 - The result is one plain object with `reference`.
 - Each option is a value, a ref or a getter. A getter of `stickIfOpen` is read at each press, as the function of Base UI.
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
+- Where a trigger of Base UI sets the attribute `CLICK_TRIGGER_IDENTIFIER`, the trigger part sets the same constant of `src/internals/constants.ts`.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
 
@@ -1441,6 +1446,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `fireTouch.start`, `move`, `end` and `cancel` dispatch a touch event with `touches`, `targetTouches` and `changedTouches` through `fireEvent`. A point needs only `clientX` and `clientY`. The event is a `TouchEvent` where the browser can construct one. Firefox on a desktop has no `Touch` and no `TouchEvent`, and WebKit on a desktop cannot construct a `Touch`. There the event is an `Event` with the three lists.
 - `flushMicrotasks` resolves in the next task. Each flush that Vue queued is then complete.
 - After each test in a browser, `test/setup.ts` waits for one 0 ms timer of the browser. The wait comes after each unmount and before the check of the messages. The next test then starts in a new task. A 0 ms timer that the last test set in the task in which the test ended ran before the new task. The browser delays a timer by 4 ms or more when timers nest more than five deep. A delayed timer that the last test set in an earlier task can run in the next test. Without the wait, a test that ends in a `ResizeObserver` callback gives the next test the loop error of the browser. Fake timers do not replace this timer.
+- After each test in which the page got a trusted `pointerover` event, `test/setup.ts` moves the real pointer of the browser to a point outside the page. The move comes before the wait. A press in a frame of the page also gives the page that event, on the frame element. Without the move, the pointer stays where the test left it. An element that a later test renders under the pointer then gets hover events from the browser. Chromium and Firefox send them in two frames or fewer, and WebKit sends them later.
 - `describeConformance` has no hydration case. A server render needs the path of a module. The suite gets a vnode. The test of a part calls the hydration helpers.
 - `describeConformance` needs a part that has its element when the `render` option of the call resolves. For a part with no element at mount, that option makes the element appear: it renders an open root, or it does the action that mounts the part. The call for `Avatar.Image` needs no action, because the test file mocks `Image` and the element appears in the flush after the mount.
 - The call for `ScrollArea.Corner` waits for the first measurement of the viewport, because the corner has no element before it. Its `render` option calls `await flushMicrotasks()`.
@@ -1505,7 +1511,7 @@ The hydration helpers:
 - Do not put a negative assertion in `waitFor`: it passes on the first try. Advance the timers or flush first, then assert. Assert a state that a timer ends directly after the timer advances. Where a case waits for a first measurement, wait for a value that the measurement writes. Then assert the absence.
 - A case that tests the observer of the content waits for the first measurement, and then for two animation frames. The first notification of each observer then has come. If the content changes before it, the observer of the viewport measures. The case then does not test the observer of the content. `ScrollAreaContent.test.tsx` is the model.
 - `waitFor` can resolve in the microtask checkpoint of a `ResizeObserver` callback, because a `MutationObserver` runs it. A change of the layout in that checkpoint gives the loop error of the browser. Call `await flushMicrotasks()` before the next change.
-- The pointer of the browser stays where a case leaves it, for each later test. A case that uses a real pointer releases it in `onTestFinished`, with coordinates. A call with no coordinates moves the pointer to the element of the last press, which is gone by then. `releasePointerAfterTest` of `ScrollAreaScrollbar.test.tsx` does this.
+- A button of the real pointer stays pressed for each later test until a case releases it. A case that holds a button releases it in `onTestFinished`, with coordinates. A call with no coordinates moves the pointer to the element of the last press, which is gone by then. `releasePointerAfterTest` of `ScrollAreaScrollbar.test.tsx` does this.
 - A test must fail when the behavior in its title breaks. Break the behavior in the source, make sure that the test fails, then put the source back.
 - A test fails when Vue warns in it, or when a call to `console.warn` or `console.error` reaches the console. `test/setup.ts` makes this check when the test ends.
 - When a test expects a Vue warning, call `takeReportedMessages()` after the action. Assert the whole list that it returns. A `.node.test` file imports the function by a relative path to `test/reportedMessages`.
@@ -1531,9 +1537,6 @@ The hydration helpers:
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
-- A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
-- A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
-- A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
 - A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
