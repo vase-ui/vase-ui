@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, KeepAlive, onMounted, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { CSSProperties, PropType } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
@@ -18,6 +18,7 @@ import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { REASONS } from '../../internals/reasons';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
+import NavigationMenuTriggerScoped from './NavigationMenuTriggerScoped.test.vue';
 
 const HYDRATION_FIXTURE = 'src/navigation-menu/trigger/NavigationMenuTriggerHydration.test.vue';
 
@@ -722,6 +723,92 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe('focus-out');
       expect(screen.getByTestId('outside')).toHaveFocus();
     });
+  });
+
+  describe('guards and owner element', () => {
+    it.each([
+      { name: 'its item closes', nextValue: null, mounted: true },
+      { name: 'the trigger unmounts', nextValue: 'one', mounted: false },
+    ])('clears the guard refs of the root when $name', async ({ nextValue, mounted }) => {
+      let rootContext!: ReturnType<typeof useNavigationMenuRootContext>;
+      const RootContextReader = defineComponent(() => {
+        rootContext = useNavigationMenuRootContext();
+        return () => null;
+      });
+      const value = shallowRef<string | null>('one');
+      const hasTrigger = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root value={value.value}>
+          <RootContextReader />
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              {hasTrigger.value ? <NavigationMenu.Trigger>One</NavigationMenu.Trigger> : null}
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Viewport />
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      expect(rootContext.beforeOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+      expect(rootContext.afterOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+
+      value.value = nextValue;
+      hasTrigger.value = mounted;
+      await flushMicrotasks();
+
+      expect(rootContext.beforeOutsideRef.value).toBe(null);
+      expect(rootContext.afterOutsideRef.value).toBe(null);
+    });
+
+    it('removes aria-owns from the owner element when the viewport unmounts', async () => {
+      const hasViewport = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {hasViewport.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null}
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      const owner = screen.getByTestId('trigger').parentElement!.children[2];
+      expect(owner).toHaveAttribute('aria-owns', screen.getByTestId('viewport').id);
+
+      hasViewport.value = false;
+      await flushMicrotasks();
+
+      expect(owner).not.toHaveAttribute('aria-owns');
+    });
+  });
+
+  describe('VUE-60: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed item', defaultValue: null },
+      { name: 'an active item', defaultValue: 'one' },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to $name',
+      async ({ defaultValue }) => {
+        const shown = shallowRef(true);
+        await render(() => (
+          <NavigationMenuTriggerScoped defaultValue={defaultValue} shown={shown.value} />
+        ));
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        expect(trigger.parentElement!.querySelectorAll('[data-vase-ui-focus-guard]')).toHaveLength(
+          defaultValue === null ? 0 : 2,
+        );
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   describe('hydration', () => {

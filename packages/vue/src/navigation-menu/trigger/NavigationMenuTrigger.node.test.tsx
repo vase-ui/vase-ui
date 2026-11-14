@@ -38,15 +38,15 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(html).toMatch(/data-testid="item-two"[^>]*>.*data-testid="link-two"/);
     });
 
-    it('renders the open trigger of defaultValue with its focus guards, and no content', async () => {
+    it('renders the open trigger of defaultValue with no focus guard beside it, and no content', async () => {
       const html = await renderToString(<NavigationMenuTriggerHydration defaultValue="one" />);
 
       const trigger = readTag(html, 'trigger-one');
       expect(trigger).toContain('aria-expanded="true"');
       expect(trigger).toContain('data-popup-open');
       expect(readTag(html, 'trigger-two')).toContain('aria-expanded="false"');
-      // Two guards follow the trigger, and two guards are in the viewport.
-      expect(countGuards(html)).toBe(4);
+      // The two guards are in the viewport. The trigger places its guards after the mount.
+      expect(countGuards(html)).toBe(2);
       // The root knows the element of the viewport only after the mount, so the content has no
       // place on a server.
       expect(html).not.toContain('data-testid="content-one"');
