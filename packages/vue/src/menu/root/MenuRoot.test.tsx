@@ -8,6 +8,7 @@ import {
   hydrate,
   renderOnServer,
   waitFor,
+  within,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -18,6 +19,7 @@ import {
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
@@ -1180,6 +1182,25 @@ describe('<Menu.Root />', () => {
       const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
 
       await hydrate(MenuRootHydration, { serverHtml });
+    });
+
+    it('puts the focus guards beside the trigger of an open root only after the hydration', async () => {
+      const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      expect(template.content.querySelectorAll(`[${createAttribute('focus-guard')}]`)).toHaveLength(
+        0,
+      );
+
+      const { container } = await hydrate(MenuRootHydration, { serverHtml });
+      await flushMicrotasks();
+
+      const trigger = within(container).getByRole('button', { name: 'Open' });
+      expect(
+        [trigger.previousElementSibling, trigger.nextElementSibling].map(
+          (sibling) => sibling?.hasAttribute(createAttribute('focus-guard')) ?? false,
+        ),
+      ).toEqual([true, true]);
     });
   });
 });

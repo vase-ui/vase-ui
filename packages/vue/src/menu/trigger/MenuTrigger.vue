@@ -61,6 +61,7 @@ import {
 } from '../../utils/popups/tree/FloatingTree';
 import { FloatingTreeStore } from '../../utils/popups/tree/FloatingTreeStore';
 import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
+import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuHandleStore } from '../store/MenuStore';
@@ -166,6 +167,9 @@ const { element, elementProps } = useRenderElement('button', props, {
     getButtonProps,
   ],
 });
+
+// A trigger in a menubar is an item of the composite of the menubar, and it has no guards.
+useTriggerFocusGuards(store, element, () => !isInMenubar && isOpenedByThisTrigger.value);
 
 defineExpose({ element });
 </script>
