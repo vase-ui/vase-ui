@@ -12,7 +12,11 @@ import {
 } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
-import { createScrollDocument, isPageLocked } from '../../../test/fixtures/scrollDocument';
+import {
+  createScrollDocument,
+  getScrollLockRegistry,
+  isPageLocked,
+} from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
@@ -556,6 +560,7 @@ describe('<Dialog.Root />', () => {
 
       handle.close();
       await waitFor(() => expect(isPageLocked(scrollDocument)).toBe(false), POLL);
+      expect(getScrollLockRegistry()?.lockCount).toBe(0);
     });
 
     it.each([

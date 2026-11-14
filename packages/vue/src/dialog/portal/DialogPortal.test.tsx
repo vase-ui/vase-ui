@@ -79,36 +79,64 @@ describe('<Dialog.Portal />', () => {
       expect(store.context.internalBackdropRef.value).toBe(backdrop);
     });
 
-    it('is inert while the dialog closes, and leaves the store when it unmounts', async () => {
-      let root!: Dialog.Root.Actions;
+    it.each([
+      { name: 'with the portal', keepMounted: false },
+      { name: 'from a kept portal', keepMounted: true },
+    ])(
+      'is inert while the dialog closes, and leaves the store when it unmounts $name',
+      async ({ keepMounted }) => {
+        let root!: Dialog.Root.Actions;
+        let store!: DialogStore<unknown>;
+        await render(() => (
+          <Dialog.Root
+            ref={(instance: unknown) => {
+              root = instance as Dialog.Root.Actions;
+            }}
+            defaultOpen
+            onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
+          >
+            <DialogStoreProbe onStore={(value) => (store = value)} />
+            <Dialog.Portal keepMounted={keepMounted} data-testid="portal">
+              <DialogPopupPart />
+            </Dialog.Portal>
+          </Dialog.Root>
+        ));
+        const backdrop = screen
+          .getByTestId('portal')
+          .querySelector<HTMLElement>(INTERNAL_BACKDROP_SELECTOR)!;
+        expect(backdrop.inert).toBe(false);
+
+        root.close();
+        await flushMicrotasks();
+        expect(store.select('mounted')).toBe(true);
+        expect(backdrop.inert).toBe(true);
+
+        root.unmount();
+        await flushMicrotasks();
+        expect(backdrop.isConnected).toBe(false);
+        expect(screen.queryByTestId('portal') !== null).toBe(keepMounted);
+        expect(store.context.internalBackdropRef.value).toBe(null);
+      },
+    );
+
+    it('leaves the store when the portal unmounts while the dialog is open', async () => {
+      const showPortal = shallowRef(true);
       let store!: DialogStore<unknown>;
       await render(() => (
-        <Dialog.Root
-          ref={(instance: unknown) => {
-            root = instance as Dialog.Root.Actions;
-          }}
-          defaultOpen
-          onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
-        >
+        <Dialog.Root defaultOpen>
           <DialogStoreProbe onStore={(value) => (store = value)} />
-          <Dialog.Portal data-testid="portal">
-            <DialogPopupPart />
-          </Dialog.Portal>
+          {showPortal.value ? (
+            <Dialog.Portal>
+              <DialogPopupPart />
+            </Dialog.Portal>
+          ) : null}
         </Dialog.Root>
       ));
-      const backdrop = screen
-        .getByTestId('portal')
-        .querySelector<HTMLElement>(INTERNAL_BACKDROP_SELECTOR)!;
-      expect(backdrop.inert).toBe(false);
+      expect(store.context.internalBackdropRef.value).not.toBe(null);
 
-      root.close();
+      showPortal.value = false;
       await flushMicrotasks();
-      expect(store.select('mounted')).toBe(true);
-      expect(backdrop.inert).toBe(true);
 
-      root.unmount();
-      await flushMicrotasks();
-      expect(backdrop.isConnected).toBe(false);
       expect(store.context.internalBackdropRef.value).toBe(null);
     });
 

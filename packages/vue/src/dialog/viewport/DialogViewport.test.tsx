@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
-import {
-  createRenderer,
-  describeConformance,
-  flushMicrotasks,
-  screen,
-  waitFor,
-} from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';

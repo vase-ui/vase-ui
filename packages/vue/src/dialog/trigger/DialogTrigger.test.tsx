@@ -123,6 +123,23 @@ describe('<Dialog.Trigger />', () => {
       },
     );
 
+    it('closes the dialog on the Escape key, and stops the key press at the trigger', async () => {
+      const handleKeydown = vi.fn();
+      await render(
+        <div onKeydown={handleKeydown}>
+          <Dialog.Root defaultOpen modal={false}>
+            <Dialog.Trigger>Open</Dialog.Trigger>
+            <DialogPopupPart />
+          </Dialog.Root>
+        </div>,
+      );
+
+      await fireEvent.keyDown(screen.getByRole('button', { name: 'Open' }), { key: 'Escape' });
+
+      expect(screen.queryByRole('dialog')).toBe(null);
+      expect(handleKeydown).not.toHaveBeenCalled();
+    });
+
     it('marks its element as a click trigger', async () => {
       await render(
         <Dialog.Root modal={false}>
@@ -202,7 +219,12 @@ describe('<Dialog.Trigger />', () => {
     it.each([
       { name: 'a closed dialog', props: {}, one: 'false', two: 'false' },
       // The first trigger that registers claims the dialog after the mount.
-      { name: 'an open dialog with no trigger id', props: { defaultOpen: true }, one: 'true', two: 'false' },
+      {
+        name: 'an open dialog with no trigger id',
+        props: { defaultOpen: true },
+        one: 'true',
+        two: 'false',
+      },
       {
         name: 'an open dialog with a trigger id',
         props: { defaultOpen: true, defaultTriggerId: 'two' },
