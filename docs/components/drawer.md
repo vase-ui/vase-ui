@@ -34,7 +34,7 @@ A panel that slides in from the edge of the screen.
 
 ## Usage guidelines
 
-- **Drawer extends Dialog**: It adds swipe gestures, snap points and indent effects. If you do not need these, use Dialog. A panel that slides in from the edge of the screen and needs no swipe gestures is a positioned Dialog.
+- **Drawer extends [Dialog](/components/dialog)**: It adds swipe gestures, snap points and indent effects. If you do not need these, use Dialog. A panel that slides in from the edge of the screen and needs no swipe gestures is a positioned Dialog.
 
 ## Anatomy
 
