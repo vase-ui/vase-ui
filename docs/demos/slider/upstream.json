@@ -1,0 +1,18 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/slider/demos",
+  "files": {
+    "edge-alignment/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
+    "edge-alignment/css-modules/index.tsx": "18a4e72433d0c630911eb466f718caebc2301f71f0b4862a498ba5de5182d261",
+    "hero/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
+    "hero/css-modules/index.tsx": "57ad2a8b4d1d994004ef9746a319ca859fbd5914bbc1396733ffc9bcf38f461e",
+    "marks/css-modules/index.module.css": "934a938cac37240c26fdf30c4b3ca903d90edf0e550fa33ca8fea4e16704f835",
+    "marks/css-modules/index.tsx": "7b5ac4d755d4dbd61611bbf1ff6a54ceb87fce053e9ad5224785efd65b803f69",
+    "range-slider/css-modules/index.module.css": "1f26715c72a8a1d085d175e60486a3e49b15c04e9bb047a8020858425d89e7cc",
+    "range-slider/css-modules/index.tsx": "6b3bb3419c70a74ce3c6fe22a8c6b81fd5bb563bfb0953f7a54f9430795f525f",
+    "steps/css-modules/index.module.css": "caa47680c6924e503b8df7608d33cdd5a74eac306f36cd04376d35add13a0a0a",
+    "steps/css-modules/index.tsx": "4d06bd957afc7fdd1151f89ce8240700ff763d86ea3252f32a7a2eff535f7b3f",
+    "vertical/css-modules/index.module.css": "54b20152f9edf7bcb77a8b75ae0b1347f2c6bd4c9c5a034e29e3f9f7213dd89e",
+    "vertical/css-modules/index.tsx": "81f4109a835a69e0732baf6a1e208a4a2a2ef37a678555659f270455dad6c8bb"
+  }
+}
