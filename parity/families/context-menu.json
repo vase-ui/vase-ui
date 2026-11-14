@@ -36,7 +36,7 @@
       "describe": ["<ContextMenu.Root />"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "Each case renders the popup parts and `ContextMenu.Item`, which Vase UI does not have. The two focus cases also need the focus manager of the popup."
+      "reason": "Each case renders the popup parts and `ContextMenu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -130,7 +130,7 @@
       "title": "keeps the root menu open when the context-menu gesture ends in a portaled submenu",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which Vase UI does not have."
+      "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which Vase UI does not have. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -264,7 +264,7 @@
       "entry": "Separator",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is the Separator part with the Menu name, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The family exports `Separator` of the Separator family with the items of Menu. Vase UI does not have that export yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",

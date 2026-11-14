@@ -242,9 +242,11 @@ A part that Base UI writes as another part renders that part and no element of i
 
 A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
 
-- The root renders no element, so it does not set `inheritAttrs`. It declares its own props with the text of Base UI, and binds each prop on the other root by name.
-- The rule above for the events applies: the root listens to each event of the other root and emits it again.
-- The root exposes the actions of the other root. Each exposed function calls the function of the same name on the other root. A function `ref` in the template writes that root to a `shallowRef`.
+- The root renders no element, so it does not set `inheritAttrs`, and it has no `#render` slot.
+- It declares its own props with the text of Base UI, and binds each prop on the other root by name.
+- The rule above for events applies to the events of the other root.
+- It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
+- A function `ref` in the template writes the other root to a `shallowRef`.
 
 ### Parts with nodes of their own
 
