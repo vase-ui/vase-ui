@@ -772,6 +772,59 @@ async function expectRadioGroupPage(page: Page) {
   expect(await readRadios(page, 'empty', 'tabindex')).toEqual(['-1', '0', '-1']);
 }
 
+const APPLE_TEST_IDS = ['fuji', 'gala', 'granny-smith'];
+
+async function readCheckboxGroupPage(page: Page) {
+  return {
+    group: await readAttributes(page.getByTestId('group'), ['role', 'aria-labelledby']),
+    parent: await readAttributes(page.getByTestId('parent'), [
+      'aria-checked',
+      'data-checked',
+      'data-indeterminate',
+      'data-parent',
+      'aria-controls',
+    ]),
+    apples: await Promise.all(
+      APPLE_TEST_IDS.map((testId) => page.getByTestId(testId).getAttribute('aria-checked')),
+    ),
+    formData: await readFormData(page),
+    indeterminate: await page
+      .getByTestId('form')
+      .evaluate((form) =>
+        Array.from(
+          form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+          (input) => input.indeterminate,
+        ),
+      ),
+  };
+}
+
+// The label comes after the group, and the server HTML names the group with it. A child gives its
+// id after the mount, so the server HTML has no `aria-controls` on the parent. HTML has no
+// attribute for `indeterminate`, so the input of the parent gets it after the mount. The input of
+// the parent has no name, so the form gets the entries of the children only.
+async function expectCheckboxGroupPage(page: Page, { hydrated }: { hydrated: boolean }) {
+  const labelId = await page.getByTestId('label').getAttribute('id');
+  const childIds = await Promise.all(
+    APPLE_TEST_IDS.map((testId) => page.getByTestId(testId).getAttribute('id')),
+  );
+
+  expect(labelId).toBeTruthy();
+  expect(await readCheckboxGroupPage(page)).toEqual({
+    group: { role: 'group', 'aria-labelledby': labelId },
+    parent: {
+      'aria-checked': 'mixed',
+      'data-checked': null,
+      'data-indeterminate': '',
+      'data-parent': '',
+      'aria-controls': hydrated ? childIds.join(' ') : null,
+    },
+    apples: ['true', 'false', 'false'],
+    formData: ['apples=fuji'],
+    indeterminate: [hydrated, false, false, false],
+  });
+}
+
 // The label and the messages name the input in the server HTML, in each order of the parts. The
 // hidden input has the number and not the text.
 async function expectNumberFieldPage(page: Page) {
@@ -891,6 +944,11 @@ const PAGES: PageCase[] = [
     path: '/checkbox',
     expectPage: expectCheckboxPage,
     expectHydratedPage: expectHydratedCheckboxPage,
+  },
+  {
+    path: '/checkbox-group',
+    expectPage: (page) => expectCheckboxGroupPage(page, { hydrated: false }),
+    expectHydratedPage: (page) => expectCheckboxGroupPage(page, { hydrated: true }),
   },
   { path: '/radio-group', expectPage: expectRadioGroupPage },
   {
@@ -1031,6 +1089,32 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await readRadioIndicator('banana-indicator')).toMatchObject({ 'data-checked': '' });
     expect(await page.getByTestId('value').textContent()).toBe('banana');
     expect(await readFormData(page)).toEqual(['fruit=banana']);
+    expect(messages).toEqual([]);
+  });
+
+  it('changes the checkboxes of /checkbox-group with three clicks on the parent and a click on a child after hydration', async () => {
+    const page = await createPage('/checkbox-group');
+    const messages = collectMessages(page);
+    const expectSelection = async (parent: string, selected: string[]) => {
+      expect(await readCheckboxGroupPage(page)).toMatchObject({
+        parent: { 'aria-checked': parent },
+        apples: APPLE_TEST_IDS.map((apple) => String(selected.includes(apple))),
+        formData: selected.map((apple) => `apples=${apple}`),
+      });
+      expect(await page.getByTestId('value').textContent()).toBe(selected.join(','));
+    };
+
+    await page.getByTestId('parent').click();
+    await expectSelection('true', ['fuji', 'gala', 'granny-smith']);
+
+    await page.getByTestId('parent').click();
+    await expectSelection('false', []);
+
+    await page.getByTestId('parent').click();
+    await expectSelection('mixed', ['fuji']);
+
+    await page.getByTestId('gala').click();
+    await expectSelection('mixed', ['fuji', 'gala']);
     expect(messages).toEqual([]);
   });
 
