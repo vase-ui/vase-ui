@@ -1,4 +1,5 @@
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
@@ -715,8 +716,12 @@ describe('<NumberField.ScrubArea />', () => {
       </NumberField.Root>,
     );
 
+    // The pointer of the browser stays where a case leaves it, for each later test.
+    onTestFinished(async () => {
+      await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+    });
+
     // Real browser input, so the native click and the synthesized one can both happen.
-    const { userEvent } = await import('vitest/browser');
     await userEvent.click(screen.getByTestId('scrub-area'));
     // The synthesized click is deferred by one task (20ms in Firefox).
     await wait(50);
