@@ -9,7 +9,7 @@ import {
 } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { UseAnchorPositioningReturnValue } from '../../../internals/useAnchorPositioning';
-import { useFloatingTree } from '../tree/FloatingTree';
+import { removeNodeContext, useFloatingTree } from '../tree/FloatingTree';
 import type { FloatingTreeStore } from '../tree/FloatingTreeStore';
 import type {
   ExtendedElements,
@@ -106,8 +106,8 @@ export function useVaseUIFloating(options: UseFloatingOptions): PopupPositioning
   }
 
   function unpublishNode() {
-    if (publishedNode?.context === context) {
-      publishedNode.context = undefined;
+    if (publishedNode) {
+      removeNodeContext(publishedNode, context);
     }
     publishedNode = undefined;
   }

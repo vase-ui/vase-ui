@@ -653,6 +653,87 @@ describe('useVaseUIFloating', () => {
       expect(contexts()).toEqual([undefined, context]);
     });
 
+    it('leaves the node of a part that KeepAlive holds when the popup moves to another node', async () => {
+      const tree = new FloatingTreeStore();
+      const { store } = createStore();
+      const { positioning } = createPositioning();
+      const nodeId = shallowRef<string | undefined>();
+      const ids: Record<string, string> = {};
+      const Kept = createNodeOwner(tree, (id) => {
+        ids.kept = id;
+      });
+      const Other = createNodeOwner(tree, (id) => {
+        ids.other = id;
+      });
+      let context!: PopupPositioningContext;
+      const Positioner = createPositioner(
+        { rootStore: store, mounted: true, positioning, nodeId, externalTree: tree },
+        (value) => {
+          context = value;
+        },
+      );
+      const visible = shallowRef(true);
+      await render(() => (
+        <>
+          <KeepAlive>{visible.value ? <Kept key="kept" /> : <span key="other" />}</KeepAlive>
+          <Other />
+          <Positioner />
+        </>
+      ));
+      const contextOf = (id: string) => tree.nodesRef.value.find((node) => node.id === id)?.context;
+
+      nodeId.value = ids.kept;
+      await nextTick();
+      expect(contextOf(ids.kept)).toBe(context);
+
+      visible.value = false;
+      await nextTick();
+      nodeId.value = ids.other;
+      await nextTick();
+      expect(contextOf(ids.other)).toBe(context);
+
+      visible.value = true;
+      await nextTick();
+      expect(contextOf(ids.other)).toBe(context);
+      expect(contextOf(ids.kept)).toBeUndefined();
+    });
+
+    it('leaves the node of a part that KeepAlive holds when the positioner unmounts', async () => {
+      const tree = new FloatingTreeStore();
+      const { store } = createStore();
+      const { positioning } = createPositioning();
+      let keptId = '';
+      const Kept = createNodeOwner(tree, (id) => {
+        keptId = id;
+      });
+      let context!: PopupPositioningContext;
+      const Positioner = createPositioner(
+        { rootStore: store, mounted: true, positioning, nodeId: () => keptId, externalTree: tree },
+        (value) => {
+          context = value;
+        },
+      );
+      const visible = shallowRef(true);
+      const show = shallowRef(true);
+      await render(() => (
+        <>
+          <KeepAlive>{visible.value ? <Kept key="kept" /> : <span key="other" />}</KeepAlive>
+          {show.value && <Positioner />}
+        </>
+      ));
+      const [node] = tree.nodesRef.value;
+      expect(node.context).toBe(context);
+
+      visible.value = false;
+      await nextTick();
+      show.value = false;
+      await nextTick();
+      visible.value = true;
+      await nextTick();
+
+      expect(node.context).toBeUndefined();
+    });
+
     it('lets the popup above the old node close for a press in the popup', async () => {
       const tree = new FloatingTreeStore();
       const parent = createDocumentStore();
