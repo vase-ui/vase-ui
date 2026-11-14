@@ -246,7 +246,7 @@ describe('<Combobox.List />', () => {
       expect(toRaw(store!.state).positionerElement).toBe(screen.getByTestId('list'));
     });
 
-    it('gives the labels of the rendered items to the root only with no items', async () => {
+    it('gives the labels of the rendered items to the root with no items', async () => {
       let store: ComboboxStore | undefined;
       await render(
         <Combobox.Root defaultOpen>
@@ -269,7 +269,7 @@ describe('<Combobox.List />', () => {
       expect(store!.context.labelsRef.value).toEqual(['Apple', 'Banana']);
     });
 
-    it('keeps the labels of the items when the root has items', async () => {
+    it('gives no rendered labels to the root when the root has items', async () => {
       let store: ComboboxStore | undefined;
       await render(
         <Combobox.Root items={['a', 'b']} defaultOpen>
