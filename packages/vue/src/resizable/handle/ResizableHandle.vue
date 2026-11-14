@@ -55,6 +55,7 @@ const stateAttributesMapping: StateAttributesMapping<ResizableHandleState> = {
 
 <script setup lang="ts">
 import { computed, onDeactivated, onScopeDispose, watch } from 'vue';
+import { useIsHydrating } from '../../common/hydration';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
 import {
@@ -105,6 +106,7 @@ const root = useResizableRootContext();
 // the `setup` of the panels that follow it, so the server HTML has the values.
 useDeferredServerRender();
 
+const hydrating = useIsHydrating();
 const { ref: listItemRef, index } = useCompositeListItem();
 const isDisabled = computed(() => root.disabled.value || props.disabled);
 
@@ -114,6 +116,8 @@ const pivot = computed(() => {
   const before = panels.findLastIndex((panel) => panel.index.value < index.value);
   return before < panels.length - 1 ? before : -1;
 });
+// A handle with no panel on one side moves nothing, so it is not in the tab order.
+const isFocusable = computed(() => !isDisabled.value && pivot.value >= 0);
 const primary = computed(() =>
   pivot.value < 0
     ? undefined
@@ -151,11 +155,10 @@ const limits = computed(() =>
     : getHandleLimits(root.constraints.value, root.shown.value, pivot.value, root.pushPanels.value),
 );
 
-let handleElement: HTMLElement | null = null;
 const drag = createHandleDrag(root, {
   pivot: () => pivot.value,
   disabled: () => isDisabled.value,
-  element: () => handleElement,
+  element: () => element.value,
 });
 
 // A positive delta grows the panel before the handle.
@@ -206,6 +209,11 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   event.preventDefault();
+  // The next move of a drag computes the layout from the start of the drag again, and it would
+  // undo the key.
+  if (drag.dragging.value) {
+    return;
+  }
   const next = adjustLayout(root.constraints.value, root.shown.value, pivot.value, delta, {
     exact: true,
     push: root.pushPanels.value,
@@ -228,6 +236,10 @@ function toggleCollapse(event: KeyboardEvent) {
     return;
   }
   event.preventDefault();
+  // The next move of a drag would undo the change.
+  if (drag.dragging.value) {
+    return;
+  }
   const by = { pivot: pivot.value, reason: REASONS.keyboard, event };
   if (isCollapsed(panel, size)) {
     root.expandPanel(panel.id, by);
@@ -250,12 +262,12 @@ function onDblclick(event: MouseEvent) {
 function onPointerdown(event: PointerEvent) {
   if (drag.start(event)) {
     // The `mousedown` of the press does not focus the handle, as the next function says.
-    handleElement?.focus({
+    element.value?.focus({
       preventScroll: true,
       // Prevent a focus ring that a pointer press gives in browsers that support this option.
       // Chrome 144 and later support it.
       focusVisible: false,
-    } as FocusOptions);
+    });
   }
 }
 
@@ -268,13 +280,16 @@ function onMousedown(event: MouseEvent) {
   }
 }
 
-// Firefox and Safari keep the focus on an element that becomes disabled.
-watch(isDisabled, (disabled) => {
-  if (disabled) {
-    drag.end();
-    if (handleElement && activeElement(ownerDocument(handleElement)) === handleElement) {
-      handleElement.blur();
-    }
+// Firefox and Safari keep the focus on an element that loses its tab stop: a handle that becomes
+// disabled, or that loses the panel on one side.
+watch(isFocusable, (focusable) => {
+  if (focusable) {
+    return;
+  }
+  drag.end();
+  const handle = element.value;
+  if (handle && activeElement(ownerDocument(handle)) === handle) {
+    handle.blur();
   }
 });
 
@@ -303,18 +318,16 @@ const state = computed<ResizableHandleState>(() => {
 const { element, elementProps } = useRenderElement('div', props, {
   state,
   stateAttributesMapping,
-  ref: [
-    listItemRef,
-    (node) => {
-      handleElement = node;
-    },
-  ],
+  ref: [listItemRef],
   props: (attrs) => [
     {
       role: 'separator',
       'aria-orientation': root.orientation.value === 'horizontal' ? 'vertical' : 'horizontal',
       'aria-disabled': isDisabled.value ? 'true' : undefined,
-      tabindex: isDisabled.value ? undefined : 0,
+      // While the page hydrates, the handle can render before the panel after it registers. Vue
+      // compares `tabindex`, so the server HTML and that render give each handle that is not
+      // disabled its tab stop.
+      tabindex: isFocusable.value || (hydrating.value && !isDisabled.value) ? 0 : undefined,
       ...valueAttributes.value,
       onKeydown,
       onMousedown,

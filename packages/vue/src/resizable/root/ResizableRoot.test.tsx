@@ -412,6 +412,11 @@ describe('<Resizable.Root />', () => {
       expect(screen.getByTestId('root')).not.toHaveAttribute('data-dragging');
       expect(onDraggingChange.mock.calls).toEqual([[true], [false]]);
       expect(onLayoutCommitted).toHaveBeenCalledTimes(1);
+      // The commit has the last pointer event of the drag.
+      expect(onLayoutCommitted.mock.calls[0]?.[1].event).toMatchObject({
+        type: 'pointermove',
+        clientX: 100,
+      });
     });
 
     it('lets a handle of another root start its own drag', async () => {
@@ -536,6 +541,31 @@ describe('<Resizable.Root />', () => {
       await waitFor(() => {
         expect(screen.getByTestId('handle')).toHaveAttribute('aria-controls', 'a');
       });
+    });
+
+    it('emits a change for a panel that mounts late with the id constructor', async () => {
+      const showLate = shallowRef(false);
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 50, b: 50 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id="a" />
+            <Resizable.Panel id="b" />
+            {showLate.value ? <Resizable.Panel id="constructor" /> : null}
+          </Resizable.Root>
+        </div>
+      ));
+
+      showLate.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      // An object has a `constructor` key, but the layout does not name the panel.
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutChange).toHaveBeenCalledWith(
+        { a: 33.334, b: 33.333, constructor: 33.333 },
+        expect.objectContaining({ reason: REASONS.none }),
+      );
     });
 
     it('lets a listener cancel the change of a panel that mounts', async () => {
@@ -836,6 +866,62 @@ describe('<Resizable.Root />', () => {
       await nextTick();
 
       expect(screen.getByTestId('handle')).not.toHaveAttribute('data-dragging');
+    });
+
+    it('gives the space of a panel that it holds to the other panels, and gives it back', async () => {
+      const Side = defineComponent({
+        setup: () => () => <Resizable.Panel id="c" data-testid="c" />,
+      });
+      const showC = shallowRef(true);
+      const onLayoutChange = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root defaultLayout={{ a: 60, b: 20, c: 20 }} onLayoutChange={onLayoutChange}>
+            <Resizable.Panel id="a" data-testid="a" />
+            <Resizable.Handle data-testid="handle-a" />
+            <Resizable.Panel id="b" data-testid="b" />
+            <Resizable.Handle data-testid="handle-b" primaryPanel="next" />
+            <KeepAlive>{showC.value ? <Side /> : null}</KeepAlive>
+          </Resizable.Root>
+        </div>
+      ));
+      const handle = screen.getByTestId('handle-b');
+      expect(handle).toHaveAttribute('aria-controls', 'c');
+
+      showC.value = false;
+      await nextTick();
+      expect(grows('a', 'b')).toEqual(['75', '25']);
+      expect(screen.getByTestId('handle-a')).toHaveAttribute('aria-valuenow', '75');
+      // The handle has no panel after it, so it does not name the panel that is not in the page.
+      expect(handle).not.toHaveAttribute('aria-controls');
+
+      showC.value = true;
+      await nextTick();
+
+      expect(grows('a', 'b', 'c')).toEqual(['60', '20', '20']);
+      expect(handle).toHaveAttribute('aria-controls', 'c');
+      expect(onLayoutChange).not.toHaveBeenCalled();
+    });
+
+    it('emits no change when the root shows again', async () => {
+      const active = shallowRef(true);
+      const onLayoutChange = vi.fn();
+      const Layout = defineComponent({
+        setup: () => () => <Three root={{ onLayoutChange }} />,
+      });
+      const Other = defineComponent({ setup: () => () => <p>Other</p> });
+      await render(() => (
+        <KeepAlive>{active.value ? <Layout key="layout" /> : <Other key="other" />}</KeepAlive>
+      ));
+
+      active.value = false;
+      await nextTick();
+      active.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+      expect(onLayoutChange).not.toHaveBeenCalled();
     });
   });
 

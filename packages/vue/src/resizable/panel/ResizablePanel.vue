@@ -24,7 +24,7 @@ export interface ResizablePanelState {
 export interface ResizablePanelProps
   extends
     VaseUIComponentProps<ResizablePanelState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'id'> {
   /**
    * The id of the panel element, and the key of the panel in the layout.
    * The default is a generated id. Give an id of your own to save the layout and to read it again.
@@ -109,8 +109,11 @@ export interface ResizablePanelActions {
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, provide, shallowRef } from 'vue';
+import type { InjectionKey } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
+import { CompositeListContext } from '../../internals/composite/list/CompositeListContext';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -161,9 +164,11 @@ const { ref: listItemRef, index } = useCompositeListItem({
   metadata: computed(() => ({ id: id.value })),
 });
 
-const size = computed(
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel registers in `setup`, so the layout has an entry for its id.
-  () => root.shown.value[id.value]!,
+// A panel that `KeepAlive` holds is not in the layout. It keeps its last size until it shows again.
+const size = computed<number>(
+  (previous) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The panel registers in `setup`, so the layout of the first computation has an entry for its id.
+    root.shown.value[id.value] ?? previous!,
 );
 const collapsed = computed(() => {
   const constraints = root.constraints.value.find((panel) => panel.id === id.value);
@@ -205,6 +210,16 @@ const { element, elementProps } = useRenderElement('div', props, {
   stateAttributesMapping: { size: () => null },
 });
 
+// `KeepAlive` takes the panel out of the document. The root then gives its space to the other
+// panels, and the handles beside it do not name it.
+const deactivated = shallowRef(false);
+onDeactivated(() => {
+  deactivated.value = true;
+});
+onActivated(() => {
+  deactivated.value = false;
+});
+
 root.registerPanel({
   id,
   index,
@@ -216,6 +231,7 @@ root.registerPanel({
   collapseThreshold: () => props.collapseThreshold,
   disabled: () => props.disabled,
   element,
+  deactivated,
 });
 
 const actions: ResizablePanelActions = {
@@ -232,6 +248,12 @@ const actions: ResizablePanelActions = {
 };
 
 provide(ResizablePanelContext, { id, state, ...actions });
+
+// The content of the panel gets the composite list around the root, so that an item in the panel,
+// such as a button of a toolbar around the root, joins that list. The key also takes `undefined`:
+// with no list around the root, an item in the panel has no list.
+const listKey: InjectionKey<CompositeListContextValue<any> | undefined> = CompositeListContext;
+provide(listKey, root.outerList);
 
 defineExpose({ element, ...actions });
 </script>

@@ -120,11 +120,21 @@ export interface ResizableRootActions {
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  provide,
+  shallowRef,
+  watch,
+} from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
+import { useCompositeListContext } from '../../internals/composite/list/CompositeListContext';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import {
   createChangeEventDetails,
@@ -176,7 +186,7 @@ const emit = defineEmits<{
   layoutChange: [layout: ResizableRootLayout, eventDetails: ResizableRootChangeEventDetails];
   'update:layout': [layout: ResizableRootLayout];
   /**
-   * Event handler called when the user ends a change of the layout: at the release of a drag that
+   * Event handler called when the user ends a change of the layout: at the end of a drag that
    * changed the layout, and after a key, a double click or a method that changed it.
    * Does not fire if the layout did not change, or if a listener canceled the change.
    * **Warning**: This is a generic event, not a change event.
@@ -220,7 +230,11 @@ const [requested, setRequested] = useControlled<ResizableRootLayout>({
 const firstRequested: ResizableRootLayout = props.defaultLayout ?? EMPTY_OBJECT;
 
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
-const panels = computed(() => registered.value.toSorted((a, b) => a.index.value - b.index.value));
+const panels = computed(() =>
+  registered.value
+    .filter((panel) => !panel.deactivated.value)
+    .toSorted((a, b) => a.index.value - b.index.value),
+);
 const constraints = computed<PanelConstraints[]>(() =>
   panels.value.map((panel) => {
     const collapseThreshold = panel.collapseThreshold();
@@ -278,6 +292,9 @@ if (process.env.NODE_ENV !== 'production') {
 // The panels register in `setup`, before the mount. The layout of that first state is the layout
 // that the consumer asked for, so it has no change event.
 let mounted = false;
+// `KeepAlive` takes the panels of a deactivated root out of the list, and gives them back at the
+// activation. The panels are then the same, so the root keeps the ids that it knows.
+let deactivated = false;
 let knownIds = new Set<string>();
 
 // Each panel and handle gets its place among the others from this list. A server gives the places
@@ -286,6 +303,9 @@ let knownIds = new Set<string>();
 // size, and the others make room for it. The layout then names that panel. A panel that goes keeps
 // its entry, so it comes back at its size.
 function syncLayoutWithPanels() {
+  if (deactivated) {
+    return;
+  }
   const ids = constraints.value.map((panel) => panel.id);
   const isNew = ids.some((id) => !knownIds.has(id) && !Object.hasOwn(requested.value, id));
   knownIds = new Set(ids);
@@ -294,10 +314,19 @@ function syncLayoutWithPanels() {
   }
 }
 
+const outerList = useCompositeListContext();
 useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
 
 onMounted(() => {
   mounted = true;
+});
+
+onDeactivated(() => {
+  deactivated = true;
+});
+
+onActivated(() => {
+  deactivated = false;
 });
 
 function registerPanel(panel: ResizablePanelRegistration) {
@@ -380,15 +409,20 @@ function getPanelSpace() {
   const horizontal = props.orientation === 'horizontal';
   let space = 0;
   for (const { element } of panels.value) {
-    if (element.value) {
-      const rect = element.value.getBoundingClientRect();
-      const style = ownerWindow(element.value).getComputedStyle(element.value);
+    const panel = element.value;
+    if (panel) {
+      const rect = panel.getBoundingClientRect();
+      const style = ownerWindow(panel).getComputedStyle(panel);
       const edges = horizontal
         ? [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth]
         : [style.paddingTop, style.paddingBottom, style.borderTopWidth, style.borderBottomWidth];
       const size = horizontal ? rect.width : rect.height;
+      const layoutSize = horizontal ? panel.offsetWidth : panel.offsetHeight;
+      // The rectangle has the pixels of the screen, and the padding and the border have layout
+      // pixels. A scale transform around the root makes the two differ.
+      const scale = layoutSize > 0 ? size / layoutSize : 1;
       space += Math.max(
-        size - edges.reduce((total, edge) => total + Number.parseFloat(edge), 0),
+        size - edges.reduce((total, edge) => total + Number.parseFloat(edge), 0) * scale,
         0,
       );
     }
@@ -491,6 +525,7 @@ const orientation = computed(() => props.orientation);
 provide(ResizableRootContext, {
   orientation,
   direction,
+  outerList,
   disabled: computed(() => props.disabled),
   step: computed(() => props.step),
   largeStep: computed(() => props.largeStep),

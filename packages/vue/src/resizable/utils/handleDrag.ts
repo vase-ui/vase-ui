@@ -57,6 +57,8 @@ export function createHandleDrag(
   let startLayout: Layout = {};
   // The layout of the last change that no listener canceled. The release commits it.
   let applied: Layout | undefined;
+  // A drag that a lifecycle change ends commits with the last pointer event of the drag.
+  let lastEvent: PointerEvent | undefined;
   // Whether the pointer moved in the drag that runs.
   let moved = false;
   // Whether the next click is the click that follows a drag in which the pointer moved. A press
@@ -81,6 +83,7 @@ export function createHandleDrag(
     panelSpace = space;
     startLayout = root.shown.value;
     applied = undefined;
+    lastEvent = event;
     moved = false;
     try {
       options.element()?.setPointerCapture(event.pointerId);
@@ -105,7 +108,7 @@ export function createHandleDrag(
     if (applied) {
       const layout = applied;
       applied = undefined;
-      root.commitLayout(layout, createGenericEventDetails(REASONS.drag, event));
+      root.commitLayout(layout, createGenericEventDetails(REASONS.drag, event ?? lastEvent));
     }
   }
 
@@ -113,6 +116,7 @@ export function createHandleDrag(
     if (!dragging.value || event.pointerId !== pointerId) {
       return;
     }
+    lastEvent = event;
     // A release that the page did not send leaves no button down.
     if (event.buttons === 0) {
       end(event);

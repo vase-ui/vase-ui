@@ -1,5 +1,6 @@
 import { inject } from 'vue';
-import type { ComputedRef, InjectionKey, ShallowRef } from 'vue';
+import type { ComputedRef, InjectionKey, Ref, ShallowRef } from 'vue';
+import type { CompositeListContextValue } from '../../internals/composite/list/CompositeListContext';
 import type { TextDirection } from '../../internals/direction-context/DirectionContext';
 import type { REASONS } from '../../internals/reasons';
 import type { Orientation } from '../../internals/types';
@@ -30,6 +31,10 @@ export interface ResizablePanelRegistration {
   collapseThreshold: () => number | string | undefined;
   disabled: () => boolean;
   element: Readonly<ShallowRef<HTMLElement | null>>;
+  /**
+   * Whether `KeepAlive` holds the panel. Such a panel is not in the layout.
+   */
+  deactivated: Readonly<Ref<boolean>>;
 }
 
 /**
@@ -54,12 +59,17 @@ export interface ResizableParentRoot extends ResizableRootActions {
 export interface ResizableRootContext {
   orientation: ComputedRef<Orientation>;
   direction: ComputedRef<TextDirection>;
+  /**
+   * The composite list around the root. A panel gives it to its content, so that an item in the
+   * panel joins that list and not the list of the panels.
+   */
+  outerList: CompositeListContextValue<any> | undefined;
   disabled: ComputedRef<boolean>;
   step: ComputedRef<number>;
   largeStep: ComputedRef<number>;
   pushPanels: ComputedRef<boolean>;
   /**
-   * The panels in the order of the document.
+   * The panels in the order of the document, without a panel that `KeepAlive` holds.
    */
   panels: ComputedRef<readonly ResizablePanelRegistration[]>;
   /**

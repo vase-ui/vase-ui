@@ -68,13 +68,6 @@ function setWebKit(webkit: boolean) {
   });
 }
 
-// The pointer of the browser stays where a case leaves it, for each later test.
-function releasePointerAfterTest() {
-  onTestFinished(async () => {
-    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-  });
-}
-
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
@@ -1139,6 +1132,12 @@ describe('FloatingFocusManager', () => {
         focusBefore: false,
         focused: 'reference',
       },
+      {
+        name: 'null type, and the outside is inert',
+        manager: { openInteractionType: null, outsideElementsInert: true },
+        focusBefore: true,
+        focused: 'before',
+      },
     ])('moves the focus to the $focused when $name', async ({ manager, focusBefore, focused }) => {
       await render(
         <div>
@@ -1321,10 +1320,7 @@ describe('FloatingFocusManager', () => {
       }>([
         {
           name: 'a press of the mouse',
-          close: () => {
-            releasePointerAfterTest();
-            return userEvent.click(screen.getByTestId('close'));
-          },
+          close: () => userEvent.click(screen.getByTestId('close')),
           options: { preventScroll: true },
         },
         {

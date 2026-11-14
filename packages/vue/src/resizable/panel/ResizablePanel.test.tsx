@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, nextTick, shallowRef } from 'vue';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -328,6 +329,52 @@ describe('<Resizable.Panel />', () => {
         expect(second - content(1)).toBeCloseTo(60, 0);
       },
     );
+
+    it('keeps the handle under the pointer in a root that a transform scales', async () => {
+      await render(
+        <div style={{ width: '1000px', transform: 'scale(0.5)', transformOrigin: '0 0' }}>
+          <Resizable.Root>
+            <Resizable.Panel style={{ padding: '0 100px' }} />
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel style={{ padding: '0 100px' }} />
+          </Resizable.Root>
+        </div>,
+      );
+      const handle = screen.getByTestId('handle');
+      const start = handle.getBoundingClientRect().left;
+      const pointer = { pointerId: 1, pointerType: 'mouse' };
+
+      await fireEvent.pointerDown(handle, { ...pointer, clientX: start, buttons: 1 });
+      await fireEvent.pointerMove(handle, { ...pointer, clientX: start + 50, buttons: 1 });
+      await fireEvent.pointerUp(handle, { ...pointer, clientX: start + 50 });
+
+      expect(handle.getBoundingClientRect().left - start).toBeCloseTo(50, 0);
+    });
+  });
+
+  describe('content', () => {
+    it('joins the composite list around the root, and not the list of the panels', async () => {
+      await render(
+        <Toolbar.Root>
+          <Resizable.Root>
+            <Resizable.Panel>
+              <Toolbar.Button data-testid="first">First</Toolbar.Button>
+            </Resizable.Panel>
+            <Resizable.Handle data-testid="handle" />
+            <Resizable.Panel>
+              <Toolbar.Button data-testid="second">Second</Toolbar.Button>
+            </Resizable.Panel>
+          </Resizable.Root>
+        </Toolbar.Root>,
+      );
+      const first = screen.getByTestId('first');
+      first.focus();
+
+      await fireEvent.keyDown(first, { key: 'ArrowRight' });
+
+      expect(screen.getByTestId('second')).toHaveFocus();
+      expect(screen.getByTestId('handle')).toHaveAttribute('aria-valuenow', '50');
+    });
   });
 
   describe('state', () => {

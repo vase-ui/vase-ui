@@ -161,14 +161,14 @@ describe('<Resizable.Handle />', () => {
       expect(handle).toHaveAttribute('aria-valuenow', '59');
     });
 
-    it('has no value attribute when it has no panel on one side', async () => {
-      await render(
+    it('has no value attribute and no tab stop when it has no panel on one side', async () => {
+      const { container } = await render(
         <Resizable.Root>
-          <Resizable.Handle data-testid="first" />
+          <Resizable.Handle data-testid="first" aria-label="First" />
           <Resizable.Panel id="a" />
-          <Resizable.Handle data-testid="between" />
+          <Resizable.Handle data-testid="between" aria-label="Between" />
           <Resizable.Panel id="b" />
-          <Resizable.Handle data-testid="last" />
+          <Resizable.Handle data-testid="last" aria-label="Last" />
         </Resizable.Root>,
       );
 
@@ -177,8 +177,32 @@ describe('<Resizable.Handle />', () => {
         expect(handle).toHaveAttribute('role', 'separator');
         expect(handle).not.toHaveAttribute('aria-valuenow');
         expect(handle).not.toHaveAttribute('aria-controls');
+        expect(handle).not.toHaveAttribute('tabindex');
       }
       expect(screen.getByTestId('between')).toHaveAttribute('aria-valuenow', '50');
+      expect(screen.getByTestId('between')).toHaveAttribute('tabindex', '0');
+      // A separator in the tab order needs a value.
+      await expectNoAxeViolations(container);
+    });
+
+    it('leaves the focus when it loses the panel on one side', async () => {
+      const showB = shallowRef(true);
+      await render(() => (
+        <Resizable.Root>
+          <Resizable.Panel id="a" />
+          <Resizable.Handle data-testid="handle" />
+          {showB.value ? <Resizable.Panel id="b" /> : null}
+        </Resizable.Root>
+      ));
+      const handle = screen.getByTestId('handle');
+      handle.focus();
+      expect(handle).toHaveFocus();
+
+      showB.value = false;
+      await nextTick();
+
+      expect(handle).not.toHaveAttribute('tabindex');
+      expect(handle).not.toHaveFocus();
     });
 
     it('does nothing when it has no panel on one side', async () => {
@@ -329,6 +353,23 @@ describe('<Resizable.Handle />', () => {
       // The handle is at its greatest value after End, and the key is still its own.
       await fireEvent.keyDown(handle, { key: 'End' });
       expect(await fireEvent.keyDown(handle, { key: 'End' })).toBe(false);
+    });
+
+    it('ignores a key while the handle drags', async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      await renderPanels({ root: { onLayoutChange, onLayoutCommitted } });
+      const handle = screen.getByTestId('handle-1');
+      await fireEvent.pointerDown(handle, pointerInit({ clientX: 0, buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+
+      expect(await fireEvent.keyDown(handle, { key: 'ArrowRight' })).toBe(false);
+
+      expect(handle).toHaveAttribute('aria-valuenow', '60');
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutCommitted).not.toHaveBeenCalled();
+      await fireEvent.pointerUp(handle, pointerInit({ clientX: 100 }));
+      expect(onLayoutCommitted).toHaveBeenCalledTimes(1);
     });
 
     it.each([
@@ -754,6 +795,20 @@ describe('<Resizable.Handle />', () => {
       await fireEvent.keyDown(handle, { key: 'Enter' });
 
       expect([grow(0), grow(1)]).toEqual(['20', '80']);
+    });
+
+    it('ignores Enter while the handle drags', async () => {
+      const onLayoutChange = vi.fn();
+      await renderPanels({ root: { onLayoutChange }, panels: [collapsible, { id: 'b' }] });
+      const handle = screen.getByTestId('handle-1');
+      await fireEvent.pointerDown(handle, pointerInit({ clientX: 0, buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+      onLayoutChange.mockClear();
+
+      expect(await fireEvent.keyDown(handle, { key: 'Enter' })).toBe(false);
+
+      expect(onLayoutChange).not.toHaveBeenCalled();
+      expect([grow(0), grow(1)]).toEqual(['50', '50']);
     });
 
     it('collapses the panel after the handle with Enter and primaryPanel="next"', async () => {

@@ -10,6 +10,7 @@ describe('parseSize', () => {
     { name: 'a decimal string', value: '12.5%', expected: 12.5 },
     { name: 'a string that starts with a point', value: '.5', expected: 0.5 },
     { name: 'a string with spaces around it', value: ' 25% ', expected: 25 },
+    { name: 'zero', value: 0, expected: 0 },
   ])('gives the percent of $name', ({ value, expected }) => {
     expect(parseSize(value)).toBe(expected);
   });
@@ -23,6 +24,8 @@ describe('parseSize', () => {
     { name: 'a space before the percent sign', value: '25 %' },
     { name: 'a number that is not finite', value: Number.NaN },
     { name: 'infinity', value: Number.POSITIVE_INFINITY },
+    { name: 'a negative number', value: -10 },
+    { name: 'a negative string', value: '-10%' },
   ])('throws for $name', ({ value }) => {
     expect(() => parseSize(value)).toThrow(/^Vase UI: The size .* is not valid\./);
   });

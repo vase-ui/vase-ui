@@ -42,7 +42,7 @@
     {
       "entry": "CheckboxGroup",
       "prop": "id",
-      "reason": "The part reads `id` to register its control with the field, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `id` to register its control with the field, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
     }
   ],
   "returnTypeDifferences": [],

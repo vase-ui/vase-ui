@@ -150,13 +150,6 @@ describe('<NumberField.Increment />', () => {
   });
 
   describe('with a real pointer', () => {
-    // The pointer of the browser stays where a case leaves it, for each later test.
-    function releasePointerAfterTest() {
-      onTestFinished(async () => {
-        await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-      });
-    }
-
     it('steps one time and commits one time for a click, and keeps the focus in the input', async () => {
       const onValueChange = vi.fn();
       const onValueCommitted = vi.fn();
@@ -170,8 +163,6 @@ describe('<NumberField.Increment />', () => {
           <NumberField.Input />
         </NumberField.Root>,
       );
-
-      releasePointerAfterTest();
 
       await userEvent.click(screen.getByRole('button'));
 
@@ -192,7 +183,11 @@ describe('<NumberField.Increment />', () => {
         </NumberField.Root>,
       );
       const input = screen.getByRole<HTMLInputElement>('textbox');
-      releasePointerAfterTest();
+      // When an assertion of this case fails before its release, the button stays pressed for the
+      // next test.
+      onTestFinished(async () => {
+        await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+      });
 
       await userEvent.pointer({ target: screen.getByRole('button'), keys: '[MouseLeft>]' });
       await waitFor(() => expect(Number(input.value)).toBeGreaterThanOrEqual(3), { timeout: 3000 });
