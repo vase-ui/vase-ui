@@ -6,6 +6,7 @@ import { readTypesMd } from '../parity/typesMd.ts';
 import { REPOSITORY_ROOT } from '../parity/repository.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import {
+  buildApiClasses,
   buildApiFunctions,
   buildApiParts,
   buildApiTypes,
@@ -233,7 +234,27 @@ test('the functions are the parts and then the functions of the types.md that ha
   assert.deepEqual(names, ['Sample.closeHandle', 'Sample.createHandle']);
 });
 
-test('the types are the types and then the additional types of the types.md that have one property or more or are a union of strings, with the path of the export as name, the properties in the sequence of their names and the values in the sequence of the alphabet', () => {
+test('the classes are the functions of the types.md that are a class export, with the path of the export as name', () => {
+  const [createHandle] = types.functions;
+  const file = { ...types, functions: [createHandle, { ...createHandle, name: 'Handle' }] };
+  const classes = withTexts(
+    [
+      [
+        PARTS,
+        'export interface Handle {\n  open: () => void;\n  close: () => void;\n}',
+        'export class Handle {\n  open(): void {}\n  close(): void {}\n}',
+      ],
+    ],
+    () => buildApiClasses(project, ENTRY, file),
+  );
+  assert.deepEqual(
+    classes.map(({ name, methods }) => [name, methods.map((method) => method.name)]),
+    [['Sample.Handle', ['open', 'close']]],
+  );
+  assert.deepEqual(buildApiClasses(project, ENTRY, file), []);
+});
+
+test('the types are the types and then the additional types of the types.md that have one property or more or are a union of strings, with the path of the export as name, the properties in the sequence of their names and the values in the sequence of the declaration', () => {
   const file = {
     ...types,
     types: [
@@ -256,7 +277,7 @@ test('the types are the types and then the additional types of the types.md that
     ]),
     [
       ['Sample.Handle', ['close', 'open'], []],
-      ['SampleRootChangeEventReason', [], ['escape-key', 'none', 'trigger-press']],
+      ['SampleRootChangeEventReason', [], ['trigger-press', 'escape-key', 'none']],
       ['SampleRootChangeEventDetails', ['cancel', 'event', 'isCanceled', 'reason'], []],
     ],
   );

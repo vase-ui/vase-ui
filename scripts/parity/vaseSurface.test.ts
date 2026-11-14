@@ -141,6 +141,110 @@ test('a type has its properties with type, optional mark, default and descriptio
   ]);
 });
 
+test('a property has the tags of its own declaration, and a property of an Omit has the tags of the property that it copies', () => {
+  const read = (name: string) =>
+    withParts(
+      HANDLE,
+      [
+        'export interface Placement {',
+        '  /** @default 600 */',
+        '  delay?: number | undefined;',
+        "  /** @default 'horizontal' */",
+        '  orientation?: string | undefined;',
+        '}',
+        'export interface SeparatorPlacement extends Placement {',
+        '  /** The opposite of the orientation of the toolbar. */',
+        '  orientation?: string | undefined;',
+        '}',
+        "export type DelayPlacement = Omit<Placement, 'orientation'>;",
+        HANDLE,
+      ].join('\n'),
+      () => project.readProperties(exportOf(name)),
+    )?.map(({ name: property, default: text }) => [property, text]);
+  assert.deepEqual(read('SeparatorPlacement'), [
+    ['orientation', null],
+    ['delay', '600'],
+  ]);
+  assert.deepEqual(read('DelayPlacement'), [['delay', '600']]);
+});
+
+test('a union of strings has its values in the sequence of its declaration', () => {
+  const [changeReason, openReason] = withText(
+    ROOT,
+    "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';",
+    "export type SampleRootChangeEventReason = 'trigger-press' | 'escape-key' | 'none';\nexport type SampleRootOpenEventReason = 'none' | 'escape-key' | 'trigger-press';",
+    () =>
+      ['SampleRootChangeEventReason', 'SampleRootOpenEventReason'].map((name) =>
+        project.readUnionValues(ENTRY, name),
+      ),
+  );
+  assert.deepEqual(changeReason, ['trigger-press', 'escape-key', 'none']);
+  assert.deepEqual(openReason, ['none', 'escape-key', 'trigger-press']);
+});
+
+test('a class has its public properties and methods, in the sequence of the declaration', () => {
+  const handle = withParts(
+    HANDLE,
+    [
+      'class PopupHandle {',
+      '  protected readonly fallback = 0;',
+      '  /** @internal */',
+      '  attach(): void {}',
+      '  /** Whether the sample is open. */',
+      '  get isOpen(): boolean {',
+      '    return false;',
+      '  }',
+      '}',
+      'export class Handle extends PopupHandle {',
+      "  private readonly componentName = 'Sample';",
+      '  /** The label of the trigger. */',
+      "  label = 'Open';",
+      '  /**',
+      '   * Opens the sample.',
+      '   * @param triggerId The id of the trigger.',
+      '   */',
+      '  open(triggerId: string): void {}',
+      '  close(): void {}',
+      '}',
+    ].join('\n'),
+    () => project.readClass(exportOf('Handle')),
+  );
+  assert.deepEqual(handle, {
+    properties: [
+      { name: 'label', type: 'string', readonly: false, description: 'The label of the trigger.' },
+      {
+        name: 'isOpen',
+        type: 'boolean',
+        readonly: true,
+        description: 'Whether the sample is open.',
+      },
+    ],
+    methods: [
+      {
+        name: 'open',
+        description: 'Opens the sample.',
+        parameters: [
+          {
+            name: 'triggerId',
+            type: 'string',
+            optional: false,
+            description: 'The id of the trigger.',
+          },
+        ],
+        returns: { type: 'void', description: '' },
+      },
+      {
+        name: 'close',
+        description: '',
+        parameters: [],
+        returns: { type: 'void', description: '' },
+      },
+    ],
+  });
+  assert.equal(project.readClass(exportOf('Handle')), undefined);
+  assert.equal(project.readClass(exportOf('createHandle')), undefined);
+});
+
 test('an export that is not a type has no properties', () => {
   assert.equal(project.readProperties(exportOf('createHandle')), undefined);
   assert.equal(project.readProperties(exportOf('Popup')), undefined);

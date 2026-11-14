@@ -14,6 +14,7 @@ import type { FamilyFiles } from '../parity/repository.ts';
 import type { SurfaceFile, SurfacePart } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import type {
+  ClassSurface,
   ComponentSurface,
   FunctionSurface,
   MemberSurface,
@@ -70,17 +71,23 @@ export interface ApiFunction extends FunctionSurface {
   name: string;
 }
 
+export interface ApiClass extends ClassSurface {
+  /** `Tooltip.Handle`. */
+  name: string;
+}
+
 export interface ApiType {
   /** `useRender.Parameters`. */
   name: string;
   properties: PropertySurface[];
-  /** The values of a union of strings, such as `ImageLoadingStatus`, in the sequence of the alphabet. Empty for a type with properties. */
+  /** The values of a union of strings, such as `ImageLoadingStatus`, in the sequence of the declaration. Empty for a type with properties. */
   values: string[];
 }
 
 export interface ApiReference {
   parts: ApiPart[];
   functions: ApiFunction[];
+  classes: ApiClass[];
   types: ApiType[];
 }
 
@@ -199,10 +206,25 @@ export function buildApiFunctions(
 }
 
 /**
+ * The classes of a `types.md`: the names of its functions that are a class export, in their
+ * sequence. The parser of the `types.md` puts a class, such as `Handle`, with the functions.
+ */
+export function buildApiClasses(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiClass[] {
+  return file.functions.flatMap(({ name: title }) => {
+    const [match] = project.findExports(entryFile, title);
+    const surface = match && project.readClass(match);
+    return match && surface ? [{ name: match.path, ...surface }] : [];
+  });
+}
+
+/**
  * The types and then the additional types of a `types.md`, in its sequence. The properties are in
- * the sequence of their names, and the values of a union are in the sequence of the alphabet. A type
- * with no property is left out, unless it is a union of strings. So is a name with no export in the
- * entry file.
+ * the sequence of their names. A type with no property is left out, unless it is a union of strings.
+ * So is a name with no export in the entry file.
  */
 export function buildApiTypes(
   project: VaseProject,
@@ -213,15 +235,13 @@ export function buildApiTypes(
     const match = project
       .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
       .find(({ path }) => path === name);
-    // TypeScript gives the properties of a mapped type, such as an `Omit`, and the members of a
-    // union in an order that changes with the order in which it reads the program.
+    // TypeScript gives the properties of a mapped type, such as an `Omit`, in an order that changes
+    // with the order in which it reads the program.
     const properties = ((match && project.readProperties(match)) ?? []).sort((a, b) =>
       a.name.localeCompare(b.name, 'en'),
     );
     const values =
-      match && properties.length === 0
-        ? (project.readUnionValues(entryFile, name) ?? []).sort((a, b) => a.localeCompare(b, 'en'))
-        : [];
+      match && properties.length === 0 ? (project.readUnionValues(entryFile, name) ?? []) : [];
     return properties.length > 0 || values.length > 0 ? [{ name, properties, values }] : [];
   });
 }
@@ -290,6 +310,7 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         ),
       ),
       functions: build(buildApiFunctions),
+      classes: build(buildApiClasses),
       types: build(buildApiTypes),
     };
   };

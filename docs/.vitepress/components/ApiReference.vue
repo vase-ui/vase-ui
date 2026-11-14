@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useData } from 'vitepress';
-import type { ApiReference } from '../../../scripts/docs/apiReference.ts';
+import type { ApiReference, ApiClass } from '../../../scripts/docs/apiReference.ts';
 import TextWithCode from './TextWithCode.vue';
 
 const props = defineProps<{
   /**
-   * The name of one function or type of the reference, such as `mergeProps`. The page writes the
-   * heading and the text. With no name, the component shows each part of the family.
+   * The name of one function, class or type of the reference, such as `mergeProps`. The page
+   * writes the heading and the text. With no name, the component shows each part of the family.
    */
   name?: string;
 }>();
@@ -30,16 +30,17 @@ const named = computed(() => {
   if (name === undefined) {
     return undefined;
   }
-  const { functions, types } = reference.value;
+  const { functions, classes, types } = reference.value;
   const apiFunction = functions.find((item) => item.name === name);
+  const apiClass = classes.find((item) => item.name === name);
   const apiType = types.find((item) => item.name === name);
-  if (!apiFunction && !apiType) {
-    const names = [...functions, ...types].map((item) => item.name).join(', ');
+  if (!apiFunction && !apiClass && !apiType) {
+    const names = [...functions, ...classes, ...types].map((item) => item.name).join(', ');
     throw new Error(
-      `${page.value.relativePath} has <ApiReference name="${name}" />, but the API reference of its family has no function or type with that name, so the page shows nothing. Use one of these names: ${names}.`,
+      `${page.value.relativePath} has <ApiReference name="${name}" />, but the API reference of its family has no function, class or type with that name, so the page shows nothing. Use one of these names: ${names}.`,
     );
   }
-  return { apiFunction, apiType };
+  return { apiFunction, apiClass, apiType };
 });
 const showsDefault = computed(
   () => named.value?.apiType?.properties.some((property) => property.default !== null) ?? false,
@@ -55,6 +56,14 @@ const MEMBER_TABLES = [
   },
   { key: 'cssVariables', title: 'CSS variables', columns: ['Variable', 'Type', 'Description'] },
 ] as const;
+
+/** `open(triggerId: string)`. */
+function signatureOf({ name, parameters }: ApiClass['methods'][number]): string {
+  const list = parameters.map(
+    (parameter) => `${parameter.name}${parameter.optional ? '?' : ''}: ${parameter.type}`,
+  );
+  return `${name}(${list.join(', ')})`;
+}
 
 // The prefix makes the id different from the slug of a Markdown heading, such as the page title.
 function idOf(name: string): string {
@@ -96,6 +105,73 @@ function idOf(name: string): string {
     <p>
       <code>{{ named.apiFunction.returns.type }}</code>
     </p>
+  </template>
+  <template v-else-if="named?.apiClass">
+    <template v-if="named.apiClass.properties.length > 0">
+      <h4>Properties</h4>
+      <div class="api-table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Property</th>
+              <th scope="col">Type</th>
+              <th scope="col">Modifiers</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="property in named.apiClass.properties" :key="property.name">
+              <td>
+                <code>{{ property.name }}</code>
+              </td>
+              <td>
+                <code>{{ property.type }}</code>
+              </td>
+              <td>
+                <code v-if="property.readonly">readonly</code>
+              </td>
+              <td><TextWithCode :text="property.description" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+    <template v-if="named.apiClass.methods.length > 0">
+      <h4>Methods</h4>
+      <div class="api-table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Returns</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="method in named.apiClass.methods" :key="method.name">
+              <td>
+                <code>{{ signatureOf(method) }}</code>
+              </td>
+              <td>
+                <code>{{ method.returns.type }}</code>
+                <div v-if="method.returns.description">
+                  <TextWithCode :text="method.returns.description" />
+                </div>
+              </td>
+              <td>
+                <TextWithCode :text="method.description" />
+                <template v-for="parameter in method.parameters" :key="parameter.name">
+                  <div v-if="parameter.description">
+                    <code>{{ parameter.name }}</code
+                    >: <TextWithCode :text="parameter.description" />
+                  </div>
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
   </template>
   <div v-else-if="named?.apiType && named.apiType.properties.length > 0" class="api-table">
     <table>
