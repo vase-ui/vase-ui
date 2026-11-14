@@ -11,6 +11,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
@@ -723,6 +724,8 @@ describe('<Drawer.Popup />', () => {
     const parentPopup = screen.getByTestId('parent-popup');
     screen.getByRole('button', { name: 'Open nested drawer' }).click();
     await flushMicrotasks();
+    // The open mounts the close button. Vue skips its listener for a click in that millisecond.
+    await waitForLaterMillisecond();
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
@@ -822,6 +825,8 @@ describe('<Drawer.Popup />', () => {
     const parentPopup = screen.getByTestId('parent-popup');
     screen.getByRole('button', { name: 'Open nested drawer' }).click();
     await flushMicrotasks();
+    // The open mounts the close button. Vue skips its listener for a click in that millisecond.
+    await waitForLaterMillisecond();
 
     await waitFor(() => {
       expect(parentPopup).toHaveAttribute('data-nested-drawer-open', '');
