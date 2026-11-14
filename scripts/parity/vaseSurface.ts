@@ -96,12 +96,14 @@ export interface ExportMatch {
 
 export interface VaseProject {
   findExports: (entryFile: string, name: string) => ExportMatch[];
+  /** The export at `path`, such as `Root`, `Dialog.Handle` or `Dialog.Root.Props`. Each name before the last is a namespace. `undefined` when the entry file has no such export. */
+  findExportAt: (entryFile: string, path: string) => ExportMatch | undefined;
   /** `undefined` when the export does not come from a `.vue` file. */
   readComponent: (match: ExportMatch) => ComponentSurface | undefined;
   /** The field names of an exported type, or `undefined` when the entry file has no such type. */
   readFields: (entryFile: string, typeName: string) => string[] | undefined;
-  /** The string values of an exported union type, in the sequence of the declaration. `undefined` when there is no such type or it is not a union of strings. */
-  readUnionValues: (entryFile: string, typeName: string) => string[] | undefined;
+  /** The string values of the union type at `path`, such as `Progress.Status`, in the sequence of the declaration. `undefined` when there is no such type or it is not a union of strings. */
+  readUnionValues: (entryFile: string, path: string) => string[] | undefined;
   /** The constants of an exported namespace, or `undefined` when the entry file has no such namespace. */
   readConstants: (entryFile: string, namespaceName: string) => ConstantSurface[] | undefined;
   /** The return type of each call signature of the export, joined with ` | `. `undefined` when the export has no call signature. */
@@ -271,6 +273,20 @@ export function createVaseProject(tsconfig: string): VaseProject {
         .find((symbol) => symbol.getName() === name)
     );
   };
+  const exportAt = (entryFile: string, path: string): ts.Symbol | undefined => {
+    let module = entrySymbol(entryFile);
+    let found: ts.Symbol | undefined;
+    for (const name of path.split('.')) {
+      if (!module || !(module.flags & ts.SymbolFlags.Module)) {
+        return undefined;
+      }
+      found = typeChecker()
+        .getExportsOfModule(module)
+        .find((symbol) => symbol.getName() === name);
+      module = found && resolve(found);
+    }
+    return found;
+  };
 
   function sfcOf(symbol: ts.Symbol, depth = 0): string | undefined {
     const resolved = resolve(symbol);
@@ -396,8 +412,13 @@ export function createVaseProject(tsconfig: string): VaseProject {
         .map(({ name }) => name);
     },
 
-    readUnionValues(entryFile, typeName) {
-      const symbol = directExport(entryFile, typeName);
+    findExportAt(entryFile, path) {
+      const symbol = exportAt(entryFile, path);
+      return symbol && { path, symbol };
+    },
+
+    readUnionValues(entryFile, path) {
+      const symbol = exportAt(entryFile, path);
       const declaration = symbol && resolve(symbol).declarations?.find(ts.isTypeAliasDeclaration);
       if (!declaration) {
         return undefined;

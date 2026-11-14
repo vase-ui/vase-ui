@@ -42,7 +42,7 @@ pnpm --filter @vase-ui/vue exec playwright install chromium firefox webkit
 | `pnpm status:render`                             | Writes the status line of `README.md` from the family files in `parity/families` and from `parity/upstream.json`.                                                                                                                                                                           |
 | `pnpm status:check`                              | Fails when the status line of `README.md` differs from the line that `pnpm status:render` writes.                                                                                                                                                                                           |
 | `pnpm thanks:render`                             | Writes `THANKS.md` from GitHub's contributor lists of Base UI, Floating UI and aria-hidden. It uses your `gh` login.                                                                                                                                                                        |
-| `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better`. It reads only the repository.                                                                                                                                                                |
+| `pnpm parity:check`                              | Checks each family against its extract of Base UI. It also checks the rows of `parity/better` and each record in `parity/own`. It reads only the repository.                                                                                                                                |
 | `pnpm parity:extract --upstream <path> [family]` | Writes `parity/families/<family>.upstream.json` from a local clone of Base UI. With no family name, it writes each extract. With `--check`, it writes nothing and fails when an extract is absent or differs. With `--counts` alone, it prints the counts of Base UI at the tracked commit. |
 | `pnpm parity:track <sha> --upstream <path>`      | Writes `parity/upstream.json` for a Base UI commit. The commit must be the tracked commit or a descendant of it.                                                                                                                                                                            |
 | `pnpm docs:demos --upstream <path> [family]`     | Writes the demo style sheets of a family and the record `docs/demos/<family>/upstream.json` from a local clone of Base UI. With no family name, it does this for each family with a page or a demo folder. With `--check`, it writes nothing and fails when a file is absent or differs.    |
@@ -131,6 +131,28 @@ Each family also has an extract, `parity/families/<family>.upstream.json`. It ho
 - Run the command after each change of `upstreamPaths` or `matchedCommit`. Commit the extract in the same pull request as the family file.
 - CI has no copy of Base UI, so `pnpm parity:check` reads the committed extract.
 
+## Components that Base UI does not have
+
+Vase UI can add a component that Base UI does not have. This is a component of Vase UI's own. It is not a family: it has no family file, no extract and no exception row. It has one record, `parity/own/<name>.json`. `pnpm parity:check` refuses a record that lacks a required key or has another key:
+
+| Key         | Content                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `standard`  | The links to the standards that the behavior follows, such as a pattern of the WAI-ARIA Authoring Practices Guide. Each link starts with `https://`. |
+| `reason`    | Why Vase UI has the component.                                                                                                                       |
+| `parts`     | The titles of the parts, in the sequence of the API reference, such as `Root`. Each title is a component that the entry point exports.               |
+| `functions` | Optional. The titles of the functions and classes that the entry point exports, such as `createHandle`.                                              |
+| `types`     | Optional. The paths of the types that the entry point exports, such as `useRender.Parameters`.                                                       |
+
+- The component is not a port, so no file of Base UI is its source. The sources are the standards in `standard`, the code and documentation of Vue, and the libraries that Vase UI depends on.
+- The API follows the [API convention](#api-convention), as in each other component. The entry point exports the four things of [Entry points](#entry-points).
+- Each list has at least one item, and no item twice.
+- `<name>` is the name of the folder of the component, `packages/vue/src/<name>`.
+- A record and a family file cannot have the same name. A record cannot have the name of a component in `components` of `parity/upstream.json`, because that component is a port.
+- `pnpm parity:check` reads `packages/vue/src/<name>/index.ts`. It fails when the file does not exist.
+- It also fails when a name in the record has no export of its kind, and on a type that has no property and is not a union of strings. The API reference leaves out such a name.
+- It also fails when a title matches more than one export. The API reference then takes the first match.
+- Add the record in the pull request that adds the `index.ts` of the component.
+
 ## Layout and names
 
 | Base UI                       | Vase UI                     |
@@ -157,6 +179,7 @@ Each family also has an extract, `parity/families/<family>.upstream.json`. It ho
 The package is `@vase-ui/vue`. It is ESM only.
 
 - Each upstream folder that has a package export is one entry point with the same name: `@vase-ui/vue/dialog`, `@vase-ui/vue/merge-props`, `@vase-ui/vue/use-render`.
+- A component of Vase UI's own has no upstream folder. Its entry point has the name of its record in `parity/own`.
 - `@vase-ui/vue` is a barrel of the entry points.
 - A folder `packages/vue/src/<name>` that has an `index.ts` file is an entry point.
 - No list names the entry points. `package.json` has the one pattern `./*`. The build and `pnpm typecheck` write the barrel `src/index.ts`. Do not commit the barrel.
@@ -1912,6 +1935,7 @@ The thing that a row names decides which kinds the row can have:
 - A `waits-on` row is valid only while its target is absent. The pull request that adds the target also adds the tests and removes the rows.
 - A row for a test file that imports the entry point of its family can name that entry point in `waitsOn`. A pull request that ports some cases of the file keeps the row. The row goes when each case of the file has a counterpart.
 - `pnpm parity:check` fails on a row that covers nothing. Remove a row when its thing gets a counterpart.
+- A component of Vase UI's own has no exception row, because Base UI has nothing for it to match.
 
 ### Rows of `parity/better`
 
@@ -1956,6 +1980,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
 - The status line shows `N of T`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
+- A component of Vase UI's own is in neither N nor T. The parity page lists it under Components of Vase UI's own.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
 - `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
 - `look.css` gives `.Layout`, the root of the site, `isolation: isolate`, as the quick start of Base UI tells an app to do. A popup of a demo is outside `.Layout`, so it shows above each element of the page, the navigation bar included. Without the rule, a code block of VitePress, which has a `z-index`, shows above the popup.
@@ -1988,12 +2013,14 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
 - `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file and each entry point that the demo imports exists in Vase UI. It also fails when a demo folder has a style sheet that Base UI does not have.
 - A demo with no Vue file waits while one of its entry points does not exist in Vase UI. The page then has no such demo. When the last entry point exists, `pnpm test:docs` fails until the demo has its Vue file. The pull request that adds that entry point ports the demo.
+- A component of Vase UI's own has no `upstream.json`. Its demos have elements and style sheets of their own. `pnpm test:docs` fails for a page that has neither a family file nor a record in `parity/own`.
 - On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet directly below it in one `code-group`. The frame and the code group then make one card.
 - A demo declares its props itself, in a type literal: `defineProps<{ as?: string | Component | undefined }>()`. It does not extend a type of `@vase-ui/vue`. The SFC compiler then reads the props from the demo file, and not from a type of the built package.
 - A code sample that is not a demo is `docs/components/<family>/<Name>.vue`, or `docs/utils/<family>/<Name>.vue` on a utility page. The page shows its source and does not render it. `pnpm docs:typecheck` checks it.
 - The docs package has no router. A sample that imports one, such as `RouterLink` of `vue-router` or `NuxtLink` of Nuxt, is a component of the Nuxt fixture in `fixtures/nuxt/app/components`. The page shows it with `<<< ../../fixtures/nuxt/app/components/<Name>.vue`. The type check of the Nuxt fixture checks it. The link samples of the Navigation Menu page are the examples.
 - A page can show a part of a sample. Mark the part with `// #region <name>` and `// #endregion <name>` in the script of the sample. Show it with `<<< ./<family>/<Name>.vue#<name>{ts}`. The `ts` gives it the colors of TypeScript.
 - Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. The reference lists the parts in the sequence of the Base UI page, which the extract records. Do not write a table by hand. To change a text of the reference, change the JSDoc.
+- A component of Vase UI's own has no extract and no Base UI page. Its reference lists the parts, functions and types of its record, each list in the sequence of the record.
 - A `types.md` can repeat the parts of another family. The `types.md` of Radio Group repeats `Radio.Root` and `Radio.Indicator`. The reference reads such a part from the entry file of the family that exports it. The page of Radio Group thus shows both parts.
 - `<ApiReference name="<name>" />` shows one function, class or type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps`, `Tooltip.Handle`, `useRender.Parameters` or `ToastManagerAddOptions`. A type is an entry of the section API Reference or Additional Types of the `types.md`. The page writes the heading and the text. The build fails when the reference has no function, class or type with that name.
 - When the Base UI page has the section Additional types, write `## Additional types` at the end of the page. Under it, write a `### <name>` heading and `<ApiReference name="<name>" />` for each type that `showAdditionalTypes` of the Base UI page names.

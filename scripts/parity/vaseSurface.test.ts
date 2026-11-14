@@ -182,6 +182,27 @@ test('a union of strings has its values in the sequence of its declaration', () 
   assert.deepEqual(openReason, ['none', 'escape-key', 'trigger-press']);
 });
 
+test('the export at a path can be in a namespace of a namespace, and a union of strings in a namespace has its values', () => {
+  const read = withParts(
+    CREATE_HANDLE,
+    `export type Reason = 'open' | 'close';\n\n${CREATE_HANDLE}`,
+    () => ({
+      props: project.findExportAt(ENTRY, 'Sample.Root.Props')?.path,
+      reason: project.findExportAt(ENTRY, 'Sample.Reason')?.path,
+      values: project.readUnionValues(ENTRY, 'Sample.Reason'),
+      missing: ['Sample.Root.Ghost', 'Sample.createHandle.Ghost', 'SampleRoot.Props'].map((path) =>
+        project.findExportAt(ENTRY, path),
+      ),
+    }),
+  );
+  assert.deepEqual(read, {
+    props: 'Sample.Root.Props',
+    reason: 'Sample.Reason',
+    values: ['open', 'close'],
+    missing: [undefined, undefined, undefined],
+  });
+});
+
 test('a class has its public properties and methods, in the sequence of the declaration', () => {
   const handle = withParts(
     HANDLE,
