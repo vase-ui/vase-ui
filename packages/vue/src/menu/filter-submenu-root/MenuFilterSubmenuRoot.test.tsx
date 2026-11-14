@@ -237,6 +237,12 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
 
         const folders = ['Projects', 'Photos', 'Archive'];
         const onValueChange = vi.fn();
+        let endExit = () => {};
+        // A busy machine can stall the page for some seconds, so the wait for the end of the exit
+        // has no time limit.
+        const exitEnded = new Promise<void>((resolve) => {
+          endExit = resolve;
+        });
 
         const ExternalFilterSubmenu = defineComponent(() => {
           const { contains } = Menu.useFilter();
@@ -252,7 +258,7 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
                   to { opacity: 0; }
                 }
                 .filter-submenu-external-exit-test[data-ending-style] {
-                  animation: filter-submenu-external-exit-test 10s linear;
+                  animation: filter-submenu-external-exit-test 100s linear;
                 }
               `}</style>
                 <Menu.Root open>
@@ -269,7 +275,14 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
                             query.value = value;
                           }}
                         >
-                          <Menu.SubmenuRoot defaultOpen>
+                          <Menu.SubmenuRoot
+                            defaultOpen
+                            onOpenChangeComplete={(nextOpen: boolean) => {
+                              if (!nextOpen) {
+                                endExit();
+                              }
+                            }}
+                          >
                             <Menu.SubmenuTrigger>Move to</Menu.SubmenuTrigger>
                             <Menu.Portal>
                               <Menu.Positioner>
@@ -313,22 +326,19 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
         });
 
         await user.keyboard('[Escape]');
+        await flushMicrotasks();
 
         const popup = screen.getByTestId('submenu-popup');
-        await waitFor(() => {
-          expect(popup).toHaveAttribute('data-ending-style');
-        });
+        expect(popup).toHaveAttribute('data-ending-style');
         expect(getFolderNames()).toEqual(['Projects', 'Photos']);
         expect(input).toHaveValue('p');
         expect(onValueChange).not.toHaveBeenCalledWith('', 'popup-close');
 
         popup.getAnimations().forEach((animation) => animation.finish());
-        await waitFor(() => {
-          expect(screen.queryByTestId('submenu-popup')).toBe(null);
-        });
-        await waitFor(() => {
-          expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
-        });
+        await exitEnded;
+        await flushMicrotasks();
+        expect(screen.queryByTestId('submenu-popup')).toBe(null);
+        expect(onValueChange).toHaveBeenLastCalledWith('', 'popup-close');
       },
     );
   });

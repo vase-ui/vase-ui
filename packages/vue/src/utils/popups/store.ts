@@ -86,6 +86,10 @@ export type PopupStoreState<Payload> = {
    */
   popupElement: HTMLElement | null;
   /**
+   * The `id` of the popup element. The store follows each change of the attribute.
+   */
+  popupElementId: string | undefined;
+  /**
    * The element of the positioner.
    */
   positionerElement: HTMLElement | null;
@@ -128,6 +132,7 @@ export function createInitialPopupStoreState<Payload>(
     openChangeReason: null,
     triggerIdProp: undefined,
     popupElement: null,
+    popupElementId: undefined,
     positionerElement: null,
     anchorOverride: null,
     activeTriggerProps: EMPTY_OBJECT,
@@ -187,10 +192,7 @@ const openSelector = (state: S) => state.openProp ?? state.open;
 const activeTriggerElementSelector = (state: S) =>
   state.mounted ? state.activeTriggerElement : null;
 
-const popupIdSelector = (state: S) => {
-  const popupId = state.popupElement?.id ?? state.defaultPopupId;
-  return popupId || undefined;
-};
+const popupIdSelector = (state: S) => (state.popupElementId ?? state.defaultPopupId) || undefined;
 
 function triggerOwnsOpenPopup(state: S, triggerId: string | undefined) {
   return (
@@ -397,6 +399,11 @@ export abstract class BasePopupStore<
   // A new object for each open. A close uses it to know if the popup opened again since.
   private openSession = {};
 
+  // A render can give the popup element a new `id` and write nothing to the store. The id comes
+  // from a prop, an attribute or the `#render` slot. A `computed` does not follow a read of the DOM,
+  // so the observer copies each change of the attribute to `popupElementId`.
+  private popupIdObserver: MutationObserver | undefined;
+
   /**
    * Writes the state in two passes. The first pass writes each key except `open` and `openProp`.
    * The second pass writes those two keys. A sync watcher of the open state then reads the trigger
@@ -410,12 +417,30 @@ export abstract class BasePopupStore<
     if (!openSelector(current) && openSelector(newState)) {
       this.openSession = {};
     }
-    const next = this.anchorsToActiveTrigger() ? syncAnchorState(current, newState) : newState;
+    let next = this.anchorsToActiveTrigger() ? syncAnchorState(current, newState) : newState;
+    if (next.popupElement !== current.popupElement) {
+      next = { ...next, popupElementId: this.observePopupId(next.popupElement) };
+    }
 
     super.setState({ ...next, open: current.open, openProp: current.openProp });
     // A sync watcher can write the store in the first pass. This pass starts from the state of now,
     // so that it keeps that write.
     super.setState({ ...toRaw(this.state), open: next.open, openProp: next.openProp });
+  }
+
+  /**
+   * Follows the `id` of a new popup element. It gives the `id` that the element has now.
+   */
+  private observePopupId(element: HTMLElement | null): string | undefined {
+    this.popupIdObserver?.disconnect();
+    if (element === null) {
+      return undefined;
+    }
+    this.popupIdObserver ??= new MutationObserver(() => {
+      this.set('popupElementId', toRaw(this.state).popupElement?.id);
+    });
+    this.popupIdObserver.observe(element, { attributeFilter: ['id'] });
+    return element.id;
   }
 
   /**
