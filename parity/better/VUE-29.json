@@ -2,8 +2,9 @@
   "id": "VUE-29",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L573-L586",
-    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L197"
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/thumb/SliderThumb.tsx#L197",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/slider/root/SliderRoot.test.tsx#L122-L144"
   ],
-  "behavior": "The server HTML of a range slider has the index, the value and the text of the value of each thumb, also when the thumbs have no `index` prop. A thumb takes its index from the order in which the thumbs render. Base UI needs the `index` prop on each thumb for a server render, because its list of thumbs fills only after the mount.",
+  "behavior": "The server HTML of a range slider has the index, the value and the text of the value of each thumb, also when the thumbs have no `index` prop. A thumb takes its index from the order in which the thumbs render. Base UI needs the `index` prop on each thumb for a server render, because its list of thumbs fills only after the mount. The server HTML of a slider that has `Slider.Label` links the label. The root and the input of each thumb have the id of the label in `aria-labelledby`. The label can come before or after the control. Base UI links the label after the page hydrates.",
   "dueWith": "packages/react/src/slider/thumb/SliderThumb.tsx"
 }
