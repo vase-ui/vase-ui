@@ -25,7 +25,7 @@ import {
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
 import type { ToastManager } from '../createToastManager';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import type { ToastStore } from '../store';
 import { List, Button } from '../utils/test-utils';

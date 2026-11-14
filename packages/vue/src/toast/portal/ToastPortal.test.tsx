@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRenderer, describeConformance, screen } from '#test-utils';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 
 describe('<Toast.Portal />', () => {
   const { render } = createRenderer();

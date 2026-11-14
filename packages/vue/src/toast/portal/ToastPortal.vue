@@ -16,7 +16,7 @@ import FloatingPortalLite from '../../utils/popups/portal/FloatingPortalLite.vue
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<ToastPortalProps>();
+const props = withDefaults(defineProps<ToastPortalProps>(), { as: 'div' });
 
 defineSlots<{
   default(props: { state: ToastPortalState }): unknown;

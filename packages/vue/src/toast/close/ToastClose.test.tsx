@@ -6,7 +6,7 @@ import {
   flushMicrotasks,
   screen,
 } from '#test-utils';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import { List, Button } from '../utils/test-utils';
 
 describe('<Toast.Close />', () => {
