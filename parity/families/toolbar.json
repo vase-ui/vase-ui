@@ -9,8 +9,8 @@
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/MenuTrigger.tsx",
-      "reason": "Each case of the block renders `Menu.Trigger` and the other parts of Menu, which Vase UI does not have."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The cases open the menu with a press and move the focus into the menu. The trigger and the popup of Vase UI have no press and no focus management yet."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",

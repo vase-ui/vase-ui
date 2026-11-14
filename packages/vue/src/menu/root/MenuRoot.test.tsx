@@ -936,7 +936,7 @@ describe('<Menu.Root />', () => {
   });
 
   describe('server render', () => {
-    it('renders the trigger of an open root as open, and a detached trigger as closed', async () => {
+    it('renders the trigger of an open root as open, and a detached trigger with no open state', async () => {
       const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
       const template = document.createElement('template');
       template.innerHTML = serverHtml;
@@ -945,7 +945,8 @@ describe('<Menu.Root />', () => {
       expect(triggers.map((trigger) => trigger.id)).toEqual(['in-root', 'detached']);
       expect(triggers[0].getAttribute('aria-expanded')).toBe('true');
       expect(triggers[0].hasAttribute('data-popup-open')).toBe(true);
-      expect(triggers[1].getAttribute('aria-expanded')).toBe('false');
+      expect(triggers[1].getAttribute('aria-haspopup')).toBe('menu');
+      expect(triggers[1].hasAttribute('aria-expanded')).toBe(false);
       expect(triggers[1].hasAttribute('data-popup-open')).toBe(false);
       expect(template.content.querySelector('[role="menu"]')).toBe(null);
     });

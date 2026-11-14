@@ -73,11 +73,11 @@ const open = computed(() => store.select('open'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
 
-const id = computed(() => props.id ?? generatedPopupId);
+const popupId = computed(() => props.id ?? generatedPopupId);
 
 // The root names the popup with the id that the popup renders. A generated id is not a request, so
 // removing an explicit id gives the generated id back.
-watch(() => (id.value === generatedPopupId ? undefined : id.value), setRenderedPopupId, {
+watch(() => (popupId.value === generatedPopupId ? undefined : popupId.value), setRenderedPopupId, {
   immediate: true,
 });
 onScopeDispose(() => setRenderedPopupId(undefined));
@@ -114,12 +114,12 @@ const state = computed<MenuPopupState>(() => ({
   instant: store.select('instantType'),
 }));
 
-// An explicit `aria-label` or `aria-labelledby` replaces the label from the trigger. The part reads
-// only its own attributes, because it does not see an attribute that a `#render` slot adds.
+// An `aria-label` or an `aria-labelledby` of the consumer replaces the label from the trigger. The
+// part reads only its own attributes, because it does not see an attribute that a `#render` slot
+// adds.
 function getAriaLabelledBy(attrs: Record<string, unknown>) {
-  const ariaLabel = attrs['aria-label'];
   const ariaLabelledBy = attrs['aria-labelledby'] as string | undefined;
-  if (ariaLabelledBy != null || ariaLabel) {
+  if (ariaLabelledBy != null || attrs['aria-label']) {
     return ariaLabelledBy;
   }
 
@@ -150,7 +150,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   props: (attrs) => [
     store.select('popupProps'),
     {
-      id: id.value,
+      id: popupId.value,
       role: 'menu',
       // `menu` is implicitly vertical, so only the non-default value needs to be rendered.
       'aria-orientation': orientation.value === 'horizontal' ? 'horizontal' : undefined,

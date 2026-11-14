@@ -71,16 +71,16 @@ defineSlots<{
 const { store } = useMenuRootContext();
 
 const listItem = useCompositeListItem({ label: () => props.label });
-const id = useVaseUiId(() => props.id);
+const itemId = useVaseUiId(() => props.id);
 
-const disabled = computed(() => props.disabled || store.select('disabled'));
+const isDisabled = computed(() => props.disabled || store.select('disabled'));
 const highlighted = computed(() => store.select('isActive', listItem.index.value));
 
 const { getItemProps, itemRef } = useMenuItem({
   closeOnClick: () => props.closeOnClick,
-  disabled,
+  disabled: isDisabled,
   highlighted,
-  id,
+  id: itemId,
   store,
   nativeButton: () => props.nativeButton,
   nodeId: () => store.select('floatingNodeId'),
@@ -88,7 +88,7 @@ const { getItemProps, itemRef } = useMenuItem({
 });
 
 const state = computed<MenuItemState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   highlighted: highlighted.value,
 }));
 

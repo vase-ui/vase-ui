@@ -114,7 +114,7 @@ describe('<Menu.Item />', () => {
     },
   );
 
-  it('allows onMouseDown to call preventVaseUIHandler', async () => {
+  it('allows onMouseDown to call preventBaseUIHandler', async () => {
     await render(
       <Menu.Root open>
         <Menu.Portal>

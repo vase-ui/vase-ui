@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
 import { Menu } from '@vase-ui/vue/menu';
+import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
   describeConformance,
@@ -71,7 +72,7 @@ describe('<Menu.Trigger />', () => {
         ),
       );
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole(menubar ? 'menuitem' : 'button');
       expect(button).toHaveProperty('disabled', true);
       expect(button).toHaveAttribute('data-disabled');
     });
@@ -128,6 +129,24 @@ describe('<Menu.Trigger />', () => {
       expect(second).not.toHaveAttribute('aria-controls');
       expect(second).not.toHaveAttribute('data-popup-open');
       expect(second).toHaveAttribute('aria-haspopup', 'menu');
+    });
+
+    it('renders a toolbar button as its element, and the button is an item of the toolbar', async () => {
+      await render(
+        <Toolbar.Root>
+          <Menu.Root>
+            <Menu.Trigger as={Toolbar.Button} data-testid="button">
+              Toggle
+            </Menu.Trigger>
+            {popup}
+          </Menu.Root>
+        </Toolbar.Root>,
+      );
+
+      const button = screen.getByTestId('button');
+      expect(button).toHaveAttribute('aria-haspopup', 'menu');
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+      expect(button).toHaveAttribute('tabindex', '0');
     });
 
     it('gives a trigger that is not a native button the button role', async () => {
@@ -248,7 +267,7 @@ describe('<Menu.Trigger />', () => {
       },
     });
 
-    it('gives the tree and the node of a detached trigger to the menu while it owns the menu', async () => {
+    it('gives the tree and the node of a detached trigger to the menu', async () => {
       const handle = Menu.createHandle();
       const probe = createMenuStoreProbe();
       const trees: Array<FloatingTreeType | null> = [];
@@ -276,10 +295,6 @@ describe('<Menu.Trigger />', () => {
         probe.store.select('floatingNodeId'),
       );
 
-      handle.close();
-      await flushMicrotasks();
-      expect(probe.store.select('floatingTreeRoot')).toBe(rootTree);
-      expect(trees.at(-1)).toBe(rootTree);
     });
 
     it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {

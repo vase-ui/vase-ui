@@ -120,13 +120,13 @@ const isOpenedByThisTrigger = computed(() =>
 );
 const controlsId = computed(() => store.value.select('triggerControlsId', thisTriggerId.value));
 
-const disabled = computed(
+const isDisabled = computed(
   () =>
     props.disabled || store.value.select('disabled') || (menubarContext?.disabled.value ?? false),
 );
 
 const { getButtonProps, buttonRef } = useButton({
-  disabled,
+  disabled: isDisabled,
   native: () => props.nativeButton,
 });
 
@@ -140,7 +140,7 @@ const rootTriggerProps = computed(() =>
 const filterTriggerProps = computed(() => store.value.select('filterTriggerProps'));
 
 const state = computed<MenuTriggerState>(() => ({
-  disabled: disabled.value,
+  disabled: isDisabled.value,
   open: isOpenedByThisTrigger.value,
 }));
 

@@ -790,6 +790,53 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+// A server renders no popup and no portal. The trigger of an open root has the open state. The
+// trigger of a handle has the closed form, because a server attaches no store to a handle.
+async function expectMenuPageOnServer(page: Page) {
+  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open', 'data-pressed'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await read('open')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+    'data-pressed': '',
+  });
+  expect(await read('detached')).toEqual({
+    'aria-haspopup': 'menu',
+    'aria-expanded': null,
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`, and the trigger of the handle
+// follows its root.
+async function expectHydratedMenuPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(await popup.evaluate((element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName)).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('menu');
+  expect(await popup.getAttribute('aria-labelledby')).toBe('open-trigger');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBe(
+    await popup.getAttribute('id'),
+  );
+  expect(await popup.getByRole('menuitem').allTextContents()).toEqual(['First', 'Second']);
+
+  expect(await page.getByTestId('closed').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('detached-popup').count()).toBe(0);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -846,6 +893,7 @@ const PAGES: PageCase[] = [
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
   },
+  { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
 ];
 
 const MODES = [

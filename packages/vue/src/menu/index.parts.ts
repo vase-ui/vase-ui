@@ -2,14 +2,8 @@ import MenuArrow from './arrow/MenuArrow.vue';
 import type { MenuArrowProps, MenuArrowState } from './arrow/MenuArrow.vue';
 import MenuBackdrop from './backdrop/MenuBackdrop.vue';
 import type { MenuBackdropProps, MenuBackdropState } from './backdrop/MenuBackdrop.vue';
-import MenuGroup from './group/MenuGroup.vue';
-import type { MenuGroupProps, MenuGroupState } from './group/MenuGroup.vue';
-import MenuGroupLabel from './group-label/MenuGroupLabel.vue';
-import type { MenuGroupLabelProps, MenuGroupLabelState } from './group-label/MenuGroupLabel.vue';
 import MenuItem from './item/MenuItem.vue';
 import type { MenuItemProps, MenuItemState } from './item/MenuItem.vue';
-import MenuLinkItem from './link-item/MenuLinkItem.vue';
-import type { MenuLinkItemProps, MenuLinkItemState } from './link-item/MenuLinkItem.vue';
 import MenuPopup from './popup/MenuPopup.vue';
 import type { MenuPopupProps, MenuPopupState } from './popup/MenuPopup.vue';
 import MenuPortal from './portal/MenuPortal.vue';
@@ -51,26 +45,6 @@ export namespace Backdrop {
 }
 
 /**
- * Groups related menu items with the corresponding label.
- * Renders a `<div>` element.
- */
-export const Group: typeof MenuGroup = MenuGroup;
-export namespace Group {
-  export type Props = MenuGroupProps;
-  export type State = MenuGroupState;
-}
-
-/**
- * An accessible label that is automatically associated with its parent group.
- * Renders a `<div>` element.
- */
-export const GroupLabel: typeof MenuGroupLabel = MenuGroupLabel;
-export namespace GroupLabel {
-  export type Props = MenuGroupLabelProps;
-  export type State = MenuGroupLabelState;
-}
-
-/**
  * An individual interactive item in the menu.
  * Renders a `<div>` element.
  */
@@ -78,16 +52,6 @@ export const Item: typeof MenuItem = MenuItem;
 export namespace Item {
   export type State = MenuItemState;
   export type Props = MenuItemProps;
-}
-
-/**
- * A link in the menu that can be used to navigate to a different page or section.
- * Renders an `<a>` element.
- */
-export const LinkItem: typeof MenuLinkItem = MenuLinkItem;
-export namespace LinkItem {
-  export type State = MenuLinkItemState;
-  export type Props = MenuLinkItemProps;
 }
 
 /**

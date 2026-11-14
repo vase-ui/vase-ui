@@ -105,7 +105,7 @@ describe('<Menu.Positioner />', () => {
         anchor.value = element as HTMLElement | null;
       };
 
-      await render(
+      await render(() => (
         <div style={margin}>
           <Menu.Root open>
             <Menu.Portal>
@@ -124,8 +124,8 @@ describe('<Menu.Positioner />', () => {
             </Menu.Portal>
           </Menu.Root>
           <div data-testid="anchor" style={{ marginTop: '100px' }} ref={setAnchor} />
-        </div>,
-      );
+        </div>
+      ));
 
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 
@@ -175,7 +175,7 @@ describe('<Menu.Positioner />', () => {
         anchor.value = element as HTMLElement | null;
       };
 
-      await render(
+      await render(() => (
         <div style={margin}>
           <Menu.Root open>
             <Menu.Portal>
@@ -194,8 +194,8 @@ describe('<Menu.Positioner />', () => {
             </Menu.Portal>
           </Menu.Root>
           <div data-testid="anchor" style={{ marginTop: '100px' }} ref={setAnchor} />
-        </div>,
-      );
+        </div>
+      ));
 
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 

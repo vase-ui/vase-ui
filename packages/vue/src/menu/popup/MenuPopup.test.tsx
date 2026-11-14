@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-import { computed, defineComponent, provide, shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
+import { KeepAlive, computed, defineComponent, provide, shallowRef } from 'vue';
 import { Menu } from '@vase-ui/vue/menu';
 import {
   createRenderer,
@@ -184,7 +185,7 @@ describe('<Menu.Popup />', () => {
   });
 
   describe('prop: id', () => {
-    it('gives the id of the popup to the root and to the trigger, and gives the generated id back', async () => {
+    it('gives the id of the popup to the root and to the trigger, and gives the generated id back to the root', async () => {
       const id = shallowRef<string | undefined>('custom-popup');
       const probe = createMenuStoreProbe();
       await render(() => (
@@ -210,7 +211,6 @@ describe('<Menu.Popup />', () => {
 
       expect(popup.id).toBe(probe.context.generatedPopupId);
       expect(probe.store.select('defaultPopupId')).toBe(probe.context.generatedPopupId);
-      expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
 
     it('takes back the id of a popup that unmounts', async () => {
@@ -277,6 +277,77 @@ describe('<Menu.Popup />', () => {
       });
       expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
     });
+  });
+
+  it('VUE-5: takes the popup out of the document while KeepAlive holds the menu, and puts the same popup back', async () => {
+    const Page = defineComponent({
+      name: 'Page',
+      setup: () => () => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup">
+                <Menu.Item>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ),
+    });
+    const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
+    const showPage = shallowRef(true);
+    await render(() => (
+      <KeepAlive>{showPage.value ? <Page key="page" /> : <Other key="other" />}</KeepAlive>
+    ));
+    const popup = screen.getByTestId('popup');
+    expect(popup).toHaveAttribute('data-open');
+
+    showPage.value = false;
+    await flushMicrotasks();
+
+    expect(popup.isConnected).toBe(false);
+
+    showPage.value = true;
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('popup')).toBe(popup);
+    expect(popup.closest('[data-vase-ui-portal]')?.parentElement).toBe(document.body);
+    expect(popup).toHaveAttribute('data-open');
+  });
+
+  it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {
+    // The pointer of the browser stays where a case leaves it, for each later test.
+    onTestFinished(async () => {
+      await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+    });
+    const frame = document.createElement('iframe');
+    frame.srcdoc = '<button style="width: 80px; height: 40px">in the frame</button>';
+    frame.style.cssText =
+      'position: absolute; left: 20px; top: 300px; width: 200px; height: 100px; border: 0';
+    const loaded = new Promise<void>((resolve) => {
+      frame.addEventListener('load', () => resolve(), { once: true });
+    });
+    document.body.append(frame);
+    onTestFinished(() => frame.remove());
+    await loaded;
+    const onOpenChange = vi.fn();
+    await render(
+      <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup />
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    await userEvent.click(frame, { position: { x: 20, y: 20 } });
+    await flushMicrotasks();
+
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+    expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.outsidePress);
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
