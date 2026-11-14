@@ -37,8 +37,6 @@ type InputProps<T extends ElementType> =
 type Handler = (...args: any[]) => unknown;
 type HandlerValue = Handler | Handler[] | null | false | undefined;
 
-const EMPTY_PROPS = {};
-
 /* eslint-disable @typescript-eslint/unified-signatures -- The overloads are the public signature of Base UI, one for each count of props objects. */
 /**
  * Merges sets of Vue props. The rightmost set wins, as with `Object.assign`: its fields replace
@@ -57,11 +55,12 @@ const EMPTY_PROPS = {};
  *
  * A set can be an object or a function. The function gets the props that are merged up to that
  * point, from left to right. For `(obj1, obj2, fn, obj3)`, `fn` gets the merge of `obj1` and
- * `obj2`. The result of the function is not merged, so the function must call the earlier
- * handlers itself.
+ * `obj2`. The result of the function replaces those props, so the function must call the earlier
+ * handlers itself. `mergeProps` copies the result and does not change it.
  *
- * `preventVaseUIHandler()` does not stop a handler that such a function returns. That handler
- * must read `event.vaseUIHandlerPrevented` and stop when it is `true`.
+ * A handler that such a function returns can also call `event.preventVaseUIHandler()`. The call
+ * only sets `event.vaseUIHandlerPrevented`. This handler calls the earlier handlers itself. It must
+ * read the flag, and call them only when it is not `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
  * @template T Tag of the element that gets the merged props. The sets and the result then have
@@ -136,7 +135,7 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  */
 export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return EMPTY_PROPS;
+    return {};
   }
   if (props.length === 1) {
     return createInitialMergedProps(props[0]) as MergedProps<T>;
@@ -153,17 +152,15 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Merg
 }
 
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
-  if (isPropsGetter(inputProps)) {
-    // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS) };
-  }
-
-  return copyInitialProps(inputProps);
+  // A props getter can write to the object that it gets, so each call gets a new object.
+  return copyInitialProps(isPropsGetter(inputProps) ? inputProps({}) : inputProps);
 }
 
 function mergeInto<T extends ElementType>(merged: Record<string, any>, inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
-    return inputProps(merged as MergedProps<T>);
+    // The result of a props getter can be an object that the caller keeps, so the later sets merge
+    // into a copy.
+    return copyInitialProps(inputProps(merged as MergedProps<T>));
   }
   return mutablyMergeInto(merged, inputProps);
 }
