@@ -577,7 +577,7 @@ A part that binds the id of a part that comes after it:
 - A part that defers assumes nothing. With no registered id, it has no attribute.
 - A later part that is below an async `setup`, or below a component that defers, registers too late for the server HTML. The part that binds the id gets it after the page hydrates.
 - A popup trigger does not call it. Each value that the trigger lacks on a server comes from a registration, an attachment or an element. A server has none of them. A deferral adds none of them.
-- `Select.Trigger` and `Combobox.Trigger` are the exceptions, because each is also the control of a field. Each binds the id of the label part of its family, and the ids of the label and the messages of a field. Each calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
+- `Select.Trigger` and `Combobox.Trigger` are the exceptions, because each can be the control of a field. Each binds the id of the label part of its family, and the ids of the label and the messages of a field. Each calls `useDeferredServerRender()`, so the server HTML has these ids in each order of the parts.
 
 The label of a root:
 
