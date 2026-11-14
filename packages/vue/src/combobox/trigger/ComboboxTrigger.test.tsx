@@ -1429,33 +1429,41 @@ describe('<Combobox.Trigger />', () => {
 
     it('is invalid when an outside press closes the popup, with no change before', async () => {
       const { user } = await render(
-        <Field.Root validationMode="onBlur" data-testid="field">
-          <Combobox.Root required defaultOpen>
-            <Combobox.Trigger data-testid="trigger" />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.Input />
-                  <Combobox.List>
-                    <Combobox.Item value="a">a</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-          <Field.Error match="valueMissing" data-testid="error">
-            required
-          </Field.Error>
-        </Field.Root>,
+        <div>
+          <Field.Root validationMode="onBlur" data-testid="field">
+            <Combobox.Root required>
+              <Combobox.Trigger data-testid="trigger" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.List>
+                      <Combobox.Item value="a">a</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">Outside</button>
+        </div>,
       );
-      await screen.findByRole('listbox');
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(screen.getByTestId('input')).toHaveFocus();
+      });
       expect(screen.queryByTestId('error')).toBe(null);
 
-      await user.click(document.body);
+      // The press closes the popup before the focus leaves the input in the popup.
+      await user.click(screen.getByRole('button', { name: 'Outside' }));
 
       await waitFor(() => {
         expect(screen.queryByRole('listbox')).toBe(null);
       });
+      expect(screen.getByRole('button', { name: 'Outside' })).toHaveFocus();
       expect(screen.getByTestId('error')).toHaveTextContent('required');
       expect(screen.getByTestId('trigger')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-dirty');
