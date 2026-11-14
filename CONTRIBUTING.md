@@ -451,7 +451,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `exactOptionalPropertyTypes` is off in the package. With the flag, the built declarations give a listener no `| undefined`. A consumer that sets the flag then cannot pass `undefined` to a listener.
 - The consumer project of `pnpm check:package` sets `exactOptionalPropertyTypes`. It passes `undefined` to an optional prop and to a listener.
 - `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
-- `noUncheckedIndexedAccess` is also off in the root project and in `docs`, because the scripts do not obey it.
+- `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are also off in the root project and in `docs`, because the scripts do not obey them.
 - `lib` and `target` of the package are ES2024. Each API of ES2024 is Baseline Widely Available, except a resizable `ArrayBuffer`, a growable `SharedArrayBuffer` and `Atomics.waitAsync`. Do not use these three, `using` or `Symbol.dispose`.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
@@ -465,7 +465,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 `noUncheckedIndexedAccess` adds `undefined` to the type of an index read, and `no-non-null-assertion` refuses `!`. In the source, use the first of these rules that applies:
 
 1. Write the code so that no read can be absent, when the result is as short and does the same. Use `for...of`, a destructure or `.at(-1)`.
-2. If an algorithm of Base UI needs the index, keep the read and write `!`. Disable `@typescript-eslint/no-non-null-assertion` for the line, or for the block when a function has many such reads. The reason says why the index is in range.
+2. If an algorithm of Base UI needs the index, keep the read and write `!`. Disable `@typescript-eslint/no-non-null-assertion` for the line, or for the block when a function has many such reads. The reason says why the index is in range. Where Base UI gives a read that can be absent to code that accepts the absent value, keep the read with `!`. The reason then says what the code does with the absent value.
 3. Do not add a guard or a default that cannot run. Do not write `as T`.
 
 A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`. For a block, write `/* eslint-disable <rule> -- <reason> */` before the block and `/* eslint-enable <rule> */` after it.
