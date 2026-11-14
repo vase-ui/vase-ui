@@ -30,6 +30,11 @@ import type {
   PreviewCardTriggerProps,
   PreviewCardTriggerState,
 } from './trigger/PreviewCardTrigger.vue';
+import PreviewCardViewport from './viewport/PreviewCardViewport.vue';
+import type {
+  PreviewCardViewportProps,
+  PreviewCardViewportState,
+} from './viewport/PreviewCardViewport.vue';
 
 /**
  * Groups all parts of the preview card.
@@ -103,6 +108,18 @@ export const Backdrop: typeof PreviewCardBackdrop = PreviewCardBackdrop;
 export namespace Backdrop {
   export type State = PreviewCardBackdropState;
   export type Props = PreviewCardBackdropProps;
+}
+
+/**
+ * A viewport for displaying content transitions.
+ * This component is only required if one popup can be opened by multiple triggers, its content
+ * changes based on the trigger, and switching between them is animated.
+ * Renders a `<div>` element.
+ */
+export const Viewport: typeof PreviewCardViewport = PreviewCardViewport;
+export namespace Viewport {
+  export type State = PreviewCardViewportState;
+  export type Props = PreviewCardViewportProps;
 }
 
 export {
