@@ -63,7 +63,7 @@ A tooltip can give extra clarity that is not necessary to sighted users with a m
 
 ### Contextual feedback messages
 
-To show a feedback message next to an element, use an anchored toast. A screen reader then announces the message, and the message can hold complex content.
+To show a feedback message next to an element, use an [anchored toast](/components/toast#anchored-toasts). A screen reader then announces the message, and the message can hold complex content.
 
 ## Examples
 
@@ -160,14 +160,16 @@ Use `Tooltip.Viewport` only when one popup has more than one trigger, the conten
 
 ## createHandle
 
+Creates a handle that connects a `<Tooltip.Root>` with detached `<Tooltip.Trigger>` parts. The type argument of the function is the type of the payload.
+
 <ApiReference name="Tooltip.createHandle" />
 
 ### Handle
 
 `Tooltip.createHandle()` returns a `Tooltip.Handle`. Give it to the `handle` prop of the root and of each trigger outside the root.
 
-- `open(triggerId)` opens the tooltip for the trigger with that `id`. It throws when no trigger has that `id`.
+- `open(triggerId)` opens the tooltip for the `<Tooltip.Trigger>` that has that `id` and the same handle. While a root is mounted, it throws when the handle has no such trigger.
 - `close()` closes the tooltip.
-- `isOpen` is `true` while the tooltip is open. A `computed`, a `watch` or a template that reads it follows the open state.
+- `isOpen` is `true` while the tooltip is open, and `false` while no root is mounted. A `computed`, a `watch` or a template that reads it follows the open state.
 
 The methods have an effect only while a root with the handle is mounted. Call them in an event listener or in a hook such as `onMounted`, not in a render function.
