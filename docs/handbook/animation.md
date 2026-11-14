@@ -99,11 +99,11 @@ When a popup closes, `open` becomes `false` at once. The popup stays in the DOM 
 
 When the animation ends, Vase UI removes the popup from the DOM, or hides it if the portal has `keepMounted`. The root emits `openChangeComplete` with `false`.
 
-Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The first two examples below animate `opacity`, so Vase UI ends the exit on its own.
+Vase UI ends the exit when the animation that it finds ends. If it finds none, it ends the exit in the next frame. To end the exit yourself, see [Manual unmounting](#manual-unmounting). The examples of the next three sections animate `opacity`, so Vase UI ends the exit on its own.
 
 ### Animate a popup with motion-v
 
-The examples use [Dialog](/components/dialog) and [Select](/components/select).
+The examples of this section and the next section use [Dialog](/components/dialog).
 
 1. Give `motion.div` to the `#render` slot of `Dialog.Popup`. Bind the `props` of the slot on it, cast to `MotionProps`. The cast is for the type of `style`, which differs between Vue and `motion-v`.
 2. Set `initial` to the closed style.
@@ -123,7 +123,7 @@ Vase UI keeps the popup in the DOM while the exit animation plays. The popup nee
 
 Do not put a part in `<AnimatePresence>`: a portal part renders a `<Teleport>`, which `<AnimatePresence>` cannot animate.
 
-You can also give `motion.div` to the `as` prop. The `as` prop gets no `state`, so `animate` reads a controlled `open`.
+You can also give `motion.div` to the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
 <<< ../examples/animation/MotionAsProp.vue{10,14-16}
 
@@ -143,7 +143,7 @@ A popup stays in the DOM while it is closed when its portal has `keepMounted`. T
 
 ### Animate a Select popup
 
-`Select.Portal` has no `keepMounted` prop. The popup stays in the DOM after its first open, and it is hidden while the select is closed. The same code animates it.
+The popup of [Select](/components/select) is not in the DOM until the first interaction with the select. After that, the popup stays in the DOM, and it is hidden while the select is closed. `Select.Portal` has no `keepMounted` prop. The same code animates the popup.
 
 <DemoFrame>
   <MotionSelect />
