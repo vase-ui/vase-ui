@@ -1,4 +1,4 @@
-import { computed, nextTick, shallowRef, toValue } from 'vue';
+import { computed, nextTick, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../../../common/hydration';
 import { platform } from '../../../common/platform';
@@ -295,6 +295,13 @@ export function useDateTimeFieldSegment(
     event.preventDefault();
     context.pasteText(text, event);
   }
+
+  watch(
+    () => context.resetCount.value,
+    () => {
+      void nextTick(writeTextToInput);
+    },
+  );
 
   const props = computed(() => {
     const { number, text, placeholder, min, max, valueText, label, size, id } = view.value;

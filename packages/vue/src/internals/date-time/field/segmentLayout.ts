@@ -1,4 +1,5 @@
 import { formatter } from '../format';
+import { isKind } from '../temporal';
 import type { TemporalValue } from '../temporal';
 
 export type EditableSegmentType =
@@ -102,13 +103,28 @@ export function getSegmentLayout(
   return { hourCycle: options.time ? format.resolvedOptions().hourCycle : undefined, segments };
 }
 
+// The calendar of a value gives the era, so the value is in the calendar of the layout. A year and
+// month has no `withCalendar`.
+function inCalendar(value: TemporalValue, calendar: string): TemporalValue {
+  if (isKind(value, 'time')) {
+    return value;
+  }
+  return isKind(value, 'yearMonth')
+    ? value.toPlainDate({ day: 1 }).withCalendar(calendar)
+    : value.withCalendar(calendar);
+}
+
 /** The text of the era and of the time zone name of `value`. They are not edited. */
 export function getFixedSegmentTexts(
   value: TemporalValue,
   locale: Intl.LocalesArgument,
   options: SegmentLayoutOptions,
 ): Record<'era' | 'timeZoneName', string> {
-  const [format, epoch] = formatter(value, intlOptions(options), locale);
+  const [format, epoch] = formatter(
+    inCalendar(value, options.calendar),
+    intlOptions(options),
+    locale,
+  );
   const texts = { era: '', timeZoneName: '' };
   for (const part of format.formatToParts(epoch)) {
     if (part.type === 'era' || part.type === 'timeZoneName') {

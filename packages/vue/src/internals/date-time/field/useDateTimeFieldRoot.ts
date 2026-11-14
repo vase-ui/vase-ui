@@ -700,6 +700,8 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     }
   }
 
+  const resetCount = shallowRef(0);
+
   useFormReset(hiddenInputElement, (event) => {
     const before = validityKey.value;
     draft.value = null;
@@ -714,6 +716,10 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     } else {
       isResetChangePending = true;
     }
+    // The browser reset the inputs before this call. The text of the input is not the text of the
+    // model when the reset left the model as it was.
+    writeValueToHiddenInput();
+    resetCount.value += 1;
   });
 
   const hiddenText = computed(() =>
@@ -887,6 +893,7 @@ export function useDateTimeFieldRoot<Value extends TemporalValue>(
     state,
     segments,
     listKey,
+    resetCount,
     disabled: isDisabled,
     readOnly: isReadOnly,
     required: isRequired,

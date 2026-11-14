@@ -1,0 +1,175 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { formatter } from '../format';
+import { getDayPeriodTexts, getFixedSegmentTexts, getSegmentLayout } from './segmentLayout';
+import type { SegmentLayoutOptions, SegmentType } from './segmentLayout';
+
+const DATE_TIME: SegmentLayoutOptions = {
+  date: 'day',
+  time: 'minute',
+  hourCycle: 24,
+  calendar: 'gregory',
+  era: false,
+  timeZoneName: false,
+};
+
+const types = (options: Partial<SegmentLayoutOptions>, locale = 'en-US') =>
+  getSegmentLayout(locale, { ...DATE_TIME, ...options }).segments.map(({ type }) => type);
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('getSegmentLayout', () => {
+  it.each(['en-US', 'de-DE', 'fr-FR', 'ja-JP', 'ar-EG', 'ko-KR', 'hi-IN', 'fr-CA'])(
+    'gives the segments and the literals of %s in its order',
+    (locale) => {
+      const { segments } = getSegmentLayout(locale, DATE_TIME);
+      const numbers = new Intl.NumberFormat(locale, {
+        useGrouping: false,
+        minimumIntegerDigits: 2,
+      });
+      const textOfType: Partial<Record<SegmentType, string>> = {
+        year: new Intl.NumberFormat(locale, { useGrouping: false }).format(2026),
+        month: numbers.format(11),
+        day: numbers.format(14),
+        hour: numbers.format(15),
+        minute: numbers.format(4),
+      };
+      const [format, epoch] = formatter(
+        Temporal.PlainDateTime.from('2026-11-14T15:04'),
+        {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        },
+        locale,
+      );
+
+      const shown = segments.map((segment) =>
+        segment.type === 'literal' ? segment.text : textOfType[segment.type],
+      );
+      expect(shown.join('')).toBe(format.format(epoch));
+    },
+  );
+
+  it.each([
+    { name: 'a year and month', options: { date: 'month', time: undefined } as const, count: 2 },
+    { name: 'a date', options: { date: 'day', time: undefined } as const, count: 3 },
+    { name: 'a time of hours', options: { date: undefined, time: 'hour' } as const, count: 1 },
+    { name: 'a time of seconds', options: { date: undefined, time: 'second' } as const, count: 3 },
+  ])('shows only the units of $name', ({ options, count }) => {
+    const editable = types(options).filter((type) => type !== 'literal');
+    expect(editable).toHaveLength(count);
+  });
+
+  it.each([
+    { hourCycle: 12 as const, resolved: 'h12', dayPeriod: true },
+    { hourCycle: 24 as const, resolved: 'h23', dayPeriod: false },
+  ])('has the hour cycle $resolved when the prop is $hourCycle', ({ hourCycle, ...expected }) => {
+    const layout = getSegmentLayout('en-US', { ...DATE_TIME, hourCycle });
+    expect(layout.hourCycle).toBe(expected.resolved);
+    expect(layout.segments.some(({ type }) => type === 'dayPeriod')).toBe(expected.dayPeriod);
+  });
+
+  it('keeps the hour cycle of the locale, and has none without a time', () => {
+    const [format] = formatter(Temporal.PlainTime.from('15:04'), { hour: 'numeric' }, 'de-DE');
+    expect(getSegmentLayout('de-DE', { ...DATE_TIME, hourCycle: undefined }).hourCycle).toBe(
+      format.resolvedOptions().hourCycle,
+    );
+    expect(getSegmentLayout('en-US', { ...DATE_TIME, time: undefined }).hourCycle).toBe(undefined);
+  });
+
+  it('puts the era and the time zone name where the locale puts them', () => {
+    expect(types({ era: true, time: undefined })).toContain('era');
+    expect(types({ timeZoneName: true })).toContain('timeZoneName');
+    expect(types({ time: undefined, timeZoneName: true })).not.toContain('timeZoneName');
+    const japanese = getSegmentLayout('ja-JP', {
+      ...DATE_TIME,
+      time: undefined,
+      calendar: 'japanese',
+    });
+    expect(japanese.segments[0]?.type).toBe('era');
+  });
+
+  it('gives Intl the Gregorian calendar for the ISO calendar', () => {
+    expect(types({ calendar: 'iso8601' })).toEqual(types({ calendar: 'gregory' }));
+  });
+
+  it('maps the parts that Intl gives, and joins the literals that follow each other', () => {
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts').mockReturnValue([
+      { type: 'relatedYear', value: '2026' },
+      { type: 'yearName', value: 'bing-wu' },
+      { type: 'literal', value: '/' },
+      { type: 'literal', value: ' ' },
+      { type: 'weekday', value: 'Sat' },
+      { type: 'month', value: '11' },
+    ]);
+    expect(getSegmentLayout('en-US', DATE_TIME).segments).toEqual([
+      { type: 'year', text: '' },
+      { type: 'year', text: '' },
+      { type: 'literal', text: '/ Sat' },
+      { type: 'month', text: '' },
+    ]);
+  });
+});
+
+describe('getFixedSegmentTexts', () => {
+  it('gives the era and the time zone name that Intl gives for the value', () => {
+    const zoned = Temporal.ZonedDateTime.from('0000-03-01T09:00[Asia/Tokyo]').withCalendar(
+      'gregory',
+    );
+    const options = { ...DATE_TIME, era: true, timeZoneName: true };
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Tokyo',
+      calendar: 'gregory',
+      era: 'short',
+      timeZoneName: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+    }).formatToParts(zoned.epochMilliseconds);
+    const textOf = (type: string) => parts.find((part) => part.type === type)?.value;
+
+    expect(getFixedSegmentTexts(zoned, 'en-US', options)).toEqual({
+      era: textOf('era'),
+      timeZoneName: textOf('timeZoneName'),
+    });
+  });
+
+  it('gives the era of the calendar of the layout for a value in another calendar', () => {
+    const options = { ...DATE_TIME, time: undefined, calendar: 'persian' };
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', calendar: 'persian' })
+      .formatToParts(Date.UTC(2026, 10, 14))
+      .filter((part) => part.type === 'era');
+
+    expect(parts).toHaveLength(1);
+    expect(getFixedSegmentTexts(Temporal.PlainDate.from('2026-11-14'), 'en-US', options).era).toBe(
+      parts[0]?.value,
+    );
+    expect(
+      getFixedSegmentTexts(Temporal.PlainYearMonth.from('2026-11'), 'en-US', options).era,
+    ).toBe(parts[0]?.value);
+  });
+
+  it('gives an empty text for a part that the layout does not have', () => {
+    expect(getFixedSegmentTexts(Temporal.PlainDate.from('2026-11-14'), 'en-US', DATE_TIME)).toEqual(
+      {
+        era: '',
+        timeZoneName: '',
+      },
+    );
+  });
+});
+
+describe('getDayPeriodTexts', () => {
+  it.each(['en-US', 'ja-JP', 'ar-EG'])('gives the two day periods of %s', (locale) => {
+    const text = (hour: number) =>
+      new Intl.DateTimeFormat(locale, { hour: 'numeric', hourCycle: 'h12', timeZone: 'UTC' })
+        .formatToParts(Date.UTC(2026, 10, 14, hour))
+        .find((part) => part.type === 'dayPeriod')?.value;
+
+    expect(getDayPeriodTexts(locale)).toEqual({ am: text(3), pm: text(15) });
+  });
+});

@@ -62,6 +62,11 @@ export interface DateTimeFieldContext {
   readOnly: ComputedRef<boolean>;
   required: ComputedRef<boolean>;
   invalid: ComputedRef<boolean>;
+  /**
+   * Counts the resets of the form. A reset puts the browser default in each input, and Vue writes
+   * `value` only when it changes. A part writes its text again after each reset.
+   */
+  resetCount: Readonly<Ref<number>>;
   /** The ten digits of the numbering system of the locale. */
   digits: ComputedRef<string[]>;
   dayPeriodTexts: ComputedRef<Record<DayPeriod, string>>;
