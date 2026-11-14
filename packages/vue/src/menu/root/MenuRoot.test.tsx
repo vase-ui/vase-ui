@@ -34,8 +34,8 @@ import {
 import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
-import * as ContextMenu from '../../context-menu/index.parts';
 import { reset as resetWarnings } from '../../common/warn';
+import * as ContextMenu from '../../context-menu/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -481,7 +481,6 @@ describe('<Menu.Root />', () => {
       await browserUserEvent.keyboard(shift ? '{Shift>}[Tab]{/Shift}' : '[Tab]');
 
       expect(menu).toHaveFocus();
-      expect(menu).toBeInTheDocument();
     },
   );
 
