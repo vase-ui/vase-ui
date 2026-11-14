@@ -134,8 +134,8 @@ const MultipleDetachedTriggersTooltip = defineComponent(
   { props: testTooltipProps },
 );
 
-// `user.hover` refuses an element with `pointer-events: none`.
-const userPointer = { style: { pointerEvents: 'auto' } };
+// `user.hover` throws for an element with `pointer-events: none`.
+const hoverableByUser = { style: { pointerEvents: 'auto' } };
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
@@ -550,7 +550,7 @@ describe('<Tooltip.Root />', () => {
             triggerProps={{
               delay: 0,
               closeDelay: 0,
-              ...userPointer,
+              ...hoverableByUser,
             }}
           />,
         );
@@ -600,7 +600,7 @@ describe('<Tooltip.Root />', () => {
                 details.preventUnmountOnClose();
               },
             }}
-            triggerProps={userPointer}
+            triggerProps={hoverableByUser}
           />,
         );
 
@@ -630,7 +630,7 @@ describe('<Tooltip.Root />', () => {
         const { user } = await render(
           <TestTooltip
             rootProps={{ ref: actions.setRef, onOpenChange }}
-            triggerProps={{ delay: 0, ...userPointer }}
+            triggerProps={{ delay: 0, ...hoverableByUser }}
           />,
         );
 
