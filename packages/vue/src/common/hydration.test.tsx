@@ -99,8 +99,9 @@ describe('hydration', () => {
       {
         name: 'a textarea with a CRLF',
         props: { as: 'textarea', value: 'a\r\nb' },
-        // Vue writes the line break as it is, and the parser of the browser then gives a LF.
-        editServerHtml: (html: string) => html.replace('\r\n', '&#13;&#10;'),
+        // Vue writes a CRLF as it is, and the parser of the browser changes it into a LF. Vue 3.5.12
+        // then also reports a mismatch for the text of the model.
+        editServerHtml: (html: string) => html.replaceAll('\r\n', '&#13;&#10;'),
       },
     ])('sends no event for $name that nobody changed', async ({ props, editServerHtml }) => {
       const { events } = await hydrateProbe(props, () => {}, editServerHtml);
