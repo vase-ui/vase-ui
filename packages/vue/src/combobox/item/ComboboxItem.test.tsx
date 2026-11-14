@@ -785,7 +785,7 @@ describe('<Combobox.Item />', () => {
     });
 
     it('submits the form with the value of the item that the click selects', async () => {
-      const submittedValues: Array<FormDataEntryValue | null> = [];
+      const submittedValues: (FormDataEntryValue | null)[] = [];
       const handleSubmit = (event: SubmitEvent) => {
         event.preventDefault();
         submittedValues.push(new FormData(event.target as HTMLFormElement).get('fruit'));

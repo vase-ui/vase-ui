@@ -203,7 +203,13 @@ export default defineConfig([
     'packages/vue/test/package-check/index.ts',
   ]),
   js.configs.recommended,
-  tseslint.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
   pluginVue.configs['flat/essential'],
   {
     linterOptions: { reportUnusedDisableDirectives: 'error' },
@@ -226,14 +232,72 @@ export default defineConfig([
   },
   {
     rules: {
-      // `Dialog.Root.Props` is a type-only namespace beside the part.
+      // `Dialog.Root.Props` is a namespace of types beside the part. `erasableSyntaxOnly` refuses
+      // a namespace that has a value.
       '@typescript-eslint/no-namespace': 'off',
       // Part files keep the names of the Base UI files, such as `Separator.vue`.
       'vue/multi-word-component-names': 'off',
-      // The port keeps the shape of the Base UI code, which uses `any`.
+      // Base UI has `any` in public types, which `pnpm parity:check` compares.
       '@typescript-eslint/no-explicit-any': 'off',
-      // The port keeps the shape of the Base UI code, which uses `{}` as a type.
+      // Each report is a public type of Base UI: an empty `State`, or `{}` as the default of a
+      // type parameter.
       '@typescript-eslint/no-empty-object-type': 'off',
+      // typescript-eslint cannot read an SFC, so a value from a `.vue` import has no type. These
+      // rules report each use of such a value.
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      // The DOM types say that each API exists, so the rule reports the feature checks.
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      // An interface has no implicit index signature, so the fix can break an assignment to a
+      // `Record`.
+      '@typescript-eslint/consistent-type-definitions': 'off',
+      // The fix writes the `!` that `no-non-null-assertion` refuses.
+      '@typescript-eslint/non-nullable-type-assertion-style': 'off',
+      // `void source.value` registers a dependency of a `computed` or a watcher.
+      '@typescript-eslint/no-meaningless-void-operator': 'off',
+      // A function that does nothing is a value here, such as `NOOP`. The fix is a comment that
+      // repeats the code.
+      '@typescript-eslint/no-empty-function': 'off',
+      // The records of Base UI are plain objects.
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      // The rule reports the helper that compares two types, and public signatures of Base UI.
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+      // The fix changes the text of two types in the declarations of `mergeProps`.
+      '@typescript-eslint/consistent-indexed-object-style': 'off',
+      // A callback of the consumer can return nothing, so Base UI has `void` in a union.
+      '@typescript-eslint/no-invalid-void-type': 'off',
+      // A number in a template is correct, such as `${height}px` for a CSS length.
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      // An arrow function that calls a function with no result is the text of Base UI, such as
+      // `() => resolve()`.
+      '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
+      // `||` and `??` give different results for `''`, `0` and `false`.
+      '@typescript-eslint/prefer-nullish-coalescing': [
+        'error',
+        { ignorePrimitives: { bigint: true, boolean: true, number: true, string: true } },
+      ],
+      // `test` of `node:test` returns a promise that the runner handles.
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            { from: 'package', name: ['describe', 'it', 'test'], package: 'node:test' },
+          ],
+        },
+      ],
+      // With `verbatimModuleSyntax`, `import { type A }` stays as an import of the module.
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { fixStyle: 'separate-type-imports', disallowTypeAnnotations: false },
+      ],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      'prefer-object-has-own': 'error',
+      'logical-assignment-operators': 'error',
       // The port keeps the shape of the Base UI code, which has unused `_` names and rest siblings.
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -252,6 +316,8 @@ export default defineConfig([
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
+      // A type test gives a constant a wider type than its value.
+      '@typescript-eslint/no-inferrable-types': 'off',
     },
   },
   {
@@ -315,6 +381,27 @@ export default defineConfig([
         ...RESTRICTED_PROPERTIES.filter(({ property }) => property !== '$el'),
       ],
     },
+  },
+  {
+    files: [...TEST_SCRIPT_FILES, 'packages/vue/test/**/*.{ts,tsx,vue}', 'fixtures/nuxt/test/**'],
+    rules: {
+      // A ported test keeps the `!` of the Base UI test. A value that is absent fails the test.
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      // A test takes the queries of Testing Library out of their object.
+      '@typescript-eslint/unbound-method': 'off',
+      // The fix changes a title such as `${key}` into an expression, and `pnpm parity:check` then
+      // cannot read the title.
+      '@typescript-eslint/no-unnecessary-template-expression': 'off',
+      // A ported test keeps the casts of the Base UI test.
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+    },
+  },
+  {
+    // No tsconfig.json includes a JavaScript file. `nuxt prepare` writes the one of the fixture,
+    // and `pnpm lint` does not run it. In an SFC, typescript-eslint has no type for a macro or
+    // for a parameter of `generic`, and a fix then removes a type argument that vue-tsc needs.
+    files: ['**/*.{js,mjs,vue}', 'fixtures/nuxt/**'],
+    extends: [tseslint.configs.disableTypeChecked],
   },
   eslintConfigPrettier,
 ]);

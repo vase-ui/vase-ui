@@ -11,6 +11,10 @@ const {
   previousContainerRef,
 } = usePopupViewportContext();
 
+// The template binds these two refs by name. vue-tsc does not count that as a use of the name.
+void currentContainerRef;
+void previousContainerRef;
+
 markChildrenMounted();
 
 // The previous container has no vnode child. The composable fills it with `replaceChildren`, and

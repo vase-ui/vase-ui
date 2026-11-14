@@ -4,7 +4,7 @@ import MenubarHydration from './MenubarHydration.test.vue';
 
 // The attribute order in the HTML is not part of the test.
 function readRootTag(html: string) {
-  return html.match(/^<[^>]*>/)?.[0] ?? '';
+  return /^<[^>]*>/.exec(html)?.[0] ?? '';
 }
 
 function hasAttribute(tag: string, name: string) {
@@ -12,13 +12,13 @@ function hasAttribute(tag: string, name: string) {
 }
 
 function readAttribute(tag: string, name: string) {
-  return tag.match(new RegExp(` ${name}="([^"]*)"`))?.[1];
+  return new RegExp(` ${name}="([^"]*)"`).exec(tag)?.[1];
 }
 
 function readTabindexes(html: string) {
   return ['a', 'b', 'c'].map((testId) =>
     readAttribute(
-      html.match(new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`))?.[0] ?? '',
+      new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0] ?? '',
       'tabindex',
     ),
   );

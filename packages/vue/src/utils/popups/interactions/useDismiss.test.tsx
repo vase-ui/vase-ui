@@ -2624,7 +2624,7 @@ describe('useDismiss', () => {
       }
 
       const closed: string[][] = [];
-      for (let press = 0; press < names.length; press += 1) {
+      for (const _name of names) {
         const before = names.filter(isOpen);
         await fireEvent.keyDown(document.body, { key: 'Escape' });
         closed.push(before.filter((name) => !isOpen(name)));

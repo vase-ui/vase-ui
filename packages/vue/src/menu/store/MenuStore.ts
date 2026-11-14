@@ -74,8 +74,8 @@ export type State<Payload> = PopupStoreState<Payload> & {
 type Context = PopupStoreContext<MenuRootChangeEventDetails> & {
   readonly positionerRef: ShallowRef<HTMLElement | null>;
   readonly typingRef: ShallowRef<boolean>;
-  readonly itemDomElements: ShallowRef<Array<HTMLElement | null>>;
-  readonly itemLabels: ShallowRef<Array<string | null>>;
+  readonly itemDomElements: ShallowRef<(HTMLElement | null)[]>;
+  readonly itemLabels: ShallowRef<(string | null)[]>;
   /** Why the next `activeIndex` write happens, consumed by `itemHighlighted` after the DOM update. */
   highlightReason: MenuRootHighlightEventReason;
   /** The event that caused the next `activeIndex` write, reported along with `highlightReason`. */
@@ -210,7 +210,7 @@ export class MenuStore<Payload> extends BasePopupStore<
   Selectors,
   MenuRootChangeEventDetails
 > {
-  constructor(initialState?: Partial<State<Payload>>, defaultPopupId?: string | undefined) {
+  constructor(initialState?: Partial<State<Payload>>, defaultPopupId?: string) {
     super(
       createInitialState<Payload>(defaultPopupId, initialState),
       createInitialContext(),
@@ -272,6 +272,7 @@ export class MenuStore<Payload> extends BasePopupStore<
   protected override getCloseTrigger() {
     // Reports the trigger the root last rendered, which repeated requests are compared against.
     // The store can already hold a newer trigger from a request that hasn't rendered yet.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `isOpenChangeIgnored` drops each request while the root has not set `getCommittedOpenState`.
     return this.context.getCommittedOpenState!().activeTriggerElement;
   }
 
@@ -320,11 +321,7 @@ export class MenuStore<Payload> extends BasePopupStore<
     return { allowMouseEnter: false };
   }
 
-  setActiveIndex(
-    activeIndex: number | null,
-    reason: MenuRootHighlightEventReason,
-    event?: Event | undefined,
-  ) {
+  setActiveIndex(activeIndex: number | null, reason: MenuRootHighlightEventReason, event?: Event) {
     // Only a write that changes the index is reported. Tagging a no-op, or a write back to the
     // reported item before the change is reported, would let a later registry-driven re-emit
     // report this reason instead of `none`.
@@ -338,11 +335,7 @@ export class MenuStore<Payload> extends BasePopupStore<
     this.set('activeIndex', activeIndex);
   }
 
-  highlightItem(
-    element: Element | null,
-    reason: MenuRootHighlightEventReason,
-    event?: Event | undefined,
-  ) {
+  highlightItem(element: Element | null, reason: MenuRootHighlightEventReason, event?: Event) {
     const index = this.context.itemDomElements.value.indexOf(element as HTMLElement);
     if (index > -1) {
       this.setActiveIndex(index, reason, event);
@@ -370,8 +363,8 @@ function createInitialContext(): Context {
     ...createPopupStoreContext(),
     positionerRef: shallowRef<HTMLElement | null>(null),
     typingRef: shallowRef(false),
-    itemDomElements: shallowRef<Array<HTMLElement | null>>([]),
-    itemLabels: shallowRef<Array<string | null>>([]),
+    itemDomElements: shallowRef<(HTMLElement | null)[]>([]),
+    itemLabels: shallowRef<(string | null)[]>([]),
     highlightReason: 'none',
     highlightEvent: undefined,
     reportedItem: undefined,
@@ -388,7 +381,7 @@ function createInitialContext(): Context {
 }
 
 function createInitialState<Payload>(
-  defaultPopupId?: string | undefined,
+  defaultPopupId?: string,
   initialState?: Partial<State<Payload>>,
 ): State<Payload> {
   return {
@@ -406,8 +399,8 @@ function createInitialState<Payload>(
     activeIndex: null,
     listElement: null,
     listElementId: undefined,
-    filterTriggerProps: EMPTY_OBJECT as PopupProps,
-    inputProps: EMPTY_OBJECT as PopupProps,
+    filterTriggerProps: EMPTY_OBJECT,
+    inputProps: EMPTY_OBJECT,
     inputFocused: false,
     highlightedItem: undefined,
     hoverEnabled: true,
@@ -416,7 +409,7 @@ function createInitialState<Payload>(
     floatingTreeRoot: new FloatingTreeStore(),
     floatingNodeId: undefined,
     floatingParentNodeId: null,
-    itemProps: EMPTY_OBJECT as PopupProps,
+    itemProps: EMPTY_OBJECT,
     keyboardEventRelay: undefined,
     closeDelay: 0,
     adaptiveOrigin: undefined,
