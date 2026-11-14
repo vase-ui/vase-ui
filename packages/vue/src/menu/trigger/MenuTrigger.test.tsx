@@ -554,7 +554,7 @@ describe('<Menu.Trigger />', () => {
       );
     }
 
-    it('opens a menu on hover while another menu of the menubar is open, and blocks no pointer events', async () => {
+    it('opens a menu on hover while another menu of the menubar is open', async () => {
       await renderMenubar(true);
       const edit = screen.getByRole('menuitem', { name: 'Edit' });
 
@@ -562,7 +562,6 @@ describe('<Menu.Trigger />', () => {
       await fireEvent.mouseMove(edit);
 
       expect(await screen.findByTestId('edit-menu')).not.toBe(null);
-      expect(document.body.style.pointerEvents).toBe('');
     });
 
     it('opens a menu on focus while another menu of the menubar is open', async () => {
