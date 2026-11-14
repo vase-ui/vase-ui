@@ -721,7 +721,7 @@ describe('<Drawer.Popup />', () => {
       expect(parentPopup.style.getPropertyValue('--drawer-height')).not.toBe('');
     });
 
-    const mutations: Array<{ hasNested: boolean; drawerHeight: string }> = [];
+    const mutations: { hasNested: boolean; drawerHeight: string }[] = [];
     const observer = new MutationObserver(() => {
       mutations.push({
         hasNested: parentPopup.hasAttribute('data-nested-drawer-open'),
@@ -828,7 +828,7 @@ describe('<Drawer.Popup />', () => {
       expect(screen.queryByTestId('child-popup')).toBe(null);
     });
 
-    const mutations: Array<{ hasNested: boolean; drawerHeight: string }> = [];
+    const mutations: { hasNested: boolean; drawerHeight: string }[] = [];
     const observer = new MutationObserver(() => {
       mutations.push({
         hasNested: parentPopup.hasAttribute('data-nested-drawer-open'),

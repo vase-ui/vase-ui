@@ -174,7 +174,7 @@ watch(
   { flush: 'post' },
 );
 
-let pointerType: string = 'mouse';
+let pointerType = 'mouse';
 let allowMouseSelection = false;
 
 const { getButtonProps, buttonRef } = useButton({

@@ -33,31 +33,28 @@ describe.skipIf(isJSDOM)('visuallyHidden', () => {
       ['ltr', 'rtl'],
       ['rtl', 'ltr'],
       ['rtl', 'rtl'],
-    ])(
-      'does not overflow a %s scroller with %s content',
-      async (scrollerDirection, contentDirection) => {
-        await render(
-          <div
-            data-testid="scroller"
-            dir={scrollerDirection}
-            style={{ width: '100px', height: '100px', overflow: 'auto' }}
-          >
-            {/* Establish a fixed-position containing block below the scroller's top edge. */}
-            <div dir={contentDirection} style={{ transform: 'translateY(20px)' }}>
-              <input type="radio" style={style} />
-            </div>
-          </div>,
-        );
+    ])('does not overflow a %s scroller with %s content', (scrollerDirection, contentDirection) => {
+      render(
+        <div
+          data-testid="scroller"
+          dir={scrollerDirection}
+          style={{ width: '100px', height: '100px', overflow: 'auto' }}
+        >
+          {/* Establish a fixed-position containing block below the scroller's top edge. */}
+          <div dir={contentDirection} style={{ transform: 'translateY(20px)' }}>
+            <input type="radio" style={style} />
+          </div>
+        </div>,
+      );
 
-        const scroller = screen.getByTestId('scroller');
-        expect(scroller.scrollWidth).toBe(scroller.clientWidth);
-      },
-    );
+      const scroller = screen.getByTestId('scroller');
+      expect(scroller.scrollWidth).toBe(scroller.clientWidth);
+    });
 
     // Label clicks and native validation focus hidden inputs.
-    it('does not scroll the page when focused', async ({ onTestFinished }) => {
+    it('does not scroll the page when focused', ({ onTestFinished }) => {
       onTestFinished(() => window.scrollTo(0, 0));
-      await render(
+      render(
         <div style={{ paddingTop: '2000px', height: '5000px' }}>
           <input type="checkbox" data-testid="input" style={style} />
         </div>,
@@ -70,8 +67,8 @@ describe.skipIf(isJSDOM)('visuallyHidden', () => {
     });
   });
 
-  it('places visuallyHidden just above the viewport', async () => {
-    await render(<span data-testid="hidden" style={visuallyHidden} />);
+  it('places visuallyHidden just above the viewport', () => {
+    render(<span data-testid="hidden" style={visuallyHidden} />);
     expect(screen.getByTestId('hidden').getBoundingClientRect().bottom).toBe(0);
   });
 });
@@ -81,8 +78,8 @@ describe('visuallyHidden styles', () => {
   it.each([
     { name: 'visuallyHidden', style: visuallyHidden },
     { name: 'visuallyHiddenInput', style: visuallyHiddenInput },
-  ])('applies each style of $name', async ({ style }) => {
-    await render(<span data-testid="hidden" style={style} />);
+  ])('applies each style of $name', ({ style }) => {
+    render(<span data-testid="hidden" style={style} />);
     const element = screen.getByTestId('hidden');
 
     const dropped = Object.keys(style).filter((name) => Reflect.get(element.style, name) === '');

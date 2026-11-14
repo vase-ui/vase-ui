@@ -550,7 +550,7 @@ describe('<Slider.Root />', () => {
       expect(sliderOutput).toHaveAttribute('data-orientation', 'horizontal');
     });
 
-    it.skipIf(isJSDOM || !/WebKit/.test(window.navigator.userAgent))(
+    it.skipIf(isJSDOM || !window.navigator.userAgent.includes('WebKit'))(
       'does not set the orientation via appearance for WebKit browsers',
       async () => {
         await render(<TestSlider orientation="vertical" />);
@@ -1724,7 +1724,7 @@ describe('<Slider.Root />', () => {
             if (type === 'touchend' && listener != null) {
               addedListeners.push(listener);
             }
-            return originalAdd(type, listener, options);
+            originalAdd(type, listener, options);
           });
         const removeEventListenerSpy = vi
           .spyOn(document, 'removeEventListener')
@@ -1732,7 +1732,7 @@ describe('<Slider.Root />', () => {
             if (type === 'touchend' && listener != null) {
               removedListeners.push(listener);
             }
-            return originalRemove(type, listener, options);
+            originalRemove(type, listener, options);
           });
 
         try {
@@ -2299,7 +2299,7 @@ describe('<Slider.Root />', () => {
     it.skipIf(isJSDOM).each([
       { name: 'readonly range', value: Object.freeze([2, 1]) },
       { name: 'range', value: [2, 1] },
-    ] as Array<{ name: string; value: number[] }>)(
+    ] as { name: string; value: number[] }[])(
       'is called even if the $name did not change',
       async ({ value }) => {
         const handleValueChange = vi.fn();
@@ -2365,8 +2365,9 @@ describe('<Slider.Root />', () => {
     });
 
     it('should not rely on the global event when cloning change events', async () => {
-      const hadGlobalEvent = Object.prototype.hasOwnProperty.call(globalThis, 'event');
+      const hadGlobalEvent = Object.hasOwn(globalThis, 'event');
       const previousDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'event');
+      // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- The class throws when code constructs it, and the case expects that no code does.
       const globalEventConstructor = class {
         constructor() {
           throw new Error('Should not construct global event');
@@ -2495,12 +2496,12 @@ describe('<Slider.Root />', () => {
   });
 
   describe('keyboard interactions', () => {
-    const keyboardCases: Array<{
+    const keyboardCases: {
       direction: TextDirection;
       orientation: Orientation;
       decrementKeys: string[];
       incrementKeys: string[];
-    }> = [
+    }[] = [
       {
         direction: 'ltr',
         orientation: 'horizontal',

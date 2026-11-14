@@ -5,6 +5,7 @@ import { lowerUserAgent } from './shared';
 // Blink left WebKit in 2013 and has only the name without the prefix.
 // The `typeof CSS` check keeps a server safe.
 export const webkit =
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- An engine with no `CSS.supports` gives `undefined`, and the export must be a Boolean.
   typeof CSS !== 'undefined' && !!CSS.supports?.('-webkit-backdrop-filter:none');
 
 // Firefox on iOS is WebKit. Its user agent has `FxiOS/` and not `Firefox/`.

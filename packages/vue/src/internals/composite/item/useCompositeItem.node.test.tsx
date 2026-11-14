@@ -6,7 +6,7 @@ import CompositeItemTabStop from './CompositeItemTabStop.test.vue';
 
 // The attribute order in the HTML is not part of the test.
 function readAttribute(html: string, testId: string, name: string) {
-  const tag = html.match(new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`))?.[0];
+  const tag = new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`).exec(html)?.[0];
   return tag?.match(new RegExp(` ${name}="([^"]*)"`))?.[1];
 }
 

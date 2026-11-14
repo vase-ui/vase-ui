@@ -85,7 +85,8 @@ function getLineRects(rects: ArrayLike<RectLike>) {
     if (!previousRect || rect.top - previousRect.top > previousRect.height / 2) {
       lines.push(copyRect(rect));
     } else {
-      const line = lines[lines.length - 1];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `previousRect` is set, so `lines` has a line.
+      const line = lines[lines.length - 1]!;
       line.left = Math.min(line.left, rect.left);
       line.right = Math.max(line.right, rect.right);
       line.bottom = Math.max(line.bottom, rect.bottom);
@@ -153,35 +154,39 @@ function getInlineReferenceRect(
   const side = placement[0];
 
   if (coords?.lineIndex != null && lines[coords.lineIndex]) {
-    return createClientRect(lines[coords.lineIndex]);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above finds a line at the index.
+    return createClientRect(lines[coords.lineIndex]!);
   }
 
   if (x != null && y != null) {
     const lineIndex = findLineIndex(lines, x, y);
 
     if (lineIndex !== -1) {
-      return createClientRect(lines[lineIndex]);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `findLineIndex` gives an index of `lines` when the result is not -1.
+      return createClientRect(lines[lineIndex]!);
     }
   }
 
-  if (lines.length === 2 && lines[0].left > lines[1].right && x != null && y != null) {
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- The check of `lines.length` above proves each index. */
+  if (lines.length === 2 && lines[0]!.left > lines[1]!.right && x != null && y != null) {
     return fallback;
   }
 
   if (side === 't' || side === 'b') {
-    const firstRect = lines[0];
-    const lastRect = lines[lines.length - 1];
+    const firstRect = lines[0]!;
+    const lastRect = lines[lines.length - 1]!;
     const targetRect = side === 't' ? firstRect : lastRect;
 
     return createRect(targetRect.left, firstRect.top, targetRect.right, lastRect.bottom);
   }
 
   const isLeft = side === 'l';
-  let left = lines[0].left;
-  let right = lines[0].right;
+  let left = lines[0]!.left;
+  let right = lines[0]!.right;
   let edge = isLeft ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-  let targetFirstRect = lines[0];
-  let targetLastRect = lines[0];
+  let targetFirstRect = lines[0]!;
+  let targetLastRect = lines[0]!;
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
   for (const rect of lines) {
     left = Math.min(left, rect.left);

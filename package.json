@@ -35,10 +35,12 @@
     "parity:track": "node scripts/parity/track.ts",
     "release:check-tag": "node scripts/release/checkTag.ts",
     "lint": "pnpm test:lint-rules && pnpm test:cost && pnpm test:parity && pnpm test:docs && pnpm test:thanks && pnpm test:release && eslint . --max-warnings 0 && prettier --check . && pnpm cost:check && pnpm status:check",
+    "lint:fix": "eslint . --fix; prettier --write .",
     "format": "prettier --write ."
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@tsconfig/strictest": "2.0.9",
     "@types/node": "26.6.6",
     "eslint": "10.14.0",
     "eslint-config-prettier": "10.1.8",

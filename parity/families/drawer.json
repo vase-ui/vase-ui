@@ -33,12 +33,6 @@
       "title": "registers the swipe area once a generated id becomes available",
       "kind": "not-applicable",
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [

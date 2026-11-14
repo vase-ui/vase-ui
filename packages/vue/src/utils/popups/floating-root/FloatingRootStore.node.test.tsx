@@ -9,14 +9,15 @@ import { useFloatingRootStore } from './useFloatingRootStore';
 // All server requests share the store of a module.
 const emptyStore = getEmptyRootStore();
 
+// eslint-disable-next-line @typescript-eslint/no-base-to-string -- The cases compare the text of the value, and `null` is the expected text.
+const getAnchorText = () => String(emptyStore.select('anchorElement'));
+
 const Writer = defineComponent(() => {
   emptyStore.set('anchorElement', { nodeType: 1 } as Element);
-  return () => <span>{String(emptyStore.select('anchorElement'))}</span>;
+  return () => <span>{getAnchorText()}</span>;
 });
 
-const Reader = defineComponent(() => () => (
-  <span>{String(emptyStore.select('anchorElement'))}</span>
-));
+const Reader = defineComponent(() => () => <span>{getAnchorText()}</span>);
 
 describe('getEmptyRootStore on a server', () => {
   it('gives the initial value to a render after another render wrote to the store', async () => {

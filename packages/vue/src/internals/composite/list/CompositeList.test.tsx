@@ -33,8 +33,8 @@ describe('<CompositeList />', () => {
     }
 
     it('cleans up refs on unmount', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
       const { unmount } = await render(
         <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
           <Item />
@@ -64,8 +64,8 @@ describe('<CompositeList />', () => {
         { props: ['label'] },
       );
 
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
@@ -84,11 +84,11 @@ describe('<CompositeList />', () => {
     });
 
     it('only publishes maps that are aligned with the element registry', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const snapshots: Array<{
-        elements: Array<HTMLElement | null>;
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const snapshots: {
+        elements: (HTMLElement | null)[];
         mapElements: Element[];
-      }> = [];
+      }[] = [];
 
       const App = defineComponent(
         (props: { items: string[] }) => () => (
@@ -122,7 +122,7 @@ describe('<CompositeList />', () => {
     });
 
     it('registers explicitly indexed items in their index-addressed slots', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
       const onMapChange = vi.fn();
 
       await render(
@@ -143,7 +143,7 @@ describe('<CompositeList />', () => {
     });
 
     it('reserves explicit slots when assigning automatic indexes', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef}>
@@ -163,8 +163,8 @@ describe('<CompositeList />', () => {
     });
 
     it('does not consume an index guess for an explicitly indexed item', async () => {
-      const baselineElementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const baselineElementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const GuessedItem = defineComponent(
         (props: { label: string; index?: number }) => {
@@ -197,7 +197,7 @@ describe('<CompositeList />', () => {
     });
 
     it('registers a replacement render target', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const SwitchingItem = defineComponent(() => {
         const useButton = shallowRef(false);
@@ -242,7 +242,7 @@ describe('<CompositeList />', () => {
     });
 
     it('does not register negative explicit indexes', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef}>
@@ -255,7 +255,7 @@ describe('<CompositeList />', () => {
     });
 
     it('updates refs when an item mounts from a nested state update', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const DeepSection = defineComponent(() => {
         const showItem = shallowRef(false);
@@ -292,7 +292,7 @@ describe('<CompositeList />', () => {
     });
 
     it('updates refs when an item unmounts from a nested state update', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
       const onMapChange = vi.fn();
 
       const DeepSection = defineComponent(() => {
@@ -334,7 +334,7 @@ describe('<CompositeList />', () => {
     });
 
     it('keeps syncing refs after replacing items under Strict Mode', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
       const hideItems: Record<string, () => void> = {};
 
       const HideableItem = defineComponent(
@@ -400,7 +400,7 @@ describe('<CompositeList />', () => {
         { props: ['label'] },
       );
 
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef}>
@@ -421,8 +421,8 @@ describe('<CompositeList />', () => {
     });
 
     it('re-registers an item when its explicit index changes or is removed', async () => {
-      const refCalls: Array<HTMLElement | null> = [];
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const refCalls: (HTMLElement | null)[] = [];
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const TrackedItem = defineComponent(
         (props: { index?: number }) => {
@@ -478,7 +478,7 @@ describe('<CompositeList />', () => {
     });
 
     it('resolves an automatic index when the equivalent explicit index is removed', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const App = defineComponent(
         (props: { index?: number }) => () => (
@@ -498,7 +498,7 @@ describe('<CompositeList />', () => {
     });
 
     it('does not detach item refs when an index shifts', async () => {
-      const refCalls: Array<HTMLElement | null> = [];
+      const refCalls: (HTMLElement | null)[] = [];
 
       const TrackedItem = defineComponent(() => {
         const { ref, index } = useCompositeListItem();
@@ -519,7 +519,7 @@ describe('<CompositeList />', () => {
 
       const App = defineComponent(
         (props: { items: string[] }) => {
-          const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+          const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
           return () => (
             <CompositeList elementsRef={elementsRef}>
               {props.items.map((item) =>
@@ -543,7 +543,7 @@ describe('<CompositeList />', () => {
     });
 
     it('excludes items detached outside React from the registry', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
       const onMapChange = vi.fn();
 
       const App = defineComponent(
@@ -585,7 +585,7 @@ describe('<CompositeList />', () => {
 
     it('skips detached items while verifying order after a move', async () => {
       const App = defineComponent(() => {
-        const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+        const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
         return () => (
           <CompositeList elementsRef={elementsRef}>
             <div data-testid="list">
@@ -616,7 +616,7 @@ describe('<CompositeList />', () => {
     });
 
     it('updates the registry when a mounted item stops rendering an element', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const VanishingItem = defineComponent(() => {
         // Starts with no element at all, so the item registers nothing until it renders one.
@@ -664,7 +664,7 @@ describe('<CompositeList />', () => {
     });
 
     it('updates indexes when a leaf item moves outside React', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef}>
@@ -695,7 +695,7 @@ describe('<CompositeList />', () => {
 
     it('observes each shared mutation root once', async () => {
       const observe = vi.spyOn(MutationObserver.prototype, 'observe');
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       // `waitFor` uses a `MutationObserver` of its own, so no `waitFor` call comes before the
       // restore of the spy.
@@ -717,8 +717,8 @@ describe('<CompositeList />', () => {
     it('updates indexes when keyed groups reorder', async () => {
       const App = defineComponent(() => {
         const reordered = shallowRef(false);
-        const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-        const labelsRef = shallowRef<Array<string | null>>([]);
+        const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+        const labelsRef = shallowRef<(string | null)[]>([]);
 
         return () => {
           const groups = reordered.value ? ['b', 'a'] : ['a', 'b'];
@@ -761,7 +761,7 @@ describe('<CompositeList />', () => {
     it('observes reorders after the list grows from one item', async () => {
       const App = defineComponent(
         (props: { items: string[] }) => {
-          const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+          const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
           return () => (
             <CompositeList elementsRef={elementsRef}>
               {props.items.map((item) => (
@@ -785,8 +785,8 @@ describe('<CompositeList />', () => {
 
     it('updates indexes when grouped items reorder alongside unrelated mutations', async () => {
       const App = defineComponent(() => {
-        const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-        const labelsRef = shallowRef<Array<string | null>>([]);
+        const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+        const labelsRef = shallowRef<(string | null)[]>([]);
 
         return () => (
           <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
@@ -826,8 +826,8 @@ describe('<CompositeList />', () => {
     it('ignores mutations for unrelated leaf nodes', async () => {
       const App = defineComponent(
         (props: { onMapChange: (map: Map<Element, unknown>) => void }) => {
-          const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-          const labelsRef = shallowRef<Array<string | null>>([]);
+          const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+          const labelsRef = shallowRef<(string | null)[]>([]);
 
           return () => (
             <CompositeList
@@ -871,7 +871,7 @@ describe('<CompositeList />', () => {
       const shadowContainer = document.createElement('div');
       host.attachShadow({ mode: 'open' }).appendChild(shadowContainer);
 
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       try {
         // No ancestor can `contain` both items, so the pair has no common root to observe.
@@ -900,7 +900,7 @@ describe('<CompositeList />', () => {
 
     it('does not sort again when an item renders again with the same element', async () => {
       const text = shallowRef('before');
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const BoundItem = defineComponent(
         (props: { label: string }) => {
@@ -934,7 +934,7 @@ describe('<CompositeList />', () => {
 
     it('does not render an item again when a later item registers', async () => {
       const renderCounts: Record<string, number> = { a: 0, b: 0, c: 0 };
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const CountedItem = defineComponent(
         (props: { label: string }) => {
@@ -986,8 +986,8 @@ describe('<CompositeList />', () => {
     );
 
     it('resolves each label source', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
 
       await render(
         <CompositeList elementsRef={elementsRef} labelsRef={labelsRef}>
@@ -1003,8 +1003,8 @@ describe('<CompositeList />', () => {
     });
 
     it('drops label slots for items that unmount', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
 
       const App = defineComponent(
         (props: { items: string[] }) => () => (
@@ -1025,8 +1025,8 @@ describe('<CompositeList />', () => {
     });
 
     it('updates the label of a mounted item', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
 
       const App = defineComponent(
         (props: { label: string }) => () => (
@@ -1048,7 +1048,7 @@ describe('<CompositeList />', () => {
 
   describe('prop: onMapChange', () => {
     it('publishes item metadata alongside the index', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
       const onMapChange = vi.fn();
 
       const MetadataItem = defineComponent(
@@ -1073,8 +1073,8 @@ describe('<CompositeList />', () => {
     });
 
     it('does not publish an unchanged map when a label changes', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-      const labelsRef = shallowRef<Array<string | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+      const labelsRef = shallowRef<(string | null)[]>([]);
       const onMapChange = vi.fn();
 
       const App = defineComponent(
@@ -1141,7 +1141,7 @@ describe('<CompositeList />', () => {
 
   describe('KeepAlive', () => {
     it('removes a deactivated item and registers it again when it is active', async () => {
-      const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+      const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const Other = defineComponent(() => () => <span data-testid="other" />);
 

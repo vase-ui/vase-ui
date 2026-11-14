@@ -467,6 +467,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                   root: {
                     open: open.value,
                     onOpenChangeComplete,
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                     onOpenChange: async (nextOpen, eventDetails) => {
                       if (nextOpen) {
                         open.value = true;
@@ -709,6 +710,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                 root: {
                   defaultOpen: true,
                   onOpenChangeComplete,
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                   onOpenChange: async (nextOpen, eventDetails) => {
                     if (!nextOpen) {
                       await Promise.resolve();
@@ -762,7 +764,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             expect(onOpenChangeComplete).toHaveBeenCalled();
           });
           onOpenChangeComplete.mockClear();
-          const exitStarts: Array<{ isEnding: boolean; calls: number }> = [];
+          const exitStarts: { isEnding: boolean; calls: number }[] = [];
           recordAnimationStarts((popup) => {
             exitStarts.push({
               isEnding: popup.hasAttribute('data-ending-style'),
@@ -834,7 +836,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             );
           }
 
-          const exitStarts: Array<{ isEnding: boolean; isInaccessible: boolean }> = [];
+          const exitStarts: { isEnding: boolean; isInaccessible: boolean }[] = [];
           const listener = (event: Event) => {
             const popup = event.target as HTMLElement;
             if (popup === getPopup()) {

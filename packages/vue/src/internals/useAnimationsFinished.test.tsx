@@ -21,6 +21,7 @@ function mockAnimations(element: Element, getAnimations: () => Animation[]) {
     Array.from(mockedAnimations, ([target, getTargetAnimations]) =>
       getTargetAnimations().map(
         (animation) =>
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- The mock copies each `Animation` into a plain object on purpose.
           ({ ...animation, effect: { ...animation.effect, target } }) as unknown as Animation,
       ),
     ).flat();
@@ -528,7 +529,7 @@ describe('useAnimationsFinished', () => {
       { props: ['onFinished', 'animate', 'signal'] },
     );
 
-    function createWatchedElements(timings: Array<KeyframeAnimationOptions | null>) {
+    function createWatchedElements(timings: (KeyframeAnimationOptions | null)[]) {
       const animations: Animation[] = [];
       const elements: WatchedElement[] = timings.map((timing, index) => ({
         onFinished: vi.fn(),
