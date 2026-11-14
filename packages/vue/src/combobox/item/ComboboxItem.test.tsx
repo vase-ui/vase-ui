@@ -13,7 +13,6 @@ import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vu
 import type { HTMLProps } from '../../internals/types';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
-import ComboboxItemRenders from './ComboboxItemRenders.test.vue';
 
 describe('<Combobox.Item />', () => {
   const { render } = createRenderer();
@@ -653,13 +652,37 @@ describe('<Combobox.Item />', () => {
   });
 
   // A keystroke that doesn't change which items match must not re-render the items that stay
-  // mounted. A compiled template gives each item stable slots, so the case renders one.
+  // mounted.
   describe('item re-renders on keystroke', () => {
     it('does not re-render still-mounted items when filtering keeps the same membership', async () => {
       const items = ['apple', 'apricot', 'avocado'];
       const renderSpy = vi.fn();
 
-      await render(<ComboboxItemRenders items={items} onItemRender={renderSpy} />);
+      await render(
+        <Combobox.Root items={items} defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {{
+                    item: ({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {{
+                          render: ({ props }: { props: HTMLProps }) => {
+                            renderSpy();
+                            return <div {...props}>{item}</div>;
+                          },
+                        }}
+                      </Combobox.Item>
+                    ),
+                  }}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
 
       await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(screen.getAllByRole('option')).toHaveLength(3);
