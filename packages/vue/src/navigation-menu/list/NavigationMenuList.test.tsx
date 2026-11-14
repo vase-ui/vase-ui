@@ -253,11 +253,6 @@ describe('<NavigationMenu.List />', () => {
                     <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
                   </NavigationMenu.Content>
                 </NavigationMenu.Item>
-                <NavigationMenu.Item value="three">
-                  <NavigationMenu.Trigger data-testid="trigger-three" disabled>
-                    Three
-                  </NavigationMenu.Trigger>
-                </NavigationMenu.Item>
                 <NavigationMenu.Item>
                   <NavigationMenu.Link data-testid="top-link" href="#top">
                     Top
@@ -330,11 +325,22 @@ describe('<NavigationMenu.List />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
     });
 
-    it('keeps the menu open for a press of a trigger that does not open its item', async () => {
-      const { user } = await render(<DismissMenu />);
+    it('keeps the menu open for a press of a trigger of another menu', async () => {
+      await render(
+        <div>
+          <DismissMenu />
+          <NavigationMenu.Root>
+            <NavigationMenu.List>
+              <NavigationMenu.Item value="other">
+                <NavigationMenu.Trigger data-testid="other-trigger">Other</NavigationMenu.Trigger>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+          </NavigationMenu.Root>
+        </div>,
+      );
       await open('trigger-one');
 
-      await user.click(screen.getByTestId('trigger-three'));
+      await fireEvent.click(screen.getByTestId('other-trigger'));
       await flushMicrotasks();
 
       expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
