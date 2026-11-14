@@ -1,7 +1,14 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { ComponentPublicInstance, PropType } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  hydrate,
+  renderOnServer,
+  waitFor,
+} from '#test-utils';
 import { Menu } from '@vase-ui/vue/menu';
 import {
   ContextMenuProvider,
@@ -18,6 +25,7 @@ import type { FloatingTreeType } from '../../utils/popups/types';
 import type { MenuStore } from '../store/MenuStore';
 import { useMenuRootContext } from './MenuRootContext';
 import type { MenuRootContext } from './MenuRootContext';
+import MenuRootHydration from './MenuRootHydration.test.vue';
 import { useMenuRoot } from './useMenuRoot';
 import type { UseMenuRootOptions } from './useMenuRoot';
 
@@ -925,5 +933,27 @@ describe('<Menu.Root />', () => {
     await fireEvent.keyDown(document.body, { key: 'Escape' });
 
     expect(events).toEqual([[false, 'escape-key']]);
+  });
+
+  describe('server render', () => {
+    it('renders the trigger of an open root as open, and a detached trigger as closed', async () => {
+      const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+
+      const triggers = Array.from(template.content.querySelectorAll('button'));
+      expect(triggers.map((trigger) => trigger.id)).toEqual(['in-root', 'detached']);
+      expect(triggers[0].getAttribute('aria-expanded')).toBe('true');
+      expect(triggers[0].hasAttribute('data-popup-open')).toBe(true);
+      expect(triggers[1].getAttribute('aria-expanded')).toBe('false');
+      expect(triggers[1].hasAttribute('data-popup-open')).toBe(false);
+      expect(template.content.querySelector('[role="menu"]')).toBe(null);
+    });
+
+    it('hydrates an open root, a trigger of a handle and their portals, with no message', async () => {
+      const serverHtml = await renderOnServer('src/menu/root/MenuRootHydration.test.vue', {});
+
+      await hydrate(MenuRootHydration, { serverHtml });
+    });
   });
 });

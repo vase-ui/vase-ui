@@ -1,0 +1,346 @@
+import { describe, expect, it } from 'vitest';
+import { computed, defineComponent, shallowRef } from 'vue';
+import { Menu } from '@vase-ui/vue/menu';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+  waitFor,
+} from '#test-utils';
+import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
+import {
+  MenubarProvider,
+  createMenubarContext,
+} from '../../../test/fixtures/MenuParentFixture';
+import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
+import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
+import type { FloatingTreeType } from '../../utils/popups/types';
+
+const popup = (
+  <Menu.Portal>
+    <Menu.Positioner>
+      <Menu.Popup data-testid="popup" />
+    </Menu.Positioner>
+  </Menu.Portal>
+);
+
+describe('<Menu.Trigger />', () => {
+  const { render } = createRenderer();
+
+  describeConformance(<Menu.Trigger />, () => ({
+    refInstanceof: window.HTMLButtonElement,
+    testRenderPropWith: 'button',
+    button: true,
+    render: (node) => {
+      return render(<Menu.Root open>{node}</Menu.Root>);
+    },
+  }));
+
+  describe('prop: disabled', () => {
+    it('should render a disabled button', async () => {
+      await render(
+        <Menu.Root>
+          <Menu.Trigger disabled />
+        </Menu.Root>,
+      );
+
+      const button = screen.getByRole('button');
+      expect(button).toHaveProperty('disabled', true);
+    });
+
+    it.each([
+      { name: 'the disabled prop', root: false, menubar: false, prop: true },
+      { name: 'a disabled root', root: true, menubar: false, prop: false },
+      { name: 'a disabled menubar', root: false, menubar: true, prop: false },
+    ])('is disabled by $name', async ({ root, menubar, prop }) => {
+      const trigger = (
+        <Menu.Root disabled={root}>
+          <Menu.Trigger disabled={prop}>Open</Menu.Trigger>
+        </Menu.Root>
+      );
+
+      await render(
+        menubar ? (
+          <MenubarProvider context={createMenubarContext({ disabled: computed(() => true) })}>
+            <CompositeRootPart>{trigger}</CompositeRootPart>
+          </MenubarProvider>
+        ) : (
+          trigger
+        ),
+      );
+
+      const button = screen.getByRole('button');
+      expect(button).toHaveProperty('disabled', true);
+      expect(button).toHaveAttribute('data-disabled');
+    });
+
+    it('is not disabled by default', async () => {
+      await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+        </Menu.Root>,
+      );
+
+      const button = screen.getByRole('button');
+      expect(button).toHaveProperty('disabled', false);
+      expect(button).not.toHaveAttribute('data-disabled');
+    });
+  });
+
+  describe('attributes', () => {
+    it('has the attributes of a trigger of a closed menu', async () => {
+      await render(
+        <Menu.Root>
+          <Menu.Trigger id="trigger">Open</Menu.Trigger>
+          {popup}
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('id', 'trigger');
+      expect(trigger).toHaveAttribute('type', 'button');
+      expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+      expect(trigger).not.toHaveAttribute('data-pressed');
+    });
+
+    it('has the attributes of the trigger that owns an open menu', async () => {
+      await render(
+        <Menu.Root defaultOpen defaultTriggerId="first">
+          <Menu.Trigger id="first">First</Menu.Trigger>
+          <Menu.Trigger id="second">Second</Menu.Trigger>
+          {popup}
+        </Menu.Root>,
+      );
+
+      const first = screen.getByRole('button', { name: 'First' });
+      const second = screen.getByRole('button', { name: 'Second' });
+      expect(first).toHaveAttribute('aria-expanded', 'true');
+      expect(first).toHaveAttribute('aria-controls', screen.getByTestId('popup').id);
+      expect(first).toHaveAttribute('data-popup-open');
+      expect(first).toHaveAttribute('data-pressed');
+
+      expect(second).toHaveAttribute('aria-expanded', 'false');
+      expect(second).not.toHaveAttribute('aria-controls');
+      expect(second).not.toHaveAttribute('data-popup-open');
+      expect(second).toHaveAttribute('aria-haspopup', 'menu');
+    });
+
+    it('gives a trigger that is not a native button the button role', async () => {
+      await render(
+        <Menu.Root>
+          <Menu.Trigger as="span" nativeButton={false} data-testid="trigger" />
+        </Menu.Root>,
+      );
+
+      expect(screen.getByTestId('trigger')).toHaveAttribute('role', 'button');
+    });
+  });
+
+  describe('state of the root', () => {
+    it('follows the open state of its root', async () => {
+      const open = shallowRef(false);
+      await render(() => (
+        <Menu.Root open={open.value}>
+          <Menu.Trigger>Open</Menu.Trigger>
+          {popup}
+        </Menu.Root>
+      ));
+      const trigger = screen.getByRole('button');
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+
+      open.value = true;
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('data-popup-open');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      open.value = false;
+      await flushMicrotasks();
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('gives its payload to the menu while it owns the menu', async () => {
+      const handle = Menu.createHandle<string>();
+      await render(
+        <Menu.Root handle={handle}>
+          {{
+            default: ({ payload }: { payload: string | undefined }) => (
+              <div>
+                <Menu.Trigger id="one" payload="payload one">
+                  One
+                </Menu.Trigger>
+                <Menu.Trigger id="two" payload="payload two">
+                  Two
+                </Menu.Trigger>
+                <span data-testid="payload">{String(payload)}</span>
+              </div>
+            ),
+          }}
+        </Menu.Root>,
+      );
+      expect(screen.getByTestId('payload')).toHaveTextContent('undefined');
+
+      handle.open('one');
+      await flushMicrotasks();
+      expect(screen.getByTestId('payload')).toHaveTextContent('payload one');
+
+      handle.open('two');
+      await flushMicrotasks();
+      expect(screen.getByTestId('payload')).toHaveTextContent('payload two');
+    });
+  });
+
+  describe('prop: handle', () => {
+    it('opens the menu of its handle, and reports the open state of its menu', async () => {
+      const handle = Menu.createHandle<string>();
+      await render(
+        <div>
+          <Menu.Trigger handle={handle} id="detached" payload="detached payload">
+            Detached
+          </Menu.Trigger>
+          <Menu.Root handle={handle}>
+            {{
+              default: ({ payload }: { payload: string | undefined }) => (
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup>{payload}</Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              ),
+            }}
+          </Menu.Root>
+        </div>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Detached' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('menu')).toBe(null);
+
+      handle.open('detached');
+      await waitFor(() => {
+        expect(screen.getByRole('menu')).toHaveTextContent('detached payload');
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).toHaveAttribute('data-popup-open');
+      expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', 'detached');
+
+      handle.close();
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
+  describe('data for the store', () => {
+    const TreeProbe = defineComponent({
+      props: { onTree: { type: Function, required: true } },
+      setup(props) {
+        const tree = useFloatingTree();
+        return () => {
+          (props.onTree as (value: FloatingTreeType | null) => void)(tree.value);
+          return null;
+        };
+      },
+    });
+
+    it('gives the tree and the node of a detached trigger to the menu while it owns the menu', async () => {
+      const handle = Menu.createHandle();
+      const probe = createMenuStoreProbe();
+      const trees: Array<FloatingTreeType | null> = [];
+      await render(
+        <div>
+          <Menu.Trigger handle={handle} id="detached">
+            Detached
+          </Menu.Trigger>
+          <Menu.Root handle={handle}>
+            <probe.Probe />
+            <TreeProbe onTree={(tree: FloatingTreeType | null) => trees.push(tree)} />
+          </Menu.Root>
+        </div>,
+      );
+      const rootTree = probe.store.select('floatingTreeRoot');
+      expect(trees.at(-1)).toBe(rootTree);
+
+      handle.open('detached');
+      await flushMicrotasks();
+
+      const detachedTree = probe.store.select('floatingTreeRoot');
+      expect(detachedTree).not.toBe(rootTree);
+      expect(trees.at(-1)).toBe(detachedTree);
+      expect(detachedTree.nodesRef.value.map((node) => node.id)).toContain(
+        probe.store.select('floatingNodeId'),
+      );
+
+      handle.close();
+      await flushMicrotasks();
+      expect(probe.store.select('floatingTreeRoot')).toBe(rootTree);
+      expect(trees.at(-1)).toBe(rootTree);
+    });
+
+    it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {
+      const handle = Menu.createHandle();
+      const probe = createMenuStoreProbe();
+      await render(
+        <div>
+          <MenubarProvider context={createMenubarContext()}>
+            <CompositeRootPart>
+              <Menu.Trigger handle={handle} id="in-menubar">
+                File
+              </Menu.Trigger>
+            </CompositeRootPart>
+          </MenubarProvider>
+          <Menu.Root handle={handle}>
+            <probe.Probe />
+          </Menu.Root>
+        </div>,
+      );
+      expect(probe.store.select('parent').type).toBe(undefined);
+      expect(probe.store.select('keyboardEventRelay')).toBe(undefined);
+
+      handle.open('in-menubar');
+      await flushMicrotasks();
+
+      expect(probe.store.select('parent').type).toBe('menubar');
+      expect(probe.store.select('keyboardEventRelay')).toBeTypeOf('function');
+    });
+  });
+
+  describe('in a menubar', () => {
+    it('has the menuitem role and the tab stop of an item of the menubar', async () => {
+      await render(
+        <MenubarProvider context={createMenubarContext()}>
+          <CompositeRootPart>
+            <Menu.Root>
+              <Menu.Trigger>File</Menu.Trigger>
+            </Menu.Root>
+            <Menu.Root>
+              <Menu.Trigger>Edit</Menu.Trigger>
+            </Menu.Root>
+          </CompositeRootPart>
+        </MenubarProvider>,
+      );
+
+      const items = screen.getAllByRole('menuitem');
+      expect(items.map((item) => item.textContent)).toEqual(['File', 'Edit']);
+      expect(items.map((item) => item.getAttribute('tabindex'))).toEqual(['0', '-1']);
+    });
+  });
+
+  // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
+  // instance set, and each later case of the file then gets a warning about a slot.
+  it('throws without Menu.Root or a handle', async () => {
+    await expect(render(<Menu.Trigger />)).rejects.toThrow(
+      'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
+    );
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
+  });
+});

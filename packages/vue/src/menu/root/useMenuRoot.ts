@@ -400,8 +400,9 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   provide(MenuRootContext, context);
 
   if (parentFromContext.type === undefined || parentFromContext.type === 'context-menu') {
-    // Set up a tree to provide the context to nested menus.
-    provideFloatingTree(toRaw(store.state).floatingTreeRoot);
+    // Set up a tree to provide the context to nested menus. A detached trigger can give the store
+    // another tree.
+    provideFloatingTree(floatingTreeRoot);
   }
 
   return { payload, actions };
