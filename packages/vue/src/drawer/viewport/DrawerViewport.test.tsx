@@ -76,6 +76,19 @@ function createNativeTouchMove(target: EventTarget, point: Point) {
   return touchMove;
 }
 
+// The speed of a swipe comes from the `timeStamp` of its events. A browser stamps a touch event
+// with its own clock, so a stalled run makes a fast swipe slow. This gives each event that the
+// element dispatches a stamp 16 ms after the stamp before it, as `firePointer` does for a pointer.
+function stampEventTimes(element: Element) {
+  let timeStamp = 0;
+  const dispatchEvent = element.dispatchEvent.bind(element);
+  vi.spyOn(element, 'dispatchEvent').mockImplementation((event) => {
+    timeStamp += 16;
+    Object.defineProperty(event, 'timeStamp', { value: timeStamp });
+    return dispatchEvent(event);
+  });
+}
+
 function trackTouchMoveListeners() {
   const activeListeners = new Set<EventListenerOrEventListenerObject>();
   const addSpy = vi
@@ -843,6 +856,7 @@ describe('<Drawer.Viewport />', () => {
         );
 
         const target = screen.getByTestId('target');
+        stampEventTimes(target);
         expect(await swipe(target, [...points])).toEqual([true, false, false]);
 
         await endSwipe(target, points[2]);
@@ -1022,6 +1036,7 @@ describe('<Drawer.Viewport />', () => {
     const viewport = screen.getByTestId('viewport');
     const popup = screen.getByTestId('popup');
     Object.defineProperty(popup, 'offsetHeight', { value: 200, configurable: true });
+    stampEventTimes(viewport);
     stubElementFromPoint(document, (_x, y) => (y < 100 ? viewport : popup));
 
     await fireTouch.start(viewport, { touches: [{ clientX: 0, clientY: 0 }] });
@@ -4319,6 +4334,64 @@ describe('<Drawer.Viewport />', () => {
       expect(open).toBe(false);
       expect(details.reason).toBe(REASONS.swipe);
       expect(popup).toHaveAttribute('data-swipe-dismiss', '');
+    });
+
+    it('closes a drawer with snap points from a fast swipe whose target is nearer a snap point', async () => {
+      const handleOpenChange = vi.fn();
+      const handleSnapPointChange = vi.fn();
+      await render(
+        <Drawer.Root
+          open
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['600px', '200px']}
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 800 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 600 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      stubElementFromPoint(document, () => screen.getByTestId('popup'));
+      const pointer = { pointerType: 'mouse', pointerId: 1, clientX: 100 };
+      // The release speed is 0.5 px/ms, the lowest fast speed. The speed moves the target of the
+      // release 150 px down, which is nearer the open snap point than the closed position.
+      await firePointer.down(viewport, {
+        ...pointer,
+        button: 0,
+        buttons: 1,
+        clientY: 10,
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, { ...pointer, buttons: 1, clientY: 12, timeStamp: 1010 });
+      await firePointer.move(viewport, { ...pointer, buttons: 1, clientY: 22, timeStamp: 1030 });
+      await firePointer.move(viewport, { ...pointer, buttons: 1, clientY: 32, timeStamp: 1050 });
+      await firePointer.up(viewport, {
+        ...pointer,
+        button: 0,
+        buttons: 0,
+        clientY: 32,
+        timeStamp: 1050,
+      });
+      await flushMicrotasks();
+
+      expect(handleSnapPointChange.mock.calls[0][0]).toBe(null);
+      expect(handleOpenChange).toHaveBeenCalledTimes(1);
+      const [open, details] = handleOpenChange.mock.calls[0];
+      expect(open).toBe(false);
+      expect(details.reason).toBe(REASONS.swipe);
     });
 
     it('VUE-58: lets a pointer listener of the consumer stop the swipe of the viewport', async () => {
