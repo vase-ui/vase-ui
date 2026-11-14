@@ -132,10 +132,7 @@ describe('real pointer between tests', () => {
 });
 
 describe('pointer lock', () => {
-  // With a pointer lock, Firefox puts a second pointer in the page. The move of the setup does not
-  // take that pointer off the page, so it gives hover events to each later test of the page. The
-  // Vitest config turns the pointer lock off in Firefox. Chromium and WebKit refuse a lock in the
-  // page of a test.
+  // A browser can give a pointer lock to a request that comes in a real press.
   const { render } = createRenderer();
 
   it('gets no pointer lock for a real press', async () => {
