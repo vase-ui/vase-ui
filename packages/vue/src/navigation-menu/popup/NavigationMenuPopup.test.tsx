@@ -10,7 +10,7 @@ import {
   screen,
   within,
 } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import NavigationMenuPopupHydration from './NavigationMenuPopupHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/navigation-menu/popup/NavigationMenuPopupHydration.test.vue';

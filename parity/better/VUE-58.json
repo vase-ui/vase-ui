@@ -1,0 +1,8 @@
+{
+  "id": "VUE-58",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/drawer/viewport/DrawerViewport.tsx#L919-L1055"
+  ],
+  "behavior": "A listener of the consumer on `Drawer.Viewport` runs before the swipe listener of the viewport that has the same key, and `event.preventVaseUIHandler()` in it stops that swipe listener. A consumer can thus stop the start of a swipe, as it can stop the handler of each other part. In Base UI, the listener of the viewport runs first, and a listener of the consumer cannot stop it.",
+  "dueWith": "packages/react/src/drawer/viewport/DrawerViewport.tsx"
+}

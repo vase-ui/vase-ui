@@ -8,7 +8,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 // A link component of a router renders one `a` element and takes the `href` from a prop.
 const RouterLinkLike = defineComponent({
