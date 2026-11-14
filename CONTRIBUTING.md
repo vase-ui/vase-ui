@@ -1766,7 +1766,12 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A family is a component when its `upstreamPaths` name a path under `docs/src/app/(docs)/react/components/`.
 - The status line shows `N of T`. N is the number of components with no `waits-on` row that names a source file, an entry of a `types.md` or a prop row.
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
-- The site uses the default theme of VitePress. Do not add the folder `docs/.vitepress/theme`. When that folder exists, VitePress uses it and not the default theme. A page imports its components from `docs/.vitepress/components`.
+- The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
+- `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
+- Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
+- Base UI uses a commercial font. The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
+- `markdown.colorReplacements` in `docs/.vitepress/config.ts` changes the colors of the GitHub themes of Shiki to the syntax colors of Base UI.
+- `postcssIsolateStyles` in `docs/.vitepress/config.ts` also covers each style sheet in `docs/.vitepress/theme`, so a rule there does not reach a demo. For the same reason, a rule there cannot style the frame of a demo. Put that rule in `DemoFrame.vue`.
 - The text of a page follows [Voice](#voice).
 
 ### Component pages
@@ -1785,7 +1790,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
 - `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file and each entry point that the demo imports exists in Vase UI. It also fails when a demo folder has a style sheet that Base UI does not have.
 - A demo with no Vue file waits while one of its entry points does not exist in Vase UI. The page then has no such demo. When the last entry point exists, `pnpm test:docs` fails until the demo has its Vue file. The pull request that adds that entry point ports the demo.
-- On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet below it in one `code-group`.
+- On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet directly below it in one `code-group`. The frame and the code group then make one card.
 - A demo declares its props itself, in a type literal: `defineProps<{ as?: string | Component | undefined }>()`. It does not extend a type of `@vase-ui/vue`. The SFC compiler then reads the props from the demo file, and not from a type of the built package.
 - A code sample that is not a demo is `docs/components/<family>/<Name>.vue`, or `docs/utils/<family>/<Name>.vue` on a utility page. The page shows its source and does not render it. `pnpm docs:typecheck` checks it.
 - The docs package has no router. A sample that imports one, such as `RouterLink` of `vue-router` or `NuxtLink` of Nuxt, is a component of the Nuxt fixture in `fixtures/nuxt/app/components`. The page shows it with `<<< ../../fixtures/nuxt/app/components/<Name>.vue`. The type check of the Nuxt fixture checks it. The link samples of the Navigation Menu page are the examples.
