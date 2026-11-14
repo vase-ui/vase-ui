@@ -67,8 +67,10 @@ export interface MenuSubmenuTriggerProps
 import { computed, onMounted, onUpdated, shallowRef, watch } from 'vue';
 import { isElementDisabled } from '../../common/isElementDisabled';
 import { platform } from '../../common/platform';
+import { getTarget } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
@@ -78,6 +80,7 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerRegistration } from '../../utils/popups/popupStoreUtils';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { useMenuFilterItem } from '../filter-root/MenuFilterContext';
 import { useMenuItem } from '../item/useMenuItem';
 import type { UseMenuItemMetadata } from '../item/useMenuItem';
@@ -125,6 +128,29 @@ const popupId = computed(() => store.select('triggerPopupId', thisTriggerId.valu
 const { registerTrigger } = useTriggerRegistration(thisTriggerId, store);
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
+
+let focusReturnedThroughGuard = false;
+
+// The listener sees the focus leave the guard in the positioner. When the portal is in a shadow
+// root, the focus event of the trigger can report the shadow host as `relatedTarget`, not the guard.
+useDomEffect([open, () => store.select('positionerElement')], () => {
+  const positionerElement = store.select('positionerElement');
+  if (!open.value || !positionerElement) {
+    return undefined;
+  }
+
+  function handleGuardFocusOut(event: FocusEvent) {
+    if (getTarget(event) === store.context.beforeContentFocusGuardRef.value) {
+      focusReturnedThroughGuard = event.relatedTarget === triggerElement.value;
+    }
+  }
+
+  positionerElement.addEventListener('focusout', handleGuardFocusOut, true);
+  return () => {
+    focusReturnedThroughGuard = false;
+    positionerElement.removeEventListener('focusout', handleGuardFocusOut, true);
+  };
+});
 
 watch(
   () => props.closeDelay,
@@ -221,6 +247,15 @@ const state = computed<MenuSubmenuTriggerState>(() => ({
 }));
 
 const ownProps = {
+  onFocusin(event: FocusEvent) {
+    // Close when the focus returns through the guard of the submenu to its trigger. This also lets
+    // screen reader users move past the trigger in the parent menu. Direct focus from a submenu
+    // item, such as on hover, leaves the submenu open.
+    if (store.select('open') && focusReturnedThroughGuard) {
+      focusReturnedThroughGuard = false;
+      store.setOpen(false, createChangeEventDetails(REASONS.focusOut, event));
+    }
+  },
   onFocusout() {
     if (highlighted.value) {
       parentMenuStore.setActiveIndex(null, REASONS.none);

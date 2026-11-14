@@ -1,10 +1,11 @@
 import { computed, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
+import { addEventListener } from '../../common/addEventListener';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import type { HTMLProps } from '../../internals/types';
+import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import type { UseRenderElementParameters } from '../../internals/useRenderElement';
 import {
@@ -37,6 +38,7 @@ export function useFilterDropdownInput(
   let isComposing = false;
 
   let inputElement: HTMLInputElement | null = null;
+  let removeFocusListeners: (() => void) | undefined;
 
   // A template can mount the input that replaces this input before it unmounts this input. The
   // input then clears the focus owner only when the owner is its own element.
@@ -45,6 +47,31 @@ export function useFilterDropdownInput(
       context.focusOwnerRef.value = element;
     }
     inputElement = element;
+    removeFocusListeners?.();
+    removeFocusListeners =
+      element === null
+        ? undefined
+        : addInputFocusListeners(element, { focusin: handleFocusin, focusout: handleFocusout });
+  }
+
+  function handleFocusin(event: FocusEvent) {
+    context.setInputFocusVisible(true);
+
+    // A screen reader that followed `aria-activedescendant` put real focus on the item, so
+    // focus returning from an item means the user moved back to the input on purpose and
+    // the highlight no longer reflects where they are. The list's own key replay and
+    // pointer refocus also pass through here and keep it.
+    if (context.autoHighlight.value === 'always' || isRefocusingOwner()) {
+      return;
+    }
+    const from = event.relatedTarget as HTMLElement | null;
+    if (from !== null && listRef.value.includes(from)) {
+      context.setActiveIndex(null);
+    }
+  }
+
+  function handleFocusout() {
+    context.setInputFocusVisible(false);
   }
 
   // The value that the input has after the last event that the part handled, or after the last
@@ -139,24 +166,6 @@ export function useFilterDropdownInput(
         refocusOwner(event.currentTarget as HTMLElement);
       }
     },
-    onFocusin(event: FocusEvent) {
-      context.setInputFocusVisible(true);
-
-      // A screen reader that followed `aria-activedescendant` put real focus on the item, so
-      // focus returning from an item means the user moved back to the input on purpose and
-      // the highlight no longer reflects where they are. The list's own key replay and
-      // pointer refocus also pass through here and keep it.
-      if (context.autoHighlight.value === 'always' || isRefocusingOwner()) {
-        return;
-      }
-      const from = event.relatedTarget as HTMLElement | null;
-      if (from !== null && listRef.value.includes(from)) {
-        context.setActiveIndex(null);
-      }
-    },
-    onFocusout() {
-      context.setInputFocusVisible(false);
-    },
   };
 
   const state = computed<FilterDropdownInputState>(() => ({
@@ -199,6 +208,42 @@ export function useFilterDropdownInput(
         elementAttrs,
       ];
     },
+  };
+}
+
+/**
+ * Adds the `focusin` and `focusout` listeners of a part to its input with `addEventListener`.
+ * Returns the function that removes them. Call it in the function ref of the input.
+ *
+ * Vue skips an event in a listener that Vue attached in the millisecond of the event, when another
+ * Vue listener received the event first. A popup can move the focus to a new input in that
+ * millisecond.
+ *
+ * Chromium sends `focusout` when it removes a focused input. Vue calls the function ref with `null`
+ * before the removal, so that event reaches no listener and keeps the focus ring. React also drops
+ * a focus event in the mutation phase of its commit.
+ *
+ * Vue attaches the listeners that the input has at its mount before it calls the function ref. A
+ * listener of the consumer then runs first, and its `event.preventVaseUIHandler()` stops the
+ * listener of the part.
+ *
+ * @internal
+ */
+export function addInputFocusListeners(
+  input: HTMLInputElement,
+  listeners: Record<'focusin' | 'focusout', (event: FocusEvent) => void>,
+): () => void {
+  const removers = (['focusin', 'focusout'] as const).map((type) =>
+    addEventListener(input, type, (event) => {
+      if (!(event as VaseUIEvent<FocusEvent>).vaseUIHandlerPrevented) {
+        listeners[type](event);
+      }
+    }),
+  );
+  return () => {
+    for (const remove of removers) {
+      remove();
+    }
   };
 }
 

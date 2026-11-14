@@ -129,6 +129,11 @@ export interface FloatingFocusManagerProps {
    */
   beforeContentFocusGuardRef?: ShallowRef<HTMLSpanElement | null> | undefined;
   /**
+   * Ref to the focus guard following the floating element content. The focus manager writes it. A
+   * focus guard outside the popup can send the focus to the end of the popup with it.
+   */
+  afterContentFocusGuardRef?: ShallowRef<HTMLSpanElement | null> | undefined;
+  /**
    * External FloatingTree to use when the one provided by context can't be used.
    */
   externalTree?: FloatingTreeStore | undefined;
@@ -753,7 +758,8 @@ effect(
 
 // The portal renders its guards from this state. `KeepAlive` takes the guards of the portal out of
 // the document with the popup, so this effect does not read `deactivated`. The same guards then
-// return at the activation.
+// return at the activation. A trigger writes its guard after the popup opens. That guard is the
+// next focusable element, so whether it exists is a source of this effect too.
 effect(
   () => [
     props.disabled,
@@ -762,6 +768,7 @@ effect(
     props.store,
     props.closeOnFocusOut,
     domReference.value,
+    toValue(props.nextFocusableElement) != null,
   ],
   () => {
     if (props.disabled || !portalContext) {
@@ -775,6 +782,7 @@ effect(
       open: open.value,
       onOpenChange: (nextOpen, eventDetails) => store.setOpen(nextOpen, eventDetails),
       domReference: domReference.value,
+      hasNextFocusableElement: toValue(props.nextFocusableElement) != null,
     });
 
     return () => {
@@ -784,13 +792,22 @@ effect(
 );
 
 effect(
-  () => [beforeGuardElement.value, afterGuardElement.value, props.beforeContentFocusGuardRef],
+  () => [
+    beforeGuardElement.value,
+    afterGuardElement.value,
+    props.beforeContentFocusGuardRef,
+    props.afterContentFocusGuardRef,
+  ],
   () => {
     const before = beforeGuardElement.value;
     const after = afterGuardElement.value;
     const beforeContentRef = props.beforeContentFocusGuardRef;
+    const afterContentRef = props.afterContentFocusGuardRef;
     if (beforeContentRef) {
       beforeContentRef.value = before;
+    }
+    if (afterContentRef) {
+      afterContentRef.value = after;
     }
     if (portalContext) {
       portalContext.beforeInsideRef.value = before;
@@ -802,6 +819,9 @@ effect(
       // element.
       if (beforeContentRef && beforeContentRef.value === before) {
         beforeContentRef.value = null;
+      }
+      if (afterContentRef && afterContentRef.value === after) {
+        afterContentRef.value = null;
       }
       if (portalContext?.beforeInsideRef.value === before) {
         portalContext.beforeInsideRef.value = null;
@@ -1277,13 +1297,15 @@ function handleAfterGuardFocusin(event: FocusEvent) {
   if (props.modal) {
     getTabbableContent()[0]?.focus();
   } else if (portalNode) {
-    if (props.closeOnFocusOut) {
-      preventReturnFocus = true;
-    }
-
+    // Only a focus that leaves the popup through this guard stops the return of the focus. After a
+    // focus that comes in through it, a close from inside the popup returns the focus.
     if (isOutsideEvent(event, portalNode)) {
+      preventReturnFocus = false;
       getPreviousTabbable(domReference.value)?.focus();
     } else {
+      if (props.closeOnFocusOut) {
+        preventReturnFocus = true;
+      }
       (toValue(props.nextFocusableElement) ?? portalContext?.afterOutsideRef.value)?.focus();
     }
   }

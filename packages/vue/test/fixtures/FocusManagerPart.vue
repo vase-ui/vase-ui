@@ -11,6 +11,7 @@ const props = withDefaults(
     modal?: boolean | undefined;
     closeOnFocusOut?: boolean | undefined;
     domReference?: Element | null | undefined;
+    nextFocusableElement?: HTMLElement | null | undefined;
   }>(),
   { open: true, modal: false, closeOnFocusOut: true, domReference: null },
 );
@@ -31,6 +32,7 @@ const store = useFloatingRootStore({
     :store="store"
     :modal="modal"
     :close-on-focus-out="closeOnFocusOut"
+    :next-focusable-element="nextFocusableElement"
     :initial-focus="false"
   >
     <slot />

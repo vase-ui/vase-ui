@@ -1800,9 +1800,9 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     isItemEqualToValue: isItemEqualToValue.value,
     submitOnItemClick: props.submitOnItemClick ?? false,
     hasInputValue: hasInputValue.value,
-    // The input part writes `inputInsidePopup` in its `ref` callback. The getter reads that key, so
-    // this key follows in the next write. Until the root is mounted, it keeps the value of the
-    // first state, because a server calls no `ref` callback.
+    // The input part writes `inputInsidePopup` in `onMounted`. The getter reads that key, so this
+    // key follows in the next write. Until the root is mounted, it keeps the value of the first
+    // state, because a server calls no `onMounted`.
     inputOwnsFormValue:
       selectionMode.value === 'none' &&
       (isHydrating.value || inlineProp.value || !inputInsidePopup.value),

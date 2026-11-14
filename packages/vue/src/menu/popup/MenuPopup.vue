@@ -245,10 +245,9 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// Internal defaults, not targets of the consumer: the focus manager keeps a focus that moved.
-const dynamicReturnFocus = computed(
-  () => submenuRootContext.value?.getReturnElement ?? parentHandoff?.parentVirtualFocusRef,
-);
+// The input of a filtered parent menu holds the real focus while the parent highlights an item. It
+// is an internal default, not a target of the consumer: the focus manager keeps a focus that moved.
+const dynamicReturnFocus = computed(() => parentHandoff?.parentVirtualFocusRef);
 
 const returnFocus = computed(() => {
   const { type } = parent.value;
@@ -288,6 +287,7 @@ defineExpose({ element });
     :previous-focusable-element="activeTriggerElement"
     :next-focusable-element="parent.type === undefined ? getNextFocusableElement : undefined"
     :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
+    :after-content-focus-guard-ref="store.context.afterContentFocusGuardRef"
   >
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
     <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
