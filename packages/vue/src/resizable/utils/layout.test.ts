@@ -402,6 +402,17 @@ describe('layout', () => {
     expect(getHandleRange(panels, layout, 0, a, false)).toEqual({ min: 4, max: 30 });
   });
 
+  it('range: a collapsible panel just above its least size can go to its collapsed size', () => {
+    // The panel after the handle has 20.002 of room, which is all of the size of the first panel
+    // above its collapsed size. The sizes have decimals, as a layout has after a drag.
+    const a = panel('a', { minSize: 20, collapsible: true, collapseThreshold: 20 });
+    const panels = [a, panel('b')];
+    const layout = { a: 20.002, b: 79.998 };
+
+    expect(getHandleRange(panels, layout, 0, a)).toEqual({ min: 0, max: 100 });
+    expect(adjustLayout(panels, layout, 0, -100, { exact: true })).toEqual({ a: 0, b: 100 });
+  });
+
   it.each([
     {
       name: 'at the least size',

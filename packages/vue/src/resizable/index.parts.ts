@@ -37,7 +37,7 @@ export namespace Root {
 }
 
 /**
- * A part of the layout that a handle resizes.
+ * A part of the layout that a handle resizes. A collapsible panel can collapse to a small size.
  * Renders a `<div>` element.
  */
 export const Panel: typeof ResizablePanel = ResizablePanel;
@@ -49,6 +49,7 @@ export namespace Panel {
 
 /**
  * The separator between two panels. The user drags it or presses a key on it to resize the panels.
+ * Enter collapses or expands the primary panel, and a double click gives it its first size.
  * Renders a `<div>` element.
  */
 export const Handle: typeof ResizableHandle = ResizableHandle;

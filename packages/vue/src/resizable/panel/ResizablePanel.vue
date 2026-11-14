@@ -109,13 +109,14 @@ export interface ResizablePanelActions {
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, watch } from 'vue';
+import { computed, onMounted, provide } from 'vue';
 import { useIsHydrating } from '../../common/hydration';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import { useDeferredServerRender } from '../../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useValueChanged } from '../../internals/useValueChanged';
 import { useResizableRootContext } from '../root/ResizableRootContext';
 import { isCollapsed } from '../utils/layout';
 import { ResizablePanelContext } from './ResizablePanelContext';
@@ -135,7 +136,7 @@ const props = withDefaults(defineProps<ResizablePanelProps>(), {
 const emit = defineEmits<{
   /**
    * Event handler called when the panel collapses or expands: when `collapsed` changes.
-   * It is not called at the mount.
+   * It is called after the DOM update, and not at the mount.
    */
   collapsedChange: [collapsed: boolean];
 }>();
@@ -177,10 +178,10 @@ const state = computed<ResizablePanelState>(() => ({
 }));
 
 // The panels beside this panel register in `setup` too, so the layout is known only when they all
-// have registered. The watcher starts at the mount, so the state at the mount has no event.
+// have registered. The change starts at the mount, so the state at the mount has no event.
 onMounted(() => {
-  watch(collapsed, (value) => {
-    emit('collapsedChange', value);
+  useValueChanged(collapsed, () => {
+    emit('collapsedChange', collapsed.value);
   });
 });
 

@@ -485,7 +485,7 @@ describe('<Resizable.Panel />', () => {
       expect(onCollapsedChange.mock.calls).toEqual([[true]]);
     });
 
-    it('warns once when a collapsible panel has no size that is a collapse', async () => {
+    it('warns once when a collapsible panel cannot collapse', async () => {
       await renderPanels({ panels: [{ id: 'a', collapsible: true }, {}] });
 
       expect(takeReportedMessages()).toEqual([
