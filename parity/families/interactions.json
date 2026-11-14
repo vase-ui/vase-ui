@@ -56,25 +56,25 @@
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
       "describe": ["useListNavigation"],
       "title": "focus management in nested lists",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
-      "reason": "The case renders `Main` of `Menu.tsx`, which calls `useHoverPopupInteraction`. Vase UI does not have that file. Base UI runs the case only in jsdom, because a browser focuses the first item. The pull request that adds `useHoverPopupInteraction` ports the case to the browser, or gives it a `replaced` row."
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The block `lists below the list in the component tree` opens a list below with its key, moves in it and closes it with its key, in a browser."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
       "describe": ["useListNavigation"],
       "title": "keyboard navigation in nested menus lists",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
-      "reason": "The case renders `Main` of `Menu.tsx`, which calls `useHoverPopupInteraction`. Vase UI does not have that file. Base UI runs the case only in jsdom, because a browser focuses the first item. The pull request that adds `useHoverPopupInteraction` ports the case to the browser, or gives it a `replaced` row."
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The block `lists below the list in the component tree` opens a list below with its key, moves in it and closes it with its key, in a browser."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
       "describe": ["useListNavigation"],
       "title": "keyboard navigation in nested menus with different orientation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useHoverPopupInteraction.ts",
-      "reason": "The case renders `Main` of `MenuOrientation.tsx`, which calls `useHoverPopupInteraction`. Vase UI does not have that file. Base UI runs the case only in jsdom, because a browser focuses the first item. The pull request that adds `useHoverPopupInteraction` ports the case to the browser, or gives it a `replaced` row."
+      "kind": "replaced",
+      "test": "packages/vue/src/utils/popups/interactions/useListNavigation.test.tsx",
+      "reason": "Base UI runs the case only in jsdom. jsdom does not focus the first item at the open, and a browser does, so the keys of the case reach other items in a browser. The block `lists below the list in the component tree` opens a list below with its key, moves in it and closes it with its key, in a browser."
     },
     {
       "upstream": "packages/react/test/useTestInteractions.test.tsx",
