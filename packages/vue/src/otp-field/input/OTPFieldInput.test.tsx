@@ -1199,7 +1199,7 @@ describe('<OTPField.Input />', () => {
       expect(document.activeElement).toBe(inputs[4]);
     });
 
-    it('selects the character of a slot on a click, and moves a click after the first empty slot to that slot', async () => {
+    it('selects the character of a slot on each click, and moves a click after the first empty slot to that slot', async () => {
       await render(<OTPFieldTest defaultValue="123" />);
 
       const inputs = getSlots();
@@ -1207,6 +1207,11 @@ describe('<OTPField.Input />', () => {
       await userEvent.click(inputs[1]);
 
       expect(document.activeElement).toBe(inputs[1]);
+      expect([inputs[1].selectionStart, inputs[1].selectionEnd]).toEqual([0, 1]);
+
+      // The slot has the focus, so only the part can select the character again.
+      await userEvent.click(inputs[1]);
+
       expect([inputs[1].selectionStart, inputs[1].selectionEnd]).toEqual([0, 1]);
 
       await userEvent.click(inputs[5]);

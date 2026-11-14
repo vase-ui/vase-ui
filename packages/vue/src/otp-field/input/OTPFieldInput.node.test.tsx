@@ -76,7 +76,7 @@ describe('<OTPField.Input />', () => {
         expect(slots.map((slot) => attribute(slot, 'aria-describedby'))).toEqual(
           Array(4).fill(undefined),
         );
-        expect(attribute(labelTag, 'for')).toBe(attribute(slots[0], 'id'));
+        expect(attribute(labelTag, 'for')).toBe(attribute(slots[0] ?? '', 'id'));
       },
     );
   });
