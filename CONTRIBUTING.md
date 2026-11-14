@@ -261,6 +261,12 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its props and state types are aliases of the types of the other part.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
 
+A part whose new types change a prop is the exception. `AlertDialog.Trigger` is the example: its `handle` takes only a handle of Alert Dialog.
+
+- The part is an SFC that renders the other part. It follows the rules above for a part that Base UI writes as another part.
+- Its props interface extends an `Omit` of the props interface of the other part, and declares the changed prop.
+- The API reference then shows the type and the text of the changed prop. For an alias of the other SFC, it shows the prop of the other part.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
@@ -892,6 +898,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `DialogPortalChildren.vue`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. `DialogPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of the store context.
+- `Menu.Portal` gives `FloatingPortal` a default slot that renders `MenuPortalChildren.vue`. Its `#render` slot gets that component as `children`. That component renders `InternalBackdrop.vue` before the default slot of the consumer, while a modal menu is mounted and a hover did not open it. A menu in a menubar has the backdrop while the menubar is modal. The backdrop has a hole for the trigger of a menu with no parent, or for the menubar. The backdrop is `inert` while the menu closes. Base UI renders this backdrop in the positioner. A backdrop there gives the positioner more than one root node, and a `<style scoped>` rule, `v-show` or a custom directive of the consumer then does not work on the positioner (`VUE-61`). `MenuPortalChildren.vue` writes the element of the backdrop to `internalBackdropRef` of a context menu above the menu.
 - The `#render` slots of `FloatingPortal` and `FloatingPortalLite` get `children`. The component is `FloatingPortalChildren.vue`, which renders only its default slot. A portal part that has nodes of its own gives its own component: `Dialog.Portal` gives `DialogPortalChildren.vue`. A portal part with no nodes of its own, such as `Tooltip.Portal`, gives each slot prop of the portal to its own `#render` slot. See [Parts with nodes of their own](#parts-with-nodes-of-their-own).
 - `Dialog.Popup` gives the internal backdrop to its focus manager in `getInsideElements`, so the modal marks do not touch it. The release of the marks would remove the `inert` of the backdrop of a closing dialog.
 - `Drawer.Popup` gives the internal backdrop to its focus manager in the same way.
