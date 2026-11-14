@@ -22,6 +22,7 @@ export interface MenuPortalProps
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -37,6 +38,8 @@ defineSlots<{
   render(props: { props: HTMLProps; state: MenuPortalState; children: Component }): unknown;
 }>();
 
+const state: MenuPortalState = EMPTY_OBJECT;
+
 const { store, parent } = useMenuRootContext();
 const shouldRender = computed(() => store.select('mounted') || props.keepMounted);
 
@@ -50,6 +53,9 @@ provide(
 // trigger gives its own.
 const portalOwnerRole = parent.type === 'menu' || parent.type === 'menubar' ? 'group' : undefined;
 
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of the portal dynamic. Each part below the portal that has slot content then
+// renders again with its parent.
 const portalRef = useTemplateRef('portal');
 const element = computed(() => portalRef.value?.element ?? null);
 
@@ -58,15 +64,19 @@ defineExpose({ element });
 
 <template>
   <FloatingPortal
-    v-if="shouldRender"
+    v-if="shouldRender && $slots.render"
     ref="portal"
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container, portalOwnerRole }"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="MenuPortalChildren" />
     </template>
-    <template #default="slotProps">
-      <MenuPortalChildren><slot v-bind="slotProps" /></MenuPortalChildren>
-    </template>
+  </FloatingPortal>
+  <FloatingPortal
+    v-else-if="shouldRender"
+    ref="portal"
+    v-bind="{ ...$attrs, as, stateClass, stateStyle, container, portalOwnerRole }"
+  >
+    <MenuPortalChildren><slot :state="state" /></MenuPortalChildren>
   </FloatingPortal>
 </template>

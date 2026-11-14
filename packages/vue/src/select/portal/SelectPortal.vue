@@ -19,6 +19,7 @@ export interface SelectPortalProps
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
 import type { Component } from 'vue';
+import { EMPTY_OBJECT } from '../../common/empty';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -33,11 +34,16 @@ defineSlots<{
   render(props: { props: HTMLProps; state: SelectPortalState; children: Component }): unknown;
 }>();
 
+const state: SelectPortalState = EMPTY_OBJECT;
+
 const store = useSelectRootContext();
 // The root mounts the items before the first open, so that a closed select can match a value.
 const shouldRender = computed(() => store.select('mounted') || store.select('forceMounted'));
 
 // As in Base UI, this part renders `FloatingPortal` and makes no element of its own.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of the portal dynamic. Each part below the portal that has slot content then
+// renders again with its parent.
 const portal = useTemplateRef('portal');
 const element = computed(() => portal.value?.element ?? null);
 
@@ -46,15 +52,19 @@ defineExpose({ element });
 
 <template>
   <FloatingPortal
-    v-if="shouldRender"
+    v-if="shouldRender && $slots.render"
     ref="portal"
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" :children="SelectPortalChildren" />
     </template>
-    <template #default="slotProps">
-      <SelectPortalChildren><slot v-bind="slotProps" /></SelectPortalChildren>
-    </template>
+  </FloatingPortal>
+  <FloatingPortal
+    v-else-if="shouldRender"
+    ref="portal"
+    v-bind="{ ...$attrs, as, stateClass, stateStyle, container }"
+  >
+    <SelectPortalChildren><slot :state="state" /></SelectPortalChildren>
   </FloatingPortal>
 </template>
