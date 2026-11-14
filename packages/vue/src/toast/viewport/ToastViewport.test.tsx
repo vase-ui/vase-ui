@@ -1148,6 +1148,32 @@ describe('<Toast.Viewport />', () => {
       },
     );
 
+    it('BUG-6174: keeps one pair of frame listeners when the first toast comes before the focus check, and removes it at the unmount', async () => {
+      const manager = Toast.createToastManager();
+      const { unmount } = await renderViewport(manager);
+      const frame = await appendFrame(document.body);
+      const frameWindow = frame.contentWindow!;
+      const addListener = vi.spyOn(frameWindow, 'addEventListener');
+      const removeListener = vi.spyOn(frameWindow, 'removeEventListener');
+      const liveListeners = (type: string) =>
+        addListener.mock.calls.filter(([name]) => name === type).length -
+        removeListener.mock.calls.filter(([name]) => name === type).length;
+      window.focus();
+      screen.getByTestId('origin').focus();
+
+      // The first toast runs the listeners of the viewport again while the check of the `blur` waits.
+      frame.contentDocument!.getElementById('inner')!.focus();
+      manager.add({ title: 'toast', timeout: 0 });
+      await flushMicrotasks();
+      await tick(1);
+
+      expect([liveListeners('blur'), liveListeners('focus')]).toEqual([1, 1]);
+
+      unmount();
+
+      expect([liveListeners('blur'), liveListeners('focus')]).toEqual([0, 0]);
+    });
+
     it('VUE-76: starts the timers paused when the page is hidden at the mount', async () => {
       const onClose = vi.fn();
       const manager = Toast.createToastManager();

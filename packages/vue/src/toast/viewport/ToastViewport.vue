@@ -296,6 +296,10 @@ function getFocusedFrameWindow(doc: Document): Window | null {
   return frameWindow;
 }
 
+// A focus check in `windowFocusTimeout` can run after the watch below runs again, so the check
+// calls the function of the run that listens at that time.
+let listenToFocusedFrame = () => {};
+
 // Window focus is tracked even while empty, so toasts added in the background start paused.
 // `isEmpty` only toggles the F6 and touch listeners.
 watch(
@@ -324,7 +328,7 @@ watch(
 
     // While a frame has the focus, the window gets no `blur` and no `focus` when the page loses or
     // gets the focus. Only the window of the frame gets them.
-    function listenToFocusedFrame() {
+    listenToFocusedFrame = () => {
       removeFrameListeners?.();
       const frameWindow = getFocusedFrameWindow(doc);
       removeFrameListeners = frameWindow
@@ -333,7 +337,7 @@ watch(
             addEventListener(frameWindow, 'focus', handleFrameFocus, true),
           )
         : undefined;
-    }
+    };
 
     // Focus that goes into a frame of the page blurs the window, but the page keeps the focus.
     // Firefox reports no focus for the page while it sends the event, so the check comes after.
@@ -427,7 +431,10 @@ watch(
         addEventListener(win, 'blur', handleWindowBlur, true),
         addEventListener(win, 'focus', handleWindowFocus, true),
         addEventListener(doc, 'visibilitychange', handleVisibilitychange),
-        () => removeFrameListeners?.(),
+        () => {
+          removeFrameListeners?.();
+          listenToFocusedFrame = () => {};
+        },
         !empty && addEventListener(win, 'keydown', handleGlobalKeydown),
         !empty && addEventListener(doc, 'pointerdown', store.handleDocumentPointerDown, true),
       ),
