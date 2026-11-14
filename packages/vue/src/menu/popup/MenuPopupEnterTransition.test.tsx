@@ -1,10 +1,9 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent } from 'vue';
+import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, flushMicrotasks, isJSDOM, screen, waitFor } from '#test-utils';
-import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
+import { createRenderer, flushMicrotasks, isJSDOM, screen, wait, waitFor } from '#test-utils';
+import type { VaseUIRenderResult } from '#test-utils';
 
 /**
  * Records whether an element ever matches `selector`. The attributes that the cases look for can
@@ -36,6 +35,56 @@ function trackSelector(selector: string) {
 
 function trackStartingStyle(testId: string) {
   return trackSelector(`[data-testid="${testId}"][data-starting-style]`);
+}
+
+/**
+ * The menu of the cases that open a submenu with its parent. The props give the differences
+ * between the Base UI cases.
+ */
+const App = defineComponent({
+  props: {
+    submenuOpen: { type: Boolean, default: undefined },
+    submenuDefaultOpen: { type: Boolean, default: false },
+    keepMounted: { type: Boolean, default: false },
+    showPopup: { type: Boolean, default: true },
+    style: { type: String, default: undefined },
+  },
+  setup(props) {
+    return () => (
+      <div>
+        {props.style ? <style>{props.style}</style> : null}
+        <Menu.Root>
+          <Menu.Trigger>Trigger</Menu.Trigger>
+          <Menu.Portal keepMounted={props.keepMounted}>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="menu-popup">
+                <Menu.Item>Item</Menu.Item>
+                <Menu.SubmenuRoot open={props.submenuOpen} defaultOpen={props.submenuDefaultOpen}>
+                  <Menu.SubmenuTrigger>Submenu</Menu.SubmenuTrigger>
+                  {props.showPopup ? (
+                    <Menu.Portal>
+                      <Menu.Positioner>
+                        <Menu.Popup data-testid="submenu-popup">
+                          <Menu.Item>Sub item</Menu.Item>
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  ) : null}
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </div>
+    );
+  },
+});
+
+/** Opens the menu with Enter on its trigger: a keyboard click, which opens it instantly. */
+async function openWithEnter(user: VaseUIRenderResult['user']) {
+  screen.getByRole('button', { name: 'Trigger' }).focus();
+  await flushMicrotasks();
+  await user.keyboard('[Enter]');
 }
 
 describe.skipIf(isJSDOM)('Menu enter transition', () => {
@@ -144,145 +193,212 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     });
   });
 
-  describe('a submenu that is open when its parent opens', () => {
-    // The parent opens with a change of the store, as a press of its trigger does. A keyboard
-    // click opens the parent instantly.
-    async function renderMenu(
-      options: { submenuOpen?: boolean; showSubmenuPopup?: boolean; style?: string } = {},
-    ) {
-      const probe = createMenuStoreProbe();
-      const onOpenChangeComplete = vi.fn();
-      const submenuOpen = shallowRef(options.submenuOpen ?? true);
-      const showSubmenuPopup = shallowRef(options.showSubmenuPopup ?? true);
-      const Test = defineComponent({
-        setup() {
-          return () => (
-            <div>
-              {options.style ? <style>{options.style}</style> : null}
-              <Menu.Root onOpenChangeComplete={onOpenChangeComplete}>
-                <probe.Probe />
-                <Menu.Trigger>Trigger</Menu.Trigger>
-                <Menu.Portal>
-                  <Menu.Positioner>
-                    <Menu.Popup data-testid="menu-popup">
-                      <Menu.Item>Item</Menu.Item>
-                      <Menu.SubmenuRoot open={submenuOpen.value}>
-                        <Menu.SubmenuTrigger>Submenu</Menu.SubmenuTrigger>
-                        {showSubmenuPopup.value ? (
-                          <Menu.Portal>
-                            <Menu.Positioner>
-                              <Menu.Popup data-testid="submenu-popup">
-                                <Menu.Item>Sub item</Menu.Item>
-                              </Menu.Popup>
-                            </Menu.Positioner>
-                          </Menu.Portal>
-                        ) : null}
-                      </Menu.SubmenuRoot>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.Root>
-            </div>
-          );
-        },
-      });
-      await render(<Test />);
+  it('plays the enter transition for a submenu that is open when its parent opens', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      function openParent(keyboard: boolean) {
-        probe.store.setOpen(
-          true,
-          createChangeEventDetails(
-            REASONS.triggerPress,
-            new MouseEvent('click', { detail: keyboard ? 0 : 1 }),
-            screen.getByRole('button', { name: 'Trigger' }),
-          ),
-        );
+    const submenuTracker = trackStartingStyle('submenu-popup');
+
+    const { user } = await render(<App submenuDefaultOpen />);
+
+    await user.click(screen.getByRole('button', { name: 'Trigger' }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(submenuTracker.seen()).toBe(true);
+    });
+  });
+
+  it('plays the enter transition for a controlled-open submenu when its parent opens', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+    const submenuTracker = trackStartingStyle('submenu-popup');
+
+    const { user } = await render(<App submenuOpen />);
+
+    await user.click(screen.getByRole('button', { name: 'Trigger' }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(submenuTracker.seen()).toBe(true);
+    });
+  });
+
+  it('does not play the enter transition for a submenu when the parent popup is kept mounted', async () => {
+    // Known limitation: with a `keepMounted` parent the submenu subtree exists from page load, so
+    // its mount cannot be tied to the parent's reveal and the submenu appears without a
+    // transition when the parent opens. This test pins the current behavior; a fix needs a
+    // visibility-based signal in the shared transition machinery.
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+    const submenuTracker = trackStartingStyle('submenu-popup');
+
+    const { user } = await render(<App keepMounted submenuDefaultOpen />);
+
+    await user.click(screen.getByRole('button', { name: 'Trigger' }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('menu-popup')).toBeVisible();
+    });
+
+    await wait(100);
+
+    expect(submenuTracker.seen()).toBe(false);
+  });
+
+  it('plays the enter transition for a submenu whose parent opened instantly', async () => {
+    // `data-instant` is a styling hint: suppressing the enter transition is the consumer's
+    // choice, not the framework's. A consumer without `[data-instant]` CSS gets the parent's
+    // enter transition on a keyboard open, so the submenu must go through `'starting'` alongside
+    // it — skipping the phase would re-create the detached-panel artifact for keyboard users.
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+    const submenuTracker = trackStartingStyle('submenu-popup');
+
+    const { user } = await render(<App submenuDefaultOpen />);
+
+    await openWithEnter(user);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(submenuTracker.seen()).toBe(true);
+    });
+  });
+
+  it('marks an initially open submenu as instant when its parent opened instantly', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+    const submenuInstantTracker = trackSelector(
+      '[data-testid="submenu-popup"][data-instant="click"]',
+    );
+
+    const { user } = await render(<App submenuDefaultOpen />);
+
+    await openWithEnter(user);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
+    // The submenu carries the inherited value during its enter frames only: it is cleared once
+    // the initial reveal settles, so it cannot suppress later transitions.
+    await waitFor(() => {
+      expect(submenuInstantTracker.seen()).toBe(true);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+    });
+  });
+
+  it('clears the inherited instant type after the initial open', async () => {
+    // The inherited `instantType` must not outlive the initial reveal: controlled `open` flips
+    // bypass `setOpen`, so a value that stuck around would render `[data-instant]` on every
+    // subsequent open and suppress transitions that should play.
+    const { user, setProps } = await render(() => <App submenuOpen />);
+
+    await openWithEnter(user);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+    });
+
+    await setProps({ submenuOpen: false });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+    });
+
+    await setProps({ submenuOpen: true });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+  });
+
+  it('clears the inherited instant type when a controlled close interrupts the entry', async () => {
+    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+    // The transition keeps the animations-finished cleanup pending long enough for the controlled
+    // close to interrupt it; there is no ending style, so closing unmounts without delay.
+    const style = `
+      [data-testid='submenu-popup'] {
+        opacity: 1;
+        transition: opacity 300ms linear;
       }
+      [data-testid='submenu-popup'][data-starting-style] {
+        opacity: 0;
+      }
+    `;
+    const { user, setProps } = await render(() => <App submenuOpen style={style} />);
 
-      return { openParent, submenuOpen, showSubmenuPopup, onOpenChangeComplete };
-    }
+    await openWithEnter(user);
 
-    it('plays the enter transition of the submenu with the enter transition of its parent', async () => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const submenuTracker = trackStartingStyle('submenu-popup');
-      const { openParent } = await renderMenu();
-
-      openParent(false);
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
-      });
-      await waitFor(() => {
-        expect(submenuTracker.seen()).toBe(true);
-      });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
     });
 
-    it('marks the submenu as instant while it enters, when its parent opened instantly', async () => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const submenuInstantTracker = trackSelector(
-        '[data-testid="submenu-popup"][data-instant="click"]',
-      );
-      const { openParent } = await renderMenu();
+    // Close before the 300ms enter transition finishes, then reopen.
+    await setProps({ submenuOpen: false });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).toBe(null);
+    });
 
-      openParent(true);
+    await setProps({ submenuOpen: true });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+  });
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
-      });
+  it('clears the inherited instant type when the popup is not initially rendered', async () => {
+    // With the popup subtree omitted at mount (e.g. suspended or waiting on data), there is no
+    // element for the animations-finished callback to watch, and a ref assignment alone never
+    // reruns the clearing effect. The seed must still be cleared, so a popup rendered after the
+    // reveal settles does not carry a stale `[data-instant]`.
+    const { user, setProps } = await render(() => <App submenuDefaultOpen showPopup={false} />);
+
+    await openWithEnter(user);
+
+    await waitFor(() => {
       expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
-      await waitFor(() => {
-        expect(submenuInstantTracker.seen()).toBe(true);
-      });
-      await waitFor(() => {
-        expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
-      });
     });
+    // Give the reveal time to settle while the submenu popup is absent.
+    await wait(100);
 
-    it('clears the inherited instant type when a controlled close interrupts the entry', async () => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { openParent, submenuOpen } = await renderMenu({
-        style: `
-          [data-testid='submenu-popup'] { opacity: 1; transition: opacity 300ms linear; }
-          [data-testid='submenu-popup'][data-starting-style] { opacity: 0; }
-        `,
-      });
-
-      openParent(true);
-      await waitFor(() => {
-        expect(screen.getByTestId('submenu-popup')).toHaveAttribute('data-instant', 'click');
-      });
-
-      submenuOpen.value = false;
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-popup')).toBe(null);
-      });
-
-      submenuOpen.value = true;
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
-      });
-      expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+    await setProps({ showPopup: true });
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
     });
+    expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+  });
 
-    it('clears the inherited instant type when the popup of the submenu is not rendered', async () => {
-      globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const { openParent, showSubmenuPopup, onOpenChangeComplete } = await renderMenu({
-        showSubmenuPopup: false,
-      });
+  it('does not mark a closed submenu as instant when it is later opened programmatically', async () => {
+    // A submenu that mounts closed during the parent's enter transition must not inherit the
+    // parent's `instantType`: a later programmatic open (controlled `open` flip) does not go
+    // through `setOpen`, so a seeded value would never be cleared. `defaultOpen` is set alongside
+    // the controlled prop to pin that the gate resolves the effective open state — the controlled
+    // `open={false}` must win over `defaultOpen`.
+    const { user, setProps } = await render(() => <App submenuOpen={false} submenuDefaultOpen />);
 
-      openParent(true);
-      expect(await screen.findByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
-      // The reveal of the parent ends while the popup of the submenu is absent.
-      await waitFor(() => {
-        expect(onOpenChangeComplete).toHaveBeenCalledWith(true);
-      });
-      await flushMicrotasks();
+    await openWithEnter(user);
 
-      showSubmenuPopup.value = true;
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
-      });
-      expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
+    await waitFor(() => {
+      expect(screen.queryByTestId('menu-popup')).not.toBe(null);
     });
+    expect(screen.getByTestId('menu-popup')).toHaveAttribute('data-instant', 'click');
+
+    await setProps({ submenuOpen: true });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+    });
+    expect(screen.getByTestId('submenu-popup')).not.toHaveAttribute('data-instant');
   });
 });
