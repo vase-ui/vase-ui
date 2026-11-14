@@ -12,7 +12,7 @@ const TrackedPopup = defineComponent({
     state: { type: Object as PropType<PopupState>, required: true },
     onState: { type: Function as PropType<(state: PopupState) => void>, required: true },
   },
-  setup(props, { attrs }) {
+  setup(props, { attrs, slots }) {
     function report() {
       props.onState({ open: props.state.open, transitionStatus: props.state.transitionStatus });
     }
@@ -23,7 +23,11 @@ const TrackedPopup = defineComponent({
       const { open, transitionStatus } = props.state;
       // This is the input used by transition components such as Material UI Grow.
       const enter = open && transitionStatus !== 'starting';
-      return <div {...attrs} data-enter={enter || undefined} />;
+      return (
+        <div {...attrs} data-enter={enter || undefined}>
+          {slots.default?.()}
+        </div>
+      );
     };
   },
 });
@@ -62,7 +66,11 @@ describe('Popover popup transition state', () => {
                   }: {
                     props: Record<string, unknown>;
                     state: Popover.Popup.State;
-                  }) => <TrackedPopup {...props} state={state} onState={onState} />,
+                  }) => (
+                    <TrackedPopup {...props} state={state} onState={onState}>
+                      Content
+                    </TrackedPopup>
+                  ),
                 }}
               />
             </Popover.Positioner>
