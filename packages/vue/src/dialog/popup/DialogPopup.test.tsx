@@ -856,40 +856,40 @@ describe('<Dialog.Popup />', () => {
 
       expect(focusedDuringExit).toBe(screen.getByRole('button', { name: 'Open' }));
     });
+  });
 
-    it('BUG-5519: returns the focus to the trigger at the close while preventUnmountOnClose keeps the popup', async () => {
-      let root!: Dialog.Root.Actions;
-      const { user } = await render(() => (
-        <Dialog.Root
-          ref={(instance: unknown) => {
-            root = instance as Dialog.Root.Actions;
-          }}
-          onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
-        >
-          <Dialog.Trigger>Open</Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Popup data-testid="popup">
-              <Dialog.Close>Close</Dialog.Close>
-            </Dialog.Popup>
-          </Dialog.Portal>
-        </Dialog.Root>
-      ));
-      await user.click(screen.getByRole('button', { name: 'Open' }));
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
-      });
+  it('BUG-5519: returns the focus to the trigger at the close while preventUnmountOnClose keeps the popup', async () => {
+    let root!: Dialog.Root.Actions;
+    const { user } = await render(() => (
+      <Dialog.Root
+        ref={(instance: unknown) => {
+          root = instance as Dialog.Root.Actions;
+        }}
+        onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
+      >
+        <Dialog.Trigger>Open</Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Popup data-testid="popup">
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
+    ));
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    });
 
-      await user.keyboard('{Escape}');
+    await user.keyboard('{Escape}');
 
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
-      });
-      expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
+    });
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
 
-      root.unmount();
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+    root.unmount();
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBe(null);
     });
   });
 
