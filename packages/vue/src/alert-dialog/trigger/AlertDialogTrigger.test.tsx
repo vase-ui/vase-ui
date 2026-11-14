@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { createRenderer, fireEvent, screen } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
 import type { HTMLProps } from '../../internals/types';
-import * as AlertDialog from '../index.parts';
 
 describe('<AlertDialog.Trigger />', () => {
   const { render } = createRenderer();
