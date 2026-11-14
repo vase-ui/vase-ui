@@ -14,6 +14,7 @@ import {
   waitFor,
   within,
 } from '#test-utils';
+import { REASONS } from '../../internals/reasons';
 import * as NavigationMenu from '../index.parts';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import NavigationMenuTriggerHydration from './NavigationMenuTriggerHydration.test.vue';
@@ -507,6 +508,34 @@ describe('<NavigationMenu.Trigger />', () => {
 
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(screen.getByTestId('list').style.pointerEvents).toBe('');
+    });
+
+    it('keeps the open event of its store when a key opens the closed menu', async () => {
+      // A hover that `valueChange` cancels leaves its event in the store of the trigger. A press of
+      // the open trigger then keeps the menu open, as it does after a hover open.
+      await render(
+        <Menu
+          popup
+          rootProps={{
+            onValueChange(_value: unknown, details: NavigationMenu.Root.ChangeEventDetails) {
+              if (details.reason === REASONS.triggerHover) {
+                details.cancel();
+              }
+            },
+          }}
+        />,
+      );
+      const trigger = screen.getByTestId('trigger-one');
+      await hover(trigger, 50);
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+      await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      await fireEvent.click(trigger);
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('blocks the pointer events of the list while the pointer is on the trigger, and releases them when the pointer leaves', async () => {
