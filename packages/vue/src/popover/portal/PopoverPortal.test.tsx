@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
 import { h, shallowRef } from 'vue';
 import type { Component } from 'vue';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
 import * as Popover from '../index.parts';
 import {
   createRenderer,
