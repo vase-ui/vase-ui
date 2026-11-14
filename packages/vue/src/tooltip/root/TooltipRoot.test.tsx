@@ -5,10 +5,13 @@ import {
   createRenderer,
   flushMicrotasks,
   hydrate,
+  isInaccessible,
+  popupConformanceTests,
   renderOnServer,
   screen,
   waitFor,
 } from '#test-utils';
+import { REASONS } from '../../internals/reasons';
 import TooltipHydration from './TooltipHydration.test.vue';
 
 type Details = Tooltip.Root.ChangeEventDetails;
@@ -23,6 +26,183 @@ function getTrigger(name = 'Trigger') {
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
+
+  it('keeps the payload while a controlled reopen moves to another trigger', async () => {
+    const handle = Tooltip.createHandle<string>();
+    const payloads: Array<string | undefined> = [];
+    const state = shallowRef<{ open: boolean; triggerId: string | null }>({
+      open: true,
+      triggerId: 'first',
+    });
+
+    const App = defineComponent({
+      setup: () => () => (
+        <>
+          <Tooltip.Trigger handle={handle} id="first" payload="First">
+            First
+          </Tooltip.Trigger>
+          <Tooltip.Trigger handle={handle} id="second" payload="Second">
+            Second
+          </Tooltip.Trigger>
+          <Tooltip.Root handle={handle} open={state.value.open} triggerId={state.value.triggerId}>
+            {{
+              default: ({ payload }: { payload: string | undefined }) => {
+                payloads.push(payload);
+                return (
+                  <Tooltip.Portal>
+                    <Tooltip.Positioner>
+                      <Tooltip.Popup>{payload}</Tooltip.Popup>
+                    </Tooltip.Positioner>
+                  </Tooltip.Portal>
+                );
+              },
+            }}
+          </Tooltip.Root>
+        </>
+      ),
+    });
+
+    await render(<App />);
+    await flushMicrotasks();
+    state.value = { open: false, triggerId: null };
+    await flushMicrotasks();
+
+    payloads.length = 0;
+    state.value = { open: true, triggerId: 'second' };
+    await flushMicrotasks();
+
+    expect(payloads).not.toContain(undefined);
+    expect(payloads.at(-1)).toBe('Second');
+  });
+
+  popupConformanceTests({
+    createComponent: (props) => (
+      <Tooltip.Root {...props.root}>
+        <Tooltip.Trigger {...props.trigger}>Open menu</Tooltip.Trigger>
+        <Tooltip.Portal {...props.portal}>
+          <Tooltip.Positioner>
+            <Tooltip.Popup {...props.popup}>Content</Tooltip.Popup>
+          </Tooltip.Positioner>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    ),
+    render,
+    triggerMouseAction: 'hover',
+  });
+
+  describe('preventUnmountOnClose()', () => {
+    it('unmounts on a normal close after a prevented close and initially open remount', async () => {
+      const tooltip = Tooltip.createHandle();
+      const showRoot = shallowRef(true);
+      const remountOpen = shallowRef(false);
+      let preventNextUnmount = true;
+
+      const App = defineComponent({
+        setup: () => () => (
+          <>
+            <Tooltip.Trigger handle={tooltip} id="trigger" delay={0}>
+              Toggle
+            </Tooltip.Trigger>
+            <button type="button" onClick={() => tooltip.open('trigger')}>
+              Open tooltip
+            </button>
+            <button type="button" onClick={() => tooltip.close()}>
+              Close tooltip
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                showRoot.value = false;
+              }}
+            >
+              Unmount root
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                remountOpen.value = true;
+                showRoot.value = true;
+              }}
+            >
+              Remount open
+            </button>
+            {showRoot.value && (
+              <Tooltip.Root
+                handle={tooltip}
+                defaultOpen={remountOpen.value}
+                defaultTriggerId="trigger"
+                onOpenChange={(open: boolean, details: Details) => {
+                  if (!open && preventNextUnmount) {
+                    preventNextUnmount = false;
+                    details.preventUnmountOnClose();
+                  }
+                }}
+              >
+                <Tooltip.Portal>
+                  <Tooltip.Positioner data-testid="positioner">
+                    <Tooltip.Popup>Content</Tooltip.Popup>
+                  </Tooltip.Positioner>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            )}
+          </>
+        ),
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+      await user.click(screen.getByRole('button', { name: 'Open tooltip' }));
+      await screen.findByTestId('positioner');
+
+      await user.click(screen.getByRole('button', { name: 'Close tooltip' }));
+      await flushMicrotasks();
+      expect(trigger).not.toHaveAttribute('data-popup-open');
+      expect(screen.queryByTestId('positioner')).not.toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Unmount root' }));
+      await flushMicrotasks();
+      expect(screen.queryByTestId('positioner')).toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Remount open' }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('data-popup-open');
+      });
+      await flushMicrotasks();
+      expect(screen.queryByTestId('positioner')).not.toBe(null);
+
+      await user.click(screen.getByRole('button', { name: 'Close tooltip' }));
+      await waitFor(() => {
+        expect(screen.queryByTestId('positioner')).toBe(null);
+      });
+    });
+  });
+
+  describe('close requests', () => {
+    it('reports the active trigger for an Escape close', async () => {
+      const onOpenChange = vi.fn();
+      const { user } = await render(
+        <Tooltip.Root defaultOpen onOpenChange={onOpenChange}>
+          <Tooltip.Trigger>Trigger</Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>Content</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>,
+      );
+      await flushMicrotasks();
+      expect(screen.queryByText('Content')).not.toBe(null);
+
+      await user.keyboard('[Escape]');
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(onOpenChange.mock.calls[0][1].trigger).toBe(
+        screen.getByRole('button', { name: 'Trigger' }),
+      );
+    });
+  });
 
   describe('open state', () => {
     it('follows `v-model:open`, and emits `openChange` before `update:open`', async () => {
