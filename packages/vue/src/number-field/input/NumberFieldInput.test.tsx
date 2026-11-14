@@ -954,7 +954,7 @@ describe('<NumberField.Input />', () => {
   ] as const)(
     'should respect roundingMode when rounding to explicit maximumFractionDigits on blur in %s',
     async (locale, inputText) => {
-      const format = {
+      const format: Intl.NumberFormatOptions = {
         maximumFractionDigits: 2,
         roundingMode: 'floor',
       };
@@ -970,7 +970,7 @@ describe('<NumberField.Input />', () => {
   );
 
   it('should not throw on blur when format uses roundingIncrement with fixed fraction digits', async () => {
-    const format = {
+    const format: Intl.NumberFormatOptions = {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
       roundingIncrement: 5,
@@ -995,7 +995,7 @@ describe('<NumberField.Input />', () => {
   });
 
   it('should commit roundingIncrement values on blur', async () => {
-    const format = {
+    const format: Intl.NumberFormatOptions = {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
       roundingIncrement: 5,
@@ -1015,7 +1015,7 @@ describe('<NumberField.Input />', () => {
   });
 
   it('should commit significant digit rounded values on blur', async () => {
-    const format = {
+    const format: Intl.NumberFormatOptions = {
       maximumSignificantDigits: 3,
       roundingMode: 'floor',
     };
@@ -1049,7 +1049,7 @@ describe('<NumberField.Input />', () => {
   });
 
   it('should commit roundingMode values on blur without explicit precision', async () => {
-    const format = {
+    const format: Intl.NumberFormatOptions = {
       minimumIntegerDigits: 1,
       roundingMode: 'floor',
     };
@@ -1066,7 +1066,7 @@ describe('<NumberField.Input />', () => {
   });
 
   it('should format controlled values with rounding options after external value changes', async () => {
-    const format = {
+    const format: Intl.NumberFormatOptions = {
       minimumIntegerDigits: 1,
       roundingMode: 'floor',
     };
