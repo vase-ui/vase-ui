@@ -22,13 +22,6 @@ function setIos(ios: boolean) {
   });
 }
 
-// The pointer of the browser stays where a case leaves it, for each later test.
-function releasePointerAfterTest() {
-  onTestFinished(async () => {
-    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-  });
-}
-
 describe('useOpenInteractionType', () => {
   const { render } = createRenderer();
 
@@ -84,7 +77,6 @@ describe('useOpenInteractionType', () => {
   });
 
   it('is mouse after a real click in each engine', async () => {
-    releasePointerAfterTest();
     const { open, openMethod, button } = await renderTrigger();
 
     await userEvent.click(button);

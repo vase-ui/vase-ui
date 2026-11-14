@@ -34,6 +34,11 @@ export interface UseFloatingPortalNodeProps {
    * consumer. The part calls the function in each render, so it can read reactive state.
    */
   props?: (() => Record<string, any> | undefined) | undefined;
+  /**
+   * Set it to `true` for a part whose `#render` slot has the `children` prop.
+   * `useRenderElement` then warns when the slot does not mount `children`.
+   */
+  children?: boolean | undefined;
 }
 
 export interface UseFloatingPortalNodeResult extends UseRenderElementReturnValue {
@@ -104,6 +109,7 @@ export function useFloatingPortalNode(
 
   const { element, elementProps } = useRenderElement('div', params.componentProps, {
     props: (attrs) => [{ id: uniqueId, [attr]: '' }, params.props?.(), attrs],
+    children: params.children,
   });
 
   return { element, elementProps, containerElement, deactivated };

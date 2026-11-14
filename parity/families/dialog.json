@@ -9,24 +9,24 @@
       "upstream": "packages/react/src/dialog/backdrop/DialogBackdrop.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases of `prop: forceRender` render `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases of `prop: forceRender` render `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/close/DialogClose.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/description/DialogDescription.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Dialog. It exports the parts, which Vase UI does not have."
+      "reason": "The file is the entry point of Dialog. It exports `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.tsx",
@@ -37,7 +37,7 @@
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Popup` and other parts of Dialog, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopupCssVars.ts",
@@ -45,61 +45,46 @@
       "reason": "Vase UI does not have `Dialog.Popup`."
     },
     {
-      "upstream": "packages/react/src/dialog/portal/DialogPortal.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Portal`."
-    },
-    {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Portal` and other parts of Dialog, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case `should not throw \"Maximum update depth exceeded\" when Suspense boundary is outside Portal` renders `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case that has no counterpart renders `Dialog.Trigger`, `Dialog.Portal` or `Dialog.Popup`, which Vase UI does not have. The case `does not warn for a detached payload open in production` is the one exception. It renders no part. It needs a production build, so its counterpart is a case of the Node project."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Most cases that have no counterpart render `Dialog.Popup`, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The type test imports the entry point of Dialog, which Vase UI does not have. It renders `Dialog.Trigger` and `Dialog.Portal`, which Vase UI does not have."
+      "reason": "The type test imports the entry point of Dialog, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case that has no counterpart renders `Dialog.Trigger`, `Dialog.Portal` or `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Most cases that have no counterpart render `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/title/DialogTitle.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Trigger`."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its call of `describeConformance` renders `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/trigger/DialogTrigger.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Its cases render `Dialog.Trigger` and other parts of Dialog, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/dialog/trigger/DialogTriggerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Dialog.Trigger`."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases of `prop: disabled` render `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/dialog/viewport/DialogViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Portal` and `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Each case renders `Dialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
