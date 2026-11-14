@@ -1,5 +1,7 @@
 import NumberFieldGroup from './group/NumberFieldGroup.vue';
 import type { NumberFieldGroupProps, NumberFieldGroupState } from './group/NumberFieldGroup.vue';
+import NumberFieldInput from './input/NumberFieldInput.vue';
+import type { NumberFieldInputProps, NumberFieldInputState } from './input/NumberFieldInput.vue';
 import NumberFieldRoot from './root/NumberFieldRoot.vue';
 import type {
   NumberFieldRootChangeEventDetails,
@@ -35,4 +37,14 @@ export const Group: typeof NumberFieldGroup = NumberFieldGroup;
 export namespace Group {
   export type State = NumberFieldGroupState;
   export type Props = NumberFieldGroupProps;
+}
+
+/**
+ * The native input control in the number field.
+ * Renders an `<input>` element.
+ */
+export const Input: typeof NumberFieldInput = NumberFieldInput;
+export namespace Input {
+  export type State = NumberFieldInputState;
+  export type Props = NumberFieldInputProps;
 }
