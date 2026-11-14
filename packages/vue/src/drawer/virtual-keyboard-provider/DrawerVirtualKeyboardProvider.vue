@@ -165,7 +165,7 @@ function resolveKeyboardTouchTargetFromPoint(
     [0, -INPUT_TAP_HIT_SLOP],
     [INPUT_TAP_HIT_SLOP, 0],
     [-INPUT_TAP_HIT_SLOP, 0],
-  ]) {
+  ] as const) {
     const keyboardTarget = resolveKeyboardInputTarget(
       getElementAtPoint(root, clientX + offsetX, clientY + offsetY),
     );
@@ -894,7 +894,8 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
 });
 
 function handleTouchStart(event: TouchEvent) {
-  const touch = event.touches[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A `touchstart` event has at least one touch.
+  const touch = event.touches[0]!;
   pendingKeyboardFocusMoved = false;
   keyboardTouchStart = { x: touch.clientX, y: touch.clientY };
 }
