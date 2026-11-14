@@ -1,3 +1,5 @@
+import OTPFieldInput from './input/OTPFieldInput.vue';
+import type { OTPFieldInputProps, OTPFieldInputState } from './input/OTPFieldInput.vue';
 import OTPFieldRoot from './root/OTPFieldRoot.vue';
 import type {
   OTPFieldRootChangeEventDetails,
@@ -29,6 +31,16 @@ export namespace Root {
   export type InvalidEventDetails = OTPFieldRootInvalidEventDetails;
   export type CompleteEventReason = OTPFieldRootCompleteEventReason;
   export type CompleteEventDetails = OTPFieldRootCompleteEventDetails;
+}
+
+/**
+ * An individual OTP character input.
+ * Renders an `<input>` element.
+ */
+export const Input: typeof OTPFieldInput = OTPFieldInput;
+export namespace Input {
+  export type State = OTPFieldInputState;
+  export type Props = OTPFieldInputProps;
 }
 
 export { Separator } from '../separator';
