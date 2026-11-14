@@ -49,6 +49,13 @@ interface ScrollAdjustment {
   readonly computedScrollPaddingBottom: number;
 }
 
+// The inline values that the element gives back after the provider writes the slack.
+interface ScrollSlackStyle {
+  readonly overflowAnchor: string;
+  readonly paddingBottom: string;
+  readonly scrollPaddingBottom: string;
+}
+
 interface KeyboardVisualViewport {
   readonly top: number;
   readonly bottom: number;
@@ -241,15 +248,7 @@ function findKeyboardScrollTarget(target: HTMLElement, root: HTMLElement): HTMLE
 </script>
 
 <script setup lang="ts">
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  onMounted,
-  onScopeDispose,
-  provide,
-  watch,
-} from 'vue';
+import { computed, provide } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
 import { NOOP } from '../../common/empty';
@@ -258,6 +257,7 @@ import { contains, getTarget } from '../../common/shadowDom';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import { useTimeout } from '../../common/useTimeout';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import * as DrawerViewportCssVars from '../viewport/DrawerViewportCssVars';
 import { DrawerVirtualKeyboardContext } from './DrawerVirtualKeyboardContext';
 
@@ -279,6 +279,7 @@ let keyboardTouchStart: { x: number; y: number } | null = null;
 let focusedKeyboardTarget: HTMLElement | null = null;
 let keyboardScrollAdjustment: ScrollAdjustment | null = null;
 let keyboardScrollSlack = 0;
+let keyboardScrollSlackStyle: ScrollSlackStyle | null = null;
 let stopKeepingKeyboardScrollSlack = NOOP;
 let programmaticKeyboardFocus = false;
 let getOpenKeyboardViewport: (() => KeyboardVisualViewport | null) | null = null;
@@ -296,22 +297,27 @@ function restoreKeyboardScrollAdjustment() {
   adjustment.element.style.paddingBottom = adjustment.paddingBottom;
   adjustment.element.style.scrollPaddingBottom = adjustment.scrollPaddingBottom;
   keyboardScrollAdjustment = null;
-}
-
-function getKeyboardScrollSlackStyle(adjustment: ScrollAdjustment) {
-  return {
-    overflowAnchor: 'none',
-    // The baseline below the content is at least the visibility margin, so the last field
-    // never ends flush against the keyboard when the container's own padding is smaller.
-    paddingBottom: `${
-      keyboardScrollSlack + Math.max(adjustment.computedPaddingBottom, KEYBOARD_VISIBILITY_MARGIN)
-    }px`,
-    scrollPaddingBottom: `${adjustment.computedScrollPaddingBottom + KEYBOARD_VISIBILITY_MARGIN}px`,
-  };
+  keyboardScrollSlackStyle = null;
 }
 
 function writeKeyboardScrollSlack(adjustment: ScrollAdjustment) {
-  Object.assign(adjustment.element.style, getKeyboardScrollSlackStyle(adjustment));
+  const { style } = adjustment.element;
+  style.overflowAnchor = 'none';
+  // The baseline below the content is at least the visibility margin, so the last field
+  // never ends flush against the keyboard when the container's own padding is smaller.
+  style.paddingBottom = `${
+    keyboardScrollSlack + Math.max(adjustment.computedPaddingBottom, KEYBOARD_VISIBILITY_MARGIN)
+  }px`;
+  style.scrollPaddingBottom = `${
+    adjustment.computedScrollPaddingBottom + KEYBOARD_VISIBILITY_MARGIN
+  }px`;
+  // A browser can give back a length in another form, for example with fewer digits. The
+  // observer thus compares the element with the values that the element gives back here.
+  keyboardScrollSlackStyle = {
+    overflowAnchor: style.overflowAnchor,
+    paddingBottom: style.paddingBottom,
+    scrollPaddingBottom: style.scrollPaddingBottom,
+  };
 }
 
 // Vue writes each key of a rendered `style` again, so a render of the scroll container replaces
@@ -319,12 +325,12 @@ function writeKeyboardScrollSlack(adjustment: ScrollAdjustment) {
 // on top of them before the next frame.
 function keepKeyboardScrollSlack() {
   const adjustment = keyboardScrollAdjustment;
-  if (!adjustment) {
+  const slackStyle = keyboardScrollSlackStyle;
+  if (!adjustment || !slackStyle) {
     return;
   }
 
   const { element } = adjustment;
-  const slackStyle = getKeyboardScrollSlackStyle(adjustment);
   const overflowAnchorKept = element.style.overflowAnchor === slackStyle.overflowAnchor;
   const paddingBottomKept = element.style.paddingBottom === slackStyle.paddingBottom;
   const scrollPaddingBottomKept =
@@ -404,30 +410,18 @@ function resetTouchTrackingState() {
   keyboardTouchStart = null;
 }
 
-// `KeepAlive` takes the viewport out of the document. The listeners, the timers and the styles of
-// the keyboard then stop until the activation.
-let deactivated = false;
-let cleanupKeyboardTracking = NOOP;
-
-function trackKeyboard() {
-  cleanupKeyboardTracking();
-  cleanupKeyboardTracking = NOOP;
-
-  if (deactivated) {
-    return;
-  }
-
+useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
   if (!mounted.value || !open.value) {
     focusedKeyboardTarget = null;
     restoreKeyboardScrollAdjustment();
     keyboardFocusFrame.cancel();
-    return;
+    return undefined;
   }
 
   const root = rootElement.value;
   if (!root) {
     restoreKeyboardScrollAdjustment();
-    return;
+    return undefined;
   }
 
   const resolvedRootElement: HTMLElement = root;
@@ -886,7 +880,7 @@ function trackKeyboard() {
     scheduleKeyboardFocusAlignment();
   }
 
-  cleanupKeyboardTracking = () => {
+  return () => {
     cleanupListeners.forEach((cleanup) => cleanup());
     consumePreemptedFocus();
     focusedKeyboardTarget = null;
@@ -897,26 +891,6 @@ function trackKeyboard() {
     smallViewportProbe?.remove();
     resolvedRootElement.style.removeProperty(DrawerViewportCssVars.keyboardInset);
   };
-}
-
-onMounted(trackKeyboard);
-watch([open, mounted, modal, nestedDrawerOpen, rootElement], trackKeyboard, { flush: 'post' });
-
-onDeactivated(() => {
-  deactivated = true;
-  trackKeyboard();
-});
-
-onActivated(() => {
-  if (!deactivated) {
-    return;
-  }
-  deactivated = false;
-  trackKeyboard();
-});
-
-onScopeDispose(() => {
-  cleanupKeyboardTracking();
 });
 
 function handleTouchStart(event: TouchEvent) {

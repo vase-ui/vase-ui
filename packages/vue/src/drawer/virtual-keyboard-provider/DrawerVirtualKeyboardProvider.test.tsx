@@ -34,7 +34,8 @@ vi.mock('../../common/platform', async () => {
 
 type TouchPoint = { clientX: number; clientY: number };
 
-// Firefox and WebKit on a desktop cannot construct a `Touch`, so the lists hold the points.
+// The provider reads only `clientX` and `clientY` of a touch, and WebKit on a desktop cannot
+// construct a `Touch`. The lists thus hold the points.
 function createNativeTouchEvent(type: 'touchend' | 'touchcancel', point: TouchPoint) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperties(event, {
@@ -153,7 +154,7 @@ function mockWindowInnerHeight(innerHeight: number) {
   mockResizableInnerHeight(innerHeight);
 }
 
-function mockWindowScrollY() {
+function restoreWindowScrollYAfterTest() {
   const originalDescriptor = Object.getOwnPropertyDescriptor(window, 'scrollY');
   onTestFinished(() => {
     if (originalDescriptor) {
@@ -1827,7 +1828,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
   it('restores the page scroll position when a modal drawer page scrolls while the keyboard is open', async () => {
     mockWindowInnerHeight(800);
     const visualViewport = mockVisualViewport(800);
-    mockWindowScrollY();
+    restoreWindowScrollYAfterTest();
 
     await render(
       <KeyboardDrawer modal>
@@ -1858,7 +1859,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
   it('does not restore the page scroll position for a non-modal drawer', async () => {
     mockWindowInnerHeight(800);
     const visualViewport = mockVisualViewport(800);
-    mockWindowScrollY();
+    restoreWindowScrollYAfterTest();
 
     await render(
       <KeyboardDrawer>
@@ -3053,6 +3054,45 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
         expect(scroll.style.paddingBottom).toBe('30px');
       });
       expect(scroll.style.overflowAnchor).toBe('');
+    });
+
+    it('restores a padding of the scroll container that has a fraction of a pixel', async () => {
+      mockWindowInnerHeight(800);
+      const visualViewport = mockVisualViewport(800);
+
+      await render(
+        <KeyboardDrawer>
+          <Drawer.Content
+            data-testid="scroll"
+            style={{ height: '420px', overflowY: 'auto', paddingBottom: '20.7812px' }}
+          >
+            <div style={{ height: '900px' }} />
+            <input data-testid="input" type="text" />
+          </Drawer.Content>
+        </KeyboardDrawer>,
+      );
+
+      const scroll = screen.getByTestId('scroll');
+      const input = screen.getByTestId('input');
+      setScrollSize(scroll, 420, 1200);
+      scroll.getBoundingClientRect = () => new DOMRect(0, 300, 320, 420);
+      const paddingBottom = scroll.style.paddingBottom;
+
+      input.focus();
+      visualViewport.resize(500);
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(Number.parseFloat(scroll.style.paddingBottom)).toBeCloseTo(240.78, 1);
+      });
+      // The observer of the provider sees the write of the provider in a microtask.
+      await flushMicrotasks();
+      expect(Number.parseFloat(scroll.style.paddingBottom)).toBeCloseTo(240.78, 1);
+
+      input.blur();
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(scroll.style.paddingBottom).toBe(paddingBottom);
+      });
     });
   });
 
