@@ -3241,7 +3241,9 @@ describe('useDismiss', () => {
       },
     );
 
-    // Each row ends at an event that a different capture listener of the popup element records.
+    // The older popup checks a different press event in each row: `pointerdown` and `mousedown`,
+    // `click`, `touchmove` or `touchend`. Only the capture listener of the popup element for that
+    // event records the number of the newer popup.
     it.each<{
       name: string;
       dismiss: UseDismissProps;
@@ -3259,7 +3261,8 @@ describe('useDismiss', () => {
         onTestFinished(() => host.remove());
         const shadowRoot = host.attachShadow({ mode: 'closed' });
         const changes: string[] = [];
-        // Each popup takes its number at the mount, in the order of the tree. Thus `newer` opens after `older`.
+        // Both popups are open at the mount, and each takes its number in the order of the tree.
+        // Thus `newer` has the higher number.
         await render(
           <>
             <Popup name="older" dismiss={dismiss} onChange={() => changes.push('older')} />
@@ -3287,6 +3290,7 @@ describe('useDismiss', () => {
       );
       await fireEvent.click(screen.getByTestId('open-first'));
       await fireEvent.click(screen.getByTestId('open-second'));
+      await waitForLaterMillisecond();
 
       await fireEvent.pointerDown(screen.getByTestId('second'), mouse);
 
@@ -3321,7 +3325,7 @@ describe('press ownership across independent non-modal layers', () => {
       return () => (
         <div
           data-testid={props.id}
-          data-open={props.open ? '' : undefined}
+          data-open={context.rootStore.select('open') ? '' : undefined}
           {...getFloatingProps({ ref: refs.setFloating })}
         />
       );

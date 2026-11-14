@@ -901,8 +901,8 @@ export function useDismiss(
       addTargetEventListenerOnce(event, handleTouchEnd);
     }
 
-    // Recorded in the capture phase of the document, so every open popup has claimed the press
-    // before a `closeOnPressOutside` check runs on the target.
+    // The listener runs in the capture phase of the document. Thus each open popup that holds the
+    // target records its number before a `closeOnPressOutside` check runs on the target.
     function recordPressLayer(event: Event) {
       if (isEventWithin(event, getStore().select('positionerElement'))) {
         claimPress(event);
