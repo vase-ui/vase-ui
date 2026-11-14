@@ -1,5 +1,5 @@
 import type { CDPSession } from '@vitest/browser-playwright';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import {
@@ -498,9 +498,6 @@ describe('<Dialog.Root />', () => {
       { name: 'its backdrop', backdrop: true },
       { name: 'its internal backdrop', backdrop: false },
     ])('closes a modal dialog for a real press on $name', async ({ backdrop }) => {
-      onTestFinished(async () => {
-        await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-      });
       const handleOpenChange = vi.fn();
       await render(
         <div data-testid="page">
