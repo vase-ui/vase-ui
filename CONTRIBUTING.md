@@ -2068,10 +2068,10 @@ The workflow `.github/workflows/release.yml` stages each release of `@vase-ui/vu
 
 - A version is `YYYY.M.MICRO`, such as `2026.12.0`. The month has no leading zero, and `MICRO` starts at 0.
 - The tag of a release is `v` plus the version: `v2026.12.0`. A ruleset lets only an organization admin create, change or delete a `v*` tag.
-- A release before full parity with Base UI has the dist-tag `next`. `publishConfig.tag` in `packages/vue/package.json`, the `--tag` option in the workflow and the install commands of `docs/quick-start.md` hold that tag. Change them together.
+- Each release has the dist-tag `latest`. A breaking change ships only in a `YYYY.1.0` release.
 - The trusted publisher of the package on npmjs.com names the file `release.yml` and the environment `npm`. npm refuses the release after a change of either name.
 - The trusted publisher allows `npm stage publish` only. Do not give it `--allow-publish`. Each step of the job `stage` can get an OIDC token. With `--allow-publish`, each of these steps can make a version public with no approval.
-- The workflow writes no release notes and makes no GitHub Release.
+- The workflow writes no release notes and makes no GitHub Release. `CHANGELOG.md` holds the notes of each release, one section for each version. The GitHub Release of a tag has the same text as its section.
 - A maintainer publishes the first version of a package by hand, because npm sets a trusted publisher only for a package that exists.
 
 The workflow runs on a push of a `v*` tag. It has two jobs:
@@ -2082,10 +2082,11 @@ The workflow runs on a push of a `v*` tag. It has two jobs:
 To make a release:
 
 1. Do the step that [Thanks page](#thanks-page) gives for a release.
-2. Merge a pull request that changes `version` in `packages/vue/package.json`.
+2. Merge a pull request that changes `version` in `packages/vue/package.json` and adds the section of that version to `CHANGELOG.md`.
 3. Make sure that CI passes on that commit of `main`. The workflow does not run `pnpm test`.
 4. As an organization admin, push the tag of that commit: `git tag v2026.12.0 <commit>`, then `git push origin v2026.12.0`.
-5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public.
+5. On npmjs.com, approve the staged version with two-factor authentication. Only a maintainer of the package can do this. The version is then public. When more than one version is staged, approve them in order, from the lowest version to the highest.
+6. Make the GitHub Release of the tag. Its text is the section of that version in `CHANGELOG.md`.
 
 ## Text
 
