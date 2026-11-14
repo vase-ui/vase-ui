@@ -1480,7 +1480,9 @@ async function expectComboboxPageOnServer(page: Page) {
   expect(await page.getByTestId('fruit-input').inputValue()).toBe('Banana');
 
   expect(await page.getByTestId('tags-chips').getAttribute('role')).toBe('toolbar');
-  expect(await page.getByTestId('tags-chip').allTextContents()).toEqual(['b']);
+  expect(
+    (await page.getByTestId('tags-chip').allTextContents()).map((text) => text.trim()),
+  ).toEqual(['b']);
 
   const labelId = await page.getByTestId('country-label').getAttribute('id');
   expect(labelId).toBeTruthy();

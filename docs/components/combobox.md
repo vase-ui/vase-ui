@@ -70,7 +70,7 @@ To fix the types, give the part its type arguments in an instantiation expressio
 
 A `createItems()` collection has items that differ from its selection values. The root needs the third type argument, `Item`, to accept such a collection. Without it, the type check refuses the collection.
 
-A wrapper that declares `defineProps<ComboboxRootProps<Value, Multiple, Item>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `open` as `false`, and the combobox cannot open.
+A wrapper that declares `defineProps<ComboboxRootProps<Value, Multiple, Item>>()` and forwards the props with `v-bind` does not work. Vue gives an absent Boolean prop the value `false`. The wrapper then passes `false` for each Boolean prop that its consumer omits, such as `open`, and the combobox stays closed.
 
 ### Value selection with IDs
 
@@ -134,7 +134,7 @@ To limit the visible chips, slice the selected values that `<Combobox.Value>` gi
 
 #### Keeping the filter after selection
 
-In `multiple` mode, a selection clears the typed filter and closes the popup when the input is outside the popup. To let the user pick more than one result of a query, cancel the change request that does this.
+In `multiple` mode, a selection clears the filter that the user typed. When the input is outside the popup, the selection also closes the popup. To let the user pick more than one result of a query, cancel the change request that does this.
 
 The request to cancel depends on where the input is. When the input is outside the popup, cancel the close request with the reason `item-press` in `openChange`:
 
@@ -190,7 +190,7 @@ The `items` prop describes the groups as an array of objects. Each object has an
 
 ### Async search (single)
 
-Load the items from a remote source when the input changes. Keep the selected item in the `items` list, so that it stays available while new results arrive. The list then needs no items at the start.
+Load the items from a remote source when the input changes. The app does not need to load all items first. Keep the selected item in the `items` list, so that it stays available while new results arrive.
 
 <DemoFrame>
   <DemoComboboxAsyncSingle />
@@ -206,7 +206,7 @@ Load the items from a remote source when the input changes. Keep the selected it
 
 ### Async search (multiple)
 
-Load the items from a remote source when the input changes, and allow more than one selected item. The selected items stay in the list while new matches arrive. The list then needs no items at the start.
+Load the items from a remote source when the input changes, and allow more than one selected item. The app does not need to load all items first. The selected items stay in the list while new matches arrive.
 
 <DemoFrame>
   <DemoComboboxAsyncMultiple />
@@ -257,6 +257,8 @@ A child component that takes the item as a prop is a simpler alternative to virt
 ## useFilter
 
 Matches items against a query using `Intl.Collator` for robust string matching. Use it when you filter the items yourself. Call it in `setup`. To make the filter follow a value that changes, give it a ref or a getter for its options.
+
+With no `locale`, the filter uses `en-US` until the component mounts. The server and the first client render then give the same list.
 
 <ApiReference name="Combobox.useFilter" />
 
