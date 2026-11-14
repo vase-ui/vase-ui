@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 function countTestId(html: string, testId: string) {
   return html.match(new RegExp(`data-testid="${testId}"`, 'g'))?.length ?? 0;

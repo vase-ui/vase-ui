@@ -7,7 +7,7 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
-import * as Toast from './index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import { ToastContext } from './provider/ToastProviderContext';
 import { ToastStore } from './store';
 import { useToastManager } from './useToastManager';

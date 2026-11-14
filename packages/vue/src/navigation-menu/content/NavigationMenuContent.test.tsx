@@ -9,7 +9,7 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import type { NavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 

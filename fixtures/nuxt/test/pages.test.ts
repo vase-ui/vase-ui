@@ -975,6 +975,43 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+const TOAST_VIEWPORT_ATTRIBUTES = [
+  'role',
+  'tabindex',
+  'aria-live',
+  'aria-atomic',
+  'aria-relevant',
+  'aria-label',
+];
+
+async function expectToastViewport(page: Page) {
+  expect(await readAttributes(page.getByTestId('viewport'), TOAST_VIEWPORT_ATTRIBUTES)).toEqual({
+    role: 'region',
+    tabindex: '-1',
+    'aria-live': 'polite',
+    'aria-atomic': 'false',
+    'aria-relevant': 'additions text',
+    'aria-label': 'Notifications',
+  });
+  expect(await page.getByTestId('toast').count()).toBe(0);
+}
+
+// The viewport in the page is in the server HTML. A portal renders after the mount, so the server
+// HTML has no element of the viewport in `Toast.Portal`.
+async function expectToastPageOnServer(page: Page) {
+  await expectToastViewport(page);
+  expect(await page.getByTestId('anchored-viewport').count()).toBe(0);
+}
+
+async function expectHydratedToastPage(page: Page) {
+  await expectToastViewport(page);
+  expect(
+    await page
+      .getByTestId('anchored-viewport')
+      .evaluate((element) => element.parentElement?.hasAttribute('data-vase-ui-portal')),
+  ).toBe(true);
+}
+
 // The server HTML has the label of the value before any item exists, the hidden inputs of the
 // form, and no popup: a portal renders after the mount.
 async function expectSelectPage(page: Page) {
@@ -995,6 +1032,37 @@ async function expectSelectPage(page: Page) {
   expect(await page.getByTestId('tags-value').textContent()).toBe('b');
   expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
   expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
+// A closed menu has the links of a kept content in its server HTML, and no links of another
+// content. An open item has no content before the mount, because its viewport has no target then.
+async function expectNavigationMenuPage(page: Page, { hydrated }: { hydrated: boolean }) {
+  const linkAttributes = ['href', 'aria-current', 'data-active'];
+  const countLinksInItem = (testId: string) =>
+    page.getByTestId(testId).locator('xpath=ancestor::li[1]//a').count();
+
+  expect(await page.getByTestId('kept-link').count()).toBe(1);
+  expect(await page.getByTestId('kept-content').getAttribute('hidden')).toBe('');
+  expect(await page.getByTestId('unkept-link').count()).toBe(0);
+  expect(await readElement(page.getByTestId('nuxt-link'), linkAttributes)).toEqual({
+    tag: 'a',
+    text: 'Home',
+    attributes: { href: '/', 'aria-current': 'page', 'data-active': '' },
+  });
+  expect(await readElement(page.getByTestId('router-link'), linkAttributes)).toEqual({
+    tag: 'a',
+    text: 'Home',
+    attributes: { href: '/', 'aria-current': null, 'data-active': null },
+  });
+  expect(await countLinksInItem('nuxt-link')).toBe(1);
+  expect(await countLinksInItem('router-link')).toBe(1);
+  expect(await page.getByTestId('news-trigger').getAttribute('aria-expanded')).toBe('true');
+  if (hydrated) {
+    await page.getByTestId('news-content').waitFor({ state: 'attached', timeout: 5000 });
+    expect(await page.getByTestId('news-content').getAttribute('data-open')).toBe('');
+  } else {
+    expect(await page.getByTestId('news-content').count()).toBe(0);
+  }
 }
 
 interface PageCase {
@@ -1069,7 +1137,17 @@ const PAGES: PageCase[] = [
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
   },
+  {
+    path: '/toast',
+    expectPage: expectToastPageOnServer,
+    expectHydratedPage: expectHydratedToastPage,
+  },
   { path: '/select', expectPage: expectSelectPage },
+  {
+    path: '/navigation-menu',
+    expectPage: (page) => expectNavigationMenuPage(page, { hydrated: false }),
+    expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
+  },
 ];
 
 const MODES = [
@@ -1232,6 +1310,30 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await control.blur();
 
     expect(await control.inputValue()).toBe(new Intl.NumberFormat('en-US', EURO_FORMAT).format(42));
+    expect(messages).toEqual([]);
+  });
+
+  it('adds a toast to /toast after hydration, and positions an anchored toast against its anchor', async () => {
+    const page = await createPage('/toast');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('add').click();
+    const toast = page.getByTestId('toast');
+    await toast.waitFor();
+    const titleId = await page.getByTestId('title').getAttribute('id');
+    expect(titleId).toBeTruthy();
+    expect(await toast.getAttribute('aria-labelledby')).toBe(titleId);
+
+    const anchor = page.getByTestId('anchor');
+    await anchor.click();
+    const positioner = page.getByTestId('anchored-positioner');
+    await positioner.waitFor();
+    await expect.poll(() => positioner.getAttribute('data-side')).toBe('bottom');
+    expect(await page.getByTestId('arrow').getAttribute('data-side')).toBe('bottom');
+    const anchorBox = await anchor.boundingBox();
+    await expect
+      .poll(async () => (await positioner.boundingBox())?.y)
+      .toBeCloseTo(anchorBox!.y + anchorBox!.height + 8, 0);
     expect(messages).toEqual([]);
   });
 

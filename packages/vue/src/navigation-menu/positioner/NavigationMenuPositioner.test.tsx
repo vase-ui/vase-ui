@@ -9,7 +9,7 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 const useAnchorPositioningSpy = vi.hoisted(() => vi.fn());
 

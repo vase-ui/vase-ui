@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, describeConformance, screen } from '#test-utils';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 
 type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
