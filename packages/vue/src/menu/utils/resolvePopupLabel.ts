@@ -1,8 +1,10 @@
 /**
  * Returns the `aria-labelledby` of the part that has the `menu` role: the popup, or `Menu.List`.
- * An `aria-label` or an `aria-labelledby` of the consumer replaces the label from the trigger. The
- * part reads only its own attributes, because it does not see an attribute that a `#render` slot
- * adds.
+ * An `aria-label` or an `aria-labelledby` of the part replaces the label from the trigger. The part
+ * reads only its own attributes. An `aria-labelledby` on the element of a `#render` slot also
+ * replaces the label, because the element sets it after the props. An `aria-label` on that element
+ * does not, because the part does not see it. The part then keeps the `aria-labelledby` of the
+ * trigger.
  */
 export function resolvePopupLabel(
   attrs: Record<string, unknown>,

@@ -285,8 +285,8 @@
       "describe": ["<Menu.Popup />"],
       "title": "does not move focus behind a modal dialog to $name when an item hides the menu trigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/dialog/trigger/DialogTrigger.tsx",
-      "reason": "The case renders `Dialog.Trigger` and the other parts of Dialog, which Vase UI does not have."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case presses the trigger, and it checks where the focus goes when the menu closes. The trigger of Vase UI has no press yet, and the popup has no focus management."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
@@ -310,13 +310,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />"],
-      "title": "uses aria-labelledby from a render element",
-      "kind": "not-applicable",
-      "reason": "A part does not see an attribute that a `#render` slot adds. The part reads `aria-labelledby` only from its own attributes."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
@@ -353,8 +346,8 @@
       "describe": ["<Menu.Positioner />", "collision avoidance"],
       "title": "uses the dropdown default for a context menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
-      "reason": "The case renders `ContextMenu`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -376,8 +369,8 @@
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
       "describe": ["<Menu.Positioner />", "layout viewport"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
-      "reason": "The case renders `ContextMenu`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",

@@ -2,26 +2,16 @@
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
     "packages/react/src/utils/popups/floating-root/**",
+    "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx",
     "packages/react/test/popupConformanceTests.tsx"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/utils/popups/inlineRect.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/inlineRect.test.ts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/inlineRect.ts",
-      "reason": "The file tests `inlineRect.ts`."
     },
     {
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",

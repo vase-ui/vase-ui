@@ -685,6 +685,102 @@ describe('<Menu.Positioner />', () => {
     });
   });
 
+  describe('tree of a detached trigger', () => {
+    // The portal keeps the parts mounted, so they are on the tree of the root when the trigger
+    // gives the store another tree.
+    async function renderDetachedMenu(onOpenChange = vi.fn()) {
+      const handle = Menu.createHandle();
+      const probe = createMenuStoreProbe();
+      await render(
+        <div>
+          <ParentNode id="parent">
+            <Menu.Trigger handle={handle} id="detached">
+              Detached
+            </Menu.Trigger>
+          </ParentNode>
+          <Menu.Root handle={handle} onOpenChange={onOpenChange}>
+            <probe.Probe />
+            <Menu.Portal keepMounted>
+              <Menu.Positioner>
+                <Menu.Popup />
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>,
+      );
+      const rootTree = probe.store.select('floatingTreeRoot');
+
+      async function open() {
+        handle.open('detached');
+        await flushMicrotasks();
+        const tree = probe.store.select('floatingTreeRoot');
+        expect(tree).not.toBe(rootTree);
+        return tree;
+      }
+
+      return { handle, probe, rootTree, open };
+    }
+
+    it.each([
+      {
+        name: 'a close event',
+        event: 'close',
+        data: { domEvent: undefined, reason: REASONS.itemPress },
+        reason: REASONS.itemPress,
+      },
+      {
+        name: 'the close of its parent',
+        event: 'menuopenchange',
+        data: { open: false, nodeId: 'parent', parentNodeId: null, reason: REASONS.escapeKey },
+        reason: REASONS.escapeKey,
+      },
+      {
+        name: 'the open of a sibling',
+        event: 'menuopenchange',
+        data: { open: true, nodeId: 'sibling', parentNodeId: 'parent', reason: null },
+        reason: REASONS.siblingOpen,
+      },
+      {
+        name: 'the hover of an item of its parent',
+        event: 'itemhover',
+        data: { nodeId: 'parent', target: document.body },
+        reason: REASONS.siblingOpen,
+      },
+    ])(
+      'listens to the tree that the trigger gives to the menu: $name',
+      async ({ event, data, reason }) => {
+        const onOpenChange = vi.fn();
+        const { open } = await renderDetachedMenu(onOpenChange);
+        const tree = await open();
+        onOpenChange.mockClear();
+
+        tree.events.emit(event, data);
+
+        expect(onOpenChange).toHaveBeenCalledTimes(1);
+        expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+        expect(onOpenChange.mock.lastCall?.[1].reason).toBe(reason);
+      },
+    );
+
+    it('tells the tree that the trigger gives to the menu about each open change', async () => {
+      const { handle, probe, rootTree, open } = await renderDetachedMenu();
+      const onRootTree = vi.fn();
+      rootTree.events.on('menuopenchange', onRootTree);
+
+      const tree = await open();
+      const nodeId = probe.store.select('floatingNodeId');
+      const onTree = vi.fn();
+      tree.events.on('menuopenchange', onTree);
+      handle.close();
+      await flushMicrotasks();
+
+      expect(onTree).toHaveBeenCalledWith(
+        expect.objectContaining({ open: false, nodeId, parentNodeId: 'parent' }),
+      );
+      expect(onRootTree).not.toHaveBeenCalled();
+    });
+  });
+
   it('reports the highlighted item again when the item registry settles', async () => {
     const onItemHighlighted = vi.fn();
     const showItem = shallowRef(false);

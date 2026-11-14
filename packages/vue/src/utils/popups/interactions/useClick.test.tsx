@@ -128,13 +128,6 @@ async function pressMouse(element: Element) {
 // screen reader. A mouse press has both.
 const mousePress = { pointerType: 'mouse', pressure: 0.5, buttons: 1 };
 
-// The pointer of the browser stays where a case leaves it, for each later test.
-function releasePointerAfterTest() {
-  onTestFinished(async () => {
-    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-  });
-}
-
 /** Waits for the frames that the press of a trigger can request, and for the flush after them. */
 async function waitForFrames() {
   await waitSingleFrame();
@@ -439,7 +432,6 @@ describe('useClick in Vue', () => {
 
   describe('the mousedown path', () => {
     it('opens for a real press, and the click of that press does not close the popup', async () => {
-      releasePointerAfterTest();
       const onOpenChange = vi.fn();
       await render(<App event="mousedown" onOpenChange={onOpenChange} />);
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -222,12 +222,13 @@ describe('<Menu.Trigger />', () => {
   describe('prop: handle', () => {
     it('opens the menu of its handle, and reports the open state of its menu', async () => {
       const handle = Menu.createHandle<string>();
+      const onOpenChangeComplete = vi.fn();
       await render(
         <div>
           <Menu.Trigger handle={handle} id="detached" payload="detached payload">
             Detached
           </Menu.Trigger>
-          <Menu.Root handle={handle}>
+          <Menu.Root handle={handle} onOpenChangeComplete={onOpenChangeComplete}>
             {{
               default: ({ payload }: { payload: string | undefined }) => (
                 <Menu.Portal>
@@ -254,8 +255,10 @@ describe('<Menu.Trigger />', () => {
 
       handle.close();
       await waitFor(() => {
-        expect(screen.queryByRole('menu')).toBe(null);
+        expect(onOpenChangeComplete).toHaveBeenCalledWith(false);
       });
+      await flushMicrotasks();
+      expect(screen.queryByRole('menu')).toBe(null);
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
   });
@@ -332,12 +335,14 @@ describe('<Menu.Trigger />', () => {
     it('VUE-55: closes the menu that a trigger in its popup opens when the menu closes', async () => {
       const outer = Menu.createHandle();
       const inner = Menu.createHandle();
+      const onOuterComplete = vi.fn();
+      const onInnerComplete = vi.fn();
       await render(
         <div>
           <Menu.Trigger handle={outer} id="outer-trigger">
             Outer
           </Menu.Trigger>
-          <Menu.Root handle={outer}>
+          <Menu.Root handle={outer} onOpenChangeComplete={onOuterComplete}>
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup data-testid="outer-popup">
@@ -348,7 +353,7 @@ describe('<Menu.Trigger />', () => {
               </Menu.Positioner>
             </Menu.Portal>
           </Menu.Root>
-          <Menu.Root handle={inner}>
+          <Menu.Root handle={inner} onOpenChangeComplete={onInnerComplete}>
             <Menu.Portal>
               <Menu.Positioner>
                 <Menu.Popup data-testid="inner-popup">Inner popup</Menu.Popup>
@@ -364,8 +369,15 @@ describe('<Menu.Trigger />', () => {
 
       outer.close();
 
-      await waitFor(() => expect(screen.queryByTestId('outer-popup')).toBe(null));
-      await waitFor(() => expect(screen.queryByTestId('inner-popup')).toBe(null));
+      await waitFor(() => {
+        expect(onOuterComplete).toHaveBeenCalledWith(false);
+      });
+      await waitFor(() => {
+        expect(onInnerComplete).toHaveBeenCalledWith(false);
+      });
+      await flushMicrotasks();
+      expect(screen.queryByTestId('outer-popup')).toBe(null);
+      expect(screen.queryByTestId('inner-popup')).toBe(null);
     });
 
     it('gives the parent and the keyboard relay of a trigger in a menubar to the menu', async () => {
