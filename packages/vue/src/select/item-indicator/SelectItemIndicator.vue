@@ -20,7 +20,6 @@ export interface SelectItemIndicatorProps
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
   /**
    * Whether to keep the HTML element in the DOM when the item is not selected.
-   * @default false
    */
   keepMounted?: boolean | undefined;
 }
@@ -34,10 +33,7 @@ import { useSelectItemContext } from '../item/SelectItemContext';
 
 defineOptions({ inheritAttrs: false });
 
-withDefaults(defineProps<SelectItemIndicatorProps>(), {
-  as: 'span',
-  keepMounted: false,
-});
+withDefaults(defineProps<SelectItemIndicatorProps>(), { as: 'span' });
 
 defineSlots<{
   default(props: { state: SelectItemIndicatorState }): unknown;

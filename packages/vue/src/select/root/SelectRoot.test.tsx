@@ -618,15 +618,40 @@ describe('<Select.Root />', () => {
     });
 
     it('selects the item whose value the browser fills in, in another case', async () => {
-      const { handleValueChange, result } = renderFonts();
-      await result;
+      const fonts = [
+        { code: 'sans', name: 'Sans-serif' },
+        { code: 'mono', name: 'Monospace' },
+      ];
+      const handleValueChange = vi.fn();
+      await render(
+        <Select.Root
+          name="font"
+          defaultValue={fonts[0]}
+          itemToStringValue={(font) => font.code}
+          itemToStringLabel={(font) => font.name}
+          onValueChange={handleValueChange}
+        >
+          <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {fonts.map((font) => (
+                  <Select.Item key={font.code} value={font}>
+                    {font.name}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
       const input = getHiddenInput();
 
       input.value = 'MONO';
       await fireEvent.change(input);
       await flushMicrotasks();
 
-      expect(handleValueChange.mock.lastCall?.[0]).toBe('mono');
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(fonts[1]);
       expect(input.value).toBe('mono');
     });
 
