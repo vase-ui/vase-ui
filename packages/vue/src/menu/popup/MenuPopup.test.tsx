@@ -13,6 +13,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
@@ -294,6 +295,8 @@ describe('<Menu.Popup />', () => {
 
       await user.click(trigger);
       const item = await screen.findByText('Close');
+      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
+      await waitForLaterMillisecond();
       await fireEvent.pointerDown(item, { pointerType: 'mouse' });
       await fireEvent.click(item, { detail: 1 });
       await waitFor(() => {
