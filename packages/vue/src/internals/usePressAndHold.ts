@@ -72,8 +72,9 @@ export interface UsePressAndHoldReturnValue {
 
 /**
  * Adds press-and-hold behavior to a button element.
- * On pointer down, it calls `tick` at once. After `startDelay`, it calls `tick` again at the
- * interval `tickDelay`. It handles mouse, touch and pen input.
+ * A mouse press calls `tick` at once. A touch press calls `tick` when the touch settles, after
+ * 50 ms. The first repeat comes `startDelay` plus `tickDelay` after that call, and each next
+ * repeat comes `tickDelay` later.
  * Call it in `setup`.
  */
 export function usePressAndHold(parameters: UsePressAndHoldParameters): UsePressAndHoldReturnValue {
