@@ -1003,6 +1003,39 @@ describe('<Menu.Root />', () => {
       expect(probe.store.select('highlightItemOnHover')).toBe(false);
     });
 
+    it('clears the open method when the menu closes, so an open with no press takes the scroll lock', async () => {
+      const handle = Menu.createHandle();
+      await render(
+        <Menu.Root handle={handle}>
+          <Menu.Trigger id="trigger">Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner style={{ width: '240px' }}>
+              <Menu.Popup />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      const trigger = screen.getByRole('button', { name: 'Open' });
+
+      // A touch open of a popup that is narrower than the viewport takes no lock.
+      await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+      await fireEvent.mouseDown(trigger);
+      await screen.findByRole('menu');
+      await wait(0);
+      expect(isScrollLocked(document)).toBe(false);
+
+      handle.close();
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+
+      handle.open('trigger');
+      await screen.findByRole('menu');
+      await waitFor(() => {
+        expect(isScrollLocked(document)).toBe(true);
+      });
+    });
+
     it('warns that a menu in a menubar ignores modal={false}', async () => {
       resetWarnings();
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

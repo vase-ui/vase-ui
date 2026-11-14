@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { computed, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, computed, defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import { Menubar } from '@vase-ui/vue/menubar';
@@ -10,7 +10,9 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
@@ -483,6 +485,75 @@ describe('<Menu.Trigger />', () => {
       await user.keyboard('[Enter]');
 
       expect(screen.queryByRole('menu', { hidden: false })).toBe(null);
+    });
+  });
+
+  describe('press, drag and release', () => {
+    it('does not let a release activate an item after the menu that the press opened closes', async () => {
+      const onClick = vi.fn();
+      const handle = Menu.createHandle();
+      await render(
+        <Menu.Root handle={handle}>
+          <Menu.Trigger id="trigger">Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item onClick={onClick}>Item</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
+      await screen.findByRole('menu');
+      // After 200 ms of a held press, a release over an item activates the item.
+      await wait(250);
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+
+      handle.open('trigger');
+      const item = await screen.findByRole('menuitem');
+      await waitForLaterMillisecond();
+      await fireEvent.mouseUp(item);
+
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('VUE-5: removes the mouseup listener of a press while KeepAlive holds the trigger', async () => {
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
+      onTestFinished(() => {
+        addEventListenerSpy.mockRestore();
+        removeEventListenerSpy.mockRestore();
+      });
+      const visible = shallowRef(true);
+      const Other = defineComponent({ setup: () => () => <span /> });
+      await render(() => (
+        <Menu.Root>
+          <KeepAlive>
+            {visible.value ? (
+              <Menu.Trigger key="trigger">Open</Menu.Trigger>
+            ) : (
+              <Other key="other" />
+            )}
+          </KeepAlive>
+        </Menu.Root>
+      ));
+
+      addEventListenerSpy.mockClear();
+      await fireEvent.mouseDown(screen.getByRole('button', { name: 'Open' }));
+      const mouseUpListener = addEventListenerSpy.mock.calls.find(
+        (call) => call[0] === 'mouseup',
+      )?.[1];
+      expect(mouseUpListener).toBeTypeOf('function');
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('mouseup', mouseUpListener);
     });
   });
 
