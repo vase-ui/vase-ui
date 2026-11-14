@@ -1794,7 +1794,8 @@ describe('<Toast.Viewport />', () => {
     });
 
     it('skips toasts animating out when tabbing into the viewport', async () => {
-      // The exit of a closed toast then waits for a frame of the fake clock, so the toast stays.
+      // With `false`, the exit of a closed toast waits for a frame of the fake clock. The toast thus
+      // stays in the document.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       await render(
         <Toast.Provider>
@@ -1890,7 +1891,8 @@ describe('<Toast.Viewport />', () => {
     });
 
     it('moves focus past toasts animating out when one is closed', async () => {
-      // The exit of a closed toast then waits for a frame of the fake clock, so the toast stays.
+      // With `false`, the exit of a closed toast waits for a frame of the fake clock. The toast thus
+      // stays in the document.
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const manager = Toast.createToastManager();
 
