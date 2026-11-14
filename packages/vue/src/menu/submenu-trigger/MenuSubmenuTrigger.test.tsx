@@ -15,19 +15,257 @@ import type { HTMLProps } from '../../internals/types';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuStore } from '../store/MenuStore';
 
+async function waitForAnimationFrame() {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+  await flushMicrotasks();
+}
+
+describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
+  const { render } = createRenderer();
+
+  function renderSubmenu(
+    props: {
+      root?: Record<string, unknown>;
+      submenuRoot?: Record<string, unknown>;
+      trigger?: Record<string, unknown>;
+    } = {},
+  ) {
+    return render(
+      <Menu.Root open {...props.root}>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup data-testid="parent-menu">
+              <Menu.Item>Alpha</Menu.Item>
+              <Menu.SubmenuRoot {...props.submenuRoot}>
+                <Menu.SubmenuTrigger {...props.trigger}>More</Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner data-testid="submenu-positioner">
+                    <Menu.Popup data-testid="submenu">
+                      <Menu.Item>Beta</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+  }
+
+  async function hover(element: HTMLElement) {
+    await fireEvent.mouseEnter(element);
+    await fireEvent.mouseMove(element);
+  }
+
+  function wait(ms: number) {
+    return new Promise<void>((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  it('opens the submenu on hover, and names the submenu in its attributes', async () => {
+    await renderSubmenu({ trigger: { delay: 0 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await hover(trigger);
+
+    const submenu = await screen.findByTestId('submenu');
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger).toHaveAttribute('aria-controls', submenu.id);
+    expect(trigger).toHaveAttribute('data-popup-open');
+  });
+
+  it('opens on a hover with a delay only after the pointer moved in the parent menu', async () => {
+    await renderSubmenu({ trigger: { delay: 20 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+    await fireEvent.mouseEnter(trigger);
+    await wait(60);
+    await flushMicrotasks();
+    expect(screen.queryByTestId('submenu')).toBe(null);
+
+    await fireEvent.mouseMove(trigger);
+
+    expect(await screen.findByTestId('submenu')).not.toBe(null);
+  });
+
+  it('closes the submenu when the pointer moves over another item of the parent menu', async () => {
+    const onOpenChange = vi.fn();
+    await renderSubmenu({ trigger: { delay: 0 }, submenuRoot: { onOpenChange } });
+    await hover(screen.getByRole('menuitem', { name: 'More' }));
+    await screen.findByTestId('submenu');
+
+    await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'Alpha' }));
+
+    expect(screen.queryByTestId('submenu')).toBe(null);
+    expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+    expect(onOpenChange.mock.lastCall?.[1].reason).toBe('sibling-open');
+  });
+
+  it('stays open when the pointer comes back to its trigger before the close delay ends', async () => {
+    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    const alpha = screen.getByRole('menuitem', { name: 'Alpha' });
+    await hover(trigger);
+    await screen.findByTestId('submenu');
+
+    await fireEvent.mouseMove(alpha);
+    await fireEvent.mouseMove(trigger);
+    await wait(80);
+    await flushMicrotasks();
+    expect(screen.queryByTestId('submenu')).not.toBe(null);
+
+    await fireEvent.mouseMove(alpha);
+    await wait(80);
+    await flushMicrotasks();
+    expect(screen.queryByTestId('submenu')).toBe(null);
+  });
+
+  it('closes a submenu that hover opened when the pointer leaves the submenu, after the close delay', async () => {
+    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
+    await hover(screen.getByRole('menuitem', { name: 'More' }));
+    const positioner = await screen.findByTestId('submenu-positioner');
+
+    await fireEvent.mouseEnter(positioner);
+    await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
+    expect(screen.queryByTestId('submenu')).not.toBe(null);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
+  });
+
+  it('opens the submenu on the first move over the trigger, with no enter event', async () => {
+    await renderSubmenu({ trigger: { delay: 0 } });
+
+    await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'More' }));
+
+    expect(await screen.findByTestId('submenu')).not.toBe(null);
+  });
+
+  it('cancels a hover open that waits for its delay at a mouseout with no mouseleave', async () => {
+    await renderSubmenu({ trigger: { delay: 20 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+    await hover(trigger);
+    await fireEvent.mouseOut(trigger, {
+      relatedTarget: screen.getByRole('menuitem', { name: 'Alpha' }),
+    });
+    await wait(60);
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('submenu')).toBe(null);
+  });
+
+  it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
+    await renderSubmenu({ trigger: { delay: 0 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await hover(trigger);
+    await screen.findByTestId('submenu');
+
+    await fireEvent.click(trigger, { detail: 0 });
+    await waitForAnimationFrame();
+
+    expect(screen.queryByTestId('submenu')).not.toBe(null);
+  });
+
+  it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {
+    await renderSubmenu({ trigger: { delay: 0 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await hover(trigger);
+    await fireEvent.mouseMove(await screen.findByTestId('submenu'));
+
+    await fireEvent.mouseEnter(trigger);
+    await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
+    await waitForAnimationFrame();
+
+    expect(screen.queryByTestId('submenu')).not.toBe(null);
+  });
+
+  it.each([
+    { name: 'a disabled submenu root', props: { submenuRoot: { disabled: true } } },
+    { name: 'a disabled parent menu', props: { root: { disabled: true } } },
+  ])('is disabled by $name', async ({ props }) => {
+    await renderSubmenu(props);
+
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    expect(trigger).toHaveAttribute('data-disabled');
+    expect(trigger).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it.each([
+    { name: 'by default', highlightItemOnHover: true },
+    { name: 'with highlightItemOnHover false', highlightItemOnHover: false },
+  ])(
+    'highlights the trigger when the pointer enters it $name',
+    async ({ highlightItemOnHover }) => {
+      await renderSubmenu({ root: { highlightItemOnHover }, trigger: { openOnHover: false } });
+      const trigger = screen.getByRole('menuitem', { name: 'More' });
+      expect(trigger).not.toHaveAttribute('data-highlighted');
+
+      await fireEvent.mouseEnter(trigger);
+
+      expect(trigger.hasAttribute('data-highlighted')).toBe(highlightItemOnHover);
+    },
+  );
+
+  it('clears the highlight of the trigger when the focus leaves it', async () => {
+    await renderSubmenu({ trigger: { openOnHover: false } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await fireEvent.mouseEnter(trigger);
+    expect(trigger).toHaveAttribute('data-highlighted');
+
+    await fireEvent.focusOut(trigger);
+
+    expect(trigger).not.toHaveAttribute('data-highlighted');
+  });
+
+  it.each([
+    { name: 'while its submenu is open', defaultOpen: true, tabindex: '0' },
+    { name: 'while its submenu is closed', defaultOpen: false, tabindex: '-1' },
+  ])('has the tab stop $name', async ({ defaultOpen, tabindex }) => {
+    await renderSubmenu({ submenuRoot: { defaultOpen } });
+
+    expect(screen.getByRole('menuitem', { name: 'More' })).toHaveAttribute('tabindex', tabindex);
+  });
+
+  it('opens the submenu with a mouse press when openOnHover is false, and a second press closes it', async () => {
+    const { user } = await renderSubmenu({ trigger: { openOnHover: false } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+    await user.click(trigger);
+    expect(await screen.findByTestId('submenu')).not.toBe(null);
+
+    await user.click(trigger);
+    await waitFor(() => {
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
+  });
+
+  it('ignores a mouse press while openOnHover is set', async () => {
+    await renderSubmenu();
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+    await fireEvent.pointerDown(trigger, { pointerType: 'mouse', buttons: 1 });
+    await fireEvent.mouseDown(trigger);
+    await fireEvent.click(trigger, { detail: 1 });
+    await waitForAnimationFrame();
+
+    expect(screen.queryByTestId('submenu')).toBe(null);
+  });
+});
+
 describe('<Menu.SubmenuTrigger />', () => {
   const { render } = createRenderer();
 
   beforeEach(() => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
   });
-
-  async function waitForAnimationFrame() {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => resolve());
-    });
-    await flushMicrotasks();
-  }
 
   afterEach(waitForAnimationFrame);
 
@@ -131,242 +369,6 @@ describe('<Menu.SubmenuTrigger />', () => {
     expect(storeRef.current!.context.triggerElements.getById('first')).toBeUndefined();
     expect(storeRef.current!.context.triggerElements.getById('second')).toBe(submenuTrigger);
     expect(storeRef.current!.context.triggerElements.size).toBe(1);
-  });
-
-  describe('hover and press', () => {
-    function renderSubmenu(
-      props: {
-        root?: Record<string, unknown>;
-        submenuRoot?: Record<string, unknown>;
-        trigger?: Record<string, unknown>;
-      } = {},
-    ) {
-      return render(
-        <Menu.Root open {...props.root}>
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup data-testid="parent-menu">
-                <Menu.Item>Alpha</Menu.Item>
-                <Menu.SubmenuRoot {...props.submenuRoot}>
-                  <Menu.SubmenuTrigger {...props.trigger}>More</Menu.SubmenuTrigger>
-                  <Menu.Portal>
-                    <Menu.Positioner data-testid="submenu-positioner">
-                      <Menu.Popup data-testid="submenu">
-                        <Menu.Item>Beta</Menu.Item>
-                      </Menu.Popup>
-                    </Menu.Positioner>
-                  </Menu.Portal>
-                </Menu.SubmenuRoot>
-              </Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>,
-      );
-    }
-
-    async function hover(element: HTMLElement) {
-      await fireEvent.mouseEnter(element);
-      await fireEvent.mouseMove(element);
-    }
-
-    function wait(ms: number) {
-      return new Promise<void>((resolve) => {
-        setTimeout(resolve, ms);
-      });
-    }
-
-    it('opens the submenu on hover, and names the submenu in its attributes', async () => {
-      await renderSubmenu({ trigger: { delay: 0 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-
-      await hover(trigger);
-
-      const submenu = await screen.findByTestId('submenu');
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');
-      expect(trigger).toHaveAttribute('aria-controls', submenu.id);
-      expect(trigger).toHaveAttribute('data-popup-open');
-    });
-
-    it('opens on a hover with a delay only after the pointer moved in the parent menu', async () => {
-      await renderSubmenu({ trigger: { delay: 20 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-
-      await fireEvent.mouseEnter(trigger);
-      await wait(60);
-      await flushMicrotasks();
-      expect(screen.queryByTestId('submenu')).toBe(null);
-
-      await fireEvent.mouseMove(trigger);
-
-      expect(await screen.findByTestId('submenu')).not.toBe(null);
-    });
-
-    it('closes the submenu when the pointer moves over another item of the parent menu', async () => {
-      const onOpenChange = vi.fn();
-      await renderSubmenu({ trigger: { delay: 0 }, submenuRoot: { onOpenChange } });
-      await hover(screen.getByRole('menuitem', { name: 'More' }));
-      await screen.findByTestId('submenu');
-
-      await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'Alpha' }));
-
-      expect(screen.queryByTestId('submenu')).toBe(null);
-      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
-      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('sibling-open');
-    });
-
-    it('stays open when the pointer comes back to its trigger before the close delay ends', async () => {
-      await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      const alpha = screen.getByRole('menuitem', { name: 'Alpha' });
-      await hover(trigger);
-      await screen.findByTestId('submenu');
-
-      await fireEvent.mouseMove(alpha);
-      await fireEvent.mouseMove(trigger);
-      await wait(80);
-      await flushMicrotasks();
-      expect(screen.queryByTestId('submenu')).not.toBe(null);
-
-      await fireEvent.mouseMove(alpha);
-      await wait(80);
-      await flushMicrotasks();
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
-
-    it('closes a submenu that hover opened when the pointer leaves the submenu, after the close delay', async () => {
-      await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
-      await hover(screen.getByRole('menuitem', { name: 'More' }));
-      const positioner = await screen.findByTestId('submenu-positioner');
-
-      await fireEvent.mouseEnter(positioner);
-      await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
-      expect(screen.queryByTestId('submenu')).not.toBe(null);
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu')).toBe(null);
-      });
-    });
-
-    it('opens the submenu on the first move over the trigger, with no enter event', async () => {
-      await renderSubmenu({ trigger: { delay: 0 } });
-
-      await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'More' }));
-
-      expect(await screen.findByTestId('submenu')).not.toBe(null);
-    });
-
-    it('cancels a hover open that waits for its delay at a mouseout with no mouseleave', async () => {
-      await renderSubmenu({ trigger: { delay: 20 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-
-      await hover(trigger);
-      await fireEvent.mouseOut(trigger, {
-        relatedTarget: screen.getByRole('menuitem', { name: 'Alpha' }),
-      });
-      await wait(60);
-      await flushMicrotasks();
-
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
-
-    it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
-      await renderSubmenu({ trigger: { delay: 0 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      await hover(trigger);
-      await screen.findByTestId('submenu');
-
-      await fireEvent.click(trigger, { detail: 0 });
-      await waitForAnimationFrame();
-
-      expect(screen.queryByTestId('submenu')).not.toBe(null);
-    });
-
-    it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {
-      await renderSubmenu({ trigger: { delay: 0 } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      await hover(trigger);
-      await fireEvent.mouseMove(await screen.findByTestId('submenu'));
-
-      await fireEvent.mouseEnter(trigger);
-      await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
-      await waitForAnimationFrame();
-
-      expect(screen.queryByTestId('submenu')).not.toBe(null);
-    });
-
-    it.each([
-      { name: 'a disabled submenu root', props: { submenuRoot: { disabled: true } } },
-      { name: 'a disabled parent menu', props: { root: { disabled: true } } },
-    ])('is disabled by $name', async ({ props }) => {
-      await renderSubmenu(props);
-
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      expect(trigger).toHaveAttribute('data-disabled');
-      expect(trigger).toHaveAttribute('aria-disabled', 'true');
-    });
-
-    it.each([
-      { name: 'by default', highlightItemOnHover: true },
-      { name: 'with highlightItemOnHover false', highlightItemOnHover: false },
-    ])(
-      'highlights the trigger when the pointer enters it $name',
-      async ({ highlightItemOnHover }) => {
-        await renderSubmenu({ root: { highlightItemOnHover }, trigger: { openOnHover: false } });
-        const trigger = screen.getByRole('menuitem', { name: 'More' });
-        expect(trigger).not.toHaveAttribute('data-highlighted');
-
-        await fireEvent.mouseEnter(trigger);
-
-        expect(trigger.hasAttribute('data-highlighted')).toBe(highlightItemOnHover);
-      },
-    );
-
-    it('clears the highlight of the trigger when the focus leaves it', async () => {
-      await renderSubmenu({ trigger: { openOnHover: false } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      await fireEvent.mouseEnter(trigger);
-      expect(trigger).toHaveAttribute('data-highlighted');
-
-      await fireEvent.focusOut(trigger);
-
-      expect(trigger).not.toHaveAttribute('data-highlighted');
-    });
-
-    it.each([
-      { name: 'while its submenu is open', defaultOpen: true, tabindex: '0' },
-      { name: 'while its submenu is closed', defaultOpen: false, tabindex: '-1' },
-    ])('has the tab stop $name', async ({ defaultOpen, tabindex }) => {
-      await renderSubmenu({ submenuRoot: { defaultOpen } });
-
-      expect(screen.getByRole('menuitem', { name: 'More' })).toHaveAttribute('tabindex', tabindex);
-    });
-
-    it('opens the submenu with a mouse press when openOnHover is false, and a second press closes it', async () => {
-      const { user } = await renderSubmenu({ trigger: { openOnHover: false } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-
-      await user.click(trigger);
-      expect(await screen.findByTestId('submenu')).not.toBe(null);
-
-      await user.click(trigger);
-      await waitFor(() => {
-        expect(screen.queryByTestId('submenu')).toBe(null);
-      });
-    });
-
-    it('ignores a mouse press while openOnHover is set', async () => {
-      await renderSubmenu();
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-
-      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', buttons: 1 });
-      await fireEvent.mouseDown(trigger);
-      await fireEvent.click(trigger, { detail: 1 });
-      await waitForAnimationFrame();
-
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
   });
 
   describe('prop: disabled', () => {
