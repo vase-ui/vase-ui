@@ -31,7 +31,7 @@ export type MenuFilterKeyAction =
   | 'block'
   /**
    * The popup closes, and the focus returns to where it came from. The focus also returns when a
-   * handler cancels the close.
+   * handler cancels the close, except in a root context menu.
    */
   | 'close'
   /** The key belongs to an IME composition or leaves the popup (Tab). */
@@ -228,9 +228,10 @@ export function useMenuFilterKeyDown(
         break;
       case 'close': {
         // As in a plain menu, Shift+Tab asks for the close and returns the focus, also when a
-        // handler cancels the close. A submenu returns the focus to the element that had it in the
-        // parent menu. When the parent is filterable too, that element is the input of the parent,
-        // not the trigger, which is not in the tab order.
+        // handler cancels the close. A root context menu has no active trigger element, so a
+        // canceled close keeps the focus in its modal popup. A submenu returns the focus to the
+        // element that had it in the parent menu. When the parent is filterable too, that element
+        // is the input of the parent, not the trigger, which is not in the tab order.
         stopEvent(event);
         const returnElement =
           (store.state.parent.type === 'menu' && submenuContext?.getReturnElement?.()) ||
