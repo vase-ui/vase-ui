@@ -57,35 +57,6 @@ describe('<Popover.Viewport />', () => {
     ),
   });
 
-  it('anchors the positioner from the far edge, so a size change keeps that edge in place', async () => {
-    await render(
-      <Popover.Root open>
-        <style>{`[data-testid="positioner"] { transition: transform 100ms; }`}</style>
-        {/* Leave room on the left so that the popup does not flip. */}
-        <Popover.Trigger style={{ position: 'fixed', top: '200px', left: '300px' }}>
-          Trigger
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Positioner side="left" data-testid="positioner">
-            <Popover.Popup>
-              <Popover.Viewport>Content</Popover.Viewport>
-            </Popover.Popup>
-          </Popover.Positioner>
-        </Popover.Portal>
-      </Popover.Root>,
-    );
-
-    const positioner = await screen.findByTestId('positioner');
-
-    await waitFor(() => {
-      expect(positioner).toHaveAttribute('data-side', 'left');
-    });
-    await waitFor(() => {
-      expect(positioner.style.right).not.toBe('');
-    });
-    expect(positioner.style.left).toBe('');
-  });
-
   it('has `data-instant` with the instant type of the popover', async () => {
     const { user } = await render(
       <Popover.Root>

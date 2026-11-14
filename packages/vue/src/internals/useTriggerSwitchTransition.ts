@@ -26,9 +26,10 @@ export interface UseTriggerSwitchTransitionParameters {
 /**
  * Lets the positioner animate while a popup moves between detached triggers.
  *
- * The positioner is normally instant, so a move from one trigger to another would jump. The
+ * The positioner has `data-instant` while `instantType` is set. A style of the consumer can turn
+ * the transitions off with that attribute, and a move to another trigger would then jump. The
  * composable clears `instantType` for the time of the move, so that the positioner can
- * transition. It sets `trigger-change` again when the animations of the move end.
+ * transition. It sets `trigger-change` when the animations of the move end.
  *
  * That write waits for the animations, so it can outlive the move that scheduled it. The popup
  * keeps its trigger element through the exit transition, so a close does not change

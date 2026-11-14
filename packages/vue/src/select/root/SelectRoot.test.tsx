@@ -2867,7 +2867,7 @@ describe('<Select.Root />', () => {
           <Popover.Trigger>Open popover</Popover.Trigger>
           <Popover.Portal>
             <Popover.Positioner>
-              <Popover.Popup data-testid="popover-popup">
+              <Popover.Popup data-testid="popover-popup" initialFocus={false}>
                 <Select.Root>
                   <Select.Label>Apple</Select.Label>
                   <Select.Trigger data-testid="select-trigger">

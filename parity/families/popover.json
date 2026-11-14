@@ -11,37 +11,31 @@
       "reason": "The file is the entry point of Popover. It exports the parts. Vase UI does not have all of them."
     },
     {
-      "upstream": "packages/react/src/popover/viewport/PopoverViewport.tsx",
+      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
       "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/popover/viewport/PopoverViewportCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/popover/viewport/PopoverViewportDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/popover/viewport/PopoverViewport.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "Each case of the file renders `Popover.Viewport`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The cases of the file that are not ported yet have no counterpart. Vase UI ports them with the entry point of Popover."
     },
     {
       "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
+      "describe": ["<Popover.Root />", "when using $name", "nested menu interactions"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. Many of them need the viewport of Popover, which Vase UI does not have. Vase UI ports them after `Popover.Viewport`, the last part of the family, so the row names its file."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases open a nested menu with a press and with the Enter key. The trigger of Menu in Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
+      "describe": ["<Popover.Root />", "when using $name", "non-modal focus transitions"],
+      "title": "moves focus to the next element when tabbing out of a nested menu inside the popover",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger of a nested menu to open it. The trigger of Menu in Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. Many of them need the viewport of Popover, which Vase UI does not have. Vase UI ports them after `Popover.Viewport`, the last part of the family, so the row names its file."
+      "waitsOn": "packages/react/src/popover/index.ts",
+      "reason": "The cases of the file that are not ported yet have no counterpart. Vase UI ports them with the entry point of Popover."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",

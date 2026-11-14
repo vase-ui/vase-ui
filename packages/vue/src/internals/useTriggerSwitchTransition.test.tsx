@@ -159,13 +159,15 @@ describe('useTriggerSwitchTransition', () => {
     expect(harness.writes).toEqual(writes);
   });
 
-  it('does not set `trigger-change` when the popup closes while a move waits for the animations', async () => {
+  it('does not set `trigger-change` when the popup closes and opens again while a move waits for the animations', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     const harness = createHarness({ instantType: 'click' });
     await render(<harness.Part />);
     await harness.move(harness.second);
 
     harness.setOpen(false);
+    await flushMicrotasks();
+    harness.setOpen(true);
     await flushMicrotasks();
     harness.finishAnimations();
     await flushMicrotasks();

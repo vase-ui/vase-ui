@@ -1070,7 +1070,7 @@ describe('<Popover.Root />', () => {
             <input type="text" data-testid="first-input" />
             <TestPopover
               triggerProps={{ openOnHover: true, delay: 0, closeDelay: 0 }}
-              popupProps={{ class: 'popup', children: () => null }}
+              popupProps={{ class: 'popup' }}
             />
             <input type="text" data-testid="last-input" />
           </div>,
