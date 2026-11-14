@@ -9,6 +9,7 @@ import type {
   UseRenderElementReturnValue,
 } from '../../../internals/useRenderElement';
 import { createAttribute } from '../createAttribute';
+import { useDismissPortal } from '../interactions/useDismiss';
 import { usePortalContext } from './FloatingPortalContext';
 
 const attr = createAttribute('portal');
@@ -111,6 +112,8 @@ export function useFloatingPortalNode(
     props: (attrs) => [{ id: uniqueId, [attr]: '' }, params.props?.(), attrs],
     children: params.children,
   });
+
+  useDismissPortal(element);
 
   return { element, elementProps, containerElement, deactivated };
 }
