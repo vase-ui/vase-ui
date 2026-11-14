@@ -241,9 +241,11 @@ A part that Base UI takes from another family is exported again and not copied: 
 - If your element needs a ref of your own, call `props.ref` in a function ref: `:ref="(el) => { props.ref(el); own = el }"`.
 - The setter must make no change when it gets the same element again. Vue calls a function ref again on each patch.
 - In a Vapor component (`<script setup vapor>`), bind the setter by name: `<a v-bind="props" :ref="props.ref">`. Vapor drops the `ref` key of a bound object. It gives no warning.
-- A development build shows a warning when the `#render` slot of a part gives no element.
+- A development build shows a warning when the `#render` slot of a part gives no element and no component to the `ref` setter.
+- A component in the slot can set its exposed `element` later. A component whose exposed `element` is empty at the check thus gets no warning.
 - The part makes the check after each render in which the slot appears. A part with no element at mount thus gets the check when it renders its element.
 - If a consumer gives `as` and `#render`, `#render` wins. A development build shows a warning.
+- The part makes this check after each render. A consumer can give `as` or `#render` after the mount, and the check then shows the warning too.
 - Vue removes a function that is given as `class`. This is the reason for `stateClass` and `stateStyle`.
 - A part can have declarations that must win over `style` and `stateStyle`. The part gives them to `useRenderElement` as `overridingStyle`, a function that returns a style object or `undefined`. The composable merges the result last. `undefined` or an empty object adds no `style` key.
 - `Collapsible.Panel` gives `animation-name: none` and its temporary declarations in this way. See [What differs from the React source](#what-differs-from-the-react-source).
@@ -321,6 +323,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
+- The mark of `markChildrenMounted()` ends when `<Part>Children.vue` unmounts. Each later appearance of the slot thus gets the check too.
 - The Viewport part of a popup family that calls `usePopupViewport` has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model. `NavigationMenu.Viewport` does not call `usePopupViewport`. With no positioner, `NavigationMenuViewportChildren.vue` renders the two focus guards and the target element of the content. In a positioner, it renders only its default slot. The part then keeps the two focus guards before and after its element with `useElementSiblings`, so the part has one root node. See [Focus helpers](#focus-helpers).
 
 <!-- prettier-ignore -->
@@ -393,7 +396,8 @@ One helper, `resolveElement(value)`, changes a value into an element:
 Rules:
 
 - The `ref` setter of a part calls `resolveElement`. Thus `as="RouterLink"` and `<RouterLink v-bind="props">` work.
-- A part calls `resolveElement` again at mount. A component can set its exposed `element` after its render. At mount, the element exists.
+- A part calls `resolveElement` again after each of its renders, in `onMounted` and in `onUpdated`. A component can set its exposed `element` after its render, also in its own `onMounted`. Vue runs the `onMounted` hook of a child before the `onMounted` or `onUpdated` hook of its parent, so the element exists then.
+- A component that sets its exposed `element` later than its own `onMounted`, such as after an `await`, exposes the element as a ref. The `ref` setter of the part reads that ref in the render that patches the component. Vue runs that render again when the ref changes, so the part gets the element.
 - The ref of a component with no `expose` also gives access to its props. `resolveElement` compares `element` with the prop of that name in `$props`. When the two are the same value, it reads `$el`.
 - The SFC compiler adds an empty `expose()` call to a `<script setup>` component with no `defineExpose`. It adds no call when it compiles the template inline, as a production build does. The rule above gives the two builds the same element.
 - A prop that takes an element accepts `MaybeRefOrGetter<Element | ComponentPublicInstance | null>` and upstream's other forms. Examples are `anchor`, `container`, `initialFocus`, `finalFocus` and `collisionBoundary`.
@@ -1037,7 +1041,9 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - `Combobox.Portal` has the `keepMounted` prop and provides it. It also renders while `forceMounted` of the store is set.
 - `FloatingPortal` provides `PortalContext`. The context holds the portal element, four guards and `setFocusManagerState()`.
 - The focus manager of the popup calls `setFocusManagerState()` with its state, and with `null` when it goes away. It gives a new object for each change, because the portal does not see a change in an object.
-- While the state says that the popup is open and not modal, the portal renders an owner element. It also renders two guards while the state has no next focusable element. The sequence in the place of the part is guard, owner element, `Teleport`, guard. `KeepAlive` takes the guards and the owner element out of the document with the part.
+- While the state says that the popup is open and not modal, the portal keeps an owner element in the place of the part. It also keeps two guards there while the state has no next focusable element. The sequence is guard, owner element, `Teleport`, guard. `KeepAlive` takes the guards and the owner element out of the document with the part.
+- The template does not hold the guards and the owner element, so the part has one root node: its `Teleport`. Script makes the nodes and gives them to `useElementSiblings`. A ref of the `Teleport` gives the node that marks its place, and the composable keeps the nodes beside that node. See [Focus helpers](#focus-helpers).
+- Vue 3.5.41 and later give a `<Transition>` of the consumer to the element in a `Teleport` that is the root node of a component. In Vue 3.6, they do this from 3.6.0-rc.3. With the `#render` slot, the child of the `Teleport` is the fragment of the slot, and Vue warns that it cannot animate the part. Vue gives a scope id, `v-show` and a custom directive only to a root node that is an element or a component. They thus do not reach the portal element in any version. The JSDoc of each portal part says this. It names the `#render` slot, a CSS module and a `style` binding.
 - A Popover or a Menu whose trigger has focus guards gives the guard after its trigger as the next focusable element. The popup thus has one place in the tab order. A second pair of guards at the place of the portal would give it a second place. A popup with no next focusable element, such as a submenu, keeps the guards of its portal.
 - The first guard sends the focus from outside the popup to the first inside guard. It sends the focus from inside the popup to the tabbable before the guard. When no tabbable comes before the guard, it sends the focus to `domReference` of the state of the focus manager.
 - The last guard sends the focus from outside the popup to the last inside guard. It sends the focus from inside the popup to the tabbable after the guard. When no tabbable comes after the guard, it sends the focus to `domReference` of the state of the focus manager. It closes the popup when `closeOnFocusOut` is `true`.
@@ -2035,6 +2041,11 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `look.css` gives `.Layout`, the root of the site, `isolation: isolate`, as the quick start of Base UI tells an app to do. A popup of a demo is outside `.Layout`, so it shows above each element of the page, the navigation bar included. Without the rule, a code block of VitePress, which has a `z-index`, shows above the popup.
 - Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
 - Base UI uses a commercial font. The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
+- `docs/public` holds the files that the site serves as they are. `wordmark-light.svg` and `wordmark-dark.svg` are the wordmark: the mark and the words `Vase UI`, in black ink and in white ink. The two files differ only in the ink. Change them together.
+- The words of the wordmark are outlines of Inter Medium. An SVG file in an `<img>` cannot load an external font. Do not write the words as text.
+- The navigation bar shows the wordmark as the link to the home page, through `themeConfig.logo` in `docs/.vitepress/config.ts`. `siteTitle: false` removes the title text. The `alt` text is the name of the link.
+- The heading of `README.md` shows the same two files. Name them by an absolute address on `raw.githubusercontent.com` at `main`. npm shows a copy of `README.md` from the package, and the package has no `docs/public` folder. Do not move or rename the two files, because the `README.md` of each published version names them at `main`.
+- `pnpm test:docs` checks the wordmark. It fails when the heading of `README.md` does not name two files that exist. It fails when `themeConfig.logo` does not name two files of `docs/public`. It fails when an address in the heading is not on `raw.githubusercontent.com` at `main`. It fails when the two files differ in more than the ink.
 - `markdown.colorReplacements` in `docs/.vitepress/config.ts` changes the colors of the GitHub themes of Shiki to the syntax colors of Base UI.
 - A heading of level 2 to 6 can end with `[New]` or `[Preview]`, as on a Base UI page. `docs/.vitepress/markdownHeadingBadge.ts` shows that word as a badge. The slug, the permalink label and the outline do not have the word, so the link to `### Filtering [Preview]` is `#filtering`. A heading of level 1 does not take a badge.
 - `postcssIsolateStyles` in `docs/.vitepress/config.ts` also covers each style sheet in `docs/.vitepress/theme`, so a rule there does not reach a demo. For the same reason, a rule there cannot style the frame of a demo. Put that rule in `DemoFrame.vue`.
