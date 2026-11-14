@@ -1,6 +1,6 @@
 {
-  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "describe": "v1.9.0-149-g5aacdbb7",
+  "commit": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
+  "describe": "v1.9.0-152-g315eba7a",
   "release": "1.9.0",
   "components": [
     "accordion",
@@ -61,6 +61,34 @@
         "docs/src/app/(docs)/react/components/popover/demos/open-on-hover/css-modules/index.tsx",
         "docs/src/app/(docs)/react/components/popover/demos/open-on-hover/tailwind/index.tsx",
         "docs/src/app/(docs)/react/components/popover/page.mdx"
+      ]
+    },
+    {
+      "sha": "d3a4748c726c6b9797b436a76c7fcfe0d47eae61",
+      "date": "2026-11-12T07:14:20+01:00",
+      "subject": "[toast][drawer] Deduplicate swipe dismissal math (#6153)",
+      "paths": [
+        "packages/react/src/toast/root/ToastRoot.test.tsx",
+        "packages/react/src/toast/root/ToastRoot.tsx",
+        "packages/react/src/utils/useSwipeDismiss.ts"
+      ]
+    },
+    {
+      "sha": "fb9fbbf35e72bd4a5494b678c85d2ea0457fed60",
+      "date": "2026-11-12T09:14:15Z",
+      "subject": "[docs] Reframe preventBaseUIHandler as a supported control lever (#6215)",
+      "paths": [
+        "docs/src/app/(docs)/react/handbook/customization/page.mdx"
+      ]
+    },
+    {
+      "sha": "315eba7a3d8a0a53d47fe7b902cb75daa21f6814",
+      "date": "2026-11-13T11:25:43Z",
+      "subject": "[useDismiss] Ignore presses inside layers opened later (#6108)",
+      "paths": [
+        "packages/react/src/popover/root/PopoverRoot.test.tsx",
+        "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
+        "packages/react/src/utils/popups/interactions/useDismiss.ts"
       ]
     }
   ]
