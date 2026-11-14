@@ -14,6 +14,8 @@ import {
 import { REASONS } from '../../internals/reasons';
 import type { HTMLProps, VaseUIEvent } from '../../internals/types';
 import * as Drawer from '../index.parts';
+import { useDrawerProviderContext } from '../provider/DrawerProviderContext';
+import { useDrawerRootContext } from '../root/DrawerRootContext';
 
 type Point = { clientX: number; clientY: number };
 
@@ -40,15 +42,12 @@ function createTouch(target: EventTarget, point: Point): Touch | Point {
   }
 }
 
-function setHeight(element: HTMLElement | null, value: number) {
-  if (element) {
-    Object.defineProperty(element, 'offsetHeight', { configurable: true, value });
-  }
-}
-
-// The viewport and the popup measure their height with `offsetHeight`. The function ref of the
-// `#render` slot gives the element its height before the part measures it.
-function renderWithHeight(height: number, children: () => VNodeChild) {
+// The viewport and the popup measure their size with `offsetHeight` and `offsetWidth`. The function
+// ref of the `#render` slot gives the element its size before the part measures it.
+function renderWithSize(
+  size: { offsetHeight?: number; offsetWidth?: number },
+  children: () => VNodeChild,
+) {
   let measured: Element | null = null;
   return ({ props }: { props: HTMLProps }) => (
     <div
@@ -57,7 +56,9 @@ function renderWithHeight(height: number, children: () => VNodeChild) {
         props.ref(element);
         if (element instanceof HTMLElement && element !== measured) {
           measured = element;
-          setHeight(element, height);
+          for (const [property, value] of Object.entries(size)) {
+            Object.defineProperty(element, property, { configurable: true, value });
+          }
         }
       }}
     >
@@ -1991,11 +1992,11 @@ describe('<Drawer.Viewport />', () => {
             <Drawer.Viewport
               data-testid="viewport"
               v-slots={{
-                render: renderWithHeight(400, () => (
+                render: renderWithSize({ offsetHeight: 400 }, () => (
                   <Drawer.Popup
                     data-testid="popup"
                     v-slots={{
-                      render: renderWithHeight(200, () => (
+                      render: renderWithSize({ offsetHeight: 200 }, () => (
                         <div
                           data-testid="scroll"
                           data-vase-ui-swipe-ignore={kind === 'axis ignore marker' ? 'x' : undefined}
@@ -2481,6 +2482,1807 @@ describe('<Drawer.Viewport />', () => {
 
     expect(dispatched).toBe(true);
     expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('toggles data-swiping on the backdrop while swiping', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 8,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 8,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('cancels pointer drags and ignores compatibility touch pointer cancellation', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 20,
+      pointerType: 'mouse',
+    });
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    await fireEvent.pointerCancel(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 20,
+      pointerType: 'mouse',
+    });
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+
+    await fireEvent.pointerDown(viewport, { pointerId: 2, pointerType: 'touch' });
+    await fireEvent.pointerCancel(viewport, { pointerId: 2, pointerType: 'touch' });
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('ignores touchstart when there is no active touch', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup>Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    await fireTouch.start(screen.getByTestId('viewport'), { touches: [] });
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+  });
+
+  it('uses regular horizontal dismissal when snap points are configured', async () => {
+    const handleOpenChange = vi.fn();
+    await render(
+      <Drawer.Root
+        open
+        onOpenChange={handleOpenChange}
+        snapPoints={['100px', '200px']}
+        swipeDirection="left"
+      >
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup
+              data-testid="popup"
+              v-slots={{ render: renderWithSize({ offsetWidth: 200 }, () => 'Drawer') }}
+            />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 180,
+      clientY: 10,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 179,
+      clientY: 10,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 40,
+      clientY: 10,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 40,
+      clientY: 10,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(false, expect.anything());
+  });
+
+  it('does not dismiss from a fast swipe that was never attributed to the snap point axis', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn();
+
+    vi.useFakeTimers();
+    try {
+      // The taller point is declared first so the expected settle target is not simply the
+      // first resolved snap point.
+      await render(
+        <Drawer.Root
+          open
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['200px', '100px']}
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 400 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const popup = screen.getByTestId('popup');
+      stubElementFromPoint(document, () => popup);
+
+      // A mostly horizontal flick: cumulative |deltaX| stays above |deltaY| on every
+      // move so no swipe direction is ever attributed, while the final samples carry
+      // fast downward velocity from the finger arcing down at lift.
+      await firePointer.down(viewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 10,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 120,
+        clientY: 12,
+        pointerType: 'mouse',
+        timeStamp: 1050,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 200,
+        clientY: 20,
+        pointerType: 'mouse',
+        timeStamp: 1100,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 240,
+        clientY: 55,
+        pointerType: 'mouse',
+        timeStamp: 1120,
+      });
+      await firePointer.up(viewport, {
+        pointerId: 1,
+        clientX: 240,
+        clientY: 55,
+        pointerType: 'mouse',
+        timeStamp: 1130,
+      });
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      // The release settles on the nearest snap point rather than dismissing.
+      expect(handleSnapPointChange).not.toHaveBeenCalledWith(null, expect.anything());
+      expect(handleSnapPointChange).toHaveBeenCalledWith('100px', expect.anything());
+      expect(popup).not.toHaveAttribute('data-ending-style');
+      expect(popup).not.toHaveAttribute('data-swipe-dismiss');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('navigates snap points from a drag that was never attributed to the swipe axis', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn();
+
+    await render(
+      <Drawer.Root
+        open
+        onOpenChange={handleOpenChange}
+        onSnapPointChange={handleSnapPointChange}
+        snapPoints={['100px', '200px']}
+        swipeDirection="down"
+      >
+        <Drawer.Portal>
+          <Drawer.Viewport
+            data-testid="viewport"
+            v-slots={{
+              render: renderWithSize({ offsetHeight: 400 }, () => (
+                <Drawer.Popup
+                  data-testid="popup"
+                  v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                />
+              )),
+            }}
+          />
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    // A sustained diagonal drag: cumulative |deltaX| stays above |deltaY| on every
+    // move so no direction is attributed, while the vertical component drags the
+    // sheet 150px upward toward the taller snap point.
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 300,
+      clientY: 300,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 280,
+      clientY: 290,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 200,
+      clientY: 220,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 140,
+      clientY: 150,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 140,
+      clientY: 150,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(handleSnapPointChange).toHaveBeenCalledWith('200px', expect.anything());
+    expect(handleOpenChange).not.toHaveBeenCalled();
+    expect(popup).not.toHaveAttribute('data-ending-style');
+  });
+
+  it('clears nested swipe state after an unattributed snap point gesture', async () => {
+    await render(
+      <Drawer.Root open swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root open snapPoints={['100px', '200px']} swipeDirection="down">
+                <Drawer.Portal>
+                  <Drawer.Viewport
+                    data-testid="child-viewport"
+                    v-slots={{
+                      render: renderWithSize({ offsetHeight: 400 }, () => (
+                        <Drawer.Popup
+                          data-testid="child-popup"
+                          v-slots={{
+                            render: renderWithSize({ offsetHeight: 300 }, () => 'Child'),
+                          }}
+                        />
+                      )),
+                    }}
+                  />
+                </Drawer.Portal>
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const parentPopup = screen.getByTestId('parent-popup');
+    const childPopup = screen.getByTestId('child-popup');
+    const childViewport = screen.getByTestId('child-viewport');
+    stubElementFromPoint(document, () => childPopup);
+
+    await fireEvent.pointerDown(childViewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 10,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(childViewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 120,
+      clientY: 12,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(childViewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 200,
+      clientY: 30,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(parentPopup).toHaveAttribute('data-nested-drawer-swiping', '');
+    expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).not.toBe('0');
+
+    await fireEvent.pointerUp(childViewport, {
+      pointerId: 1,
+      clientX: 200,
+      clientY: 30,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(parentPopup).not.toHaveAttribute('data-nested-drawer-swiping');
+  });
+
+  it('clears nested swipe state after an attributed drag settles on a snap point', async () => {
+    vi.useFakeTimers();
+    try {
+      await render(
+        <Drawer.Root open swipeDirection="down">
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup data-testid="parent-popup">
+                <Drawer.Root open snapPoints={['100px', '200px']} swipeDirection="down">
+                  <Drawer.Portal>
+                    <Drawer.Viewport
+                      data-testid="child-viewport"
+                      v-slots={{
+                        render: renderWithSize({ offsetHeight: 400 }, () => (
+                          <Drawer.Popup
+                            data-testid="child-popup"
+                            v-slots={{
+                              render: renderWithSize({ offsetHeight: 300 }, () => 'Child'),
+                            }}
+                          />
+                        )),
+                      }}
+                    />
+                  </Drawer.Portal>
+                </Drawer.Root>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const parentPopup = screen.getByTestId('parent-popup');
+      const childPopup = screen.getByTestId('child-popup');
+      const childViewport = screen.getByTestId('child-viewport');
+      stubElementFromPoint(document, () => childPopup);
+
+      // A straight-down drag, so the swipe direction is attributed, ending in a
+      // slight upward reversal: the reversal flips the sampled release velocity
+      // against the drag so the release resolves through the slow fallback velocity
+      // and settles back on the snap point in both test environments.
+      await firePointer.down(childViewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 10,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(childViewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 24,
+        pointerType: 'mouse',
+        timeStamp: 1050,
+      });
+      await firePointer.move(childViewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 48,
+        pointerType: 'mouse',
+        timeStamp: 1150,
+      });
+      await flushMicrotasks();
+
+      expect(parentPopup).toHaveAttribute('data-nested-drawer-swiping', '');
+      expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).not.toBe('0');
+
+      await firePointer.move(childViewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 44,
+        pointerType: 'mouse',
+        timeStamp: 1250,
+      });
+      await firePointer.up(childViewport, {
+        pointerId: 1,
+        clientX: 100,
+        clientY: 44,
+        pointerType: 'mouse',
+        timeStamp: 1600,
+      });
+      await flushMicrotasks();
+
+      expect(childPopup).not.toHaveAttribute('data-ending-style');
+      expect(childPopup).not.toHaveAttribute('data-swipe-dismiss');
+      expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+      expect(parentPopup).not.toHaveAttribute('data-nested-drawer-swiping');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not dismiss from an unattributed fast swipe with snapToSequentialPoints', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn();
+
+    vi.useFakeTimers();
+    try {
+      await render(
+        <Drawer.Root
+          open
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['100px', '200px']}
+          snapToSequentialPoints
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 400 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const popup = screen.getByTestId('popup');
+      stubElementFromPoint(document, () => popup);
+
+      // Same mostly horizontal flick as the non-sequential test, released from the
+      // most-collapsed snap point so the sequential branch has no adjacent point to
+      // advance to and decides to close.
+      await firePointer.down(viewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 10,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 120,
+        clientY: 12,
+        pointerType: 'mouse',
+        timeStamp: 1050,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 200,
+        clientY: 20,
+        pointerType: 'mouse',
+        timeStamp: 1100,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 240,
+        clientY: 55,
+        pointerType: 'mouse',
+        timeStamp: 1120,
+      });
+      await firePointer.up(viewport, {
+        pointerId: 1,
+        clientX: 240,
+        clientY: 55,
+        pointerType: 'mouse',
+        timeStamp: 1130,
+      });
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(handleSnapPointChange).not.toHaveBeenCalledWith(null, expect.anything());
+      expect(handleSnapPointChange).toHaveBeenCalledWith('100px', expect.anything());
+      expect(popup).not.toHaveAttribute('data-ending-style');
+      expect(popup).not.toHaveAttribute('data-swipe-dismiss');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not start swipe dismissal when closing the snap point is canceled', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn(
+      (
+        nextSnapPoint: Drawer.Root.SnapPoint | null,
+        eventDetails: Drawer.Root.SnapPointChangeEventDetails,
+      ) => {
+        if (nextSnapPoint === null) {
+          eventDetails.cancel();
+        }
+      },
+    );
+
+    vi.useFakeTimers();
+    try {
+      await render(
+        <Drawer.Root
+          open
+          defaultSnapPoint="100px"
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['100px', '200px']}
+          snapToSequentialPoints
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 400 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const popup = screen.getByTestId('popup');
+      const releaseAttributes: string[] = [];
+      const observer = new MutationObserver((records) => {
+        records.forEach((record) => {
+          if (record.attributeName) {
+            releaseAttributes.push(record.attributeName);
+          }
+        });
+      });
+      observer.observe(popup, {
+        attributeFilter: ['data-ending-style', 'data-swipe-dismiss'],
+        attributes: true,
+      });
+      onTestFinished(() => observer.disconnect());
+      stubElementFromPoint(document, () => popup);
+
+      await firePointer.down(viewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 10,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 30,
+        pointerType: 'mouse',
+        timeStamp: 1050,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 80,
+        pointerType: 'mouse',
+        timeStamp: 1100,
+      });
+      await firePointer.up(viewport, {
+        pointerId: 1,
+        clientX: 100,
+        clientY: 100,
+        pointerType: 'mouse',
+        timeStamp: 1120,
+      });
+      await flushMicrotasks();
+
+      expect(handleSnapPointChange).toHaveBeenCalledWith(null, expect.anything());
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(releaseAttributes).toEqual([]);
+      expect(popup).not.toHaveAttribute('data-ending-style');
+      expect(popup).not.toHaveAttribute('data-swipe-dismiss');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('settles on the nearest snap point when an unattributed drag ends past the last snap point', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn();
+
+    vi.useFakeTimers();
+    try {
+      await render(
+        <Drawer.Root
+          open
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['200px', '100px']}
+          defaultSnapPoint="100px"
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 400 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const popup = screen.getByTestId('popup');
+      stubElementFromPoint(document, () => popup);
+
+      // A slow diagonal drag that never attributes a direction and ends nearer the closed
+      // position than to any snap point, so the release resolves through the close branch.
+      await firePointer.down(viewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 100,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 200,
+        clientY: 120,
+        pointerType: 'mouse',
+        timeStamp: 1100,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 300,
+        clientY: 170,
+        pointerType: 'mouse',
+        timeStamp: 1400,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 400,
+        clientY: 190,
+        pointerType: 'mouse',
+        timeStamp: 1900,
+      });
+      await firePointer.up(viewport, {
+        pointerId: 1,
+        clientX: 400,
+        clientY: 190,
+        pointerType: 'mouse',
+        timeStamp: 1950,
+      });
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(handleSnapPointChange).not.toHaveBeenCalledWith(null, expect.anything());
+      expect(handleSnapPointChange).toHaveBeenCalledWith('100px', expect.anything());
+      expect(popup).not.toHaveAttribute('data-ending-style');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('settles on the nearest snap point when an unattributed drag ends past the last snap point with snapToSequentialPoints', async () => {
+    const handleOpenChange = vi.fn();
+    const handleSnapPointChange = vi.fn();
+
+    vi.useFakeTimers();
+    try {
+      await render(
+        <Drawer.Root
+          open
+          onOpenChange={handleOpenChange}
+          onSnapPointChange={handleSnapPointChange}
+          snapPoints={['200px', '100px']}
+          defaultSnapPoint="100px"
+          snapToSequentialPoints
+          swipeDirection="down"
+        >
+          <Drawer.Portal>
+            <Drawer.Viewport
+              data-testid="viewport"
+              v-slots={{
+                render: renderWithSize({ offsetHeight: 400 }, () => (
+                  <Drawer.Popup
+                    data-testid="popup"
+                    v-slots={{ render: renderWithSize({ offsetHeight: 300 }, () => 'Drawer') }}
+                  />
+                )),
+              }}
+            />
+          </Drawer.Portal>
+        </Drawer.Root>,
+      );
+
+      const viewport = screen.getByTestId('viewport');
+      const popup = screen.getByTestId('popup');
+      stubElementFromPoint(document, () => popup);
+
+      // A slow diagonal drag that never attributes a direction and ends nearer the closed
+      // position than to any snap point, so the release resolves through the close branch.
+      await firePointer.down(viewport, {
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 100,
+        pointerType: 'mouse',
+        timeStamp: 1000,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 200,
+        clientY: 120,
+        pointerType: 'mouse',
+        timeStamp: 1100,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 300,
+        clientY: 170,
+        pointerType: 'mouse',
+        timeStamp: 1400,
+      });
+      await firePointer.move(viewport, {
+        buttons: 1,
+        pointerId: 1,
+        clientX: 400,
+        clientY: 190,
+        pointerType: 'mouse',
+        timeStamp: 1900,
+      });
+      await firePointer.up(viewport, {
+        pointerId: 1,
+        clientX: 400,
+        clientY: 190,
+        pointerType: 'mouse',
+        timeStamp: 1950,
+      });
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(handleSnapPointChange).not.toHaveBeenCalledWith(null, expect.anything());
+      expect(handleSnapPointChange).toHaveBeenCalledWith('100px', expect.anything());
+      expect(popup).not.toHaveAttribute('data-ending-style');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the resting snap point progress when a press never starts a swipe', async () => {
+    await render(
+      <Drawer.Root open snapPoints={['100px', '200px']} swipeDirection="down">
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport
+            data-testid="viewport"
+            v-slots={{
+              render: renderWithSize({ offsetHeight: 400 }, () => (
+                <Drawer.Popup
+                  data-testid="popup"
+                  v-slots={{
+                    render: renderWithSize({ offsetHeight: 300 }, () => (
+                      <Drawer.Content data-testid="content">Drawer</Drawer.Content>
+                    )),
+                  }}
+                />
+              )),
+            }}
+          />
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const backdrop = screen.getByTestId('backdrop');
+    const content = screen.getByTestId('content');
+    stubElementFromPoint(document, () => content);
+
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('1');
+
+    // A press inside `Drawer.Content` never starts a swipe, but it still reaches the gesture
+    // hook's release handler, which reports progress carrying the last drag deltas.
+    await fireEvent.pointerDown(content, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(content, {
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('1');
+  });
+
+  it('does not resolve snap points before the popup has a measurable height', async () => {
+    const handleOpenChange = vi.fn();
+    await render(
+      <Drawer.Root
+        open
+        onOpenChange={handleOpenChange}
+        snapPoints={['100px', '200px']}
+        swipeDirection="down"
+      >
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup
+              data-testid="popup"
+              v-slots={{ render: renderWithSize({ offsetHeight: 0 }, () => 'Drawer') }}
+            />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 1,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 40,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 40,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('falls back to regular dismissal when all snap points are invalid', async () => {
+    const handleOpenChange = vi.fn();
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange} snapPoints={['50%']}>
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup
+              data-testid="popup"
+              v-slots={{ render: renderWithSize({ offsetHeight: 200 }, () => 'Drawer') }}
+            />
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 1,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 140,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 140,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).toHaveBeenCalledWith(false, expect.anything());
+  });
+
+  it('ends swipe drag when the primary mouse button is released mid-gesture', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    const backdrop = screen.getByTestId('backdrop');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 8,
+      buttons: 1,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop).toHaveAttribute('data-swiping', '');
+
+    // Simulate a right-click interruption where the primary button is no longer pressed.
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 12,
+      buttons: 2,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+
+    await fireEvent.pointerMove(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 30,
+      buttons: 0,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('ignores swipe input until a popup is mounted', async () => {
+    const handleOpenChange = vi.fn();
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange}>
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport" />
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    stubElementFromPoint(document, () => viewport);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(handleOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('cleans up when the popup unmounts during an active swipe', async () => {
+    const handleOpenChange = vi.fn();
+    const showPopup = shallowRef(true);
+
+    await render(() => (
+      <Drawer.Root
+        open
+        onOpenChange={handleOpenChange}
+        snapPoints={['100px', '200px']}
+        swipeDirection="down"
+      >
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            {showPopup.value && <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>}
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 20,
+      pointerType: 'mouse',
+    });
+    expect(screen.getByTestId('backdrop')).toHaveAttribute('data-swiping', '');
+
+    showPopup.value = false;
+    await flushMicrotasks();
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 30,
+      pointerType: 'mouse',
+    });
+    expect(screen.getByTestId('backdrop')).toHaveAttribute('data-swiping', '');
+
+    await fireEvent.pointerUp(viewport, {
+      pointerId: 1,
+      clientX: 0,
+      clientY: 30,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+    expect(handleOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('does not start pointer swipes while a closed drawer remains mounted', async () => {
+    const handleOpenChange = vi.fn();
+
+    await render(
+      <Drawer.Root
+        defaultOpen
+        onOpenChange={(nextOpen: boolean, eventDetails: Drawer.Root.ChangeEventDetails) => {
+          handleOpenChange(nextOpen);
+          if (!nextOpen) {
+            eventDetails.preventUnmountOnClose();
+          }
+        }}
+      >
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">
+              <Drawer.Close>Close</Drawer.Close>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+
+    screen.getByRole('button', { name: 'Close' }).click();
+    await flushMicrotasks();
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('data-closed', '');
+    });
+    handleOpenChange.mockClear();
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 100,
+      pointerType: 'mouse',
+    });
+
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+    expect(handleOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('clears a selection whose endpoints are popup elements', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const popup = screen.getByTestId('popup');
+    const removeAllRanges = vi.fn();
+    const selectionSpy = vi.spyOn(document, 'getSelection').mockReturnValue({
+      anchorNode: popup,
+      focusNode: popup,
+      isCollapsed: false,
+      removeAllRanges,
+    } as unknown as Selection);
+    onTestFinished(() => selectionSpy.mockRestore());
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(screen.getByTestId('viewport'), {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    expect(removeAllRanges).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves an expanded touch selection whose focus endpoint is in the popup', async () => {
+    await render(
+      <div>
+        <span data-testid="outside">Outside</span>
+        <Drawer.Root open>
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            <Drawer.Viewport>
+              <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </div>,
+    );
+
+    const popup = screen.getByTestId('popup');
+    const outside = screen.getByTestId('outside');
+    const selectionSpy = vi.spyOn(document, 'getSelection').mockReturnValue({
+      anchorNode: outside,
+      focusNode: popup,
+      isCollapsed: false,
+      containsNode: () => false,
+    } as unknown as Selection);
+    onTestFinished(() => selectionSpy.mockRestore());
+    stubElementFromPoint(document, () => popup);
+
+    await fireTouch.start(popup, { touches: [{ clientX: 0, clientY: 100 }] });
+    await fireTouch.move(popup, { touches: [{ clientX: 0, clientY: 140 }] });
+
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+  });
+
+  it('falls back to the viewport when a touch event has no element target', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+    const touchStart = new Event('touchstart', { bubbles: true, cancelable: true });
+    Object.defineProperty(touchStart, 'touches', {
+      configurable: true,
+      value: [createTouch(popup, { clientX: 0, clientY: 100 })],
+    });
+    touchStart.composedPath = () => [window];
+
+    popup.dispatchEvent(touchStart);
+    await flushMicrotasks();
+    await fireTouch.move(popup, { touches: [{ clientX: 0, clientY: 140 }] });
+    expect(screen.getByTestId('backdrop')).toHaveAttribute('data-swiping', '');
+  });
+
+  it('ignores compatibility touch pointer gestures with real displacement', async () => {
+    const handleOpenChange = vi.fn();
+    await render(
+      <Drawer.Root open onOpenChange={handleOpenChange}>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport data-testid="viewport">
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    stubElementFromPoint(document, () => popup);
+    const pointerEvents = [
+      ['pointerdown', 0, 1],
+      ['pointermove', 1, 1],
+      ['pointermove', 100, 1],
+      ['pointerup', 100, 0],
+      ['pointercancel', 100, 0],
+    ] as const;
+
+    for (const [type, clientY, buttons] of pointerEvents) {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperties(event, {
+        pointerType: { value: 'touch' },
+        pointerId: { value: 1 },
+        button: { value: 0 },
+        buttons: { value: buttons },
+        clientX: { value: 0 },
+        clientY: { value: clientY },
+      });
+
+      viewport.dispatchEvent(event);
+    }
+    await flushMicrotasks();
+
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+    expect(handleOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('publishes and clears swipe progress through Drawer.Provider', async () => {
+    await render(
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        <Drawer.Root open>
+          <Drawer.Portal>
+            <Drawer.Viewport data-testid="viewport">
+              <Drawer.Popup
+                data-testid="popup"
+                v-slots={{ render: renderWithSize({ offsetHeight: 100 }, () => 'Drawer') }}
+              />
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </Drawer.Provider>,
+    );
+
+    const viewport = screen.getByTestId('viewport');
+    const popup = screen.getByTestId('popup');
+    const indent = screen.getByTestId('indent');
+    stubElementFromPoint(document, () => popup);
+
+    await fireEvent.pointerDown(viewport, {
+      button: 0,
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 1,
+      pointerType: 'mouse',
+    });
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 40,
+      pointerType: 'mouse',
+    });
+    await flushMicrotasks();
+    expect(
+      Number.parseFloat(indent.style.getPropertyValue('--drawer-swipe-progress')),
+    ).toBeCloseTo(0.39);
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
+
+    await fireEvent.pointerMove(viewport, {
+      buttons: 1,
+      pointerId: 1,
+      clientX: 0,
+      clientY: 0,
+      pointerType: 'mouse',
+    });
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
+  });
+
+  it('publishes resting snap progress before descendant layout effects', async () => {
+    let taskAfterChangeRan = false;
+    let appliedBeforeTask: boolean | null = null;
+    const snapPoint = shallowRef('100px');
+
+    await render(() => (
+      <Drawer.Root
+        open
+        modal={false}
+        snapPoints={['100px', '200px']}
+        snapPoint={snapPoint.value}
+      >
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport
+            v-slots={{
+              render: renderWithSize({ offsetHeight: 200 }, () => (
+                <Drawer.Popup
+                  v-slots={{ render: renderWithSize({ offsetHeight: 200 }, () => 'Drawer') }}
+                />
+              )),
+            }}
+          />
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    const backdrop = screen.getByTestId('backdrop');
+    const originalSetProperty = backdrop.style.setProperty.bind(backdrop.style);
+    const setPropertySpy = vi
+      .spyOn(backdrop.style, 'setProperty')
+      .mockImplementation((name, value, priority) => {
+        if (name === '--drawer-swipe-progress' && value === '0' && appliedBeforeTask === null) {
+          appliedBeforeTask = !taskAfterChangeRan;
+        }
+        originalSetProperty(name, value, priority);
+      });
+    onTestFinished(() => setPropertySpy.mockRestore());
+
+    snapPoint.value = '200px';
+    setTimeout(() => {
+      taskAfterChangeRan = true;
+    });
+    await flushMicrotasks();
+    expect(appliedBeforeTask).toBe(true);
+    expect(backdrop.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+  });
+
+  it('clears kept-mounted swipe state before descendant layout effects on reopen', async () => {
+    let taskAfterOpenRan = false;
+    let resetBeforeTask: boolean | null = null;
+    const open = shallowRef(false);
+
+    await render(() => (
+      <Drawer.Root open={open.value} modal={false}>
+        <Drawer.Portal keepMounted>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+    const popup = screen.getByTestId('popup');
+    popup.style.setProperty('--drawer-swipe-movement-y', '50px');
+    popup.setAttribute('data-swipe-dismiss', '');
+    const originalToggleAttribute = popup.toggleAttribute.bind(popup);
+    const toggleAttributeSpy = vi
+      .spyOn(popup, 'toggleAttribute')
+      .mockImplementation((name, force) => {
+        if (name === 'data-swipe-dismiss' && force === false && resetBeforeTask === null) {
+          resetBeforeTask = !taskAfterOpenRan;
+        }
+        return originalToggleAttribute(name, force);
+      });
+    onTestFinished(() => toggleAttributeSpy.mockRestore());
+
+    open.value = true;
+    setTimeout(() => {
+      taskAfterOpenRan = true;
+    });
+    await flushMicrotasks();
+    expect(resetBeforeTask).toBe(true);
+    expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('0px');
+    expect(popup).not.toHaveAttribute('data-swipe-dismiss');
+  });
+
+  it('clears nested progress before descendant layout effects when the child closes', async () => {
+    let taskAfterCloseRan = false;
+    let clearedBeforeTask: boolean | null = null;
+
+    const NestedProgressControl = defineComponent({
+      setup() {
+        const { onNestedSwipeProgressChange } = useDrawerRootContext();
+
+        return () => (
+          <button onClick={() => onNestedSwipeProgressChange(0.5)}>Set nested progress</button>
+        );
+      },
+    });
+
+    const childOpen = shallowRef(true);
+    const { user } = await render(() => (
+      <Drawer.Root open modal={false}>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="parent-popup">
+              <Drawer.Root open={childOpen.value} modal={false}>
+                <Drawer.Portal keepMounted>
+                  <Drawer.Viewport>
+                    <Drawer.Popup>Child drawer</Drawer.Popup>
+                  </Drawer.Viewport>
+                </Drawer.Portal>
+                <NestedProgressControl />
+              </Drawer.Root>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ));
+
+    await user.click(screen.getByRole('button', { name: 'Set nested progress' }));
+    expect(
+      screen.getByTestId('parent-popup').style.getPropertyValue('--drawer-swipe-progress'),
+    ).toBe('0.5');
+    const parentPopup = screen.getByTestId('parent-popup');
+    const originalSetProperty = parentPopup.style.setProperty.bind(parentPopup.style);
+    const setPropertySpy = vi
+      .spyOn(parentPopup.style, 'setProperty')
+      .mockImplementation((name, value, priority) => {
+        if (name === '--drawer-swipe-progress' && value === '0' && clearedBeforeTask === null) {
+          clearedBeforeTask = !taskAfterCloseRan;
+        }
+        originalSetProperty(name, value, priority);
+      });
+    onTestFinished(() => setPropertySpy.mockRestore());
+
+    childOpen.value = false;
+    setTimeout(() => {
+      taskAfterCloseRan = true;
+    });
+    await flushMicrotasks();
+    expect(clearedBeforeTask).toBe(true);
+    expect(parentPopup.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+  });
+
+  it('clears provider and backdrop swipe state during layout teardown', async () => {
+    let taskAfterTeardownRan = false;
+    let clearedBeforeTask: boolean | null = null;
+
+    const ProviderStateControl = defineComponent({
+      setup() {
+        const providerContext = useDrawerProviderContext();
+
+        return () => (
+          <button
+            onClick={() => {
+              providerContext?.visualStateStore.set({
+                swipeProgress: 0.5,
+                frontmostHeight: 100,
+              });
+            }}
+          >
+            Set provider state
+          </button>
+        );
+      },
+    });
+
+    const showViewport = shallowRef(true);
+    const { user } = await render(() => (
+      <Drawer.Provider>
+        <Drawer.Indent data-testid="indent" />
+        <ProviderStateControl />
+        <Drawer.Root open modal={false}>
+          <Drawer.Portal>
+            <Drawer.Backdrop data-testid="backdrop" />
+            {showViewport.value && (
+              <Drawer.Viewport>
+                <Drawer.Popup>Drawer</Drawer.Popup>
+              </Drawer.Viewport>
+            )}
+          </Drawer.Portal>
+        </Drawer.Root>
+      </Drawer.Provider>
+    ));
+
+    await user.click(screen.getByRole('button', { name: 'Set provider state' }));
+    const indent = screen.getByTestId('indent');
+    const backdrop = screen.getByTestId('backdrop');
+    backdrop.setAttribute('data-swiping', '');
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0.5');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('100px');
+    const originalSetProperty = indent.style.setProperty.bind(indent.style);
+    const setPropertySpy = vi
+      .spyOn(indent.style, 'setProperty')
+      .mockImplementation((name, value, priority) => {
+        if (name === '--drawer-swipe-progress' && value === '0' && clearedBeforeTask === null) {
+          clearedBeforeTask = !taskAfterTeardownRan;
+        }
+        originalSetProperty(name, value, priority);
+      });
+    onTestFinished(() => setPropertySpy.mockRestore());
+
+    showViewport.value = false;
+    setTimeout(() => {
+      taskAfterTeardownRan = true;
+    });
+    await flushMicrotasks();
+    expect(clearedBeforeTask).toBe(true);
+    expect(indent.style.getPropertyValue('--drawer-swipe-progress')).toBe('0');
+    expect(indent.style.getPropertyValue('--drawer-height')).toBe('');
+    expect(backdrop).not.toHaveAttribute('data-swiping');
+  });
+
+  it('leaves pinch-zoom touchmove to the browser', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Backdrop data-testid="backdrop" />
+          <Drawer.Viewport>
+            <Drawer.Popup data-testid="popup">Drawer</Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const popup = screen.getByTestId('popup');
+    await fireTouch.start(popup, { touches: [{ clientX: 0, clientY: 100 }] });
+    const touchMove = new Event('touchmove', { bubbles: true, cancelable: true });
+    Object.defineProperty(touchMove, 'touches', {
+      configurable: true,
+      value: [
+        createTouch(popup, { clientX: 0, clientY: 80 }),
+        createTouch(popup, { clientX: 20, clientY: 80 }),
+      ],
+    });
+
+    expect(popup.dispatchEvent(touchMove)).toBe(true);
+    await flushMicrotasks();
+    expect(screen.getByTestId('backdrop')).not.toHaveAttribute('data-swiping');
+  });
+
+  it('prevents page scrolling for a non-overflowing touch scroll container', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ overflowY: 'auto' }}>
+                Content
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperties(scroll, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 200, writable: true },
+    });
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 100 }] });
+    Object.defineProperty(scroll, 'scrollHeight', { configurable: true, value: 100 });
+    const touchMove = createNativeTouchMove(scroll, { clientX: 0, clientY: 80 });
+
+    expect(scroll.dispatchEvent(touchMove)).toBe(false);
+    await flushMicrotasks();
+    expect(touchMove.defaultPrevented).toBe(true);
+
+    const nonCancelableMove = new Event('touchmove', { bubbles: true, cancelable: false });
+    Object.defineProperty(nonCancelableMove, 'touches', {
+      configurable: true,
+      value: [createTouch(scroll, { clientX: 0, clientY: 60 })],
+    });
+    expect(scroll.dispatchEvent(nonCancelableMove)).toBe(true);
+    await flushMicrotasks();
+  });
+
+  it('keeps a claimed scroll-edge swipe moving through non-cancelable events', async () => {
+    const handleParentTouchMove = vi.fn();
+    await render(
+      <div onTouchmove={handleParentTouchMove}>
+        <Drawer.Root open>
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <Drawer.Popup>
+                <div data-testid="scroll" style={{ height: '100px', overflowY: 'auto' }}>
+                  <div style={{ height: '300px' }} />
+                </div>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      </div>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperties(scroll, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 300 },
+    });
+    scroll.scrollTop = 0;
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 100 }] });
+    await fireTouch.move(scroll, { touches: [{ clientX: 0, clientY: 120 }] });
+    handleParentTouchMove.mockClear();
+
+    const touchMove = new Event('touchmove', { bubbles: true, cancelable: false });
+    Object.defineProperty(touchMove, 'touches', {
+      configurable: true,
+      value: [createTouch(scroll, { clientX: 0, clientY: 130 })],
+    });
+    expect(scroll.dispatchEvent(touchMove)).toBe(true);
+    await flushMicrotasks();
+
+    expect(handleParentTouchMove).not.toHaveBeenCalled();
+
+    const cancelableMove = await fireTouch.move(scroll, {
+      touches: [{ clientX: 0, clientY: 140 }],
+    });
+    expect(cancelableMove).toBe(false);
+  });
+
+  it('does not claim a stationary touch in overflowing content', async () => {
+    await render(
+      <Drawer.Root open>
+        <Drawer.Portal>
+          <Drawer.Viewport>
+            <Drawer.Popup>
+              <div data-testid="scroll" style={{ height: '100px', overflowY: 'auto' }}>
+                <div style={{ height: '300px' }} />
+              </div>
+            </Drawer.Popup>
+          </Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>,
+    );
+
+    const scroll = screen.getByTestId('scroll');
+    Object.defineProperties(scroll, {
+      clientHeight: { configurable: true, value: 100 },
+      scrollHeight: { configurable: true, value: 300 },
+    });
+    await fireTouch.start(scroll, { touches: [{ clientX: 0, clientY: 100 }] });
+    const touchMove = createNativeTouchMove(scroll, { clientX: 0, clientY: 100 });
+
+    expect(scroll.dispatchEvent(touchMove)).toBe(true);
+    await flushMicrotasks();
+    expect(touchMove.defaultPrevented).toBe(false);
   });
 
   describe('swipe', () => {
