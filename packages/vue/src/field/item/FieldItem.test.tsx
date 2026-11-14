@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -32,6 +34,27 @@ describe('<Field.Item />', () => {
 
       expect(screen.getByTestId('item')).toHaveAttribute('data-disabled');
       expect(renderItem.mock.lastCall?.[0].disabled).toBe(true);
+    });
+
+    it('disables a wrapped checkbox', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Field.Root name="apple">
+          <CheckboxGroup defaultValue={[]} onValueChange={onValueChange}>
+            <Field.Item disabled>
+              <Checkbox.Root value="fuji-apple" />
+            </Field.Item>
+            <Field.Item>
+              <Checkbox.Root value="gala-apple" />
+            </Field.Item>
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+      const [checkbox1, checkbox2] = screen.getAllByRole('checkbox');
+      await user.click(checkbox1);
+      expect(onValueChange.mock.calls.length).toBe(0);
+      await user.click(checkbox2);
+      expect(onValueChange.mock.calls.length).toBe(1);
     });
 
     it('disables a wrapped radio', async () => {
