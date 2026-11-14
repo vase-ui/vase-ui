@@ -2351,8 +2351,9 @@ describe('<Select.Root />', () => {
 
         await pressWithTouch(trigger);
 
+        // The positioner has no opacity of its own once the position is ready.
         await waitFor(() => {
-          expect(screen.getByTestId('positioner').style.opacity).not.toBe('0');
+          expect(screen.getByTestId('positioner').style.opacity).toBe('');
         });
 
         const reopenedPositioner = screen.getByTestId('positioner');
@@ -3478,136 +3479,6 @@ describe('<Select.Root />', () => {
 
       await user.keyboard('a');
       expect(valueEl.textContent).toBe('cat');
-    });
-  });
-
-  describe('prop: highlightItemOnHover', () => {
-    it.skipIf(isWebKit)('highlights an item on mouse move by default', async () => {
-      const { user } = await render(
-        <Select.Root defaultOpen>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await flushMicrotasks();
-      const optionB = screen.getByRole('option', { name: 'b' });
-      await user.hover(optionB);
-
-      await waitFor(() => {
-        expect(optionB).toHaveAttribute('data-highlighted');
-      });
-    });
-
-    it.skipIf(isJSDOM)(
-      'highlights the first item after opening when alignItemWithTrigger is active and no value is selected',
-      async () => {
-        await render(
-          <div style={{ paddingTop: '120px', paddingLeft: '24px' }}>
-            <Select.Root>
-              <Select.Trigger data-testid="trigger" style={{ width: '120px', height: '36px' }}>
-                <Select.Value placeholder="Pick one" />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Positioner>
-                  <Select.Popup style={{ maxHeight: 'none' }}>
-                    <Select.Item value="a">a</Select.Item>
-                    <Select.Item value="b">b</Select.Item>
-                    <Select.Item value="c">c</Select.Item>
-                  </Select.Popup>
-                </Select.Positioner>
-              </Select.Portal>
-            </Select.Root>
-          </div>,
-        );
-
-        const trigger = screen.getByTestId('trigger');
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
-        await fireEvent.mouseDown(trigger);
-
-        const optionA = await screen.findByRole('option', { name: 'a' });
-
-        await waitFor(() => {
-          expect(optionA).toHaveAttribute('data-highlighted');
-        });
-      },
-    );
-
-    it('does not highlight items from mouse movement when disabled', async () => {
-      const { user } = await render(
-        <Select.Root defaultOpen highlightItemOnHover={false}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await flushMicrotasks();
-      const optionB = screen.getByRole('option', { name: 'b' });
-      await user.hover(optionB);
-
-      await flushMicrotasks();
-
-      expect(optionB).not.toHaveAttribute('data-highlighted');
-    });
-
-    it('does not remove highlight when mousing out of popup when disabled', async () => {
-      const { user } = await render(
-        <Select.Root defaultOpen highlightItemOnHover={false}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
-      );
-
-      await flushMicrotasks();
-      const optionA = screen.getByRole('option', { name: 'a' });
-      await user.hover(optionA);
-
-      const popup = screen.getByRole('listbox');
-      await waitFor(() => {
-        expect(popup).toHaveFocus();
-      });
-
-      await user.keyboard('{ArrowDown}');
-
-      await waitFor(() => {
-        expect(optionA).toHaveAttribute('data-highlighted');
-      });
-
-      await user.unhover(popup);
-
-      await waitFor(() => {
-        expect(optionA).toHaveAttribute('data-highlighted');
-      });
     });
   });
 
@@ -4741,9 +4612,138 @@ describe('<Select.Root />', () => {
       expect(option).toHaveAttribute('data-selected', '');
 
       await fireEvent.click(option);
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'Bob' })).not.toHaveAttribute('data-selected');
+    });
+  });
+
+  describe('prop: highlightItemOnHover', () => {
+    it.skipIf(isWebKit)('highlights an item on mouse move by default', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionB = screen.getByRole('option', { name: 'b' });
+      await user.hover(optionB);
 
       await waitFor(() => {
-        expect(screen.getByRole('option', { name: 'Bob' })).not.toHaveAttribute('data-selected');
+        expect(optionB).toHaveAttribute('data-highlighted');
+      });
+    });
+
+    it.skipIf(isJSDOM)(
+      'highlights the first item after opening when alignItemWithTrigger is active and no value is selected',
+      async () => {
+        await render(
+          <div style={{ paddingTop: '120px', paddingLeft: '24px' }}>
+            <Select.Root>
+              <Select.Trigger data-testid="trigger" style={{ width: '120px', height: '36px' }}>
+                <Select.Value placeholder="Pick one" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup style={{ maxHeight: 'none' }}>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                    <Select.Item value="c">c</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+        await fireEvent.mouseDown(trigger);
+
+        const optionA = await screen.findByRole('option', { name: 'a' });
+
+        await waitFor(() => {
+          expect(optionA).toHaveAttribute('data-highlighted');
+        });
+      },
+    );
+
+    it('does not highlight items from mouse movement when disabled', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionB = screen.getByRole('option', { name: 'b' });
+      await user.hover(optionB);
+
+      await flushMicrotasks();
+
+      expect(optionB).not.toHaveAttribute('data-highlighted');
+    });
+
+    it('does not remove highlight when mousing out of popup when disabled', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionA = screen.getByRole('option', { name: 'a' });
+      await user.hover(optionA);
+
+      const popup = screen.getByRole('listbox');
+      await waitFor(() => {
+        expect(popup).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+
+      await waitFor(() => {
+        expect(optionA).toHaveAttribute('data-highlighted');
+      });
+
+      await user.unhover(popup);
+
+      await waitFor(() => {
+        expect(optionA).toHaveAttribute('data-highlighted');
       });
     });
   });
