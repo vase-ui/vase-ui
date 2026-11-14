@@ -6,93 +6,43 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/otp-field/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of OTP Field. It exports `OTPField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `OTPField.Input`."
-    },
-    {
-      "upstream": "packages/react/src/otp-field/input/OTPFieldInputDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `OTPField.Input`."
-    },
-    {
-      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "The type test reads the props of `OTPField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "Each case and suite call of the file that Vase UI does not port renders `OTPField.Input`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.react17.test.tsx",
       "kind": "not-applicable",
       "reason": "The file mocks `SafeReact` to test the id fallback of React 17. Vue has `useId` in each version that the package supports."
     },
     {
-      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "Each case of the file renders `OTPField.Input`, which Vase UI does not have."
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": [
+        "<OTPField.Root />",
+        "value handling",
+        "prop: validationType",
+        "hidden validation input"
+      ],
+      "title": "renders the hidden validation input with an alphanumeric pattern during SSR",
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/root/OTPFieldRoot.node.test.tsx",
+      "reason": "A server render with no `hydrate()` runs in Node with no DOM. The case is in the test file that the Node project runs, with the same titles."
     },
     {
-      "upstream": "packages/react/src/otp-field/input/OTPFieldInput.android.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "The case of the file renders `OTPField.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/index.ts",
-      "reason": "The entry point of OTP Field exports `OTPField.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "Input",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "Vase UI does not have `OTPField.Input`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "Separator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/index.ts",
-      "reason": "The entry point of OTP Field exports `OTPField.Separator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "OTPFieldRootDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/index.ts",
-      "reason": "The entry point of OTP Field exports the attribute names of `OTPField.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "OTPFieldInputDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/input/OTPFieldInput.tsx",
-      "reason": "Vase UI does not have `OTPField.Input`."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/otp-field/types.md",
-      "entry": "OTPFieldSeparatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/otp-field/index.ts",
-      "reason": "The entry point of OTP Field exports the attribute names of `OTPField.Separator`. Vase UI does not have that entry point."
+      "upstream": "packages/react/src/otp-field/root/OTPFieldRoot.test.tsx",
+      "describe": ["<OTPField.Root />", "Form", "server-side rendering"],
+      "kind": "replaced",
+      "test": "packages/vue/src/otp-field/root/OTPFieldRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The two cases are in the test file that the Node project runs, with the same titles."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "ariaLabelledby",
+      "reason": "The part reads `aria-labelledby` to find out if a label names the group and the inputs, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "changeEventReason": "none",
+      "reason": "A native reset changes the value. Base UI does not follow a reset."
+    }
+  ],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
 }
