@@ -63,21 +63,25 @@ describe('<Dialog.Portal />', () => {
       { name: 'modal true', modal: true, hasBackdrop: true },
       { name: 'modal false', modal: false, hasBackdrop: false },
       { name: "modal 'trap-focus'", modal: 'trap-focus' as const, hasBackdrop: false },
-    ])('renders it only for a modal dialog: $name', async ({ modal, hasBackdrop }) => {
-      let store!: DialogStore<unknown>;
-      await render(
-        <Dialog.Root defaultOpen modal={modal}>
-          <DialogStoreProbe onStore={(value) => (store = value)} />
-          <Dialog.Portal data-testid="portal">
-            <DialogPopupPart />
-          </Dialog.Portal>
-        </Dialog.Root>,
-      );
+    ])(
+      'renders it before the content, only for a modal dialog: $name',
+      async ({ modal, hasBackdrop }) => {
+        let store!: DialogStore<unknown>;
+        await render(
+          <Dialog.Root defaultOpen modal={modal}>
+            <DialogStoreProbe onStore={(value) => (store = value)} />
+            <Dialog.Portal data-testid="portal">
+              <DialogPopupPart />
+            </Dialog.Portal>
+          </Dialog.Root>,
+        );
 
-      const backdrop = screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR);
-      expect(backdrop !== null).toBe(hasBackdrop);
-      expect(store.context.internalBackdropRef.value).toBe(backdrop);
-    });
+        const backdrop = screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR);
+        expect(backdrop !== null).toBe(hasBackdrop);
+        expect(screen.getByRole('dialog').previousElementSibling).toBe(backdrop);
+        expect(store.context.internalBackdropRef.value).toBe(backdrop);
+      },
+    );
 
     it.each([
       { name: 'with the portal', keepMounted: false },
@@ -140,6 +144,27 @@ describe('<Dialog.Portal />', () => {
       expect(store.context.internalBackdropRef.value).toBe(null);
     });
 
+    it('stays in the store when another portal of the dialog unmounts', async () => {
+      const showOther = shallowRef(true);
+      let store!: DialogStore<unknown>;
+      await render(() => (
+        <Dialog.Root defaultOpen>
+          <DialogStoreProbe onStore={(value) => (store = value)} />
+          {showOther.value ? <Dialog.Portal key="other" /> : null}
+          <Dialog.Portal key="portal" data-testid="portal">
+            <DialogPopupPart />
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+      const backdrop = screen.getByTestId('portal').querySelector(INTERNAL_BACKDROP_SELECTOR);
+      expect(store.context.internalBackdropRef.value).toBe(backdrop);
+
+      showOther.value = false;
+      await flushMicrotasks();
+
+      expect(store.context.internalBackdropRef.value).toBe(backdrop);
+    });
+
     it('closes a modal dialog on a press on it', async () => {
       const handleOpenChange = vi.fn();
       await render(
@@ -165,7 +190,8 @@ describe('<Dialog.Portal />', () => {
 
     await hydrate(DialogPortalHydration, { serverHtml });
 
-    expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
+    // `hydrate` also mounts a client-only app. Each of the two apps renders one dialog.
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
@@ -177,7 +203,9 @@ describe('<Dialog.Portal />', () => {
           <Dialog.Viewport />
         </Dialog.Root>,
       ),
-    ).rejects.toThrow('Vase UI: <Dialog.Portal> is missing.');
+    ).rejects.toThrow(
+      'Vase UI: <Dialog.Portal> is missing. Without it the part cannot know if it stays mounted while the dialog is closed. Put the part inside <Dialog.Portal>.',
+    );
 
     // Vue also warns about the error of `setup`.
     expect(takeReportedMessages()).toEqual([

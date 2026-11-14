@@ -807,6 +807,7 @@ The portal of a popup is in `src/utils/popups/portal`. `useFloatingPortalNode()`
 - The portal part of a family, such as `Dialog.Portal`, renders `FloatingPortal` or `FloatingPortalLite`, as Base UI does, and no element of its own. It follows the rules for a part that Base UI writes as another part. See [Parts that render an element](#parts-that-render-an-element).
 - That part renders nothing while the popup is not mounted, unless its `keepMounted` prop is `true`. It provides `keepMounted` to the parts in it.
 - `Dialog.Portal` gives `FloatingPortal` a default slot that renders `InternalBackdrop.vue` before the default slot of the consumer, while a dialog with `modal` set to `true` is mounted. The backdrop is `inert` while the dialog closes. The portal writes the element of the backdrop to `internalBackdropRef` of the store context.
+- Under `#render`, `FloatingPortal` does not render its default slot. A dialog whose `Dialog.Portal` has a `#render` slot thus has no internal backdrop.
 
 ### Popup interactions
 
