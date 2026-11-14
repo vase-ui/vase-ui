@@ -39,7 +39,6 @@ import {
   provideFloatingTree,
   useFloatingNodeId,
   useFloatingParentNodeId,
-  useFloatingTree,
 } from '../tree/FloatingTree';
 import type { InteractionProps } from '../types';
 import { gridNavigation } from './gridNavigation';
@@ -848,15 +847,6 @@ const NestedList = defineComponent({
     });
     const { rootStore } = context;
     const click = useToggle(rootStore);
-    // A positioner gives its context to the node of the popup. The node registers in
-    // `onBeforeMount`, so it is in the tree here.
-    const tree = useFloatingTree();
-    onMounted(() => {
-      const node = tree.value?.nodesRef.value.find((entry) => entry.id === nodeId);
-      if (node) {
-        node.context = rootStore.context.positioning;
-      }
-    });
     provideFloatingNode(nodeId);
     const navigation = useListNavigation(rootStore, {
       ...props.options,
@@ -2480,6 +2470,25 @@ describe('useListNavigation', () => {
       expect(list.proposals).toEqual([2]);
     });
 
+    it('with real focus, makes no proposal and moves no focus while `enabled` is false', async () => {
+      const { list } = await renderList({
+        options: { enabled: false, selectedIndex: 2, focusItemOnOpen: true },
+      });
+
+      await fireEvent.click(reference(), { detail: 1 });
+      list.setActiveIndex(1);
+      await waitSingleFrame();
+      await waitSingleFrame();
+
+      expect(menu()).toBeInTheDocument();
+      expect(list.proposals).toEqual([]);
+      expect(document.body).toHaveFocus();
+
+      await keyDown(menu(), 'ArrowDown');
+
+      expect(list.proposals).toEqual([]);
+    });
+
     it('warns about options that do not agree', async () => {
       resetWarnings();
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -2491,6 +2500,22 @@ describe('useListNavigation', () => {
         'Vase UI: `useListNavigation` has `allowEscape` and no `loopFocus`. `allowEscape` has no effect while `loopFocus` is `false`. Set `loopFocus` to `true`, or remove `allowEscape`.',
         'Vase UI: `useListNavigation` has `allowEscape` and no `virtual`. With real focus, an item of the list always has the focus. Set `virtual` to `true`, or remove `allowEscape`.',
         'Vase UI: `useListNavigation` has a `grid` and the orientation "vertical". The horizontal arrow keys then do not move the highlight in the grid. Set `orientation` to "horizontal" or "both".',
+      ]);
+    });
+
+    it('warns again when a change of an option makes the options disagree', async () => {
+      const allowEscape = shallowRef(false);
+      await renderList({ options: { allowEscape, virtual: true } });
+      // `warn` logs a message one time, so an earlier case can have logged this one.
+      resetWarnings();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      onTestFinished(() => warn.mockRestore());
+
+      allowEscape.value = true;
+      await nextTick();
+
+      expect(warn.mock.calls.map(([message]) => message)).toEqual([
+        'Vase UI: `useListNavigation` has `allowEscape` and no `loopFocus`. `allowEscape` has no effect while `loopFocus` is `false`. Set `loopFocus` to `true`, or remove `allowEscape`.',
       ]);
     });
   });
@@ -2531,6 +2556,13 @@ describe('useListNavigation', () => {
       await waitFor(() => expect(item('x')).toHaveFocus());
     }
 
+    // A click gives the focus to no item, so the focus stays on `<body>`.
+    async function clickTriggers(...labels: string[]) {
+      for (const label of labels) {
+        await fireEvent.click(part(`trigger-${label}`), { detail: 1 });
+      }
+    }
+
     it.each(forms)(
       'keeps the keys of a list in $name away from the list above',
       async ({ teleport }) => {
@@ -2566,6 +2598,37 @@ describe('useListNavigation', () => {
       },
     );
 
+    it('moves the list above from its own index for a key that the list below does not use', async () => {
+      await openMore('horizontal', true);
+
+      // The focus is in the popup below. `Teleport` moved that popup out of the popup above.
+      await keyDown(part('menu-more'), 'ArrowRight');
+
+      expect(activeIndexOf('root')).toBe('3');
+      expect(item('four')).toHaveFocus();
+    });
+
+    it('does not give a key that a list in the middle stops to the list above it', async () => {
+      const middle: Entry = {
+        label: 'more',
+        orientation: 'horizontal',
+        items: ['m1', { label: 'deep', items: ['x', 'y'] }, 'm3'],
+      };
+      await render(
+        <Tree>
+          <NestedList label="root" orientation="horizontal" items={['one', middle, 'three']} />
+        </Tree>,
+      );
+      await clickTriggers('root', 'more', 'deep');
+      expect(isOpen('deep')).toBe(true);
+
+      // The list below does not use this key. The list in the middle uses it and stops it.
+      await keyDown(part('menu-deep'), 'ArrowRight');
+
+      expect(activeIndexOf('more')).toBe('0');
+      expect(activeIndexOf('root')).toBe('');
+    });
+
     it('lets a handler of the popup element stop a key of a list in that element', async () => {
       await openMore('horizontal', false, undefined, {
         onKeydown(event: KeyboardEvent & { preventVaseUIHandler?: () => void }) {
@@ -2592,15 +2655,44 @@ describe('useListNavigation', () => {
           <NestedList label="root" orientation="horizontal" items={['one', middle]} />
         </Tree>,
       );
-      await fireEvent.click(part('trigger-root'), { detail: 1 });
-      await fireEvent.click(part('trigger-more'), { detail: 1 });
-      await fireEvent.click(part('trigger-deep'), { detail: 1 });
+      await clickTriggers('root', 'more', 'deep');
       expect(isOpen('deep')).toBe(true);
 
       // The list below does not use this key, and the list in the middle is not enabled.
       await keyDown(part('menu-deep'), 'ArrowRight');
 
       expect(activeIndexOf('root')).toBe('0');
+    });
+
+    it('gives a key of the popup of a list that is not enabled to the list above', async () => {
+      const notEnabled: Entry = { label: 'more', options: { enabled: false }, items: ['x', 'y'] };
+      await render(
+        <Tree>
+          <NestedList label="root" orientation="horizontal" items={['one', notEnabled]} />
+        </Tree>,
+      );
+      await clickTriggers('root', 'more');
+      expect(isOpen('more')).toBe(true);
+
+      await keyDown(part('menu-more'), 'ArrowRight');
+
+      expect(activeIndexOf('root')).toBe('0');
+      expect(activeIndexOf('more')).toBe('');
+    });
+
+    it('gives no focus to the popup above when a list that is not enabled closes', async () => {
+      const notEnabled: Entry = { label: 'more', options: { enabled: false }, items: ['x', 'y'] };
+      await render(
+        <Tree>
+          <NestedList label="root" items={['one', notEnabled]} />
+        </Tree>,
+      );
+
+      await clickTriggers('root', 'more', 'more');
+      await flushMicrotasks();
+
+      expect(isOpen('more')).toBe(false);
+      expect(document.body).toHaveFocus();
     });
 
     it('keeps the list above open for a Tab key in the list below', async () => {

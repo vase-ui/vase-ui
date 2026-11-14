@@ -120,7 +120,9 @@ export interface UseListNavigationProps {
    */
   onNavigate?: ((activeIndex: number | null, event: Event | undefined) => void) | undefined;
   /**
-   * Whether the composable is enabled, including its effects and its event handlers.
+   * Whether the composable is enabled, including its effects and its event handlers. The one
+   * exception is the `keydown` handler of the popup: a list that is not enabled still gives a key
+   * to the list above.
    * @default true
    */
   enabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -826,16 +828,14 @@ export function useListNavigation(
 
   provide(ListNavigationParentContext, {
     handleFloatingKeydown(event) {
-      if (!isEnabled()) {
-        parent?.handleFloatingKeydown(event);
-        return;
-      }
       const floatingFocusElement = readFloatingFocusElement();
       // The DOM gives the event to this popup itself when its element holds the target.
       if (isEventTargetWithin(event, floatingFocusElement)) {
         return;
       }
-      handleFloatingKeydown(event, floatingFocusElement);
+      if (isEnabled()) {
+        handleFloatingKeydown(event, floatingFocusElement);
+      }
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }
@@ -909,10 +909,11 @@ export function useListNavigation(
 
   const floatingHandlers: InteractionProps = {
     onKeydown(event) {
-      if (!isEnabled()) {
-        return;
+      // A list that is not enabled does not handle the key. It still gives the key to the list
+      // above, as the React event of its popup reaches the popup above in Base UI.
+      if (isEnabled()) {
+        handleFloatingKeydown(event, event.currentTarget as Element | null);
       }
-      handleFloatingKeydown(event, event.currentTarget as Element | null);
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }
