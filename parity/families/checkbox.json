@@ -16,7 +16,7 @@
       "title": "sets grouped parent aria when manually indeterminate",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
@@ -24,7 +24,7 @@
       "title": "sets grouped parent native input state when manually indeterminate",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
@@ -32,7 +32,7 @@
       "title": "assigns an input id to a valueless child in a parent checkbox group",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
@@ -40,15 +40,7 @@
       "title": "assigns a root id to a valueless native button in a parent checkbox group",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a `CheckboxGroup` with `allValues` and a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
-      "describe": ["<Checkbox.Root />", "Field", "[data-filled]"],
-      "title": "adds [data-filled] attribute when any checkbox is filled when inside a group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
-      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
+      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
@@ -63,7 +55,7 @@
       "prop": "parent",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The prop makes the parent checkbox of a `CheckboxGroup`, which Vase UI does not have."
+      "reason": "The prop makes the parent checkbox of a group, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [
