@@ -292,22 +292,6 @@
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "keeps a submenu open on direct trigger focus but closes it on guard return",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no keys yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "closes a submenu when its focus guard is in a shadow-root portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no keys yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
       "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
       "title": "warns without an owner stack when React cannot provide one",
       "kind": "not-applicable",
