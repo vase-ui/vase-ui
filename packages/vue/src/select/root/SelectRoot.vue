@@ -217,6 +217,10 @@ const emit = defineEmits<{
     value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null),
     eventDetails: SelectRootChangeEventDetails,
   ];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [
     value: SelectOutputValue<Value, Multiple> | (Multiple extends true ? never : null),
   ];
@@ -224,6 +228,10 @@ const emit = defineEmits<{
    * Event handler called when the select popup is opened or closed.
    */
   openChange: [open: boolean, eventDetails: SelectRootOpenChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the select popup is opened or closed.
