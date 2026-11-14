@@ -1968,9 +1968,7 @@ describe('<Autocomplete.Root />', () => {
                   <Autocomplete.List
                     v-slots={{
                       item: ({ item: movie }: { item: Movie }) => (
-                        <Autocomplete.Item key={movie.id} value={movie}>
-                          {movie.title}
-                        </Autocomplete.Item>
+                        <Autocomplete.Item value={movie}>{movie.title}</Autocomplete.Item>
                       ),
                     }}
                   />
@@ -2803,6 +2801,141 @@ describe('<Autocomplete.Root />', () => {
       expect(handleSubmit.mock.results.at(-1)?.value).toBe('hello world');
     });
 
+    it('submits the typed input value when name is provided on Autocomplete.Root', async () => {
+      const handleSubmit = createFormDataSpy('query');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="query">
+            <Autocomplete.Root>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="base-ui">base-ui</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit" data-testid="submit-btn">
+            Submit
+          </button>
+        </Form>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      await user.type(input, 'base ui');
+
+      expect(input.getAttribute('name'), 'input should have name attribute').toBe('query');
+      expect(input.value, 'input should have typed value').toBe('base ui');
+
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('base ui');
+    });
+
+    it('submits the popup input value through native FormData when rendering a field-aware input', async () => {
+      const handleSubmit = createFormDataSpy('search');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']}>
+              <Autocomplete.Trigger>
+                <Autocomplete.Value />
+              </Autocomplete.Trigger>
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.Input as={Input} data-testid="input" />
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      await user.click(screen.getByRole('combobox'));
+      const input = await screen.findByTestId('input');
+      expect(input).not.toHaveAttribute('name');
+
+      await user.click(screen.getByRole('option', { name: 'alpha' }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toHaveTextContent('alpha');
+      });
+
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('alpha');
+    });
+
+    it('submits the inline input value through native FormData', async () => {
+      const handleSubmit = createFormDataSpy('search');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']} inline>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.List v-slots={itemSlot} />
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('name', 'search');
+
+      const hiddenInput = screen.getByRole('textbox', { hidden: true });
+      expect(hiddenInput).not.toHaveAttribute('name');
+
+      await user.type(input, 'alp');
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('alp');
+    });
+
+    it('submits a default popup input value through native FormData before the popup opens', async () => {
+      const handleSubmit = createFormDataSpy('search');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']} defaultValue="alpha">
+              <Autocomplete.Trigger>
+                <Autocomplete.Value />
+              </Autocomplete.Trigger>
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.Input as={Input} data-testid="input" />
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('alpha');
+    });
+
     it.skipIf(isJSDOM)('submits to an external form when `form` is provided', async () => {
       const handleSubmit = createFormDataSpy('query');
 
@@ -2845,6 +2978,673 @@ describe('<Autocomplete.Root />', () => {
 
       const error = screen.getByTestId('error');
       expect(error).toHaveTextContent('required');
+    });
+
+    it('clears external errors on change', async () => {
+      const { user } = await render(
+        <Form
+          errors={{
+            autocomplete: 'test',
+          }}
+        >
+          <Field.Root name="autocomplete">
+            <Autocomplete.Root>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="a">a</Autocomplete.Item>
+                      <Autocomplete.Item value="b">b</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+            <Field.Error data-testid="error" />
+          </Field.Root>
+        </Form>,
+      );
+
+      expect(screen.getByTestId('error')).toHaveTextContent('test');
+
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+
+      await user.type(input, 'test input');
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(input).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('submits the input value directly (not selection value)', async () => {
+      const handleSubmit = createFormDataSpy('search');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="search">
+            <Autocomplete.Root>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="apple">apple</Autocomplete.Item>
+                      <Autocomplete.Item value="banana">banana</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('input');
+      // Type something that doesn't exactly match any option
+      await user.type(input, 'appl');
+      await user.click(screen.getByText('Submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('appl');
+    });
+
+    it('Enter submits when no item is highlighted', async () => {
+      const handleSubmit = createFormDataSpy('search');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'beta']} openOnInputClick>
+              <Autocomplete.Input />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      await user.click(screen.getByRole('combobox'));
+      await user.keyboard('{Enter}');
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('pressing Enter in the Input submits the owning form when no item is highlighted', async () => {
+      const handleSubmit = createFormDataSpy('q');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="q">
+            <Autocomplete.Root items={['alpha', 'alpine']} submitOnItemClick>
+              <Autocomplete.Input />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+
+      await user.type(input, 'xyz');
+      await user.keyboard('{Enter}');
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('xyz');
+    });
+
+    it('pressing Enter in the List when it has focus submits the owning form', async () => {
+      const handleSubmit = createFormDataSpy('q');
+
+      const { user } = await render(
+        <Form onSubmit={handleSubmit}>
+          <Field.Root name="q">
+            <Autocomplete.Root items={['alpha', 'alpine']} submitOnItemClick>
+              <Autocomplete.Input />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+        </Form>,
+      );
+
+      const input = screen.getByRole<HTMLInputElement>('combobox');
+      await user.type(input, 'al');
+      await user.keyboard('{ArrowDown}');
+
+      const alphaButton = screen.getByRole('option', { name: 'alpha' });
+      expect(alphaButton).toHaveAttribute('data-highlighted');
+
+      const list = screen.getByRole('listbox');
+      list.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('{Enter}');
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.results.at(-1)?.value).toBe('alpha');
+    });
+  });
+
+  describe('object item stringification', () => {
+    it('filters and displays using label for {label} objects', async () => {
+      const items = [{ label: 'United States' }, { label: 'Canada' }, { label: 'Australia' }];
+
+      const { user } = await render(
+        <Autocomplete.Root items={items}>
+          <Autocomplete.Input data-testid="input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner>
+              <Autocomplete.Popup>
+                <Autocomplete.List
+                  v-slots={{
+                    item: ({ item }: { item: { label: string } }) => (
+                      <Autocomplete.Item value={item}>{item.label}</Autocomplete.Item>
+                    ),
+                  }}
+                />
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+      await user.click(input);
+      await user.type(input, 'can');
+
+      // Should match the item by its label, not its value
+      await waitFor(() => {
+        expect(screen.getAllByRole('option')).toHaveLength(1);
+      });
+      await user.click(screen.getByRole('option', { name: 'Canada' }));
+
+      expect(input).toHaveValue('Canada');
+    });
+
+    it('uses itemToStringValue when object lacks label', async () => {
+      const items = [{ country: 'United States' }, { country: 'Canada' }, { country: 'Australia' }];
+
+      const { user } = await render(
+        <Autocomplete.Root items={items} itemToStringValue={(i) => i.country}>
+          <Autocomplete.Input data-testid="input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner>
+              <Autocomplete.Popup>
+                <Autocomplete.List
+                  v-slots={{
+                    item: ({ item }: { item: { country: string } }) => (
+                      <Autocomplete.Item value={item}>{item.country}</Autocomplete.Item>
+                    ),
+                  }}
+                />
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+      await user.click(input);
+      await user.type(input, 'can');
+
+      // Should match by the provided itemToStringValue mapping
+      await waitFor(() => {
+        expect(screen.getAllByRole('option')).toHaveLength(1);
+      });
+      await user.keyboard('{ArrowDown}');
+      await user.keyboard('{Enter}');
+
+      expect(input).toHaveValue('Canada');
+    });
+
+    it('filters and displays using value for {value} objects', async () => {
+      const items = [{ value: 'United States' }, { value: 'Canada' }, { value: 'Australia' }];
+
+      const { user } = await render(
+        <Autocomplete.Root items={items}>
+          <Autocomplete.Input data-testid="input" />
+          <Autocomplete.Portal>
+            <Autocomplete.Positioner>
+              <Autocomplete.Popup>
+                <Autocomplete.List
+                  v-slots={{
+                    item: ({ item }: { item: { value: string } }) => (
+                      <Autocomplete.Item value={item}>{item.value}</Autocomplete.Item>
+                    ),
+                  }}
+                />
+              </Autocomplete.Popup>
+            </Autocomplete.Positioner>
+          </Autocomplete.Portal>
+        </Autocomplete.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+      await user.type(input, 'can');
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('option')).toHaveLength(1);
+      });
+      await user.click(screen.getByRole('option', { name: 'Canada' }));
+
+      expect(input).toHaveValue('Canada');
+    });
+  });
+
+  describe('Field', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('sets `required` on the visible input', async () => {
+      await render(
+        <Field.Root>
+          <Autocomplete.Root required>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner />
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('input')).toHaveAttribute('required');
+    });
+
+    it('[data-touched]', async () => {
+      await render(
+        <Field.Root>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="">Select</Autocomplete.Item>
+                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('data-touched');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.focusOut(input);
+
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('data-touched', '');
+    });
+
+    it('[data-dirty]', async () => {
+      const { user } = await render(
+        <Field.Root>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="">Select</Autocomplete.Item>
+                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('data-dirty');
+
+      await user.type(input, 'test');
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('data-dirty', '');
+    });
+
+    describe('[data-filled]', () => {
+      it('adds [data-filled] attribute when input has content', async () => {
+        const { user } = await render(
+          <Field.Root>
+            <Autocomplete.Root>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="">Select</Autocomplete.Item>
+                      <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        expect(input).not.toHaveAttribute('data-filled');
+
+        await user.type(input, 'test input');
+        await flushMicrotasks();
+
+        expect(input).toHaveAttribute('data-filled', '');
+      });
+
+      it('adds [data-filled] attribute when already filled with defaultValue', async () => {
+        await render(
+          <Field.Root>
+            <Autocomplete.Root defaultValue="initial value">
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        expect(input).toHaveAttribute('data-filled');
+      });
+    });
+
+    it('[data-focused]', async () => {
+      await render(
+        <Field.Root>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="">Select</Autocomplete.Item>
+                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('data-focused');
+
+      await fireEvent.focusIn(input);
+
+      expect(input).toHaveAttribute('data-focused', '');
+
+      await fireEvent.focusOut(input);
+
+      expect(input).not.toHaveAttribute('data-focused');
+    });
+
+    it('[data-invalid]', async () => {
+      await render(
+        <Field.Root invalid>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).toHaveAttribute('data-invalid', '');
+    });
+
+    it('[data-valid]', async () => {
+      const { user } = await render(
+        <Field.Root validationMode="onBlur">
+          <Autocomplete.Root required>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="1">Option 1</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByRole('combobox');
+      expect(input).not.toHaveAttribute('data-valid');
+      expect(input).not.toHaveAttribute('data-invalid');
+
+      await user.type(input, 'ok');
+      input.blur();
+      await flushMicrotasks();
+
+      expect(input).toHaveAttribute('data-valid', '');
+      expect(input).not.toHaveAttribute('data-invalid');
+    });
+
+    it('prop: validate', async () => {
+      await render(
+        <Field.Root validationMode="onBlur" validate={() => 'error'}>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner />
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await fireEvent.focusIn(input);
+      await fireEvent.focusOut(input);
+      await flushMicrotasks();
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('prop: validationMode=onSubmit', async () => {
+      const { user } = await render(
+        <Form>
+          <Field.Root
+            validate={(value) => {
+              return value === 'one' ? 'error' : null;
+            }}
+          >
+            <Autocomplete.Root required>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List>
+                      <Autocomplete.Item value="one">Option 1</Autocomplete.Item>
+                      <Autocomplete.Item value="two">Option 2</Autocomplete.Item>
+                    </Autocomplete.List>
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      const input = screen.getByTestId('input');
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await user.click(screen.getByText('submit'));
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+
+      await user.type(input, 'two');
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await user.clear(input);
+      await user.type(input, 'one');
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+
+      await user.clear(input);
+      await user.type(input, 'three');
+      expect(input).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('prop: validationMode=onChange', async () => {
+      const { user } = await render(
+        <Field.Root
+          validationMode="onChange"
+          validate={(value) => {
+            return value === 'invalid' ? 'error' : null;
+          }}
+        >
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="valid">Valid Option</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await user.type(input, 'invalid');
+
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('prop: validationMode=onBlur', async () => {
+      const { user } = await render(
+        <Field.Root
+          validationMode="onBlur"
+          validate={(value) => {
+            return value === 'invalid' ? 'error' : null;
+          }}
+        >
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="valid">Valid Option</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+          <Field.Error data-testid="error" />
+        </Field.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      expect(input).not.toHaveAttribute('aria-invalid');
+
+      await user.type(input, 'invalid');
+
+      await fireEvent.focusOut(input);
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-invalid', 'true');
+      });
+    });
+
+    it('Field.Label', async () => {
+      await render(
+        <Field.Root>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner />
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+          <Field.Label data-testid="label" as="span" nativeLabel={false} />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('input')).toHaveAttribute(
+        'aria-labelledby',
+        screen.getByTestId('label').id,
+      );
+    });
+
+    it('Field.Description', async () => {
+      await render(
+        <Field.Root>
+          <Autocomplete.Root>
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner />
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+          <Field.Description data-testid="description" />
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('input')).toHaveAttribute(
+        'aria-describedby',
+        screen.getByTestId('description').id,
+      );
     });
   });
 });
