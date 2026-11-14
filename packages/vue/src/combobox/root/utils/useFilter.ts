@@ -9,8 +9,26 @@ export type { Filter, UseFilterOptions };
 
 /**
  * Matches items against a query using `Intl.Collator` for robust string matching.
+ * Call it in `setup`. Pass the options as a ref or a getter, so that the filter follows a change of
+ * an option. With no `locale`, the filter uses `en-US` until the component is mounted, and then the
+ * runtime locale.
  */
-export const useCoreFilter = getFilter;
+export function useCoreFilter(options: MaybeRefOrGetter<UseFilterOptions> = {}): Filter {
+  const locale = useFormatLocale(() => toValue(options).locale);
+  const coreFilter = computed(() => getFilter({ ...toValue(options), locale: locale.value }));
+
+  return {
+    contains(item, query, itemToString) {
+      return coreFilter.value.contains(item, query, itemToString);
+    },
+    startsWith(item, query, itemToString) {
+      return coreFilter.value.startsWith(item, query, itemToString);
+    },
+    endsWith(item, query, itemToString) {
+      return coreFilter.value.endsWith(item, query, itemToString);
+    },
+  };
+}
 
 export interface UseComboboxFilterOptions extends UseFilterOptions {
   /**
