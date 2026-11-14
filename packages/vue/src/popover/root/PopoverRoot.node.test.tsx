@@ -32,7 +32,7 @@ const open: TriggerValues = {
 
 describe('<Popover.Root /> on a server', () => {
   it('writes the attributes of a dialog trigger for a closed root', async () => {
-    const [tag] = (await renderRoot()).match(/<button\b[^>]*>/)!;
+    const [tag] = /<button\b[^>]*>/.exec(await renderRoot())!;
 
     expect(tag).toBe(
       '<button type="button" tabindex="0" data-vase-ui-click-trigger id="inside" aria-haspopup="dialog" aria-expanded="false">',
@@ -41,7 +41,7 @@ describe('<Popover.Root /> on a server', () => {
 
   it('writes the open attributes for a root with defaultTriggerId', async () => {
     const html = await renderRoot({ defaultOpen: true, defaultTriggerId: 'inside' });
-    const [tag] = html.match(/<button\b[^>]*>/)!;
+    const [tag] = /<button\b[^>]*>/.exec(html)!;
     const [, controls] = / aria-controls="([^"]*)"/.exec(tag)!;
 
     // The generated id of the popup has the count of the earlier ids, so the test reads it.
