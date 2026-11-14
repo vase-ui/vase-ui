@@ -49,27 +49,34 @@ describe('<Menu.Trigger />', () => {
     });
 
     it.each([
-      { name: 'the disabled prop', root: false, menubar: false, prop: true },
-      { name: 'a disabled root', root: true, menubar: false, prop: false },
-      { name: 'a disabled menubar', root: false, menubar: true, prop: false },
-    ])('is disabled by $name', async ({ root, menubar, prop }) => {
-      const trigger = (
+      { name: 'the disabled prop', root: false, prop: true },
+      { name: 'a disabled root', root: true, prop: false },
+    ])('is disabled by $name', async ({ root, prop }) => {
+      await render(
         <Menu.Root disabled={root}>
           <Menu.Trigger disabled={prop}>Open</Menu.Trigger>
-        </Menu.Root>
+        </Menu.Root>,
       );
 
+      const button = screen.getByRole('button');
+      expect(button).toHaveProperty('disabled', true);
+      expect(button).toHaveAttribute('data-disabled');
+    });
+
+    it('is disabled by a disabled menubar above a trigger that has a handle', async () => {
+      const handle = Menu.createHandle();
       await render(
-        menubar ? (
+        <div>
           <MenubarProvider context={createMenubarContext({ disabled: computed(() => true) })}>
-            <CompositeRootPart>{trigger}</CompositeRootPart>
+            <CompositeRootPart>
+              <Menu.Trigger handle={handle}>Open</Menu.Trigger>
+            </CompositeRootPart>
           </MenubarProvider>
-        ) : (
-          trigger
-        ),
+          <Menu.Root handle={handle} />
+        </div>,
       );
 
-      const button = screen.getByRole(menubar ? 'menuitem' : 'button');
+      const button = screen.getByRole('menuitem');
       expect(button).toHaveProperty('disabled', true);
       expect(button).toHaveAttribute('data-disabled');
     });
@@ -320,6 +327,22 @@ describe('<Menu.Trigger />', () => {
       expect(probe.store.select('parent').type).toBe('menubar');
       expect(probe.store.select('keyboardEventRelay')).toBeTypeOf('function');
     });
+  });
+
+  it('applies the props that the store has for a filter', async () => {
+    const probe = createMenuStoreProbe();
+    await render(
+      <Menu.Root>
+        <probe.Probe />
+        <Menu.Trigger>Open</Menu.Trigger>
+      </Menu.Root>,
+    );
+    expect(screen.getByRole('button')).not.toHaveAttribute('data-filter');
+
+    probe.store.set('filterTriggerProps', { 'data-filter': '' } as never);
+    await flushMicrotasks();
+
+    expect(screen.getByRole('button')).toHaveAttribute('data-filter');
   });
 
   describe('in a menubar', () => {

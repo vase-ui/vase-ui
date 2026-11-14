@@ -4,6 +4,7 @@ import { Menu } from '@vase-ui/vue/menu';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
   screen,
   takeReportedMessages,
@@ -623,6 +624,73 @@ describe('<Menu.Positioner />', () => {
         reason: null,
       });
     });
+  });
+
+  it('reports the highlighted item again when the item registry settles', async () => {
+    const onItemHighlighted = vi.fn();
+    const showItem = shallowRef(false);
+    const probe = createMenuStoreProbe();
+    await render(() => (
+      <Menu.Root open onItemHighlighted={onItemHighlighted}>
+        <probe.Probe />
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>{showItem.value ? <Menu.Item>Item</Menu.Item> : null}</Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ));
+    probe.store.setActiveIndex(0, REASONS.keyboard);
+    await flushMicrotasks();
+    expect(onItemHighlighted).not.toHaveBeenCalled();
+
+    showItem.value = true;
+
+    await waitFor(() => {
+      expect(onItemHighlighted).toHaveBeenCalledTimes(1);
+    });
+    expect(onItemHighlighted.mock.lastCall?.[0]).toBe(screen.getByRole('menuitem'));
+  });
+
+  it('gives its positioning context to the node of the menu while it is mounted', async () => {
+    const mounted = shallowRef(true);
+    const probe = createMenuStoreProbe();
+    await render(() => (
+      <Menu.Root open>
+        <probe.Probe />
+        <Menu.Portal>{mounted.value ? <Menu.Positioner /> : null}</Menu.Portal>
+      </Menu.Root>
+    ));
+    const readContext = () =>
+      probe.store
+        .select('floatingTreeRoot')
+        .nodesRef.value.find((node) => node.id === probe.store.select('floatingNodeId'))?.context;
+    await waitFor(() => {
+      expect(readContext()?.nodeId).toBe(probe.store.select('floatingNodeId'));
+    });
+
+    mounted.value = false;
+    await flushMicrotasks();
+
+    expect(readContext()).toBe(undefined);
+  });
+
+  it('marks the positioner and the popup of an Escape close as instant', async () => {
+    await render(
+      <Menu.Root defaultOpen>
+        <Menu.Portal keepMounted>
+          <Menu.Positioner data-testid="positioner">
+            <Menu.Popup data-testid="popup" />
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+    expect(screen.getByTestId('positioner')).not.toHaveAttribute('data-instant');
+
+    await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(screen.getByTestId('positioner')).toHaveAttribute('data-instant', 'dismiss');
+    expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
   });
 
   it('is not nested for a menu with no parent menu', async () => {

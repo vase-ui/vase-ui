@@ -360,28 +360,35 @@ describe('<Menu.Item />', () => {
   });
 
   describe('typeahead', () => {
-    it('keeps the Space key from activating the item while a typeahead session runs', async () => {
-      const probe = createMenuStoreProbe();
-      await render(
-        <Menu.Root open>
-          <probe.Probe />
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup>
-                <Menu.Item>Item</Menu.Item>
-              </Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>,
-      );
-      const item = screen.getByRole('menuitem');
-      item.focus();
+    it.each([
+      { name: 'does not click', typing: true, clicks: 0 },
+      { name: 'clicks', typing: false, clicks: 1 },
+    ])(
+      '$name the item for the Space key when a typeahead session runs: $typing',
+      async ({ typing, clicks }) => {
+        const onClick = vi.fn();
+        const probe = createMenuStoreProbe();
+        await render(
+          <Menu.Root open>
+            <probe.Probe />
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item onClick={onClick}>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>,
+        );
+        const item = screen.getByRole('menuitem');
+        item.focus();
 
-      probe.store.context.typingRef.value = true;
-      const prevented = !(await fireEvent.keyDown(item, { key: ' ' }));
+        probe.store.context.typingRef.value = typing;
+        await fireEvent.keyDown(item, { key: ' ' });
 
-      expect(prevented).toBe(true);
-    });
+        expect(onClick).toHaveBeenCalledTimes(clicks);
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
