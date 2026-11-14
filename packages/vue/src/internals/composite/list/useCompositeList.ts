@@ -134,7 +134,8 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
     // at the boundary. A pair with no common ancestor has no observer, and its items still register.
     const roots = new Set<Element>();
     for (let i = 1; i < sortedNodes.length; i += 1) {
-      const root = getCommonAncestor(sortedNodes[i - 1], sortedNodes[i]);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from 1 to the last index, so `i - 1` and `i` are indexes of `sortedNodes`.
+      const root = getCommonAncestor(sortedNodes[i - 1]!, sortedNodes[i]!);
       if (root) {
         roots.add(root);
       }
@@ -153,10 +154,10 @@ export function useCompositeList<Metadata>(params: UseCompositeListParameters<Me
     // snapshots resolved from them.
     const previous = previousItems;
     const changed =
-      !previous ||
-      previous.length !== items.length ||
+      previous?.length !== items.length ||
       items.some((item, index) => {
-        const previousItem = previous[index];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The length check above proves the index.
+        const previousItem = previous[index]!;
         return (
           item.index !== previousItem.index ||
           item.element !== previousItem.element ||
@@ -273,8 +274,8 @@ function getCommonAncestor(firstNode: Element, lastNode: Element) {
 
 function hasMovedNode(entries: MutationRecord[]) {
   for (const entry of entries) {
-    for (let i = 0; i < entry.removedNodes.length; i += 1) {
-      if (entry.removedNodes[i].isConnected) {
+    for (const node of entry.removedNodes) {
+      if (node.isConnected) {
         return true;
       }
     }

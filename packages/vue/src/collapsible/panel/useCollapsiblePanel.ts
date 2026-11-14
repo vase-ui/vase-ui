@@ -151,7 +151,7 @@ export function useCollapsiblePanel(
   // pixels. The height then goes from `auto` to `0`, and no transition runs. A read of the layout
   // after the update gives the browser that style.
   function readLayoutAfterUpdate() {
-    nextTick(() => {
+    void nextTick(() => {
       panel?.getBoundingClientRect();
     });
   }

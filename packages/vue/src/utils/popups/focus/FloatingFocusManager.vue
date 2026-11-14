@@ -226,7 +226,8 @@ const readSources = () => effects.map((item) => item.sources());
 
 function update(sourceLists: unknown[][]) {
   effects.forEach((item, index) => {
-    const sources = sourceLists[index];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `sourceLists` has one list for each effect.
+    const sources = sourceLists[index]!;
     const lastSources = item.lastSources;
     if (
       !lastSources ||
@@ -472,7 +473,7 @@ function handleBeforeGuardFocusin(event: FocusEvent) {
   const portalNode = portalContext?.portalNode.value;
   if (props.modal) {
     const els = getTabbableContent();
-    els[els.length - 1]?.focus();
+    els.at(-1)?.focus();
   } else if (portalNode) {
     if (isOutsideEvent(event, portalNode)) {
       getNextTabbable(domReference.value)?.focus();

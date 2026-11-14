@@ -93,7 +93,8 @@ function getFrameDocuments(doc: Document): Document[] {
   for (let index = 0; view && index < view.length; index += 1) {
     let frameDocument: Document;
     try {
-      frameDocument = view[index].document;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop condition proves the index.
+      frameDocument = view[index]!.document;
     } catch {
       // A cross-origin frame throws when code reads its document.
       continue;
@@ -267,6 +268,7 @@ export function useDismiss(
     }
 
     // Key code 229 indicates that an IME is processing the key event.
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- The key code 229 is the IME workaround of Base UI, and the code keeps it.
     const isImeKey = event.keyCode === 229;
 
     // Wait until IME is settled. Pressing `Escape` while composing should
@@ -300,6 +302,7 @@ export function useDismiss(
   // target.
   function handleFloatingKeydown(event: KeyboardEvent) {
     closeOnEscapeKeyDown(event);
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
     if (!event.cancelBubble) {
       parent?.handleKeydown(event);
     }

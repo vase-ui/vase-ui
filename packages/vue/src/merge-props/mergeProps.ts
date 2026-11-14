@@ -39,6 +39,7 @@ type HandlerValue = Handler | Handler[] | null | false | undefined;
 
 const EMPTY_PROPS = {};
 
+/* eslint-disable @typescript-eslint/unified-signatures -- The overloads are the public signature of Base UI, one for each count of props objects. */
 /**
  * Merges sets of Vue props. The rightmost set wins, as with `Object.assign`: its fields replace
  * the conflicting fields of the sets to its left. Event handlers, `class` and `style` have other
@@ -96,6 +97,7 @@ export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
 ): MergedProps<T>;
+/* eslint-enable @typescript-eslint/unified-signatures */
 export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
   if (!c && !d && !e && !a) {
     return createInitialMergedProps(b);

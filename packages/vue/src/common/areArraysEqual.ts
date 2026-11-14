@@ -13,7 +13,8 @@ export function areArraysEqual<Item>(
   }
 
   for (let i = 0; i < length; i += 1) {
-    if (!itemComparer(array1[i], array2[i])) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The length check above proves both indexes.
+    if (!itemComparer(array1[i]!, array2[i]!)) {
       return false;
     }
   }

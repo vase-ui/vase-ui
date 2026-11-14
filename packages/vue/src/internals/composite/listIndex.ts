@@ -175,7 +175,8 @@ export function getGridNavigatedIndex(
           currentRowIndex += 1;
           rows[currentRowIndex] = [];
         }
-        rows[currentRowIndex].push(idx);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The block above makes the row of `currentRowIndex` when the row changes.
+        rows[currentRowIndex]!.push(idx);
         rowIndexMap[idx] = currentRowIndex;
       });
     }
@@ -210,7 +211,8 @@ export function getGridNavigatedIndex(
         return undefined;
       }
 
-      const colInRow = rows[currentRow].indexOf(prevIndex);
+      /* eslint-disable @typescript-eslint/no-non-null-assertion -- Each row index is in `rows`, each row has an item, and `col` is in its row. */
+      const colInRow = rows[currentRow]!.indexOf(prevIndex);
       const step = direction === 'up' ? -1 : 1;
 
       for (let nextRow = currentRow + step, i = 0; i < rows.length; i += 1, nextRow += step) {
@@ -220,21 +222,22 @@ export function getGridNavigatedIndex(
           }
           nextRow = nextRow < 0 ? rows.length - 1 : 0;
           if (onLoop) {
-            const clampedCol = Math.min(colInRow, rows[nextRow].length - 1);
-            const targetItemIndex = rows[nextRow][clampedCol] ?? rows[nextRow][0];
+            const clampedCol = Math.min(colInRow, rows[nextRow]!.length - 1);
+            const targetItemIndex = rows[nextRow]![clampedCol] ?? rows[nextRow]![0]!;
             const returnedItemIndex = onLoop(event, prevIndex, targetItemIndex);
             nextRow = rowIndexMap[returnedItemIndex] ?? nextRow;
           }
         }
 
-        const targetRow = rows[nextRow];
+        const targetRow = rows[nextRow]!;
         for (let col = Math.min(colInRow, targetRow.length - 1); col >= 0; col -= 1) {
-          const candidate = targetRow[col];
+          const candidate = targetRow[col]!;
           if (!isListIndexDisabled(list, candidate, disabledIndices)) {
             return candidate;
           }
         }
       }
+      /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
       return undefined;
     };

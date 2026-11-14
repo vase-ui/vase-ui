@@ -43,7 +43,7 @@ export function isNativeInput(
 
 export function scrollIntoViewIfNeeded(
   scrollContainer: HTMLElement | null,
-  element: HTMLElement | null,
+  element: HTMLElement | null | undefined,
   direction: TextDirection,
   orientation: 'horizontal' | 'vertical' | 'both',
 ) {

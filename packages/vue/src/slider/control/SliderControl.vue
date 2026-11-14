@@ -145,8 +145,10 @@ function getFingerCoords(event: TouchEvent | PointerEvent): Coords | null {
   // The event is TouchEvent
   if (touchId != null && (event as TouchEvent).changedTouches) {
     const touchEvent = event as TouchEvent;
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of -- The browser compatibility data has no entry for the iterator of `TouchList`. The loop reads the list by index, as Base UI does.
     for (let i = 0; i < touchEvent.changedTouches.length; i += 1) {
-      const touch = touchEvent.changedTouches[i];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop condition proves the index.
+      const touch = touchEvent.changedTouches[i]!;
       if (touch.identifier === touchId) {
         return { x: touch.clientX, y: touch.clientY };
       }

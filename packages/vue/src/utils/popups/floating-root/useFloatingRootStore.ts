@@ -20,7 +20,8 @@ export interface UseFloatingRootStoreOptions {
   /**
    * Called when an interaction composable requests an open change.
    */
-  onOpenChange?(open: boolean, eventDetails: VaseUIChangeEventDetails<string>): void;
+  onOpenChange?:
+    ((open: boolean, eventDetails: VaseUIChangeEventDetails<string>) => void) | undefined;
   /**
    * The elements to copy into the store. A source that gives `undefined` keeps the current value of
    * the store.

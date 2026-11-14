@@ -127,7 +127,7 @@ export function useTriggerRegistration<State extends PopupStoreState<unknown>>(
 
   return {
     element: element as Readonly<ShallowRef<Element | null>>,
-    registerTrigger(next: Element | null) {
+    registerTrigger: (next: Element | null) => {
       element.value = next;
     },
   };

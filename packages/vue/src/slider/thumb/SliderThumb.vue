@@ -132,11 +132,13 @@ function getDefaultAriaValueText(
     return undefined;
   }
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- A thumb reads the value at its own index, and `formatNumber` accepts a missing value. */
   if (values.length === 2) {
-    return `${formatNumber(values[index], locale, format)} ${index === 0 ? 'start' : 'end'} range`;
+    return `${formatNumber(values[index]!, locale, format)} ${index === 0 ? 'start' : 'end'} range`;
   }
 
-  return format ? formatNumber(values[index], locale, format) : undefined;
+  return format ? formatNumber(values[index]!, locale, format) : undefined;
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 }
 
 function getNewValue(
@@ -233,7 +235,8 @@ const { ref: listItemRef, index: compositeIndex } = useCompositeListItem<ThumbMe
 
 const thumbIndex = computed(() => (!range.value ? 0 : (props.index ?? compositeIndex.value)));
 const last = computed(() => thumbIndex.value === sliderValues.value.length - 1);
-const thumbValue = computed(() => sliderValues.value[thumbIndex.value]);
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A thumb that has no index yet has no value, and `valueToPercent` then gives `NaN`, as in Base UI.
+const thumbValue = computed(() => sliderValues.value[thumbIndex.value]!);
 const thumbValuePercent = computed(() => valueToPercent(thumbValue.value, min.value, max.value));
 
 const positionPercent = shallowRef<number | undefined>();
@@ -502,20 +505,22 @@ function inputProps() {
             increment = largeStep.value;
             keyDirection = -1;
             break;
+          /* eslint-disable @typescript-eslint/no-non-null-assertion -- `Number.isFinite` proves that the value of the neighbor exists. */
           case END:
             newValue =
               range.value && Number.isFinite(sliderValues.value[thumbIndex.value + 1])
-                ? sliderValues.value[thumbIndex.value + 1] -
+                ? sliderValues.value[thumbIndex.value + 1]! -
                   step.value * minStepsBetweenValues.value
                 : max.value;
             break;
           case HOME:
             newValue =
               range.value && Number.isFinite(sliderValues.value[thumbIndex.value - 1])
-                ? sliderValues.value[thumbIndex.value - 1] +
+                ? sliderValues.value[thumbIndex.value - 1]! +
                   step.value * minStepsBetweenValues.value
                 : min.value;
             break;
+          /* eslint-enable @typescript-eslint/no-non-null-assertion */
           default:
             break;
         }
