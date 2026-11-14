@@ -134,9 +134,9 @@ export function useValueBeforeHydration(
     return true;
   }
 
-  // The watcher gives Vue a job in the flush that `onMounted` starts. `nextTick` then waits for
-  // that flush, in which a root that registers its control in its own `onMounted` takes the
-  // initial value. A post watcher would send the event before that.
+  // The watcher gives Vue a job in the flush that `onMounted` starts, so `nextTick` waits for that
+  // flush. A root that registers its control in its own `onMounted` takes the initial value of its
+  // field in that flush, before the event.
   const isMounted = shallowRef(false);
   watch(isMounted, () => {});
   onMounted(() => {

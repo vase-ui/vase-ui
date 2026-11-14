@@ -21,7 +21,7 @@ const props = withDefaults(
 const ValueText = defineComponent({
   props: { value: { type: String, default: undefined } },
   setup(textProps) {
-    return () => h('output', textProps.value);
+    return () => h('output', textProps.value ?? '');
   },
 });
 

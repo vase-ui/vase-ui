@@ -660,8 +660,8 @@ The hydration state:
 - A part that measures the layout gives no measurement on a server and in the first client render. `Tabs.Indicator` reads the layout in a `computed` that gives `null` while `useIsHydrating()` is `true`. The server HTML and the first client render are then equal.
 - `useValueBeforeHydration(props, control)` is in `src/common/hydration.ts` too. A part that renders a text input and gives it a `value` key calls it in `setup`. `Field.Control`, `NumberField.Input`, `OTPField.Input`, `Combobox.Input` and `Toolbar.Input` call it.
 - Vue writes the `value` key of an `<input>` when it hydrates the input. That write replaces the text that the user typed before the hydration.
-- While Vue hydrates the part from server HTML, the result is `false`. While the result is `false`, the part writes no DOM value. Its element gets no `value` key, and the part writes no value of its own.
-- After the flush of the mount, a control whose value differs from a new control with the same attributes gets one `input` event. The result is then `true`. A handler for that event reads `false`, because the composable sets the result after the dispatch.
+- While Vue hydrates the part from server HTML, the result is `false`. While the result is `false`, the element of the part gets no `value` key, and no watcher of the part writes a value to it. The handler of the `input` event can still write the text of the state, as for a change that the part refuses.
+- After the flush of the mount, a control whose value differs from a new control with the same attributes gets one `input` event. Then the result is `true`, also for a control that got no event. A handler for that event reads `false`, because the composable sets the result after the dispatch.
 - In a client-only mount and for a component in `as`, the result is `true` from the start.
 - The composable reads `vnode.el` of `getCurrentInstance()`. Vue sets it before `setup` only when it hydrates the component from server HTML. Vue has no public API for this fact, and Nuxt reads the same field. The import thus breaks the rule of [Vapor mode](#vapor-mode) on one line. In Vapor mode the instance is `null`, and the part writes its value as in a client-only mount.
 
@@ -1829,7 +1829,7 @@ The hydration helpers:
 - `hydrate` mounts the client-only render first, and removes it before it hydrates. The document thus holds one app at a time, as a page does.
 - `hydrateAfter(component, { serverHtml, props, before })` inserts the server HTML as `hydrate` does. It then awaits `before(container)`, and it hydrates the HTML. `before` does what a user or a browser does before the scripts of a page run, such as a focus, a key press or a write of `input.value`.
 - After mount and two ticks, `hydrateAfter` fails the test on a Vue warning or a console call. It makes no comparison with a client-only render, because `before` changes the DOM.
-- The `blur` and `focusout` of `useValueBeforeHydration` come after the two ticks. A case that needs them waits for a state that stays, such as `data-touched`.
+- `useValueBeforeHydration` sends the `blur` and `focusout` of a changed control one tick after its `input` event, and the events of a second control come in a later flush. A case that needs a state that these events set waits for that state with `waitFor`, such as `data-touched`.
 - To test what an inline script of the server HTML does before the app starts, insert the HTML with a fragment of a range, as `hydrate` does. Make the assertions before a mount. `internals/PrehydrationScript.test.tsx` is the model.
 - To test a nonce, load an `<iframe>` whose document has a `Content-Security-Policy` in a `<meta>` element. Insert the server HTML into the document of the frame, and collect its `securitypolicyviolation` events.
 

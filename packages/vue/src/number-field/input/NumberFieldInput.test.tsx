@@ -2640,7 +2640,11 @@ describe('<NumberField.Input />', () => {
     // options of these cases. The parser reads the decimal separator from a formatter with
     // `numberingSystem` and no other option.
     it('parses the typed text in the locale of the runtime', async () => {
-      const props = { value: 1, format: { numberingSystem: 'latn', maximumFractionDigits: 7 } };
+      // The root formats the text of the server again in `de-DE` when it is mounted.
+      const props = {
+        value: 1000.5,
+        format: { numberingSystem: 'latn', maximumFractionDigits: 7 },
+      };
       mockRuntimeLocale('de-DE');
 
       const { input, changes } = await hydrateTyped(props, { typed: '7,5', focus: 'input' });

@@ -45,7 +45,7 @@ A reset of the form puts an uncontrolled field back to `defaultValue`. A control
 
 Because of the hidden input, `OTPField.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
-Text that a visitor types, or that the browser fills, before the page hydrates stays in the slots. After the hydration, the root emits `valueChange` and `update:value` with that text. A complete code emits `valueComplete`, and with `autoSubmit` the root submits the form. When the visitor left a slot before the page hydrated, the slot then also gets `change`, `blur` and `focusout`.
+Characters that a visitor types, or that the browser fills, before the page hydrates stay in the slots when the field accepts them. After the hydration, the root emits `valueChange` and `update:value` with them. A complete code emits `valueComplete`, and with `autoSubmit` the root submits the form. When the visitor left a slot before the page hydrated, the slot then also gets `change`, `blur` and `focusout`.
 
 ## Examples
 
