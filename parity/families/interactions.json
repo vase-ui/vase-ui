@@ -17,14 +17,6 @@
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "default options"],
-      "title": "outsidePress ignored for third party elements",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/focus/markOthers.ts",
-      "reason": "The case needs the markers that `markOthers` writes while a focus manager is open. The focus manager of Vase UI writes no marker. The pull request that ports `markOthers.ts` ports the case."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
       "describe": ["useDismiss", "options set to false"],
       "title": "does not dismiss when clicking portaled children",
       "kind": "replaced",
