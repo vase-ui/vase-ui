@@ -2006,6 +2006,25 @@ describe('usePopupRootSync', () => {
 
     expect(store.state.openMethod).toBe(null);
   });
+
+  it('keeps openMethod while KeepAlive holds the root', async () => {
+    const store = createStoreWithOpenMethod();
+    const visible = shallowRef(true);
+    await render(() => (
+      <KeepAlive>
+        {visible.value ? <SyncTest key="root" store={store} open /> : <Other key="other" />}
+      </KeepAlive>
+    ));
+    store.set('openMethod', 'touch');
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+
+    visible.value = true;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+  });
 });
 
 describe('usePopupRootWithPopupId', () => {

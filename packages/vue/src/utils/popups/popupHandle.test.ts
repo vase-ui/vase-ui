@@ -2,6 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { watch } from 'vue';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import { createAlertDialogHandle } from '../../alert-dialog/handle';
+import { createDialogHandle } from '../../dialog/store/DialogHandle';
+import type { DialogHandle } from '../../dialog/store/DialogHandle';
+import { createMenuHandle } from '../../menu/store/MenuHandle';
+import { createPopoverHandle } from '../../popover/store/PopoverHandle';
+import { createPreviewCardHandle } from '../../preview-card/store/PreviewCardHandle';
+import { createTooltipHandle } from '../../tooltip/store/TooltipHandle';
 import { BasePopupHandle } from './popupHandle';
 import { PopupTriggerMap } from './popupTriggerMap';
 
@@ -353,4 +360,57 @@ describe('BasePopupHandle', () => {
       expect(details.trigger).toBe(undefined);
     });
   });
+});
+
+describe('concrete popup handles', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each<{
+    component: string;
+    warningName: string;
+    createHandle: () => { open(triggerId: string): void; close(): void; readonly isOpen: boolean };
+  }>([
+    { component: 'AlertDialog', warningName: 'Dialog', createHandle: createAlertDialogHandle },
+    { component: 'Dialog', warningName: 'Dialog', createHandle: createDialogHandle },
+    { component: 'Menu', warningName: 'Menu', createHandle: createMenuHandle },
+    { component: 'Popover', warningName: 'Popover', createHandle: createPopoverHandle },
+    { component: 'PreviewCard', warningName: 'PreviewCard', createHandle: createPreviewCardHandle },
+    { component: 'Tooltip', warningName: 'Tooltip', createHandle: createTooltipHandle },
+  ])(
+    '$component handle is closed and names itself in warnings while no root is attached',
+    ({ warningName, createHandle }) => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const handle = createHandle();
+
+      handle.open('trigger');
+      handle.close();
+
+      expect(handle.isOpen).toBe(false);
+      expect(countWarnings(consoleWarn, `${warningName}Handle.open() was called while`)).toBe(1);
+      expect(countWarnings(consoleWarn, `${warningName}Handle.close() was called while`)).toBe(1);
+    },
+  );
+
+  it.each<{ component: string; createHandle: () => DialogHandle<number> }>([
+    { component: 'AlertDialog', createHandle: createAlertDialogHandle },
+    { component: 'Dialog', createHandle: createDialogHandle },
+  ])(
+    '$component handle ignores openWithPayload() with a warning while detached',
+    ({ createHandle }) => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const handle = createHandle();
+
+      handle.openWithPayload(8);
+
+      expect(handle.isOpen).toBe(false);
+      expect(consoleWarn.mock.calls).toEqual([
+        [
+          'Vase UI: DialogHandle.openWithPayload() was called while no root that uses this handle is mounted. ' +
+            'The handle ignored the call and its payload. Mount a root with this handle before you call openWithPayload().',
+        ],
+      ]);
+    },
+  );
 });

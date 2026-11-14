@@ -72,6 +72,7 @@ import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
 import { TooltipStore } from '../store/TooltipStore';
+import type { State as TooltipStoreState } from '../store/TooltipStore';
 import { TooltipRootContext } from './TooltipRootContext';
 
 const props = withDefaults(defineProps<TooltipRootProps<Payload>>(), {
@@ -104,6 +105,7 @@ const {
   store,
   open: isOpen,
   payload,
+  transitionStatus,
   actions,
 } = usePopupRoot(
   props,
@@ -138,6 +140,34 @@ function closeWhileDisabled() {
 }
 onMounted(closeWhileDisabled);
 watch([() => store.select('open'), () => props.disabled], closeWhileDisabled);
+
+// Animations are instant in two cases: an open in the instant phase of a delay group, where the
+// tooltip of an adjacent trigger opens at once, and a close with the reason `none`, for example
+// because another tooltip of the group opened. An exit for another reason keeps its animation.
+// The watcher keeps the instant type that it replaces, and gives it back when neither case holds.
+let previousInstantType: TooltipStoreState<Payload>['instantType'] | null = null;
+watch(
+  [
+    transitionStatus,
+    () => store.select('isInstantPhase'),
+    () => store.select('lastOpenChangeReason'),
+    () => store.select('instantType'),
+  ],
+  ([status, isInstantPhase, lastOpenChangeReason, instantType]) => {
+    if (
+      (status === 'ending' && lastOpenChangeReason === REASONS.none) ||
+      (status !== 'ending' && isInstantPhase)
+    ) {
+      if (instantType !== 'delay') {
+        previousInstantType = instantType;
+      }
+      store.set('instantType', 'delay');
+    } else if (previousInstantType !== null) {
+      store.set('instantType', previousInstantType);
+      previousInstantType = null;
+    }
+  },
+);
 
 watch([isOpen, () => store.select('activeTriggerId')], ([openNow, triggerId]) => {
   if (openNow && triggerId == null) {
