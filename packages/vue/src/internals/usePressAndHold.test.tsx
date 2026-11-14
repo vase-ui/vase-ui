@@ -23,8 +23,11 @@ function defineHoldButton(options: HoldOptions, tick: () => boolean) {
       elementRef: button,
       ...options,
     });
+    // A real pointer can rest over the button, and the browser then sends a `mouseenter` event that
+    // starts the hold again. With `pointer-events: none` the button gets no such event. An event
+    // that a case dispatches still reaches the button.
     return () => (
-      <button ref={button} {...pointerHandlers}>
+      <button ref={button} style={{ pointerEvents: 'none' }} {...pointerHandlers}>
         hold
       </button>
     );

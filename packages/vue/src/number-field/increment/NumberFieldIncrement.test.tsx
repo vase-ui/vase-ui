@@ -171,6 +171,8 @@ describe('<NumberField.Increment />', () => {
         </NumberField.Root>,
       );
 
+      releasePointerAfterTest();
+
       await userEvent.click(screen.getByRole('button'));
 
       expect(onValueChange).toHaveBeenCalledTimes(1);
