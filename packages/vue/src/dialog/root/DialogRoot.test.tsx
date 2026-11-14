@@ -37,6 +37,7 @@ import {
   isPageLocked as isScrollDocumentLocked,
 } from '../../../test/fixtures/scrollDocument';
 import type { ScrollDocument } from '../../../test/fixtures/scrollDocument';
+import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
@@ -1637,7 +1638,6 @@ describe('<Dialog.Root />', () => {
     const resolveContainer = (target: PortalContainer) =>
       target && { 'shadow root': shadowRoot, body: document.body }[target];
 
-    // Alert Dialog has no popup parts, so the kind `alert dialog` of Base UI is not in the list.
     const nestedKinds = [
       {
         name: 'modal dialog',
@@ -1666,6 +1666,21 @@ describe('<Dialog.Root />', () => {
               </Dialog.Popup>
             </Dialog.Portal>
           </Dialog.Root>
+        ),
+      },
+      {
+        name: 'alert dialog',
+        modal: true,
+        render: (portalContainer: ShadowRoot | HTMLElement | undefined) => (
+          <AlertDialog.Root>
+            <AlertDialog.Trigger data-testid="open-nested">Open nested</AlertDialog.Trigger>
+            <AlertDialog.Portal container={portalContainer}>
+              <AlertDialog.Backdrop />
+              <AlertDialog.Popup data-testid="nested">
+                <AlertDialog.Close data-testid="close-nested">Close</AlertDialog.Close>
+              </AlertDialog.Popup>
+            </AlertDialog.Portal>
+          </AlertDialog.Root>
         ),
       },
     ];
@@ -2048,6 +2063,159 @@ describe('<Dialog.Root />', () => {
 
       expect(outsideBefore).not.toHaveFocus();
       expect(outsideAfter).not.toHaveFocus();
+    },
+  );
+
+  it.skipIf(isJSDOM)(
+    'returns focus into the dialog when a close confirmation opened by an outside press closes',
+    async () => {
+      const App = defineComponent(() => {
+        const open = shallowRef(false);
+        const confirmationOpen = shallowRef(false);
+        const value = shallowRef('');
+
+        return () => (
+          <Dialog.Root
+            open={open.value}
+            onOpenChange={(nextOpen: boolean, eventDetails: Dialog.Root.ChangeEventDetails) => {
+              if (!nextOpen && value.value) {
+                eventDetails.cancel();
+                confirmationOpen.value = true;
+                return;
+              }
+              open.value = nextOpen;
+            }}
+          >
+            <Dialog.Trigger data-testid="trigger">Tweet</Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Backdrop data-testid="backdrop" />
+              <Dialog.Popup>
+                <textarea
+                  data-testid="textarea"
+                  value={value.value}
+                  onInput={(event) => {
+                    value.value = (event.target as HTMLTextAreaElement).value;
+                  }}
+                />
+              </Dialog.Popup>
+            </Dialog.Portal>
+            <AlertDialog.Root
+              open={confirmationOpen.value}
+              onOpenChange={(nextOpen: boolean) => {
+                confirmationOpen.value = nextOpen;
+              }}
+            >
+              <AlertDialog.Portal>
+                <AlertDialog.Popup>
+                  <AlertDialog.Close data-testid="go-back">Go back</AlertDialog.Close>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </Dialog.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      await user.click(screen.getByTestId('trigger'));
+      await screen.findByRole('dialog');
+
+      const textarea = screen.getByTestId('textarea');
+      await user.click(textarea);
+      await user.keyboard('x');
+      expect(textarea).toHaveFocus();
+
+      // Pressing the backdrop moves focus to the body before the close is
+      // canceled and the confirmation dialog opens.
+      await user.click(screen.getByTestId('backdrop'));
+
+      const goBack = await screen.findByTestId('go-back');
+      await waitFor(() => {
+        expect(goBack).toHaveFocus();
+      });
+
+      await user.keyboard('[Enter]');
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('go-back')).toBe(null);
+      });
+      await waitFor(() => {
+        expect(textarea).toHaveFocus();
+      });
+    },
+  );
+
+  it.skipIf(isJSDOM)(
+    'does not leak a non-modal popup field into an unrelated dialog return focus',
+    async () => {
+      const App = defineComponent(() => {
+        const confirmationOpen = shallowRef(false);
+
+        return () => (
+          <>
+            {/* Clicking this non-focusable surface blurs the field to the body and
+                opens the confirmation while the body is focused. */}
+            <div
+              data-testid="surface"
+              onClick={() => {
+                confirmationOpen.value = true;
+              }}
+              style={{ width: '100px', height: '100px' }}
+            >
+              surface
+            </div>
+
+            {/* A non-modal dialog held open (controlled, no `onOpenChange`). Its field
+                blurs to the body on the outside press, but because it is non-modal it
+                must not feed the shared focus stack. */}
+            <Dialog.Root open modal={false}>
+              <Dialog.Portal>
+                <Dialog.Popup>
+                  <textarea data-testid="nonmodal-field" />
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+
+            <AlertDialog.Root
+              open={confirmationOpen.value}
+              onOpenChange={(nextOpen: boolean) => {
+                confirmationOpen.value = nextOpen;
+              }}
+            >
+              <AlertDialog.Portal>
+                <AlertDialog.Popup>
+                  <AlertDialog.Close data-testid="go-back">Go back</AlertDialog.Close>
+                </AlertDialog.Popup>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
+          </>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      const field = screen.getByTestId('nonmodal-field');
+      await user.click(field);
+      expect(field).toHaveFocus();
+
+      // Blur the field to the body and open the confirmation while it is focused.
+      await user.click(screen.getByTestId('surface'));
+
+      const goBack = await screen.findByTestId('go-back');
+      await waitFor(() => {
+        expect(goBack).toHaveFocus();
+      });
+
+      await user.keyboard('[Enter]');
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('go-back')).toBe(null);
+      });
+
+      // The modal gate keeps the non-modal field out of the shared stack, so the
+      // confirmation must not restore focus into the unrelated dialog.
+      await flushMicrotasks();
+      expect(field).not.toHaveFocus();
     },
   );
 
