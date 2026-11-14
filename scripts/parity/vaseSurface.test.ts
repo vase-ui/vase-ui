@@ -324,6 +324,20 @@ for (const { kind, file, edits, part } of [
   });
 }
 
+test('a prop that has the name of the listener of an emit is ignored when its JSDoc has the tag @ignore', () => {
+  const props = withText(
+    ROOT,
+    [
+      [
+        OPEN_PROP,
+        `${OPEN_PROP}\n  /**\n   * The listener of the \`openChangeComplete\` emit.\n   * @ignore\n   */\n  onOpenChangeComplete?: ${LISTENER_TYPE};`,
+      ],
+    ],
+    () => project.readComponent(exportOf('Root'))?.props,
+  );
+  assert.equal(props?.get('onOpenChangeComplete')?.ignored, true);
+});
+
 test('a prop that the SFC compiler reads and vue-component-meta lists under another name is an error', () => {
   assert.throws(
     () =>

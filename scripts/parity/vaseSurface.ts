@@ -162,9 +162,13 @@ export function readEmits(source: string, file: string): Map<string, MemberSurfa
     ) {
       const type = node.typeArguments?.[0];
       for (const member of type && ts.isTypeLiteralNode(type) ? type.members : []) {
-        if (ts.isPropertySignature(member) && member.type && ts.isTupleTypeNode(member.type)) {
+        if (ts.isPropertySignature(member) && member.type) {
+          // The printer keeps the line breaks of a tuple that the source writes on several lines,
+          // so each element of a tuple prints alone.
           emits.set(member.name.getText(sourceFile).replace(/^['"]|['"]$/g, ''), {
-            type: `[${member.type.elements.map(print).join(', ')}]`,
+            type: ts.isTupleTypeNode(member.type)
+              ? `[${member.type.elements.map(print).join(', ')}]`
+              : print(member.type),
             description: jsDocText(member),
           });
         } else if (ts.isCallSignatureDeclaration(member)) {
