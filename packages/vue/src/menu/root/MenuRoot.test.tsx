@@ -1,4 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
 import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import type { ComponentPublicInstance, PropType } from 'vue';
 import {
@@ -38,40 +39,52 @@ type PartProps = Record<string, unknown>;
 
 const testMenuProps = {
   rootProps: { type: Object as PropType<PartProps>, default: undefined },
+  // `children` is a function that returns the items of the popup.
+  popupProps: { type: Object as PropType<PartProps>, default: undefined },
   omitTrigger: { type: Boolean, default: false },
 };
+
+const defaultItems = () => (
+  <>
+    <Menu.Item data-testid="item-1">Item 1</Menu.Item>
+    <Menu.Item data-testid="item-2">Item 2</Menu.Item>
+    <Menu.Item data-testid="item-3" disabled>
+      Item 3
+    </Menu.Item>
+    <Menu.SubmenuRoot>
+      <Menu.SubmenuTrigger data-testid="submenu-trigger">Item 4</Menu.SubmenuTrigger>
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup data-testid="submenu">
+            <Menu.Item data-testid="item-4_1">Item 4.1</Menu.Item>
+            <Menu.Item data-testid="item-4_2">Item 4.2</Menu.Item>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.SubmenuRoot>
+    <Menu.Item data-testid="item-5">Item 5</Menu.Item>
+  </>
+);
 
 const ContainedTriggerMenu = defineComponent({
   props: testMenuProps,
   setup(props) {
-    return () => (
-      <Menu.Root {...props.rootProps}>
-        {!props.omitTrigger ? <Menu.Trigger>Toggle</Menu.Trigger> : null}
-        <Menu.Portal>
-          <Menu.Positioner data-testid="menu-positioner">
-            <Menu.Popup data-testid="menu">
-              <Menu.Item data-testid="item-1">Item 1</Menu.Item>
-              <Menu.Item data-testid="item-2">Item 2</Menu.Item>
-              <Menu.Item data-testid="item-3" disabled>
-                Item 3
-              </Menu.Item>
-              <Menu.SubmenuRoot>
-                <Menu.SubmenuTrigger data-testid="submenu-trigger">Item 4</Menu.SubmenuTrigger>
-                <Menu.Portal>
-                  <Menu.Positioner>
-                    <Menu.Popup data-testid="submenu">
-                      <Menu.Item data-testid="item-4_1">Item 4.1</Menu.Item>
-                      <Menu.Item data-testid="item-4_2">Item 4.2</Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.SubmenuRoot>
-              <Menu.Item data-testid="item-5">Item 5</Menu.Item>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    );
+    return () => {
+      const { children: popupChildren, ...restPopupProps } = props.popupProps ?? {};
+
+      return (
+        <Menu.Root {...props.rootProps}>
+          {!props.omitTrigger ? <Menu.Trigger>Toggle</Menu.Trigger> : null}
+          <Menu.Portal>
+            <Menu.Positioner data-testid="menu-positioner">
+              <Menu.Popup data-testid="menu" {...restPopupProps}>
+                {typeof popupChildren === 'function' ? popupChildren() : defaultItems()}
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      );
+    };
   },
 });
 
@@ -82,7 +95,11 @@ const DetachedTriggerMenu = defineComponent({
 
     return () => (
       <>
-        <ContainedTriggerMenu rootProps={{ ...props.rootProps, handle: menuHandle }} omitTrigger />
+        <ContainedTriggerMenu
+          {...props}
+          rootProps={{ ...props.rootProps, handle: menuHandle }}
+          omitTrigger
+        />
         <Menu.Trigger handle={menuHandle}>Toggle</Menu.Trigger>
       </>
     );
@@ -1167,6 +1184,102 @@ describe('<Menu.Root />', () => {
             expect(isScrollLocked(doc)).toBe(false);
           },
         );
+      });
+    });
+
+    describe.skipIf(isJSDOM)('mouse interaction', () => {
+      it('triggers a menu item and closes the menu on click, drag, release', async () => {
+        const openChangeSpy = vi.fn();
+        const clickSpy = vi.fn();
+
+        const items = () => [
+          <Menu.Item key="1" data-testid="item-1">
+            1
+          </Menu.Item>,
+          <Menu.Item key="2" data-testid="item-2" onClick={clickSpy}>
+            2
+          </Menu.Item>,
+          <Menu.Item key="3" data-testid="item-3">
+            3
+          </Menu.Item>,
+        ];
+
+        await render(
+          <div>
+            <TestMenu
+              rootProps={{ onOpenChange: openChangeSpy }}
+              popupProps={{ children: items }}
+            />
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        await fireEvent.mouseDown(trigger);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('menu')).not.toBe(null);
+        });
+
+        await wait(200);
+
+        const item2 = screen.getByTestId('item-2');
+        await fireEvent.mouseUp(item2);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('menu')).toBe(null);
+        });
+
+        expect(clickSpy.mock.calls.length).toBe(1);
+
+        expect(openChangeSpy.mock.calls.length).toBe(2);
+        expect(openChangeSpy.mock.calls[0][0]).toBe(true);
+        expect(openChangeSpy.mock.lastCall?.[0]).toBe(false);
+        expect(openChangeSpy.mock.lastCall?.[1].reason).toBe(REASONS.itemPress);
+        // The synthesized drag-release click must carry `detail: 1` so MenuRoot does
+        // not classify it as a keyboard (`detail === 0`) activation.
+        expect((openChangeSpy.mock.lastCall?.[1].event as MouseEvent).detail).toBe(1);
+      });
+
+      it('closes the menu on click, drag outside, release', async () => {
+        const openChangeSpy = vi.fn();
+
+        const items = () => [
+          <Menu.Item key="1" data-testid="item-1">
+            1
+          </Menu.Item>,
+          <Menu.Item key="2" data-testid="item-2">
+            2
+          </Menu.Item>,
+          <Menu.Item key="3" data-testid="item-3">
+            3
+          </Menu.Item>,
+        ];
+
+        await render(
+          <div>
+            <TestMenu
+              rootProps={{ onOpenChange: openChangeSpy }}
+              popupProps={{ children: items }}
+            />
+            <div data-testid="outside">Outside</div>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        // The browser locator must resolve after pointer-down.
+        const backdrop = page.getByRole('presentation').first();
+
+        await userEvent.dragAndDrop(trigger, backdrop);
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('menu')).toBe(null);
+        });
+
+        expect(openChangeSpy.mock.calls.length).toBe(2);
+        expect(openChangeSpy.mock.calls[0][0]).toBe(true);
+        expect(openChangeSpy.mock.lastCall?.[0]).toBe(false);
+        expect(openChangeSpy.mock.lastCall?.[1].reason).toBe(REASONS.cancelOpen);
       });
     });
   });

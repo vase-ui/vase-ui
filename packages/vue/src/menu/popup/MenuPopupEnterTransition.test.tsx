@@ -1,6 +1,5 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent } from 'vue';
-import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
 import { createRenderer, flushMicrotasks, isJSDOM, screen, wait, waitFor } from '#test-utils';
 import type { VaseUIRenderResult } from '#test-utils';

@@ -59,7 +59,6 @@ async function fireScreenReaderMouseDown(element: Element) {
 
 async function waitForFrames(count = 2) {
   for (let i = 0; i < count; i += 1) {
-    // eslint-disable-next-line no-await-in-loop
     await waitSingleFrame();
   }
 }

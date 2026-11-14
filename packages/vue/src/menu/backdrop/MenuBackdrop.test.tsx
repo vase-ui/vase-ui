@@ -6,9 +6,6 @@ import {
   ContextMenuProvider,
   createContextMenuContext,
 } from '../../../test/fixtures/MenuParentFixture';
-import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
 import MenuBackdropReplace from './MenuBackdropReplace.test.vue';
 
 describe('<Menu.Backdrop />', () => {
