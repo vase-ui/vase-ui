@@ -208,7 +208,9 @@ export function positionerConformanceTests(config: PositionerTestConfig) {
 
     it('places the popup on the default side when it fits', async () => {
       await render(
-        <div style={{ position: 'fixed', top: '200px', left: '200px' }}>{prepareComponent({})}</div>,
+        <div style={{ position: 'fixed', top: '200px', left: '200px' }}>
+          {prepareComponent({})}
+        </div>,
       );
 
       const positioner = await screen.findByTestId('positioner');

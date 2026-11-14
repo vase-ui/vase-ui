@@ -52,7 +52,12 @@ describe('<Tooltip.Positioner />', () => {
     render,
     defaultSide: 'top',
     defaultCollisionAvoidance: 'popup',
-    createComponent: ({ root, trigger, positioner: { render: renderPositioner, ...positioner }, popup }) => (
+    createComponent: ({
+      root,
+      trigger,
+      positioner: { render: renderPositioner, ...positioner },
+      popup,
+    }) => (
       <Tooltip.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
         <Tooltip.Portal>

@@ -49,14 +49,17 @@ describe('<Tooltip.Root />', () => {
         portal: { keepMounted: true },
         two: 'id="two"',
       },
-    ])('writes the triggers and one comment for the portal of $name', async ({ root, portal, two }) => {
-      const one = two.replace('data-popup-open ', '').replace('"two"', '"one"');
+    ])(
+      'writes the triggers and one comment for the portal of $name',
+      async ({ root, portal, two }) => {
+        const one = two.replace('data-popup-open ', '').replace('"two"', '"one"');
 
-      expect(typeof document).toBe('undefined');
-      expect(await renderToString(tooltip(root, portal))).toBe(
-        `<!--[-->${button('one', one)}${button('two', two)}<!----><!--]-->`,
-      );
-    });
+        expect(typeof document).toBe('undefined');
+        expect(await renderToString(tooltip(root, portal))).toBe(
+          `<!--[-->${button('one', one)}${button('two', two)}<!----><!--]-->`,
+        );
+      },
+    );
 
     it('writes nothing to a handle, and calls no listener', async () => {
       const handle = Tooltip.createHandle();

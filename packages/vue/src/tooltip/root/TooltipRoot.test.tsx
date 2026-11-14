@@ -630,7 +630,11 @@ describe('<Tooltip.Root />', () => {
         props: { defaultOpen: true, defaultTriggerId: 'two' },
         payload: 'second',
       },
-      { name: 'a closed tooltip that stays mounted', props: { keepMounted: true }, payload: 'none' },
+      {
+        name: 'a closed tooltip that stays mounted',
+        props: { keepMounted: true },
+        payload: 'none',
+      },
     ])('hydrates the server HTML of $name', async ({ props, payload }) => {
       const serverHtml = await renderOnServer('src/tooltip/root/TooltipHydration.test.vue', props);
 

@@ -83,7 +83,9 @@ const { element, elementProps, state, positioning } = usePopupPositioner<Tooltip
     keepMounted,
     state: () => ({
       instant:
-        store.select('trackCursorAxis') !== 'none' ? 'tracking-cursor' : store.select('instantType'),
+        store.select('trackCursorAxis') !== 'none'
+          ? 'tracking-cursor'
+          : store.select('instantType'),
     }),
     inert: () =>
       !store.select('open') ||

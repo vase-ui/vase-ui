@@ -3,7 +3,8 @@
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
     "packages/react/src/utils/popups/floating-root/**",
-    "packages/react/test/popupStoreTestUtils.tsx"
+    "packages/react/test/popupStoreTestUtils.tsx",
+    "packages/react/test/popupConformanceTests.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
@@ -31,6 +32,7 @@
     "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
     "packages/react/src/utils/popups/usePopupHandleStore.ts",
     "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+    "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "typeTests": [
@@ -1080,6 +1082,266 @@
           "title": "returns focus to the trigger when no outside element is tabbable and trigger tabIndex=%s",
           "conditions": [
             "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/popupConformanceTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Popup conformance",
+            "IME dismissal"
+          ],
+          "title": "dismisses after a composition is dropped without compositionend"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "IME dismissal"
+          ],
+          "title": "preserves the popup for an IME Escape identified by $name"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "controlled mode"
+          ],
+          "title": "opens the popup with the `open` prop"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "controlled mode"
+          ],
+          "title": "reports every close request while `open={true}` keeps the popup open"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: defaultOpen"
+          ],
+          "title": "opens initially and remains uncontrolled"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: defaultOpen"
+          ],
+          "title": "is ignored when `open={false}` is passed"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: defaultOpen"
+          ],
+          "title": "is ignored when `open={true}` is passed, so Escape cannot close"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "is called with the new open state and the change details"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "keeps the popup closed when the open change is canceled"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "is not called when the `close` action is called while closed"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "is not called when the `close` action is called after the `open` prop opened and closed the popup"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "is called when the `close` action is called while open"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "cancels a pending hover open when the `close` action is called"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "cancels a pending hover open when the `close` action is called while the popup is still mounted"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "reopens a popup that is still mounted once the hover delay ends without a `close` action"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "is not called when the pointer leaves the trigger before the hover delay ends"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "opens once the hover delay ends without a `close` action"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "closes normally after a canceled close that asked to keep the popup mounted"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChange"
+          ],
+          "title": "keeps a controlled popup from finishing its close when it prevents unmounting after an await, with $name"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "ARIA attributes"
+          ],
+          "title": "`has the ${expectedPopupRole} role on the popup`"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "ARIA attributes"
+          ],
+          "title": "has the `aria-controls` attribute on the trigger"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "ARIA attributes"
+          ],
+          "title": "opens on trigger click and sets `aria-expanded` on the trigger"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "ARIA attributes"
+          ],
+          "title": "has the `aria-haspopup` attribute on the trigger"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "ARIA attributes"
+          ],
+          "title": "allows a custom `id` prop"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete without animations"
+          ],
+          "title": "is called on open in the commit that mounts the popup"
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is not called on mount when closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is called on open when there is no enter animation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is called on close when there is no exit animation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is not called on close when onOpenChange prevents unmounting after an await",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is called on open once the enter animation finishes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "prop: onOpenChangeComplete"
+          ],
+          "title": "is called on close once the exit animation finishes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "animations"
+          ],
+          "title": "removes the popup when there is no exit animation defined",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup conformance",
+            "animations"
+          ],
+          "title": "hides the kept-mounted popup once the exit animation finishes",
+          "conditions": [
+            "skipIf(isJSDOM || !exitAnimation)"
           ]
         }
       ]
