@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { KeepAlive, computed, defineComponent, h, onMounted, shallowRef } from 'vue';
-import type { PropType } from 'vue';
+import { KeepAlive, computed, defineComponent, onMounted, shallowRef } from 'vue';
 import {
   createRenderer,
   fireEvent,
@@ -9,61 +8,15 @@ import {
   renderOnServer,
   screen,
 } from '#test-utils';
+import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
+import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
 import { DialogStore } from '../store/DialogStore';
-import { useDialogRootContext } from './DialogRootContext';
 import DialogRootHydration from './DialogRootHydration.test.vue';
 import { useDialogInteractions } from './useDialogRoot';
 
 type Store = DialogStore<unknown>;
-
-// Gives the store of the root above it to the test, as each part of the family reads it.
-const StoreProbe = defineComponent({
-  props: { onStore: { type: Function as PropType<(store: Store) => void>, required: true } },
-  setup(props) {
-    props.onStore(useDialogRootContext());
-    return () => null;
-  },
-});
-
-// The popup element of a dialog, with the props that the root gives to its popup.
-const PopupElement = defineComponent({
-  inheritAttrs: false,
-  setup(_, { attrs, slots }) {
-    const store = useDialogRootContext();
-    return () =>
-      store.select('mounted')
-        ? h(
-            'div',
-            {
-              ...store.select('popupProps'),
-              ...attrs,
-              role: 'dialog',
-              ref: (element) => {
-                store.context.popupRef.value = element as HTMLElement | null;
-                store.set('popupElement', element as HTMLElement | null);
-              },
-            },
-            slots.default?.(),
-          )
-        : null;
-  },
-});
-
-// The backdrop element of a dialog. `Dialog.Backdrop` writes its element to the same ref.
-const BackdropElement = defineComponent({
-  setup() {
-    const store = useDialogRootContext();
-    return () =>
-      h('div', {
-        'data-testid': 'backdrop',
-        ref: (element) => {
-          store.context.backdropRef.value = element as HTMLDivElement | null;
-        },
-      });
-  },
-});
 
 describe('<Dialog.Root />', () => {
   const { render } = createRenderer();
@@ -152,7 +105,7 @@ describe('<Dialog.Root />', () => {
           {...{ 'onUpdate:open': (open: boolean) => calls.push(`update:open ${open}`) }}
           onOpenChangeComplete={(open) => calls.push(`openChangeComplete ${open}`)}
         >
-          <PopupElement />
+          <DialogPopupPart />
         </Dialog.Root>
       ));
 
@@ -179,7 +132,7 @@ describe('<Dialog.Root />', () => {
           onOpenChange={(_open, eventDetails) => eventDetails.cancel()}
           {...{ 'onUpdate:open': handleUpdate }}
         >
-          <StoreProbe onStore={(value) => (store = value)} />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
         </Dialog.Root>
       ));
 
@@ -203,8 +156,8 @@ describe('<Dialog.Root />', () => {
           onOpenChange={(_open, eventDetails) => eventDetails.preventUnmountOnClose()}
           onOpenChangeComplete={handleComplete}
         >
-          <StoreProbe onStore={(value) => (store = value)} />
-          <PopupElement />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
+          <DialogPopupPart />
         </Dialog.Root>
       ));
 
@@ -231,7 +184,7 @@ describe('<Dialog.Root />', () => {
       let store!: Store;
       await render(() => (
         <Dialog.Root {...(props as object)}>
-          <StoreProbe onStore={(value) => (store = value)} />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
         </Dialog.Root>
       ));
 
@@ -247,7 +200,7 @@ describe('<Dialog.Root />', () => {
       const disablePointerDismissal = shallowRef(false);
       await render(() => (
         <Dialog.Root modal={modal.value} disablePointerDismissal={disablePointerDismissal.value}>
-          <StoreProbe onStore={(value) => (store = value)} />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
         </Dialog.Root>
       ));
 
@@ -264,7 +217,7 @@ describe('<Dialog.Root />', () => {
       let store!: Store;
       await render(() => (
         <Dialog.Root handle={handle} defaultOpen>
-          <StoreProbe onStore={(value) => (store = value)} />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
         </Dialog.Root>
       ));
       store.set('openMethod', 'touch');
@@ -279,8 +232,8 @@ describe('<Dialog.Root />', () => {
       let store!: Store;
       await render(() => (
         <Dialog.Root defaultOpen>
-          <StoreProbe onStore={(value) => (store = value)} />
-          <PopupElement />
+          <DialogStoreProbe onStore={(value) => (store = value)} />
+          <DialogPopupPart />
         </Dialog.Root>
       ));
 
@@ -343,7 +296,7 @@ describe('<Dialog.Root />', () => {
       const handleOpenChange = vi.fn();
       await render(() => (
         <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
-          <PopupElement />
+          <DialogPopupPart />
         </Dialog.Root>
       ));
 
@@ -361,7 +314,7 @@ describe('<Dialog.Root />', () => {
         <div>
           <button>outside</button>
           <Dialog.Root defaultOpen modal={modal}>
-            <PopupElement />
+            <DialogPopupPart />
           </Dialog.Root>
         </div>
       ));
@@ -382,7 +335,7 @@ describe('<Dialog.Root />', () => {
         <div>
           <button>outside</button>
           <Dialog.Root defaultOpen modal="trap-focus" {...props}>
-            <PopupElement />
+            <DialogPopupPart />
           </Dialog.Root>
         </div>
       ));
@@ -398,8 +351,8 @@ describe('<Dialog.Root />', () => {
         <div>
           <button>outside</button>
           <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
-            <BackdropElement />
-            <PopupElement />
+            <Dialog.Backdrop data-testid="backdrop" />
+            <DialogPopupPart />
           </Dialog.Root>
         </div>
       ));
@@ -424,17 +377,17 @@ describe('<Dialog.Root />', () => {
       const grandchildOpen = shallowRef(false);
       const result = render(() => (
         <Dialog.Root defaultOpen={options.parentOpen ?? true} modal={false}>
-          <StoreProbe onStore={(value) => (stores.parent = value)} />
-          <PopupElement data-testid="parent">
+          <DialogStoreProbe onStore={(value) => (stores.parent = value)} />
+          <DialogPopupPart data-testid="parent">
             <Dialog.Root defaultOpen={options.childOpen ?? false} modal={false}>
-              <StoreProbe onStore={(value) => (stores.child = value)} />
-              <PopupElement data-testid="child">
+              <DialogStoreProbe onStore={(value) => (stores.child = value)} />
+              <DialogPopupPart data-testid="child">
                 <Dialog.Root open={grandchildOpen.value} modal={false}>
-                  <StoreProbe onStore={(value) => (stores.grandchild = value)} />
+                  <DialogStoreProbe onStore={(value) => (stores.grandchild = value)} />
                 </Dialog.Root>
-              </PopupElement>
+              </DialogPopupPart>
             </Dialog.Root>
-          </PopupElement>
+          </DialogPopupPart>
         </Dialog.Root>
       ));
       return { result, stores, grandchildOpen };
@@ -499,7 +452,7 @@ describe('<Dialog.Root />', () => {
       let parent!: Store;
       await render(() => (
         <Dialog.Root defaultOpen modal={false}>
-          <StoreProbe onStore={(value) => (parent = value)} />
+          <DialogStoreProbe onStore={(value) => (parent = value)} />
           {show.value ? <Dialog.Root defaultOpen modal={false} /> : null}
         </Dialog.Root>
       ));
@@ -517,7 +470,7 @@ describe('<Dialog.Root />', () => {
       let parent!: Store;
       await render(() => (
         <Dialog.Root handle={handle} modal={false}>
-          <StoreProbe onStore={(value) => (parent = value)} />
+          <DialogStoreProbe onStore={(value) => (parent = value)} />
           <Dialog.Root open={childOpen.value} modal={false} />
         </Dialog.Root>
       ));
@@ -536,8 +489,8 @@ describe('<Dialog.Root />', () => {
       let parent!: Store;
       await render(() => (
         <Dialog.Root handle={handle} defaultOpen modal={false}>
-          <StoreProbe onStore={(value) => (parent = value)} />
-          <PopupElement />
+          <DialogStoreProbe onStore={(value) => (parent = value)} />
+          <DialogPopupPart />
           <Dialog.Root open modal={false} />
         </Dialog.Root>
       ));
@@ -560,7 +513,7 @@ describe('<Dialog.Root />', () => {
       const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
       await render(() => (
         <Dialog.Root defaultOpen modal={false}>
-          <StoreProbe onStore={(value) => (parent = value)} />
+          <DialogStoreProbe onStore={(value) => (parent = value)} />
           <KeepAlive>{show.value ? <Child key="child" /> : <Other key="other" />}</KeepAlive>
         </Dialog.Root>
       ));
