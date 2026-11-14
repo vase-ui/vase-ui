@@ -12,50 +12,10 @@
     },
     {
       "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
-      "describe": ["<Checkbox.Root />", "prop: indeterminate"],
-      "title": "sets grouped parent aria when manually indeterminate",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
-      "describe": ["<Checkbox.Root />", "prop: indeterminate"],
-      "title": "sets grouped parent native input state when manually indeterminate",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
-      "describe": ["<Checkbox.Root />", "with native <label>"],
-      "title": "assigns an input id to a valueless child in a parent checkbox group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
-      "describe": ["<Checkbox.Root />", "with native <label>"],
-      "title": "assigns a root id to a valueless native button in a parent checkbox group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders `allValues` and a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox/root/CheckboxRoot.test.tsx",
       "describe": ["<Checkbox.Root />"],
       "title": "prefers a render element's `aria-label` over an associated label",
       "kind": "not-applicable",
       "reason": "The case gives the `aria-label` as a prop of a React element in `render`. Base UI reads that prop with `React.isValidElement`. In Vue, an element with props of its own is the `#render` slot, and a part does not see an attribute that the slot adds. Base UI also does not see an attribute that a render function adds."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/checkbox/types.md",
-      "entry": "Root",
-      "prop": "parent",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The prop makes the parent checkbox of a group, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [
