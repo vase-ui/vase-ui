@@ -14,6 +14,7 @@ import { getOverflowAncestors } from '@floating-ui/vue';
 import { isHTMLElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
+import { useIsHydrating } from '../../common/hydration';
 import { ownerWindow } from '../../common/owner';
 import { closest, contains, getTarget } from '../../common/shadowDom';
 import { useControlled } from '../../common/useControlled';
@@ -826,6 +827,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   );
 
   const { openMethod, triggerProps } = useOpenInteractionType(open);
+  const isHydrating = useIsHydrating();
 
   useRegisterFieldControl(
     computed(() => (inputInsidePopup.value ? store.select('triggerElement') : inputRef.value)),
@@ -1396,9 +1398,11 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     submitOnItemClick: props.submitOnItemClick ?? false,
     hasInputValue: hasInputValue.value,
     // The input part writes `inputInsidePopup` in its `ref` callback. This key follows it in the
-    // same write.
+    // same write. Until the root is mounted, it keeps the value of the first state, because a
+    // server calls no `ref` callback.
     inputOwnsFormValue:
-      selectionMode.value === 'none' && (inlineProp.value || !inputInsidePopup.value),
+      selectionMode.value === 'none' &&
+      (isHydrating.value || inlineProp.value || !inputInsidePopup.value),
   }));
 
   provide(ComboboxRootContext, store);

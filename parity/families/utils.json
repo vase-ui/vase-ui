@@ -21,6 +21,7 @@
     "packages/react/src/utils/resolveAriaLabelledBy.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
+    "packages/react/src/utils/scrollable.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
     "packages/react/src/utils/scrollEdges.ts",
     "packages/react/src/utils/styles.tsx",

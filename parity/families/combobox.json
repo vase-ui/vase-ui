@@ -261,11 +261,6 @@
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Root` and other parts of Combobox, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Root`."
-    },
-    {
       "upstream": "packages/react/src/combobox/row/ComboboxRow.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Row`."
