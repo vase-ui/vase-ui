@@ -19,6 +19,11 @@ import type { UseHoverTriggerInteractionProps } from './useHoverTriggerInteracti
 describe('useHoverTriggerInteraction', () => {
   const { render } = createRenderer();
 
+  async function tick(ms: number) {
+    vi.advanceTimersByTime(ms);
+    await flushMicrotasks();
+  }
+
   it('updates the handleClose options during render', async () => {
     const block = shallowRef(false);
     let store!: FloatingRootStore;
@@ -304,11 +309,6 @@ describe('useHoverTriggerInteraction', () => {
         );
       },
     });
-
-    async function tick(ms: number) {
-      vi.advanceTimersByTime(ms);
-      await flushMicrotasks();
-    }
 
     it('opens on mouseenter', async () => {
       await render(<App />);
@@ -636,11 +636,6 @@ describe('useHoverTriggerInteraction', () => {
     async function enter(element: Element, pointerType = 'mouse') {
       await fireEvent.pointerEnter(element, { pointerType });
       await fireEvent.mouseEnter(element);
-    }
-
-    async function tick(ms: number) {
-      vi.advanceTimersByTime(ms);
-      await flushMicrotasks();
     }
 
     it.each([

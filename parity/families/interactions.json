@@ -13,11 +13,6 @@
       "reason": "The pull request that adds the list navigation ports the file."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that adds the cursor anchor ports the file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
       "kind": "waits-on",
       "reason": "The pull request that adds the list navigation ports the file."
@@ -31,12 +26,6 @@
       "upstream": "packages/react/test/floating-ui-tests/useFloating.ts",
       "kind": "waits-on",
       "reason": "The pull request that ports the Base UI cases of `useDismiss` adds the test helper."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/interactions/useClientPoint.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useClientPoint.ts",
-      "reason": "The file tests `useClientPoint.ts`."
     },
     {
       "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
