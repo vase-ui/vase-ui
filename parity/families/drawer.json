@@ -12,12 +12,6 @@
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. The case that has no counterpart renders the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "describe": ["<Drawer.Popup />"],
       "title": "warns without relying on React owner-stack support",
       "kind": "not-applicable",
