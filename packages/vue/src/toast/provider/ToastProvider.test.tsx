@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, ShallowRef } from 'vue';
-import { createRenderer, flushMicrotasks } from '#test-utils';
+import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import type { ToastManager } from '../createToastManager';
 import * as Toast from '../index.parts';
 import type { ToastStore } from '../store';
@@ -246,31 +246,6 @@ describe('<Toast.Provider />', () => {
       return { probe, rendered };
     }
 
-    it('pauses the timer while it is deactivated and resumes it with the remaining time', async () => {
-      const onClose = vi.fn();
-      const manager = Toast.createToastManager();
-      const visible = shallowRef(true);
-      await renderKept(manager, visible).rendered;
-      manager.add({ title: 'Toast', timeout: 1000, onClose });
-
-      await tick(400);
-      visible.value = false;
-      await nextTick();
-      await tick(5000);
-
-      expect(onClose).not.toHaveBeenCalled();
-
-      visible.value = true;
-      await nextTick();
-      await tick(599);
-
-      expect(onClose).not.toHaveBeenCalled();
-
-      await tick(2);
-
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
     it('does not listen to the manager while it is deactivated, and listens again after it', async () => {
       const manager = Toast.createToastManager();
       const visible = shallowRef(true);
@@ -310,6 +285,129 @@ describe('<Toast.Provider />', () => {
       second.add({ title: 'after the activation', timeout: 0 });
 
       expect(probe.store!.state.toasts).toHaveLength(1);
+    });
+  });
+
+  describe('React.Activity', () => {
+    const ToastList = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toast) => (
+            <Toast.Root key={toast.id} toast={toast}>
+              <Toast.Title />
+            </Toast.Root>
+          ));
+      },
+    });
+
+    // The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
+    // viewport, and the real pointer sends no event of its own.
+    const noRealPointer = { pointerEvents: 'none' } as const;
+
+    function renderApp(toastManager: ToastManager, visible: ShallowRef<boolean>) {
+      const Page = defineComponent({
+        name: 'Page',
+        setup: () => () => (
+          <Toast.Provider toastManager={toastManager}>
+            <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+              <ToastList />
+            </Toast.Viewport>
+          </Toast.Provider>
+        ),
+      });
+      const Hidden = defineComponent({ name: 'Hidden', setup: () => () => <p /> });
+
+      return render(() => (
+        <KeepAlive>{visible.value ? <Page key="page" /> : <Hidden key="hidden" />}</KeepAlive>
+      ));
+    }
+
+    async function setVisible(visible: ShallowRef<boolean>, value: boolean) {
+      visible.value = value;
+      await nextTick();
+    }
+
+    it('pauses the auto-dismiss timer while hidden and resumes it with the remaining time once revealed', async () => {
+      const onClose = vi.fn();
+      const toastManager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      await renderApp(toastManager, visible);
+
+      toastManager.add({ title: 'Toast', timeout: 1000, onClose });
+      await flushMicrotasks();
+
+      vi.advanceTimersByTime(400);
+      await setVisible(visible, false);
+
+      await tick(5000);
+      expect(onClose).not.toHaveBeenCalled();
+
+      await setVisible(visible, true);
+
+      await tick(599);
+      expect(onClose).not.toHaveBeenCalled();
+
+      await tick(2);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the timer paused after reveal while the viewport is still hovered', async () => {
+      const onClose = vi.fn();
+      const toastManager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      await renderApp(toastManager, visible);
+
+      toastManager.add({ title: 'Toast', timeout: 1000, onClose });
+      await flushMicrotasks();
+
+      await fireEvent.mouseEnter(screen.getByTestId('viewport'));
+      expect(screen.getByTestId('viewport')).toHaveAttribute('data-expanded');
+
+      await setVisible(visible, false);
+      await setVisible(visible, true);
+
+      await tick(2000);
+      expect(onClose).not.toHaveBeenCalled();
+
+      await fireEvent.mouseLeave(screen.getByTestId('viewport'));
+
+      await tick(1001);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not start the timer of a toast updated while hidden until it is revealed', async () => {
+      const onClose = vi.fn();
+      const toastManager = Toast.createToastManager();
+      const visible = shallowRef(true);
+      await renderApp(toastManager, visible);
+
+      let resolvePromise: (value: string) => void = () => {};
+      toastManager.promise(
+        new Promise<string>((resolve) => {
+          resolvePromise = resolve;
+        }),
+        {
+          loading: 'loading',
+          success: { title: 'success', timeout: 1000, onClose },
+          error: 'error',
+        },
+      );
+      await flushMicrotasks();
+
+      await setVisible(visible, false);
+
+      // The promise settles while hidden, which gives the toast a timer.
+      resolvePromise('done');
+      await flushMicrotasks();
+
+      await tick(5000);
+      expect(onClose).not.toHaveBeenCalled();
+
+      await setVisible(visible, true);
+
+      await tick(1001);
+      expect(onClose).toHaveBeenCalledTimes(1);
     });
   });
 });

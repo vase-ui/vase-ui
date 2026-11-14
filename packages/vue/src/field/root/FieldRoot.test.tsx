@@ -14,11 +14,16 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
   isJSDOM,
+  renderOnServer,
   screen,
   waitFor,
+  within,
 } from '#test-utils';
 import { useFieldRootContext } from '../../internals/field-root-context';
+import * as Select from '../../select/index.parts';
+import SelectInFieldHydration from './SelectInFieldHydration.test.vue';
 
 type FieldRootInstance = InstanceType<typeof Field.Root>;
 type FieldControlInstance = InstanceType<typeof Field.Control>;
@@ -300,6 +305,118 @@ describe('<Field.Root />', () => {
 
     expect(label).not.toHaveAttribute('for');
     expect(group).toHaveAttribute('aria-labelledby', label.id);
+  });
+
+  it.skipIf(isJSDOM)(
+    'keeps `aria-labelledby` valid when toggling from Checkbox.Root to Select.Root after hydration',
+    async () => {
+      const serverHtml = await renderOnServer('src/field/root/SelectInFieldHydration.test.vue');
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      const serverLabelId = template.content.querySelector('[data-testid="label"]')?.id;
+
+      expect(serverLabelId).toMatch(/^vase-ui-./);
+      expect(
+        template.content.querySelector('[data-testid="checkbox"]')?.getAttribute('aria-labelledby'),
+      ).toBe(serverLabelId);
+
+      const { container } = await hydrate(SelectInFieldHydration, { serverHtml });
+      const label = container.querySelector('[data-testid="label"]')!;
+      await waitFor(() => {
+        expect(container.querySelector('[data-testid="checkbox"]')).toHaveAttribute(
+          'aria-labelledby',
+          label.id,
+        );
+      });
+      await fireEvent.click(within(container).getByRole('button', { name: 'Toggle' }));
+
+      const trigger = container.querySelector('[data-testid="trigger"]');
+      expect(trigger).toHaveAttribute('aria-labelledby', label.id);
+
+      await fireEvent.click(within(container).getByRole('button', { name: 'Toggle' }));
+
+      const checkboxAfterToggle = container.querySelector('[data-testid="checkbox"]');
+      expect(checkboxAfterToggle).toHaveAttribute('aria-labelledby', label.id);
+    },
+  );
+
+  it.skipIf(isJSDOM)(
+    'removes `aria-labelledby` when Field.Label is removed after hydration',
+    async () => {
+      const props = { control: 'select' };
+      const serverHtml = await renderOnServer(
+        'src/field/root/SelectInFieldHydration.test.vue',
+        props,
+      );
+      const template = document.createElement('template');
+      template.innerHTML = serverHtml;
+      const serverLabelId = template.content.querySelector('[data-testid="label"]')?.id;
+
+      expect(serverLabelId).toMatch(/^vase-ui-./);
+      expect(
+        template.content.querySelector('[data-testid="trigger"]')?.getAttribute('aria-labelledby'),
+      ).toBe(serverLabelId);
+
+      const { container } = await hydrate(SelectInFieldHydration, { serverHtml, props });
+      const label = container.querySelector('[data-testid="label"]')!;
+      await waitFor(() => {
+        expect(container.querySelector('[data-testid="trigger"]')).toHaveAttribute(
+          'aria-labelledby',
+          label.id,
+        );
+      });
+      await fireEvent.click(within(container).getByRole('button', { name: 'Remove Label' }));
+
+      expect(container.querySelector('[data-testid="label"]')).toBe(null);
+      expect(container.querySelector('[data-testid="trigger"]')).not.toHaveAttribute(
+        'aria-labelledby',
+      );
+    },
+  );
+
+  it('preserves a non-native label association when a control is unmounted and remounted', async () => {
+    const showSelect = shallowRef(true);
+
+    await render(() => (
+      <>
+        <Field.Root>
+          <Field.Label nativeLabel={false} as="div" data-testid="label">
+            Label
+          </Field.Label>
+          <KeepAlive>
+            {showSelect.value ? (
+              <Select.Root key="select">
+                <Select.Trigger data-testid="trigger">
+                  <Select.Value placeholder="Select a model" />
+                </Select.Trigger>
+              </Select.Root>
+            ) : null}
+          </KeepAlive>
+        </Field.Root>
+        <Checkbox.Root
+          checked={!showSelect.value}
+          onCheckedChange={(checked: boolean) => {
+            showSelect.value = !checked;
+          }}
+        />
+      </>
+    ));
+
+    const checkbox = screen.getByRole('checkbox');
+    const labelId = screen.getByTestId('label').id;
+    const trigger = screen.getByTestId('trigger');
+
+    expect(trigger).toHaveAttribute('aria-labelledby', labelId);
+
+    await fireEvent.click(checkbox);
+
+    // `KeepAlive` takes the trigger out of the document and keeps its DOM.
+    expect(trigger.isConnected).toBe(false);
+    expect(trigger).toHaveAttribute('aria-labelledby', labelId);
+
+    await fireEvent.click(checkbox);
+
+    expect(screen.getByTestId('trigger')).toHaveAttribute('aria-labelledby', labelId);
   });
 
   describe('prop: disabled', () => {

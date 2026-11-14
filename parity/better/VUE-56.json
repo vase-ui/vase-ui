@@ -1,0 +1,8 @@
+{
+  "id": "VUE-56",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/utils/useToastLabelPart.ts#L40-L49"
+  ],
+  "behavior": "When two titles of one toast are mounted, the toast names the title that registered last in `aria-labelledby`. When that title unmounts, the toast names the title that stays. Base UI gives the toast no `aria-labelledby` then, because the title that stays does not write its id again. The descriptions follow the same rule for `aria-describedby`.",
+  "dueWith": "packages/react/src/toast/utils/useToastLabelPart.ts"
+}
