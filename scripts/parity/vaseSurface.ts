@@ -61,6 +61,24 @@ export interface PropertySurface {
   description: string;
 }
 
+export interface ClassPropertySurface {
+  name: string;
+  type: string;
+  /** Whether the property is a getter with no setter, or a field with the `readonly` modifier. */
+  readonly: boolean;
+  description: string;
+}
+
+export interface MethodSurface extends FunctionSurface {
+  name: string;
+}
+
+/** The public members of a class, in the sequence of the declaration. A member with the `@internal` tag is not public. */
+export interface ClassSurface {
+  properties: ClassPropertySurface[];
+  methods: MethodSurface[];
+}
+
 export interface ConstantSurface {
   name: string;
   /** `undefined` when the constant is not a string. */
@@ -82,7 +100,7 @@ export interface VaseProject {
   readComponent: (match: ExportMatch) => ComponentSurface | undefined;
   /** The field names of an exported type, or `undefined` when the entry file has no such type. */
   readFields: (entryFile: string, typeName: string) => string[] | undefined;
-  /** The string values of an exported union type. `undefined` when there is no such type or it is not a union of strings. */
+  /** The string values of an exported union type, in the sequence of the declaration. `undefined` when there is no such type or it is not a union of strings. */
   readUnionValues: (entryFile: string, typeName: string) => string[] | undefined;
   /** The constants of an exported namespace, or `undefined` when the entry file has no such namespace. */
   readConstants: (entryFile: string, namespaceName: string) => ConstantSurface[] | undefined;
@@ -92,6 +110,8 @@ export interface VaseProject {
   readFunction: (match: ExportMatch) => FunctionSurface | undefined;
   /** The properties of the declared type of an exported type. `undefined` when the export is not a type. */
   readProperties: (match: ExportMatch) => PropertySurface[] | undefined;
+  /** The public members of an exported class. `undefined` when the export is not a class. */
+  readClass: (match: ExportMatch) => ClassSurface | undefined;
   /** Gives vue-component-meta and the SFC compiler another text for a file. */
   updateFile: (path: string, text: string) => void;
 }
@@ -198,9 +218,49 @@ export function createVaseProject(tsconfig: string): VaseProject {
       .replace(/import\(.*?\)\./g, '');
   const documentationOf = (symbol: ts.Symbol): string =>
     ts.displayPartsToString(symbol.getDocumentationComment(typeChecker()));
+  // `getJsDocTags` gives a property that an interface declares again with no tag the tags of the
+  // declaration in the base interface. The declarations of a property of an `Omit` or a `Pick` are
+  // those of the property that it copies, so such a property keeps its tags.
+  const ownTags = (symbol: ts.Symbol): ts.JSDocTag[] =>
+    (symbol.declarations ?? []).flatMap((declaration) => ts.getJSDocTags(declaration));
   const tagText = (symbol: ts.Symbol, tagName: string): string | undefined => {
-    const tag = symbol.getJsDocTags(typeChecker()).find(({ name }) => name === tagName);
-    return tag?.text && ts.displayPartsToString(tag.text);
+    const tag = ownTags(symbol).find((item) => item.tagName.text === tagName);
+    return tag && ts.getTextOfJSDocComment(tag.comment);
+  };
+  const returnTypeOf = (signatures: readonly ts.Signature[]): string => {
+    const texts = signatures.map((signature) =>
+      typeText(typeChecker().getReturnTypeOfSignature(signature)),
+    );
+    return [...new Set(texts)].join(' | ');
+  };
+  const functionOf = (symbol: ts.Symbol): FunctionSurface | undefined => {
+    const signatures = typeChecker().getTypeOfSymbol(symbol).getCallSignatures();
+    if (signatures.length === 0) {
+      return undefined;
+    }
+    const longest = signatures.reduce((best, signature) =>
+      signature.parameters.length > best.parameters.length ? signature : best,
+    );
+    return {
+      description: documentationOf(symbol),
+      parameters: longest.parameters.map((parameter, index) => {
+        const declaration = parameter.valueDeclaration;
+        return {
+          name: parameter.getName(),
+          type: typeText(typeChecker().getTypeOfSymbol(parameter)),
+          optional:
+            (declaration !== undefined &&
+              ts.isParameter(declaration) &&
+              typeChecker().isOptionalParameter(declaration)) ||
+            signatures.some((signature) => signature.parameters.length <= index),
+          description: documentationOf(parameter),
+        };
+      }),
+      returns: {
+        type: returnTypeOf(signatures),
+        description: tagText(symbol, 'returns') ?? '',
+      },
+    };
   };
   const directExport = (entryFile: string, name: string): ts.Symbol | undefined => {
     const entry = entrySymbol(entryFile);
@@ -338,14 +398,21 @@ export function createVaseProject(tsconfig: string): VaseProject {
 
     readUnionValues(entryFile, typeName) {
       const symbol = directExport(entryFile, typeName);
-      if (!symbol) {
+      const declaration = symbol && resolve(symbol).declarations?.find(ts.isTypeAliasDeclaration);
+      if (!declaration) {
         return undefined;
       }
-      const type = typeChecker().getDeclaredTypeOfSymbol(resolve(symbol));
-      const members = type.isUnion() ? type.types : [type];
-      return members.every((member) => member.isStringLiteral())
-        ? members.map((member) => member.value)
-        : undefined;
+      // The checker gives the members of a union in the order in which it made their types. The
+      // nodes of the declaration keep the order that the source shows.
+      const nodes = ts.isUnionTypeNode(declaration.type)
+        ? declaration.type.types
+        : [declaration.type];
+      const members = nodes.flatMap((node) => {
+        const type = typeChecker().getTypeFromTypeNode(node);
+        return type.isUnion() ? type.types : [type];
+      });
+      const values = members.flatMap((member) => (member.isStringLiteral() ? [member.value] : []));
+      return values.length === members.length ? [...new Set(values)] : undefined;
     },
 
     readConstants(entryFile, namespaceName) {
@@ -372,46 +439,10 @@ export function createVaseProject(tsconfig: string): VaseProject {
 
     readReturnType({ symbol }) {
       const signatures = typeChecker().getTypeOfSymbol(resolve(symbol)).getCallSignatures();
-      if (signatures.length === 0) {
-        return undefined;
-      }
-      const texts = signatures.map((signature) =>
-        typeText(typeChecker().getReturnTypeOfSignature(signature)),
-      );
-      return [...new Set(texts)].join(' | ');
+      return signatures.length === 0 ? undefined : returnTypeOf(signatures);
     },
 
-    readFunction(match) {
-      const returnType = project.readReturnType(match);
-      if (returnType === undefined) {
-        return undefined;
-      }
-      const resolved = resolve(match.symbol);
-      const signatures = typeChecker().getTypeOfSymbol(resolved).getCallSignatures();
-      const longest = signatures.reduce((best, signature) =>
-        signature.parameters.length > best.parameters.length ? signature : best,
-      );
-      return {
-        description: documentationOf(resolved),
-        parameters: longest.parameters.map((parameter, index) => {
-          const declaration = parameter.valueDeclaration;
-          return {
-            name: parameter.getName(),
-            type: typeText(typeChecker().getTypeOfSymbol(parameter)),
-            optional:
-              (declaration !== undefined &&
-                ts.isParameter(declaration) &&
-                typeChecker().isOptionalParameter(declaration)) ||
-              signatures.some((signature) => signature.parameters.length <= index),
-            description: documentationOf(parameter),
-          };
-        }),
-        returns: {
-          type: returnType,
-          description: tagText(resolved, 'returns') ?? '',
-        },
-      };
-    },
+    readFunction: ({ symbol }) => functionOf(resolve(symbol)),
 
     readProperties({ symbol }) {
       const resolved = resolve(symbol);
@@ -432,6 +463,41 @@ export function createVaseProject(tsconfig: string): VaseProject {
           default: tagText(property, 'default') ?? null,
           description: documentationOf(property),
         }));
+    },
+
+    readClass({ symbol }) {
+      const resolved = resolve(symbol);
+      if (!(resolved.flags & ts.SymbolFlags.Class)) {
+        return undefined;
+      }
+      const hidden = ts.ModifierFlags.Private | ts.ModifierFlags.Protected;
+      const members = typeChecker()
+        .getPropertiesOfType(typeChecker().getDeclaredTypeOfSymbol(resolved))
+        .filter(
+          (member) =>
+            !ownTags(member).some(({ tagName }) => tagName.text === 'internal') &&
+            (member.declarations ?? []).every(
+              (declaration) => (ts.getCombinedModifierFlags(declaration) & hidden) === 0,
+            ),
+        );
+      return {
+        properties: members
+          .filter((member) => !(member.flags & ts.SymbolFlags.Method))
+          .map((property) => ({
+            name: property.getName(),
+            type: typeText(typeChecker().getTypeOfSymbol(property)),
+            readonly: (property.declarations ?? []).every(
+              (declaration) =>
+                ts.isGetAccessorDeclaration(declaration) ||
+                (ts.getCombinedModifierFlags(declaration) & ts.ModifierFlags.Readonly) !== 0,
+            ),
+            description: documentationOf(property),
+          })),
+        methods: members.flatMap((member) => {
+          const method = member.flags & ts.SymbolFlags.Method ? functionOf(member) : undefined;
+          return method ? [{ name: member.getName(), ...method }] : [];
+        }),
+      };
     },
 
     updateFile(path, text) {

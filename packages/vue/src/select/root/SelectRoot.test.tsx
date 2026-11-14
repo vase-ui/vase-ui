@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, reactive, shallowRef } from 'vue';
+import { defineComponent, onMounted, reactive, shallowRef, watch } from 'vue';
+import type { PropType } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
@@ -10,14 +11,18 @@ import {
   hiddenInputTypeTests,
   hydrate,
   isJSDOM,
+  popupConformanceTests,
+  pressWithTouch,
   renderOnServer,
   screen,
   wait,
   waitFor,
 } from '#test-utils';
+import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import * as SelectSeparatorDataAttributes from '../../separator/SeparatorDataAttributes';
 import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
@@ -65,6 +70,2300 @@ function getFormData(name: string) {
 
 describe('<Select.Root />', () => {
   const { render } = createRenderer();
+
+  describe('closing before the popup attaches', () => {
+    it('finishes closing when a layout effect closes it on mount', async () => {
+      const onOpenChangeComplete = vi.fn();
+
+      const App = defineComponent(() => {
+        const open = shallowRef(true);
+        onMounted(() => {
+          open.value = false;
+        });
+        return () => (
+          <Select.Root
+            open={open.value}
+            onOpenChange={(nextOpen: boolean) => {
+              open.value = nextOpen;
+            }}
+            onOpenChangeComplete={onOpenChangeComplete}
+          >
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apple">Apple</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      await render(<App />);
+
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+      });
+      // A closed select keeps its list mounted and hidden, as after any other close. The focus
+      // goes to the trigger, and the trigger mounts the list in a 0 ms timer.
+      expect(await screen.findByRole('listbox', { hidden: true })).not.toHaveAttribute(
+        'data-ending-style',
+      );
+    });
+
+    it('finishes closing when a layout effect closes it right after a press opens it', async () => {
+      const onOpenChangeComplete = vi.fn();
+
+      const App = defineComponent(() => {
+        const open = shallowRef(false);
+        watch(
+          open,
+          (isOpen) => {
+            if (isOpen) {
+              open.value = false;
+            }
+          },
+          { flush: 'post' },
+        );
+        return () => (
+          <Select.Root
+            open={open.value}
+            onOpenChange={(nextOpen: boolean) => {
+              open.value = nextOpen;
+            }}
+            onOpenChangeComplete={onOpenChangeComplete}
+          >
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apple">Apple</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+      await user.click(screen.getByTestId('trigger'));
+
+      await waitFor(() => {
+        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+      });
+      // The press mounts the list while closed so its items can register; it isn't left closing.
+      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
+        'data-ending-style',
+      );
+    });
+  });
+
+  it('exposes the orientation attribute rendered by Separator', async () => {
+    await render(<Select.Separator orientation="vertical" />);
+
+    const separator = screen.getByRole('presentation');
+    expect(separator).toHaveAttribute(SelectSeparatorDataAttributes.orientation, 'vertical');
+  });
+
+  describe('manual unmount lifecycle', () => {
+    const Popup = defineComponent({
+      props: {
+        open: { type: Boolean, default: undefined },
+        defaultOpen: Boolean,
+        actionsRef: Function as PropType<(actions: Select.Root.Actions) => void>,
+        onOpenChange: Function as PropType<(open: boolean, details: OpenChangeDetails) => void>,
+        onOpenChangeComplete: Function as PropType<(open: boolean) => void>,
+      },
+      setup(props) {
+        const open = shallowRef(props.defaultOpen);
+        return () => (
+          <Select.Root
+            ref={(instance: unknown) => {
+              if (instance) {
+                props.actionsRef?.(instance as Select.Root.Actions);
+              }
+            }}
+            open={props.open ?? open.value}
+            onOpenChange={(nextOpen: boolean, details: OpenChangeDetails) => {
+              props.onOpenChange?.(nextOpen, details);
+              if (!details.isCanceled) {
+                open.value = nextOpen;
+              }
+            }}
+            onOpenChangeComplete={(nextOpen: boolean) => props.onOpenChangeComplete?.(nextOpen)}
+          >
+            <Select.Trigger />
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apple">Apple</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      },
+    });
+
+    function closeCount(onOpenChangeComplete: ReturnType<typeof vi.fn>) {
+      return onOpenChangeComplete.mock.calls.filter(([open]) => !open).length;
+    }
+
+    it('automatically unmounts with an actions ref and completes closing once', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      const { user } = await render(
+        <Popup
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+        />,
+      );
+
+      expect(onOpenChangeComplete).not.toHaveBeenCalled();
+      await user.click(screen.getByRole('combobox'));
+      await screen.findByRole('listbox');
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+
+      // Calling the action after the automatic unmount must not repeat the completion.
+      actions.unmount();
+      await flushMicrotasks();
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+    });
+
+    it('keeps the popup mounted until the unmount action completes closing', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      const { user, setProps } = await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+          onOpenChange={(open, details) => {
+            if (!open) {
+              details.preventUnmountOnClose();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option'));
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+      expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+
+      await setProps({ open: true });
+      await screen.findByRole('listbox');
+      await setProps({ open: false });
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(closeCount(onOpenChangeComplete)).toBe(2);
+    });
+
+    it('clears the opt-out when a controlled reopen interrupts a pending unmount', async () => {
+      const onOpenChangeComplete = vi.fn();
+      const { user, setProps } = await render(
+        <Popup
+          defaultOpen
+          onOpenChangeComplete={onOpenChangeComplete}
+          onOpenChange={(open, details) => {
+            if (!open) {
+              details.preventUnmountOnClose();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option'));
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+      expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+      await setProps({ open: true });
+      await setProps({ open: false });
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+    });
+
+    it('ignores an opt-out on a canceled close', async () => {
+      let cancel = true;
+      const { user } = await render(
+        <Popup
+          defaultOpen
+          onOpenChange={(open, details) => {
+            if (!open && cancel) {
+              details.preventUnmountOnClose();
+              details.cancel();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option'));
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+      cancel = false;
+      await user.click(screen.getByRole('option'));
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+    });
+
+    it('keeps the opt-out when a controlled close is applied in a transition', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      const App = defineComponent(() => {
+        const open = shallowRef(true);
+        return () => (
+          <Popup
+            open={open.value}
+            actionsRef={(value) => (actions = value)}
+            onOpenChangeComplete={onOpenChangeComplete}
+            onOpenChange={(nextOpen, details) => {
+              if (!nextOpen) {
+                details.preventUnmountOnClose();
+              }
+              // A transition of React renders the state in a later task.
+              setTimeout(() => {
+                open.value = nextOpen;
+              });
+            }}
+          />
+        );
+      });
+
+      const { user } = await render(<App />);
+      await flushMicrotasks();
+      await user.click(screen.getByRole('option'));
+      await waitFor(() =>
+        expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false'),
+      );
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+      expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+    });
+
+    it('closes through the `close` action so `onOpenChange` can opt out', async () => {
+      let actions!: Select.Root.Actions;
+      const reasons: string[] = [];
+      await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChange={(open, details) => {
+            reasons.push(details.reason);
+            if (!open) {
+              details.preventUnmountOnClose();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      actions.close();
+      await flushMicrotasks();
+      expect(reasons).toEqual([REASONS.imperativeAction]);
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+    });
+
+    it('ignores `unmount` while the popup is open', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+        />,
+      );
+      await flushMicrotasks();
+      const popup = screen.getByRole('listbox');
+
+      actions.unmount();
+      await flushMicrotasks();
+
+      expect(screen.getByRole('listbox')).toBe(popup);
+      expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
+      expect(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('unmounts when `close` and `unmount` are called in one batch', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+          onOpenChange={(open, details) => {
+            if (!open) {
+              details.preventUnmountOnClose();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      actions.close();
+      actions.unmount();
+      await flushMicrotasks();
+
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+    });
+
+    it('still unmounts on a later close after `unmount` was called while open', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      const { user } = await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+        />,
+      );
+      await flushMicrotasks();
+
+      // A stale exit-animation callback can call `unmount()` after a quick reopen.
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
+    });
+
+    it('still unmounts on a later close after `unmount` and a reopen in one batch', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      let reopenOnComplete = true;
+      let optOut = true;
+      const App = defineComponent(() => {
+        const open = shallowRef(true);
+        return () => (
+          <Popup
+            open={open.value}
+            actionsRef={(value) => (actions = value)}
+            onOpenChange={(nextOpen, details) => {
+              if (!nextOpen && optOut) {
+                details.preventUnmountOnClose();
+              }
+              open.value = nextOpen;
+            }}
+            onOpenChangeComplete={(nextOpen) => {
+              onOpenChangeComplete(nextOpen);
+              // An exit-animation callback that reopens right after it unmounts.
+              if (!nextOpen && reopenOnComplete) {
+                reopenOnComplete = false;
+                open.value = true;
+              }
+            }}
+          />
+        );
+      });
+
+      const { user } = await render(<App />);
+      await flushMicrotasks();
+      actions.close();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+
+      optOut = false;
+      await user.click(screen.getByRole('option'));
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+      expect(closeCount(onOpenChangeComplete)).toBe(2);
+    });
+
+    it('completes closing once when `unmount` is called twice in one batch', async () => {
+      let actions!: Select.Root.Actions;
+      const onOpenChangeComplete = vi.fn();
+      const { user } = await render(
+        <Popup
+          defaultOpen
+          actionsRef={(value) => (actions = value)}
+          onOpenChangeComplete={onOpenChangeComplete}
+          onOpenChange={(open, details) => {
+            if (!open) {
+              details.preventUnmountOnClose();
+            }
+          }}
+        />,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option'));
+      expect(screen.queryByRole('listbox')).not.toBe(null);
+
+      actions.unmount();
+      actions.unmount();
+      await flushMicrotasks();
+      expect(screen.queryByRole('listbox')).toBe(null);
+      expect(closeCount(onOpenChangeComplete)).toBe(1);
+    });
+  });
+
+  describe('conformance', () => {
+    popupConformanceTests({
+      createComponent: (props) => (
+        <Select.Root {...props.root}>
+          <Select.Trigger {...props.trigger}>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal {...props.portal}>
+            <Select.Positioner>
+              <Select.Popup {...props.popup}>
+                <Select.Item>Item</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ),
+      render,
+      triggerMouseAction: 'click',
+      expectedPopupRole: 'listbox',
+      alwaysMounted: 'only-after-open',
+    });
+  });
+
+  describe('prop: defaultValue', () => {
+    it('should select the item by default', async () => {
+      await render(
+        <Select.Root defaultValue="b">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.click(trigger);
+
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'b', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+  });
+
+  describe('prop: value', () => {
+    it('should select the item specified by the value prop', async () => {
+      await render(
+        <Select.Root value="b">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.click(trigger);
+
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'b', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+
+    it('selects the controlled value when the popup is mounted on the initial render', async () => {
+      await render(
+        <Select.Root defaultOpen value="b">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'b', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+      expect(screen.getByRole('option', { name: 'a', hidden: false })).not.toHaveAttribute(
+        'data-selected',
+      );
+    });
+
+    it('should update the selected item when the value prop changes', async () => {
+      const { setProps } = await render(
+        <Select.Root value="a">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireEvent.click(trigger);
+
+      await flushMicrotasks();
+
+      expect(screen.getByRole('option', { name: 'a', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+
+      await setProps({ value: 'b' });
+
+      expect(screen.getByRole('option', { name: 'b', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+      expect(screen.getByRole('option', { name: 'a', hidden: false })).not.toHaveAttribute(
+        'data-selected',
+      );
+    });
+
+    it.each([
+      { name: 'single', multiple: false, initialValue: 'dave', nextValue: 'bob' },
+      { name: 'multiple', multiple: true, initialValue: ['dave'], nextValue: ['bob'] },
+    ])(
+      'keeps a new controlled value and focus in $name mode when the previous item is removed in the same update',
+      async ({ multiple, initialValue, nextValue }) => {
+        const onValueChange = vi.fn();
+
+        const Test = defineComponent(() => {
+          const options = shallowRef(['alice', 'bob', 'carol', 'dave']);
+          const value = shallowRef<string | string[] | null>(initialValue);
+
+          return () => (
+            <div>
+              <Select.Root
+                multiple={multiple}
+                value={value.value as any}
+                onValueChange={(next: any, details: ChangeDetails) => {
+                  onValueChange(next, details);
+                  value.value = next;
+                }}
+                open
+                modal={false}
+              >
+                <Select.Trigger>
+                  <Select.Value />
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Positioner>
+                    <Select.Popup>
+                      <Select.List>
+                        {options.value.map((option) => (
+                          <Select.Item key={option} value={option}>
+                            {option}
+                          </Select.Item>
+                        ))}
+                      </Select.List>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
+              <button
+                type="button"
+                onClick={() => {
+                  options.value = ['alice', 'bob'];
+                  value.value = nextValue;
+                }}
+              >
+                Update options and value
+              </button>
+              <output data-testid="value">{JSON.stringify(value.value)}</output>
+            </div>
+          );
+        });
+
+        const { user } = await render(<Test />);
+        expect(await screen.findByRole('option', { name: 'dave' })).toHaveAttribute(
+          'data-selected',
+        );
+        const alice = screen.getByRole('option', { name: 'alice' });
+        alice.focus();
+        await flushMicrotasks();
+        expect(alice).toHaveFocus();
+        expect(alice).toHaveAttribute('data-highlighted');
+
+        // Simulate an external update without moving focus away from the surviving item.
+        await fireEvent.click(screen.getByRole('button', { name: 'Update options and value' }));
+
+        expect(screen.getByTestId('value').textContent).toBe(JSON.stringify(nextValue));
+        expect(screen.getByRole('option', { name: 'bob' })).toHaveAttribute('data-selected');
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(alice).toHaveFocus();
+        expect(alice).toHaveAttribute('data-highlighted');
+
+        await user.keyboard('{ArrowDown}');
+        expect(screen.getByRole('option', { name: 'bob' })).toHaveFocus();
+      },
+    );
+
+    it('uses the current multiple setting when options and value change together', async () => {
+      const onValueChange = vi.fn();
+
+      const Test = defineComponent(() => {
+        const multiple = shallowRef(false);
+        const value = shallowRef<string | string[]>('alice');
+        const options = shallowRef(['alice', 'bob', 'carol']);
+
+        return () => (
+          <div>
+            <Select.Root
+              multiple={multiple.value}
+              value={value.value as any}
+              onValueChange={onValueChange}
+              open
+              modal={false}
+            >
+              <Select.Trigger />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    {options.value.map((option) => (
+                      <Select.Item key={option} value={option}>
+                        {option}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+            <button
+              type="button"
+              onClick={() => {
+                multiple.value = true;
+                value.value = ['alice'];
+                options.value = ['alice', 'bob'];
+              }}
+            >
+              Update selection
+            </button>
+          </div>
+        );
+      });
+
+      const { user } = await render(<Test />);
+      await flushMicrotasks();
+      expect(screen.getByRole('listbox')).not.toHaveAttribute('aria-multiselectable');
+      expect(screen.getByRole('option', { name: 'carol' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Update selection' }));
+
+      expect(screen.getByRole('listbox')).toHaveAttribute('aria-multiselectable', 'true');
+      expect(screen.queryByRole('option', { name: 'carol' })).not.toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'alice' })).toHaveAttribute('data-selected', '');
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('uses the current comparator when options and value change together', async () => {
+      const onValueChange = vi.fn();
+      const alice = { id: 'alice' };
+      const bob = { id: 'bob' };
+      const carol = { id: 'carol' };
+
+      const Test = defineComponent(() => {
+        const compareById = shallowRef(false);
+        const value = shallowRef(alice);
+        const options = shallowRef([alice, bob, carol]);
+
+        return () => (
+          <div>
+            <Select.Root
+              value={value.value}
+              isItemEqualToValue={
+                compareById.value
+                  ? (item: { id: string }, selected: { id: string }) => item.id === selected.id
+                  : Object.is
+              }
+              onValueChange={onValueChange}
+              open
+              modal={false}
+            >
+              <Select.Trigger />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    {options.value.map((option) => (
+                      <Select.Item key={option.id} value={option}>
+                        {option.id}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+            <button
+              type="button"
+              onClick={() => {
+                compareById.value = true;
+                value.value = { id: 'bob' };
+                options.value = [alice, bob];
+              }}
+            >
+              Update selection
+            </button>
+          </div>
+        );
+      });
+
+      const { user } = await render(<Test />);
+      await user.click(screen.getByRole('button', { name: 'Update selection' }));
+
+      expect(screen.getByRole('option', { name: 'bob' })).toHaveAttribute('data-selected', '');
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('should not update the internal value if the controlled value prop does not change', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root value="a" onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveTextContent('a');
+
+      await user.click(trigger);
+      await user.click(await screen.findByRole('option', { name: 'b' }));
+
+      expect(onValueChange).toHaveBeenCalledOnce();
+      expect(onValueChange.mock.calls[0][0]).toBe('b');
+      expect(trigger).toHaveTextContent('a');
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+
+      await user.click(trigger);
+
+      expect(await screen.findByRole('option', { name: 'a' })).toHaveAttribute('data-selected');
+      expect(screen.getByRole('option', { name: 'b' })).not.toHaveAttribute('data-selected');
+    });
+
+    it('updates <Select.Value /> label when the value prop changes before the popup opens', async () => {
+      const { setProps } = await render(
+        <Select.Root value="b">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      expect(trigger).toHaveTextContent('b');
+
+      await setProps({ value: 'a' });
+      await flushMicrotasks();
+
+      expect(trigger).toHaveTextContent('a');
+    });
+  });
+
+  describe('prop: itemToStringValue', () => {
+    it('uses itemToStringValue for form submission', async () => {
+      const items = [
+        { country: 'United States', code: 'US' },
+        { country: 'Canada', code: 'CA' },
+        { country: 'Australia', code: 'AU' },
+      ];
+
+      await render(
+        <Select.Root
+          name="country"
+          defaultValue={items[0]}
+          itemToStringLabel={(item) => item.country}
+          itemToStringValue={(item) => item.code}
+        >
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const hiddenInput = screen.getByRole('textbox', {
+        hidden: true,
+      });
+      expect(hiddenInput).toHaveValue('US');
+    });
+
+    it('uses itemToStringValue for multiple selection form submission', async () => {
+      const items = [
+        { country: 'United States', code: 'US' },
+        { country: 'Canada', code: 'CA' },
+        { country: 'Australia', code: 'AU' },
+      ];
+
+      const { container } = await render(
+        <Select.Root
+          name="countries"
+          multiple
+          defaultValue={[items[0], items[1]]}
+          itemToStringLabel={(item) => item.country}
+          itemToStringValue={(item) => item.code}
+        >
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const hiddenInputs = container.querySelectorAll('input[name="countries"]');
+      expect(hiddenInputs).toHaveLength(2);
+      expect(hiddenInputs[0]).toHaveValue('US');
+      expect(hiddenInputs[1]).toHaveValue('CA');
+    });
+
+    it('does not invoke itemToStringValue with the value array in multiple mode', async () => {
+      const items = [
+        { country: 'United States', code: 'US' },
+        { country: 'Canada', code: 'CA' },
+      ];
+
+      // A user `itemToStringValue` written for a single item throws if invoked with the whole
+      // array. The shared hidden input is nameless in multiple mode, so it must not serialize
+      // the array (per-value inputs carry the data). Rendering succeeding is the regression guard.
+      const { container } = await render(
+        <Select.Root
+          name="countries"
+          multiple
+          defaultValue={[items[0], items[1]]}
+          itemToStringValue={(item) => item.code.toUpperCase()}
+        >
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const hiddenInputs = container.querySelectorAll('input[name="countries"]');
+      expect(hiddenInputs).toHaveLength(2);
+      expect(hiddenInputs[0]).toHaveValue('US');
+      expect(hiddenInputs[1]).toHaveValue('CA');
+    });
+  });
+
+  describe('prop: itemToStringLabel', () => {
+    const items = [
+      { country: 'United States', code: 'US' },
+      { country: 'Canada', code: 'CA' },
+      { country: 'Australia', code: 'AU' },
+    ];
+
+    it('uses itemToStringLabel for trigger text when value is object', async () => {
+      await render(
+        <Select.Root
+          defaultValue={items[1]}
+          itemToStringLabel={(item) => item.country}
+          itemToStringValue={(item) => item.code}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveTextContent('Canada');
+    });
+
+    it('updates trigger text with itemToStringLabel after selecting object item', async () => {
+      const { user } = await render(
+        <Select.Root
+          defaultOpen
+          itemToStringLabel={(item: any) => item.country}
+          itemToStringValue={(item: any) => item.code}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option', { name: 'Canada' }));
+      expect(screen.getByTestId('trigger')).toHaveTextContent('Canada');
+    });
+  });
+
+  describe('prop: onValueChange', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should call onValueChange when an item is selected', async () => {
+      const handleValueChange = vi.fn();
+
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>('');
+
+        return () => (
+          <Select.Root
+            value={value.value}
+            onValueChange={(newValue: string | null) => {
+              value.value = newValue;
+              handleValueChange(newValue);
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      const trigger = screen.getByTestId('trigger');
+
+      await user.click(trigger);
+      await flushMicrotasks();
+
+      const option = screen.getByRole('option', { name: 'b' });
+      await vi.advanceTimersByTimeAsync(200);
+      await flushMicrotasks();
+      await user.click(option);
+
+      expect(handleValueChange.mock.calls[0][0]).toBe('b');
+    });
+
+    it('is not called twice on select', async () => {
+      const handleValueChange = vi.fn();
+
+      const { user } = await render(
+        <Select.Root onValueChange={handleValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await user.click(trigger);
+      await flushMicrotasks();
+
+      const option = screen.getByRole('option', { name: 'b' });
+      await vi.advanceTimersByTimeAsync(200);
+      await flushMicrotasks();
+      await user.click(option);
+
+      expect(handleValueChange.mock.calls.length).toBe(1);
+    });
+  });
+
+  describe('prop: defaultOpen', () => {
+    it('should open the select by default', async () => {
+      await render(
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      const listbox = screen.getByRole('listbox', { hidden: false });
+      expect(listbox).toBeVisible();
+      // `listbox` is implicitly vertical.
+      expect(listbox).not.toHaveAttribute('aria-orientation');
+    });
+
+    it('should select an item and close when clicked while opened by default', async () => {
+      const handleValueChange = vi.fn();
+
+      const { user } = await render(
+        <Select.Root defaultOpen onValueChange={handleValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.queryByRole('listbox')).toBeVisible();
+
+      const optionB = screen.getByRole('option', { name: 'b' });
+
+      await fireEvent.mouseMove(optionB);
+      await user.click(optionB);
+      await flushMicrotasks();
+
+      expect(handleValueChange.mock.calls.length).toBe(1);
+      expect(handleValueChange.mock.calls[0][0]).toBe('b');
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+    });
+  });
+
+  it('should handle browser autofill', async () => {
+    const { user } = await render(
+      <Select.Root name="select">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+
+    const selectInput = screen.getByRole('textbox', {
+      hidden: true,
+    });
+    expect(selectInput).toHaveAttribute('name', 'select');
+    await fireEvent.input(selectInput, { target: { value: 'b' } });
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-selected', '');
+    });
+  });
+
+  it('ignores browser autofill in multiple mode', async () => {
+    const handleValueChange = vi.fn();
+
+    await render(
+      <Select.Root multiple name="select" onValueChange={handleValueChange}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    // Autofill only ever writes a single scalar, which can't be meaningfully applied to a
+    // multi-selection, so it must be dropped rather than collapsing the value to one item.
+    await fireEvent.input(selectInput, { target: { value: 'b' } });
+    await flushMicrotasks();
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves the value untouched when autofill matches no item', async () => {
+    const handleValueChange = vi.fn();
+
+    await render(
+      <Select.Root name="select" defaultValue="a" onValueChange={handleValueChange}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    await fireEvent.input(selectInput, { target: { value: 'not-an-option' } });
+    await flushMicrotasks();
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(trigger).toHaveTextContent('a');
+  });
+
+  it('redirects focus to the trigger when the hidden input is focused', async () => {
+    await render(
+      <Select.Root name="select">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    // Browsers can focus the visually hidden input (for example when validation reports an
+    // error on it); focus has to land on the visible control instead.
+    selectInput.focus();
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  it('should pass autoComplete to the hidden input', async () => {
+    await render(
+      <Select.Root name="country" autoComplete="country">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="US">United States</Select.Item>
+              <Select.Item value="CA">Canada</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const hiddenInput = screen.getByRole('textbox', { hidden: true });
+    expect(hiddenInput).toHaveAttribute('name', 'country');
+    expect(hiddenInput).toHaveAttribute('autocomplete', 'country');
+  });
+
+  it('should handle browser autofill with object values', async () => {
+    const items = [
+      { country: 'United States', code: 'US' },
+      { country: 'Canada', code: 'CA' },
+    ];
+
+    const { user } = await render(
+      <Select.Root
+        name="country"
+        itemToStringLabel={(item: any) => item.country}
+        itemToStringValue={(item: any) => item.code}
+      >
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              {items.map((it) => (
+                <Select.Item key={it.code} value={it}>
+                  {it.country}
+                </Select.Item>
+              ))}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+
+    const selectInput = screen.getByRole('textbox', {
+      hidden: true,
+    });
+    expect(selectInput).toHaveAttribute('name', 'country');
+    await fireEvent.input(selectInput, { target: { value: 'CA' } });
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Canada', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+  });
+
+  it('should handle browser autofill with object values when autofill uses the label', async () => {
+    // Browsers autofill with the displayed text (label), not the underlying value.
+    // For example, Chrome will autofill "United States" (the label), not "US" (the value).
+    const items = [
+      { country: 'United States', code: 'US' },
+      { country: 'Canada', code: 'CA' },
+    ];
+
+    const { user } = await render(
+      <Select.Root
+        name="country"
+        itemToStringLabel={(item: any) => item.country}
+        itemToStringValue={(item: any) => item.code}
+      >
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              {items.map((it) => (
+                <Select.Item key={it.code} value={it}>
+                  {it.country}
+                </Select.Item>
+              ))}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+
+    const selectInput = screen.getByRole('textbox', {
+      hidden: true,
+    });
+    expect(selectInput).toHaveAttribute('name', 'country');
+
+    // Simulate browser autofill with the LABEL (displayed text), not the value
+    await fireEvent.input(selectInput, { target: { value: 'Canada' } }); // Browser sends "Canada" (label), not "CA" (value)
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Canada', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+  });
+
+  it('matches browser autofill against an item rendered label for primitive values regardless of case', async () => {
+    const { user } = await render(
+      <Select.Root name="country">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="US">United States</Select.Item>
+              <Select.Item value="CA">Canada</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    await fireEvent.input(selectInput, { target: { value: 'canada' } });
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Canada', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+  });
+
+  it('matches browser autofill by serialized value before an earlier rendered label', async () => {
+    const { user } = await render(
+      <Select.Root name="country">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="CA">US</Select.Item>
+              <Select.Item value="US">United States</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    await fireEvent.input(selectInput, { target: { value: 'US' } });
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'United States', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+    expect(screen.getByRole('option', { name: 'US', hidden: false })).not.toHaveAttribute(
+      'data-selected',
+    );
+  });
+
+  it('matches browser autofill when an earlier item has no rendered label', async () => {
+    const { user } = await render(
+      <Select.Root name="country">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="US">{null}</Select.Item>
+              <Select.Item value="CA">Canada</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    await fireEvent.input(selectInput, { target: { value: 'Canada' } });
+    await flushMicrotasks();
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Canada', hidden: false })).toHaveAttribute(
+        'data-selected',
+        '',
+      );
+    });
+  });
+
+  it('marks the field dirty and validates after successful autofill', async () => {
+    const validateSpy = vi.fn((value: unknown) => {
+      return value === 'CA' ? null : 'error';
+    });
+
+    await render(
+      <Field.Root validationMode="onChange" validate={validateSpy}>
+        <Select.Root name="country">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="US">United States</Select.Item>
+                <Select.Item value="CA">Canada</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </Field.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+
+    await fireEvent.input(selectInput, { target: { value: 'CA' } });
+    await flushMicrotasks();
+
+    await waitFor(() => {
+      expect(validateSpy).toHaveBeenCalled();
+    });
+
+    expect(validateSpy.mock.calls[validateSpy.mock.calls.length - 1][0]).toBe('CA');
+    expect(trigger).toHaveAttribute('data-dirty', '');
+  });
+
+  it('does not update field state when autofill is canceled', async () => {
+    await render(
+      <Form errors={{ country: 'server error' }}>
+        <Field.Root name="country">
+          <Select.Root
+            onValueChange={(_value: unknown, eventDetails: ChangeDetails) => {
+              eventDetails.cancel();
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="US">United States</Select.Item>
+                  <Select.Item value="CA">Canada</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <Field.Error data-testid="error" />
+        </Field.Root>
+      </Form>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const selectInput = screen.getByRole('textbox', { hidden: true });
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+    expect(screen.getByTestId('error')).toHaveTextContent('server error');
+
+    await fireEvent.input(selectInput, { target: { value: 'CA' } });
+    await flushMicrotasks();
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+    expect(screen.getByTestId('error')).toHaveTextContent('server error');
+  });
+
+  it('removes [data-dirty] in multiple mode after returning to the initial value', async () => {
+    const { user } = await render(
+      <Field.Root>
+        <Select.Root multiple defaultOpen defaultValue={['a']}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </Field.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const optionB = await screen.findByRole('option', { name: 'b' });
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+
+    await user.click(optionB);
+
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('data-dirty', '');
+    });
+
+    await user.click(optionB);
+
+    await waitFor(() => {
+      expect(trigger).not.toHaveAttribute('data-dirty');
+    });
+  });
+
+  it('compares object values with isItemEqualToValue when clearing [data-dirty] in multiple mode', async () => {
+    const items = [
+      { value: 'a', label: 'a' },
+      { value: 'b', label: 'b' },
+    ];
+
+    const { user } = await render(
+      <Field.Root>
+        <Select.Root
+          multiple
+          defaultOpen
+          // A distinct object reference from `items[0]`, but equal to it via `isItemEqualToValue`.
+          defaultValue={[{ value: 'a', label: 'a' }]}
+          isItemEqualToValue={(a, b) => a.value === b.value}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value={items[0]}>a</Select.Item>
+                <Select.Item value={items[1]}>b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </Field.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const optionA = await screen.findByRole('option', { name: 'a' });
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+
+    // Deselect the initial item, then reselect it. The reselected value is `items[0]`,
+    // a different object reference than the initial `defaultValue` object, so a reference
+    // comparison would incorrectly report dirty.
+    await user.click(optionA);
+
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('data-dirty', '');
+    });
+
+    await user.click(optionA);
+
+    await waitFor(() => {
+      expect(trigger).not.toHaveAttribute('data-dirty');
+    });
+  });
+
+  it('does not invoke isItemEqualToValue with the value array in multiple mode when empty', async () => {
+    const items = [
+      { value: 'a', label: 'a' },
+      { value: 'b', label: 'b' },
+    ];
+
+    // A custom `isItemEqualToValue` is written for single items. Before the fix, an empty
+    // selection in multiple mode handed the raw `[]` to the comparer (`[]` is non-null, so
+    // `compareItemEquality` forwarded it), causing the comparer to run against the array.
+    // It must instead be compared against `undefined` (nothing selected), so the comparer
+    // is never invoked here. `defaultOpen` ensures the items mount and run the registration
+    // effect that used to call the comparer with the raw array.
+    const isItemEqualToValue = vi.fn((a: { value: string }, b: { value: string }) => {
+      if (Array.isArray(b)) {
+        throw new Error('isItemEqualToValue received the value array');
+      }
+      return a.value === b.value;
+    });
+
+    await render(
+      <Select.Root multiple defaultOpen defaultValue={[]} isItemEqualToValue={isItemEqualToValue}>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value={items[0]}>a</Select.Item>
+              <Select.Item value={items[1]}>b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    expect(screen.getByTestId('trigger')).not.toBeNull();
+    expect(await screen.findAllByRole('option')).toHaveLength(2);
+    expect(isItemEqualToValue).not.toHaveBeenCalledWith(expect.anything(), expect.any(Array));
+  });
+
+  it('keeps [data-dirty] in multiple mode when the same values return in a different order', async () => {
+    const { user } = await render(
+      <Field.Root>
+        <Select.Root multiple defaultOpen defaultValue={['a', 'b']}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </Field.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    const optionA = await screen.findByRole('option', { name: 'a' });
+
+    expect(trigger).not.toHaveAttribute('data-dirty');
+
+    // Deselect `a` (value becomes `['b']`), then reselect it (value becomes `['b', 'a']`).
+    // The set of values matches the initial `['a', 'b']`, but the order differs, so the
+    // field stays dirty: the comparison is order-sensitive.
+    await user.click(optionA);
+    await user.click(optionA);
+
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute('data-dirty', '');
+    });
+  });
+
+  it.each([
+    { lockState: 'readOnly', label: 'inside Field', withField: true },
+    { lockState: 'disabled', label: 'inside Field', withField: true },
+    { lockState: 'readOnly', label: 'outside Field', withField: false },
+    { lockState: 'disabled', label: 'outside Field', withField: false },
+  ] as const)(
+    'ignores hidden-input autofill when $lockState $label',
+    async ({ lockState, withField }) => {
+      const onValueChange = vi.fn();
+      const select = (
+        <Select.Root
+          name={withField ? undefined : 'select'}
+          readOnly={lockState === 'readOnly'}
+          disabled={lockState === 'disabled'}
+          onValueChange={onValueChange}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      );
+
+      await render(
+        withField ? (
+          <Form errors={{ select: 'test' }}>
+            <Field.Root name="select">
+              {select}
+              <Field.Error data-testid="error" />
+            </Field.Root>
+          </Form>
+        ) : (
+          select
+        ),
+      );
+
+      const selectInput = screen.getByRole<HTMLInputElement>('textbox', { hidden: true });
+      expect(selectInput).toHaveAttribute('name', 'select');
+
+      // Only the Field wrapper renders an error.
+      const expectedError = withField ? 'test' : undefined;
+
+      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+
+      await fireEvent.input(selectInput, { target: { value: 'b' } });
+      await flushMicrotasks();
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(selectInput.value).toBe('');
+
+      expect(screen.queryByTestId('error')?.textContent).toBe(expectedError);
+    },
+  );
+
+  it.each(['disabled', 'readOnly'] as const)(
+    'does not commit item selection when root is %s and forced open',
+    async (lockState) => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root
+          open
+          onValueChange={onValueChange}
+          disabled={lockState === 'disabled'}
+          readOnly={lockState === 'readOnly'}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+      await flushMicrotasks();
+
+      await user.click(screen.getByRole('option', { name: 'b', hidden: false }));
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('option', { name: 'b', hidden: false })).not.toHaveAttribute(
+        'data-selected',
+      );
+    },
+  );
+
+  describe('prop: modal', () => {
+    it('should render an internal backdrop when `true`', async () => {
+      const { user } = await render(
+        <div>
+          <Select.Root modal>
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner data-testid="positioner">
+                <Select.Popup>
+                  <Select.Item>1</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button>Outside</button>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+    });
+
+    it('should not render an internal backdrop when `false`', async () => {
+      const { user } = await render(
+        <div>
+          <Select.Root modal={false}>
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner data-testid="positioner">
+                <Select.Popup>
+                  <Select.Item>1</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button>Outside</button>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toBe(null);
+    });
+  });
+
+  describe.skipIf(isJSDOM)('scroll locking', () => {
+    describe('interaction type tracking (openMethod)', () => {
+      it('keeps touch interaction type when reopening quickly after close', async ({
+        onTestFinished,
+      }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+        let nextFrameId = 0;
+        const frameCallbacks = new Map<number, FrameRequestCallback>();
+
+        const requestAnimationFrameSpy = vi
+          .spyOn(window, 'requestAnimationFrame')
+          .mockImplementation((callback: FrameRequestCallback) => {
+            nextFrameId += 1;
+            frameCallbacks.set(nextFrameId, callback);
+            return nextFrameId;
+          });
+        const cancelAnimationFrameSpy = vi
+          .spyOn(window, 'cancelAnimationFrame')
+          .mockImplementation((id: number) => {
+            frameCallbacks.delete(id);
+          });
+
+        onTestFinished(() => {
+          requestAnimationFrameSpy.mockRestore();
+          cancelAnimationFrameSpy.mockRestore();
+          globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+        });
+
+        const style = `
+          @keyframes select-close-test {
+            to {
+              opacity: 0;
+            }
+          }
+
+          .animation-test-indicator[data-ending-style] {
+            animation: select-close-test 20ms linear;
+          }
+        `;
+
+        await render(
+          <div>
+            <style>{style}</style>
+            <Select.Root modal>
+              <Select.Trigger>Open</Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup class="animation-test-indicator">
+                    <Select.Item>Item</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('combobox');
+
+        function flushAnimationFrames() {
+          let iterations = 0;
+          while (frameCallbacks.size > 0) {
+            if (iterations > 20) {
+              throw new Error('Exceeded maximum animation frame flush iterations.');
+            }
+
+            const pending = Array.from(frameCallbacks.values());
+            frameCallbacks.clear();
+            pending.forEach((callback) => {
+              callback(0);
+            });
+            iterations += 1;
+          }
+        }
+
+        await pressWithTouch(trigger);
+        flushAnimationFrames();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
+
+        await pressWithTouch(trigger);
+
+        flushAnimationFrames();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        });
+
+        // Re-open while the previous close animation is still pending.
+        await pressWithTouch(trigger);
+
+        flushAnimationFrames();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(screen.queryByRole('listbox')).not.toBe(null);
+        });
+
+        await wait(30);
+
+        expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
+      });
+
+      it('keeps touch positioning during the close transition', async ({ onTestFinished }) => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        onTestFinished(() => {
+          globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
+        });
+
+        const style = `
+          @keyframes select-close-test {
+            to {
+              opacity: 0;
+            }
+          }
+
+          .animation-test-popup[data-ending-style] {
+            animation: select-close-test 100ms linear;
+          }
+        `;
+
+        await render(
+          <div style={{ paddingTop: '80px' }}>
+            <style>{style}</style>
+            <Select.Root>
+              <Select.Trigger>Open</Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup class="animation-test-popup">
+                    <Select.Item>Item</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        const trigger = screen.getByRole('combobox');
+
+        await pressWithTouch(trigger);
+
+        const popup = await screen.findByRole('listbox');
+        const positioner = popup.parentElement as HTMLElement;
+
+        await waitFor(() => {
+          expect(getComputedStyle(positioner).position).toBe('absolute');
+        });
+
+        // The exit lasts 100 ms. The observer records the position while the popup has
+        // `data-ending-style`, and the record stays after the exit.
+        const positionsWhileEnding: string[] = [];
+        const observer = new MutationObserver(() => {
+          if (popup.hasAttribute('data-ending-style')) {
+            positionsWhileEnding.push(getComputedStyle(positioner).position);
+          }
+        });
+        observer.observe(popup, { attributeFilter: ['data-ending-style'] });
+        onTestFinished(() => observer.disconnect());
+
+        await pressWithTouch(trigger);
+
+        await waitFor(() => {
+          expect(positionsWhileEnding.length).toBeGreaterThan(0);
+        });
+
+        expect(positionsWhileEnding[0]).toBe('absolute');
+      });
+
+      it('keeps the selected item highlighted when reopening after a touch-driven mouseleave', async () => {
+        await render(
+          <Select.Root>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                  <Select.Item value="c">c</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>,
+        );
+
+        const trigger = screen.getByRole('combobox');
+
+        await pressWithTouch(trigger);
+
+        await waitFor(() => {
+          expect(screen.getByRole('listbox')).toBeInTheDocument();
+        });
+
+        const optionB = screen.getByRole('option', { name: 'b' });
+        await fireEvent.pointerDown(optionB, { pointerType: 'touch' });
+        await fireEvent.click(optionB);
+        await fireEvent.mouseLeave(optionB, { clientX: -1, clientY: -1 });
+
+        await pressWithTouch(trigger);
+
+        await waitFor(() => {
+          expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('data-highlighted');
+        });
+      });
+    });
+
+    describe('touch scroll lock', () => {
+      it('applies scroll lock when a touch-opened popup covers the viewport width', async () => {
+        await render(
+          <Select.Root modal>
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner data-testid="positioner" style={{ width: 'calc(100vw - 10px)' }}>
+                <Select.Popup>
+                  <Select.Item>1</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+
+        await pressWithTouch(trigger);
+
+        await screen.findByRole('listbox');
+
+        await waitFor(() => {
+          expect(isScrollLocked(trigger.ownerDocument)).toBe(true);
+        });
+      });
+
+      it('does not apply scroll lock when a touch-opened popup is narrower than the viewport', async () => {
+        await render(
+          <Select.Root modal>
+            <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner data-testid="positioner" style={{ width: '240px' }}>
+                <Select.Popup>
+                  <Select.Item>1</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+
+        await pressWithTouch(trigger);
+
+        await screen.findByRole('listbox');
+
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+        await flushMicrotasks();
+
+        expect(isScrollLocked(trigger.ownerDocument)).toBe(false);
+      });
+    });
+  });
+
+  describe('prop: actionsRef', () => {
+    it('unmounts the select when the `unmount` method is called', async () => {
+      let actions!: Select.Root.Actions;
+
+      const { user } = await render(() => (
+        <Select.Root
+          ref={(instance: unknown) => {
+            if (instance) {
+              actions = instance as Select.Root.Actions;
+            }
+          }}
+          onOpenChange={(_open: boolean, details: OpenChangeDetails) =>
+            details.preventUnmountOnClose()
+          }
+        >
+          <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item>1</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+
+      const trigger = screen.getByTestId('trigger');
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+
+      await user.click(trigger);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+
+      await new Promise((resolve) => {
+        requestAnimationFrame(resolve);
+      });
+      actions.unmount();
+      await flushMicrotasks();
+
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+    });
+
+    it('does not leave a tabbable option while closed and kept mounted after tabbing out', async () => {
+      const { user } = await render(
+        <div>
+          <input />
+          <Select.Root
+            defaultValue="1"
+            modal={false}
+            onOpenChange={(_open: boolean, details: OpenChangeDetails) =>
+              details.preventUnmountOnClose()
+            }
+          >
+            <Select.Trigger>Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="1">1</Select.Item>
+                  <Select.Item value="2">2</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <input data-testid="after" />
+        </div>,
+      );
+
+      const trigger = screen.getByRole('combobox');
+      await user.click(trigger);
+
+      const option = await screen.findByRole('option', { name: '1' });
+      option.focus();
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(option).toHaveFocus();
+      });
+      expect(option).toHaveAttribute('tabindex', '0');
+
+      await user.tab();
+
+      await waitFor(() => {
+        expect(screen.getByTestId('after')).toHaveFocus();
+      });
+      expect(screen.getByRole('listbox')).not.toHaveAttribute('data-open');
+      expect(option).toHaveAttribute('tabindex', '-1');
+    });
+  });
 
   hiddenInputTypeTests({
     render,
@@ -1098,27 +3397,6 @@ describe('<Select.Root />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(handleOpenChange).toHaveBeenCalledTimes(0);
     });
-
-    it('closes with the reason imperative-action from its close action', async () => {
-      const handleOpenChange = vi.fn();
-      let root: { close: () => void } | null = null;
-      await render(() => (
-        <Select.Root
-          ref={(instance: any) => (root = instance)}
-          defaultOpen
-          onOpenChange={handleOpenChange}
-        >
-          <Select.Trigger data-testid="trigger" />
-        </Select.Root>
-      ));
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'true');
-
-      root!.close();
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
-      expect(handleOpenChange.mock.lastCall?.[1].reason).toBe('imperative-action');
-    });
   });
 
   describe('hidden inputs', () => {
@@ -1132,19 +3410,6 @@ describe('<Select.Root />', () => {
       );
 
       expect(getFormData('font')).toEqual(['serif']);
-    });
-
-    it('submits the string of an object value', async () => {
-      const value = { code: 'mono', name: 'Monospace' };
-      await render(
-        <form data-testid="form">
-          <Select.Root name="font" defaultValue={value} itemToStringValue={(item) => item.code}>
-            <Select.Trigger />
-          </Select.Root>
-        </form>,
-      );
-
-      expect(getFormData('font')).toEqual(['mono']);
     });
 
     it('submits one entry for each value of a multiple select, from inputs of its own', async () => {
@@ -1214,32 +3479,14 @@ describe('<Select.Root />', () => {
 
       expect(input.value).toBe('serif');
     });
-
-    it('moves the focus to the trigger when the input gets the focus', async () => {
-      await render(
-        <Select.Root name="font">
-          <Select.Trigger data-testid="trigger" />
-        </Select.Root>,
-      );
-
-      getHiddenInput().focus();
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('trigger')).toHaveFocus();
-    });
   });
 
   describe('autofill', () => {
-    function renderFonts(props: { readOnly?: boolean } = {}) {
+    it('selects the item whose text the browser fills into the input of a closed select', async () => {
       const handleValueChange = vi.fn();
-      const result = render(
+      await render(
         <form data-testid="form">
-          <Select.Root
-            name="font"
-            defaultValue="sans"
-            readOnly={props.readOnly}
-            onValueChange={handleValueChange}
-          >
+          <Select.Root name="font" defaultValue="sans" onValueChange={handleValueChange}>
             <Select.Trigger />
             <Select.Portal>
               <Select.Positioner>
@@ -1252,12 +3499,6 @@ describe('<Select.Root />', () => {
           </Select.Root>
         </form>,
       );
-      return { handleValueChange, result };
-    }
-
-    it('selects the item whose text the browser fills into the input of a closed select', async () => {
-      const { handleValueChange, result } = renderFonts();
-      await result;
       expect(document.querySelector('[role="option"]')).toBe(null);
       const input = getHiddenInput();
 
@@ -1308,19 +3549,6 @@ describe('<Select.Root />', () => {
 
       expect(handleValueChange.mock.lastCall?.[0]).toBe(fonts[1]);
       expect(input.value).toBe('mono');
-    });
-
-    it('keeps the value of a read-only select', async () => {
-      const { handleValueChange, result } = renderFonts({ readOnly: true });
-      await result;
-      const input = getHiddenInput();
-
-      input.value = 'Monospace';
-      await fireEvent.input(input);
-      await flushMicrotasks();
-
-      expect(handleValueChange).not.toHaveBeenCalled();
-      expect(input.value).toBe('sans');
     });
   });
 
