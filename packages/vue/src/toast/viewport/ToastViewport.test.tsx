@@ -1053,6 +1053,7 @@ describe('<Toast.Viewport />', () => {
         window.focus();
         screen.getByTestId('origin').focus();
         frame.focus();
+        await flushMicrotasks();
         await tick(1);
 
         page.setFocus(false);
@@ -1126,19 +1127,20 @@ describe('<Toast.Viewport />', () => {
         window.focus();
         screen.getByTestId('origin').focus();
         frame.contentDocument!.getElementById('inner')!.focus();
+        await flushMicrotasks();
         await tick(1);
 
         // Only the window of the frame that has the focus gets the events of the page focus.
-        const frameWindow = frame.contentWindow!;
+        const frameWindow = frame.contentWindow as Window & typeof globalThis;
         page.setFocus(false);
-        frameWindow.dispatchEvent(new FocusEvent('blur'));
+        frameWindow.dispatchEvent(new frameWindow.FocusEvent('blur'));
         await tick(1);
         await tick(5000);
 
         expect(onClose).not.toHaveBeenCalled();
 
         page.setFocus(true);
-        frameWindow.dispatchEvent(new FocusEvent('focus'));
+        frameWindow.dispatchEvent(new frameWindow.FocusEvent('focus'));
         await tick(1);
         await tick(1000);
 
