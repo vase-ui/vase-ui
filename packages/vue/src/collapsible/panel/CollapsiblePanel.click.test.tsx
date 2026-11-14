@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { Collapsible } from '@vase-ui/vue/collapsible';
-import { createRenderer, createTransitionRunCounter, nextEvent, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  createTransitionRunCounter,
+  nextAnimationsRead,
+  nextEvent,
+  waitFor,
+} from '#test-utils';
 
 // A real pointer event makes Chromium compute style before the next frame callback. A later case
 // in the same file then passes without the layout read of the panel. This file has the cases that
@@ -68,14 +74,14 @@ describe('<Collapsible.Panel /> opened by a click', () => {
           expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
         });
 
-        await userEvent.click(trigger);
-        await waitFor(
-          () => {
-            const panel = getPanel();
-            expect(panel === null || panel.hidden).toBe(true);
-          },
-          { timeout: 3000 },
-        );
+        const animations = await nextAnimationsRead(getPanel()!, {
+          action: () => userEvent.click(trigger),
+        });
+        await Promise.all(animations.map((animation) => animation.finished));
+        await waitFor(() => {
+          const panel = getPanel();
+          expect(panel === null || panel.hidden).toBe(true);
+        });
       }
 
       // The browser can send the `transitionrun` of the last exit after the panel is hidden.
