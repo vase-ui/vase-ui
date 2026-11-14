@@ -99,6 +99,27 @@ describe('<Menu.FilterProvider />', () => {
     expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
   });
 
+  it('keeps a menu in the popup of a filterable menu plain', async () => {
+    await render(
+      <Menu.FilterProvider>
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter files" />
+                <Menu.Root>
+                  <Menu.Trigger>More</Menu.Trigger>
+                </Menu.Root>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: 'More' })).toHaveAttribute('aria-haspopup', 'menu');
+  });
+
   it('starts with the default query', async () => {
     await renderMenu({ defaultValue: 'ren' });
 
