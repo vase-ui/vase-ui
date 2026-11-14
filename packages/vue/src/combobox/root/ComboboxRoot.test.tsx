@@ -34,7 +34,6 @@ import {
   screen,
   waitFor,
   waitForLaterMillisecond,
-  waitForPositioned,
   waitSingleFrame,
 } from '#test-utils';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
@@ -9954,6 +9953,95 @@ describe('<Combobox.Root />', () => {
   });
 
   describe('prop: filteredItems', () => {
+    it('resets external filteredItems when reopening after a selection', async () => {
+      interface TestItem {
+        id: number;
+        label: string;
+        label2: string;
+      }
+
+      const testItems: TestItem[] = [
+        { id: 1, label: 'apple', label2: 'one' },
+        { id: 2, label: 'orange', label2: 'two' },
+        { id: 3, label: 'banana', label2: 'three' },
+      ];
+
+      function getItemLabelToFilter(item: TestItem | null) {
+        return item ? `${item.label} ${item.label2}` : '';
+      }
+
+      function getItemLabelToDisplay(item: TestItem | null) {
+        return item ? item.label || item.label2 : '';
+      }
+
+      const FilteredItemsCombobox = defineComponent(() => {
+        const searchValue = shallowRef('');
+        const value = shallowRef<TestItem | null>(null);
+        const { contains } = Combobox.useFilter(() => ({ value: value.value }));
+        const filteredItems = computed(() =>
+          testItems.filter((item) => contains(item, searchValue.value, getItemLabelToFilter)),
+        );
+
+        return () => (
+          <Combobox.Root
+            items={testItems}
+            filteredItems={filteredItems.value}
+            inputValue={searchValue.value}
+            onInputValueChange={(next: string) => {
+              searchValue.value = next;
+            }}
+            value={value.value}
+            onValueChange={(next: TestItem | null) => {
+              value.value = next;
+            }}
+            itemToStringLabel={getItemLabelToDisplay}
+            isItemEqualToValue={(item: TestItem | null, other: TestItem | null) =>
+              item?.id === other?.id
+            }
+          >
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner sideOffset={4}>
+                <Combobox.Popup>
+                  <Combobox.Empty>No items found.</Combobox.Empty>
+                  <Combobox.List>
+                    {{
+                      item: ({ item }: { item: TestItem }) => (
+                        <Combobox.Item key={item.id} value={item}>
+                          <Combobox.ItemIndicator></Combobox.ItemIndicator>
+                          {item.label}
+                        </Combobox.Item>
+                      ),
+                    }}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        );
+      });
+
+      const { user } = await render(<FilteredItemsCombobox />);
+      const input = screen.getByRole('combobox');
+
+      await user.click(input);
+      await user.type(input, 'one');
+
+      await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
+      expect(screen.queryByRole('option', { name: 'orange' })).toBe(null);
+
+      await user.click(screen.getByRole('option', { name: 'apple' }));
+
+      await waitFor(() => expect(input).toHaveAttribute('aria-expanded', 'false'));
+      expect(screen.queryByRole('listbox')).toBe(null);
+
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('option', { name: 'orange' })).not.toBe(null);
+      });
+    });
+
     it('uses filteredItems when items prop is omitted', async () => {
       const fruits = ['Apple', 'Banana', 'Cherry'];
 
@@ -10160,9 +10248,6 @@ describe('<Combobox.Root />', () => {
         <ComboboxRootRenders items={items} onItemRender={renderItem} />,
       );
 
-      // The list renders again while the popup gets its first position.
-      await waitForPositioned(screen.getByTestId('positioner'));
-      await flushMicrotasks();
       expect(renderItem).toHaveBeenCalled();
       renderItem.mockClear();
 
@@ -10653,6 +10738,110 @@ describe('<Combobox.Root />', () => {
     });
 
     describe('asynchronous items', () => {
+      const AsyncCombobox = defineComponent({
+        props: {
+          items: { type: Array as PropType<string[]>, default: () => [] },
+          dataProp: { type: String as PropType<'items' | 'filteredItems'>, default: 'items' },
+          autoHighlight: { type: Boolean, default: true },
+          open: { type: Boolean, default: undefined },
+          inputValue: { type: String, default: undefined },
+          onOpenChange: Function as PropType<
+            (open: boolean, details: Combobox.Root.OpenChangeEventDetails) => void
+          >,
+          onInputValueChange: Function as PropType<(value: string) => void>,
+          onValueChange: Function as PropType<(value: string | null) => void>,
+          onItemHighlighted: Function as PropType<(value: string | undefined) => void>,
+        },
+        setup(props) {
+          return () => (
+            <Combobox.Root
+              {...(props.dataProp === 'items'
+                ? { items: props.items }
+                : { filteredItems: props.items })}
+              autoHighlight={props.autoHighlight}
+              filter={null}
+              open={props.open}
+              inputValue={props.inputValue}
+              onOpenChange={props.onOpenChange}
+              onInputValueChange={props.onInputValueChange}
+              onValueChange={props.onValueChange}
+              onItemHighlighted={props.onItemHighlighted}
+            >
+              <Combobox.Input />
+              <Combobox.Trigger data-testid="trigger" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup data-testid="popup">
+                    <Combobox.Empty>No matches</Combobox.Empty>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          );
+        },
+      });
+
+      function rejectTypedOpen(nextOpen: boolean, details: Combobox.Root.OpenChangeEventDetails) {
+        if (nextOpen && details.reason === REASONS.inputChange) {
+          details.cancel();
+        }
+      }
+
+      it.each(['items', 'filteredItems'] as const)(
+        'highlights a candidate arriving after typing with %s',
+        async (dataProp) => {
+          const onItemHighlighted = vi.fn();
+          const onValueChange = vi.fn();
+          const { user, setProps } = await render(
+            <AsyncCombobox
+              dataProp={dataProp}
+              onItemHighlighted={onItemHighlighted}
+              onValueChange={onValueChange}
+            />,
+          );
+          const input = screen.getByRole('combobox');
+          await user.type(input, '32');
+          onItemHighlighted.mockClear();
+          await setProps({ items: ['32', '320'] });
+
+          const option = screen.getByRole('option', { name: '32' });
+          expect(option).toHaveAttribute('data-highlighted');
+          expect(input).toHaveAttribute('aria-activedescendant', option.id);
+          expect(onItemHighlighted).toHaveBeenCalledExactlyOnceWith(
+            '32',
+            expect.objectContaining({ index: 0, reason: 'none' }),
+          );
+
+          await user.keyboard('{Enter}');
+          expect(onValueChange).toHaveBeenCalledExactlyOnceWith('32', expect.anything());
+        },
+      );
+
+      it('waits for a controlled popup to open', async () => {
+        const { user, setProps } = await render(<AsyncCombobox items={['32']} open={false} />);
+        await user.type(screen.getByRole('combobox'), '32');
+        await setProps({ open: true });
+        expect(screen.getByRole('option')).toHaveAttribute('data-highlighted');
+      });
+
+      it('discards the request when a rejected typed open is followed by a controlled open', async () => {
+        const { user, setProps } = await render(
+          <AsyncCombobox items={['32']} open={false} onOpenChange={rejectTypedOpen} />,
+        );
+        await user.type(screen.getByRole('combobox'), '32');
+        await setProps({ open: true });
+        expect(screen.getByRole('option')).not.toHaveAttribute('data-highlighted');
+      });
+
       it('keeps a hovered item highlighted when individually rendered items arrive', async () => {
         const ChildrenCombobox = defineComponent({
           props: { results: { type: Array as PropType<string[]>, required: true } },
@@ -10734,6 +10923,116 @@ describe('<Combobox.Root />', () => {
         const option = screen.getByRole('option', { name: 'blackberry' });
         expect(option).toHaveAttribute('data-highlighted');
         expect(input).toHaveAttribute('aria-activedescendant', option.id);
+      });
+
+      it('discards the request when an ignored typed open is followed by another open', async () => {
+        const onOpenChange = vi.fn();
+        const { user, setProps } = await render(
+          <AsyncCombobox items={['32']} open={false} onOpenChange={onOpenChange} />,
+        );
+        await user.type(screen.getByRole('combobox'), '32');
+        await user.click(screen.getByTestId('trigger'));
+        // A trigger press opens on the frame after `mousedown`, which `user.click` can beat.
+        await waitFor(() => {
+          expect(onOpenChange).toHaveBeenLastCalledWith(
+            true,
+            expect.objectContaining({ reason: REASONS.triggerPress }),
+          );
+        });
+        await setProps({ open: true });
+        expect(screen.getByRole('option')).not.toHaveAttribute('data-highlighted');
+      });
+
+      it.each(['Trigger', 'ArrowDown'] as const)(
+        'discards the request when a rejected typed open is followed by opening with %s',
+        async (method) => {
+          const { user } = await render(
+            <AsyncCombobox items={['32', '320']} onOpenChange={rejectTypedOpen} />,
+          );
+          const input = screen.getByRole('combobox');
+          input.focus();
+          await flushMicrotasks();
+          await user.keyboard('32');
+          expect(screen.queryByRole('listbox')).toBe(null);
+
+          if (method === 'Trigger') {
+            await user.click(screen.getByTestId('trigger'));
+          } else {
+            await user.keyboard('{ArrowDown}');
+          }
+
+          // A trigger press opens on the frame after `mousedown`, which `user.click` can beat.
+          const option = await screen.findByRole('option', { name: '32' });
+          expect(option).not.toHaveAttribute('data-highlighted');
+          expect(input).not.toHaveAttribute('aria-activedescendant');
+        },
+      );
+
+      it('discards the request when the controlled input is cleared', async () => {
+        const onValueChange = vi.fn();
+        const ControlledCombobox = defineComponent({
+          props: {
+            clear: { type: Boolean, default: false },
+            items: { type: Array as PropType<string[]>, default: () => [] },
+          },
+          setup(props) {
+            const inputValue = shallowRef('');
+            return () => (
+              <AsyncCombobox
+                items={props.items}
+                inputValue={props.clear ? '' : inputValue.value}
+                onInputValueChange={(next: string) => {
+                  inputValue.value = next;
+                }}
+                onValueChange={onValueChange}
+              />
+            );
+          },
+        });
+        const { user, setProps } = await render(<ControlledCombobox />);
+        const input = screen.getByRole('combobox');
+        await user.type(input, '32');
+        await setProps({ clear: true });
+        await setProps({ clear: true, items: ['32'] });
+        expect(input).toHaveValue('');
+        expect(input).not.toHaveAttribute('aria-activedescendant');
+        expect(screen.getByRole('option')).not.toHaveAttribute('data-highlighted');
+        await user.keyboard('{Enter}');
+        expect(onValueChange).not.toHaveBeenCalled();
+      });
+
+      it.skipIf(isJSDOM)(
+        'discards the request when a controlled close is interrupted',
+        async () => {
+          const { user, setProps } = await render(<AsyncCombobox open />);
+          const input = screen.getByRole('combobox');
+          await user.type(input, '32');
+          screen.getByTestId('popup').animate({ opacity: [1, 0] }, { duration: 10000 });
+
+          globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+          await setProps({ open: false, items: ['32'] });
+          await setProps({ open: true, items: ['32'] });
+          expect(input).toHaveValue('32');
+          expect(screen.getByRole('option')).not.toHaveAttribute('data-highlighted');
+        },
+      );
+
+      it('does not reset keyboard navigation when candidates change', async () => {
+        const { user, setProps } = await render(<AsyncCombobox />);
+        await user.type(screen.getByRole('combobox'), '32');
+        await setProps({ items: ['32', '320'] });
+        await user.keyboard('{ArrowDown}');
+        expect(screen.getByRole('option', { name: '320' })).toHaveAttribute('data-highlighted');
+        await setProps({ items: ['321', '320'] });
+        expect(screen.getByRole('option', { name: '320' })).toHaveAttribute('data-highlighted');
+      });
+
+      it('discards the request when autoHighlight is disabled', async () => {
+        const { user, setProps } = await render(<AsyncCombobox />);
+        await user.type(screen.getByRole('combobox'), '32');
+        await setProps({ autoHighlight: false });
+        await setProps({ autoHighlight: true, items: ['32'] });
+        expect(screen.getByRole('option')).not.toHaveAttribute('data-highlighted');
       });
     });
 
