@@ -17,6 +17,6 @@ Vase UI is a port of Base UI. If Base UI has the same problem, report it to Base
 1. We answer in the report. The report stays private until we publish a security advisory.
 2. With your help, we confirm the problem and find the versions that have it.
 3. We correct the problem in private and publish a release with the correction.
-4. We publish the security advisory on GitHub. It names that release and gives you credit if you accept it.
+4. Before we publish the security advisory, we remove the details that you do not want in public. We publish it on GitHub. It names that release and gives you credit if you accept it.
 
 If a report does not show a security problem, we close it and give the reason.
