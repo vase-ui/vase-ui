@@ -1,0 +1,43 @@
+export * as Drawer from './index.parts';
+
+export { default as DrawerRoot } from './root/DrawerRoot.vue';
+export { default as DrawerProvider } from './provider/DrawerProvider.vue';
+export { default as DrawerIndent } from './indent/DrawerIndent.vue';
+export { default as DrawerIndentBackground } from './indent-background/DrawerIndentBackground.vue';
+export { default as DrawerTrigger } from './trigger/DrawerTrigger.vue';
+export { DrawerPortal } from './portal/DrawerPortal';
+export { default as DrawerPopup } from './popup/DrawerPopup.vue';
+export { default as DrawerSwipeArea } from './swipe-area/DrawerSwipeArea.vue';
+export { default as DrawerContent } from './content/DrawerContent.vue';
+export { default as DrawerBackdrop } from './backdrop/DrawerBackdrop.vue';
+export { default as DrawerViewport } from './viewport/DrawerViewport.vue';
+export { DrawerTitle } from './title/DrawerTitle';
+export { DrawerDescription } from './description/DrawerDescription';
+export { DrawerClose } from './close/DrawerClose';
+export { default as DrawerVirtualKeyboardProvider } from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
+
+export type * from './root/DrawerRoot.vue';
+export type * from './provider/DrawerProvider.vue';
+export type * from './indent/DrawerIndent.vue';
+export type * from './indent-background/DrawerIndentBackground.vue';
+export type * from './trigger/DrawerTrigger.vue';
+export type * from './portal/DrawerPortal';
+export type * from './popup/DrawerPopup.vue';
+export type * from './swipe-area/DrawerSwipeArea.vue';
+export type * from './content/DrawerContent.vue';
+export type * from './backdrop/DrawerBackdrop.vue';
+export type * from './viewport/DrawerViewport.vue';
+export type * from './title/DrawerTitle';
+export type * from './description/DrawerDescription';
+export type * from './close/DrawerClose';
+export type * from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
+
+export * as DrawerBackdropCssVariables from './backdrop/DrawerBackdropCssVars';
+export * as DrawerBackdropDataAttributes from './backdrop/DrawerBackdropDataAttributes';
+export * as DrawerPopupCssVariables from './popup/DrawerPopupCssVars';
+export * as DrawerPopupDataAttributes from './popup/DrawerPopupDataAttributes';
+export * as DrawerSwipeAreaDataAttributes from './swipe-area/DrawerSwipeAreaDataAttributes';
+export * as DrawerViewportCssVariables from './viewport/DrawerViewportCssVars';
+export * as DrawerViewportDataAttributes from './viewport/DrawerViewportDataAttributes';
+export * as DrawerTriggerDataAttributes from '../dialog/trigger/DialogTriggerDataAttributes';
+export * as DrawerCloseDataAttributes from '../dialog/close/DialogCloseDataAttributes';

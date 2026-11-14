@@ -422,7 +422,8 @@ const hasSelectedValue = computed(() => {
 setFilled(hasSelectedValue.value);
 watch(hasSelectedValue, setFilled);
 
-// The items write their values after the DOM update, so the sync runs after it too.
+// The items that an update adds write their values after the DOM update, so the sync runs after
+// it too. An item that gets a new value writes it before the update.
 function syncSelectedIndex() {
   const nextIndex = findSelectionIndex(
     store.context.valuesRef.value,

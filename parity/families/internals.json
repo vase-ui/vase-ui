@@ -40,6 +40,10 @@
     "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
+    "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
+    "packages/react/src/internals/useItemRegistry.ts",
+    "packages/react/src/internals/useItemRegistry.test.tsx",
     "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/usePressAndHold.ts",
     "packages/react/src/internals/useRenderElement.tsx",
@@ -209,6 +213,13 @@
       "upstream": "packages/react/src/internals/composite/index.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/composite`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/internals/useItemRegistry.test.tsx",
+      "describe": ["useItemRegistry"],
+      "title": "publishes every registration under StrictMode double effects",
+      "kind": "not-applicable",
+      "reason": "The case runs the effects of the items two times under StrictMode. Vue has no Strict Mode, and a registration runs one time in `onMounted`."
     }
   ],
   "surfaceAdditions": [],

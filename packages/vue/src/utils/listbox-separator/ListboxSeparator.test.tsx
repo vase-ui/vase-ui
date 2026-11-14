@@ -1,4 +1,5 @@
 import { expect, describe, it } from 'vitest';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../../combobox/index.parts';
 import * as Select from '../../select/index.parts';
 import { createRenderer, describeConformance, screen } from '#test-utils';
@@ -35,6 +36,7 @@ describe('<ListboxSeparator />', () => {
   });
 
   describe.each([
+    ['Autocomplete.Separator', <Autocomplete.Separator data-testid="separator" />],
     ['Combobox.Separator', <Combobox.Separator data-testid="separator" />],
     ['Select.Separator', <Select.Separator data-testid="separator" />],
   ])('%s', (_, separator) => {
