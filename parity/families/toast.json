@@ -40,7 +40,7 @@
     {
       "upstream": "packages/react/src/toast/utils/test-utils.tsx",
       "kind": "waits-on",
-      "reason": "The file has two components for the tests. `List` renders `Toast.Title`, `Toast.Description`, `Toast.Close` and `Toast.Action`, which Vase UI does not have."
+      "reason": "The file has `List` and `Button`, two components for the tests. Vase UI adds it with the cases that render them."
     },
     {
       "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",

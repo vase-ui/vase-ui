@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  hydrate,
+  renderOnServer,
+  screen,
+  within,
+} from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Toast from '../index.parts';
+import ToastTitleHydration from './ToastTitleHydration.test.vue';
 
 const toast = {
   id: 'test',
@@ -47,5 +55,17 @@ describe('<Toast.Title />', () => {
     const title = screen.getByTestId('title');
     expect(title.localName).toBe('strong');
     expect(title.textContent).toBe('Toast title');
+  });
+
+  it('hydrates a toast with a component title in the toast and in the alert region, with no message', async () => {
+    const serverHtml = await renderOnServer('src/toast/title/ToastTitleHydration.test.vue', {});
+    const { container } = await hydrate(ToastTitleHydration, { serverHtml, props: {} });
+
+    expect(container.querySelectorAll('[data-toast-label]')).toHaveLength(2);
+    expect(within(container).getByTestId('title').innerHTML).toBe(
+      '<em data-toast-label="">Saved</em>',
+    );
+    expect(within(container).getByTestId('description').textContent).toBe('The file is saved.');
+    expect(within(container).getByTestId('action').innerHTML).toBe('<strong>Undo</strong>');
   });
 });
