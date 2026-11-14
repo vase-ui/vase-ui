@@ -1,0 +1,2034 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/tooltip/**",
+    "docs/src/app/(docs)/react/components/tooltip/**"
+  ],
+  "sources": [
+    "packages/react/src/tooltip/arrow/TooltipArrow.tsx",
+    "packages/react/src/tooltip/arrow/TooltipArrowDataAttributes.ts",
+    "packages/react/src/tooltip/index.parts.ts",
+    "packages/react/src/tooltip/index.ts",
+    "packages/react/src/tooltip/popup/TooltipPopup.tsx",
+    "packages/react/src/tooltip/popup/TooltipPopupDataAttributes.ts",
+    "packages/react/src/tooltip/portal/TooltipPortal.tsx",
+    "packages/react/src/tooltip/portal/TooltipPortalContext.ts",
+    "packages/react/src/tooltip/positioner/TooltipPositioner.tsx",
+    "packages/react/src/tooltip/positioner/TooltipPositionerContext.ts",
+    "packages/react/src/tooltip/positioner/TooltipPositionerCssVars.ts",
+    "packages/react/src/tooltip/positioner/TooltipPositionerDataAttributes.ts",
+    "packages/react/src/tooltip/provider/TooltipProvider.tsx",
+    "packages/react/src/tooltip/provider/TooltipProviderContext.ts",
+    "packages/react/src/tooltip/root/TooltipRoot.tsx",
+    "packages/react/src/tooltip/root/TooltipRootContext.ts",
+    "packages/react/src/tooltip/store/TooltipHandle.ts",
+    "packages/react/src/tooltip/store/TooltipStore.ts",
+    "packages/react/src/tooltip/trigger/TooltipTrigger.tsx",
+    "packages/react/src/tooltip/trigger/TooltipTriggerDataAttributes.ts",
+    "packages/react/src/tooltip/utils/constants.ts",
+    "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
+    "packages/react/src/tooltip/viewport/TooltipViewportCssVars.ts",
+    "packages/react/src/tooltip/viewport/TooltipViewportDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/tooltip/positioner/TooltipPositioner.spec.tsx",
+    "packages/react/src/tooltip/trigger/TooltipTrigger.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/tooltip/arrow/TooltipArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Arrow />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Arrow />"
+          ],
+          "title": "is hidden from assistive technology and mirrors the resolved side"
+        },
+        {
+          "describe": [
+            "<Tooltip.Arrow />"
+          ],
+          "title": "is marked uncentered when it cannot point at the anchor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Arrow />"
+          ],
+          "title": "is not marked uncentered when it can point at the anchor",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/popup/TooltipPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Popup />"
+          ],
+          "title": "should render the children"
+        },
+        {
+          "describe": [
+            "<Tooltip.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Tooltip.Positioner>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/portal/TooltipPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Portal />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Portal />",
+            "prop: keepMounted"
+          ],
+          "title": "renders the closed popup as hidden instead of unmounting it"
+        },
+        {
+          "describe": [
+            "<Tooltip.Portal />",
+            "prop: keepMounted"
+          ],
+          "title": "unmounts the closed popup by default"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/positioner/TooltipPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Positioner />",
+            "prop: side"
+          ],
+          "title": "uses the side prop over the default"
+        },
+        {
+          "describe": [
+            "<Tooltip.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Tooltip.Root>"
+        },
+        {
+          "describe": [
+            "<Tooltip.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Tooltip.Portal>"
+        },
+        {
+          "describe": [
+            "<Tooltip.Positioner />"
+          ],
+          "suite": "positionerConformanceTests"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/provider/TooltipProvider.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: delay"
+          ],
+          "title": "waits for the delay before showing the tooltip"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: delay"
+          ],
+          "title": "respects delay=0"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: delay"
+          ],
+          "title": "respects trigger delay prop over provider delay prop"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: closeDelay"
+          ],
+          "title": "waits for the closeDelay before hiding the tooltip"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: closeDelay"
+          ],
+          "title": "uses the latest closeDelay after the prop updates"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: timeout"
+          ],
+          "title": "opens an adjacent tooltip instantly while the group is active"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: timeout"
+          ],
+          "title": "respects a trigger delay over delay=0 outside the instant phase"
+        },
+        {
+          "describe": [
+            "<Tooltip.Provider />",
+            "prop: timeout"
+          ],
+          "title": "requires the full delay again once the timeout elapses"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "keeps a default-open root open until its detached trigger hydrates",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "keeps an open root open when ownership moves to a trigger that has not hydrated",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "suite": "detachedTriggersConformanceTests"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when opened and closed imperatively"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when the popup moves to another trigger"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when focus opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "does not re-render inactive triggers"
+          ],
+          "title": "when hover opens and closes the popup"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "closes a cursor-tracking tooltip when an inactive trigger is pressed"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "handle-backed root ownership"
+          ],
+          "title": "keeps a default-open root open while a detached trigger migrates after the initial commit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "hands off open state and payload to a trigger with its own DOM id while open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should close when the active trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple triggers within Root"
+          ],
+          "title": "should remain open when the active trigger unmount close is canceled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should close when focusing a disabled trigger while another trigger is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should close when the active detached trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should close when hovering a disabled trigger while another trigger is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "multiple detached triggers"
+          ],
+          "title": "should switch to a rendered disabled button trigger when trigger hover is enabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "keeps the payload while a controlled reopen moves to another trigger"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "marks the popup data-instant dismiss when Escape closes it"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "trigger unmount during the open delay"
+          ],
+          "title": "does not open once the hovered $name has unmounted"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should open when the trigger is hovered"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "does not open when a touch pointer hovers the trigger"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should close when the trigger is unhovered"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should open when the trigger is focused"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "uncontrolled open"
+          ],
+          "title": "should close when the trigger is blurred"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "should call onOpenChange when the open state changes"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "controlled open"
+          ],
+          "title": "does not call onOpenChange again when the trigger is re-hovered while open"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: defaultOpen"
+          ],
+          "title": "closes when the trigger is unhovered after opening by default"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: delay"
+          ],
+          "title": "should open after rest delay"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: closeDelay"
+          ],
+          "title": "should close after delay"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "preventUnmountOnClose()"
+          ],
+          "title": "does not prevent unmounting on later closes"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts the tooltip when the `unmount` method is called"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: actionsRef"
+          ],
+          "title": "closes the tooltip when the `close` method is called"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "animations"
+          ],
+          "title": "toggles instant animations for adjacent tooltips only while opening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "animations"
+          ],
+          "title": "unmounts an exiting tooltip when another tooltip opens",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "animations"
+          ],
+          "title": "inline opacity: 0 is removed before user CSS transitions run",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "should not open when disabled"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "should not open on focus when the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "should close if open when becoming disabled"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "reopens when re-enabled if the disabled close was canceled"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "does not report the open completion again when it toggles on a kept-mounted open tooltip"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "does not throw error when combined with defaultOpen"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "marks the trigger as disabled when the root is disabled"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "keeps the tooltip disabled when the root is disabled and the trigger opts back in"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disableHoverablePopup"
+          ],
+          "title": "applies pointer-events: none to the positioner when `disableHoverablePopup = true`"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: disableHoverablePopup"
+          ],
+          "title": "does not apply pointer-events: none to the positioner when `disableHoverablePopup = false`"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: trackCursorAxis"
+          ],
+          "title": "makes the positioner inert when tracking both axes"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "prop: trackCursorAxis"
+          ],
+          "title": "keeps the positioner hoverable when tracking a single axis"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "instant animations"
+          ],
+          "title": "marks the popup as instant when opened by focus, but not when opened by hover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "BaseUIChangeEventDetails"
+          ],
+          "title": "allowPropagation() prevents stopPropagation on Escape while still closing"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should close when Escape is pressed"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should not open when the trigger was clicked before delay duration"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should not open when the trigger receives pointerdown before delay duration"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should open when the trigger was clicked before delay duration and closeOnClick is false"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should close when the trigger is clicked after delay duration"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "should not close when the trigger is clicked after delay duration and closeOnClick is false"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "when using $name",
+            "dismissal"
+          ],
+          "title": "reopens on hover after the trigger is clicked closed"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "preventUnmountOnClose()"
+          ],
+          "title": "unmounts on a normal close after a prevented close and initially open remount"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "tracks the cursor on the first delayed hover when trackCursorAxis is x",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "stops tracking the cursor after trackCursorAxis is disabled while closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "updates the tracked cursor position after closing and reopening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "cursor anchor after a close"
+          ],
+          "title": "anchors a reopen without a pointer to the last cursor position",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "cursor anchor after a close"
+          ],
+          "title": "keeps following the cursor while a kept-mounted tooltip is closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "hoverable popup"
+          ],
+          "title": "survives the trip from the trigger to the popup, then closes after leaving it",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "hoverable popup"
+          ],
+          "title": "closes on that same trip when `disableHoverablePopup` is set",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "keeps the tooltip open when moving across spaced triggers without a closeDelay"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />"
+          ],
+          "title": "closes a tooltip that is still open when another tooltip in the group opens"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "close requests"
+          ],
+          "title": "reports the active trigger for an Escape close"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "hover changes"
+          ],
+          "title": "commits a hover open while the hover event is dispatched"
+        },
+        {
+          "describe": [
+            "<Tooltip.Root />",
+            "hover changes"
+          ],
+          "title": "reopens immediately when re-hovering the trigger during its close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when hovering over a nested tooltip trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when moving between sibling nested triggers"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open ancestor tooltips when hovering over a third-level nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should open the outer tooltip when moving from a nested trigger to the parent area with zero delay"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open a disabled outer tooltip when moving from a nested trigger to the parent area with zero delay"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should reopen the delayed outer tooltip when moving from a nested trigger to the parent area"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not re-announce an open outer tooltip when the pending reopen fires"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should support nested triggers inside a detached parent trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not reopen the outer tooltip when rapidly moving back to a nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not reopen the outer tooltip when hovering the nested tooltip popup"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should cancel the pending parent reopen when the pointer leaves the parent trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when the pointer moves onto a nested trigger before the delay expires"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should restart the parent delay when moving from a nested trigger to the parent area"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should close the outer tooltip when the pointer moves from outer area onto a nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should keep a focus-opened outer tooltip open when hovering over a nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should keep a controlled-open outer tooltip open when hovering over a nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when focusing a nested tooltip trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should close a focus-opened inner tooltip when the inner trigger loses focus"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should allow the parent tooltip to open when a nested trigger is disabled"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when hovering over a nested trigger inside a shadow root"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "falls back to the event target when the composed path is empty"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should open the outer tooltip when hovering over the non-nested area"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not reopen the outer tooltip via the local reopen path for touch pointers"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should allow mouse hover after leaving a touch interaction"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should not open the outer tooltip when moving from the outer popup to a nested trigger"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should suppress the safePolygon-driven open while a nested trigger is hovered"
+        },
+        {
+          "describe": [
+            "nested tooltips"
+          ],
+          "title": "should support nested triggers with a Provider delay={0}"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/trigger/TooltipTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />"
+          ],
+          "title": "throws a descriptive error when rendered without a root or a handle"
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />"
+          ],
+          "title": "removes `data-popup-open` as soon as `open` becomes false"
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />"
+          ],
+          "title": "opens when the rendered trigger element has its own id"
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />"
+          ],
+          "title": "opens on delayed hover when rendered as a disabled toolbar button",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />",
+            "once the tooltip has unmounted"
+          ],
+          "title": "stays closed when focus returns to the trigger after leaving the window"
+        },
+        {
+          "describe": [
+            "<Tooltip.Trigger />",
+            "once the tooltip has unmounted"
+          ],
+          "title": "does not request an open when its previously active trigger is hovered while the tooltip is open without a trigger"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/tooltip/viewport/TooltipViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Tooltip.Viewport />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Tooltip.Viewport />"
+          ],
+          "suite": "viewportConformanceTests"
+        },
+        {
+          "describe": [
+            "<Tooltip.Viewport />"
+          ],
+          "title": "anchors the positioner from the far edge while it transitions",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Tooltip.Viewport />"
+          ],
+          "title": "should mirror the instant animation type of the tooltip",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/tooltip/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Tooltip.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Tooltip.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "trackCursorAxis",
+              "required": false,
+              "type": "'none' | 'x' | 'y' | 'both'",
+              "default": "'none'"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disableHoverablePopup",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipRootState",
+            "fields": [],
+            "code": "type TooltipRootState = {};"
+          },
+          "actions": {
+            "name": "TooltipRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type TooltipRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "TooltipRootChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "disabled",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type TooltipRootChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'escape-key' | 'disabled' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "TooltipRootChangeEventDetails",
+            "code": "type TooltipRootChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'disabled';\n    event: Event;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Provider",
+          "tag": null,
+          "props": [
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "timeout",
+              "required": false,
+              "type": "number",
+              "default": "400"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipProviderState",
+            "fields": [],
+            "code": "type TooltipProviderState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "Tooltip.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "600"
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type TooltipTriggerState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-trigger-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipPortalState",
+            "fields": [],
+            "code": "type TooltipPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'top'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type TooltipPositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    instant: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-height",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'delay' | 'focus' | 'dismiss' | undefined"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type TooltipPopupState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    instant: 'delay' | 'focus' | 'dismiss' | undefined;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-instant",
+              "type": "'delay' | 'dismiss' | 'focus'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'delay' | 'dismiss' | 'focus' | undefined"
+              }
+            ],
+            "code": "type TooltipArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n    instant: 'delay' | 'dismiss' | 'focus' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-instant",
+              "type": "'delay' | 'dismiss' | 'focus'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Tooltip.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Tooltip.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Tooltip.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "TooltipViewportState",
+            "fields": [
+              {
+                "name": "activationDirection",
+                "optional": false,
+                "type": "string | undefined"
+              },
+              {
+                "name": "transitioning",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'delay' | 'dismiss' | 'focus' | undefined"
+              }
+            ],
+            "code": "type TooltipViewportState = {\n    activationDirection: string | undefined;\n    transitioning: boolean;\n    instant: 'delay' | 'dismiss' | 'focus' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-activation-direction",
+              "type": "`${'left' | 'right' | ''} ${'down' | 'up' | ''}`"
+            },
+            {
+              "name": "data-current",
+              "type": null
+            },
+            {
+              "name": "data-instant",
+              "type": "'delay' | 'dismiss' | 'focus'"
+            },
+            {
+              "name": "data-previous",
+              "type": null
+            },
+            {
+              "name": "data-transitioning",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--popup-height",
+              "type": "``"
+            },
+            {
+              "name": "--popup-width",
+              "type": "``"
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = Tooltip.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "TooltipArrowDataAttributes",
+          "code": "declare namespace TooltipArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        },
+        {
+          "name": "TooltipPopupDataAttributes",
+          "code": "declare namespace TooltipPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        },
+        {
+          "name": "TooltipPositionerCssVariables",
+          "code": "declare namespace TooltipPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n    const positionerWidth: '--positioner-width';\n    const positionerHeight: '--positioner-height';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            },
+            {
+              "name": "positionerWidth",
+              "value": "--positioner-width"
+            },
+            {
+              "name": "positionerHeight",
+              "value": "--positioner-height"
+            }
+          ]
+        },
+        {
+          "name": "TooltipPositionerDataAttributes",
+          "code": "declare namespace TooltipPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "TooltipTriggerDataAttributes",
+          "code": "declare namespace TooltipTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const triggerDisabled: 'data-trigger-disabled';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "triggerDisabled",
+              "value": "data-trigger-disabled"
+            }
+          ]
+        },
+        {
+          "name": "TooltipViewportCssVariables",
+          "code": "declare namespace TooltipViewportCssVariables {\n    const popupWidth: '--popup-width';\n    const popupHeight: '--popup-height';\n}",
+          "constants": [
+            {
+              "name": "popupWidth",
+              "value": "--popup-width"
+            },
+            {
+              "name": "popupHeight",
+              "value": "--popup-height"
+            }
+          ]
+        },
+        {
+          "name": "TooltipViewportDataAttributes",
+          "code": "declare namespace TooltipViewportDataAttributes {\n    const current: 'data-current';\n    const previous: 'data-previous';\n    const activationDirection: 'data-activation-direction';\n    const transitioning: 'data-transitioning';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "current",
+              "value": "data-current"
+            },
+            {
+              "name": "previous",
+              "value": "data-previous"
+            },
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            },
+            {
+              "name": "transitioning",
+              "value": "data-transitioning"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        },
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/tooltip/page.mdx",
+      "referenceTags": [
+        "TypesTooltip.Provider",
+        "TypesTooltip.Root",
+        "TypesTooltip.Trigger",
+        "TypesTooltip.Portal",
+        "TypesTooltip.Positioner",
+        "TypesTooltip.Popup",
+        "TypesTooltip.Arrow",
+        "TypesTooltip.Viewport",
+        "TypesTooltip.createHandle",
+        "TypesTooltip.Handle"
+      ]
+    }
+  ]
+}
