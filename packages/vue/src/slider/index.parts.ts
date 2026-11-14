@@ -1,5 +1,7 @@
 import SliderControl from './control/SliderControl.vue';
 import type { SliderControlProps, SliderControlState } from './control/SliderControl.vue';
+import SliderIndicator from './indicator/SliderIndicator.vue';
+import type { SliderIndicatorProps, SliderIndicatorState } from './indicator/SliderIndicator.vue';
 import SliderRoot from './root/SliderRoot.vue';
 import type {
   SliderRootChangeEventDetails,
@@ -11,6 +13,8 @@ import type {
 } from './root/SliderRoot.vue';
 import SliderThumb from './thumb/SliderThumb.vue';
 import type { SliderThumbProps, SliderThumbState } from './thumb/SliderThumb.vue';
+import SliderTrack from './track/SliderTrack.vue';
+import type { SliderTrackProps, SliderTrackState } from './track/SliderTrack.vue';
 
 /**
  * Groups all parts of the slider.
@@ -38,6 +42,16 @@ export namespace Control {
 }
 
 /**
+ * Contains the slider indicator and represents the entire range of the slider.
+ * Renders a `<div>` element.
+ */
+export const Track: typeof SliderTrack = SliderTrack;
+export namespace Track {
+  export type State = SliderTrackState;
+  export type Props = SliderTrackProps;
+}
+
+/**
  * The draggable part of the slider at the tip of the indicator.
  * Renders a `<div>` element and a nested `<input type="range">`.
  */
@@ -45,4 +59,14 @@ export const Thumb: typeof SliderThumb = SliderThumb;
 export namespace Thumb {
   export type State = SliderThumbState;
   export type Props = SliderThumbProps;
+}
+
+/**
+ * Visualizes the current value of the slider.
+ * Renders a `<div>` element.
+ */
+export const Indicator: typeof SliderIndicator = SliderIndicator;
+export namespace Indicator {
+  export type State = SliderIndicatorState;
+  export type Props = SliderIndicatorProps;
 }

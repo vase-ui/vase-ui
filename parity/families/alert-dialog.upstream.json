@@ -1,0 +1,874 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/alert-dialog/**",
+    "docs/src/app/(docs)/react/components/alert-dialog/**"
+  ],
+  "sources": [
+    "packages/react/src/alert-dialog/handle.ts",
+    "packages/react/src/alert-dialog/index.parts.ts",
+    "packages/react/src/alert-dialog/index.ts",
+    "packages/react/src/alert-dialog/root/AlertDialogRoot.tsx",
+    "packages/react/src/alert-dialog/trigger/AlertDialogTrigger.tsx",
+    "packages/react/src/alert-dialog/trigger/AlertDialogTriggerDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "suite": "dialogRootSharedTests"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "suite": "detachedTriggersConformanceTests"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "title": "ARIA attributes"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "title": "synchronizes trigger ARIA attributes when initially open with a handle"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "title": "synchronizes detached trigger ARIA attributes when initially open with a handle"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "title": "does not re-render inactive detached triggers when the popup opens and closes"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />"
+          ],
+          "title": "renders a viewport"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />",
+            "prop: onOpenChange"
+          ],
+          "title": "does not close when the backdrop is clicked"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />",
+            "prop: onOpenChange"
+          ],
+          "title": "keeps the trigger data-popup-open attribute and handle.isOpen when a controlled close is vetoed"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />",
+            "handle-backed roots"
+          ],
+          "title": "rewires the trigger and keeps pointer dismissal disabled after the root remounts while open"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />",
+            "handle-backed roots"
+          ],
+          "title": "enforces alert dialog state for handle-backed roots"
+        },
+        {
+          "describe": [
+            "<AlertDialog.Root />",
+            "modality"
+          ],
+          "title": "makes other interactive elements on the page inert when a modal dialog is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: AlertDialog.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<AlertDialog.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "defaultTriggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "handle",
+              "required": false,
+              "type": "AlertDialog.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "triggerId",
+              "required": false,
+              "type": "string | null",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | PayloadChildRenderFunction<Payload>",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogRootState",
+            "fields": [],
+            "code": "type AlertDialogRootState = {};"
+          },
+          "actions": {
+            "name": "AlertDialogRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type AlertDialogRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "AlertDialogRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "close-press",
+              "focus-out",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type AlertDialogRootChangeEventReason = 'trigger-press' | 'outside-press' | 'escape-key' | 'close-press' | 'focus-out' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "AlertDialogRootChangeEventDetails",
+            "code": "type AlertDialogRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "handle",
+              "required": false,
+              "type": "AlertDialog.Handle<Payload>",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "payload",
+              "required": false,
+              "type": "Payload",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogTriggerState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AlertDialogTriggerState = {\n    disabled: boolean;\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogPortalState",
+            "fields": [],
+            "code": "type AlertDialogPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "forceRender",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type AlertDialogBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "initialFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDialogOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AlertDialogPopupState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    nested: boolean;\n    nestedDialogOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-nested",
+              "type": null
+            },
+            {
+              "name": "data-nested-dialog-open",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--nested-dialogs",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Title",
+          "tag": "h2",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Title.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Title.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Title.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogTitleState",
+            "fields": [],
+            "code": "type AlertDialogTitleState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Description",
+          "tag": "p",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Description.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Description.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Description.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogDescriptionState",
+            "fields": [],
+            "code": "type AlertDialogDescriptionState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Close",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Close.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Close.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Close.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogCloseState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AlertDialogCloseState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: AlertDialog.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: AlertDialog.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: AlertDialog.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AlertDialogViewportState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nestedDialogOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AlertDialogViewportState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    nested: boolean;\n    nestedDialogOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-nested",
+              "type": null
+            },
+            {
+              "name": "data-nested-dialog-open",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [
+        {
+          "name": "createHandle",
+          "tables": [],
+          "code": [
+            "type ReturnValue = AlertDialog.Handle<Payload>;"
+          ]
+        },
+        {
+          "name": "Handle",
+          "tables": [
+            {
+              "label": "Properties",
+              "rows": [
+                {
+                  "name": "isOpen",
+                  "type": "boolean",
+                  "modifiers": "readonly"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "function open(triggerId: string | null): void;",
+            "function openWithPayload(payload: Payload): void;",
+            "function close(): void;"
+          ]
+        }
+      ],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "AlertDialogBackdropDataAttributes",
+          "code": "declare namespace AlertDialogBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "AlertDialogCloseDataAttributes",
+          "code": "declare namespace AlertDialogCloseDataAttributes {\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "AlertDialogPopupCssVariables",
+          "code": "declare namespace AlertDialogPopupCssVariables {\n    const nestedDialogs: '--nested-dialogs';\n}",
+          "constants": [
+            {
+              "name": "nestedDialogs",
+              "value": "--nested-dialogs"
+            }
+          ]
+        },
+        {
+          "name": "AlertDialogPopupDataAttributes",
+          "code": "declare namespace AlertDialogPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const nested: 'data-nested';\n    const nestedDialogOpen: 'data-nested-dialog-open';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "nested",
+              "value": "data-nested"
+            },
+            {
+              "name": "nestedDialogOpen",
+              "value": "data-nested-dialog-open"
+            }
+          ]
+        },
+        {
+          "name": "AlertDialogTriggerDataAttributes",
+          "code": "declare namespace AlertDialogTriggerDataAttributes {\n    const disabled: 'data-disabled';\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "AlertDialogViewportDataAttributes",
+          "code": "declare namespace AlertDialogViewportDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const nested: 'data-nested';\n    const nestedDialogOpen: 'data-nested-dialog-open';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "nested",
+              "value": "data-nested"
+            },
+            {
+              "name": "nestedDialogOpen",
+              "value": "data-nested-dialog-open"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "PayloadChildRenderFunction",
+          "code": "type PayloadChildRenderFunction = (arg: {\n    payload: unknown | undefined;\n}) => ReactNode;"
+        },
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/alert-dialog/page.mdx",
+      "referenceTags": [
+        "TypesAlertDialog.Root",
+        "TypesAlertDialog.Trigger",
+        "TypesAlertDialog.Portal",
+        "TypesAlertDialog.Backdrop",
+        "TypesAlertDialog.Viewport",
+        "TypesAlertDialog.Popup",
+        "TypesAlertDialog.Title",
+        "TypesAlertDialog.Description",
+        "TypesAlertDialog.Close",
+        "TypesAlertDialog.createHandle",
+        "TypesAlertDialog.Handle"
+      ]
+    }
+  ]
+}
