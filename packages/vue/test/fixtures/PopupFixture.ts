@@ -1,5 +1,6 @@
-import type { InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 import { NOOP } from '../../src/common/empty';
+import type { Side } from '../../src/internals/useAnchorPositioning';
 import { NullStore } from '../../src/utils/popups/NullStore';
 import type { AdaptiveOriginMiddleware } from '../../src/utils/popups/positioning/adaptiveOriginConstants';
 import { BasePopupHandle } from '../../src/utils/popups/popupHandle';
@@ -18,8 +19,8 @@ import type {
 } from '../../src/utils/popups/store';
 
 // The fixture family of the popup root: a store with keys of its own, its handle, and the key of
-// its context. `PopupRootPart`, `PopupTriggerPart`, `PopupPositionerPart` and `PopupPart` are its
-// parts.
+// its context. `PopupRootPart`, `PopupTriggerPart`, `PopupPositionerPart`, `PopupPart` and
+// `PopupViewportPart` are its parts.
 
 export type PopupFixtureState<Payload> = PopupStoreState<Payload> & {
   instantType: 'dismiss' | 'focus' | undefined;
@@ -110,3 +111,8 @@ export function createPopupFixtureHandle<Payload>() {
 }
 
 export const PopupFixtureContext: InjectionKey<PopupFixtureStore<any>> = Symbol();
+
+/**
+ * What the positioner gives to the parts below it. A family has a positioner context of its own.
+ */
+export const PopupFixturePositionerContext: InjectionKey<{ side: ComputedRef<Side> }> = Symbol();

@@ -1,0 +1,131 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/utils/popups/viewport/**",
+    "packages/react/test/viewportConformanceTests.tsx"
+  ],
+  "sources": [
+    "packages/react/src/utils/popups/viewport/CommonPopupCssVars.ts",
+    "packages/react/src/utils/popups/viewport/CommonViewportDataAttributes.ts",
+    "packages/react/src/utils/popups/viewport/usePopupAutoResize.ts",
+    "packages/react/src/utils/popups/viewport/usePopupViewport.tsx",
+    "packages/react/test/viewportConformanceTests.tsx"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/utils/popups/viewport/usePopupViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "getActivationDirection"
+          ],
+          "title": "returns undefined without an offset"
+        },
+        {
+          "describe": [
+            "getActivationDirection"
+          ],
+          "title": "returns [$expected] for $offset.horizontal, $offset.vertical"
+        },
+        {
+          "describe": [
+            "calculateRelativePosition"
+          ],
+          "title": "$name"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/viewportConformanceTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Viewport conformance"
+          ],
+          "title": "renders children in the `current` container by default"
+        },
+        {
+          "describe": [
+            "Viewport conformance"
+          ],
+          "title": "remounts the `current` container when the active trigger changes"
+        },
+        {
+          "describe": [
+            "Viewport conformance"
+          ],
+          "title": "does not restart a transition when the active trigger remounts while closed and retained (strict: $strict)"
+        },
+        {
+          "describe": [
+            "Viewport conformance"
+          ],
+          "title": "anchors the popup for side=$side in $direction mode"
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "creates morphing containers during transitions",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "sets `data-activation-direction` from the previous to the new trigger",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "creates morphing containers after a kept-mounted popup closes and reopens",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "shows the latest content after rapid trigger changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "keeps the latest transition active during rapid trigger changes",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Viewport conformance",
+            "morphing containers"
+          ],
+          "title": "cleans up the transition when a lagging payload remounts the current container",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "surface": [],
+  "pages": []
+}

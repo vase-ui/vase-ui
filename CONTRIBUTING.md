@@ -111,7 +111,7 @@ Each family has a file `parity/families/<family>.json`. It has six keys. `pnpm p
 - A `surfaceAdditions` row names one member of one part: `{ "entry": "Button", "prop": "disabled", "reason": "…" }`.
 - `entry` is the title of the part in the `types.md`. The key of the member is `prop`, `emit`, `slot` or `exposed`.
 - A `types.md` has no row for a native attribute that the React part reads, such as `disabled` of Button. The prop of the Vase UI part then needs a `surfaceAdditions` row.
-- A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row.
+- A `types.md` can also have a prop row for a native attribute that the React part does not read. An example is `aria-valuetext` of `Progress.Root`. Do not declare that prop: the attribute goes to the element through `$attrs`, with its type from `HTMLAttributes`. Give the row a `not-applicable` exception row. The part can give such an attribute a default, as `NumberField.Input` does for `aria-roledescription`. The part sets the default before the attributes of the consumer, so the attribute of the consumer wins.
 - A `returnTypeDifferences` row names one function: `{ "entry": "useDirection", "returns": "ComputedRef<TextDirection>", "reason": "…" }`.
 - `entry` is the title of the function in the `types.md`. `returns` is the return type of the Vase UI function, as `pnpm parity:check` prints it.
 - `pnpm parity:check` fails on a difference when no row gives the Vase UI type and no exception row names the entry. It also fails on a stale row.
@@ -216,7 +216,7 @@ A family can land in more than one pull request. Its `index.ts` then comes in th
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - TSX and templates then accept the native attributes and listeners, with their types.
 - The SFC compiler ignores the extended type, so the run-time props are only the declared props. A native attribute stays in `$attrs`.
-- Omit a native attribute that the part declares as a prop: `Omit<ButtonHTMLAttributes, 'disabled'>`.
+- Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
 - There is no `asChild` prop, and no part clones a vnode.
 
@@ -231,6 +231,10 @@ The template of each such part has two lines and no wrapper component:
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
 - The render function runs again on each change of the attributes.
 - A part with a void default tag (`img`, `input`) has no default slot.
+- A part whose default tag depends on its context, such as `NavigationMenu.Root`, has no default for `as`.
+- It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
+- Its template binds `:is="as ?? defaultTag"` in the second line.
+- Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
@@ -251,6 +255,7 @@ Some upstream parts put nodes of their own in the element. Examples are the rang
 - A consumer writes `<a v-bind="props"><component :is="children">…</component></a>`.
 - A development build shows a warning when the `#render` slot does not mount `children`. The part makes this check together with the check for the element of the slot.
 - The part passes `children: true` to `useRenderElement`. `<Part>Children.vue` calls `markChildrenMounted()` in setup. The warning needs the two calls.
+- The Viewport part of a popup family has no `<Part>Children.vue`. Its `children` is `utils/popups/viewport/PopupViewportChildren.vue`. `test/fixtures/PopupViewportPart.vue` is the model.
 
 <!-- prettier-ignore -->
 ```vue
@@ -273,7 +278,7 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - The template has the two lines of a part. The inputs come after them.
 - The input that has the state of the part has one `v-bind` and no other attribute. The `ref` setter is a key of the bound object. With a second attribute, the compiler calls the `mergeProps` of Vue, which makes a new `style` object in each render. See [What differs from the React source](#what-differs-from-the-react-source).
 - A part with more than one root node gets no scope id from the component that renders it. A rule of `<style scoped>` thus does not match the element of the part, and `v-show` on the part has no effect. The JSDoc of the part says this. It names `:deep()`, a CSS module, a `style` binding and `v-if`.
-- A part that is its own control declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row. A root whose control is another part, such as `NumberField.Root`, declares neither.
+- A part that is its own control declares `aria-label` and `aria-labelledby` as props, because `useAriaLabelledBy` watches them. Each prop gets a `surfaceAdditions` row. A root whose control is another part, such as `NumberField.Root`, declares neither. [Props](#props) gives the form of each prop.
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
 - A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of `indeterminate`. A click on the input clears the property, and the write in the tick after an accepted click sets it again. A script that writes `checked` does not clear the property. A server cannot write it, because HTML has no attribute for it.
@@ -285,6 +290,8 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - `KeepAlive` takes the input out of the document and calls no `ref` setter. The control calls the function that `registerInput` returns in `onDeactivated`. The field then does not validate an input that the user cannot reach.
 - The control registers the input again in a `watch` of a flag that `onDeactivated` and `onActivated` set. A registration in `onActivated` would reverse the order of the inputs, because `KeepAlive` runs those hooks from the last part to the first part. `Radio.Root` is the model.
 - The part calls `useFormReset(input, onReset)` of `src/internals` in `setup`. The composable listens to `reset` on the root node of the input, because the form of the input can change. It ignores an event whose target is not the form of the input when the event arrives. It calls `onReset` in a 0 ms timeout, after the listeners of the event. It does not call `onReset` when a listener prevented the event. In `onReset`, an uncontrolled part goes back to its default value through its change event, with the `reset` event in `details`. A controlled part does not change. After each reset that the part follows, the part clears the error of its field with `useClearFieldError`, also when its value does not change. The change of a reset starts no validation.
+- A group that has one input for each item, such as `RadioGroup` and `CheckboxGroup`, does not call `useFormReset` itself. The input that `RadioGroup` exposes changes with the value, and it can be absent. `CheckboxGroup` exposes no input. `useFormReset` also drops a reset that waits when its input changes. Each item thus calls `useFormReset` with its own input. The group handles the first call for each `reset` event.
+- `CheckboxGroup` follows the reset of each form that has an input of one of its items. An uncontrolled item whose state the group does not hold goes back to its default value through its own change event. A checkbox with no `value`, and with no `name` of its own or of its field, is such an item. The group clears the error of the field, so such an item does not.
 - A part inside a root can validate each change of the value of the root. The root then sets a flag in its context for the change of a reset, and the part starts no validation while the flag is set. `NumberField.Root` does this with `isResetChangePending`. The root clears the error of the field itself.
 
 ```vue
@@ -347,11 +354,19 @@ Rules:
 - The SFC compiler then writes `type: Boolean`, so a bare `multiple` is `true`. For `Multiple` alone, it writes `type: null`, so a bare `multiple` is the string `''`, which is falsy.
 - In a union of `boolean` and a string, write `boolean` first: `boolean | 'trap-focus'`. With the string first, a bare attribute is the string `''`.
 - The SFC compiler cannot read a type of the DOM library, such as `ValidityState`. In a union with `boolean`, the production build then keeps `Boolean` alone. For any other value, Vue warns in a development build of the consumer. Write the other member with a type of the package, as `Field.Error` does: `boolean | keyof FieldValidityData['state']`.
+- A Boolean prop with the default `true` cannot tell an absent prop from `true`. A check of Base UI for a prop that is set thus runs only for `false`. `Menu.Root` does this for `modal` on a nested menu.
 - Declare a required prop that can be `null` as `x: T | null`, such as `value` of `Progress.Root`. The SFC compiler then writes `required: true`, and Vue accepts `null` with no warning.
+- The props interface of a part can extend an `Omit` of the props interface of another part. The other interface can be in another `.vue` file and can have a type parameter. The SFC compiler reads the kept props, and each keeps its JSDoc. `AlertDialogRoot.vue` is the example.
 - Do not give a constant of `setup` the name of a prop. The SFC compiler then reports that name as a constant, and `pnpm parity:check` does not find the prop. `ProgressLabel.vue` declares the prop `id`, so its constant is `labelId`.
+- Write the default of a prop that a `types.md` row documents as a literal in `withDefaults`: `delay: 600`. `pnpm parity:check` compares the text of the default, so a constant such as `OPEN_DELAY` fails the check.
 - A native attribute that a part must watch is a declared prop. The Vue documentation says that `$attrs` is not reactive. `Avatar.Image` declares `src`, `srcset`, `sizes`, `crossorigin` and `referrerpolicy` for this reason.
+- Declare the prop of an `aria-*` attribute in camel case: `ariaLabel` for `aria-label`. Vue gives the attribute `aria-label` to that prop.
+- Do not omit the `aria-*` key from the attributes type that the interface extends. vue-tsc keeps an `aria-*` name of a template as it is, because its `htmlAttributes` option names `aria-*`. Without the key, `<Switch.Root aria-label="Wi-Fi">` fails the type check of a consumer that sets `strictTemplates`.
+- A template and TSX then accept `aria-label` and `ariaLabel`, each as a `string`.
+- Add each such prop to the type tests `packages/vue/test/AriaAttributesInTemplate.spec.vue` and `packages/vue/test/ariaAttributes.spec.tsx`.
 - A generic SFC is not assignable to `as` of another part. vue-tsc types it as a function that `as` does not accept, so `<Toolbar.Button :as="ToggleGroup">` fails the type check.
 - A part that a consumer must be able to give to `as`, such as `Toggle`, is not a generic SFC. It keeps the type parameter on its exported props interface: `ToggleProps<Value extends string = string>`, with `defineProps<ToggleProps>()`. `ToggleGroup` is a generic SFC, because the type of its `valueChange` event follows `Value`.
+- A popup trigger is the exception. It is a generic SFC, because its `payload` must have the type of its `handle`. Give another part to its `as` or to its `#render` slot. Do not give the trigger to the `as` of another part.
 - Base UI takes a `React.ReactNode` as the label of an item. A label comes from an `items` record, from an `items` list, or from an object value that has a `label`. Vase UI takes an `ItemLabel`, which `src/internals/resolveValueLabel.ts` exports.
 - An `ItemLabel` is a string, a number, `null`, `undefined`, or a function that returns the content of the label. It is not a vnode. A vnode must be unique in the tree, and a label shows in the value part and in its item at the same time. See [Vnodes Must Be Unique](https://vuejs.org/guide/extras/render-function.html#vnodes-must-be-unique).
 - On a page that Vue hydrated, a component in a vnode that mounts a second time renders nothing.
@@ -371,7 +386,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To stop a change, call `details.cancel()` before the listener returns. The part reads `isCanceled` at that time, so a call after an `await` has no effect.
 - An item whose change also changes its group, such as `Toggle` in `ToggleGroup`, emits in this order: `pressedChange` of the item, `valueChange` and `update:value` of the group, and `update:pressed` of the item. Both change events get the same `details` object. A `details.cancel()` in `pressedChange` stops each later event. A `details.cancel()` in `valueChange` stops `update:value` and `update:pressed`.
 - Do not throw to stop a change. A listener that throws stops `update:x` only where Vue throws the error again. Vue throws the error again only in a development build, or in a production build where `app.config.throwUnhandledErrorInProduction` is `true`. Vue does not throw it again when `app.config.errorHandler` or an ancestor `errorCaptured` hook that returns `false` handles the error. Where Vue does not throw the error again, the part emits `update:x`.
-- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked` or `v-model:pressed`. There is no `modelValue` alias.
+- A consumer writes `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed` or `v-model:snapPoint`. There is no `modelValue` alias.
 - One composable does this: `useControlled({ controlled: () => props.x, default: () => props.defaultX, name })`.
 - `default` is a getter. A development build then shows a warning when the default of an uncontrolled part changes.
 - Do not use `defineModel`. It writes the value before a parent can cancel the change.
@@ -406,6 +421,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
 - Give the type parameter the default that Base UI gives it: `generic="Value = any"` on `Accordion.Root`. With no default, the handler of a root that has no `value` and no `defaultValue` gets `unknown[]`. Base UI gives `any[]`, and its type test has a line for it.
 - Write the `#render` slot as a property with the shared type: `render: ComponentRenderFn<HTMLProps, ButtonState>`. A part with the `children` slot prop writes a method with the three slot props, because `ComponentRenderFn` has no `children`.
+- A part whose default tag has attributes of its own gives them to the slot type. The `a` of `PreviewCard.Trigger` is an example: `render: ComponentRenderFn<HTMLProps & AnchorHTMLAttributes, PreviewCardTriggerState>`. `HTMLProps` has no `href`.
 - Hooks keep their names as composables: `useDirection`, `useRender`, `Toast.useToastManager`, `Combobox.useFilter`.
 - Where an upstream hook returns a value that can change, the composable returns a ref of that value. `setup` runs one time, so a plain value does not follow a change. Read `.value` where the code uses the value. Do not make a copy of it in `setup`.
 - The ref is a `ComputedRef` when the composable computes the value: `useDirection()` returns `ComputedRef<TextDirection>`. It is a `Readonly<Ref<T>>` when the composable writes the value: `useTransitionStatus()` returns `mounted` and `transitionStatus` in this form.
@@ -436,6 +452,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - `useAnchorPositioning` of `src/internals` is the only caller of `useFloating` of `@floating-ui/vue`. A positioner part of a popup family calls `usePopupPositioner` in `setup`. `test/fixtures/PopupPositionerPart.vue` is the model. See [Popup positioning](#popup-positioning).
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
+- `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
@@ -540,6 +557,7 @@ The label, the control and the messages of a field:
 - `labelId` of the context is the id of the last label that has one. `messageIds` lists the ids of the messages in the order of the registrations, which is the order of the mount.
 - A control gets `aria-describedby` from `getDescriptionProps` of the context. The result also has the messages of the provider above. A control in `Field.Item` that calls `getDescriptionProps` of its context thus names the messages of the item and of the field.
 - `Field.Control` gets `aria-describedby` through `getValidationProps` of `useFieldValidation`, which calls `getDescriptionProps` of the labelable context of `Field.Root`, as in Base UI. In an item, the control thus names only the messages of the field.
+- A group that is the control of its field and takes its name from `aria-labelledby`, such as `CheckboxGroup`, calls `useLabelableId({ id: null })`. The label then has no `for`. An item of the group does not claim the control id of that scope. It passes `enabled: false` to `useLabelableId` when its `registerControlId` is the function of the group. A `Field.Item` opens a scope that the item owns.
 - A control that renders a labelable element, such as `Field.Control`, binds `labelId` of the context to `aria-labelledby`. It does not call `useControlLabelId()`. It calls `useDeferredServerRender()` itself, so that the server HTML has the ids of the label and of the messages that come after it.
 - A control calls `useControlLabelId()` when its element is not a labelable element of HTML, such as a `<span>` with a role. It gives the result to `useAriaLabelledBy`, which follows this list. The result is the id of the registered label, and `undefined` with no label. The control defers when it has a provider. A label that comes after it then names it in the server HTML, also with an `id` prop.
 - When the field has no label, the control has no `aria-labelledby`, in the server HTML also.
@@ -552,8 +570,9 @@ The label, the control and the messages of a field:
 The state of a field:
 
 - The root of a field holds `touched`, `dirty`, `filled`, `focused` and the validity data in `shallowRef` values. A part changes one only through a function of the field context.
+- The field reads the getters of a registration inside its own computed values. The state of a part can include the state of the field, and the field then reads itself through the getter. A getter thus does not read such a state. It reads the sources of the state, as the getters of `NumberField.Input` read `value` and `disabled` of its root context. With a getter that reads the state, `data-focused` and `data-touched` stay stale.
 - A control can call such a function in `setup` with a value that it knows from its props, such as `setFilled`. The server HTML of the control and of each part after it then has the attribute. The root and the parts before the control get it in the first flush on the client. Vue does not compare `data-*`.
-- A part below a control that defers runs its `setup` after a server wrote the parts that come after the control. The control thus sets the first state itself, as `RadioGroup` does for `filled`.
+- A part below a control that defers runs its `setup` after a server wrote the parts that come after the control. The control thus sets the first state itself, as `RadioGroup` and `CheckboxGroup` do for `filled`.
 - A value that can add or remove an element does not come from `setup`. A lazy component runs its `setup` later in a browser than on a server, and Vue reports the difference as a hydration mismatch.
 - `focused`, `touched`, the validity and the initial value come after the mount. A control that has focus before the hydration gets `data-focused` when it is mounted.
 - The name of a control comes with its registration, after the mount. A form error for a `name` that only the control has thus shows after the mount. A field with the `name` on its root has the error in the server HTML.
@@ -561,6 +580,7 @@ The state of a field:
 ### What Vue replaces
 
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
+- A store of Base UI whose purpose is a write that renders nothing stays a plain object with `getSnapshot` and `subscribe`. `nestedSwipeProgressStore` of `Drawer.Root` is an example.
 - A popup store is `shallowReactive` state, selector functions and a plain `context`. Each root makes one. See [Popup store](#popup-store).
 - `useId` gives the ids.
 - `Teleport` puts the portal element, with the popup in it, into the container. It has no `defer`, because the portal renders the `Teleport` after the mount, when the container exists. See [Popup portal](#popup-portal).
@@ -572,7 +592,7 @@ The state of a field:
 - A function that only reads such a ref takes `Readonly<Ref<T>>`. The owner makes the ref with `shallowRef` and gives it a new value on each change. It does not change an array in place, because a `shallowRef` does not see that change.
 - Base UI sometimes gives a ref object that computes its value on each read, or that it selects at render. A function that only reads such a ref takes `MaybeRefOrGetter<T>` and reads it with `toValue` in a handler or a hook. A function that gives the ref to such a reader takes the same type. Examples are `focusTargetRef` of `useSetFieldFocused` and `controlRef` of `useRegisterFieldControl`, which the form reads.
 - A ref that parts write with no function of the context is a `Ref<T>`, made with `shallowRef`. `focusOwnerRef` of the field context is an example.
-- A part writes `null` to such a ref only when the ref holds its own element. A compiled template can mount a new part before it unmounts the part that it replaces. The old part then does not clear the element of the new part. `Field.Control` does this for `validation.inputRef`.
+- A part writes `null` to such a ref only when the ref holds its own element. A compiled template can mount a new part before it unmounts the part that it replaces. The old part then does not clear the element of the new part. `Field.Control` does this for `validation.inputRef`. `Dialog.Viewport` does it for the key `viewportElement` of the popup store.
 - A ref that only handlers, lifecycle hooks and `watch` callbacks read costs no render. They read it with no effect active, so a write wakes nothing. Do not read such a ref in a template.
 - A value that Base UI keeps in a React ref and reads during render is also a `shallowRef`. Only a reactive value renders the part when it changes. `useCollapsiblePanel` has examples.
 - A React ref that stays in one function becomes a `let`.
@@ -590,7 +610,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context file exports the key with the type `InjectionKey<Context>`. It exports `use<Root>Context()` beside the key.
 - `use<Root>Context()` calls `inject(key, undefined)`. With one argument, Vue gives a warning of its own when there is no provider.
 - When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
-- A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` returns `undefined`, because a radio with no group is valid.
+- A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` and `useCheckboxGroupContext()` return `undefined`, because a radio or a checkbox with no group is valid.
 - A context that Base UI creates with a default value has one default object in its file. `use<Name>Context()` then calls `inject(key, DEFAULT_<NAME>_CONTEXT)`, and a part works with no provider. `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` do this.
 - The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does.
 - `DEFAULT_FIELD_ROOT_CONTEXT` has three more forms. A ref that parts write drops each write: `validation.inputRef` is a `customRef` that reads `null`. A member that only a provider can have is `null`: `focusOwnerRef`. A collection is empty and read-only: `registeredInputs`.
@@ -606,27 +626,32 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 
 ### Popup store
 
-The state of a popup is in a store. The code is in `src/utils/popups`.
+The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/root/TooltipRoot.vue` and `tooltip/trigger/TooltipTrigger.vue` are the models of a popup root and a popup trigger.
 
 - `ReactiveStore` holds `state`, `context` and the selectors. `state` is a `shallowReactive` object. `context` is a plain object for the values that no part renders, such as a callback or a map.
 - A selector is a plain function of the state: `(state, ...args) => value`. `store.select(key, ...args)` calls it with the reactive state.
 - A part reads a selector in a `computed` in `setup`: `computed(() => store.select('isOpenedByTrigger', id.value))`. The part then renders again only when the value changes.
 - A `select` call in a render function makes the part render again on each change of a key that the selector reads.
+- A selector of a child store can read the store of its parent. A `computed` that reads the selector follows the parent, so the child store needs no subscription.
 - The store makes no `computed` and no watcher. The `computed` of a part stops with the part. Thus code can make a store outside a component, with no `effectScope`.
 - Write with `set`, `update` or `setState`. Do not assign to `state`.
 - `set` and `update` call `setState` with the full state, so a subclass that overrides `setState` sees each write.
+- A family store that must do work when one key of its state changes overrides `setState`, because a store makes no watcher. `MenuStore` shares the mouse-up ref of its parent in this way.
 - Vue has no public batch for writes. A watcher with the default flush runs one time for an update of many keys. A watcher with `flush: 'sync'` runs after the write of each key, so it can read a state that is not complete.
 - `setState` finds the changed keys before it writes the first key. A sync watcher can write the store during an update, and that write stays.
 - `BasePopupStore` writes `open` and `openProp` after the other keys. A sync watcher of the open state then reads the trigger and the reason of the change.
 - A function that a render function, a ref callback or the cleanup of a `watch` calls reads `toRaw(store.state)`. That read adds no dependency. Vue runs the cleanup of a part in the render of its parent when the part unmounts. The write methods of a store read the state in this way.
 - The state keeps each value as it is: an object, an element, a ref. Do not hold a payload in `ref()` or `reactive()`.
 - `NullStore` is a store that takes no write. Give it a frozen state and a frozen context. Vue does not make a frozen object reactive. Code that all apps and all server requests share, such as a handle, holds only such a store.
-- A handle holds an inert `NullStore` and a `shallowRef` that points at the store of the root that controls the handle. A `computed` that reads `handle.store`, or a getter such as `isOpen` that reads the state of that store, follows the pointer. A method such as `open()` reads `attachedStoreUntracked`, so an effect that calls it does not run again when a root attaches or detaches.
+- A handle holds an inert `NullStore` and a `shallowRef` that points at the store of the root that controls the handle. A `computed` that reads `handle.store`, or a getter such as `isOpen` that reads the state of that store, follows the pointer. A method such as `open()` reads `attachedStoreUntracked`, so an effect that calls it does not run again when a root attaches or detaches. The `isOpen` of a family handle reads `attachedStore`, which is the tracked pointer (`VUE-34`).
 - A root attaches its store to its handle in `onBeforeMount`. `attachStore` returns the function that detaches the store. A server does not call `onBeforeMount`, so a server render writes nothing to a handle that all requests share. Do not attach in `setup`.
+- A root can call a listener of the consumer when its props change. The close of a disabled root does this. The call runs in `onMounted` and in a `watch` with no `immediate`, so a server render calls no listener.
 - A trigger that has a handle calls `usePopupHandleStore(() => props.handle)` in `setup`. The result is the inert store of the handle while the trigger hydrates, and then the store that the handle points at. Hydration does not patch an attribute of a bound object, which is how a part binds its attributes. A trigger that reads the store of the root while it hydrates then keeps the attribute values of the server HTML.
 - When two roots take one handle, the newest root controls it. When the newest root unmounts, control returns to the older root. A development build warns when two roots are still attached one frame later.
 - `BasePopupHandle` calls `markRaw(this)`. Vue then makes no reactive proxy of a handle. A proxy, from `ref()` or the `data` option, would unwrap the pointer ref and fail at the next write to it.
 - A family makes a subclass of `BasePopupStore`. The subclass overrides only the steps where it differs: `isOpenChangeIgnored`, `getCloseTrigger`, `prepareOpenChange`, `prepareUnmount` and `anchorsToActiveTrigger`.
+- A family that picks a value from a list makes a subclass of `ValuePopupStore` from `utils/popups/value-popup`. The subclass gives `getAnchorElement`. The store writes that element to `anchorElement` in each write that changes the anchor, the open state or the positioner element.
+- A selector of a family that replaces a selector of `popupStoreSelectors` has the parameter type `PopupStoreState<unknown>`. With the state type of the family, the store does not fit a root composable.
 - `BasePopupStore` has no `isCommittedSynchronously` step, because Vue has no `flushSync`. A caller that reads the DOM after `setOpen` awaits `nextTick()`.
 - A function that works with the store of any family types its parameter as `PopupTriggerDataStore<State>`, or as a `ReactiveStore<State, PopupStoreContext<never>, PopupStoreSelectors>` plus the members that it calls. A parameter of the type `BasePopupStore<…>` refuses a family store with other change event details. It also refuses a family store with a step that returns only keys that the family adds.
 - A part with no popup store calls `useFloatingRootStore` in `setup` and gives it `open`, because `setOpen` of the store only calls `onOpenChange`.
@@ -642,9 +667,12 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated.
 - When the flag changes, the registration updates `triggerCount`. After the activation, the active trigger gives its data to the store again.
 - A root part calls `usePopupInteractionProps(store, () => ({ activeTriggerProps, inactiveTriggerProps, popupProps }))` in `setup`. It writes the props at once, so each part below the root gets them in its first render. It writes them again when a source of the getter changes, and it clears them when the root unmounts.
+- `activeTriggerProps`, `inactiveTriggerProps` and `popupProps` have the type `HTMLAttributes` of Vue. They hold attributes and listeners, and no `ref`.
 - A root part calls `usePopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `payload`, `transitionStatus` and `actions`. The part provides `store` with `provide`, exposes `actions`, and renders `<slot :payload="payload" />`.
-- The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root part only declares its props, its emits, its slot and its exposed actions.
+- The roots of Dialog, Alert Dialog and Drawer share one composable, `useRenderDialogRoot(mode, props, emit)`. It calls `usePopupRoot`, provides the store and calls `useDialogInteractions`. The root parts of Dialog and Alert Dialog only declare their props, their emits, their slot and their exposed actions.
+- `Drawer.Root` also provides `DrawerRootContext`, reports to `Drawer.Provider` and holds the close watcher. It gives the composable a function in place of its `emit`. For `update:open` and `openChangeComplete`, the function only emits the event. For `openChange`, it emits the event and returns when `details.isCanceled` is `true`. For a close of a root that has snap points, it then calls `setActiveSnapPoint` with the default snap point and the reason of the close. The composable then calls the function for `update:open`, so `update:open` comes after `snapPointChange` and `update:snapPoint`.
 - `createStore` runs one time, and the props give only the first state. The composable then follows `open` and `triggerId` with watchers that have the default flush. A controlled `open` of `false` also resets the last request in `state.open`.
+- A prop of the root that the store also holds, such as `disabled`, goes into the first state in `createStore`. One `watch` writes each later change. The server HTML then has the first state.
 - `options.onOpenChange` is a function of the part. It emits `openChange`, and then `update:open` when `details.isCanceled` is `false`. The composable puts it in `context.onOpenChange`. `options.onOpenChangeComplete` emits `openChangeComplete`.
 - The composable calls `useControlled` for `open` and for `triggerId` only to give two warnings. One is for a change between controlled and uncontrolled. The other is for a change of the default of an uncontrolled root. The store holds the state.
 - `useUnmountAfterClose` runs the transition. A `watch` with `flush: 'sync'` copies `mounted` and `transitionStatus` to the store in the write that changes them. A caller that reads the store after a write of `open` thus reads the new values.
@@ -652,25 +680,28 @@ The state of a popup is in a store. The code is in `src/utils/popups`.
 - `useImplicitActiveTrigger` keeps the trigger map and the state in step after each DOM update. It does not run while `KeepAlive` holds the root. With `closeOnActiveTriggerUnmount`, the popup closes with the reason `none` when the active trigger unregisters. The close waits one microtask, so that a trigger with the same id can register first.
 - When triggers join an open popup that has no active trigger and none claims it, the root picks the first trigger of the trigger map that is in the document. The result is the same as at the mount. `KeepAlive` runs the hooks from the last part to the first part, so a claim by each trigger would pick the last trigger.
 - `KeepAlive` detaches the store of a deactivated root from its handle. The store attaches again at the activation.
-- `popupRoot.ts` has `usePopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`. The pull request that first needs `usePopupRootWithPopupId` or `useSingleAnchorPopupRoot` adds it with its cases.
-- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose store has the key `openMethod` calls it in `setup`.
+- A root of a popup with one anchor and no trigger registry, such as Select and Combobox, calls `useSingleAnchorPopupRoot(props, createStore, options)` in `setup`. The call returns `store`, `open`, `mounted`, `transitionStatus` and `actions`. Such a root has no handle, no payload and no trigger id.
+- `usePopupRootWithPopupId(props, createStore, defaultPopupId, options)` is `usePopupRoot` for a root that gives its own default popup id. The id is a value, a ref or a getter, and the store follows a change. `Menu.Root` gives the id that its popup registers, or else a generated id.
+- `popupRoot.ts` has `usePopupRoot`, `usePopupRootWithPopupId`, `useSingleAnchorPopupRoot`, `useImplicitActiveTrigger` and `usePopupRootSync`.
+- `usePopupRootSync(store, open)` clears `openMethod` of the store when `open` becomes `false` and when the root unmounts. A root whose trigger writes `openMethod` with `useOpenMethodTriggerProps` calls it in `setup`. `useOpenInteractionType` clears its own `openMethod`, so a root that uses it does not.
 - `types.ts` has a part of the types of Base UI. The pull request that first needs a type adds it.
 
 ### Popup tree
 
 A popup tree holds one node for each popup below one root. The code is in `src/utils/popups/tree`.
 
-- `provideFloatingTree()` makes a `FloatingTreeStore`, provides it and returns it. `provideFloatingNode(id)` provides the id of a node. Base UI has the components `FloatingTree` and `FloatingNode` for this.
+- `provideFloatingTree(externalTree)` provides a tree to the parts below and returns it as a `ComputedRef`. `externalTree` is a store, a ref or a getter. With no tree, the part provides one `FloatingTreeStore` of its own. `provideFloatingNode(id)` provides the id of a node. Base UI has the components `FloatingTree` and `FloatingNode` for this.
 - `useFloatingNodeId()` registers a node in the tree and returns its id. `useFloatingParentNodeId()` gives the id of the node above the part, or `null`. `useFloatingTree()` gives the tree above the part, or `null`.
 - `provide` follows the components and not the DOM. A part in a `Teleport` thus gets the tree and the node of the part around it.
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
+- The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
 - `nodesRef` is a `shallowRef`. The tree gives it a new array for each node that it adds or removes.
 - `parentId` of a node gives the id that the part above provides at the time of the read. When that id changes, the node keeps its place and its `context`.
-- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open.
+- `KeepAlive` leaves a node in its place. While the part of the node is deactivated, the `context` of the node is `undefined`. `getNodeChildren` then does not count the node as open. `removeNodeContext(node, context)` removes `context` from a node, also while the part of the node is deactivated. It keeps the context of another popup. Do not compare `node.context` for this, because a deactivated part hides it.
 
 ### Popup positioning
 
@@ -679,6 +710,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - The part calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node.
+- `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
@@ -688,9 +720,25 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `floating` and `domReference` come from the store: its positioner element and its `anchorElement`. `reference` is the element that the popup is positioned against. It is the `anchor` of the positioner, or else the anchor of the store.
 - The context has no position (`x`, `y`, `isPositioned`, `update`) and no `refs`. A reader that needs the position uses the return value of `useAnchorPositioning`.
 - `useVaseUIFloating` writes the context in `onBeforeMount`. A server render thus writes nothing, and each part below the positioner finds the context in `setup`.
-- The composable removes its context from the store when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree hides the context of a deactivated node by itself.
+- The composable removes its context from the store and from the node when the part unmounts and while `KeepAlive` holds the part. It never removes the context of another positioner. The tree also hides the context of a node whose own part is deactivated.
 - While the popup is not mounted, the composable calls `clearPositioning()` of the store. A kept popup then forgets its anchor override, and a `FloatingRootStore` forgets its anchor and its positioner element.
 - `rootStore` can be a getter. A part that gets its store after it has mounted gives a getter, and the context moves to the new store.
+
+### Popup viewport
+
+The viewport of a popup, in `src/utils/popups/viewport`, shows the old content while the popup moves to another trigger.
+
+- A viewport part calls `usePopupViewport({ store, side })` in `setup` and gets `state`.
+- The container `data-current="true"` holds the content, and the container `data-previous="true"` comes first while the old content shows.
+- The old container has `inert` and `position: absolute`, and it has the old size of the popup in `--popup-width` and `--popup-height` when the payload changes.
+- The new container has `data-starting-style` in the first DOM update and loses it one frame later, when the old container gets `data-ending-style`.
+- The old content is a DOM clone that the composable takes when the trigger changes, before Vue renders the change.
+- The clone has no `id` on an HTML element and no `name` on a control.
+- The content mounts one time for a change of the trigger, and one more time when the payload of the trigger comes later.
+- The composable writes `adaptiveOrigin` in `onBeforeMount` and in `onMounted`, and a server render writes nothing.
+- The resize writes the size variables to the popup element and the positioner element, and their rendered style has none of them.
+- A `style` of the consumer on the popup replaces an anchoring declaration that has the same property at the next render.
+- While `KeepAlive` holds the part, the resize measures nothing and a morph in progress ends.
 
 ### Focus helpers
 
@@ -784,6 +832,11 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - A trigger stops its open timer, its rest timer and its safe polygon when it unmounts, when its store changes, when it gets disabled, and when `KeepAlive` deactivates it.
 - Chromium sends `focusout` when Vue removes the focused trigger, after the scope of the part stopped. A handler that starts a timer thus starts none after the scope stopped.
 - A popup that hover or focus opened closes with the reason `trigger-hover` or `trigger-focus` when `KeepAlive` deactivates its trigger. This is the exception to the open state that a popup keeps under `KeepAlive`.
+- `useHoverPopupInteraction` takes `store` as a store, a ref or a getter, because a part can get its store after `setup`. A change of the store runs each effect of the part again for the new store.
+- `useHoverPopupInteraction` adds its listeners to the positioner element with `addEventListener`, because the element belongs to another part than the popup part that calls it.
+- A popup part stops its own timer and the timers of the hover intent. It also gives back the pointer events that the intent blocked. It does both when it unmounts, when its store changes, and when `KeepAlive` deactivates it.
+- While `KeepAlive` holds a popup part, the part blocks no pointer events and has no listener on its positioner element.
+- A popup that the pointer left closes when the popup below it closes. It looks for an open popup below it in a 0 ms timer, because `open` of a node is the state of the last DOM update.
 - `useClientPoint` writes a virtual element at the pointer to `anchorOverride` for each move, and `null` when the part unmounts. A positioner reads it through `store.select('anchor')`.
 - While it is enabled, `useClientPoint` adds one `mousemove` listener to the window of the positioner element. A mouse-like pointer keeps the listener while the store has that element, so the popup follows the pointer while it closes. A touch pointer keeps it only while the popup is open. The listener removes itself when the pointer moves over the positioner element. A `mouseenter` or `mousemove` event of the trigger adds it again while the popup is open. A popup that a non-mouse event opened, such as a focus or a key press, gets no listener and keeps the anchor of its trigger. While it is not enabled, `useClientPoint` has no listener. It writes the anchor element of the store to `anchorOverride`.
 - `store` of `useClientPoint` is a store, a ref or a getter. When the store changes, the composable removes its window listener. It writes `null` to `anchorOverride` of the old store. It then applies the rules above to the new store.
@@ -796,6 +849,7 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - The result is one plain object with `reference`, `floating` and `trigger`. `trigger` is `reference`. Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state, so the object is made one time. The root gives the members to `usePopupInteractionProps`.
 - `enabled`, `escapeKey`, `outsidePressEvent`, `bubbles` and `externalTree` are a value, a ref or a getter, because a caller of Base UI changes each of them between renders.
 - `outsidePress` and `referencePress` are plain members, because `toValue` calls a function. `referencePress` is a function. `outsidePress` is a Boolean that the composable reads one time, or a function that it calls for each press. A caller of Base UI gives a function or nothing, so no caller needs a Boolean that changes.
+- A root whose trigger is a link, such as `PreviewCard.Root`, gives no `referencePress`. A press of the link then does not close the popup, and the link navigates.
 - The document listeners exist only while the popup is open, enabled and not held by `KeepAlive`. A server render adds none.
 - One function, `update()`, removes the listeners of the last run and adds the listeners of the new state. It follows the rule of [What differs from the React source](#what-differs-from-the-react-source) for an effect that reads the DOM: `onMounted` plus a `watch` with `flush: 'post'`. A server calls no `onMounted` and runs no such `watch`.
 - The two `KeepAlive` hooks call `update()` themselves. A plain flag, not a ref, tells it that `KeepAlive` holds the popup. The popup keeps its open state. While `KeepAlive` holds it, the composable resets its session state and clears its timers.
@@ -829,6 +883,20 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+
+### Toast store
+
+The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/toast/store.ts`.
+
+- `ToastStore` is a `ReactiveStore`. Code can make one with no component.
+- A reader calls a selector of the store in a `computed`. `useToastManager()` does this for `toasts`, so it returns `toasts` as a `ComputedRef`. Its four methods are plain functions.
+- The store derives the place of each toast from `toasts`, so one write changes the list and the places.
+- `ToastStore` writes `toasts` after the other keys. A sync watcher of the toasts then reads the limit and the interaction state of the same change.
+- A method of the store reads the state with `toRaw`. An effect of a consumer that calls `add`, `update`, `close` or `promise` thus does not run again when the toasts change.
+- `closeToast` reads a document only when the store has a viewport element. A call on a server thus does not throw (`VUE-30`).
+- A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
+- `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
+- `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
 
 ### Composite
 
@@ -870,6 +938,7 @@ A part that is in a composite only in some trees:
 
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `Radio.Root` is an item only in a `RadioGroup`.
+- `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - The part reads the context that decides with `inject`, in `setup`. It calls `useCompositeItem` or `useCompositeRoot` only when that context allows it: `const compositeItem = groupContext ? useCompositeItem({ … }) : undefined`.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
 - `useCompositeItem` throws when it has no composite root, so a part cannot call it in each tree.
@@ -978,20 +1047,23 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useFloating` sets `isPositioned` from the `open` option that it read when the position pass started. A pass can start while the popup is open and end after the popup closed. `useFloating` then gives `true` for a closed popup, and the part shows an old position.
 - The composable keeps its own `isPositioned` in a `shallowRef`. One `watch` on `middlewareData` and on the `isPositioned` of `useFloating` writes it. The value is `true` only when the `isPositioned` of `useFloating` is `true` and `open` is not `false` at that time.
 - Each reader of `isPositioned` reads this ref. A reader outside a render, such as the microtask of a function ref, needs the value in the write that ends the pass.
-- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`.
+- Where a handler of Base UI reads the state of the last render after a state write, keep that value in a variable that a `watch` with the default flush writes. A direct read in the handler gives the value after the write. `useFieldValidation` does this for the validity of the field: `renderedValid`. `useMenuRoot` does this for the open state, and it gives the state to the store only while the root is mounted.
 - `useValueAsRef(value)` of Base UI becomes a variable that a `watch` of the value writes with `flush: 'sync'`. A handler then reads the value of the last change. `SliderControl.vue` does this for `values`.
 - `useValueChanged` calls its callback after the DOM update, because the callback of a field control reads the validity of the input. Under `KeepAlive` it waits for the activation and gives the value before the deactivation.
 - A consumer can change an object prop in place, because a `ref` of the consumer gives a reactive proxy. `errors` of `Form` is such a prop. A `computed` that reads the proxy with `Object.hasOwn` does not see a new key, because Vue tracks no `Object.hasOwn` of a proxy.
 - Watch such a prop with `deep: true`, and keep a plain copy of it in a `shallowRef`. Each change then gives a new object, and a `computed` that reads the copy runs again.
+- `CheckboxGroup` gives a copy of its `value` to `useControlled`: `controlled: () => props.value?.slice()`. The copy reads each item. A change in place thus gives the watchers of the part a new array.
 - Do not use `watchPostEffect` for an effect. It runs again for each value that the effect reads, and an effect of upstream runs again only for the dependencies that it names. A dependency that the effect does not read, such as `restartKey` in `useOpenChangeComplete`, then starts no run.
 - An internal component of Base UI that only provides a context and renders its children becomes a composable that the root calls. `LabelableProvider.ts` exports `provideLabelableContext()`.
+- An internal root component of Base UI that more than one root part renders also becomes a composable. `useMenuRoot` does the work of `MenuRootInternal`.
 - A registration that the server HTML needs runs one time in `setup`. Register a getter for the value, so that a later change needs no new registration. Remove the registration in `onScopeDispose`. `useLabel` and `useRegisteredMessageId` do this.
 - Do not register with a `watch` that has `immediate` and a cleanup. A server render stops that watcher directly after its first run, and the stop runs the cleanup.
 - A registration from which a provider picks one value among many parts runs in `onMounted`. A control that replaces another control then registers after the old control left the registrations. `useLabelableId` does this for the id of a control, with a `watch` for a later change. `useRegisterFieldControl` does it for the control of a field. It registers one getter for all the values of the control. A `watch` registers the same getter again when the `id`, the `name`, the value or `enabled` of the control changes.
 - `Collapsible.Panel` registers its id in `setup` with `useRegisteredId`, and the root takes the id of the last registration. A panel that replaces another panel then registers after it.
+- `Dialog.Title` and `Dialog.Description` register their ids in `setup` with `useRegisteredId`. `useDialogInteractions` makes one registry for each kind. It writes the id of the last registration to `titleElementId` or `descriptionElementId` of the store. Base UI clears that id when any part of the kind unmounts, also when another part of the kind stays.
 - Where Base UI removes a registration in the cleanup of a layout effect, use `onScopeDispose`. It runs while Vue unmounts the component. The `onMounted` of a part that replaces it runs after that.
 - A compiled template can mount a new part before it unmounts the part that it replaces. A removal by value then removes the value of the new part.
-- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the controls, the labels and the messages, for the controls of a field, for the panels of a collapsible, and for the triggers of an accordion item.
+- Thus register a value that two parts can have by source: a `Map` with one entry for each part. `createIdRegistry()` of `src/internals/labelable-provider` does this for the controls, the labels and the messages, for the controls of a field, for the panels of a collapsible, for the triggers of an accordion item, and for the titles and the descriptions of a dialog.
 - A `#render` slot can give an element with attributes that no prop of the part shows. An effect that depends on such an attribute runs in `onMounted` and `onUpdated`. It compares the values that it reads with the values of its last run, and it stops when they are equal. `AvatarImage.vue` reads the rendered image in this way.
 - The transition status runs on a `flush: 'sync'` watcher. It replaces a state write during render.
 - A state that React writes during render, to keep the value of an earlier render, also becomes a `watch` with `flush: 'sync'` and `immediate`. `Field.Error` keeps its last message in this way, for its exit animation.
@@ -1022,6 +1094,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.
+- Vue before 3.5.14 sets the key `autocorrect` as the boolean DOM property of the element, so the string `'off'` turns autocorrect on. A part that turns autocorrect off gives the key `autoCorrect`. Vue sets that key as an attribute in each version, and a server writes it in lower case. The part takes `autocorrect` out of the attributes of the consumer and gives its value to that key, because two keys for one attribute give two attributes on a server. The part gives `'off'` when the consumer gives `undefined`.
 - Where upstream takes a native attribute out of its props and does not use it, the part takes the key out of `attrs` in the `props` function of `useRenderElement`. It does not declare a prop for it. `Toggle` does this for `type` and `form`: `const { form, type, ...elementAttrs } = attrs`.
 - Where an element can lack the DOM property, a part gives a Boolean attribute the value `true` or `undefined`, never `false`. On an `<svg>`, which has no `hidden` property, Vue writes `false` as `hidden="false"`.
 - For `hidden="until-found"`, the props hold the string `'until-found'` as `hidden`. A server with Vue 3.5.41 or later writes that value. An earlier server writes a bare `hidden`.
@@ -1032,6 +1105,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example.
+- A text input part can refuse a change. `NumberField.Input` is an example. No render follows a refused change, so the part writes the text of its state to the input in the `input` handler. The part does not write while the event has `isComposing`, because a write stops the composition. After `compositionend` it writes in a 0 ms timeout, because WebKit sends the last `input` event of a composition after `compositionend`.
 - A text input part listens to `input` and to `change`. It handles `change` only when the value of the input is new. A value is not new when the input had it after the last event that the part handled. A value is also not new when the input had it after the last write of Vue, of the part or of a reset. React's `onChange` does the same, because its value tracker also follows the writes of React. A program that fills a form can send only `change`. A range input follows the same rule, as the input of `Slider.Thumb` does.
 - Vue writes `value` of an input when it hydrates, so a part with a range input needs no write at the mount. Chromium restores the form state of a page after `load`, with no event on the input. The part thus writes its state to the inputs on each `pageshow` event, as `Slider.Root` does.
 - A native reset of a form changes the value of an input and sends no `input` event. A part that holds state for that value follows the reset with `useFormReset` of `src/internals`. The part gives it the input and a callback. The composable listens on the root node of the input. A `reset` event does not leave a shadow root, so a listener on the document does not get it. `Field.Control` is the example.
@@ -1042,6 +1116,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A dialog reports its open state to the dialog above it. While `KeepAlive` holds the dialog, it reports that it is closed. The dialog above is then the top dialog again, so Escape closes it. The report comes back at the activation.
+- A drawer in a `Drawer.Provider` reports its open state to the provider, and a drawer can hold a close watcher. While `KeepAlive` holds the drawer, it reports to the provider that it is closed, and it destroys its close watcher. Both come back at the activation.
 - A part that clears a timer in `onDeactivated` also ends the state that the timer would end. `ScrollAreaRoot.vue` ends its scrolling state.
 - A part that follows a pointer ends that state in `onDeactivated`, because `KeepAlive` sends no leave event. `ScrollAreaRoot.vue` does this for its hover state.
 - A part that reads `:hover` at mount reads it again in `onActivated`. No enter event comes for a pointer that is already over the part. `ScrollAreaViewport.vue` does this.
@@ -1115,7 +1190,9 @@ Vase UI: <Dialog.Trigger> must be inside <Dialog.Root>. Without a root the trigg
 - A `.node.test` file does not import `#test-utils`, because that index loads the libraries of the DOM helpers. To render a part, such a file imports `renderToString` from `vue/server-renderer` and the part directly.
 - A family can have one `.node.test.tsx` file for the server render of the whole family, in the folder of its root: `progress/root/ProgressRoot.node.test.tsx`. A `replaced` Base UI case is the exception. It goes to the `.node.test.tsx` file of the folder of its Base UI test, as [How to port a test](#how-to-port-a-test) says: `fieldset/legend/FieldsetLegend.node.test.tsx`.
 - There is no jsdom.
-- A file with a name that ends in `.spec.ts` or `.spec.tsx` is a type test. vue-tsc checks it, and no test runner runs it.
+- A file with a name that ends in `.spec.ts`, `.spec.tsx` or `.spec.vue` is a type test. vue-tsc checks it, and no test runner runs it.
+- A `.spec.vue` file is the type test of a template. Its first line is `<!-- @strictTemplates true -->`. vue-tsc then reports an unknown prop in that file, as it does for a consumer that sets `strictTemplates`.
+- In this package, vue-tsc reports no unknown prop on a generic SFC, in a `.spec.vue` file also. The files that are not strict give each generic SFC a type that accepts each unknown prop. For such a part, write a line that must fail: `<!-- @vue-expect-error -->` before an element that gives the prop a value of a wrong type.
 - The tests of `fixtures/nuxt` run in Node. They start the Nuxt app with `@nuxt/test-utils` and read its pages in Chromium. They are not part of `pnpm test`. The job `test-nuxt` of CI runs them, and `required` needs that job.
 - The job `test-nuxt` also runs `pnpm --filter @vase-ui/nuxt-fixture typecheck`. vue-tsc then checks the templates of the fixture against the built package, as it does in the project of a consumer.
 
@@ -1176,15 +1253,17 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `clock.tick(n)`                                                                                            | `vi.advanceTimersByTime(n)`, then `await flushMicrotasks()`                                                                                                                                                                                               |
 | `clock.tickAsync(n)`                                                                                       | `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`                                                                                                                                                                                    |
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
+| `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]`                              | `toasts.value`, because the composable returns a ref                                                                                                                                                                                                      |
 | A function component that calls a hook and spreads the rest of its props                                   | `defineComponent` with a setup function that returns the render function. Declare the props that the hook reads. Set `inheritAttrs: false` and spread `attrs`.                                                                                            |
 | `useTestInteractions([useX(…), …])` in a test component                                                    | The same call in `setup`. In the render function, call the functions of the result that the upstream test component calls. A call of these functions in `setup` reads the props only one time.                                                            |
 | `useTestInteractions([useX(…)])`, where `useX` returns listeners with no `reference`, such as `useFocus`   | Call `useX(…)` in `setup`, and spread the object that it returns on the trigger: `<button {...props} />`. The object has the listeners and no `reference` member.                                                                                         |
 | `<CompositeList>`, `<CompositeRoot>` or `<CompositeItem>` in a test                                        | The fixture part of `packages/vue/test/fixtures`, imported with the upstream name                                                                                                                                                                         |
-| `useFloating` of `test/floating-ui-tests`                                                                  | `useFloating` of `test/fixtures`. It makes a `FloatingRootStore` and writes the positioning context that a positioner writes.                                                                                                                             |
+| `useFloating` of `test/floating-ui-tests`                                                                  | `useFloating` of `test/fixtures`. It makes a `FloatingRootStore` and calls `useVaseUIFloating`, so the store and the popup tree get the positioning context.                                                                                              |
 | `renderToString` of the renderer, with no `hydrate()`                                                      | A case in the `.node.test.tsx` file of the same folder, with `renderToString` of `vue/server-renderer`. Give the upstream case a `replaced` row.                                                                                                          |
 | `renderToString` of the renderer, then `hydrate()`                                                         | The case stays in the ported test file with the same title, so it needs no row. Use `renderOnServer` and `hydrate`, which need a browser. A case that acts between the server render and `hydrate()` hydrates by hand. See [Test helpers](#test-helpers). |
 | A `React.Suspense` around a part, so that the part hydrates after its root                                 | A fixture SFC with `defineAsyncComponent(() => Promise.resolve(Part))` inside `<Suspense>`. Hydrate it by hand. See [Test helpers](#test-helpers).                                                                                                        |
 | `expect(fn).toErrorDev(message)` or `.toWarnDev(message)`                                                  | A spy that has `mockImplementation`, on `console.error` or `console.warn`. Call `fn`. Assert the call and its message. The message starts with `Vase UI:`.                                                                                                |
+| `toErrorDev` for a warning that React DOM gives, such as the warning for a `NaN` value                     | No counterpart, because Vue gives no such warning. The case runs with no wrapper and keeps its other assertions. State the removal in the body of the pull request.                                                                                       |
 | `childNodes`, `firstChild` or `nextSibling` on the element of a part                                       | `children` or `querySelector`                                                                                                                                                                                                                             |
 | A number as a length in a style object, such as `top: 1`                                                   | A string with its unit, such as `top: '1px'`                                                                                                                                                                                                              |
 | `<style dangerouslySetInnerHTML={{ __html: style }} />`                                                    | `<style>{style}</style>`                                                                                                                                                                                                                                  |
@@ -1197,6 +1276,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | An enter or leave call of `fireEvent` on a descendant of the element that has the listener                 | The same call on the element that has the listener. The calls are `pointerEnter`, `pointerLeave`, `mouseEnter` and `mouseLeave`. The native events do not bubble. React makes its events from events that bubble, such as `pointerover`.                  |
 | `fireEvent.change(input, { target: { value } })` on a text input                                           | `fireEvent.input(input, { target: { value } })`. It is the event of real typing.                                                                                                                                                                          |
 | `fireEvent.focus(element)` and `fireEvent.blur(element)` on a part that has a focus handler                | `fireEvent.focusIn(element)` and `fireEvent.focusOut(element)`. The part listens to `focusin` and `focusout`, and a dispatched `focus` event is not one of them.                                                                                          |
+| `event.preventDefault()` in an `onFocus` or `onBlur` handler of a consumer                                 | `event.preventVaseUIHandler()` in the `onFocusin` or `onFocusout` handler. See [DOM event names](#dom-event-names).                                                                                                                                       |
 | A `setPointerCapture` call that must capture the pointer                                                   | A real pointer: `userEvent` of `vitest/browser`. `ScrollAreaScrollbar.test.tsx`, "track click by axis" is the model.                                                                                                                                      |
 | `waitFor` on a state that a timer of the part ends, directly after an event                                | A direct assertion after the awaited event. `fireEvent` resolves after the Vue flush, in the same task, so the timer cannot end the state first.                                                                                                          |
 | An engine condition (`isWebKit`, `platform.engine.gecko`, a Blink check)                                   | No change                                                                                                                                                                                                                                                 |
@@ -1209,6 +1289,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - TypeScript cannot infer the type of the parameter of a `v-slots` function.
 - A render function of Base UI can return nothing, because the case only records the state. The slot of a Vue part must return an element: `<div {...props} />`. Without an element, the part gives a warning.
 - Vue's JSX types declare no `Capture` attribute. Vue reads the suffix at run time.
+- A helper component of a test can spread its props on a part. Give these props the type of the props of the instance, such as `InstanceType<typeof NumberField.Root>['$props']`. The type `NumberField.Root.Props` has no listener of an emit, such as `onValueChange`.
 - A Vue handler gets the DOM event. It has no `nativeEvent`.
 - Vue binds a `ref` to the component whose render function makes the vnode. A vnode from the body of a test has no such component, so Vue drops its `ref`.
 - Vue has no ref forwarding. `resolveElement` reads the `element` that the `Wrapper` exposes.
@@ -1327,7 +1408,9 @@ The hydration helpers:
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
+- A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
+- A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
 - A test that replaces one child of `KeepAlive` with another child of the same component gives each child its own `key`. `KeepAlive` then keeps both children and deactivates the one that the other child replaces.
@@ -1452,6 +1535,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - A code sample that is not a demo is `docs/components/<family>/<Name>.vue`, or `docs/utils/<family>/<Name>.vue` on a utility page. The page shows its source and does not render it. `pnpm docs:typecheck` checks it.
 - A page can show a part of a sample. Mark the part with `// #region <name>` and `// #endregion <name>` in the script of the sample. Show it with `<<< ./<family>/<Name>.vue#<name>{ts}`. The `ts` gives it the colors of TypeScript.
 - Write `<ApiReference />` under the heading `## API reference`. The site build makes the reference from the types and the JSDoc of the source. The reference lists the parts in the sequence of the Base UI page, which the extract records. Do not write a table by hand. To change a text of the reference, change the JSDoc.
+- A `types.md` can repeat the parts of another family. The `types.md` of Radio Group repeats `Radio.Root` and `Radio.Indicator`. The reference reads such a part from the entry file of the family that exports it. The page of Radio Group thus shows both parts.
 - `<ApiReference name="<name>" />` shows one function or one type of the family, with no heading and no description. The name is the path of the export, such as `mergeProps` or `useRender.Parameters`. The page writes the heading and the text. The build fails when the reference has no function or type with that name.
 - For a function, the component shows a table of its parameters (`c?` is an optional parameter) and then its return value. For a type, it shows one table of its properties, with a column Default when a property has a default.
 - Each demo is a test fixture. `packages/vue/test/demos.test.tsx` mounts each demo, checks it with axe and hydrates its server render, in each engine. A new demo needs no new test.
