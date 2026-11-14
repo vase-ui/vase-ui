@@ -6,95 +6,20 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have the parent checkbox of a group."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/useCheckboxGroupParent.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "Each case of the file renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "prop: defaultValue"],
-      "title": "keeps omitted defaults isolated between groups in Strict Mode",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Field"],
-      "title": "validates with the group value when toggling the parent checkbox",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Field.Label"],
-      "title": "keeps checkbox ids unique when the group shares one Field.Root (nativeButton=%s)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
       "describe": ["<CheckboxGroup />", "Field.Label"],
       "title": "keeps checkbox ids unique in a shared Field.Root during SSR (nativeButton=%s)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Field.Label"],
-      "title": "labels the group rather than pointing Field.Label at one checkbox inside it",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Field.Label"],
-      "title": "gives each checkbox in a shared Field.Root its own accessible name",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
       "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
       "describe": ["<CheckboxGroup />", "Field.Label"],
       "title": "associates Field.Label with a grouped Checkbox during SSR (nativeButton=$nativeButton, parent=$parent)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Field.Label"],
-      "title": "points parent aria-controls at the children once they register (nativeButton=%s)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Form"],
-      "title": "focuses the first child checkbox instead of a parent checkbox for Form errors",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
-      "describe": ["<CheckboxGroup />", "Form"],
-      "title": "excludes parent checkboxes from form submission",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The case renders a parent checkbox, which Vase UI does not have."
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
       "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
@@ -111,14 +36,6 @@
       "kind": "replaced",
       "test": "packages/vue/src/checkbox-group/CheckboxGroup.test.tsx",
       "reason": "The case reads the second argument of `validate`, and it expects the field `group` there. Base UI keeps the fields of a page that has no form in a variable of the module. Vase UI keeps no such variable, so a field with no form sees no other field, and the argument is an empty object. The case \"validates an initially empty group through the exposed `validate`\" in the block \"a field with no form\" has the same steps and asserts that argument."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/checkbox-group/types.md",
-      "entry": "CheckboxGroup",
-      "prop": "allValues",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/useCheckboxGroupParent.ts",
-      "reason": "The prop lists the checkboxes of a parent checkbox, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [
