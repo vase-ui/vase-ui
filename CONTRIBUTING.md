@@ -810,7 +810,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - The composable removes the nodes in `onUnmounted`. Vue reads the node after the element as the place of a part that replaces this part. A removal in an earlier hook makes that insert throw.
 - `KeepAlive` moves only the element out of the document. The observer moves the nodes with it, and the same nodes come back at the activation.
 - A server makes no node. See [Server render](#server-render).
-- A popup trigger calls `useTriggerFocusGuards(store, element, enabled)` of `src/utils/popups`. While `enabled` is `true`, the composable keeps a guard before and after the element with `useElementSiblings`. `MenuTrigger.vue` is the model.
+- A popup trigger that has focus guards calls `useTriggerFocusGuards(store, element, enabled)` of `src/utils/popups`. While `enabled` is `true`, the composable keeps a guard before and after the element with `useElementSiblings`. `MenuTrigger.vue` is the model.
 - The composable writes the two guards to `beforeTriggerFocusGuardRef` and `triggerFocusTargetRef` of the store context. It clears a ref only while the ref holds its own guard. Another trigger of the store can write the ref in the same DOM update.
 - A guard that gets the focus closes the popup with the reason `focus-out`. After the DOM update, the focus moves to the tabbable element on the side of the guard. When the close removed the guard, the trigger is the start of the search.
 - A focus that comes from outside the popup onto the guard after the trigger goes into the popup.

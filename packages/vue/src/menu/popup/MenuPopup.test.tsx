@@ -14,7 +14,9 @@ import {
 } from '#test-utils';
 import {
   ContextMenuProvider,
+  MenubarProvider,
   createContextMenuContext,
+  createMenubarContext,
 } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
@@ -529,6 +531,62 @@ describe('<Menu.Popup />', () => {
       await userEvent.tab();
 
       expect(screen.getByTestId('first')).toHaveFocus();
+    });
+
+    // With an active trigger the focus always returns, so the menu of these cases has no trigger.
+    describe('in a menubar', () => {
+      async function renderOpenMenu() {
+        const open = shallowRef(false);
+        const result = await render(() => (
+          <div>
+            <button data-testid="before">Before</button>
+            <div data-testid="outside">Outside</div>
+            <MenubarProvider context={createMenubarContext()}>
+              <Menu.Root
+                open={open.value}
+                onUpdate:open={(nextOpen) => {
+                  open.value = nextOpen;
+                }}
+              >
+                <Menu.Portal>
+                  <Menu.Positioner anchor={() => screen.getByTestId('before')}>
+                    <Menu.Popup data-testid="popup" />
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </MenubarProvider>
+          </div>
+        ));
+        const before = screen.getByTestId('before');
+        before.focus();
+        open.value = true;
+        await waitFor(() => {
+          expect(screen.getByTestId('popup')).toHaveFocus();
+        });
+        return { ...result, before };
+      }
+
+      it('returns the focus after Escape', async () => {
+        const { user, before } = await renderOpenMenu();
+
+        await user.keyboard('{Escape}');
+
+        await waitFor(() => {
+          expect(before).toHaveFocus();
+        });
+      });
+
+      it('returns no focus after a press outside', async () => {
+        const { before } = await renderOpenMenu();
+
+        await fireEvent.pointerDown(screen.getByTestId('outside'), { pointerType: 'mouse' });
+
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+        await flushMicrotasks();
+        expect(before).not.toHaveFocus();
+      });
     });
   });
 

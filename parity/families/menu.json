@@ -464,8 +464,8 @@
       "describe": ["<Menu.Popup />"],
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "The call renders `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The suite presses the trigger to open the menu, and the call renders `Menu.Item`. The trigger of Vase UI has no press yet, and Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
