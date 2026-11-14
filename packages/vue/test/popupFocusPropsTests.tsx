@@ -4,10 +4,11 @@ import type { PropType, ShallowRef, VNode, VNodeChild } from 'vue';
 import { isInaccessible, screen, waitFor } from '@testing-library/dom';
 import type { InteractionType } from '../src/common/useEnhancedClickHandler';
 import type { FocusOption } from '../src/utils/popups/focus/FloatingFocusManager.vue';
+import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
-import { wait, waitSingleFrame } from './wait';
+import { waitSingleFrame } from './wait';
 
 /**
  * Value resolution of the `initialFocus` and `finalFocus` popup props: elements, refs, functions
@@ -86,9 +87,8 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
     await waitFor(() => {
       expect(getComputedStyle(close).pointerEvents).not.toBe('none');
     });
-    // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
-    // them. The open mounts the control, and its click listener is such a listener.
-    await wait(1);
+    // The open mounts the control, and the press must not come in the millisecond of its listener.
+    await waitForLaterMillisecond();
     return close;
   }
 
