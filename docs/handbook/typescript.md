@@ -40,7 +40,7 @@ The namespace of a part also exports the types of the custom events.
 - `OpenChangeEventDetails` (such as `Combobox.Root.OpenChangeEventDetails`) is the object that a part gives to `openChange`, on a part whose `ChangeEventDetails` also serves other listeners. It adds `preventUnmountOnClose()`.
 - `ChangeEventReason` (such as `Combobox.Root.ChangeEventReason`) is the union of the possible reason strings of a change event.
 
-<<< ../examples/typescript/ChangeEvents.vue{6,10}
+<<< ../examples/typescript/ChangeEvents.vue{6,7,11}
 
 ### Other accessible types
 

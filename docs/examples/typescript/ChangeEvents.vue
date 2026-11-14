@@ -4,7 +4,8 @@ import { Combobox } from '@vase-ui/vue/combobox';
 const fruits = ['Apple', 'Banana', 'Orange'];
 
 function onValueChange(value: string | null, eventDetails: Combobox.Root.ChangeEventDetails) {
-  console.log(value, eventDetails);
+  const reason: Combobox.Root.ChangeEventReason = eventDetails.reason;
+  console.log(value, reason);
 }
 
 function onOpenChange(open: boolean, eventDetails: Combobox.Root.OpenChangeEventDetails) {
