@@ -592,7 +592,7 @@ If a line must break a rule, put a disable comment on that line and give the rea
 - A portal renders after mount. It does not render while the popup is closed, unless `keepMounted` is set. The server HTML thus has one comment in its place, also for an open popup. See [Popup portal](#popup-portal).
 - `NavigationMenu.Content` teleports into its viewport, and the root gets the element of the viewport only after the mount. The server HTML thus has no content, also for an open item. With `keepMounted`, the content is in its item, hidden.
 - The server render of some families depends on an id, a locale, a prehydration script or a portal. It can also depend on a state that a server cannot know, such as the loading status of an image. Such a family adds a page and its cases to the Nuxt fixture, `fixtures/nuxt`. While no entry point exports a part, the page imports it by its path in `packages/vue/src`, as the page `portal.vue` does. Such a page imports each other part that shares a context with that part by its path too, because a part of the built package and a part of the source do not share a context. The page `select.vue` does this for `Field`.
-- The type check of the fixture reads the source that a page imports by its path. The package checks its source without `noUncheckedIndexedAccess` and `noImplicitOverride`, and Nuxt sets both options by default, so `nuxt.config.ts` of the fixture turns them off.
+- The type check of the fixture reads the source that a page imports by its path. Nuxt sets `noUncheckedIndexedAccess` and `noImplicitOverride`, and the build project of the package sets them too.
 
 The hydration state:
 
