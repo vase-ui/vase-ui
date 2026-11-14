@@ -37,9 +37,6 @@ export namespace Provider {
 /**
  * A container viewport for toasts.
  * Renders a `<div>` element.
- *
- * The part has more than one root node. A rule of `<style scoped>` thus does not match its element,
- * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Viewport: typeof ToastViewport = ToastViewport;
 export namespace Viewport {

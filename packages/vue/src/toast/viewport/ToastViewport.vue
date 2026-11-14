@@ -26,10 +26,11 @@ import { useTimeout } from '../../common/useTimeout';
 import { visuallyHidden } from '../../common/visuallyHidden';
 import type { HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
-import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
+import { createFocusGuardElement } from '../../utils/popups/focus/createFocusGuardElement';
+import { useElementSiblings } from '../../utils/popups/focus/useElementSiblings';
+import type { ElementSiblings } from '../../utils/popups/focus/useElementSiblings';
 import { useToastProviderContext } from '../provider/ToastProviderContext';
 import { isFocusVisible } from '../utils/focusVisible';
-import ToastLabelContent from '../utils/ToastLabelContent.vue';
 import ToastViewportChildren from './ToastViewportChildren.vue';
 import { ToastViewportContext } from './ToastViewportContext';
 import * as ToastViewportCssVars from './ToastViewportCssVars';
@@ -63,6 +64,7 @@ const highPriorityToasts = computed(() =>
   toasts.value.filter((toast) => toast.priority === 'high'),
 );
 const hasFocusGuards = computed(() => !isEmpty.value && prevFocusElement.value !== null);
+const hasAlerts = computed(() => !focused.value && highPriorityToasts.value.length > 0);
 
 // `KeepAlive` takes the element out of the document, so the listeners wait until it comes back.
 const deactivated = shallowRef(false);
@@ -90,8 +92,6 @@ function handleFocusGuard(event: FocusEvent) {
     store.restoreFocusToPrevElement();
   }
 }
-
-provide(ToastViewportContext, { hasFocusGuards, handleFocusGuard });
 
 function handleKeydown(event: KeyboardEvent) {
   if (event.defaultPrevented) {
@@ -232,6 +232,69 @@ const { element, elementProps } = useRenderElement('div', props, {
   ],
 });
 
+// Script makes the focus guard before the element and the alert region after it, so the viewport
+// has one root node.
+let focusGuard: HTMLSpanElement | null = null;
+let alertRegion: HTMLDivElement | null = null;
+
+const siblingNodes = computed(() => {
+  const viewport = element.value;
+  if (!viewport) {
+    return { focusGuard: null, alertRegion: null };
+  }
+  const doc = ownerDocument(viewport);
+  if (hasFocusGuards.value && !focusGuard) {
+    focusGuard = createFocusGuardElement(doc);
+    focusGuard.addEventListener('focusin', handleFocusGuard);
+  }
+  if (hasAlerts.value && !alertRegion) {
+    alertRegion = doc.createElement('div');
+    Object.assign(alertRegion.style, visuallyHidden);
+  }
+  return {
+    focusGuard: hasFocusGuards.value ? focusGuard : null,
+    alertRegion: hasAlerts.value ? alertRegion : null,
+  };
+});
+
+const siblings = computed<ElementSiblings | null>(() => {
+  const nodes = siblingNodes.value;
+  if (!nodes.focusGuard && !nodes.alertRegion) {
+    return null;
+  }
+  return {
+    before: nodes.focusGuard ? [nodes.focusGuard] : [],
+    after: nodes.alertRegion ? [nodes.alertRegion] : [],
+  };
+});
+
+useElementSiblings(element, siblings);
+
+provide(ToastViewportContext, {
+  hasFocusGuards,
+  handleFocusGuard,
+  alertRegion: computed(() => siblingNodes.value.alertRegion),
+  highPriorityToasts,
+});
+
+function isFrame(node: Element | null): node is HTMLIFrameElement {
+  // An element of a frame belongs to the realm of the frame, so `instanceof` is false for it.
+  return node?.localName === 'iframe';
+}
+
+// The window of the deepest frame of the same origin in the chain of focused frames. A frame of
+// another origin has no `contentDocument`.
+function getFocusedFrameWindow(doc: Document): Window | null {
+  let frameWindow: Window | null = null;
+  let focusedElement = activeElement(doc);
+  while (isFrame(focusedElement) && focusedElement.contentDocument) {
+    const frameDocument = focusedElement.contentDocument;
+    frameWindow = frameDocument.defaultView;
+    focusedElement = activeElement(frameDocument);
+  }
+  return frameWindow;
+}
+
 // Window focus is tracked even while empty, so toasts added in the background start paused.
 // `isEmpty` only toggles the F6 and touch listeners.
 watch(
@@ -243,12 +306,41 @@ watch(
 
     const win = ownerWindow(viewport);
     const doc = ownerDocument(viewport);
+    let removeFrameListeners: (() => void) | undefined;
 
     function markWindowFocused() {
       store.set('isWindowFocused', true);
       if (!store.select('expanded')) {
         store.resumeTimers();
       }
+    }
+
+    function markWindowBlurred() {
+      windowFocusTimeout.clear();
+      store.set('isWindowFocused', false);
+      store.pauseTimers();
+    }
+
+    // While a frame has the focus, the window gets no `blur` and no `focus` when the page loses or
+    // gets the focus. Only the window of the frame gets them.
+    function listenToFocusedFrame() {
+      removeFrameListeners?.();
+      const frameWindow = getFocusedFrameWindow(doc);
+      removeFrameListeners = frameWindow
+        ? mergeCleanups(
+            addEventListener(frameWindow, 'blur', handleFrameBlur, true),
+            addEventListener(frameWindow, 'focus', handleFrameFocus, true),
+          )
+        : undefined;
+    }
+
+    // Focus that goes into a frame of the page blurs the window, but the page keeps the focus.
+    // Firefox reports no focus for the page while it sends the event, so the check comes after.
+    function checkFocusInFrame() {
+      if (doc.hasFocus() && isFrame(activeElement(doc))) {
+        markWindowFocused();
+      }
+      listenToFocusedFrame();
     }
 
     // Listen globally for F6 so we can force-focus the viewport.
@@ -271,17 +363,8 @@ watch(
         return;
       }
 
-      windowFocusTimeout.clear();
-      store.set('isWindowFocused', false);
-      store.pauseTimers();
-
-      // Focus that goes into a frame of the page blurs the window, but the page keeps the focus.
-      // Firefox reports no focus for the page while it sends the event, so the check comes after.
-      windowFocusTimeout.start(0, () => {
-        if (doc.hasFocus() && activeElement(doc)?.localName === 'iframe') {
-          markWindowFocused();
-        }
-      });
+      markWindowBlurred();
+      windowFocusTimeout.start(0, checkFocusInFrame);
     }
 
     function handleWindowFocus(event: FocusEvent) {
@@ -292,13 +375,58 @@ watch(
       // This capture listener also sees element focus, e.g. a click on a toast while nothing
       // had focus. Wait for `handleFocusin` so keyboard focus inside the viewport keeps the pause,
       // and resume after the flag flips so toasts added in between start running too.
-      windowFocusTimeout.start(0, markWindowFocused);
+      // The timer replaces the check that the `blur` of a frame starts, so it also follows the
+      // focused frame.
+      windowFocusTimeout.start(0, () => {
+        markWindowFocused();
+        listenToFocusedFrame();
+      });
     }
+
+    function handleFrameBlur(event: FocusEvent) {
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+
+      markWindowBlurred();
+      windowFocusTimeout.start(0, checkFocusInFrame);
+    }
+
+    function handleFrameFocus(event: FocusEvent) {
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+
+      windowFocusTimeout.start(0, checkFocusInFrame);
+    }
+
+    function handleVisibilitychange() {
+      if (doc.visibilityState === 'hidden') {
+        markWindowBlurred();
+        return;
+      }
+
+      // The window gets no `focus` when a frame has the focus, and a frame of another origin sends
+      // no event to the page. A frame that has the focus thus lets the timers continue.
+      windowFocusTimeout.start(0, () => {
+        if (doc.hasFocus() || isFrame(activeElement(doc))) {
+          markWindowFocused();
+        }
+        listenToFocusedFrame();
+      });
+    }
+
+    if (doc.visibilityState === 'hidden') {
+      markWindowBlurred();
+    }
+    listenToFocusedFrame();
 
     onCleanup(
       mergeCleanups(
         addEventListener(win, 'blur', handleWindowBlur, true),
         addEventListener(win, 'focus', handleWindowFocus, true),
+        addEventListener(doc, 'visibilitychange', handleVisibilitychange),
+        () => removeFrameListeners?.(),
         !empty && addEventListener(win, 'keydown', handleGlobalKeydown),
         !empty && addEventListener(doc, 'pointerdown', store.handleDocumentPointerDown, true),
       ),
@@ -329,13 +457,6 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <FocusGuard v-if="hasFocusGuards" @focusin="handleFocusGuard" />
   <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="ToastViewportChildren" />
   <component :is="as" v-else v-bind="elementProps()"><ToastViewportChildren><slot :state="state" /></ToastViewportChildren></component>
-  <div v-if="!focused && highPriorityToasts.length > 0" :style="visuallyHidden">
-    <div v-for="toast in highPriorityToasts" :key="toast.id" role="alert" aria-atomic="true">
-      <div><ToastLabelContent :label="toast.title" /></div>
-      <div><ToastLabelContent :label="toast.description" /></div>
-    </div>
-  </div>
 </template>
