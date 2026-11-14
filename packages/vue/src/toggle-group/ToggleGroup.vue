@@ -67,7 +67,9 @@ export type ToggleGroupChangeEventReason = typeof REASONS.none;
 export type ToggleGroupChangeEventDetails = VaseUIChangeEventDetails<ToggleGroupChangeEventReason>;
 </script>
 
-<script setup lang="ts" generic="Value extends string = string">
+<script setup lang="ts" generic="Value extends string = any">
+// vue-tsc resolves `Value` before it checks a listener of a template.
+// With the default `any`, that check accepts `(value: ('a' | 'b')[]) => void`.
 import { computed, provide } from 'vue';
 import { EMPTY_ARRAY } from '../common/empty';
 import { useControlled } from '../common/useControlled';

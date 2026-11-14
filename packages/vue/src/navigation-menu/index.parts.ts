@@ -180,9 +180,7 @@ export namespace Arrow {
  * Renders a `<div>` element.
  *
  * In a positioner, the element holds the content of the active item, and two focus guards come
- * before and after the element. The part then has more than one root node. A rule of
- * `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
- * `:deep()`, a CSS module, a `style` binding or `v-if`.
+ * before and after the element.
  *
  * With no positioner, the element holds a `<div>` for the content of the active item. While an
  * item is active, it also holds two focus guards.
