@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Teleport, defineComponent, shallowRef } from 'vue';
+import { KeepAlive, Teleport, defineComponent, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { Input } from '@vase-ui/vue/input';
@@ -2447,6 +2447,56 @@ describe('<OTPField.Root />', () => {
       );
 
       await hydrate(OTPFieldRootHydration, { serverHtml, props });
+    });
+  });
+
+  describe('KeepAlive', () => {
+    it('keeps the value, the form entry and the tab stop, and moves the focus after a change', async () => {
+      const App = defineComponent({
+        props: { shown: { type: Boolean, default: true } },
+        setup(props) {
+          // `KeepAlive` does not keep a function component, so the parts are its direct child.
+          return () => (
+            <form data-testid="form">
+              <KeepAlive>
+                {props.shown ? (
+                  <OTPFieldBase.Root key="otp" name="otp" length={OTP_LENGTH}>
+                    {Array.from({ length: OTP_LENGTH }, (_, index) => (
+                      <OTPFieldBase.Input key={index} />
+                    ))}
+                  </OTPFieldBase.Root>
+                ) : null}
+              </KeepAlive>
+            </form>
+          );
+        },
+      });
+      const { setProps } = await render(<App />);
+      const form = screen.getByTestId<HTMLFormElement>('form');
+
+      await fireEvent.input(screen.getAllByRole('textbox')[0], { target: { value: '123' } });
+
+      expect(new FormData(form).get('otp')).toBe('123');
+
+      await setProps({ shown: false });
+
+      expect(new FormData(form).getAll('otp')).toEqual([]);
+
+      await setProps({ shown: true });
+
+      const inputs = screen.getAllByRole<HTMLInputElement>('textbox');
+
+      expect(getValues()).toBe('123');
+      expect(new FormData(form).get('otp')).toBe('123');
+      expect(inputs.map((input) => input.tabIndex)).toEqual([-1, -1, -1, 0, -1, -1]);
+
+      inputs[3].focus();
+      await flushMicrotasks();
+      await fireEvent.input(inputs[3], { target: { value: '4' } });
+      await flushMicrotasks();
+
+      expect(getValues()).toBe('1234');
+      expect(document.activeElement).toBe(inputs[4]);
     });
   });
 
