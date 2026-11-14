@@ -121,12 +121,6 @@
       "prop": "alignOffset",
       "kind": "not-applicable",
       "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `2` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The file imports the entry point of Menu. Its one case opens the menu with a press and finishes each phase of the transition of a popup that each open can mount again. The case is not ported yet."
     }
   ],
   "surfaceAdditions": [
