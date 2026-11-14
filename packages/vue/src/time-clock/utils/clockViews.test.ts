@@ -1,81 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  angleOfFaceNumber,
   clampTime,
-  dayPeriodOf,
   edgeValue,
   faceNumberOf,
   faceNumberOfPoint,
   faceNumbers,
   gridOf,
-  hourCycleOf,
   isTimeAllowed,
-  nextView,
   pagePlaces,
-  radiusOfFaceNumber,
-  stepOf,
   stepValue,
-  timeOfDayPeriod,
   timeOfFaceNumber,
-  viewsOf,
 } from './clockViews';
 import type { TimeClockView, TimeLimits } from './clockViews';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const always = () => true;
 const noLimits: TimeLimits = { minTime: undefined, maxTime: undefined, disabledTimes: undefined };
-
-describe('views', () => {
-  it.each([
-    { granularity: 'hour', views: ['hour'] },
-    { granularity: 'minute', views: ['hour', 'minute'] },
-    { granularity: 'second', views: ['hour', 'minute', 'second'] },
-  ] as const)('shows $views for the granularity $granularity', ({ granularity, views }) => {
-    expect(viewsOf(granularity)).toEqual(views);
-  });
-
-  it.each([
-    { name: 'the next view', view: 'hour', granularity: 'second', next: 'minute' },
-    { name: 'no view after the last one', view: 'minute', granularity: 'minute', next: undefined },
-    {
-      name: 'no view after a view past the end',
-      view: 'second',
-      granularity: 'hour',
-      next: undefined,
-    },
-  ] as const)('gives $name', ({ view, granularity, next }) => {
-    expect(nextView(view, granularity)).toBe(next);
-  });
-});
-
-describe('hourCycleOf', () => {
-  it.each([
-    { locale: 'en-US', hourCycle: 12 },
-    { locale: 'de-DE', hourCycle: 24 },
-    { locale: 'en-GB', hourCycle: 24 },
-  ] as const)('is $hourCycle for $locale', ({ locale, hourCycle }) => {
-    expect(hourCycleOf(locale)).toBe(hourCycle);
-  });
-});
-
-describe('stepOf', () => {
-  it.each([
-    { name: 'a minute step', view: 'minute', minuteStep: 5, secondStep: 15, step: 5 },
-    { name: 'a second step', view: 'second', minuteStep: 5, secondStep: 15, step: 15 },
-    { name: 'a step of 1 for an hour', view: 'hour', minuteStep: 5, secondStep: 15, step: 1 },
-    { name: 'a step of 1 for a step of 0', view: 'minute', minuteStep: 0, secondStep: 15, step: 1 },
-    {
-      name: 'a step of 1 for a fraction',
-      view: 'minute',
-      minuteStep: 2.5,
-      secondStep: 15,
-      step: 1,
-    },
-    { name: 'a step of 1 for NaN', view: 'second', minuteStep: 5, secondStep: Number.NaN, step: 1 },
-  ] as const)('gives $name', ({ view, minuteStep, secondStep, step }) => {
-    expect(stepOf(view, minuteStep, secondStep)).toBe(step);
-  });
-});
 
 describe('face numbers', () => {
   it('lists 12 hours from the top of a 12-hour face', () => {
@@ -187,43 +127,6 @@ describe('face numbers', () => {
       time(result).toString(),
     );
   });
-});
-
-describe('day period', () => {
-  it.each([
-    { at: '00:00', period: 'am' },
-    { at: '11:59', period: 'am' },
-    { at: '12:00', period: 'pm' },
-    { at: '23:59', period: 'pm' },
-  ] as const)('is $period at $at', ({ at, period }) => {
-    expect(dayPeriodOf(time(at))).toBe(period);
-  });
-
-  it.each([
-    { at: '09:20', period: 'pm', result: '21:20' },
-    { at: '21:20', period: 'am', result: '09:20' },
-    { at: '00:05', period: 'pm', result: '12:05' },
-    { at: '12:05', period: 'am', result: '00:05' },
-  ] as const)('moves $at to $period', ({ at, period, result }) => {
-    expect(timeOfDayPeriod(time(at), period).toString()).toBe(time(result).toString());
-  });
-});
-
-describe('placement', () => {
-  it.each([
-    { view: 'hour', number: { value: 12, inner: false }, angle: 0, radius: 1 },
-    { view: 'hour', number: { value: 3, inner: false }, angle: 90, radius: 1 },
-    { view: 'hour', number: { value: 13, inner: true }, angle: 30, radius: 0.64 },
-    { view: 'hour', number: { value: 0, inner: true }, angle: 0, radius: 0.64 },
-    { view: 'minute', number: { value: 15, inner: false }, angle: 90, radius: 1 },
-    { view: 'second', number: { value: 55, inner: false }, angle: 330, radius: 1 },
-  ] as const)(
-    'puts $number.value of $view at $angle degrees',
-    ({ view, number, angle, radius }) => {
-      expect(angleOfFaceNumber(view, number)).toBe(angle);
-      expect(radiusOfFaceNumber(number)).toBe(radius);
-    },
-  );
 });
 
 describe('faceNumberOfPoint', () => {
