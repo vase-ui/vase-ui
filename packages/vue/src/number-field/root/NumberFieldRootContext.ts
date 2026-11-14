@@ -32,6 +32,8 @@ export interface NumberFieldRootContext {
   hasPendingCommitRef: Ref<boolean>;
   name: ComputedRef<string | undefined>;
   nameProp: ComputedRef<string | undefined>;
+  value: ComputedRef<number | null>;
+  disabled: ComputedRef<boolean>;
   inputMode: ComputedRef<InputMode>;
   getAllowedNonNumericKeys: () => Set<string>;
   min: ComputedRef<number | undefined>;
