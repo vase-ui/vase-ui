@@ -219,6 +219,7 @@ A part that Base UI takes from another family is exported again and not copied: 
 - The interface also extends the attributes of its default tag through `/* @vue-ignore */`: `interface SeparatorProps extends VaseUIComponentProps<SeparatorState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes>`.
 - `WithVaseUIEvent` adds `preventVaseUIHandler()` to the event that each native listener gets.
 - TSX and templates then accept the native attributes and listeners, with their types.
+- `WithVaseUIEvent` leaves out the key `as`. The part declares `as` itself, and a library can add another `as` to the attributes of each element. `motion-v` does this, and TypeScript then reports TS2320 for the props interface of each part.
 - The SFC compiler ignores the extended type, so the run-time props are only the declared props. A native attribute stays in `$attrs`.
 - Omit a native attribute that the part declares as a prop with the same key: `Omit<ButtonHTMLAttributes, 'disabled'>`. Do not omit an `aria-*` attribute. See [Props](#props).
 - A consumer handler runs before the handler of the part. `event.preventVaseUIHandler()` stops the handler of the part. The exception is a native event that the part declares as an emit. See [Other callbacks](#other-callbacks).
@@ -530,6 +531,8 @@ A disable comment has the form `// eslint-disable-next-line <rule> -- <reason>`.
 - Logic is in `.ts` composables.
 - `packages/vue/src` has no TSX. Tests use TSX.
 - `vue` is a peer dependency. The package can have only two run-time dependencies: `@floating-ui/vue` and `@floating-ui/utils`.
+- `motion-v` is a development dependency of the package and of the docs. The source does not import it. `pnpm check:package` fails when a public entry imports it.
+- `packages/vue/test/motion-v.test.tsx` shows that a popup waits for the exit animation of a `motion-v` component.
 - Import the middleware, `computePosition`, `autoUpdate` and the types of Floating UI from `@floating-ui/vue`. Do not import `@floating-ui/dom` or `@floating-ui/core`. They are not dependencies of the package, so pnpm does not link them.
 - `@floating-ui/vue` does not export the type `Derivable`. Declare it in the file that needs it: `type Derivable<T> = (state: MiddlewareState) => T`.
 - A middleware of `@floating-ui/react-dom` takes a list of dependencies. A middleware of `@floating-ui/vue` takes none. Make the list of middleware in a `computed`. Read in it each option that must cause a new position.
@@ -1743,6 +1746,7 @@ The hydration helpers:
 - Give a duration of 100 s to each animation that a new or changed case ends with its own call (a seek or `finish()`). A part reads its animations some frames after the close, and a late frame can end a short animation before that read.
 - A case that counts the `transitionend` events of an exit waits for the event with `nextEvent`, called before the action. The part hides the element in the microtask after the end of the transition, and the browser sends `transitionend` after that microtask.
 - A new case that asserts the frame in which a part removes an element uses `probeFrameAfterExit`. It also has a control case in which the removal is late, as `AnimatedPanel.test.tsx` has.
+- `probeFrameAfterExit` cannot show that a part that hides its element waits for an animation that a script made, such as a `motion-v` animation. `hidden` does not cancel such an animation, so the probe does not see a hide that comes too early.
 - In Firefox, a dispatched `submit` event that no listener prevents submits the form and loads the test page again. Chromium and WebKit do not. A case that submits a valid form has a listener that calls `preventDefault()`. `observeSubmit` of `Form.test.tsx` is the model.
 - A ported case that Base UI writes with `createTouches` keeps the call. The helper is in `slider/utils/test-utils.ts`. It calls `new Touch` in Chromium and in Firefox. WebKit has no `Touch` constructor, so the helper calls `document.createTouch` and `document.createTouchList` where a browser has them.
 - A case that changes the source of a cached image first waits for the `load` event of that image. Firefox does not cancel the event when the source changes, so the new image gets it.
@@ -1839,11 +1843,15 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
 - A folder with pages is one sidebar group. The title of the group is the folder name with a capital first letter.
+- The sidebar shows the groups Handbook, Components and Utils first, in that sequence. Each other group follows them, in the sequence of its folder name.
 - Each page in the navigation has `order: <whole number>` in its front matter. A group shows its pages in the sequence of `order`, then of title.
 - The title of a page in the navigation is its first-level heading.
 - The build fails when a page in the navigation has no `order` or no first-level heading.
 - A code sample is a Vue file. A page shows its source with `<<<`. `pnpm docs:typecheck` checks the file against the built package.
-- A page that is not a component page has its samples in `docs/examples/<page>`. The page imports each sample and renders it, as `docs/quick-start.md` does.
+- A page that is not a component page has its samples in `docs/examples/<page>`. The page can import a sample and render it, as `docs/quick-start.md` does.
+- A handbook page is `docs/handbook/<page>.md`. The folder is the sidebar group Handbook. The `order` of a page follows the sequence of the pages of the Base UI handbook.
+- A demo that a handbook page renders is `docs/examples/<page>/demos/<demo>/index.vue`. `packages/vue/test/demos.test.tsx` tests it as it tests the demo of a component page. The text rules of a demo apply to it.
+- The family of a handbook page is `handbook-<page>`. Its `upstreamPaths` name `docs/src/app/(docs)/react/handbook/<page>/**`. `docs/demos/handbook-<page>` holds the record and the style sheets of the Base UI demos that wait for an entry point.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
