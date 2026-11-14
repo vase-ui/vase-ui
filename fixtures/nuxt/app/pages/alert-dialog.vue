@@ -26,7 +26,12 @@ const handle = AlertDialog.createHandle<string>();
         </AlertDialog.Popup>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-    <AlertDialog.Trigger id="detached-trigger" :handle="handle" payload="Detached payload" data-testid="detached">
+    <AlertDialog.Trigger
+      id="detached-trigger"
+      :handle="handle"
+      payload="Detached payload"
+      data-testid="detached"
+    >
       Detached
     </AlertDialog.Trigger>
     <AlertDialog.Root :handle="handle">
