@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
-import * as Slider from '../index.parts';
+import { Slider } from '@vase-ui/vue/slider';
 
 function tag(html: string, pattern: RegExp) {
   return html.match(pattern)?.[0] ?? '';

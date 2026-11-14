@@ -4,6 +4,7 @@ import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import CheckboxGroupHydration from './CheckboxGroupHydration.test.vue';
+import CheckboxGroupParentHydration from './CheckboxGroupParentHydration.test.vue';
 
 // The attribute order in the HTML is not part of the test.
 function readTag(html: string, testId: string) {
@@ -91,5 +92,77 @@ describe('<CheckboxGroup />', () => {
       expect(ids).toHaveLength(4);
       expect(new Set(ids).size).toBe(ids.length);
     });
+
+    it.each([
+      { name: 'no child on', defaultValue: [], state: 'false', hasChecked: false },
+      { name: 'one child on', defaultValue: ['fuji'], state: 'mixed', hasChecked: false },
+      { name: 'each child on', defaultValue: ['fuji', 'gala'], state: 'true', hasChecked: true },
+    ])(
+      'renders the parent with its state and its input with no name for $name',
+      async ({ defaultValue, state, hasChecked }) => {
+        const html = await renderToString(
+          <CheckboxGroupParentHydration defaultValue={defaultValue} />,
+        );
+        const [parentInput, fujiInput] = readInputs(html);
+
+        expect(readAttribute(html, 'parent', 'aria-checked')).toBe(state);
+        expect(hasAttribute(html, 'parent', 'data-parent')).toBe(true);
+        expect(hasAttribute(html, 'fuji', 'data-parent')).toBe(false);
+        // The server cannot know the children that mount later, and HTML has no attribute for
+        // `indeterminate`.
+        expect(hasAttribute(html, 'parent', 'aria-controls')).toBe(false);
+        expect(parentInput).not.toContain(' name=');
+        expect(parentInput).not.toContain(' indeterminate');
+        expect(/ checked[ >]/.test(parentInput ?? '')).toBe(hasChecked);
+        expect(fujiInput).toContain(' name="apples"');
+      },
+    );
+
+    it.each([false, true])(
+      'keeps checkbox ids unique in a shared Field.Root during SSR (nativeButton=%s)',
+      async (nativeButton) => {
+        const html = await renderToString(
+          <CheckboxGroupParentHydration nativeButton={nativeButton} />,
+        );
+        const ids = Array.from(html.matchAll(/ id="([^"]+)"/g), (match) => match[1]);
+
+        expect(ids).toHaveLength(nativeButton ? 4 : 7);
+        expect(new Set(ids).size).toBe(ids.length);
+      },
+    );
+
+    it.each([
+      { nativeButton: false, parent: false },
+      { nativeButton: true, parent: false },
+      { nativeButton: false, parent: true },
+      { nativeButton: true, parent: true },
+    ])(
+      'associates Field.Label with a grouped Checkbox during SSR (nativeButton=$nativeButton, parent=$parent)',
+      async ({ nativeButton, parent }) => {
+        const html = await renderToString(
+          <Field.Root name="apple">
+            <CheckboxGroup allValues={['fuji']}>
+              <Field.Item>
+                <Field.Label data-testid="label">Fuji</Field.Label>
+                <Checkbox.Root
+                  parent={parent}
+                  value={parent ? undefined : 'fuji'}
+                  nativeButton={nativeButton}
+                  as={nativeButton ? 'button' : undefined}
+                  data-testid="checkbox"
+                />
+              </Field.Item>
+            </CheckboxGroup>
+          </Field.Root>,
+        );
+
+        const controlId = nativeButton
+          ? readAttribute(html, 'checkbox', 'id')
+          : readInputs(html)[0]?.match(/ id="([^"]*)"/)?.[1];
+
+        expect(controlId).toBeTruthy();
+        expect(readAttribute(html, 'label', 'for')).toBe(controlId);
+      },
+    );
   });
 });
