@@ -551,8 +551,9 @@ describe('<Menu.FilterProvider><Menu.SubmenuRoot/></Menu.FilterProvider>', () =>
       await user.keyboard('ar');
       expect(input).toHaveValue('ar');
 
-      // Crossing the trigger must not interrupt the typing in the submenu.
-      await fireEvent.mouseMove(trigger);
+      // Crossing the trigger must not interrupt the typing in the submenu. In WebKit, a list
+      // ignores a pointer move with no movement.
+      await fireEvent.mouseMove(trigger, { movementX: 1 });
       await waitSingleFrame();
       await waitSingleFrame();
       expect(input).toHaveFocus();

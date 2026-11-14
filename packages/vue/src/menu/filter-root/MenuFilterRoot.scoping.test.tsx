@@ -5,8 +5,10 @@ import { defineComponent } from 'vue';
 import type { VNode } from 'vue';
 import { reset as resetWarnings } from '../../common/warn';
 import * as Menu from '../index.parts';
+import MenuFilterRootInputInPlainSubmenu from './MenuFilterRootInputInPlainSubmenu.test.vue';
 import {
   createRenderer,
+  fireEvent,
   flushMicrotasks,
   isJSDOM,
   screen,
@@ -436,12 +438,18 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       // opened fails while it transitions in.
       await userEvent.hover(screen.getByRole('menuitem', { name: 'Share' }));
       const email = await screen.findByRole('menuitem', { name: 'Email' });
+      // In WebKit, a list ignores a pointer move with no movement, and the bare instance gives
+      // none.
       await userEvent.hover(email);
+      await fireEvent.mouseMove(email, { movementX: 1 });
+      await fireEvent.pointerMove(email, { pointerType: 'mouse', movementX: 1 });
       await waitFor(() => {
         expect(email).toHaveFocus();
       });
 
-      await userEvent.hover(screen.getByRole('menuitem', { name: 'Rename' }));
+      const rename = screen.getByRole('menuitem', { name: 'Rename' });
+      await userEvent.hover(rename);
+      await fireEvent.mouseMove(rename, { movementX: 1 });
       await waitFor(() => {
         expect(screen.getByTestId('submenu')).toHaveAttribute('data-ending-style');
       });
@@ -1026,9 +1034,10 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
   const { render } = createRenderer();
 
   // These cases are the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot. Each case
-  // renders the part in the root, not in a portal: Vue renders a portal after the mount, so an
-  // error of the part then comes in an update, and Vue cannot unmount the tree that it aborted.
+  // instance set, and a later case then gets a warning for each slot of a render function. So the
+  // second case renders a fixture SFC, whose slots the template compiler makes. Each case renders
+  // the part in the root, not in a portal: Vue renders a portal after the mount, so an error of the
+  // part then comes in an update, and Vue cannot unmount the tree that it aborted.
   it('throws when a filter part is rendered in a plain menu', async () => {
     await expect(
       render(
@@ -1045,17 +1054,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
   });
 
   it('throws when a filter part is rendered in a plain submenu of a filterable menu', async () => {
-    await expect(
-      render(
-        <Menu.FilterProvider>
-          <Menu.Root>
-            <Menu.SubmenuRoot>
-              <Menu.Input />
-            </Menu.SubmenuRoot>
-          </Menu.Root>
-        </Menu.FilterProvider>,
-      ),
-    ).rejects.toThrow(
+    await expect(render(<MenuFilterRootInputInPlainSubmenu />)).rejects.toThrow(
       'Vase UI: <Menu.Input> must be placed in a menu wrapped in <Menu.FilterProvider>.',
     );
     expect(takeReportedMessages()).toEqual([
