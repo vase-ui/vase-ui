@@ -498,7 +498,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - A ref prop of upstream (`inputRef`) becomes an exposed element (`inputElement`) beside `element`.
 - Handles are upstream's objects, with no change: `Dialog.createHandle<Payload>()`, `handle`, `payload`, `triggerId`, `open()`, `openWithPayload()`, `close()`, `isOpen`.
 - Function children become a default scoped slot with named props: `{ payload }` on a root, `{ validity }` on `Field.Validity`, `{ item, index }` on `Combobox.Collection`, `{ value }` on `Select.Value`.
-- A part that renders a list has a slot that has the name of its item: `#month` of `Calendar.Months`, `#weekday` of `Calendar.GridHeaderRow`, `#week` of `Calendar.GridBody` and `#day` of `Calendar.Week`. Its props are the item and its `index`, such as `{ day, index }`.
+- A part that renders a list has a slot that has the name of its item, as `Combobox.List` has the slot `item`: `#month` of `Calendar.Months`, `#weekday` of `Calendar.GridHeaderRow`, `#week` of `Calendar.GridBody` and `#day` of `Calendar.Week`. Its props are the item and its `index`, such as `{ day, index }`.
 - A part can take nodes or a function that renders each item as its children, such as `Combobox.List`. Its default slot holds the nodes, and the slot `item` with `{ item, index }` is the function. A slot does not show at run time if it takes slot props, so one slot cannot be both.
 - `Combobox.Collection` uses each item as the `key` of its nodes. An item then keeps its element when the filter changes the list, as in React with `key={item}`. An item that the consumer replaces with a new object gets a new element. The items of one collection must be unique, because equal items give the same key.
 - Type the slots with `defineSlots`. Write each slot except `#render` as a method, as the Vue documentation does: `default(props: { state: ButtonState }): unknown`. A slot with no slot props is `default(): unknown`. A root with a value type uses `generic="Value"`.
@@ -783,7 +783,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
 - The root of a calendar holds the focused day and the month of the page. Each part derives its page from these two values, and no part keeps a page of its own.
-- Make a list of days by adding days, and never by adding 24 hours. A change of the time zone then does not repeat a day and does not skip a day.
+- Make a list of days by adding days, and never by adding 24 hours. A change of the clock in a time zone then does not repeat a day and does not skip a day.
 
 ### Popup store
 
@@ -1227,7 +1227,7 @@ A composite is a group of items with one tab stop, such as a toolbar or a list o
 - A root part calls `useCompositeRoot` in `setup`, and an item part calls `useCompositeItem`. Each part gives the result to `useRenderElement`.
 - `useCompositeRoot` makes the item registry with `useCompositeList`. `useCompositeItem` registers the item with `useCompositeListItem`. A part that needs only the registry calls those two composables.
 - Base UI also has the components `CompositeList`, `CompositeRoot` and `CompositeItem`. Vase UI has no counterpart of them, because a Vue part renders its own element. Thus `as` and `#render` work with no change, and the DOM has no wrapper element.
-- A grid of dates keeps its tab stop by date in its root, and it calls no `useCompositeRoot`. A key finds the next date with `Temporal`, because a move can cross the end of a month and an index cannot. While a cell hydrates, it binds `data-allow-mismatch="attribute"` and a `tabindex` that is a string, as an item of a composite does. `Calendar.Root` is the model.
+- A grid of dates keeps its tab stop by date in its root, and it calls no `useCompositeRoot`. A key finds the next date with `Temporal`, because a move can cross the end of a month and an index cannot. While the day button of a date hydrates, it binds `data-allow-mismatch` with the category `attribute` and a `tabindex` that is a string, as an item of a composite does. `Calendar.Root` is the model.
 
 The composite root:
 
