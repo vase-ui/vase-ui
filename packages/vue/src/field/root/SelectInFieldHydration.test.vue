@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import { Checkbox } from '../../checkbox';
-import { Field } from '../../field';
-import * as Select from '../index.parts';
+import { Field } from '../index';
+import * as Select from '../../select/index.parts';
 
 const props = defineProps<{ control?: 'checkbox' | 'select' | undefined }>();
 
