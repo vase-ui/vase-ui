@@ -127,7 +127,7 @@ describe('createRenderer', () => {
         text.value = 'end';
       }
       return () => (
-        <button type="button" onClick={change}>
+        <button type="button" onClick={() => void change()}>
           {text.value}
         </button>
       );

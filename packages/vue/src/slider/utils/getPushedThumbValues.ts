@@ -15,7 +15,7 @@ export function getPushedThumbValues(
   max: number,
   step: number,
   minStepsBetweenValues: number,
-  initialValues?: readonly number[] | undefined,
+  initialValues?: readonly number[],
 ): number[] {
   const nextValues = values.slice();
   const minValueDifference = step * minStepsBetweenValues;
@@ -26,11 +26,12 @@ export function getPushedThumbValues(
   const indexMax = max - (lastIndex - index) * minValueDifference;
   nextValues[index] = clamp(nextValue, indexMin, indexMax);
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- Each index is between 0 and `lastIndex`, and `initialValues` has a value for each thumb. */
   for (let i = index + 1; i <= lastIndex; i += 1) {
-    const minAllowed = nextValues[i - 1] + minValueDifference;
+    const minAllowed = nextValues[i - 1]! + minValueDifference;
     const maxAllowed = max - (lastIndex - i) * minValueDifference;
-    const initialValue = baseInitialValues[i];
-    let candidate = Math.max(nextValues[i], minAllowed);
+    const initialValue = baseInitialValues[i]!;
+    let candidate = Math.max(nextValues[i]!, minAllowed);
 
     if (initialValue < candidate) {
       candidate = Math.max(initialValue, minAllowed);
@@ -40,10 +41,10 @@ export function getPushedThumbValues(
   }
 
   for (let i = index - 1; i >= 0; i -= 1) {
-    const maxAllowed = nextValues[i + 1] - minValueDifference;
+    const maxAllowed = nextValues[i + 1]! - minValueDifference;
     const minAllowed = min + i * minValueDifference;
-    const initialValue = baseInitialValues[i];
-    let candidate = Math.min(nextValues[i], maxAllowed);
+    const initialValue = baseInitialValues[i]!;
+    let candidate = Math.min(nextValues[i]!, maxAllowed);
 
     if (initialValue > candidate) {
       candidate = Math.min(initialValue, maxAllowed);
@@ -53,8 +54,9 @@ export function getPushedThumbValues(
   }
 
   for (let i = 0; i <= lastIndex; i += 1) {
-    nextValues[i] = Number(nextValues[i].toFixed(12));
+    nextValues[i] = Number(nextValues[i]!.toFixed(12));
   }
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
   return nextValues;
 }

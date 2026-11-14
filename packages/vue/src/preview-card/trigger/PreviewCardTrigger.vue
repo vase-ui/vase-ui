@@ -79,6 +79,7 @@ if (rootStore === undefined && props.handle === undefined) {
     'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',
   );
 }
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above throws when the trigger has neither a root nor a handle.
 const store = computed<PreviewCardHandleStore<any>>(() => handleStore.value ?? rootStore!);
 
 const thisTriggerId = useVaseUiId(() => props.id);

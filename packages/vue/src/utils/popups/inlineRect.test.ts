@@ -58,7 +58,7 @@ function createMiddlewareState(
       floating: floatingRect,
     },
     platform: {
-      getElementRects: async ({
+      getElementRects: ({
         reference: positioningReference,
       }: {
         reference: {
@@ -67,12 +67,12 @@ function createMiddlewareState(
         };
       }) => {
         const rect = positioningReference.getBoundingClientRect();
-        return {
+        return Promise.resolve({
           reference: options?.getElementRects
             ? options.getElementRects(rect, positioningReference.contextElement)
             : { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
           floating: floatingRect,
-        };
+        });
       },
     },
   };

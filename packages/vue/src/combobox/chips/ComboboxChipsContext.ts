@@ -2,7 +2,7 @@ import { inject } from 'vue';
 import type { InjectionKey, ShallowRef } from 'vue';
 
 export interface ComboboxChipsContext {
-  chipsRef: ShallowRef<Array<HTMLButtonElement | null>>;
+  chipsRef: ShallowRef<(HTMLButtonElement | null)[]>;
 }
 
 export const ComboboxChipsContext: InjectionKey<ComboboxChipsContext> = Symbol();

@@ -50,7 +50,7 @@ export function useCompositeRoot<Metadata>(
   params: UseCompositeRootParameters<Metadata>,
 ): UseCompositeRootReturnValue {
   const direction = useDirection();
-  const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+  const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
 
   let rootElement: HTMLElement | null = null;
   let hasSetDefaultIndex = false;
@@ -130,7 +130,7 @@ export function useCompositeRoot<Metadata>(
 
     hasSetDefaultIndex = true;
 
-    const sortedElements = Array.from(map.keys()) as Array<HTMLElement | null>;
+    const sortedElements = Array.from(map.keys()) as (HTMLElement | null)[];
     const activeItem =
       sortedElements.find((compositeElement) =>
         compositeElement?.hasAttribute(ACTIVE_COMPOSITE_ITEM),
@@ -160,7 +160,7 @@ export function useCompositeRoot<Metadata>(
 
   // An item that is disabled or hidden must not be the entry point, as in `Tabs.Tab` of Base UI.
   // `isListIndexDisabled` reads `aria-disabled` only when the root has no `disabledIndices`.
-  function canHoldTabStop(elements: ReadonlyArray<HTMLElement | null>, index: number) {
+  function canHoldTabStop(elements: readonly (HTMLElement | null)[], index: number) {
     const element = elements[index];
     return (
       element != null &&
@@ -169,7 +169,7 @@ export function useCompositeRoot<Metadata>(
     );
   }
 
-  function readActiveItem(elements: ReadonlyArray<HTMLElement | null>) {
+  function readActiveItem(elements: readonly (HTMLElement | null)[]) {
     const index = elements.findIndex((element) => element?.hasAttribute(ACTIVE_COMPOSITE_ITEM));
     return {
       item: elements[index] ?? null,
@@ -549,8 +549,8 @@ export function useCompositeRoot<Metadata>(
 // first item that can. If no item can, the index is 0. The index then stays in range, and the
 // composite gets a tab stop when an item can get focus.
 function getFallbackIndex(
-  elements: ReadonlyArray<HTMLElement | null>,
-  disabledIndices?: ReadonlyArray<number> | undefined,
+  elements: readonly (HTMLElement | null)[],
+  disabledIndices?: readonly number[],
 ) {
   let fallbackIndex = -1;
 
@@ -573,7 +573,7 @@ function getFallbackIndex(
   return Math.max(fallbackIndex, 0);
 }
 
-function isModifierKeySet(event: KeyboardEvent, ignoredModifierKeys: ReadonlyArray<ModifierKey>) {
+function isModifierKeySet(event: KeyboardEvent, ignoredModifierKeys: readonly ModifierKey[]) {
   for (const key of MODIFIER_KEYS) {
     if (ignoredModifierKeys.includes(key)) {
       continue;
@@ -613,7 +613,7 @@ export interface UseCompositeRootParameters<Metadata> {
         event: KeyboardEvent,
         prevIndex: number,
         nextIndex: number,
-        elementsRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
+        elementsRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
       ) => number)
     | undefined;
   /**

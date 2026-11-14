@@ -6,7 +6,7 @@ import TabsRootHydration from './TabsRootHydration.test.vue';
 
 /** The start tag of the element that has the selector text. */
 function findTag(html: string, selector: string) {
-  return html.match(new RegExp(`<[^>]*${selector}[^>]*>`))?.[0];
+  return new RegExp(`<[^>]*${selector}[^>]*>`).exec(html)?.[0];
 }
 
 function readTag(html: string, selector: string) {

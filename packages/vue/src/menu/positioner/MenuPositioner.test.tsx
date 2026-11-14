@@ -954,7 +954,7 @@ describe('<Menu.Positioner />', () => {
   });
 
   it('gives the node of the menu to the parts below it', async () => {
-    const parentNodeIds: Array<string | null> = [];
+    const parentNodeIds: (string | null)[] = [];
     const NodeProbe = defineComponent({
       setup() {
         const parentNodeId = useFloatingParentNodeId();
