@@ -10,8 +10,8 @@ import ToastViewport from '../viewport/ToastViewport.vue';
 import ToastViewportLabel from '../viewport/ToastViewportLabel.test.vue';
 import ToastTitle from './ToastTitle.vue';
 
-// Adds a high priority toast in `setup`, where a server render can reach it. Its title and the
-// content of its action are components, so they mount in the toast and in the alert region.
+// Adds a high priority toast in `setup`, where a server render can reach it. Its title is a
+// component, which mounts in the toast and in the alert region.
 const Adder = {
   setup() {
     useToastManager().add({

@@ -983,13 +983,14 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 ### Toast parts
 
 - `Toast.Provider` makes its store in `setup` and holds the timers of the store from `onMounted`. A toast that a `setup` adds on a server thus gets no timer.
-- The provider subscribes to its `toastManager` in `onMounted`. A manager that all server requests share thus gets no subscriber from a server render, and a toast of one request does not reach another request.
+- The provider subscribes to its `toastManager` in `onMounted`. A manager that all server requests share thus gets no subscriber from a server render. A toast of one request then does not reach another request.
 - While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left.
 - The provider follows `timeout` and `limit` with a `watch` that has the default flush. A part that adds a toast in the same update thus sees the new values.
-- `Toast.Viewport` resumes the timers when the focus goes into a frame of the page (`BUG-6174`). The window gets `blur` for that move, so the viewport checks in a 0 ms timer after the event if the page has focus and a frame is the active element. Firefox reports no focus in the event itself.
+- `Toast.Viewport` resumes the timers when the focus goes into a frame of the page (`BUG-6174`). The window gets `blur` for that move. The viewport then checks, in a 0 ms timer after the event, if the page has focus and a frame is the active element. Firefox reports no focus in the event itself.
 - `Toast.Root` catches the error of `setPointerCapture`. Firefox throws `NotFoundError` for a pointer that is not active, such as the pointer id of a dispatched event. The swipe then goes on with no capture (`VUE-50`).
 - `Toast.Title` and `Toast.Description` render only while they have content: their default slot, or the label of their toast. Base UI also counts the children of the element of `render`. A part cannot read what its `#render` slot renders, so that content does not count.
-- In the `#render` slot of a label part, mount `children` for the label of the toast. To show content of your own in another element, give the content in the default slot and the element in `as`.
+- When the last of two titles of a toast unmounts, the root names the title that stays (`VUE-56`). Base UI gives the root no `aria-labelledby` then. The descriptions follow the same rule for `aria-describedby`.
+- In the `#render` slot of a label part, mount `children` for the label of the toast. To show your own content in another element, give the content in the default slot and the element in `as`.
 - `Toast.Action` shows the `children` of `actionProps` when the toast has them, as Base UI does. Without them, it shows its default slot. It renders only while it has content: `children` that are not empty, or a default slot.
 - A label part and `Toast.Action` read `$slots.default` again before each render, because `$slots` is not reactive. A parent that adds or removes the slot renders the part again.
 - A label that is `undefined` or `''` is empty. A function is a label with content. `<component :is>` renders it, so no part calls it in `setup` or in a `computed`.
