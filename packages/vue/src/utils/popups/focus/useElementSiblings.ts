@@ -15,8 +15,8 @@ export interface ElementSiblings {
  *
  * `siblings` gives the same object while the nodes do not change. `null` removes the nodes.
  *
- * The result holds the object of `siblings` whose nodes are in the document, or `null`. Vue can run
- * a `watch` of the caller before the `watch` that puts the nodes in the document.
+ * The result holds the object of `siblings` whose nodes are beside the element, or `null`. Vue can
+ * run a `watch` of the caller before the `watch` that puts the nodes there.
  */
 export function useElementSiblings(
   element: MaybeRefOrGetter<HTMLElement | null>,

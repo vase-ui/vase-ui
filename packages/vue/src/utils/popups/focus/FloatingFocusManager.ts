@@ -479,8 +479,8 @@ export function useFloatingFocusManager(
 
   const placedSiblings = useElementSiblings(element, siblings);
 
-  // Vue can run the effects before `useElementSiblings` puts the guards in the document. An effect
-  // thus gets a guard only while the guard is in the document. Each run of the marks then gives the
+  // Vue can run the effects before `useElementSiblings` puts the guards beside the element. An
+  // effect thus gets a guard only while the guard is there. Each run of the marks then gives the
   // same result.
   const beforeGuardElement = computed(() => {
     const guard = guardElements.value?.before;
