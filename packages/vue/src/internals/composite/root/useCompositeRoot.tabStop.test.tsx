@@ -101,12 +101,43 @@ describe('VUE-54: the tab stop follows the active item', () => {
     expect(readTabindexes()).toEqual(['-1', '-1', '0']);
   });
 
-  it('moves the tab stop to the first enabled item when no item is active', async () => {
-    const { List, active } = createList({ active: 'c', disabled: ['a'] });
+  it.each([
+    { name: 'no item is active', disabled: ['a'], nextActive: null, nextDisabled: ['a'] },
+    {
+      name: 'the active item becomes disabled',
+      disabled: ['a'],
+      nextActive: 'c',
+      nextDisabled: ['a', 'c'],
+    },
+    {
+      name: 'a disabled active item loses its state',
+      disabled: ['a', 'c'],
+      nextActive: null,
+      nextDisabled: ['a', 'c'],
+    },
+  ])(
+    'moves the tab stop to the first enabled item when $name',
+    async ({ disabled: initialDisabled, nextActive, nextDisabled }) => {
+      const { List, active, disabled } = createList({ active: 'c', disabled: initialDisabled });
+      await render(<List />);
+      expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+
+      active.value = nextActive;
+      disabled.value = nextDisabled;
+      await flushMicrotasks();
+
+      expect(readTabindexes()).toEqual(['-1', '0', '-1']);
+    },
+  );
+
+  it('moves the tab stop to the first enabled item when a disabled item becomes active', async () => {
+    const { List, active } = createList({ active: null, disabled: ['a'] });
     await render(<List />);
+    await focusItem('c');
+    await blurItem('c');
     expect(readTabindexes()).toEqual(['-1', '-1', '0']);
 
-    active.value = null;
+    active.value = 'a';
     await flushMicrotasks();
 
     expect(readTabindexes()).toEqual(['-1', '0', '-1']);
@@ -168,6 +199,18 @@ describe('VUE-54: the tab stop follows the active item', () => {
       expect(readTabindexes()).toEqual(['-1', '-1', '0']);
     },
   );
+
+  it('keeps the tab stop of the user while the active item stays disabled', async () => {
+    const { List, items } = createList({ active: 'a', disabled: ['a'] });
+    await render(<List />);
+    await focusItem('c');
+    await blurItem('c');
+
+    items.value = [...ITEMS, 'd'];
+    await flushMicrotasks();
+
+    expect(readTabindexes()).toEqual(['-1', '-1', '0']);
+  });
 
   it('moves the tab stop to an active item that mounts in a mounted list', async () => {
     const { List, items } = createList({ active: 'b', items: ['a', 'c'] });

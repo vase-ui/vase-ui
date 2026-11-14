@@ -32,7 +32,7 @@ Import the component and assemble its parts:
 
 <<< ./tabs/Anatomy.vue
 
-When the focus leaves the list, the tab stop moves to the active tab, also with manual activation. When the value becomes `null` while the focus is outside the list, the tab stop moves to the first tab that is not disabled.
+When the focus leaves the list, the tab stop moves to the active tab, unless that tab is disabled. This is also true with manual activation. When the value changes to `null` or to a disabled tab while the focus is outside the list, the tab stop moves to the first tab that is not disabled.
 
 ## Examples
 

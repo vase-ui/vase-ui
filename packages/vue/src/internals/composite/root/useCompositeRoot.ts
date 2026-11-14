@@ -58,7 +58,10 @@ export function useCompositeRoot<Metadata>(
   let highlightedElement: HTMLElement | null = null;
   let tabStopObserver: MutationObserver | null = null;
   let canHaveUnmountedTabStop = true;
-  let lastActiveItem: HTMLElement | null = null;
+  let lastActiveItem: { item: HTMLElement | null; canHoldTabStop: boolean } = {
+    item: null,
+    canHoldTabStop: false,
+  };
   let activeItemObserver: MutationObserver | null = null;
 
   const id = useId();
@@ -150,7 +153,7 @@ export function useCompositeRoot<Metadata>(
       }
     }
 
-    lastActiveItem = findActiveItem(elementsRef.value);
+    lastActiveItem = readActiveItem(elementsRef.value);
 
     scrollIntoViewIfNeeded(rootElement, activeItem, direction.value, getOrientation());
   }
@@ -166,13 +169,13 @@ export function useCompositeRoot<Metadata>(
     );
   }
 
-  function findActiveItem(elements: ReadonlyArray<HTMLElement | null>) {
-    return (
-      elements.find(
-        (element, index) =>
-          element?.hasAttribute(ACTIVE_COMPOSITE_ITEM) && canHoldTabStop(elements, index),
-      ) ?? null
-    );
+  function readActiveItem(elements: ReadonlyArray<HTMLElement | null>) {
+    const index = elements.findIndex((element) => element?.hasAttribute(ACTIVE_COMPOSITE_ITEM));
+    return {
+      item: elements[index] ?? null,
+      index,
+      canHoldTabStop: canHoldTabStop(elements, index),
+    };
   }
 
   function highlightIndex(index: number) {
@@ -183,10 +186,10 @@ export function useCompositeRoot<Metadata>(
 
   // A reset of a form and a controlled value change the active item while the composite does not
   // have the focus. The tab stop then moves to the active item, so the Tab key enters the
-  // composite on that item, as it does for a native radio group. When the active item loses its
-  // state, the tab stop moves to the first item that can hold it, as the APG radio pattern says
-  // for a group with no checked radio. While the composite has the focus, the highlight stays on
-  // the item that the user chose, and the keys continue from it.
+  // composite on that item, as it does for a native radio group. If the change leaves no active
+  // item that can hold the tab stop, the tab stop moves to the first item that can hold it, as the
+  // APG radio pattern says for a group with no checked radio. While the composite has the focus,
+  // the highlight stays on the item that the user chose, and the keys continue from it.
   // Limit: the observer and the focus test cover the element of the root only, as the search for
   // the tab stop of the server HTML does.
   function moveTabStopToActiveItem() {
@@ -196,23 +199,26 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    const activeItem = findActiveItem(elements);
-    const previousActiveItem = lastActiveItem;
+    const activeItem = readActiveItem(elements);
+    const hasChanged =
+      activeItem.item !== lastActiveItem.item ||
+      activeItem.canHoldTabStop !== lastActiveItem.canHoldTabStop;
+    // An active item that leaves the list is a removal, and `onMapChange` has already moved the
+    // tab stop for it, as in Base UI.
+    const isRemoval = lastActiveItem.item !== null && !elements.includes(lastActiveItem.item);
     lastActiveItem = activeItem;
 
     if (contains(rootElement, activeElement(ownerDocument(rootElement)))) {
       return;
     }
 
-    if (activeItem) {
-      highlightIndex(elements.indexOf(activeItem));
+    if (activeItem.canHoldTabStop) {
+      highlightIndex(activeItem.index);
       return;
     }
 
-    // A composite that had no active item keeps the tab stop of the user. An active item that
-    // leaves the list is a removal, and `onMapChange` has already moved the tab stop for it, as in
-    // Base UI.
-    if (previousActiveItem && elements.includes(previousActiveItem)) {
+    // With no change of the active item, the composite keeps the tab stop of the user.
+    if (hasChanged && !isRemoval) {
       highlightIndex(elements.findIndex((_, index) => canHoldTabStop(elements, index)));
     }
   }
@@ -224,10 +230,9 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    const elements = elementsRef.value;
-    const activeItem = findActiveItem(elements);
-    if (activeItem) {
-      highlightIndex(elements.indexOf(activeItem));
+    const activeItem = readActiveItem(elementsRef.value);
+    if (activeItem.canHoldTabStop) {
+      highlightIndex(activeItem.index);
     }
   }
 

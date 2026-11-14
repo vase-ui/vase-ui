@@ -4,7 +4,7 @@ import { Tabs } from '@vase-ui/vue/tabs';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 
 function readTabindexes() {
-  return screen.getAllByRole('tab').map((tab) => tab.tabIndex);
+  return screen.getAllByRole('tab', { hidden: true }).map((tab) => tab.tabIndex);
 }
 
 describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
@@ -37,23 +37,30 @@ describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
     expect(firstTab).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('moves the tab stop to the first enabled tab when the value becomes null', async () => {
-    const value = shallowRef<number | null>(2);
-    const TestComponent = defineComponent(() => () => (
-      <Tabs.Root value={value.value}>
-        <Tabs.List>
-          <Tabs.Tab value={0} disabled />
-          <Tabs.Tab value={1} />
-          <Tabs.Tab value={2} />
-        </Tabs.List>
-      </Tabs.Root>
-    ));
-    await render(<TestComponent />);
-    expect(readTabindexes()).toEqual([-1, -1, 0]);
+  it.each([
+    { name: 'an enabled tab', tabProps: {} },
+    { name: 'a disabled tab', tabProps: { disabled: true } },
+    { name: 'a hidden tab', tabProps: { hidden: true } },
+  ])(
+    'moves the tab stop to the first enabled tab when the value changes from $name to null',
+    async ({ tabProps }) => {
+      const value = shallowRef<number | null>(2);
+      const TestComponent = defineComponent(() => () => (
+        <Tabs.Root value={value.value}>
+          <Tabs.List>
+            <Tabs.Tab value={0} disabled />
+            <Tabs.Tab value={1} />
+            <Tabs.Tab value={2} {...tabProps} />
+          </Tabs.List>
+        </Tabs.Root>
+      ));
+      await render(<TestComponent />);
+      expect(readTabindexes()).toEqual([-1, -1, 0]);
 
-    value.value = null;
-    await flushMicrotasks();
+      value.value = null;
+      await flushMicrotasks();
 
-    expect(readTabindexes()).toEqual([-1, 0, -1]);
-  });
+      expect(readTabindexes()).toEqual([-1, 0, -1]);
+    },
+  );
 });
