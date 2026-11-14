@@ -8,6 +8,7 @@ import {
   isJSDOM,
   screen,
   waitFor,
+  waitForPositioned,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Autocomplete from '../../autocomplete/index.parts';
@@ -661,7 +662,7 @@ describe('<Combobox.Item />', () => {
   });
 
   // A keystroke that doesn't change which items match must not re-render the items that stay
-  // mounted. A compiled template gives each item stable slots, so the case renders one.
+  // mounted.
   describe('item re-renders on keystroke', () => {
     it('does not re-render still-mounted items when filtering keeps the same membership', async () => {
       const items = ['apple', 'apricot', 'avocado'];
@@ -672,6 +673,9 @@ describe('<Combobox.Item />', () => {
       await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(screen.getAllByRole('option')).toHaveLength(3);
 
+      // The first position pass renders the positioner after the mount, and Vue then renders each
+      // item again. The count starts after that pass.
+      await waitForPositioned(screen.getByTestId('positioner'));
       renderSpy.mockClear();
 
       // "a" matches all three items, so the filtered set is unchanged and every item stays mounted.
