@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { h } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import * as Combobox from '../index.parts';
+import { useComboboxRootContext } from '../root/ComboboxRootContext';
+import type { ComboboxStore } from '../store';
 
 describe('<Combobox.Portal />', () => {
   const { render } = createRenderer();
@@ -65,5 +67,30 @@ describe('<Combobox.Portal />', () => {
     const positioner = screen.getByTestId('positioner');
     expect(positioner).toHaveAttribute('hidden');
     expect(positioner).toHaveAttribute('data-closed');
+  });
+
+  it('renders the positioner of a closed popup that the root mounts by force', async () => {
+    let store!: ComboboxStore;
+    const StoreProbe = defineComponent(() => {
+      store = useComboboxRootContext();
+      return () => null;
+    });
+    await render(
+      <Combobox.Root>
+        <StoreProbe />
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Positioner data-testid="positioner">
+            <Combobox.Popup />
+          </Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+    await flushMicrotasks();
+    expect(screen.queryByTestId('positioner')).toBe(null);
+
+    store.context.forceMount();
+
+    expect(await screen.findByTestId('positioner')).toHaveAttribute('hidden');
   });
 });

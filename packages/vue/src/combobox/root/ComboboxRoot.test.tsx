@@ -891,6 +891,7 @@ describe('<Combobox.Root />', () => {
       // A reset with nothing to change.
       await reset();
 
+      expect(getFormData('city')).toEqual(['Oslo']);
       expect(handleValueChange).toHaveBeenCalledTimes(1);
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
     });

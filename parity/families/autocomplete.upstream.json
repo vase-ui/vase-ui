@@ -1,0 +1,2962 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/autocomplete/**",
+    "docs/src/app/(docs)/react/components/autocomplete/**"
+  ],
+  "sources": [
+    "packages/react/src/autocomplete/clear/AutocompleteClearDataAttributes.ts",
+    "packages/react/src/autocomplete/index.parts.ts",
+    "packages/react/src/autocomplete/index.ts",
+    "packages/react/src/autocomplete/input-group/AutocompleteInputGroup.tsx",
+    "packages/react/src/autocomplete/input-group/AutocompleteInputGroupDataAttributes.ts",
+    "packages/react/src/autocomplete/item/AutocompleteItem.tsx",
+    "packages/react/src/autocomplete/item/AutocompleteItemDataAttributes.ts",
+    "packages/react/src/autocomplete/root/AutocompleteRoot.tsx",
+    "packages/react/src/autocomplete/separator/AutocompleteSeparator.tsx",
+    "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
+    "packages/react/src/autocomplete/trigger/AutocompleteTriggerDataAttributes.ts",
+    "packages/react/src/autocomplete/value/AutocompleteValue.tsx"
+  ],
+  "typeTests": [
+    "packages/react/src/autocomplete/root/AutocompleteRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/autocomplete/item/AutocompleteItem.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Autocomplete.Item />",
+            "prop: onClick"
+          ],
+          "title": "calls onClick when clicked with a pointer"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Item />",
+            "prop: onClick"
+          ],
+          "title": "calls onClick when selected with Enter key (via root interaction)"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Item />"
+          ],
+          "title": "does not expose data-selected when reopening after a value is chosen"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "exposes the orientation attribute rendered by Separator"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "automatically unmounts with an actions ref and completes closing once"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "keeps the popup mounted until the unmount action completes closing"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "clears the opt-out when a controlled reopen interrupts a pending unmount"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "ignores an opt-out on a canceled close"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "keeps the opt-out when a controlled close is applied in a transition"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "closes through the `close` action so `onOpenChange` can opt out"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "ignores `unmount` while the popup is open"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "unmounts when `close` and `unmount` are called in one batch"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "still unmounts on a later close after `unmount` was called while open"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "still unmounts on a later close after `unmount` and a reopen in one batch"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "does not call `onOpenChange` when the `close` action is called while closed"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "completes closing once when `unmount` is called twice in one batch"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "keyboard interactions"
+          ],
+          "title": "closes popup on Tab after selecting with Enter and typing again"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "keyboard interactions"
+          ],
+          "title": "fills the input with the highlighted item on Space while the input is empty"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "input inside popup composition"
+          ],
+          "title": "commits a keyboard selection, restores trigger focus, and preserves it on reopen"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "input inside popup composition"
+          ],
+          "title": "preserves the typed value when the popup is dismissed with Escape"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "should handle browser autofill"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "ignores hidden-input autofill when readOnly"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "opens the list with the arrow keys but does not commit on item press when readOnly"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "does not fill the input with the highlighted item when readOnly"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "drops a pending inline completion when readOnly is turned on"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "exposes aria-autocomplete=\"none\" when readOnly"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "ignores hidden-input autofill when disabled"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "should pass autoComplete to the visible input"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />"
+          ],
+          "title": "does not expose data-placeholder on Trigger or InputGroup"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: onItemHighlighted"
+          ],
+          "title": "passes native mouse and pointer events for pointer highlights"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "calls onItemHighlighted when the popup auto highlights on open"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "highlights the first item when typing and keeps it during filtering"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "does not highlight on open via click or when pressing arrow keys initially"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "highlights the first item when opening via ArrowDown"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "links aria-activedescendant to the highlighted item after filtering"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "does not highlight first/last item when pressing ArrowDown/ArrowUp initially"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "retains highlight when clearing the query with autoHighlight enabled"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "highlights the first item immediately when behavior is \"always\""
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight"
+          ],
+          "title": "keeps the latest pointer highlight on outside blur when behavior is \"always\""
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "highlights a candidate arriving after typing"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "highlights asynchronous results while an inline input stays focused"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "handles asynchronous results after an inline input blurs with autoHighlight=%s"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "discards the request when the clear button clears the query"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "discards the request when closing with keepMounted=%s"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: autoHighlight",
+            "asynchronous items"
+          ],
+          "title": "discards the request when a controlled popup closes"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: keepHighlight"
+          ],
+          "title": "keeps the current highlight when the pointer leaves the list"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: keepHighlight"
+          ],
+          "title": "clears the highlight when the pointer leaves the list without keepHighlight"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: keepHighlight"
+          ],
+          "title": "continues keyboard navigation from the kept highlight after pointer leave"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"%s\": uses the locale when applying the default filter"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"list\" (default): no inline overlay, consumer handles filtering"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"both\": inline overlay + autocomplete handles filtering"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"both\": hovering items should not change the inline overlay (preserve temporary value)"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"both\": external controlled updates replace the temporary inline value"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"both\": a completion queued after a pointer highlight does not replace an external controlled update"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"inline\": static items with inline overlay"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: mode"
+          ],
+          "title": "mode=\"none\": static items without inline overlay"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "scroll reset on input value change"
+          ],
+          "title": "resets the list scroll position to the top when typing",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "scroll reset on input value change"
+          ],
+          "title": "mode=\"both\": inline navigation does not reset the scroll to the top",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: filter"
+          ],
+          "title": "mode=\"both\": keeps filtering against the typed query during inline completion"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: filter"
+          ],
+          "title": "mode=\"inline\": does not call a custom filter"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: filter"
+          ],
+          "title": "mode=\"%s\": uses a custom filter instead of the locale-aware default"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: filter"
+          ],
+          "title": "mode=\"%s\": does not apply default filtering when filter is null"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: value"
+          ],
+          "title": "treats a controlled null value as an empty query"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: value"
+          ],
+          "title": "delivers a burst of controlled input without exceeding the update depth (mode=\"$mode\")"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "prevents submit on Enter when an item is highlighted by default (false)"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "when true, clicking with pointer submits the owning form"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "submits the form of the input when only the input is inside the form"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "submits its own form when an unscoped control in another form owns the validation ref"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "when true, pressing Enter in the Input submits the owning form when an item is highlighted"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "when true, clicking with pointer submits an associated external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "prop: submitOnItemClick"
+          ],
+          "title": "focusing the listbox should keep the input focused and maintain functionality"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits the typed input value when wrapped in Field.Root"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits the typed input value when name is provided on Autocomplete.Root"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits the popup input value through native FormData when rendering a field-aware input"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits the inline input value through native FormData"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "server-renders only the inline input name for native FormData"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "server-renders only the outside-popup input name for native FormData"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits a default popup input value through native FormData before the popup opens"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "server-renders the default popup input value without a form name before hydration"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "triggers native validation when required and empty"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "submits the input value directly (not selection value)"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "Enter submits when no item is highlighted"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "pressing Enter in the Input submits the owning form when no item is highlighted"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Form"
+          ],
+          "title": "pressing Enter in the List when it has focus submits the owning form"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "object item stringification"
+          ],
+          "title": "filters and displays using label for {label} objects"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "object item stringification"
+          ],
+          "title": "uses itemToStringValue when object lacks label"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "object item stringification"
+          ],
+          "title": "filters and displays using value for {value} objects"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "sets `required` on the visible input"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when input has content"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when already filled with defaultValue"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "[data-focused]"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "[data-invalid]"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "[data-valid]"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "prop: validate"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onChange",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onBlur",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "Field.Label"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Root />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Autocomplete.Value />",
+            "prop: children"
+          ],
+          "title": "renders current input value via function child"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Value />",
+            "prop: children"
+          ],
+          "title": "renders function child with empty string when no value typed"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Value />",
+            "prop: children"
+          ],
+          "title": "overrides the display when children is a static ReactNode"
+        },
+        {
+          "describe": [
+            "<Autocomplete.Value />",
+            "prop: children"
+          ],
+          "title": "renders complex ReactNode children"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/autocomplete/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "string | number | string[]",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "string | string[] | number",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: string, eventDetails: Autocomplete.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Autocomplete.Root.OpenChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "autoHighlight",
+              "required": false,
+              "type": "boolean | 'always'",
+              "default": "false"
+            },
+            {
+              "name": "keepHighlight",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "highlightItemOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Autocomplete.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "filter",
+              "required": false,
+              "type": "((item: ItemValue, query: string, itemToString?: ((item: ItemValue) => string)) => boolean) | null",
+              "default": null
+            },
+            {
+              "name": "filteredItems",
+              "required": false,
+              "type": "any[] | Group<any>[] | ItemValue[] | Group<ItemValue>[]",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "grid",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inline",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "itemToStringValue",
+              "required": false,
+              "type": "((itemValue: ItemValue) => string)",
+              "default": null
+            },
+            {
+              "name": "items",
+              "required": false,
+              "type": "({ items: any[] })[] | ItemValue[]",
+              "default": null
+            },
+            {
+              "name": "limit",
+              "required": false,
+              "type": "number",
+              "default": "-1"
+            },
+            {
+              "name": "locale",
+              "required": false,
+              "type": "Intl.LocalesArgument",
+              "default": null
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "mode",
+              "required": false,
+              "type": "'list' | 'both' | 'inline' | 'none'",
+              "default": "'list'"
+            },
+            {
+              "name": "onItemHighlighted",
+              "required": false,
+              "type": "((highlightedValue: ItemValue | undefined, eventDetails: Autocomplete.Root.HighlightEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "openOnInputClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "submitOnItemClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "virtualized",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteRootState",
+            "fields": [],
+            "code": "type AutocompleteRootState = {};"
+          },
+          "actions": {
+            "name": "AutocompleteRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type AutocompleteRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "AutocompleteRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "input-press",
+              "outside-press",
+              "item-press",
+              "close-press",
+              "escape-key",
+              "list-navigation",
+              "focus-out",
+              "input-change",
+              "input-clear",
+              "clear-press",
+              "chip-remove-press",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type AutocompleteRootChangeEventReason = 'trigger-press' | 'input-press' | 'outside-press' | 'item-press' | 'close-press' | 'escape-key' | 'list-navigation' | 'focus-out' | 'input-change' | 'input-clear' | 'clear-press' | 'chip-remove-press' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "AutocompleteRootChangeEventDetails",
+            "code": "type AutocompleteRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'input-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'input-change';\n    event: Event | InputEvent;\n} | {\n    reason: 'input-clear';\n    event: Event | FocusEvent | InputEvent;\n} | {\n    reason: 'clear-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'chip-remove-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "popupSide",
+                "optional": false,
+                "type": "Side | null"
+              },
+              {
+                "name": "listEmpty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteTriggerState = {\n    open: boolean;\n    disabled: boolean;\n    popupSide: Side | null;\n    listEmpty: boolean;\n    readOnly: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-popup-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start' | null"
+            },
+            {
+              "name": "data-list-empty",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Value",
+          "tag": null,
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | ((value: string) => React.ReactNode)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteValueState",
+            "fields": [],
+            "code": "type AutocompleteValueState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Input",
+          "tag": "input",
+          "props": [
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Input.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Input.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Input.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteInputState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "popupSide",
+                "optional": false,
+                "type": "Side | null"
+              },
+              {
+                "name": "listEmpty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteInputState = {\n    open: boolean;\n    popupSide: Side | null;\n    listEmpty: boolean;\n    readOnly: boolean;\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-popup-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start' | null"
+            },
+            {
+              "name": "data-list-empty",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Icon",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Icon.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Icon.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Icon.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteIconState",
+            "fields": [],
+            "code": "type AutocompleteIconState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Clear",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Clear.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Clear.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Clear.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteClearState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "visible",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type AutocompleteClearState = {\n    open: boolean;\n    disabled: boolean;\n    visible: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-visible",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "List",
+          "tag": "div",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | ((item: any, index: number) => React.ReactNode)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.List.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.List.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.List.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteListState",
+            "fields": [
+              {
+                "name": "empty",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteListState = {\n    empty: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompletePortalState",
+            "fields": [],
+            "code": "type AutocompletePortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type AutocompleteBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompletePositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "empty",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompletePositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    empty: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-empty",
+              "type": null
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "initialFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((openType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompletePopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "empty",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompletePopupState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    transitionStatus: TransitionStatus;\n    empty: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-empty",
+              "type": null
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "div",
+          "props": [
+            {
+              "name": "value",
+              "required": false,
+              "type": "any",
+              "default": "null"
+            },
+            {
+              "name": "onClick",
+              "required": false,
+              "type": "((event: BaseUIEvent<React.MouseEvent<HTMLDivElement, MouseEvent>>) => void)",
+              "default": null
+            },
+            {
+              "name": "index",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteItemState = {\n    disabled: boolean;\n    highlighted: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Group",
+          "tag": "div",
+          "props": [
+            {
+              "name": "items",
+              "required": false,
+              "type": "any[]",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Group.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Group.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Group.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteGroupState",
+            "fields": [],
+            "code": "type AutocompleteGroupState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "GroupLabel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.GroupLabel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.GroupLabel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.GroupLabel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteGroupLabelState",
+            "fields": [],
+            "code": "type AutocompleteGroupLabelState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Separator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Separator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Separator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteSeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type AutocompleteSeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Status",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Status.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Status.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Status.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteStatusState",
+            "fields": [],
+            "code": "type AutocompleteStatusState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Empty",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Empty.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Empty.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Empty.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteEmptyState",
+            "fields": [],
+            "code": "type AutocompleteEmptyState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Collection",
+          "tag": null,
+          "props": [
+            {
+              "name": "children",
+              "required": true,
+              "type": "((item: any, index: number) => React.ReactNode)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteCollectionState",
+            "fields": [],
+            "code": "type AutocompleteCollectionState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Row",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.Row.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.Row.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.Row.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteRowState",
+            "fields": [],
+            "code": "type AutocompleteRowState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "InputGroup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Autocomplete.InputGroup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Autocomplete.InputGroup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Autocomplete.InputGroup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "AutocompleteInputGroupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "popupSide",
+                "optional": false,
+                "type": "Side | null"
+              },
+              {
+                "name": "listEmpty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type AutocompleteInputGroupState = {\n    open: boolean;\n    disabled: boolean;\n    readOnly: boolean;\n    popupSide: Side | null;\n    listEmpty: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-popup-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start' | null"
+            },
+            {
+              "name": "data-list-empty",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [
+        {
+          "name": "useFilter",
+          "tables": [
+            {
+              "label": "Parameters",
+              "rows": [
+                {
+                  "name": "options?",
+                  "type": "AutocompleteFilterOptions",
+                  "default": "{}"
+                }
+              ]
+            }
+          ],
+          "code": [
+            "type ReturnValue = AutocompleteFilter;"
+          ]
+        },
+        {
+          "name": "useFilteredItems",
+          "tables": [],
+          "code": [
+            "type ReturnValue = T[];"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "Root.HighlightEventReason",
+          "code": "type AutocompleteRootHighlightEventReason = 'keyboard' | 'pointer' | 'none';"
+        },
+        {
+          "name": "Root.HighlightEventDetails",
+          "code": "type AutocompleteRootHighlightEventDetails = {\n    reason: 'none';\n    event: Event;\n    index: number;\n} | {\n    reason: 'keyboard';\n    event: KeyboardEvent;\n    index: number;\n} | {\n    reason: 'pointer';\n    event: MouseEvent | PointerEvent;\n    index: number;\n};"
+        },
+        {
+          "name": "Root.OpenChangeEventDetails",
+          "code": "type AutocompleteRootOpenChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'input-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'input-change';\n    event: Event | InputEvent;\n} | {\n    reason: 'input-clear';\n    event: Event | FocusEvent | InputEvent;\n} | {\n    reason: 'clear-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'chip-remove-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "AutocompleteArrowDataAttributes",
+          "code": "declare namespace AutocompleteArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteBackdropDataAttributes",
+          "code": "declare namespace AutocompleteBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteClearDataAttributes",
+          "code": "declare namespace AutocompleteClearDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const disabled: 'data-disabled';\n    const visible: 'data-visible';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "visible",
+              "value": "data-visible"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteFilter",
+          "code": "type AutocompleteFilter = {\n    contains: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;\n    startsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;\n    endsWith: <Item>(item: Item, query: string, itemToString?: (item: Item) => string) => boolean;\n};"
+        },
+        {
+          "name": "AutocompleteFilterOptions",
+          "code": "type AutocompleteFilterOptions = {\n    locale?: Intl.LocalesArgument;\n};"
+        },
+        {
+          "name": "AutocompleteInputDataAttributes",
+          "code": "declare namespace AutocompleteInputDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const popupSide: 'data-popup-side';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n    const listEmpty: 'data-list-empty';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "popupSide",
+              "value": "data-popup-side"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            },
+            {
+              "name": "listEmpty",
+              "value": "data-list-empty"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteInputGroupDataAttributes",
+          "code": "declare namespace AutocompleteInputGroupDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const popupSide: 'data-popup-side';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n    const listEmpty: 'data-list-empty';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "popupSide",
+              "value": "data-popup-side"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            },
+            {
+              "name": "listEmpty",
+              "value": "data-list-empty"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteItemDataAttributes",
+          "code": "declare namespace AutocompleteItemDataAttributes {\n    const highlighted: 'data-highlighted';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "AutocompletePopupDataAttributes",
+          "code": "declare namespace AutocompletePopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n    const anchorHidden: 'data-anchor-hidden';\n    const empty: 'data-empty';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "empty",
+              "value": "data-empty"
+            }
+          ]
+        },
+        {
+          "name": "AutocompletePositionerCssVariables",
+          "code": "declare namespace AutocompletePositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            }
+          ]
+        },
+        {
+          "name": "AutocompletePositionerDataAttributes",
+          "code": "declare namespace AutocompletePositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n    const empty: 'data-empty';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "empty",
+              "value": "data-empty"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteSeparatorDataAttributes",
+          "code": "declare namespace AutocompleteSeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "AutocompleteTriggerDataAttributes",
+          "code": "declare namespace AutocompleteTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const popupSide: 'data-popup-side';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n    const listEmpty: 'data-list-empty';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "popupSide",
+              "value": "data-popup-side"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            },
+            {
+              "name": "listEmpty",
+              "value": "data-list-empty"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        },
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        },
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/autocomplete/page.mdx",
+      "referenceTags": [
+        "TypesAutocomplete.Root",
+        "TypesAutocomplete.Value",
+        "TypesAutocomplete.Input",
+        "TypesAutocomplete.InputGroup",
+        "TypesAutocomplete.Trigger",
+        "TypesAutocomplete.Icon",
+        "TypesAutocomplete.Clear",
+        "TypesAutocomplete.List",
+        "TypesAutocomplete.Portal",
+        "TypesAutocomplete.Backdrop",
+        "TypesAutocomplete.Positioner",
+        "TypesAutocomplete.Popup",
+        "TypesAutocomplete.Arrow",
+        "TypesAutocomplete.Status",
+        "TypesAutocomplete.Empty",
+        "TypesAutocomplete.Collection",
+        "TypesAutocomplete.Row",
+        "TypesAutocomplete.Item",
+        "TypesAutocomplete.Group",
+        "TypesAutocomplete.GroupLabel",
+        "TypesAutocomplete.Separator",
+        "TypesAutocomplete.useFilter",
+        "TypesAutocomplete.useFilteredItems"
+      ]
+    }
+  ]
+}

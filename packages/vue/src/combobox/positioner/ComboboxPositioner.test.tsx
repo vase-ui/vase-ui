@@ -174,6 +174,25 @@ describe('<Combobox.Positioner />', () => {
     });
   });
 
+  it('writes the side of a popup that flips to the input', async () => {
+    await render(
+      <div style={{ position: 'fixed', bottom: '0px', left: '0px' }}>
+        <Combobox.Root open>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner side="bottom">
+              <Combobox.Popup style={{ height: '100px' }} />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('input')).toHaveAttribute('data-popup-side', 'top');
+    });
+  });
+
   it.each([
     { name: 'no items', items: [], empty: true },
     { name: 'an item', items: ['Apple'], empty: false },
@@ -228,6 +247,25 @@ describe('<Combobox.Positioner />', () => {
       await waitFor(() => {
         expect(getScrollLockRegistry()?.lockCount).toBe(1);
       });
+    });
+
+    it('does not lock the scroll of the page for a popup that is not modal', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      // The positioner writes the side in the flush that also takes the lock of a modal popup.
+      await waitFor(() => {
+        expect(screen.getByTestId('input')).toHaveAttribute('data-popup-side', 'bottom');
+      });
+
+      expect(getScrollLockRegistry()?.lockCount ?? 0).toBe(0);
     });
 
     it('releases the scroll lock while KeepAlive holds it, and takes it back', async () => {

@@ -8,7 +8,9 @@ export default defineNuxtConfig({
   // build also.
   debug: { hydration: true },
   // A page imports a part by its source path while no entry point exports the part. The type check
-  // of the fixture then reads the source of the package, which the package checks without
-  // `noUncheckedIndexedAccess`. Nuxt sets that option by default.
-  typescript: { tsConfig: { compilerOptions: { noUncheckedIndexedAccess: false } } },
+  // of the fixture then reads the source of the package, which the package checks without these
+  // two options. Nuxt sets both by default.
+  typescript: {
+    tsConfig: { compilerOptions: { noUncheckedIndexedAccess: false, noImplicitOverride: false } },
+  },
 });
