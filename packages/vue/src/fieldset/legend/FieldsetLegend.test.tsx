@@ -139,6 +139,55 @@ describe('<Fieldset.Legend />', () => {
     expect(fieldset).toHaveAttribute('aria-labelledby', legend.id);
   });
 
+  it('names the last legend after KeepAlive shows a legend that mounted while held', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const Branch = defineComponent(() => () => (
+      <div>
+        <Fieldset.Legend key="a" id="legend-a">
+          A
+        </Fieldset.Legend>
+        {extra.value ? (
+          <Fieldset.Legend key="b" id="legend-b">
+            B
+          </Fieldset.Legend>
+        ) : null}
+      </div>
+    ));
+    const App = defineComponent(() => () => (
+      <Fieldset.Root>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Fieldset.Root>
+    ));
+    await render(<App />);
+    const fieldset = screen.getByRole('group');
+    const seen = [fieldset.getAttribute('aria-labelledby')];
+    const changes = [
+      () => {
+        visible.value = false;
+      },
+      () => {
+        extra.value = true;
+      },
+      () => {
+        visible.value = true;
+      },
+      () => {
+        visible.value = false;
+      },
+      () => {
+        visible.value = true;
+      },
+    ];
+    for (const change of changes) {
+      change();
+      await flushMicrotasks();
+      seen.push(fieldset.getAttribute('aria-labelledby'));
+    }
+
+    expect(seen).toEqual(['legend-a', null, null, 'legend-b', null, 'legend-b']);
+  });
+
   it.skipIf(isJSDOM)(
     'sets `aria-labelledby` after hydration without a custom legend id',
     async () => {

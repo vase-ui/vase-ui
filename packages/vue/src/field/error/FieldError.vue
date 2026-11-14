@@ -99,7 +99,10 @@ const { mounted, transitionStatus, setMounted } = useTransitionStatus(
   () => element.value,
 );
 
-useRegisteredMessageId(() => (rendered.value ? errorId.value : undefined));
+useRegisteredMessageId(
+  () => (rendered.value ? errorId.value : undefined),
+  () => element.value,
+);
 
 const error = computed<string | string[] | null | undefined>(() => {
   if (!hasSpecificMatch.value && hasFormError.value) {

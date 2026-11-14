@@ -144,6 +144,10 @@ const emit = defineEmits<{
    * Event handler called when the switch is activated or deactivated.
    */
   checkedChange: [checked: boolean, eventDetails: SwitchRootChangeEventDetails];
+  /**
+   * Event handler called after `checkedChange` with the new value, unless a listener cancels the
+   * change. `v-model:checked` uses it.
+   */
   'update:checked': [checked: boolean];
 }>();
 
