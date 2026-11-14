@@ -198,6 +198,10 @@ const emit = defineEmits<{
    * To stop the change, call `eventDetails.cancel()` before the listener returns.
    */
   valueChange: [value: Value, eventDetails: TimeClockRootChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: Value];
   /**
    * Callback fired when the user commits the time: when a press or a drag that selects a number
@@ -222,6 +226,10 @@ const emit = defineEmits<{
    * To stop the change, call `eventDetails.cancel()` before the listener returns.
    */
   viewChange: [view: TimeClockView, eventDetails: TimeClockRootChangeEventDetails];
+  /**
+   * Event handler called after `viewChange` with the new view, unless a listener cancels the
+   * change. `v-model:view` uses it.
+   */
   'update:view': [view: TimeClockView];
 }>();
 
