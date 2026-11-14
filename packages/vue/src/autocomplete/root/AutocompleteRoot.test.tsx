@@ -38,7 +38,7 @@ async function hover(user: VaseUIRenderResult['user'], element: Element) {
   await fireEvent.mouseMove(element, { movementX: 1 });
 }
 
-function popup(slots: { item: (props: { item: any }) => unknown } = itemSlot) {
+function popupWithList(slots: { item: (props: { item: any }) => unknown } = itemSlot) {
   return (
     <Autocomplete.Portal>
       <Autocomplete.Positioner>
@@ -2301,7 +2301,7 @@ describe('<Autocomplete.Root />', () => {
           {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
         >
           <Autocomplete.Input />
-          {popup()}
+          {popupWithList()}
         </Autocomplete.Root>,
       );
 
@@ -2327,7 +2327,7 @@ describe('<Autocomplete.Root />', () => {
           {...{ 'onUpdate:open': (open: boolean) => events.push(`update:open:${open}`) }}
         >
           <Autocomplete.Input />
-          {popup()}
+          {popupWithList()}
         </Autocomplete.Root>,
       );
 
@@ -2350,7 +2350,7 @@ describe('<Autocomplete.Root />', () => {
           onValueChange={handleValueChange}
         >
           <Autocomplete.Input />
-          {popup()}
+          {popupWithList()}
         </Autocomplete.Root>,
       );
       getInput().focus();
@@ -2372,7 +2372,7 @@ describe('<Autocomplete.Root />', () => {
       await render(
         <Autocomplete.Root mode="both" items={countries} itemToStringValue={(item) => item.code}>
           <Autocomplete.Input />
-          {popup({
+          {popupWithList({
             item: ({ item }: { item: (typeof countries)[number] }) => (
               <Autocomplete.Item value={item}>{item.label}</Autocomplete.Item>
             ),
@@ -2404,7 +2404,7 @@ describe('<Autocomplete.Root />', () => {
               }}
             >
               <Autocomplete.Input />
-              {popup()}
+              {popupWithList()}
             </Autocomplete.Root>
           ) : null}
         </KeepAlive>
