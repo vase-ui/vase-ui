@@ -1,5 +1,15 @@
+import NumberFieldDecrement from './decrement/NumberFieldDecrement.vue';
+import type {
+  NumberFieldDecrementProps,
+  NumberFieldDecrementState,
+} from './decrement/NumberFieldDecrement.vue';
 import NumberFieldGroup from './group/NumberFieldGroup.vue';
 import type { NumberFieldGroupProps, NumberFieldGroupState } from './group/NumberFieldGroup.vue';
+import NumberFieldIncrement from './increment/NumberFieldIncrement.vue';
+import type {
+  NumberFieldIncrementProps,
+  NumberFieldIncrementState,
+} from './increment/NumberFieldIncrement.vue';
 import NumberFieldInput from './input/NumberFieldInput.vue';
 import type { NumberFieldInputProps, NumberFieldInputState } from './input/NumberFieldInput.vue';
 import NumberFieldRoot from './root/NumberFieldRoot.vue';
@@ -37,6 +47,26 @@ export const Group: typeof NumberFieldGroup = NumberFieldGroup;
 export namespace Group {
   export type State = NumberFieldGroupState;
   export type Props = NumberFieldGroupProps;
+}
+
+/**
+ * A stepper button that increases the field value when clicked.
+ * Renders a `<button>` element.
+ */
+export const Increment: typeof NumberFieldIncrement = NumberFieldIncrement;
+export namespace Increment {
+  export type State = NumberFieldIncrementState;
+  export type Props = NumberFieldIncrementProps;
+}
+
+/**
+ * A stepper button that decreases the field value when clicked.
+ * Renders a `<button>` element.
+ */
+export const Decrement: typeof NumberFieldDecrement = NumberFieldDecrement;
+export namespace Decrement {
+  export type State = NumberFieldDecrementState;
+  export type Props = NumberFieldDecrementProps;
 }
 
 /**
