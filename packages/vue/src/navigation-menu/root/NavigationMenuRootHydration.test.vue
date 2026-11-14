@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import * as NavigationMenu from '../index.parts';
 
 withDefaults(defineProps<{ defaultValue?: string | null }>(), { defaultValue: null });
 </script>

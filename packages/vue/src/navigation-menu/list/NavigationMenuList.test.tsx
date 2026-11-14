@@ -1,5 +1,4 @@
 import { vi, describe, it, expect } from 'vitest';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import {
   createRenderer,
   describeConformance,
@@ -7,6 +6,7 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
+import * as NavigationMenu from '../index.parts';
 
 describe('<NavigationMenu.List />', () => {
   const { render } = createRenderer();

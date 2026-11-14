@@ -1,5 +1,5 @@
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { expectType } from '#test-utils';
+import * as NavigationMenu from '../index.parts';
 
 const stringValue = 'item-1';
 const nullableValue: string | null = 'item-1';
@@ -54,7 +54,7 @@ export const defaultGeneric = (
 export const wrongValue = <NavigationMenu.Root<'a' | 'b'> value="c" />;
 
 // `valueChange` is an emit, so the props type has no handler key. The handler types take the value
-// type from the props type.
+// type from `NavigationMenu.Root.Value`.
 type NavigationMenuChangeHandler = (
   value: NavigationMenu.Root.Value<'a'>,
   eventDetails: NavigationMenu.Root.ChangeEventDetails,

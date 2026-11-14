@@ -1,9 +1,9 @@
 import { vi, describe, it, expect } from 'vitest';
 import { h } from 'vue';
 import type { Component } from 'vue';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import { createRenderer, describeConformance, screen, takeReportedMessages } from '#test-utils';
+import * as NavigationMenu from '../index.parts';
 
 describe('<NavigationMenu.Icon />', () => {
   const { render } = createRenderer();

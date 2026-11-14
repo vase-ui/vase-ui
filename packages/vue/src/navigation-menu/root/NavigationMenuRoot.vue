@@ -55,6 +55,7 @@ export interface NavigationMenuRootActions {
   /**
    * Ends the closing phase of the navigation menu popup after an externally controlled closing animation finishes.
    * Call `details.preventUnmountOnClose()` in `valueChange` first, otherwise the navigation menu popup completes closing on its own.
+   * Whether it leaves the DOM is decided by `keepMounted` on the portal.
    */
   unmount: () => void;
   /**

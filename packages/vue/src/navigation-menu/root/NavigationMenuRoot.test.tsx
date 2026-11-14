@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import {
   createRenderer,
   describeConformance,
@@ -9,6 +8,7 @@ import {
   renderOnServer,
   screen,
 } from '#test-utils';
+import * as NavigationMenu from '../index.parts';
 import NavigationMenuRootHydration from './NavigationMenuRootHydration.test.vue';
 import { useNavigationMenuRootContext } from './NavigationMenuRootContext';
 

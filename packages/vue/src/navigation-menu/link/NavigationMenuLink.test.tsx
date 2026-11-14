@@ -1,7 +1,7 @@
 import { expect, describe, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 import { createRenderer, describeConformance, screen } from '#test-utils';
+import * as NavigationMenu from '../index.parts';
 
 // A link component of a router renders one `a` element and takes the `href` from a prop.
 const RouterLinkLike = defineComponent({

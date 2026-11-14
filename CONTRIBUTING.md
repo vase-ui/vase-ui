@@ -234,7 +234,7 @@ The template of each such part has two lines and no wrapper component:
 - A part whose default tag depends on its context, such as `NavigationMenu.Root`, has no default for `as`.
 - It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
 - Its template binds `:is="as ?? defaultTag"` in the second line.
-- Base UI documents the default tag, so the part needs a `not-applicable` exception row for the prop row `render`.
+- Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:

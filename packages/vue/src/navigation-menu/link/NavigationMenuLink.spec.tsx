@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+import * as NavigationMenu from '../index.parts';
 
 type RenderSlotProps = Parameters<
   NonNullable<InstanceType<typeof NavigationMenu.Link>['$slots']['render']>
