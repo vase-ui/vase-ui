@@ -104,10 +104,16 @@ watch(
   { flush: 'post' },
 );
 
-const shouldRenderGuards = computed(() => {
+const shouldRenderOwner = computed(() => {
   const focusManager = focusManagerState.value;
   return focusManager !== null && !focusManager.modal && focusManager.open;
 });
+
+// A popup with a next focusable element has guards beside its trigger. A second pair of guards at
+// the place of the portal would give the popup a second place in the tab order.
+const shouldRenderGuards = computed(
+  () => shouldRenderOwner.value && !focusManagerState.value?.hasNextFocusableElement,
+);
 
 // The `id` attribute and the `#render` slot can replace the generated id. The owner element must
 // name the id that the DOM has, so the part reads it after each DOM update.
@@ -171,7 +177,7 @@ defineExpose({ element });
       @focusin="handleBeforeGuardFocusin"
     />
     <span
-      v-if="shouldRenderGuards"
+      v-if="shouldRenderOwner"
       :role="portalOwnerRole"
       :aria-owns="nodeId"
       :style="ownerVisuallyHidden"

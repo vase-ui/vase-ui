@@ -1,7 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { shallowRef } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import * as Combobox from '../index.parts';
 
 const message =
   'Vase UI: <Combobox.Label> labels <Combobox.Trigger> only, and <Combobox.Input> is the form control of this combobox.';

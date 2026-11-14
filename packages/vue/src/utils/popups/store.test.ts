@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { defineComponent, h, nextTick, watch } from 'vue';
-import { createRenderer } from '#test-utils';
+import { computed, defineComponent, h, nextTick, watch } from 'vue';
+import { createRenderer, flushMicrotasks } from '#test-utils';
 import {
   BasePopupStore,
   createInitialPopupStoreState,
@@ -892,6 +892,99 @@ describe('BasePopupStore', () => {
       // `ReactiveStore` has no listener of a whole update. One update is one call of `setState`, so
       // the case counts those calls.
       expect(store.steps).toEqual(['commit']);
+    });
+  });
+
+  describe('popupId', () => {
+    it.each<{
+      name: string;
+      id: string | undefined;
+      change: (store: TestPopupStore, popup: HTMLElement, read: () => void) => void;
+      expected: string | undefined;
+    }>([
+      {
+        name: 'the element adds an id',
+        id: undefined,
+        change: (_store, popup) => {
+          popup.id = 'custom';
+        },
+        expected: 'custom',
+      },
+      {
+        name: 'the element removes its id',
+        id: 'custom',
+        change: (_store, popup) => {
+          popup.removeAttribute('id');
+        },
+        expected: undefined,
+      },
+      {
+        name: 'the element changes its id',
+        id: 'custom',
+        change: (_store, popup) => {
+          popup.id = 'other';
+        },
+        expected: 'other',
+      },
+      {
+        // The root of a menu writes the id of the popup before the element renders it.
+        name: 'the element renders a new default id',
+        id: 'custom',
+        change: (store, popup, read) => {
+          store.set('defaultPopupId', 'next');
+          read();
+          popup.id = 'next';
+        },
+        expected: 'next',
+      },
+      {
+        name: 'a new element changes its id',
+        id: 'custom',
+        change: (store, _popup, read) => {
+          const next = document.createElement('div');
+          next.id = 'next';
+          store.set('popupElement', next);
+          read();
+          next.id = 'other';
+        },
+        expected: 'other',
+      },
+      {
+        name: 'the element unmounts',
+        id: 'custom',
+        change: (store) => {
+          store.set('popupElement', null);
+        },
+        expected: 'default',
+      },
+    ])('follows the id of the popup element when $name', async ({ id, change, expected }) => {
+      const store = new TestPopupStore(() => {}, { defaultPopupId: 'default' });
+      const popup = document.createElement('div');
+      if (id !== undefined) {
+        popup.id = id;
+      }
+      store.set('popupElement', popup);
+      const popupId = computed(() => store.select('popupId'));
+      expect(popupId.value).toBe(id);
+
+      change(store, popup, () => popupId.value);
+      await flushMicrotasks();
+
+      expect(popupId.value).toBe(expected);
+    });
+
+    it('stops following the id of a popup element that unmounts', async () => {
+      const store = new TestPopupStore(() => {});
+      const popup = document.createElement('div');
+      store.set('popupElement', popup);
+      store.set('popupElement', null);
+      store.steps.splice(0);
+
+      popup.id = 'custom';
+      await flushMicrotasks();
+
+      // One write of the store is one call of `setState`, so the case counts those calls.
+      expect(store.steps).toEqual([]);
     });
   });
 

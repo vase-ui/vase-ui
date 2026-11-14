@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Directive } from 'vue';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 
 withDefaults(defineProps<{ shown?: boolean }>(), { shown: true });
 

@@ -31,7 +31,10 @@ export interface MenuInputProps
 </script>
 
 <script setup lang="ts">
-import { useFilterDropdownInput } from '../../filter-dropdown/input/FilterDropdownInput';
+import {
+  addInputFocusListeners,
+  useFilterDropdownInput,
+} from '../../filter-dropdown/input/FilterDropdownInput';
 import { useFilterDropdownValueContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
@@ -73,29 +76,25 @@ const input = useFilterDropdownInput({
   },
 });
 
+let removeFocusListeners: (() => void) | undefined;
+
 // A change of the element covers the removal of the input without a blur event.
 function setInputFocused(element: HTMLInputElement | null) {
+  removeFocusListeners?.();
   store.set('inputFocused', element !== null && activeElement(ownerDocument(element)) === element);
+  removeFocusListeners =
+    element === null
+      ? undefined
+      : addInputFocusListeners(element, {
+          focusin: () => store.set('inputFocused', true),
+          focusout: () => store.set('inputFocused', false),
+        });
 }
 
 const { element, elementProps } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref, setInputFocused],
-  props: (attrs) =>
-    input.props(
-      mergeProps<'input'>(
-        {
-          onKeydown: handleKeydown,
-          onFocusin() {
-            store.set('inputFocused', true);
-          },
-          onFocusout() {
-            store.set('inputFocused', false);
-          },
-        },
-        attrs,
-      ),
-    ),
+  props: (attrs) => input.props(mergeProps<'input'>({ onKeydown: handleKeydown }, attrs)),
 });
 
 defineExpose({ element });

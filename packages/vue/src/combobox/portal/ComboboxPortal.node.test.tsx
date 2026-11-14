@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computed, defineComponent, provide } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import * as Combobox from '../index.parts';
+import { Combobox } from '@vase-ui/vue/combobox';
 import { ComboboxPortalContext } from './ComboboxPortalContext';
 
 describe('<Combobox.Portal /> on a server', () => {

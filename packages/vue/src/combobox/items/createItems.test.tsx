@@ -1,7 +1,9 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, onBeforeUnmount, onMounted, shallowRef } from 'vue';
+import { Combobox } from '@vase-ui/vue/combobox';
 import {
   createRenderer,
+  expectType,
   fireEvent,
   flushMicrotasks,
   screen,
@@ -9,7 +11,6 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import * as Combobox from '../index.parts';
 import { reset } from '../../common/error';
 import { defaultItemEquality } from '../../internals/itemEquality';
 import type { ComboboxItemCollection, ItemCollection } from './itemCollection';
@@ -2077,6 +2078,20 @@ describe('Combobox.createItems', () => {
 
       expect(collection.data).toBe(undefined);
       expect(collection.hasValue(1, defaultItemEquality)).toBe(false);
+    });
+
+    // The type check of the package fails on this call when the type of the data takes the group
+    // as the item.
+    it('VUE-65: gives the leaf item of grouped data to the accessors', () => {
+      const groups = [{ value: 'Engineering', items: users }];
+
+      const collection = Combobox.createItems(groups, {
+        getValue: (item) => item.id,
+        getLabel: (item) => item.name,
+      });
+
+      expectType<ComboboxItemCollection<User, number>, typeof collection>(collection);
+      expect(readCollection(collection).label(2, defaultItemEquality)).toBe('Bob');
     });
   });
 
