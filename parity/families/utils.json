@@ -7,6 +7,8 @@
     "packages/react/src/utils/getCssDimensions.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/getPseudoElementBounds.test.ts",
+    "packages/react/src/utils/getPseudoElementBounds.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
     "packages/react/src/utils/popups/positioning/arrow.ts",
@@ -16,6 +18,7 @@
     "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
     "packages/react/src/utils/popups/positioning/useFloating.ts",
     "packages/react/src/utils/popups/positioning/usePositioner.tsx",
+    "packages/react/src/utils/resolveAriaLabelledBy.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
@@ -32,6 +35,13 @@
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
+    {
+      "upstream": "packages/react/src/utils/getPseudoElementBounds.test.ts",
+      "describe": ["getPseudoElementBounds"],
+      "title": "does not read pseudo-element styles in jsdom",
+      "kind": "not-applicable",
+      "reason": "The case tests the branch for jsdom, which has no `getComputedStyle` for a pseudo-element. Vase UI runs no test in jsdom, so the function has no such branch."
+    },
     {
       "upstream": "packages/react/src/utils/resolveRef.ts",
       "kind": "not-applicable",

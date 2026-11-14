@@ -10,6 +10,7 @@
     "packages/react/src/internals/field-root-context/**",
     "packages/react/src/internals/filter.ts",
     "packages/react/src/internals/filter.test.ts",
+    "packages/react/src/internals/getHiddenInputType.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
@@ -51,6 +52,7 @@
     "packages/react/test/describeConformance.tsx",
     "packages/react/test/formData.ts",
     "packages/react/test/hiddenInputSizeTests.tsx",
+    "packages/react/test/hiddenInputTypeTests.tsx",
     "packages/react/test/index.ts",
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
@@ -59,6 +61,13 @@
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
+    {
+      "upstream": "packages/react/test/hiddenInputTypeTests.tsx",
+      "describe": ["hidden input type"],
+      "title": "stays focusable through inputRef",
+      "kind": "not-applicable",
+      "reason": "The case gives the React ref prop `inputRef`. A part of Vase UI exposes its input as `inputElement`, and a part cannot know if a consumer reads an exposed member. With no `name`, no `autoComplete`, no `required` and no field, the input thus stays `type=\"hidden\"`, which cannot take the focus. A consumer that focuses the input gives the control one of them."
+    },
     {
       "upstream": "packages/react/src/internals/useRenderElement.test.tsx",
       "describe": ["useRenderElement"],
@@ -180,7 +189,7 @@
       "describe": ["useLabel", "%s"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The cases render `Select.Label` and `Combobox.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
+      "reason": "The cases render the popup parts of Select and `Combobox.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
     },
     {
       "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
@@ -197,14 +206,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
       "reason": "The case renders `Combobox.Root`, `Combobox.Label` and `Combobox.Trigger`, which Vase UI does not have. The case \"focuses a control in an ancestor shadow root from a label in a nested shadow root\" in the block \"with a fixture label and control\" tests the same behavior with no Combobox."
-    },
-    {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "does not throw when a label is clicked in a detached React root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/trigger/SelectTrigger.tsx",
-      "reason": "The case renders `Select.Root` and `Select.Trigger`, which Vase UI does not have. The case \"reports nothing and focuses nothing when a label in a container outside the document is clicked\" tests the same behavior with a `<Teleport>` target that is outside the document."
     },
     {
       "upstream": "packages/react/src/internals/composite/index.ts",
