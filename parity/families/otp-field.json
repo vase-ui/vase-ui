@@ -35,7 +35,7 @@
     {
       "entry": "Root",
       "prop": "ariaLabelledby",
-      "reason": "The part reads `aria-labelledby` to find out if a label names the group and the inputs, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+      "reason": "The part reads `aria-labelledby` to find out if a label names the group and the inputs, and the Vue documentation says that `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
     },
     {
       "entry": "Root",
