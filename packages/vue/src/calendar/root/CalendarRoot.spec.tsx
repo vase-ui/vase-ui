@@ -81,8 +81,6 @@ const zoned = Temporal.ZonedDateTime.from('2026-11-14T09:30[Asia/Tokyo]');
 <Calendar.Root
   disabledDates={[date, { start: date, end: date }, { dayOfWeek: [6, 7] }, (day) => day.day === 1]}
   unavailableDates={{ before: date }}
-  hiddenDates={{ after: dateTime }}
-  modifiers={{ holiday: date, work: { dayOfWeek: 1 } }}
   minDate={zoned}
   maxDate={dateTime}
   today={date}
@@ -111,5 +109,4 @@ const dayState: Calendar.Day.State = {
   today: false,
   outsideMonth: false,
   weekend: false,
-  modifiers: { holiday: true },
 };

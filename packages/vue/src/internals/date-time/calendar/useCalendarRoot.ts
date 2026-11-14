@@ -10,7 +10,7 @@ import { weekInfo } from '../format';
 import { isKind, isSameDay, toInputText, toPlainDate, today } from '../temporal';
 import type { DateValue, DayOfWeek } from '../temporal';
 import type { CalendarBaseProps, CalendarChangeEventDetails } from './calendarProps';
-import { assertModifierNames, canFocus, canSelect, getDayState } from './dayState';
+import { canFocus, canSelect, getDayState } from './dayState';
 import type { DayRules } from './dayState';
 import type { CalendarSelection } from './daySelection';
 import { findKeyTarget, getKeyAction, getTabStop } from './focusTarget';
@@ -26,8 +26,6 @@ export interface CalendarRootEmit {
 }
 
 export interface UseCalendarRootOptions {
-  /** The name of the root part in the messages. */
-  part: string;
   props: CalendarBaseProps;
   emit: CalendarRootEmit;
   selection: CalendarSelection;
@@ -66,7 +64,6 @@ export interface CalendarRootController {
  * derive from them and from the selection.
  */
 export function useCalendarRoot({
-  part,
   props,
   emit,
   selection,
@@ -128,16 +125,6 @@ export function useCalendarRoot({
 
   const pages = computed(() => [getMonthPage(visibleMonth.value, firstDay.value)]);
 
-  assertModifierNames(part, props.modifiers);
-  if (process.env.NODE_ENV !== 'production') {
-    watch(
-      () => props.modifiers,
-      (modifiers) => {
-        assertModifierNames(part, modifiers);
-      },
-    );
-  }
-
   const rules = computed<DayRules>(() => ({
     today: todayDate.value,
     weekend: weekend.value,
@@ -146,12 +133,10 @@ export function useCalendarRoot({
     maxDate: props.maxDate,
     disabledDates: props.disabledDates,
     unavailableDates: props.unavailableDates,
-    hiddenDates: props.hiddenDates,
-    modifiers: props.modifiers,
     isSelected: selection.isSelected,
   }));
 
-  // A day outside the page is a day of its own month here, so only `hiddenDates` hides it.
+  // The month of the date itself, so a day of another month is not hidden. A key can go there.
   function getStateOfDate(date: Temporal.PlainDate) {
     return getDayState(date, date.toPlainYearMonth(), rules.value);
   }

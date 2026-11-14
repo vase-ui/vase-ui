@@ -53,15 +53,6 @@ export interface CalendarBaseProps {
    */
   unavailableDates?: DateMatcher | undefined;
   /**
-   * The days that have no button. It has the same forms as `disabledDates`.
-   */
-  hiddenDates?: DateMatcher | undefined;
-  /**
-   * The names of days, each with the days that it matches. A day that a modifier matches has the
-   * attribute `data-<name>`, and its state has the name as a key.
-   */
-  modifiers?: Record<string, DateMatcher> | undefined;
-  /**
    * The day that is today. The default is the day of the clock in `timeZone`.
    * Give it when a server renders the calendar, so that the server and the browser agree.
    */

@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  assertModifierNames,
-  canFocus,
-  canSelect,
-  getDayState,
-  getModifierAttributes,
-} from './dayState';
+import { canFocus, canSelect, getDayState } from './dayState';
 import type { DayRules } from './dayState';
 
 const day = (text: string) => Temporal.PlainDate.from(text);
@@ -20,8 +14,6 @@ function rules(overrides: Partial<DayRules> = {}): DayRules {
     maxDate: undefined,
     disabledDates: undefined,
     unavailableDates: undefined,
-    hiddenDates: undefined,
-    modifiers: undefined,
     isSelected: () => false,
     ...overrides,
   };
@@ -39,7 +31,6 @@ describe('getDayState', () => {
       today: false,
       outsideMonth: false,
       weekend: false,
-      modifiers: {},
     });
   });
 
@@ -136,30 +127,6 @@ describe('getDayState', () => {
     expect(canFocus(state)).toBe(true);
     expect(canSelect(state)).toBe(false);
   });
-
-  it('hides a day that hiddenDates matches', () => {
-    const state = getDayState(
-      day('2026-11-11'),
-      november(),
-      rules({ hiddenDates: { before: day('2026-11-12') } }),
-    );
-
-    expect(state.hidden).toBe(true);
-    expect(canFocus(state)).toBe(false);
-  });
-
-  it('gives each modifier a boolean', () => {
-    const modifiers = { holiday: day('2026-11-11'), weekendDay: { dayOfWeek: [6, 7] } };
-
-    expect(getDayState(day('2026-11-11'), november(), rules({ modifiers })).modifiers).toEqual({
-      holiday: true,
-      weekendDay: false,
-    });
-    expect(getDayState(day('2026-11-14'), november(), rules({ modifiers })).modifiers).toEqual({
-      holiday: false,
-      weekendDay: true,
-    });
-  });
 });
 
 describe('canFocus and canSelect', () => {
@@ -168,7 +135,6 @@ describe('canFocus and canSelect', () => {
     today: false,
     outsideMonth: false,
     weekend: false,
-    modifiers: {},
   };
 
   it.each([
@@ -181,45 +147,5 @@ describe('canFocus and canSelect', () => {
 
     expect(canFocus(full)).toBe(focus);
     expect(canSelect(full)).toBe(select);
-  });
-});
-
-describe('modifier names', () => {
-  it.each([
-    'selected',
-    'disabled',
-    'unavailable',
-    'hidden',
-    'today',
-    'outsideMonth',
-    'outside-month',
-  ])('refuses the state name %s', (name) => {
-    expect(() => {
-      assertModifierNames('Calendar.Root', { [name]: day('2026-11-11') });
-    }).toThrow(/^Vase UI: The `modifiers` prop of <Calendar.Root> has the key `/);
-  });
-
-  it('accepts other names, and no modifiers', () => {
-    expect(() => {
-      assertModifierNames('Calendar.Root', { holiday: day('2026-11-11'), selectedByTeam: [] });
-      assertModifierNames('Calendar.Root', undefined);
-    }).not.toThrow();
-  });
-
-  it.each<{
-    name: string;
-    modifiers: Record<string, boolean>;
-    expected: Record<string, string> | null;
-  }>([
-    { name: 'a lower case name', modifiers: { holiday: true }, expected: { 'data-holiday': '' } },
-    {
-      name: 'a camel case name',
-      modifiers: { isHoliday: true, work: false },
-      expected: { 'data-is-holiday': '' },
-    },
-    { name: 'no true modifier', modifiers: { holiday: false }, expected: null },
-    { name: 'no modifier', modifiers: {}, expected: null },
-  ])('gives the attributes for $name', ({ modifiers, expected }) => {
-    expect(getModifierAttributes(modifiers)).toEqual(expected);
   });
 });

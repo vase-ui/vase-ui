@@ -131,12 +131,7 @@ defineSlots<{
 }>();
 
 const selection = useDaySelection(props, emit);
-const { label, focus, ...controller } = useCalendarRoot({
-  part: 'Calendar.Root',
-  props,
-  emit,
-  selection,
-});
+const { label, focus, ...controller } = useCalendarRoot({ props, emit, selection });
 
 const state = computed<CalendarRootState>(() => ({
   disabled: props.disabled,
