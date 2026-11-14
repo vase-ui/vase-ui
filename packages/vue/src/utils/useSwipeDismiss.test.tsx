@@ -660,12 +660,8 @@ describe('useSwipeDismiss', () => {
         movementCssVars: { x: '--x', y: '--y' },
       });
 
-      // Capture the latest `getDragStyles` from a render where the `isSwiping` state is still
-      // false. This stands in for a render that commits during a gesture before `setSwiping(true)`
-      // has flushed: its output must still mirror `isSwipingRef` so reconciling it onto the DOM
-      // does not strip the transform the imperative writer set. Gating on `!swipe.swiping` (rather
-      // than capturing only the very first render) keeps the reference tied to the surviving hook
-      // instance under StrictMode's mount/unmount/remount.
+      // Keep the `getDragStyles` of a time when `swiping` is false. During the swipe, it must
+      // still give the transform that the composable wrote to the element.
       if (!swipe.swiping.value) {
         initialGetDragStyles = swipe.getDragStyles;
       }
@@ -719,12 +715,11 @@ describe('useSwipeDismiss', () => {
 
     await flushMicrotasks();
 
-    // The gesture is active: `isSwipingRef` is true and the transform was written imperatively.
+    // The swipe is active, and the composable wrote the transform to the element.
     expect(element.style.transition).toBe('none');
 
-    // The lagging render's `getDragStyles` (captured while the `isSwiping` state was false) must
-    // still emit `transition: 'none'` and the current drag transform, otherwise React would drop
-    // the popup to its resting transform for a frame mid-gesture.
+    // A render with these styles keeps `transition: 'none'` and the drag transform. Else the
+    // element goes back to its rest transform during the swipe.
     expect(initialGetDragStyles).toBeDefined();
     const laggingStyles = initialGetDragStyles?.() ?? {};
     expect(laggingStyles.transition).toBe('none');
