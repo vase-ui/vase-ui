@@ -1,0 +1,147 @@
+<script setup lang="ts">
+import { h, shallowRef } from 'vue';
+import type { FunctionalComponent } from 'vue';
+import { Tooltip } from '@vase-ui/vue/tooltip';
+import styles from '../../index.module.css';
+
+const demoTooltip = Tooltip.createHandle();
+
+const open = shallowRef(false);
+const triggerId = shallowRef<string | null>(null);
+
+function handleOpenChange(isOpen: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) {
+  open.value = isOpen;
+  triggerId.value = eventDetails.trigger?.id ?? null;
+}
+
+function openProgrammatically() {
+  triggerId.value = 'trigger-2';
+  open.value = true;
+}
+
+const HeadphonesIcon: FunctionalComponent = (_, { attrs }) =>
+  h(
+    'svg',
+    {
+      width: '16',
+      height: '16',
+      viewBox: '0 0 16 16',
+      fill: 'none',
+      stroke: 'currentColor',
+      ...attrs,
+      style: { display: 'block' },
+    },
+    [
+      h('path', {
+        'stroke-linecap': 'round',
+        d: 'M1.5 11V7.5c0-2.5 2.5-6 6.5-6s6.5 3.5 6.5 6V11',
+      }),
+      h('path', {
+        d: 'M12 7.5c1.3807 0 2.5 1.11929 2.5 2.5v2c0 1.3807-1.1193 2.5-2.5 2.5h-1.5v-7zm-8 0h1.5v7H4c-1.38071 0-2.5-1.1193-2.5-2.5v-2c0-1.38071 1.11929-2.5 2.5-2.5Z',
+      }),
+    ],
+  );
+
+const StopwatchIcon: FunctionalComponent = (_, { attrs }) =>
+  h(
+    'svg',
+    {
+      width: '16',
+      height: '16',
+      viewBox: '0 0 16 16',
+      fill: 'none',
+      stroke: 'currentColor',
+      ...attrs,
+      style: { display: 'block' },
+    },
+    [
+      h('circle', { cx: '8', cy: '8.5', r: '6' }),
+      h('path', {
+        'stroke-linecap': 'square',
+        'stroke-linejoin': 'round',
+        d: 'M8 9.5v-5m0-2v-2m-2 0h4M12 4l1.5-1.5',
+      }),
+    ],
+  );
+
+const TrashIcon: FunctionalComponent = (_, { attrs }) =>
+  h(
+    'svg',
+    {
+      width: '16',
+      height: '16',
+      viewBox: '0 0 16 16',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-linejoin': 'round',
+      ...attrs,
+      style: { display: 'block' },
+    },
+    [
+      h('path', { 'stroke-linecap': 'square', d: 'M2.5 4h11' }),
+      h('path', {
+        'stroke-linecap': 'round',
+        d: 'M6.5 4V3c0-.82843.67157-1.5 1.5-1.5s1.5.67157 1.5 1.5v1',
+      }),
+      h('path', {
+        'stroke-linecap': 'square',
+        d: 'm3.5 4 .87069 9.1422c.07332.7699.7199 1.3578 1.49324 1.3578h4.27217c.7733 0 1.4199-.5879 1.4932-1.3578L12.5 4',
+      }),
+    ],
+  );
+</script>
+
+<template>
+  <Tooltip.Provider>
+    <div :class="styles.Container">
+      <div :class="styles.ButtonGroup">
+        <Tooltip.Trigger
+          :class="styles.IconButton"
+          :handle="demoTooltip"
+          id="trigger-1"
+          aria-label="Trigger 1"
+        >
+          <HeadphonesIcon aria-hidden="true" />
+        </Tooltip.Trigger>
+
+        <Tooltip.Trigger
+          :class="styles.IconButton"
+          :handle="demoTooltip"
+          id="trigger-2"
+          aria-label="Trigger 2"
+        >
+          <StopwatchIcon aria-hidden="true" />
+        </Tooltip.Trigger>
+
+        <Tooltip.Trigger
+          :class="styles.IconButton"
+          :handle="demoTooltip"
+          id="trigger-3"
+          aria-label="Trigger 3"
+        >
+          <TrashIcon aria-hidden="true" />
+        </Tooltip.Trigger>
+      </div>
+
+      <button type="button" :class="styles.Button" @click="openProgrammatically">
+        Open programmatically
+      </button>
+    </div>
+
+    <Tooltip.Root
+      :handle="demoTooltip"
+      :open="open"
+      :trigger-id="triggerId"
+      @open-change="handleOpenChange"
+    >
+      <Tooltip.Portal>
+        <Tooltip.Positioner :side-offset="11" :class="styles.Positioner">
+          <Tooltip.Popup :class="styles.Popup">
+            <Tooltip.Arrow :class="styles.Arrow" />
+            Controlled tooltip
+          </Tooltip.Popup>
+        </Tooltip.Positioner>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  </Tooltip.Provider>
+</template>

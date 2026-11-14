@@ -23,13 +23,6 @@
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Select"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case \"handles interactions\" of the block opens the popup with the keyboard, moves the focus to an item with the arrow keys, and gets the focus back on the trigger. It needs the list navigation and the focus manager of Select, which Vase UI does not have. The scroll arrows are the last part of Select, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Dialog"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",

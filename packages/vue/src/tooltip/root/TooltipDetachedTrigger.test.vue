@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 
 const props = defineProps<{ handle?: Tooltip.Handle<unknown> | undefined }>();
 

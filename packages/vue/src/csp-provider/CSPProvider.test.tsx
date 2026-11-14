@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { CSPProvider } from '@vase-ui/vue/csp-provider';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
-import { createRenderer, screen } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { useCSPContext } from '../internals/csp-context/CSPContext';
+import * as Select from '../select/index.parts';
 
 function queryDisableScrollbarStyle() {
   const styles = Array.from(document.querySelectorAll('style'));
@@ -88,6 +89,28 @@ describe('<CSPProvider />', () => {
         </ScrollArea.Root>
       </CSPProvider>,
     );
+
+    expect(queryDisableScrollbarStyle()).toBeNull();
+  });
+
+  it('does not render Select inline style tags when disableStyleElements is true', async () => {
+    await render(
+      <CSPProvider disableStyleElements>
+        <Select.Root defaultOpen>
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </CSPProvider>,
+    );
+    await flushMicrotasks();
 
     expect(queryDisableScrollbarStyle()).toBeNull();
   });

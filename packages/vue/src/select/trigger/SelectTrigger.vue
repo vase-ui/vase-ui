@@ -253,8 +253,13 @@ const { element, elementProps } = useRenderElement('button', props, {
       'aria-readonly': isReadOnly.value || undefined,
       'aria-required': store.select('required') || undefined,
       tabindex: isDisabled.value ? -1 : 0,
-      onFocusin() {
+      onFocusin(event: FocusEvent) {
         setFocused(true);
+
+        // The popup element shouldn't obscure the focused trigger.
+        if (isOpen.value && store.context.alignItemWithTriggerActiveRef.value) {
+          store.setOpen(false, createChangeEventDetails(REASONS.none, event));
+        }
 
         // Saves a re-render on initial click: `forceMounted === true` mounts
         // the items before `open === true`. We could sync those cycles better
