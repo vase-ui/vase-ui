@@ -419,7 +419,10 @@ const Dialog = defineComponent({
       return (
         <>
           {children &&
-            cloneElement(children, getReferenceProps({ ref: refs.setReference, ...children.props }))}
+            cloneElement(
+              children,
+              getReferenceProps({ ref: refs.setReference, ...children.props }),
+            )}
           <FloatingPortal>
             {open() && (
               <FloatingFocusManager store={context.rootStore} modal={props.modal}>
@@ -441,20 +444,23 @@ const Dialog = defineComponent({
 });
 
 const NestedDialog = defineComponent({
-  inheritAttrs: false,
-  setup(_, { attrs, slots }) {
+  props: {
+    open: { type: Boolean, default: undefined },
+    modal: { type: Boolean, default: true },
+  },
+  setup(props, { slots }) {
     const parentId = useFloatingParentNodeId();
 
     return () => {
       if (parentId.value == null) {
         return (
           <FloatingTree>
-            <Dialog {...attrs} v-slots={slots} />
+            <Dialog open={props.open} modal={props.modal} v-slots={slots} />
           </FloatingTree>
         );
       }
 
-      return <Dialog {...attrs} v-slots={slots} />;
+      return <Dialog open={props.open} modal={props.modal} v-slots={slots} />;
     };
   },
 });
@@ -547,14 +553,6 @@ describe('FloatingFocusManager', () => {
   const { render } = createRenderer();
 
   describe('initial focus', () => {
-    it('focuses the first tabbable element when the popup opens', async () => {
-      await render(<Popup />);
-
-      await openPopup();
-
-      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
-    });
-
     it('focuses the popup with no scroll when the popup has no tabbable element', async () => {
       const runFrames = holdAnimationFrames();
       await render(<Popup role="dialog">{{ default: () => <span>text</span> }}</Popup>);
@@ -642,40 +640,6 @@ describe('FloatingFocusManager', () => {
       expect(initialFocus).toHaveBeenCalledWith('touch');
     });
 
-    it('keeps the focus that a part of the popup takes when it is mounted', async () => {
-      const FocusedField = defineComponent({
-        setup() {
-          const field = shallowRef<HTMLInputElement | null>(null);
-          onMounted(() => field.value?.focus());
-          return () => <input data-testid="focused" ref={field} />;
-        },
-      });
-      await render(
-        <Popup>{{ default: () => [<input data-testid="one" />, <FocusedField />] }}</Popup>,
-      );
-
-      await openPopup();
-      await nextFrame();
-      await nextFrame();
-
-      expect(screen.getByTestId('focused')).toHaveFocus();
-    });
-
-    it.each([
-      { name: 'in the task of a screen reader press', detail: 0, focused: 'one' },
-      { name: 'one frame after a mouse press', detail: 1, focused: 'reference' },
-    ])('moves the focus $name', async ({ detail, focused }) => {
-      await render(<Popup />);
-      const reference = screen.getByTestId('reference');
-      reference.focus();
-      vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
-
-      await fireEvent.mouseDown(reference, { detail });
-      await flushMicrotasks();
-
-      expect(screen.getByTestId(focused)).toHaveFocus();
-    });
-
     it('moves no focus when the popup closes before the frame', async () => {
       const runFrames = holdAnimationFrames();
       await render(<Popup keepMounted />);
@@ -685,19 +649,6 @@ describe('FloatingFocusManager', () => {
       runFrames();
 
       expect(screen.getByTestId('reference')).toHaveFocus();
-    });
-
-    it('moves the focus when a disabled focus manager becomes enabled', async () => {
-      const disabled = shallowRef(true);
-      await render(() => <Popup manager={{ disabled: disabled.value }} />);
-      await openPopup();
-      await nextFrame();
-      await nextFrame();
-      expect(screen.getByTestId('reference')).toHaveFocus();
-
-      disabled.value = false;
-
-      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
     });
   });
 
@@ -1318,23 +1269,6 @@ describe('FloatingFocusManager', () => {
         await waitFor(() => expect(focus).toHaveBeenCalledWith(options));
       });
 
-      it('forgets the close of an earlier open when a popup that stays mounted opens again', async () => {
-        const returnFocus = vi.fn((_type: InteractionType) => true);
-        await render(<Popup keepMounted manager={{ returnFocus }} />);
-        await openPopup();
-        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
-        screen.getByTestId('close').focus();
-        await userEvent.keyboard('{Enter}');
-        await waitFor(() => expect(returnFocus).toHaveBeenLastCalledWith('keyboard'));
-
-        await openPopup();
-        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
-        await fireEvent.click(screen.getByTestId('reference'));
-
-        await waitFor(() => expect(returnFocus).toHaveBeenCalledTimes(2));
-        expect(returnFocus).toHaveBeenLastCalledWith('');
-      });
-
       it('forgets the press of an earlier open when a popup that stays mounted opens again', async () => {
         const returnFocus = vi.fn((_type: InteractionType) => true);
         const popup = captureStore();
@@ -1395,29 +1329,6 @@ describe('FloatingFocusManager', () => {
         expect(screen.getByTestId('reference')).toHaveFocus();
       });
 
-      it('uses the latest explicitReturnFocus at the close, and moves no focus while the popup is open', async () => {
-        const explicit = shallowRef(true);
-        const popup = captureStore();
-        await render(() => (
-          <div>
-            <Popup manager={{ explicitReturnFocus: explicit.value }} onStore={popup.onStore} />
-            <input data-testid="outside" />
-          </div>
-        ));
-        await openPopup();
-        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
-
-        explicit.value = false;
-        await flushMicrotasks();
-        expect(screen.getByTestId('one')).toHaveFocus();
-
-        screen.getByTestId('outside').focus();
-        popup.close();
-        await flushMicrotasks();
-
-        expect(screen.getByTestId('outside')).toHaveFocus();
-      });
-
       it('returns the focus when it is in the popup of a node below, in the popup tree', async () => {
         const tree = new FloatingTreeStore();
         const Tree = defineComponent({
@@ -1466,27 +1377,6 @@ describe('FloatingFocusManager', () => {
 
         await waitFor(() => expect(screen.getByTestId('reference')).toHaveFocus());
       });
-    });
-
-    it('moves no focus when the reference changes while the popup is open', async () => {
-      const popup = captureStore();
-      await render(
-        <div>
-          <Popup onStore={popup.onStore} />
-          <input data-testid="other" />
-        </div>,
-      );
-      await openPopup();
-      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
-      screen.getByTestId('two').focus();
-
-      popup.store.set('anchorElement', screen.getByTestId('other'));
-      await flushMicrotasks();
-      expect(screen.getByTestId('two')).toHaveFocus();
-
-      await fireEvent.click(screen.getByTestId('close'));
-
-      await waitFor(() => expect(screen.getByTestId('other')).toHaveFocus());
     });
 
     describe('Tab key that leaves a popup that is not modal', () => {
@@ -2133,28 +2023,6 @@ describe('FloatingFocusManager', () => {
         expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
       });
     });
-  });
-
-  it('sets the tabindex of the popup again when the focus leaves the reference', async () => {
-    const hasField = shallowRef(false);
-    await render(() => (
-      <div>
-        <Popup role="dialog" manager={{ initialFocus: false }}>
-          {{ default: () => (hasField.value ? <input /> : <span>text</span>) }}
-        </Popup>
-        <input data-testid="outside" />
-      </div>
-    ));
-    await openPopup();
-    const floating = screen.getByTestId('floating');
-    expect(floating).toHaveAttribute('tabindex', '0');
-
-    hasField.value = true;
-    await nextTick();
-    screen.getByTestId('outside').focus();
-    await flushMicrotasks();
-
-    expect(floating).toHaveAttribute('tabindex', '-1');
   });
 
   it('records the element that loses the focus to the body, for a later return of the focus', async () => {

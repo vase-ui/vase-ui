@@ -9,6 +9,7 @@ import { useHoverPopupInteraction } from '../../src/utils/popups/interactions/us
 import { useHoverTriggerInteraction } from '../../src/utils/popups/interactions/useHoverTriggerInteraction';
 import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
+import type { InteractionProps } from '../../src/utils/popups/types';
 import { useTestInteractions } from '../useTestInteractions';
 import { useFloating } from './useFloating';
 
@@ -122,7 +123,7 @@ export const NavigationItem = defineComponent({
             ref={refs.setReference}
             style={styles.Item}
             {...focusProps}
-            {...getReferenceProps(attrs)}
+            {...getReferenceProps(attrs as InteractionProps)}
           >
             {props.label}
           </a>
