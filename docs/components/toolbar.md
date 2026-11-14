@@ -33,7 +33,7 @@ Give a part of another component to the `as` prop of a toolbar part. The two par
 
 When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it. Set `disabled` on the toolbar part, not on the other part. The element then stays in the keyboard navigation of the toolbar.
 
-See [how props are merged](/utils/merge-props#how-merging-works) for how the two parts combine.
+See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
 
 ## API reference
 

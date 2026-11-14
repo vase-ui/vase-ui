@@ -5,16 +5,19 @@ import type { Component } from 'vue';
 import { createRenderer, expectNoAxeViolations, hydrate, renderOnServer } from '#test-utils';
 
 const modules = import.meta.glob<{ default: Component }>(
-  '../../../docs/demos/*/*/css-modules/index.vue',
+  ['../../../docs/demos/*/*/css-modules/index.vue', '../../../docs/examples/*/demos/*/index.vue'],
   { eager: true },
 );
 
 const demos = Object.entries(modules).map(([path, { default: Demo }]) => ({
-  name: /\/docs\/demos\/(.+)\/css-modules\/index\.vue$/.exec(path)![1],
+  name: /\/docs\/(?:demos\/)?(.+?)(?:\/css-modules)?\/index\.vue$/.exec(path)![1],
+  // The server command takes a path from the root of this package. A key of the glob is relative
+  // to this file.
+  file: path.replace(/^\.\.\//, ''),
   Demo,
 }));
 
-describe.each(demos)('$name', ({ name, Demo }) => {
+describe.each(demos)('$name', ({ file, Demo }) => {
   const { render } = createRenderer();
 
   it('mounts with no Vue warning and has no axe violation', async () => {
@@ -26,7 +29,7 @@ describe.each(demos)('$name', ({ name, Demo }) => {
   });
 
   it('hydrates the server render with no mismatch', async () => {
-    const serverHtml = await renderOnServer(`../../docs/demos/${name}/css-modules/index.vue`);
+    const serverHtml = await renderOnServer(file);
 
     await hydrate(Demo, { serverHtml });
   });
