@@ -260,6 +260,7 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
 - Its props and state types are aliases of the types of the other part.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
+- The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `Toolbar.Separator` does. Its props interface then holds the text of Base UI for those props.
 
 A part whose new types change a prop is the exception. `AlertDialog.Trigger` is the example: its `handle` takes only a handle of Alert Dialog.
 
@@ -1457,6 +1458,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | `clock.withFakeTimers()` of `createRenderer()`                                                             | `vi.useFakeTimers()` in `beforeEach`, and `vi.useRealTimers()` in `afterEach`                                                                                                                                                                             |
 | `clock.tick(n)`                                                                                            | `vi.advanceTimersByTime(n)`, then `await flushMicrotasks()`                                                                                                                                                                                               |
 | `clock.tickAsync(n)`                                                                                       | `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`                                                                                                                                                                                    |
+| `clockOptions: { shouldAdvanceTime: true }` of `createRenderer()`                                          | `vi.useFakeTimers({ shouldAdvanceTime: true })`. A file that asserts a time limit gives no option, and a case of that file that calls `user` calls `vi.useRealTimers()` first. See [Test helpers](#test-helpers).                                         |
 | `advanceReactClock(clock, n)`                                                                              | `await flushMicrotasks()`, `await vi.advanceTimersByTimeAsync(n)`, then `await flushMicrotasks()`. The async form runs the flushes of Vue between two timers.                                                                                             |
 | `renderHook(() => useX())`                                                                                 | A component in the test that calls the composable in `setup` and gives the result to the test                                                                                                                                                             |
 | `toasts` of `Toast.useToastManager()`, such as `toasts.map(…)` or `toasts[0]`                              | `toasts.value`, because the composable returns a ref                                                                                                                                                                                                      |
@@ -1555,6 +1557,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `render` mounts the vnode with `createApp`. The helpers do not use `@testing-library/vue`, because it depends on another version of `@testing-library/dom`.
 - The app of `render` records each Vue warning for the check of the test setup. Its `warnHandler` does not throw. After a `warnHandler` throws, Vue gives no more warnings on that page.
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
+- `user` waits for a timer after each action, so it does not return under a fake clock that does not move. A fake clock that moves with real time can end a timer of a part between two awaited steps.
 - After a mount, a `rerender` or a `setProps`, the helper waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
 - Under fake timers, the helper does not wait. It moves the fake clock by 1 ms and runs no timer, because a fake clock does not move by itself.
 - `vi.setSystemTime` makes that move, so each pending timer also moves by 1 ms. A frame callback that the mount requests then runs one frame after the next frame.
