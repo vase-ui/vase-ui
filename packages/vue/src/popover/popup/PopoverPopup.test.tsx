@@ -511,7 +511,7 @@ describe('<Popover.Popup />', () => {
         </Popover.Root>,
       ),
     ).rejects.toThrow(
-      'Vase UI: A popup or an arrow of Popover must be inside <Popover.Positioner>.',
+      'Vase UI: A popup, an arrow or a viewport of Popover must be inside <Popover.Positioner>.',
     );
     // The portal renders its content in an update after the mount, so Vue also warns about it.
     expect(takeReportedMessages()).toHaveLength(2);

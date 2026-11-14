@@ -673,8 +673,7 @@ describe('<Combobox.Item />', () => {
       await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(screen.getAllByRole('option')).toHaveLength(3);
 
-      // The first position pass renders the positioner after the mount, and Vue then renders each
-      // item again. The count starts after that pass.
+      // The first position pass renders the positioner after the mount. The count starts after that pass.
       await waitForPositioned(screen.getByTestId('positioner'));
       renderSpy.mockClear();
 

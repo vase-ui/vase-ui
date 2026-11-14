@@ -1,10 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  screen,
+  waitFor,
+  waitForPositioned,
+} from '#test-utils';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
+import ComboboxPortalRenders from './ComboboxPortalRenders.test.vue';
 
 describe('<Combobox.Portal />', () => {
   const { render } = createRenderer();
@@ -92,5 +100,34 @@ describe('<Combobox.Portal />', () => {
     store.context.forceMount();
 
     expect(await screen.findByTestId('positioner')).toHaveAttribute('hidden');
+  });
+
+  it('does not render the popup, the list and the items again when the positioner renders again', async () => {
+    const onPositionerRender = vi.fn();
+    const onPopupRender = vi.fn();
+    const onListRender = vi.fn();
+    const onItemRender = vi.fn();
+    const { setProps } = await render(
+      <ComboboxPortalRenders
+        items={['apple', 'apricot', 'avocado']}
+        sideOffset={4}
+        onPositionerRender={onPositionerRender}
+        onPopupRender={onPopupRender}
+        onListRender={onListRender}
+        onItemRender={onItemRender}
+      />,
+    );
+    await waitForPositioned(await screen.findByTestId('positioner'));
+    await flushMicrotasks();
+    const spies = [onPositionerRender, onPopupRender, onListRender, onItemRender];
+    spies.forEach((spy) => spy.mockClear());
+
+    await setProps({ sideOffset: 8 });
+    await waitFor(() => expect(onPositionerRender).toHaveBeenCalled());
+    await flushMicrotasks();
+
+    expect(onPopupRender).not.toHaveBeenCalled();
+    expect(onListRender).not.toHaveBeenCalled();
+    expect(onItemRender).not.toHaveBeenCalled();
   });
 });

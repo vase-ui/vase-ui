@@ -41,6 +41,7 @@ import { mergeProps } from '../../merge-props';
 import { useMenuFilterPart } from '../filter-root/MenuFilterContext';
 import { useMenuFilterKeyDown } from '../filter-root/useMenuFilterKeyDown';
 import { useMenuRootContext } from '../root/MenuRootContext';
+import { useMenuSubmenuRootContext } from '../submenu-root/MenuSubmenuRootContext';
 
 defineOptions({ inheritAttrs: false });
 
@@ -55,7 +56,11 @@ useMenuFilterPart('Input');
 const menuContext = useMenuRootContext();
 const { store } = menuContext;
 const value = useFilterDropdownValueContext();
-const handleKeydown = useMenuFilterKeyDown(menuContext, () => value.value !== '');
+const handleKeydown = useMenuFilterKeyDown(
+  menuContext,
+  () => value.value !== '',
+  useMenuSubmenuRootContext(),
+);
 
 const input = useFilterDropdownInput({
   id: () => props.id,

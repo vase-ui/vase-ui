@@ -10,15 +10,21 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import { isTypeableElement } from '../../utils/popups/element';
 import { isCrossOrientationCloseKey } from '../../utils/popups/interactions/useListNavigation';
 import type { MenuRootOrientation } from '../root/MenuRoot.vue';
+import { NESTED_FOCUSIN, useNestedPopupEventListener } from './nestedPopupEvents';
 
 /**
  * Returns the attributes and the listeners of the popup of a filterable menu. The listeners keep
  * the focus on the filter input while the user presses or hovers the popup.
  *
  * Call it in `setup`.
+ *
+ * @param orientation The orientation of the menu.
+ * @param getPopupElement Gives the element of the popup. A focus that enters a popup below this
+ * popup counts as the focus of that popup only when it is outside this element.
  */
 export function useMenuFilterPopup(
   orientation: MaybeRefOrGetter<MenuRootOrientation>,
+  getPopupElement?: () => Element | null | undefined,
 ): HTMLAttributes {
   const context = useFilterDropdownRootContext();
   const direction = useDirection();
@@ -49,6 +55,21 @@ export function useMenuFilterPopup(
     onMounted(warnWhenInputIsAbsent);
     watch(context.open, warnWhenInputIsAbsent, { flush: 'post' });
   }
+
+  // A popup below this popup gives its focus events to the popup tree, because Vue does not give
+  // the event of a teleported popup to this popup.
+  function trackNestedFocus(event: FocusEvent, popup: Element | null | undefined) {
+    const target = getTarget(event);
+
+    if (target === focusOwnerRef.value) {
+      nestedFocus = null;
+    } else if (isHTMLElement(target) && !contains(popup, target) && !isRefocusingOwner()) {
+      nestedFocus = target;
+    }
+  }
+  useNestedPopupEventListener<FocusEvent>(NESTED_FOCUSIN, (event) =>
+    trackNestedFocus(event, getPopupElement?.()),
+  );
 
   function restoreInputFocus(event: MouseEvent, enteredTrigger: boolean) {
     const focusOwner = focusOwnerRef.value;
@@ -127,19 +148,7 @@ export function useMenuFilterPopup(
     onFocusin(event: FocusEvent) {
       // `focusin` bubbles, so this also sees the owner itself being focused.
       const target = getTarget(event);
-
-      // In React, a portalled nested popup sends its focus events through this popup, while its
-      // elements sit outside this one in the DOM. A nested popup that `Teleport` moved sends
-      // none, so no target is outside this popup.
-      if (target === focusOwnerRef.value) {
-        nestedFocus = null;
-      } else if (
-        isHTMLElement(target) &&
-        !contains(event.currentTarget as HTMLElement, target) &&
-        !isRefocusingOwner()
-      ) {
-        nestedFocus = target;
-      }
+      trackNestedFocus(event, event.currentTarget as HTMLElement);
 
       // Focus that lands on the popup itself, the focus manager's fallback target, moves on to
       // the input, which owns focus while the menu filters.

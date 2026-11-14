@@ -30,6 +30,8 @@ import PopoverTitle from './title/PopoverTitle.vue';
 import type { PopoverTitleProps, PopoverTitleState } from './title/PopoverTitle.vue';
 import PopoverTrigger from './trigger/PopoverTrigger.vue';
 import type { PopoverTriggerProps, PopoverTriggerState } from './trigger/PopoverTrigger.vue';
+import PopoverViewport from './viewport/PopoverViewport.vue';
+import type { PopoverViewportProps, PopoverViewportState } from './viewport/PopoverViewport.vue';
 
 /**
  * Groups all parts of the popover.
@@ -133,6 +135,18 @@ export const Close: typeof PopoverClose = PopoverClose;
 export namespace Close {
   export type State = PopoverCloseState;
   export type Props = PopoverCloseProps;
+}
+
+/**
+ * A viewport for displaying content transitions.
+ * This component is only required if one popup can be opened by multiple triggers, its content
+ * changes based on the trigger, and switching between them is animated.
+ * Renders a `<div>` element.
+ */
+export const Viewport: typeof PopoverViewport = PopoverViewport;
+export namespace Viewport {
+  export type State = PopoverViewportState;
+  export type Props = PopoverViewportProps;
 }
 
 export {
