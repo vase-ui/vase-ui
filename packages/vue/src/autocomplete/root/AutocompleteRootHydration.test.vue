@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import * as Autocomplete from '../index.parts';
 
 // With `noInput`, the root has no input outside the popup, as when the input is in a closed popup.
@@ -30,6 +29,10 @@ const cities = ['Malmö', 'Malta', 'Oslo'];
   >
     <Autocomplete.Input v-if="!noInput" data-testid="input" />
     <span data-testid="value"><Autocomplete.Value /></span>
-    <ComboboxListPart />
+    <Autocomplete.List v-if="inline">
+      <template #item="{ item }">
+        <Autocomplete.Item :value="item">{{ item }}</Autocomplete.Item>
+      </template>
+    </Autocomplete.List>
   </Autocomplete.Root>
 </template>

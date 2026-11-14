@@ -146,6 +146,40 @@ describe('<Combobox.Trigger />', () => {
     });
   });
 
+  it.each([
+    {
+      name: 'single selection',
+      control: (
+        <Combobox.Root defaultValue="apple">
+          <Combobox.Trigger data-testid="trigger" />
+        </Combobox.Root>
+      ),
+      expectedValue: 'apple',
+    },
+    {
+      name: 'no selection',
+      control: (
+        <Autocomplete.Root defaultValue="query">
+          <Autocomplete.Trigger data-testid="trigger" />
+        </Autocomplete.Root>
+      ),
+      expectedValue: 'query',
+    },
+  ])('validates the $name value when blurred', async ({ control, expectedValue }) => {
+    const validate = vi.fn();
+    await render(
+      <Field.Root validationMode="onBlur" validate={validate}>
+        {control}
+      </Field.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    await fireEvent.focusIn(trigger);
+    await fireEvent.focusOut(trigger);
+
+    expect(validate).toHaveBeenCalledWith(expectedValue, expect.anything());
+  });
+
   it('ignores a pending mouseup after the trigger unmounts', async () => {
     const onOpenChange = vi.fn();
     const showTrigger = shallowRef(true);
