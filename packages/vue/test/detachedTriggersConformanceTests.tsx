@@ -38,6 +38,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
     openInteractions,
     ariaExpanded,
     throwOnMissingTrigger,
+    outsideElementsInert = false,
   } = config;
 
   const primaryInteraction = openInteractions[0];
@@ -456,9 +457,10 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             if (Close) {
               await user.click(screen.getByText('Close popup'));
               await waitForPopupClosed();
-              // Focus returns to the element that opened the popup.
+              // Focus returns to the element that opened the popup. A press does not focus an inert
+              // outside button, so the focus goes to the active trigger then.
               await waitFor(() => {
-                expect(openTrigger2).toHaveFocus();
+                expect(outsideElementsInert ? getTrigger(2) : openTrigger2).toHaveFocus();
               });
             } else {
               await user.click(closeExternally);
@@ -903,4 +905,11 @@ export interface DetachedTriggersTestConfig {
    * opening unassociated with a warning (Dialog).
    */
   throwOnMissingTrigger: boolean;
+  /**
+   * Whether the open popup sets `inert` on the elements outside it (BUG-4678). A press on an
+   * outside button then does not focus it, so after a close the focus returns to the active
+   * trigger.
+   * @default false
+   */
+  outsideElementsInert?: boolean;
 }

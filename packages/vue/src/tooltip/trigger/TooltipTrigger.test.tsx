@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   describeConformance,
@@ -52,9 +52,7 @@ describe('<Tooltip.Trigger />', () => {
       const onOpenChange = vi.fn();
       await render(
         <Tooltip.Root onOpenChange={onOpenChange}>
-          <Tooltip.Trigger style={{ pointerEvents: 'none' }} {...triggerProps}>
-            Trigger
-          </Tooltip.Trigger>
+          <Tooltip.Trigger {...triggerProps}>Trigger</Tooltip.Trigger>
         </Tooltip.Root>,
       );
       return { trigger: screen.getByRole('button', { name: 'Trigger' }), onOpenChange };
@@ -89,17 +87,21 @@ describe('<Tooltip.Trigger />', () => {
     });
 
     it('closes when the pointer stops in the gap, also when another tooltip closes at the same move', async () => {
+      // Each tooltip has its own provider. In one delay group, the open of the second tooltip
+      // closes the first.
       const renderTriggerWithTooltip = (name: string, style?: CSSProperties) => (
-        <Tooltip.Root>
-          <Tooltip.Trigger delay={0} closeDelay={0} style={style}>
-            {name}
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Positioner side="bottom" sideOffset={20} data-testid={name}>
-              <Tooltip.Popup style={{ width: '200px', height: '100px' }}>Content</Tooltip.Popup>
-            </Tooltip.Positioner>
-          </Tooltip.Portal>
-        </Tooltip.Root>
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger delay={0} closeDelay={0} style={style}>
+              {name}
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Positioner side="bottom" sideOffset={20} data-testid={name}>
+                <Tooltip.Popup style={{ width: '200px', height: '100px' }}>Content</Tooltip.Popup>
+              </Tooltip.Positioner>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       );
       await render(
         <div>
@@ -196,9 +198,7 @@ describe('<Tooltip.Trigger />', () => {
     const Page = defineComponent({
       setup: () => () => (
         <Tooltip.Root onOpenChange={onOpenChange}>
-          <Tooltip.Trigger delay={0} style={{ pointerEvents: 'none' }}>
-            Trigger
-          </Tooltip.Trigger>
+          <Tooltip.Trigger delay={0}>Trigger</Tooltip.Trigger>
         </Tooltip.Root>
       ),
     });
@@ -236,12 +236,7 @@ describe('<Tooltip.Trigger />', () => {
             open.value = nextOpen;
           }}
         >
-          <Tooltip.Trigger
-            data-testid="trigger"
-            delay={0}
-            closeDelay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger data-testid="trigger" delay={0} closeDelay={0}>
             Trigger
           </Tooltip.Trigger>
           <Tooltip.Portal>
@@ -427,33 +422,107 @@ describe('<Tooltip.Trigger />', () => {
     });
   });
 
-  it('opens only the tooltip of a nested trigger that gets the focus', async () => {
+  describe('delay group', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function tick(ms: number) {
+      await flushMicrotasks();
+      await vi.advanceTimersByTimeAsync(ms);
+      await flushMicrotasks();
+    }
+
+    async function enter(trigger: HTMLElement) {
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+    }
+
+    it('ends the instant phase of its store when it replaces the trigger of an instant open', async () => {
+      const App = defineComponent(
+        (props: { triggerKey: string }) => () => (
+          <Tooltip.Provider delay={100}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>One</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup>Content One</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+            <Tooltip.Root>
+              <Tooltip.Trigger key={props.triggerKey}>Two</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup data-testid="popup-two">Content Two</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        ),
+        { props: ['triggerKey'] },
+      );
+      const { setProps } = await render(<App triggerKey="first" />);
+
+      await enter(screen.getByRole('button', { name: 'One' }));
+      await tick(100);
+      expect(screen.queryByText('Content One')).not.toBe(null);
+
+      await fireEvent.mouseLeave(screen.getByRole('button', { name: 'One' }));
+      await enter(screen.getByRole('button', { name: 'Two' }));
+      await tick(0);
+      expect(screen.getByTestId('popup-two')).toHaveAttribute('data-instant', 'delay');
+
+      // The trigger that wrote the instant phase unmounts while its tooltip is open.
+      await setProps({ triggerKey: 'second' });
+      await tick(0);
+      expect(screen.queryByTestId('popup-two')).toBe(null);
+
+      await enter(screen.getByRole('button', { name: 'Two' }));
+      await tick(99);
+      expect(screen.queryByTestId('popup-two')).toBe(null);
+
+      await tick(1);
+      expect(screen.getByTestId('popup-two')).not.toHaveAttribute('data-instant');
+    });
+  });
+
+  it('does not report an open to the outer tooltip when a nested trigger gets the focus', async () => {
+    const onOuterOpenChange = vi.fn();
     await render(
-      <Tooltip.Root>
-        <Tooltip.Trigger as="span">
-          Outer
-          <Tooltip.Root>
-            <Tooltip.Trigger>Inner</Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Positioner>
-                <Tooltip.Popup data-testid="inner-popup">Inner tooltip</Tooltip.Popup>
-              </Tooltip.Positioner>
-            </Tooltip.Portal>
-          </Tooltip.Root>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Positioner>
-            <Tooltip.Popup data-testid="outer-popup">Outer tooltip</Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>,
+      <Tooltip.Provider delay={0}>
+        <Tooltip.Root onOpenChange={onOuterOpenChange}>
+          <Tooltip.Trigger as="div">
+            row label
+            <Tooltip.Root>
+              <Tooltip.Trigger data-testid="inner-trigger">button with tooltip</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup data-testid="inner-popup">inner popup</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Positioner>
+              <Tooltip.Popup>outer popup</Tooltip.Popup>
+            </Tooltip.Positioner>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>,
     );
 
-    screen.getByRole('button', { name: 'Inner' }).focus();
+    screen.getByTestId('inner-trigger').focus();
     await flushMicrotasks();
 
     expect(screen.getByTestId('inner-popup')).toHaveAttribute('data-open');
-    expect(screen.queryByTestId('outer-popup')).toBe(null);
+    // The delay group closes an outer tooltip that opens in the same flush. The DOM then shows no
+    // leak, so the case reads `onOpenChange` of the outer root.
+    expect(onOuterOpenChange).not.toHaveBeenCalled();
   });
 
   it('keeps a tooltip that follows the cursor open when a trigger with `closeOnClick` false is pressed', async () => {

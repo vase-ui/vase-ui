@@ -6,28 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/combobox/arrow/ComboboxArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Arrow` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/arrow/ComboboxArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Arrow`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Backdrop` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/backdrop/ComboboxBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Backdrop`."
-    },
-    {
       "upstream": "packages/react/src/combobox/chip-remove/ComboboxChipRemove.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
@@ -64,12 +42,7 @@
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Clear` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/clear/ComboboxClear.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Clear`."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the items, the chips, the trigger or the value, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.test.tsx",
@@ -116,17 +89,6 @@
       "reason": "Vase UI does not have `Combobox.Group`."
     },
     {
-      "upstream": "packages/react/src/combobox/icon/ComboboxIcon.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Icon` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/icon/ComboboxIcon.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Icon`."
-    },
-    {
       "upstream": "packages/react/src/combobox/index.ts",
       "kind": "waits-on",
       "reason": "The file is the entry point of Combobox. It exports the parts, which Vase UI does not have."
@@ -135,35 +97,13 @@
       "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.InputGroup` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.InputGroup`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input/ComboboxInput.android.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Input` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input/ComboboxInput.gecko.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Input` and other parts of Combobox, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the items, the chips or the trigger, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/input/ComboboxInput.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Input` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/input/ComboboxInput.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Input`."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the list, the items, the chips or the value, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/item-indicator/ComboboxItemIndicator.test.tsx",
@@ -191,7 +131,7 @@
       "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders `Combobox.Input`, `Combobox.Value`, `Combobox.Trigger` or another part of Combobox that Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Most cases that have no counterpart also render parts of Combobox that Vase UI does not have, such as the list, the items and `Combobox.Value`."
     },
     {
       "upstream": "packages/react/src/combobox/label/ComboboxLabel.test.tsx",
@@ -219,34 +159,13 @@
       "upstream": "packages/react/src/combobox/popup/ComboboxPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Popup` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/popup/ComboboxPopup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/portal/ComboboxPortal.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Portal` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/portal/ComboboxPortal.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Portal`."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the trigger or the items, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Positioner` and other parts of Combobox, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Positioner`."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the list and the items, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.spec.tsx",
@@ -258,7 +177,7 @@
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders `Combobox.Input`, `Combobox.Popup`, `Combobox.Item` or another part that Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Most cases that have no counterpart render `Combobox.List`, `Combobox.Item` or another part that Vase UI does not have. The pull requests that add those parts port the file."
     },
     {
       "upstream": "packages/react/src/combobox/row/ComboboxRow.tsx",
@@ -291,7 +210,7 @@
       "upstream": "packages/react/src/combobox/store.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Its cases render `Combobox.Popup`, `Autocomplete.Root` and other parts, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case renders `Autocomplete.Trigger`, `Autocomplete.Portal` or `Combobox.Trigger`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
@@ -303,11 +222,6 @@
       "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Combobox.Trigger`."
-    },
-    {
-      "upstream": "packages/react/src/combobox/utils/ComboboxInternalDismissButton.tsx",
-      "kind": "waits-on",
-      "reason": "Only `Combobox.Popup` and `Combobox.Input` use the file, and Vase UI does not have them."
     },
     {
       "upstream": "packages/react/src/combobox/value/ComboboxValue.test.tsx",

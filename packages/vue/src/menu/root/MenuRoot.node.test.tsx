@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { reset as resetWarnings } from '../../common/warn';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -45,6 +46,56 @@ describe('<Menu.Root /> on a server', () => {
     );
   });
 
+  it('renders the trigger of an open root with its attributes and its state', async () => {
+    const html = await renderToString(
+      <Menu.Root defaultOpen defaultTriggerId="trigger">
+        <Menu.Trigger id="trigger">Open</Menu.Trigger>
+      </Menu.Root>,
+    );
+
+    expect(html).toMatch(
+      /^<!--\[--><button data-popup-open data-pressed type="button" tabindex="0" aria-haspopup="menu" aria-expanded="true" aria-controls="[^"]+" id="trigger"><!--\[-->Open<!--\]--><\/button><!--\]-->$/,
+    );
+  });
+
+  it('renders the trigger of a handle in its closed form, and attaches no store to the handle', async () => {
+    const handle = Menu.createHandle();
+
+    const html = await renderToString(
+      <div>
+        <Menu.Trigger handle={handle} id="detached">
+          Detached
+        </Menu.Trigger>
+        <Menu.Root handle={handle} defaultOpen defaultTriggerId="detached" />
+      </div>,
+    );
+
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).not.toContain('aria-expanded');
+    expect(html).not.toContain('data-popup-open');
+    expect(handle.isOpen).toBe(false);
+    expect(handle.store).toBe(handle.serverStore);
+  });
+
+  it('renders the trigger in a menubar with the menuitem role and the tab stop of its menubar', async () => {
+    const html = await renderToString(
+      <MenubarProvider context={createMenubarContext()}>
+        <CompositeRootPart>
+          <Menu.Root>
+            <Menu.Trigger>File</Menu.Trigger>
+          </Menu.Root>
+          <Menu.Root>
+            <Menu.Trigger>Edit</Menu.Trigger>
+          </Menu.Root>
+        </CompositeRootPart>
+      </MenubarProvider>,
+    );
+
+    expect(html.match(/role="menuitem"/g)).toHaveLength(2);
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html.match(/tabindex="-1"/g)).toHaveLength(1);
+  });
+
   it('drops an open change on a server, and leaves the handle and the tree with nothing', async () => {
     const { TestTrigger, stores } = createTestTrigger();
     const handle = Menu.createHandle();
@@ -82,5 +133,45 @@ describe('<Menu.Root /> on a server', () => {
     );
 
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('renders the list, the groups and the items of an open menu', async () => {
+    const html = await renderToString(
+      <Menu.Root open>
+        <Menu.List id="list">
+          <Menu.Group id="group">
+            <Menu.GroupLabel id="label">Edit</Menu.GroupLabel>
+            <Menu.Item id="item">Copy</Menu.Item>
+            <Menu.LinkItem id="link" href="/docs">
+              Docs
+            </Menu.LinkItem>
+          </Menu.Group>
+          <Menu.CheckboxItem id="checkbox" defaultChecked>
+            Bold
+            <Menu.CheckboxItemIndicator />
+          </Menu.CheckboxItem>
+          <Menu.RadioGroup defaultValue="a">
+            <Menu.RadioItem id="radio" value="a">
+              A
+              <Menu.RadioItemIndicator />
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.List>
+      </Menu.Root>,
+    );
+
+    expect(html).toBe(
+      '<!--[--><div id="list" role="menu" tabindex="-1"><!--[-->' +
+        '<div role="group" id="group"><!--[--><div id="label" aria-hidden="true"><!--[-->' +
+        'Edit<!--]--></div><div role="menuitem" id="item" tabindex="-1"><!--[-->Copy<!--]-->' +
+        '</div><a role="menuitem" id="link" tabindex="-1" href="/docs"><!--[-->Docs<!--]-->' +
+        '</a><!--]--></div>' +
+        '<div data-checked role="menuitemcheckbox" id="checkbox" tabindex="-1" aria-checked="true">' +
+        '<!--[-->Bold<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--><!--]--></div><div role="group"><!--[-->' +
+        '<div data-checked role="menuitemradio" id="radio" tabindex="-1" aria-checked="true">' +
+        '<!--[-->A<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--><!--]--></div><!--]--></div><!--]--></div><!--]-->',
+    );
   });
 });

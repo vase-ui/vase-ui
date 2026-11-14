@@ -16,6 +16,10 @@ import type {
 } from './indent-background/DrawerIndentBackground.vue';
 import DrawerIndent from './indent/DrawerIndent.vue';
 import type { DrawerIndentProps, DrawerIndentState } from './indent/DrawerIndent.vue';
+import DrawerPopup from './popup/DrawerPopup.vue';
+import type { DrawerPopupProps, DrawerPopupState } from './popup/DrawerPopup.vue';
+import { DrawerPortal } from './portal/DrawerPortal';
+import type { DrawerPortalProps, DrawerPortalState } from './portal/DrawerPortal';
 import DrawerProvider from './provider/DrawerProvider.vue';
 import type { DrawerProviderProps, DrawerProviderState } from './provider/DrawerProvider.vue';
 import DrawerRoot from './root/DrawerRoot.vue';
@@ -33,6 +37,15 @@ import DrawerSwipeArea from './swipe-area/DrawerSwipeArea.vue';
 import type { DrawerSwipeAreaProps, DrawerSwipeAreaState } from './swipe-area/DrawerSwipeArea.vue';
 import { DrawerTitle } from './title/DrawerTitle';
 import type { DrawerTitleProps, DrawerTitleState } from './title/DrawerTitle';
+import { DrawerTrigger } from './trigger/DrawerTrigger';
+import type { DrawerTriggerProps, DrawerTriggerState } from './trigger/DrawerTrigger';
+import DrawerViewport from './viewport/DrawerViewport.vue';
+import type { DrawerViewportProps, DrawerViewportState } from './viewport/DrawerViewport.vue';
+import DrawerVirtualKeyboardProvider from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
+import type {
+  DrawerVirtualKeyboardProviderProps,
+  DrawerVirtualKeyboardProviderState,
+} from './virtual-keyboard-provider/DrawerVirtualKeyboardProvider.vue';
 
 /**
  * An overlay displayed beneath the popup.
@@ -96,6 +109,27 @@ export namespace IndentBackground {
 }
 
 /**
+ * A container for the drawer contents.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof DrawerPopup = DrawerPopup;
+export namespace Popup {
+  export type Props = DrawerPopupProps;
+  export type State = DrawerPopupState;
+}
+
+/**
+ * A portal element that moves the popup to a different part of the DOM.
+ * By default, the portal element is appended to `<body>`.
+ * Renders a `<div>` element.
+ */
+export const Portal: typeof DrawerPortal = DrawerPortal;
+export namespace Portal {
+  export type Props = DrawerPortalProps;
+  export type State = DrawerPortalState;
+}
+
+/**
  * Provides a shared context for coordinating global Drawer UI, such as indent/background effects based on whether any Drawer is open.
  * Doesn't render its own HTML element.
  */
@@ -139,6 +173,36 @@ export const Title: typeof DrawerTitle = DrawerTitle;
 export namespace Title {
   export type Props = DrawerTitleProps;
   export type State = DrawerTitleState;
+}
+
+/**
+ * A button that opens the drawer.
+ * Renders a `<button>` element.
+ */
+export const Trigger: typeof DrawerTrigger = DrawerTrigger;
+export namespace Trigger {
+  export type Props<Payload = unknown> = DrawerTriggerProps<Payload>;
+  export type State = DrawerTriggerState;
+}
+
+/**
+ * A positioning container for the drawer popup that can be made scrollable.
+ * Renders a `<div>` element.
+ */
+export const Viewport: typeof DrawerViewport = DrawerViewport;
+export namespace Viewport {
+  export type Props = DrawerViewportProps;
+  export type State = DrawerViewportState;
+}
+
+/**
+ * Provides keyboard-aware focus and scroll handling for bottom-sheet drawers with form fields.
+ */
+export const VirtualKeyboardProvider: typeof DrawerVirtualKeyboardProvider =
+  DrawerVirtualKeyboardProvider;
+export namespace VirtualKeyboardProvider {
+  export type State = DrawerVirtualKeyboardProviderState;
+  export type Props = DrawerVirtualKeyboardProviderProps;
 }
 
 export { createDrawerHandle as createHandle, DrawerHandle as Handle } from './handle';

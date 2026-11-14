@@ -13,7 +13,7 @@ export function usePreviewCardPositionerContext(): PreviewCardPositionerContext 
   const context = inject(PreviewCardPositionerContext, undefined);
   if (context === undefined) {
     throw new Error(
-      'Vase UI: A popup or an arrow of PreviewCard must be inside <PreviewCard.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <PreviewCard.Positioner>.',
+      'Vase UI: A popup, an arrow or a viewport of PreviewCard must be inside <PreviewCard.Positioner>. Without a positioner the part has no side and no alignment. Put the part inside <PreviewCard.Positioner>.',
     );
   }
   return context;

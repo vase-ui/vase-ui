@@ -8,16 +8,18 @@
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
+      "title": "handles interactions",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/MenuTrigger.tsx",
-      "reason": "Each case of the block renders `Menu.Trigger` and the other parts of Menu, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses Enter on the trigger to open the menu, and it moves the highlight with the arrow keys. The trigger of Vase UI has no press yet, and Menu has no list navigation."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
-      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Select"],
+      "describe": ["<Toolbar.Button />", "rendering other Base UI components", "Menu"],
+      "title": "disabled state",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case \"handles interactions\" of the block opens the popup with the keyboard, moves the focus to an item with the arrow keys, and gets the focus back on the trigger. It needs the list navigation and the focus manager of Select, which Vase UI does not have. The scroll arrows are the last part of Select, so the row names their file."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses Enter and Space on a disabled trigger, and it expects that the menu stays closed. The trigger of Vase UI has no press yet, so the case cannot fail."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
@@ -30,8 +32,8 @@
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
       "describe": ["<Toolbar.Button />", "rendering other Base UI components", "AlertDialog"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/trigger/AlertDialogTrigger.tsx",
-      "reason": "Each case of the block renders `AlertDialog.Trigger` and the other parts of Alert Dialog, which Vase UI does not have."
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "Each case of the block renders `AlertDialog.Trigger` and the other parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
