@@ -90,18 +90,22 @@ function handleFocusout(event: FocusEvent) {
   }
 }
 
-const { element, elementProps } = useRenderElement('div', props, {
-  ref: createElementSetter(viewportElement),
-  props: (attrs) => [
-    {
-      id: viewportId.value,
-      onFocusout: handleFocusout,
-      inert: !inPositioner && viewportInert.value ? true : undefined,
-    },
-    attrs,
-  ],
-  children: true,
-});
+const { element, elementProps } = useRenderElement<NavigationMenuViewportState, HTMLElement>(
+  'div',
+  props,
+  {
+    ref: createElementSetter(viewportElement),
+    props: (attrs) => [
+      {
+        id: viewportId.value,
+        onFocusout: handleFocusout,
+        inert: !inPositioner && viewportInert.value ? true : undefined,
+      },
+      attrs,
+    ],
+    children: true,
+  },
+);
 
 // In a positioner, the two inside focus guards are siblings of the element. Script keeps them
 // there, so the part has one root node. With no positioner, the element holds them.

@@ -200,9 +200,9 @@ describe('<NavigationMenu.Viewport />', () => {
 
       expect(rootContext.beforeInsideRef.value).toBe(null);
       expect(rootContext.afterInsideRef.value).toBe(null);
-      expect(screen.getByTestId('popup').querySelectorAll('[data-vase-ui-focus-guard]')).toHaveLength(
-        0,
-      );
+      expect(
+        screen.getByTestId('popup').querySelectorAll('[data-vase-ui-focus-guard]'),
+      ).toHaveLength(0);
     });
   });
 
