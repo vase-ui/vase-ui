@@ -55,7 +55,8 @@ export interface FloatingFocusManagerProps {
    * reference, the element that had the focus before the floating element opened, the floating
    * element of the focus manager above, and the newest element that had the focus before an open.
    * When `openInteractionType` is `null`, the element that had the focus comes before the reference.
-   * An element that is not in the document, or that is hidden, cannot take the focus.
+   * An element that is not in the document, or that has the `hidden` attribute or an ancestor with
+   * it, cannot take the focus.
    *
    * - `false`: Do not move the focus.
    * - `true`: Move the focus based on the default behavior.
@@ -467,7 +468,7 @@ effect(
   },
 );
 
-// The return of the focus that the cleanup of the entry below queued. When that entry runs again
+// The return of the focus that the cleanup of the effect below queued. When that effect runs again
 // while the popup is open, a source changed and the cleanup was not a close.
 let pendingReturnFocus: { cancelled: boolean } | null = null;
 
@@ -558,8 +559,8 @@ effect(
 
     events.on('openchange', onOpenChangeLocal);
 
-    // This function runs in a microtask after the cleanup. Vue runs the cleanup before it removes
-    // the elements of the update, so the reference is still in the document in the cleanup.
+    // This function runs in a microtask after the cleanup. Vue can run the cleanup before it
+    // removes the reference, so the reference can still be in the document in the cleanup.
     function getReturnElement(type: InteractionType, activeEl: Element | null) {
       const value = resolveFocusOption(props.returnFocus, type);
 
@@ -766,7 +767,8 @@ effect(
   },
 );
 
-// Track the last interaction to find the type of a close that no event of the user caused.
+// The last press or key press gives the type of a close whose event has no pointer type, such as a
+// focus event or a click.
 effect(
   () => [isDisabled(), open.value, floatingFocusElement.value],
   () => {
