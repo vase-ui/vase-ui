@@ -61,7 +61,8 @@ jobs:
       fail-fast: false
       matrix:
         # Firefox runs one test file at a time, so one job for all its files takes more than half
-        # of the time limit. The files go in three shards. Keep the count after the slash the same.
+        # of the time limit. The number after the slash is the number of Firefox shards. When you
+        # add or remove a shard, change that number in each Firefox shard.
         include:
           - engine: chromium
           - engine: firefox
