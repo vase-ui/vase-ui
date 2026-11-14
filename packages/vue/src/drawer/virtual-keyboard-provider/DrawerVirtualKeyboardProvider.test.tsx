@@ -3007,7 +3007,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     });
   });
 
-  describe('render of the scroll container', () => {
+  describe('style of the scroll container', () => {
     it('keeps the keyboard scroll slack when a render writes the style of the scroll container again', async () => {
       mockWindowInnerHeight(800);
       const visualViewport = mockVisualViewport(800);
@@ -3054,6 +3054,44 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
         expect(scroll.style.paddingBottom).toBe('30px');
       });
       expect(scroll.style.overflowAnchor).toBe('');
+    });
+
+    it('restores the padding that a script wrote to the scroll container while the keyboard was open', async () => {
+      mockWindowInnerHeight(800);
+      const visualViewport = mockVisualViewport(800);
+
+      await render(
+        <KeyboardDrawer>
+          <div data-testid="scroll">
+            <div style={{ height: '900px' }} />
+            <input data-testid="input" type="text" />
+          </div>
+        </KeyboardDrawer>,
+      );
+
+      const scroll = screen.getByTestId('scroll');
+      const input = screen.getByTestId('input');
+      // Vue renders no style for this element, so no later render writes the padding again.
+      scroll.style.cssText = 'height: 420px; overflow-y: auto; padding-bottom: 20px';
+      setScrollSize(scroll, 420, 1200);
+      scroll.getBoundingClientRect = () => new DOMRect(0, 300, 320, 420);
+
+      input.focus();
+      visualViewport.resize(500);
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(scroll.style.paddingBottom).toBe('240px');
+      });
+
+      scroll.style.paddingBottom = '30px';
+      await flushMicrotasks();
+      expect(scroll.style.paddingBottom).toBe('250px');
+
+      input.blur();
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(scroll.style.paddingBottom).toBe('30px');
+      });
     });
 
     it('restores a padding of the scroll container that has a fraction of a pixel', async () => {
