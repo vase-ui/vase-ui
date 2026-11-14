@@ -244,7 +244,9 @@ Use `Menu.Viewport` only when one popup has more than one trigger, the content c
 
 :::
 
-### Filtering [Preview]
+### Filtering
+
+Filtering is a preview feature, so its API can change.
 
 Wrap `<Menu.Root>` in `<Menu.FilterProvider>`, add `<Menu.Input>` to the popup, and put the items in `<Menu.List>`.
 
@@ -292,7 +294,7 @@ By default, an item matches when its text contains the query. The match ignores 
 
 For external filtering, set `filter` to `null` and render the results yourself. Leave out the groups that have no result.
 
-<<< ./menu/ExternalFiltering.vue{7-9,13,22}
+<<< ./menu/ExternalFiltering.vue{7-9,13,21}
 
 #### Controlling the query
 

@@ -459,6 +459,12 @@
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases of the file that are not ported yet have no counterpart. Many of them press the trigger, and the trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "describe": ["<Menu.Root />", "closing before the popup attaches"],
       "title": "unmounts the popup when a layout effect closes it right after a press opens it",
       "kind": "waits-on",
@@ -879,14 +885,14 @@
       "entry": "Positioner",
       "prop": "sideOffset",
       "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `-5` for a context menu that has no `side` and has no `align` of `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `-5` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Positioner",
       "prop": "alignOffset",
       "kind": "not-applicable",
-      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `2` for a context menu that has no `side` and has no `align` of `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
+      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `2` for a context menu that has no `side` and an `align` other than `'center'`, and `0` for any other menu, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     }
   ],
   "surfaceAdditions": [
