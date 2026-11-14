@@ -19,7 +19,7 @@ import type {
 import { isTestFile, isUnderMappedRoot, matchesAny } from '../parity/paths.ts';
 import type { VaseFiles } from '../parity/paths.ts';
 import { readRepositoryFile, REPOSITORY_ROOT } from '../parity/repository.ts';
-import type { FamilyFiles } from '../parity/repository.ts';
+import type { FamilyFiles, OwnComponentFile } from '../parity/repository.ts';
 import { array, nonEmptyString, object, problemsOf } from '../parity/validate.ts';
 import { countComponents, isComponentFamily } from './components.ts';
 import { renderStatusLine } from './status.ts';
@@ -30,6 +30,8 @@ export interface ParityReport {
   upstream: { commit: string; describe: string; release: string; date: string };
   status: { done: number; total: number; notStarted: string[]; line: string };
   families: FamilyEntry[];
+  /** The components that Base UI does not have. */
+  ownComponents: OwnComponentEntry[];
   changes: Change[];
   edgeCases: EdgeCase[];
   notPorted: { what: string; reason: string }[];
@@ -59,6 +61,12 @@ export interface FamilyEntry {
   queued: { count: number; oldest?: string };
 }
 
+export interface OwnComponentEntry {
+  name: string;
+  reason: string;
+  standard: string[];
+}
+
 export interface Change {
   sha: string;
   date: string;
@@ -85,6 +93,7 @@ export interface ScopeFile {
 export interface ReportInput {
   upstream: UpstreamFile;
   families: FamilyFiles[];
+  ownComponents: OwnComponentFile[];
   better: BetterRow[];
   check: CheckResult;
   scope: ScopeFile;
@@ -285,6 +294,11 @@ export function buildParityReport(input: ReportInput): ParityReport {
     },
     status: { ...counts, line: renderStatusLine(counts) },
     families: families.map((family) => familyEntryOf(family, upstream, changes)),
+    ownComponents: input.ownComponents.map(({ name, record }) => ({
+      name,
+      reason: record.reason,
+      standard: record.standard,
+    })),
     changes,
     edgeCases: edgeCasesOf(input.better, input.files, input.rowsOf),
     notPorted: scope.notPorted.map(({ what, reason }) => ({ what, reason })),
@@ -306,6 +320,7 @@ export function loadParityReport(root = REPOSITORY_ROOT): ParityReport {
   return buildParityReport({
     upstream,
     families: parity.families,
+    ownComponents: parity.ownComponents,
     better: parity.better,
     check: result,
     scope: readScope(root),
