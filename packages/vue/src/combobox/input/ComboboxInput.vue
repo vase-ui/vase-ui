@@ -177,10 +177,16 @@ function setInputElement(element: HTMLElement | null) {
   }
   store.update({
     inputElement: input,
-    inputInsidePopup: nextIsInsidePopup,
     inputOwnsFormValue: state.selectionMode === 'none' && !hasPositionerParent,
   });
 }
+
+// Vue calls a function ref while it hydrates the input, before it hydrates the parts after the
+// input. Hydration does not patch an attribute. A write in the ref thus leaves the server
+// attributes on a part after the input that reads the key, such as the trigger.
+onMounted(() => {
+  store.update({ inputInsidePopup: isInsidePopup.value });
+});
 
 let ownDismissButton: HTMLSpanElement | null = null;
 function setStartDismissButton(value: unknown) {

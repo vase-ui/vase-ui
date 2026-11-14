@@ -20,8 +20,10 @@ import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplac
 import { REASONS } from '../../internals/reasons';
 import type { ComboboxStore } from '../store';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
+import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
 
 const HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputHydration.test.vue';
+const TRIGGER_HYDRATION_FIXTURE = 'src/combobox/input/ComboboxInputTriggerHydration.test.vue';
 
 type RenderSlotProps = { props: Record<string, unknown> };
 
@@ -1570,6 +1572,17 @@ describe('<Combobox.Input />', () => {
       expect(input).toHaveAttribute('aria-labelledby', serverId('label'));
       expect(input).toHaveAttribute('aria-describedby', serverId('description'));
       expect(input).toHaveValue('ma');
+    });
+
+    it('hydrates the trigger beside the input as a button with no role', async () => {
+      const serverHtml = await renderOnServer(TRIGGER_HYDRATION_FIXTURE);
+
+      const { container } = await hydrate(ComboboxInputTriggerHydration, { serverHtml });
+
+      const trigger = within(container).getByTestId('trigger');
+      expect(trigger).toHaveAttribute('tabindex', '-1');
+      expect(trigger).not.toHaveAttribute('role');
+      expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
     });
 
     it('the dismiss button closes with the reason close-press', async () => {
