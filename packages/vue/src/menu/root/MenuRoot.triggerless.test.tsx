@@ -45,6 +45,7 @@ describe('<Menu.Root /> without a trigger', () => {
   async function focusItem(name: string) {
     const item = await screen.findByRole('menuitem', { name });
     item.focus();
+    await flushMicrotasks();
     return item;
   }
 

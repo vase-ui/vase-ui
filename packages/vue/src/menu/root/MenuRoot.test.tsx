@@ -405,6 +405,7 @@ describe('<Menu.Root />', () => {
       );
 
       screen.getByTestId('trigger').focus();
+      await flushMicrotasks();
       await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
@@ -449,6 +450,7 @@ describe('<Menu.Root />', () => {
           const items = screen.getAllByRole('menuitem');
 
           items[0].focus();
+          await flushMicrotasks();
 
           await user.keyboard('c');
           await waitFor(() => {
@@ -487,6 +489,7 @@ describe('<Menu.Root />', () => {
           const bananaItem = screen.getByTestId('item-banana');
 
           bananaItem.focus();
+          await flushMicrotasks();
 
           await user.keyboard('a');
           await waitFor(() => {
@@ -525,6 +528,7 @@ describe('<Menu.Root />', () => {
           const blueberryItem = screen.getByTestId('item-blueberry');
 
           appleItem.focus();
+          await flushMicrotasks();
 
           await user.keyboard('b');
           await waitFor(() => {
@@ -555,6 +559,7 @@ describe('<Menu.Root />', () => {
           const items = screen.getAllByRole('menuitem');
 
           items[0].focus();
+          await flushMicrotasks();
 
           await user.keyboard('b');
           await waitFor(() => {
@@ -584,6 +589,7 @@ describe('<Menu.Root />', () => {
           const items = screen.getAllByRole('menuitem');
 
           items[0].focus();
+          await flushMicrotasks();
 
           await user.keyboard('b');
           await waitFor(() => {
@@ -615,6 +621,7 @@ describe('<Menu.Root />', () => {
             const items = screen.getAllByRole('menuitem');
 
             items[0].focus();
+            await flushMicrotasks();
 
             await user.keyboard('ą');
             await waitFor(() => {
@@ -648,6 +655,7 @@ describe('<Menu.Root />', () => {
             const items = screen.getAllByRole('menuitem');
 
             items[0].focus();
+            await flushMicrotasks();
 
             await user.keyboard('Item T');
 
@@ -687,6 +695,7 @@ describe('<Menu.Root />', () => {
             const submenuTrigger = screen.getByTestId('submenu-trigger');
 
             submenuTrigger.focus();
+            await flushMicrotasks();
 
             await user.keyboard('Add to p');
 
@@ -708,6 +717,7 @@ describe('<Menu.Root />', () => {
           const submenuTrigger = screen.getByTestId('submenu-trigger');
 
           submenuTrigger.focus();
+          await flushMicrotasks();
 
           await user.keyboard('[Space]');
           expect(screen.queryByTestId('submenu')).not.toBe(null);
@@ -735,6 +745,7 @@ describe('<Menu.Root />', () => {
             const item2 = screen.getByTestId('item-2');
 
             item1.focus();
+            await flushMicrotasks();
 
             await user.keyboard('Item 2');
             expect(item2).toHaveFocus();
@@ -774,6 +785,7 @@ describe('<Menu.Root />', () => {
             const submenuTrigger = screen.getByTestId('submenu-trigger');
 
             item1.focus();
+            await flushMicrotasks();
 
             await user.keyboard('Item 2');
             expect(submenuTrigger).toHaveFocus();

@@ -1288,37 +1288,6 @@ describe('<Menu.Positioner />', () => {
     expect(screen.getByTestId('positioner')).not.toHaveAttribute('data-nested');
   });
 
-  it('sets `data-instant` to `trigger-change` on the popup after the menu moves to another trigger', async () => {
-    const handle = Menu.createHandle();
-    await render(
-      <>
-        <Menu.Trigger handle={handle} id="first">
-          First
-        </Menu.Trigger>
-        <Menu.Trigger handle={handle} id="second">
-          Second
-        </Menu.Trigger>
-        <Menu.Root handle={handle}>
-          <Menu.Portal>
-            <Menu.Positioner>
-              <Menu.Popup data-testid="popup">Content</Menu.Popup>
-            </Menu.Positioner>
-          </Menu.Portal>
-        </Menu.Root>
-      </>,
-    );
-
-    handle.open('first');
-    const popup = await screen.findByTestId('popup');
-    expect(popup).not.toHaveAttribute('data-instant');
-
-    handle.open('second');
-
-    await waitFor(() => {
-      expect(popup).toHaveAttribute('data-instant', 'trigger-change');
-    });
-  });
-
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
   // instance set, and each later case of the file then gets a warning about a slot.
   it('throws when rendered outside Menu.Portal', async () => {

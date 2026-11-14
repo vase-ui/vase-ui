@@ -479,7 +479,7 @@
       ],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet. The case also renders `StoreInspector`, a React development panel that Vase UI does not port, so the ported case leaves it out."
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet. The case also renders `StoreInspector`, a React development panel that Vase UI does not port. The port of the case leaves the panel out."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",

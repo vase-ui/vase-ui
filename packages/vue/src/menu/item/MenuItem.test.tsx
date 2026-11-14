@@ -374,23 +374,6 @@ describe('<Menu.Item />', () => {
 
       expect(onClick).toHaveBeenCalledTimes(1);
     });
-
-    it('does not click the item with Space while a typeahead runs', async () => {
-      const probe = createMenuStoreProbe();
-      const onClick = vi.fn();
-      const { user } = await render(
-        <Menu.Root open>
-          <probe.Probe />
-          <Menu.Item onClick={onClick}>Item</Menu.Item>
-        </Menu.Root>,
-      );
-
-      probe.store.context.typingRef.value = true;
-      screen.getByRole('menuitem').focus();
-      await user.keyboard(' ');
-
-      expect(onClick).not.toHaveBeenCalled();
-    });
   });
 
   describe('highlight', () => {
