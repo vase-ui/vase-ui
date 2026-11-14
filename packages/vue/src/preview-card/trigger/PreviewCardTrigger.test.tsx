@@ -8,6 +8,8 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  wait,
+  waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 import * as PreviewCard from '../index.parts';
@@ -23,10 +25,6 @@ describe('<PreviewCard.Trigger />', () => {
     },
   }));
 
-  // The real pointer of the browser can rest on the link. A dispatched event then still reaches
-  // the link, and the real pointer sends no event of its own.
-  const noRealPointer = { pointerEvents: 'none' } as const;
-
   async function enter(link: HTMLElement, pointerType = 'mouse') {
     await fireEvent.pointerEnter(link, { pointerType });
     await fireEvent.mouseEnter(link);
@@ -36,7 +34,7 @@ describe('<PreviewCard.Trigger />', () => {
     const onOpenChange = vi.fn();
     await render(
       <PreviewCard.Root onOpenChange={onOpenChange}>
-        <PreviewCard.Trigger href="#preview" style={noRealPointer} {...triggerProps}>
+        <PreviewCard.Trigger href="#preview" {...triggerProps}>
           Link
         </PreviewCard.Trigger>
       </PreviewCard.Root>,
@@ -203,13 +201,45 @@ describe('<PreviewCard.Trigger />', () => {
     });
   });
 
+  describe('focus', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each([
+      { name: 'the default delay', props: {}, delay: OPEN_DELAY },
+      { name: 'the `delay` prop', props: { delay: 100 }, delay: 100 },
+    ])('opens after $name when the link gets the focus', async ({ props, delay }) => {
+      const { link, onOpenChange } = await renderCard(props);
+
+      link.focus();
+      await flushMicrotasks();
+      vi.advanceTimersByTime(delay - 1);
+      await flushMicrotasks();
+      expect(link).not.toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(1);
+      await flushMicrotasks();
+      expect(link).toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        true,
+        expect.objectContaining({ reason: REASONS.triggerFocus, trigger: link }),
+      );
+    });
+  });
+
   it('closes a card that the pointer opened when `KeepAlive` deactivates the link', async () => {
     const onOpenChange = vi.fn();
     const visible = shallowRef(true);
     const Page = defineComponent({
       setup: () => () => (
         <PreviewCard.Root onOpenChange={onOpenChange}>
-          <PreviewCard.Trigger href="#preview" delay={0} style={noRealPointer}>
+          <PreviewCard.Trigger href="#preview" delay={0}>
             Link
           </PreviewCard.Trigger>
         </PreviewCard.Root>
@@ -232,6 +262,43 @@ describe('<PreviewCard.Trigger />', () => {
     visible.value = true;
     await flushMicrotasks();
     expect(link).not.toHaveAttribute('data-popup-open');
+  });
+
+  it('stays closed when focus returns to the trigger after leaving the window, once the card has unmounted', async () => {
+    const { user } = await render(
+      <PreviewCard.Root>
+        <PreviewCard.Trigger href="#" delay={0}>
+          Trigger
+        </PreviewCard.Trigger>
+        <PreviewCard.Portal>
+          <PreviewCard.Positioner>
+            <PreviewCard.Popup data-testid="popup">Content</PreviewCard.Popup>
+          </PreviewCard.Positioner>
+        </PreviewCard.Portal>
+      </PreviewCard.Root>,
+    );
+    const trigger = screen.getByRole('link', { name: 'Trigger' });
+
+    await user.keyboard('[Tab]');
+    expect(trigger).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).not.toBe(null);
+    });
+
+    await user.keyboard('[Escape]');
+    await waitFor(() => {
+      expect(screen.queryByTestId('popup')).toBe(null);
+    });
+
+    // Leaving the window blurs the trigger, then the window, while the trigger stays the active
+    // element; coming back focuses the window, then the trigger.
+    await fireEvent.focusOut(trigger);
+    await fireEvent.blur(window);
+    await fireEvent.focus(window);
+    await fireEvent.focusIn(trigger);
+    await wait(50);
+
+    expect(screen.queryByTestId('popup')).toBe(null);
   });
 
   it('gives the link an id, and no ARIA attribute, role or tabindex', async () => {
