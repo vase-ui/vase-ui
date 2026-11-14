@@ -450,28 +450,28 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
 
           expect(getHighlightedIndex()).toBe(9);
 
-          const underPointer = getItemAt(pointerX, pointerY);
-          const underPointerIndex = ITEMS.indexOf(underPointer.textContent ?? '');
-          expect(underPointerIndex).not.toBe(9);
+          const itemUnderPointer = getItemAt(pointerX, pointerY);
+          const itemUnderPointerIndex = ITEMS.indexOf(itemUnderPointer.textContent ?? '');
+          expect(itemUnderPointerIndex).not.toBe(9);
 
           if (platform.engine.webkit) {
             // WebKit sends a `pointermove` and a `mousemove` with no movement to the item under
-            // the pointer, some frames after the scroll. An assertion that follows the scroll at
-            // once runs before them, so it passes when the list does not ignore them. The case
-            // sends them itself.
-            await fireEvent.pointerMove(underPointer, { pointerType: 'mouse' });
-            await fireEvent.mouseMove(underPointer);
+            // the pointer, some frames after the scroll. The assertion above runs before them, so
+            // it passes when the list does not ignore them. The case sends them itself, so that
+            // the time at which WebKit sends them does not decide the result.
+            await fireEvent.pointerMove(itemUnderPointer, { pointerType: 'mouse' });
+            await fireEvent.mouseMove(itemUnderPointer);
             await settle();
 
             expect(getHighlightedIndex()).toBe(9);
           }
 
-          // A move with movement is the user pointing, and the highlight follows it. In WebKit,
-          // this shows that the list ignored the moves above for their lack of movement.
-          await fireEvent.mouseMove(underPointer, { movementX: 1 });
+          // A move with movement comes from the user, and the highlight follows it. In WebKit,
+          // this shows that the list ignored the moves above because they had no movement.
+          await fireEvent.mouseMove(itemUnderPointer, { movementX: 1 });
 
           await waitFor(() => {
-            expect(getHighlightedIndex()).toBe(underPointerIndex);
+            expect(getHighlightedIndex()).toBe(itemUnderPointerIndex);
           });
         },
       );
