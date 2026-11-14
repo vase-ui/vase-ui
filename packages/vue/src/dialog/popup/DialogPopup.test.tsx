@@ -5,12 +5,12 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isInaccessible,
   popupFocusPropsTests,
   screen,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import { isInaccessible } from '@testing-library/dom';
 import * as Dialog from '../index.parts';
 
 describe('<Dialog.Popup />', () => {

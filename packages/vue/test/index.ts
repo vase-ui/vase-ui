@@ -12,11 +12,14 @@ export {
 } from './pointer';
 export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
+export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
+export { popupConformanceTests } from './popupConformanceTests';
 export { popupFocusPropsTests } from './popupFocusPropsTests';
-export { screen, waitFor, within } from '@testing-library/dom';
+export { positionerConformanceTests } from './positionerConformanceTests';
+export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
 export { cloneElement } from './cloneElement';
