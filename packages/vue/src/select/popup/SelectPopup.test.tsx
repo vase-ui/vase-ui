@@ -1,10 +1,11 @@
 import { afterEach, expect, describe, it, onTestFinished, vi } from 'vitest';
 import { createSSRApp, defineComponent, h, KeepAlive, shallowRef } from 'vue';
-import type { Component, CSSProperties } from 'vue';
+import type { CSSProperties } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import { Select } from '@vase-ui/vue/select';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import { actOnElement } from '../../../test/fixtures/actOnElement';
 import { platform } from '../../common/platform';
-import * as Select from '../index.parts';
 import {
   createRenderer,
   describeConformance,
@@ -20,40 +21,6 @@ import {
 import SelectPopupHydration from './SelectPopupHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
-
-interface RenderArguments {
-  props: Record<string, any>;
-  children?: Component;
-}
-
-/**
- * Gives a part a `#render` slot whose element gets the `ref` of the part and then `act`, one time.
- * `children` renders the content of the element.
- */
-function actOnElement(
-  tag: string,
-  act: (element: HTMLElement) => void,
-  children?: (args: RenderArguments) => unknown,
-) {
-  let acted = false;
-  return {
-    render: (args: RenderArguments) =>
-      h(
-        tag,
-        {
-          ...args.props,
-          ref: (element: unknown) => {
-            args.props.ref(element);
-            if (element && !acted) {
-              acted = true;
-              act(element as HTMLElement);
-            }
-          },
-        },
-        children?.(args) as any,
-      ),
-  };
-}
 
 describe('<Select.Popup />', () => {
   const { render } = createRenderer();
@@ -1131,6 +1098,54 @@ describe('<Select.Popup />', () => {
       }
     },
   );
+
+  it('does not resize the positioner when the list scrolls before the popup is placed', async () => {
+    await render(
+      <Select.Root defaultValue="a">
+        <Select.Trigger data-testid="trigger">
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Positioner data-testid="positioner">
+          <Select.Popup>
+            <Select.ScrollUpArrow keepMounted data-testid="up-arrow" />
+            <Select.List
+              data-testid="list"
+              v-slots={actOnElement(
+                'div',
+                (node) => {
+                  Object.defineProperty(node, 'scrollTop', { value: 100, configurable: true });
+                  Object.defineProperty(node, 'scrollHeight', { value: 400, configurable: true });
+                  Object.defineProperty(node, 'clientHeight', { value: 200, configurable: true });
+                },
+                () => [
+                  <Select.Item value="a">a</Select.Item>,
+                  <Select.Item value="b">b</Select.Item>,
+                ],
+              )}
+            />
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Root>,
+    );
+
+    const positioner = screen.getByTestId('positioner');
+    const geometryBefore = {
+      height: positioner.style.height,
+      top: positioner.style.top,
+      bottom: positioner.style.bottom,
+    };
+
+    // A closed popup has never been measured, so a stray scroll must neither rewrite the
+    // positioner geometry nor light up the scroll arrows.
+    await fireEvent.scroll(screen.getByTestId('list'));
+
+    expect({
+      height: positioner.style.height,
+      top: positioner.style.top,
+      bottom: positioner.style.bottom,
+    }).toEqual(geometryBefore);
+    expect(screen.getByTestId('up-arrow')).not.toHaveAttribute('data-visible');
+  });
 
   describe.skipIf(isJSDOM)('aligned popup scroll resizing', () => {
     const docEl = document.documentElement;
