@@ -11,7 +11,7 @@
       "title": "handles interactions",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses Enter on the trigger to open the menu, and it moves the highlight with the arrow keys. The trigger of Vase UI has no press yet, and Menu has no list navigation."
+      "reason": "The case presses Enter on the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/toolbar/button/ToolbarButton.test.tsx",
