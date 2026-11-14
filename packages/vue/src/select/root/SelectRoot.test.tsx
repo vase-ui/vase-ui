@@ -122,7 +122,12 @@ describe('<Select.Root />', () => {
     });
 
     it('finishes closing when a layout effect closes it right after a press opens it', async () => {
-      const onOpenChangeComplete = vi.fn();
+      const closed = Promise.withResolvers<void>();
+      const onOpenChangeComplete = vi.fn((open: boolean) => {
+        if (!open) {
+          closed.resolve();
+        }
+      });
 
       const App = defineComponent(() => {
         const open = shallowRef(false);
@@ -158,9 +163,10 @@ describe('<Select.Root />', () => {
       const { user } = await render(<App />);
       await user.click(screen.getByTestId('trigger'));
 
-      await waitFor(() => {
-        expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
-      });
+      // The trigger opens the select in the frame after the press. A busy machine can hold that
+      // frame for more than the limit of `waitFor`, so the case waits for the event.
+      await closed.promise;
+      expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       // The press mounts the list while closed so its items can register; it isn't left closing.
       expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
         'data-ending-style',
@@ -169,17 +175,24 @@ describe('<Select.Root />', () => {
   });
 
   describe('VUE-72: a select with no popup', () => {
-    function createCompletions() {
+    function createListeners() {
       const opened = Promise.withResolvers<void>();
-      const closed = Promise.withResolvers<void>();
+      const openCompleted = Promise.withResolvers<void>();
+      const closeCompleted = Promise.withResolvers<void>();
       return {
         opened: opened.promise,
-        closed: closed.promise,
-        onOpenChangeComplete(open: boolean) {
+        openCompleted: openCompleted.promise,
+        closeCompleted: closeCompleted.promise,
+        onOpenChange(open: boolean) {
           if (open) {
             opened.resolve();
+          }
+        },
+        onOpenChangeComplete(open: boolean) {
+          if (open) {
+            openCompleted.resolve();
           } else {
-            closed.resolve();
+            closeCompleted.resolve();
           }
         },
       };
@@ -193,11 +206,14 @@ describe('<Select.Root />', () => {
       `;
     }
 
-    function renderWithoutPopup(onOpenChangeComplete: (open: boolean) => void, style = '') {
+    function renderWithoutPopup(listeners: ReturnType<typeof createListeners>, style = '') {
       return render(
         <div>
           <style>{style}</style>
-          <Select.Root onOpenChangeComplete={onOpenChangeComplete}>
+          <Select.Root
+            onOpenChange={listeners.onOpenChange}
+            onOpenChangeComplete={listeners.onOpenChangeComplete}
+          >
             <Select.Trigger data-testid="trigger">
               <Select.Value />
             </Select.Trigger>
@@ -209,35 +225,42 @@ describe('<Select.Root />', () => {
       );
     }
 
+    // The trigger opens the select in the frame after the press, and a busy machine can hold that
+    // frame for more than the limit of `waitFor`. The `openChange` event has no limit.
+    async function openWithClick(
+      user: Awaited<ReturnType<typeof renderWithoutPopup>>['user'],
+      opened: Promise<void>,
+    ) {
+      await user.click(screen.getByTestId('trigger'));
+      await opened;
+      await flushMicrotasks();
+    }
+
     it('hides the positioner and completes the close', async () => {
-      const completions = createCompletions();
-      const { user } = await renderWithoutPopup(completions.onOpenChangeComplete);
+      const listeners = createListeners();
+      const { user } = await renderWithoutPopup(listeners);
       const positioner = screen.getByTestId('positioner');
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-open');
-      });
+      await openWithClick(user, listeners.opened);
+      expect(positioner).toHaveAttribute('data-open');
 
       await user.keyboard('{Escape}');
-      await completions.closed;
+      await listeners.closeCompleted;
 
       expect(positioner).toHaveAttribute('hidden');
     });
 
     it('waits for the exit animation of the positioner', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const completions = createCompletions();
+      const listeners = createListeners();
       const { user } = await renderWithoutPopup(
-        completions.onOpenChangeComplete,
+        listeners,
         createExitStyle('.positioner[data-closed]'),
       );
       const positioner = screen.getByTestId('positioner');
 
-      await user.click(screen.getByTestId('trigger'));
-      await waitFor(() => {
-        expect(positioner).toHaveAttribute('data-open');
-      });
+      await openWithClick(user, listeners.opened);
+      expect(positioner).toHaveAttribute('data-open');
 
       const animations = await nextAnimationsRead(positioner, {
         action: () => user.keyboard('{Escape}'),
@@ -249,18 +272,18 @@ describe('<Select.Root />', () => {
       animations.forEach((animation) => {
         animation.finish();
       });
-      await completions.closed;
+      await listeners.closeCompleted;
 
       expect(positioner).toHaveAttribute('hidden');
     });
 
     it('waits for the exit animation of the popup when a popup renders', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-      const completions = createCompletions();
+      const listeners = createListeners();
       const { user } = await render(
         <div>
           <style>{createExitStyle('.popup[data-ending-style]')}</style>
-          <Select.Root onOpenChangeComplete={completions.onOpenChangeComplete}>
+          <Select.Root onOpenChangeComplete={listeners.onOpenChangeComplete}>
             <Select.Trigger data-testid="trigger">
               <Select.Value />
             </Select.Trigger>
@@ -277,7 +300,7 @@ describe('<Select.Root />', () => {
 
       await user.click(screen.getByTestId('trigger'));
       // The popup reads its animations after the open. That read must not be the read of the close.
-      await completions.opened;
+      await listeners.openCompleted;
 
       const animations = await nextAnimationsRead(popup, {
         action: () => user.keyboard('{Escape}'),
@@ -289,7 +312,7 @@ describe('<Select.Root />', () => {
       animations.forEach((animation) => {
         animation.finish();
       });
-      await completions.closed;
+      await listeners.closeCompleted;
 
       expect(positioner).toHaveAttribute('hidden');
     });
@@ -3746,6 +3769,7 @@ describe('<Select.Root />', () => {
   });
 
   it('resets selected index when value is set to null without a null item', async () => {
+    const onOpenChangeComplete = vi.fn();
     const App = defineComponent(() => {
       const value = shallowRef<string | null>(null);
       return () => (
@@ -3779,6 +3803,7 @@ describe('<Select.Root />', () => {
             onValueChange={(newValue: string | null) => {
               value.value = newValue;
             }}
+            onOpenChangeComplete={onOpenChangeComplete}
           >
             <Select.Trigger data-testid="trigger">
               <Select.Value
@@ -3812,10 +3837,17 @@ describe('<Select.Root />', () => {
     await user.click(screen.getByRole('button', { name: 'null' }));
     expect(screen.getByTestId('value')).toHaveTextContent('initial');
 
-    await user.click(screen.getByTestId('trigger'));
-    await waitFor(() => {
-      expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
+    // The trigger opens the select in the frame after the press. A busy machine can hold that
+    // frame for more than the limit of `waitFor`, so the case waits for the event.
+    const opened = Promise.withResolvers<void>();
+    onOpenChangeComplete.mockImplementation((open: boolean) => {
+      if (open) {
+        opened.resolve();
+      }
     });
+    await user.click(screen.getByTestId('trigger'));
+    await opened.promise;
+    expect(screen.queryByRole('option', { name: '2' })).not.toHaveAttribute('data-selected', '');
   });
 
   it('does not force-mount the popup on a programmatic value change', async () => {
