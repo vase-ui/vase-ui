@@ -8,6 +8,7 @@ import { Form } from '@vase-ui/vue/form';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
+import { Slider } from '@vase-ui/vue/slider';
 import { Switch } from '@vase-ui/vue/switch';
 import {
   createRenderer,
@@ -373,6 +374,56 @@ describe('<Field.Root />', () => {
       );
     },
   );
+
+  it('preserves label association without looping when a control is unmounted and remounted', async () => {
+    const showSelect = shallowRef(true);
+
+    await render(() => (
+      <>
+        <Field.Root>
+          <Field.Label data-testid="label">Label</Field.Label>
+          <KeepAlive>
+            {showSelect.value ? (
+              <Select.Root key="select" id="select">
+                <Select.Trigger data-testid="trigger">
+                  <Select.Value placeholder="Select a model" />
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Positioner>
+                    <Select.Popup>
+                      <Select.Item value="model">Model</Select.Item>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
+            ) : null}
+          </KeepAlive>
+        </Field.Root>
+        <Checkbox.Root
+          checked={!showSelect.value}
+          onCheckedChange={(checked: boolean) => {
+            showSelect.value = !checked;
+          }}
+        />
+      </>
+    ));
+
+    const checkbox = screen.getByRole('checkbox');
+    const label = screen.getByTestId('label');
+    const trigger = screen.getByTestId('trigger');
+
+    expect(label).toHaveAttribute('for', trigger.id);
+
+    await fireEvent.click(checkbox);
+
+    // `KeepAlive` takes the trigger out of the document and keeps its DOM.
+    expect(trigger.isConnected).toBe(false);
+    expect(label).toHaveAttribute('for', trigger.id);
+
+    await fireEvent.click(checkbox);
+
+    expect(label).toHaveAttribute('for', screen.getByTestId('trigger').id);
+  });
 
   it('preserves a non-native label association when a control is unmounted and remounted', async () => {
     const showSelect = shallowRef(true);
@@ -903,6 +954,93 @@ describe('<Field.Root />', () => {
       expect(control).toHaveAttribute('aria-invalid', 'true');
     });
 
+    it('receives all form values as the 2nd argument', async () => {
+      const validateSpy = vi.fn();
+      const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+
+      await render(
+        <Form onSubmit={onSubmit}>
+          <Field.Root name="checkbox">
+            <Checkbox.Root defaultChecked />
+          </Field.Root>
+
+          <Field.Root name="checkbox-group">
+            <CheckboxGroup defaultValue={['apple', 'banana']}>
+              <Field.Item>
+                <Checkbox.Root value="apple" />
+              </Field.Item>
+              <Field.Item>
+                <Checkbox.Root value="banana" />
+              </Field.Item>
+            </CheckboxGroup>
+          </Field.Root>
+
+          <Field.Root name="input" validate={validateSpy}>
+            <Field.Control data-testid="input" type="url" defaultValue="https://base-ui.com" />
+          </Field.Root>
+
+          <Field.Root name="number-field">
+            <NumberField.Root defaultValue={13}>
+              <NumberField.Input />
+            </NumberField.Root>
+          </Field.Root>
+
+          <Field.Root name="radio-group">
+            <RadioGroup defaultValue="cats">
+              <Radio.Root value="cats" />
+            </RadioGroup>
+          </Field.Root>
+
+          <Field.Root name="select">
+            <Select.Root defaultValue="sans">
+              <Select.Trigger />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="sans" />
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Field.Root>
+
+          <Field.Root name="slider">
+            <Slider.Root defaultValue={12}>
+              <Slider.Control />
+            </Slider.Root>
+          </Field.Root>
+
+          <Field.Root name="range-slider">
+            <Slider.Root defaultValue={[25, 70]}>
+              <Slider.Control />
+            </Slider.Root>
+          </Field.Root>
+
+          <Field.Root name="switch">
+            <Switch.Root defaultChecked={false} />
+          </Field.Root>
+
+          <button type="submit">submit</button>
+        </Form>,
+      );
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(validateSpy.mock.calls.length).toBe(1);
+      expect(validateSpy.mock.calls[0][1]).toEqual({
+        checkbox: true,
+        'checkbox-group': ['apple', 'banana'],
+        input: 'https://base-ui.com',
+        'number-field': 13,
+        'radio-group': 'cats',
+        select: 'sans',
+        slider: 12,
+        'range-slider': [25, 70],
+        switch: false,
+      });
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
     it('unmounted fields are excluded from the validate fn', async () => {
       const validateSpy = vi.fn();
       const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
@@ -949,6 +1087,59 @@ describe('<Field.Root />', () => {
         input2: 'two',
       });
       expect(onSubmit).toHaveBeenCalledTimes(2);
+    });
+
+    it('submits the replacement control value when swapping field-aware controls', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const showSlider = shallowRef(false);
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name="value">
+              {showSlider.value ? (
+                <Slider.Root defaultValue={12}>
+                  <Slider.Control />
+                </Slider.Root>
+              ) : (
+                <Select.Root defaultValue="sans">
+                  <Select.Trigger />
+                  <Select.Portal>
+                    <Select.Positioner>
+                      <Select.Popup>
+                        <Select.Item value="sans" />
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
+              )}
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                showSlider.value = true;
+              }}
+            >
+              Toggle
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ value: 'sans' });
+
+      await fireEvent.click(screen.getByText('Toggle'));
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(2);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ value: 12 });
     });
 
     it('excludes registration-gated controls from onFormSubmit when their field name is removed', async () => {
@@ -2462,6 +2653,63 @@ describe('<Field.Root />', () => {
         expect(root).toHaveAttribute('data-dirty', '');
 
         await fireEvent.input(control, { target: { value: '' } });
+        expect(root).not.toHaveAttribute('data-dirty');
+      });
+
+      it('should clear [data-dirty] when a Select returns to its null initial value', async () => {
+        const App = defineComponent(() => {
+          const value = shallowRef<string | null>(null);
+          return () => (
+            <div>
+              <Field.Root data-testid="root">
+                <Select.Root
+                  value={value.value}
+                  onValueChange={(next: string | null) => {
+                    value.value = next;
+                  }}
+                >
+                  <Select.Trigger />
+                  <Select.Portal>
+                    <Select.Positioner>
+                      <Select.Popup>
+                        <Select.Item value="a" />
+                      </Select.Popup>
+                    </Select.Positioner>
+                  </Select.Portal>
+                </Select.Root>
+              </Field.Root>
+              <button
+                type="button"
+                onClick={() => {
+                  value.value = 'a';
+                }}
+              >
+                set
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  value.value = null;
+                }}
+              >
+                clear
+              </button>
+            </div>
+          );
+        });
+
+        await render(<App />);
+        const root = screen.getByTestId('root');
+
+        expect(root).not.toHaveAttribute('data-dirty');
+
+        await fireEvent.click(screen.getByText('set'));
+        await waitFor(() => {
+          expect(root).toHaveAttribute('data-dirty', '');
+        });
+
+        await fireEvent.click(screen.getByText('clear'));
+        await flushMicrotasks();
         expect(root).not.toHaveAttribute('data-dirty');
       });
 
