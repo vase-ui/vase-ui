@@ -120,9 +120,11 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.click(trigger);
 
       const rename = await screen.findByRole('menuitem', { name: 'Rename' });
+      // The item that does not match is absent from the start, so the wait is for the one match.
       await waitFor(() => {
         expect(screen.getAllByRole('menuitem')).toHaveLength(1);
       });
+      expect(screen.queryByRole('menuitem', { name: 'Copy' })).toBe(null);
       // A non-matching item renders once so its text can be read; a match is never remounted.
       expect(nodes.Copy.size).toBe(1);
       expect(nodes.Rename.size).toBe(1);

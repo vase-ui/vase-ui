@@ -77,7 +77,12 @@ describe.each([false, true])('submenu pointer focus with filteredParent=%s', (fi
       await press(screen.getByRole('menuitem', { name: 'More' }), pointerType);
       const input = await screen.findByRole('searchbox', { name: 'Filter more actions' });
       await waitSingleFrame();
-      await waitFor(() => expect(input.matches(':focus')).toBe(pointerType === 'mouse'));
+      // Only a mouse press moves the focus, so a touch or pen press asserts the absence directly.
+      if (pointerType === 'mouse') {
+        await waitFor(() => expect(input.matches(':focus')).toBe(true));
+      } else {
+        expect(input.matches(':focus')).toBe(false);
+      }
     },
   );
 

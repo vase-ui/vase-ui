@@ -468,7 +468,10 @@ describe('<Menu.Popup />', () => {
       );
 
       const popup = screen.getByRole('menu', { name: 'Actions' });
-      expect(popup).toHaveAttribute('aria-labelledby', screen.getByRole('button').id);
+      expect(popup).toHaveAttribute(
+        'aria-labelledby',
+        screen.getByRole('button', { name: 'Actions' }).id,
+      );
       expect(popup).not.toHaveAttribute('aria-orientation');
     });
 
@@ -570,7 +573,7 @@ describe('<Menu.Popup />', () => {
       ));
 
       const popup = screen.getByRole('menu');
-      const trigger = screen.getByRole('button');
+      const trigger = screen.getByRole('button', { name: 'Actions' });
       expect(popup.id).toBe('custom-popup');
       expect(probe.store.select('popupId')).toBe('custom-popup');
       expect(trigger).toHaveAttribute('aria-controls', 'custom-popup');
