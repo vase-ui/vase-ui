@@ -99,13 +99,15 @@ describe('getSegmentLayout', () => {
   });
 
   it('maps the parts that Intl gives, and joins the literals that follow each other', () => {
+    // `Intl` has the parts `relatedYear` and `yearName` for a Chinese year, and TypeScript has not.
+    const part = (type: string, value: string) => ({ type, value }) as Intl.DateTimeFormatPart;
     vi.spyOn(Intl.DateTimeFormat.prototype, 'formatToParts').mockReturnValue([
-      { type: 'relatedYear', value: '2026' },
-      { type: 'yearName', value: 'bing-wu' },
-      { type: 'literal', value: '/' },
-      { type: 'literal', value: ' ' },
-      { type: 'weekday', value: 'Sat' },
-      { type: 'month', value: '11' },
+      part('relatedYear', '2026'),
+      part('yearName', 'bing-wu'),
+      part('literal', '/'),
+      part('literal', ' '),
+      part('weekday', 'Sat'),
+      part('month', '11'),
     ]);
     expect(getSegmentLayout('en-US', DATE_TIME).segments).toEqual([
       { type: 'year', text: '' },

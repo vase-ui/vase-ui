@@ -25,6 +25,7 @@ import {
   removeLastDigit,
   typeDigit,
 } from './segmentRanges';
+import type { DayPeriod } from './segmentRanges';
 
 export type EditableDateTimeFieldSegment = Extract<DateTimeFieldSegment, { editable: true }>;
 
@@ -128,9 +129,10 @@ export function useDateTimeFieldSegment(
         context.setNumber(segmentType, number, details);
       }
     } else {
-      const dayPeriod = [...text]
-        .map((character) => dayPeriodOfLetter(character, context.dayPeriodTexts.value))
-        .find((period) => period !== undefined);
+      let dayPeriod: DayPeriod | undefined;
+      for (const character of text) {
+        dayPeriod ??= dayPeriodOfLetter(character, context.dayPeriodTexts.value);
+      }
       if (dayPeriod !== undefined) {
         context.setDayPeriod(dayPeriod, details);
         isFull = true;

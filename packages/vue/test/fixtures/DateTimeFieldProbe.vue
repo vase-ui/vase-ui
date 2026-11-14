@@ -189,7 +189,7 @@ const inputProps = computed(() => ({
 function literalProps(segment: Extract<DateTimeFieldSegment, { editable: false }>) {
   return {
     'data-type': segment.type,
-    'aria-hidden': segment.type === 'literal' ? 'true' : undefined,
+    'aria-hidden': segment.type === 'literal' ? true : undefined,
     'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
   };
 }

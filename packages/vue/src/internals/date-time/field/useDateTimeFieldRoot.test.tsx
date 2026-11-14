@@ -11,12 +11,14 @@ import {
   hydrate,
   renderOnServer,
   screen,
+  takeReportedMessages,
 } from '#test-utils';
 import DateTimeFieldProbe from '../../../../test/fixtures/DateTimeFieldProbe.vue';
 import { formatter } from '../format';
 import { kindOf } from '../temporal';
 import type { TemporalValue } from '../temporal';
 import { PARTIAL_MESSAGE } from './customValidity';
+import { useDateTimeFieldContext } from './DateTimeFieldContext';
 
 const PROBE = 'test/fixtures/DateTimeFieldProbe.vue';
 
@@ -975,5 +977,22 @@ describe('useDateTimeFieldRoot', () => {
       expect(typesOf(container).join(' ')).toBe('month day year');
       expect(shownBy(container)).toBe('11/14/2026');
     });
+  });
+
+  // A case that throws in `setup` is the last of its file.
+  it('throws a descriptive error when a part is rendered outside its root', async () => {
+    const Outside = defineComponent(() => {
+      useDateTimeFieldContext();
+      return () => null;
+    });
+
+    await expect(render(<Outside />)).rejects.toThrow(
+      'Vase UI: A part of a date or time field must be inside its root. Without a root the part has no value to show. Put the part inside <DateField.Root> or <TimeField.Root>.',
+    );
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });
