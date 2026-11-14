@@ -1,5 +1,11 @@
 import type { CSSProperties } from 'vue';
 
+export const VASE_UI_SWIPE_IGNORE_ATTRIBUTE = 'data-vase-ui-swipe-ignore';
+export const LEGACY_SWIPE_IGNORE_ATTRIBUTE = 'data-swipe-ignore';
+
+export const VASE_UI_SWIPE_IGNORE_SELECTOR = `[${VASE_UI_SWIPE_IGNORE_ATTRIBUTE}]`;
+export const LEGACY_SWIPE_IGNORE_SELECTOR = `[${LEGACY_SWIPE_IGNORE_ATTRIBUTE}]`;
+
 /**
  * The style of the `aria-owns` owner element. The element is an empty `span`, so it needs fewer
  * declarations than `visuallyHidden`. With these declarations, iOS, Safari and VoiceControl still
