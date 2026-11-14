@@ -366,16 +366,17 @@ describe('<Dialog.Root />', () => {
     const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
     outside.focus();
-    open.value = true;
-    triggerId.value = 'trigger-1';
-    await nextTick();
-    // The open makes the outside button inert. The browser moves the focus off it only at the next
-    // rendering update, so the trigger changes while the inert button has the focus.
-    expect(outside).toHaveFocus();
-    triggerId.value = 'trigger-2';
-    await nextTick();
+    await waitForLaterMillisecond(async () => {
+      open.value = true;
+      triggerId.value = 'trigger-1';
+      await nextTick();
+      // The open makes the outside button inert. The browser moves the focus off it only at the
+      // next rendering update, so the trigger changes while the inert button has the focus.
+      expect(outside).toHaveFocus();
+      triggerId.value = 'trigger-2';
+      await nextTick();
+    });
 
-    await waitForLaterMillisecond();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     await waitFor(() => {
       expect(trigger2).toHaveFocus();
