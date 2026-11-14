@@ -3,6 +3,7 @@ import { computed, defineComponent, shallowRef } from 'vue';
 import * as Tooltip from '../index.parts';
 import {
   createRenderer,
+  enterWithMouse,
   fireEvent,
   flushMicrotasks,
   hydrate,
@@ -133,9 +134,6 @@ const MultipleDetachedTriggersTooltip = defineComponent(
   },
   { props: testTooltipProps },
 );
-
-// `user.hover` throws for an element with `pointer-events: none`.
-const hoverableByUser = { style: { pointerEvents: 'auto' } };
 
 describe('<Tooltip.Root />', () => {
   const { render } = createRenderer();
@@ -539,7 +537,7 @@ describe('<Tooltip.Root />', () => {
     describe('preventUnmountOnClose()', () => {
       it('does not prevent unmounting on later closes', async () => {
         let preventNextClose = true;
-        const { user } = await render(
+        await render(
           <TestTooltip
             rootProps={{
               onOpenChange: (open: boolean, details: Details) => {
@@ -552,29 +550,28 @@ describe('<Tooltip.Root />', () => {
             triggerProps={{
               delay: 0,
               closeDelay: 0,
-              ...hoverableByUser,
             }}
           />,
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.hover(trigger);
+        await enterWithMouse(trigger);
 
         await screen.findByTestId('positioner');
 
-        await user.unhover(trigger);
+        await fireEvent.mouseLeave(trigger);
 
         await waitFor(() => {
           expect(screen.getByTestId('positioner')).toHaveAttribute('data-closed');
         });
 
-        await user.hover(trigger);
+        await enterWithMouse(trigger);
 
         await waitFor(() => {
           expect(trigger).toHaveAttribute('data-popup-open');
         });
 
-        await user.unhover(trigger);
+        await fireEvent.mouseLeave(trigger);
 
         await waitFor(() => {
           expect(screen.queryByTestId('positioner')).toBe(null);
@@ -594,7 +591,7 @@ describe('<Tooltip.Root />', () => {
       it('unmounts the tooltip when the `unmount` method is called', async () => {
         const actions = actionsRef();
 
-        const { user } = await render(
+        await render(
           <TestTooltip
             rootProps={{
               ref: actions.setRef,
@@ -602,16 +599,15 @@ describe('<Tooltip.Root />', () => {
                 details.preventUnmountOnClose();
               },
             }}
-            triggerProps={hoverableByUser}
           />,
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.hover(trigger);
+        await enterWithMouse(trigger);
 
         await screen.findByTestId('positioner');
 
-        await user.unhover(trigger);
+        await fireEvent.mouseLeave(trigger);
 
         await waitFor(() => {
           expect(screen.getByTestId('positioner')).toHaveAttribute('data-closed');
@@ -629,15 +625,15 @@ describe('<Tooltip.Root />', () => {
         const onOpenChange = vi.fn();
         const actions = actionsRef();
 
-        const { user } = await render(
+        await render(
           <TestTooltip
             rootProps={{ ref: actions.setRef, onOpenChange }}
-            triggerProps={{ delay: 0, ...hoverableByUser }}
+            triggerProps={{ delay: 0 }}
           />,
         );
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
-        await user.hover(trigger);
+        await enterWithMouse(trigger);
 
         await screen.findByTestId('popup');
 

@@ -1452,7 +1452,6 @@ The hydration helpers:
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
-- `user.hover` and `user.unhover` throw for an element with `pointer-events: none`. A case that uses them sets `pointer-events: auto` on the element, also where a shared test component sets `none`.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
