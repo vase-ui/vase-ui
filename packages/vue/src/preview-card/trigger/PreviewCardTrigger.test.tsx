@@ -115,7 +115,9 @@ describe('<PreviewCard.Trigger />', () => {
           </PreviewCard.Trigger>
           <PreviewCard.Portal>
             <PreviewCard.Positioner sideOffset={20} style={noRealPointer} data-testid="positioner">
-              <PreviewCard.Popup style={{ width: '200px', height: '100px' }}>Card</PreviewCard.Popup>
+              <PreviewCard.Popup style={{ width: '200px', height: '100px' }}>
+                Card
+              </PreviewCard.Popup>
             </PreviewCard.Positioner>
           </PreviewCard.Portal>
         </PreviewCard.Root>,

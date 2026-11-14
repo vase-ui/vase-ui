@@ -184,16 +184,6 @@ describe('<PreviewCard.Root />', () => {
     triggerMouseAction: 'hover',
   });
 
-  function withFakeTimers() {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-  }
-
   async function tick(ms: number) {
     await flushMicrotasks();
     await vi.advanceTimersByTimeAsync(ms);
@@ -206,7 +196,13 @@ describe('<PreviewCard.Root />', () => {
     { name: 'multiple detached triggers', Component: MultipleDetachedTriggersPreviewCard },
   ])('when using $name', ({ Component: TestPreviewCard }) => {
     describe('uncontrolled open', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('should open when the trigger is hovered', async () => {
         await render(<TestPreviewCard />);
@@ -248,7 +244,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: onOpenChange', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('should call onOpenChange when the open state changes', async () => {
         const handleChange = vi.fn();
@@ -442,7 +444,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: defaultOpen', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('closes when the trigger is unhovered after opening by default', async () => {
         await render(
@@ -494,7 +502,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: delay', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('should open after delay with rest type by default', async () => {
         await render(<TestPreviewCard triggerProps={{ delay: 100 }} />);
@@ -517,7 +531,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('prop: closeDelay', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('should close after delay', async () => {
         await render(<TestPreviewCard triggerProps={{ closeDelay: 100 }} />);
@@ -544,7 +564,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('dismissal', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('reopens on hover after Escape closes it', async () => {
         await render(<TestPreviewCard triggerProps={{ delay: 100 }} />);
@@ -1080,7 +1106,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('race condition between close timers and hover-open logic', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('keeps the parent open and re-opens the child when re-entering after partial close', async () => {
         await render(
@@ -1098,7 +1130,9 @@ describe('<PreviewCard.Root />', () => {
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
                       <PreviewCard.Positioner style={noRealPointer}>
-                        <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                        <PreviewCard.Popup data-testid="child-popup">
+                          Child content
+                        </PreviewCard.Popup>
                       </PreviewCard.Positioner>
                     </PreviewCard.Portal>
                   </PreviewCard.Root>
@@ -1164,7 +1198,13 @@ describe('<PreviewCard.Root />', () => {
     });
 
     describe('synchronized closing', () => {
-      withFakeTimers();
+      beforeEach(() => {
+        vi.useFakeTimers();
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
 
       it('parent popup closes as soon as the child popup closes', async () => {
         await render(
@@ -1182,7 +1222,9 @@ describe('<PreviewCard.Root />', () => {
                     </PreviewCard.Trigger>
                     <PreviewCard.Portal>
                       <PreviewCard.Positioner style={noRealPointer}>
-                        <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                        <PreviewCard.Popup data-testid="child-popup">
+                          Child content
+                        </PreviewCard.Popup>
                       </PreviewCard.Positioner>
                     </PreviewCard.Portal>
                   </PreviewCard.Root>
