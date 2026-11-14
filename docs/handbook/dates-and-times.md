@@ -88,7 +88,7 @@ When the user picks a day, the new value keeps the time, the time zone and the c
 
 A component shows a date in the calendar that its `calendar` prop names. With no prop, it uses the calendar of the value when that calendar is not ISO. With neither, it uses the calendar of the locale. `th-TH` gives the Buddhist calendar, and `fa-IR` gives the Persian calendar.
 
-Set `calendar="gregory"` to turn the calendar of the locale off. The value that the component gives back keeps its own calendar. A grid of another calendar does not change the calendar of the value.
+Set `calendar="gregory"` to show Gregorian dates in each locale. The value that the component gives back keeps its own calendar. A grid of another calendar does not change the calendar of the value.
 
 For a calendar other than ISO and Gregorian in an engine that needs the polyfill, import `temporal-polyfill/full/global`. When `Temporal` has no calendar of the locale, the component uses `gregory`. This happens with the plain polyfill, and with a locale such as `ar-SA-u-ca-islamic` in Chrome.
 
