@@ -37,6 +37,7 @@
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
     "packages/react/src/internals/useOpenChangeComplete.tsx",
+    "packages/react/src/internals/usePressAndHold.ts",
     "packages/react/src/internals/useRenderElement.tsx",
     "packages/react/src/internals/useRenderElement.test.tsx",
     "packages/react/src/internals/useRenderElement.spec.tsx",
