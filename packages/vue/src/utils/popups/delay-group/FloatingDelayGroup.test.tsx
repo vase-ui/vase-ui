@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, test, vi }
 import { KeepAlive, defineComponent, onMounted, onUpdated, shallowRef } from 'vue';
 import type { CSSProperties, MaybeRefOrGetter, PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
-import { useFloating } from '../../../../test/fixtures/useFloating';
+import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { getDelay } from '../interactions/useHoverShared';
 import { useHoverPopupInteraction } from '../interactions/useHoverPopupInteraction';
 import { useHoverTriggerInteraction } from '../interactions/useHoverTriggerInteraction';
@@ -487,6 +487,29 @@ describe('FloatingDelayGroup', () => {
       expect(isOpen('two')).toBe(true);
     });
 
+    it('ends the group at once when timeoutMs changes to 0 while the timer of the group runs', async () => {
+      const timeoutMs = shallowRef(500);
+      await render(() => (
+        <Group delay={{ open: 1000, close: 0 }} timeoutMs={timeoutMs.value}>
+          <Tooltip label="one" />
+          <Tooltip label="two" />
+        </Group>
+      ));
+      await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
+      await tick(1000);
+      await fireEvent.mouseLeave(screen.getByTestId('reference-one'));
+      expect(isOpen('one')).toBe(false);
+
+      timeoutMs.value = 0;
+      await flushMicrotasks();
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(999);
+      expect(isOpen('two')).toBe(false);
+
+      await tick(1);
+      expect(isOpen('two')).toBe(true);
+    });
+
     it('joins the group when its popup is open at the mount', async () => {
       await render(
         <Group delay={{ open: 1000, close: 0 }}>
@@ -622,7 +645,7 @@ describe('FloatingDelayGroup', () => {
         },
       });
       await render(<GroupWithRemovableTooltip />);
-      // The first popup closes and then the second popup takes over the group. The second popup
+      // The first popup closes and then the second popup takes the group. The second popup
       // closes, so its timer is the one that ends the group.
       await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
       await tick(1000);

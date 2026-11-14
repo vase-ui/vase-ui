@@ -47,8 +47,7 @@ export interface FloatingDelayGroupOptions {
   delay: MaybeRefOrGetter<Delay>;
   /**
    * How long the group stays active after a popup closes. Use it to make the group last longer
-   * than the close delay, for example when there is no close delay. A change applies to the next
-   * close of a popup.
+   * than the close delay, for example when there is no close delay.
    * @default 0
    */
   timeoutMs?: MaybeRefOrGetter<number | undefined>;
@@ -167,7 +166,7 @@ export function useDelayGroup(
     }
 
     group.timeout.start(timeoutMs, () => {
-      // The popup can be open for another trigger, or another popup can have taken over the group.
+      // The popup can be open for another trigger, or another popup can hold the group.
       if (toValue(store).select('open') || (group.currentId && group.currentId !== id)) {
         return;
       }
@@ -179,7 +178,7 @@ export function useDelayGroup(
     const previousContext = group.currentContext;
     const previousId = group.currentId;
 
-    // A popup opens, so the timer that would end the group must not run.
+    // A popup opens, so the timer that ends the group must not run.
     group.timeout.clear();
     group.currentContext = member;
     group.currentId = id;
@@ -200,7 +199,7 @@ export function useDelayGroup(
   let lastId: string | undefined;
   let lastOpen = false;
 
-  // A popup that unmounts, or that gets a new id, stops being the context of the group. A closed
+  // A popup that unmounts, or that gets a new id, leaves the context of the group. A closed
   // popup does not end the group: the timer of its close does.
   function release() {
     if (group.currentId !== lastId) {
@@ -239,6 +238,13 @@ export function useDelayGroup(
   // renders is then inserted with its instant phase. With `flush: 'post'`, the phase comes after
   // the insert.
   watch([isOpen, getPopupId], update);
+  // As in Base UI, a closed popup applies a new `timeoutMs` at once. A second run of `onOpen` ends
+  // the instant phase of an open popup, so this watcher calls only `onClose`.
+  watch(group.timeoutMs, () => {
+    if (!isOpen()) {
+      onClose(getPopupId());
+    }
+  });
   onScopeDispose(release);
 
   return {
