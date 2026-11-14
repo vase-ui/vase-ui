@@ -16,6 +16,10 @@ const toast = {
   title: 'Toast title',
 };
 
+// The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
+// viewport, and the real pointer sends no event of its own.
+const noRealPointer = { pointerEvents: 'none' } as const;
+
 describe('<Toast.Content />', () => {
   const { render } = createRenderer();
 
@@ -50,7 +54,7 @@ describe('<Toast.Content />', () => {
     const manager = Toast.createToastManager();
     await render(
       <Toast.Provider toastManager={manager}>
-        <Toast.Viewport data-testid="viewport">
+        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
           <ContentList />
         </Toast.Viewport>
       </Toast.Provider>,

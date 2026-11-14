@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, watch } from 'vue';
-import type { ShallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef, toValue, watch } from 'vue';
+import type { MaybeRefOrGetter, ShallowRef } from 'vue';
 import { createRenderer, flushMicrotasks } from '#test-utils';
 import type { ToastManager } from '../createToastManager';
 import * as Toast from '../index.parts';
@@ -230,12 +230,12 @@ describe('<Toast.Provider />', () => {
   describe('KeepAlive', () => {
     const Other = defineComponent({ name: 'Other', setup: () => () => <p /> });
 
-    function renderKept(manager: ToastManager, visible: ShallowRef<boolean>) {
+    function renderKept(manager: MaybeRefOrGetter<ToastManager>, visible: ShallowRef<boolean>) {
       const { probe, Probe } = createStoreProbe();
       const Page = defineComponent({
         name: 'Page',
         setup: () => () => (
-          <Toast.Provider toastManager={manager}>
+          <Toast.Provider toastManager={toValue(manager)}>
             <Probe />
           </Toast.Provider>
         ),
@@ -286,6 +286,28 @@ describe('<Toast.Provider />', () => {
       expect(probe.store!.state.toasts).toHaveLength(0);
 
       manager.add({ title: 'after the activation', timeout: 0 });
+
+      expect(probe.store!.state.toasts).toHaveLength(1);
+    });
+
+    it('does not listen to a manager that it gets while it is deactivated, and listens to it after the activation', async () => {
+      const second = Toast.createToastManager();
+      const manager = shallowRef(Toast.createToastManager());
+      const visible = shallowRef(true);
+      const { probe, rendered } = renderKept(manager, visible);
+      await rendered;
+
+      visible.value = false;
+      await nextTick();
+      manager.value = second;
+      await nextTick();
+      second.add({ title: 'while deactivated', timeout: 0 });
+
+      expect(probe.store!.state.toasts).toHaveLength(0);
+
+      visible.value = true;
+      await nextTick();
+      second.add({ title: 'after the activation', timeout: 0 });
 
       expect(probe.store!.state.toasts).toHaveLength(1);
     });

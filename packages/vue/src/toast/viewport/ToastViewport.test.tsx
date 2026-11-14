@@ -21,6 +21,10 @@ import ToastViewportHydration from './ToastViewportHydration.test.vue';
 
 const HYDRATION_FILE = 'src/toast/viewport/ToastViewportHydration.test.vue';
 
+// The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
+// viewport, and the real pointer sends no event of its own.
+const noRealPointer = { pointerEvents: 'none' } as const;
+
 describe('<Toast.Viewport />', () => {
   const { render } = createRenderer();
 
@@ -59,7 +63,7 @@ describe('<Toast.Viewport />', () => {
         <button type="button" data-testid="origin">
           origin
         </button>
-        <Toast.Viewport data-testid="viewport">
+        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
           <ToastTextList />
         </Toast.Viewport>
       </Toast.Provider>,
@@ -141,7 +145,7 @@ describe('<Toast.Viewport />', () => {
       await render(
         <Toast.Provider toastManager={manager}>
           <Probe />
-          <Toast.Viewport data-testid="viewport" />
+          <Toast.Viewport data-testid="viewport" style={noRealPointer} />
         </Toast.Provider>,
       );
       manager.add({ id: 'leaving', title: 'toast', timeout: 0 });
@@ -266,6 +270,22 @@ describe('<Toast.Viewport />', () => {
 
       expect(onClose).toHaveBeenCalledTimes(1);
     });
+
+    it('BUG-6174: keeps the timers paused when the window blurs and the focus stays in the page', async () => {
+      const onClose = vi.fn();
+      const manager = Toast.createToastManager();
+      await renderViewport(manager);
+      manager.add({ title: 'toast', timeout: 1000, onClose });
+      await flushMicrotasks();
+      window.focus();
+      screen.getByTestId('origin').focus();
+
+      window.dispatchEvent(new FocusEvent('blur'));
+      await tick(1);
+      await tick(5000);
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 
   describe('focus', () => {
@@ -381,7 +401,7 @@ describe('<Toast.Viewport />', () => {
       name: 'Page',
       setup: () => () => (
         <Toast.Provider toastManager={manager}>
-          <Toast.Viewport data-testid="viewport">
+          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
             <ToastTextList />
           </Toast.Viewport>
         </Toast.Provider>
@@ -394,18 +414,23 @@ describe('<Toast.Viewport />', () => {
     ));
     manager.add({ title: 'toast', timeout: 0 });
     await flushMicrotasks();
+    const viewport = screen.getByTestId('viewport');
+    await fireEvent.mouseEnter(viewport);
 
     showPage.value = false;
     await nextTick();
 
     // The viewport handles F6 and prevents its default action.
     expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(true);
+    // A `mouseover` outside the viewport ends its hover, but not while `KeepAlive` holds it.
+    await fireEvent.mouseOver(document.body);
 
     showPage.value = true;
     await nextTick();
 
+    expect(viewport).toHaveAttribute('data-expanded');
     expect(await fireEvent.keyDown(document.body, { key: 'F6' })).toBe(false);
-    expect(screen.getByTestId('viewport')).toHaveFocus();
+    expect(viewport).toHaveFocus();
   });
 
   describe('hydration', () => {
