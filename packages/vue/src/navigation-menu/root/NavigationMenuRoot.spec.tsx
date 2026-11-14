@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
 
 const stringValue = 'item-1';
 const nullableValue: string | null = 'item-1';

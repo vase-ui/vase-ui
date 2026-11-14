@@ -94,7 +94,7 @@ function resolveTouchAction(direction: DrawerSwipeDirection) {
 </script>
 
 <script setup lang="ts">
-import { computed, onDeactivated, onScopeDispose, onUpdated, shallowRef, watch } from 'vue';
+import { computed, onDeactivated, onScopeDispose, shallowRef, watch } from 'vue';
 import { clamp } from '../../common/clamp';
 import { ownerDocument } from '../../common/owner';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
@@ -143,7 +143,6 @@ let swipeStartEvent: PointerEvent | TouchEvent | null = null;
 let openedBySwipe = false;
 const dragDelta = { x: 0, y: 0 };
 let closedOffset: number | null = null;
-let appliedSwipeStyles = false;
 let swipePopupElement: HTMLElement | null = null;
 let swipeBackdropElement: HTMLElement | null = null;
 let popupTransition: string | null = null;
@@ -298,7 +297,6 @@ function applySwipeMovement() {
     swipeProgress: openProgress,
     frontmostHeight: openProgress > 0 ? frontmostHeight.value : 0,
   });
-  appliedSwipeStyles = true;
   swipeAreaActiveRef.value = true;
 }
 
@@ -323,7 +321,6 @@ function clearSwipeStyles() {
   }
 
   providerContext?.visualStateStore.set({ swipeProgress: 0, frontmostHeight: 0 });
-  appliedSwipeStyles = false;
   swipePopupElement = null;
   swipeBackdropElement = null;
   swipeAreaActiveRef.value = false;
@@ -431,15 +428,6 @@ const swipe = useSwipeDismiss({
   onCancel: finishSwipeInteraction,
 });
 
-// The commit that opens the drawer re-renders the popup, resetting `--swipe-movement-*` to `0px`
-// (the viewport isn't swiping). Re-assert after the DOM mutation but before paint. It must run
-// after each render of the swipe area.
-onUpdated(() => {
-  if (swipeActive.value && appliedSwipeStyles) {
-    applySwipeMovement();
-  }
-});
-
 watch(enabled, (isEnabled) => {
   if (isEnabled) {
     return;
@@ -471,7 +459,14 @@ onDeactivated(() => {
   restoreDismiss();
 });
 
-onScopeDispose(restoreDismiss);
+// No release comes to a swipe area that unmounts during a gesture. The popup would then keep the
+// movement of the gesture, and the drawer would stay open only in part.
+onScopeDispose(() => {
+  if (swipeActive.value) {
+    clearSwipeStyles();
+  }
+  restoreDismiss();
+});
 
 const state = computed<DrawerSwipeAreaState>(() => ({
   open: open.value,

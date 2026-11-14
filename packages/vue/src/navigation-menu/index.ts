@@ -1,0 +1,40 @@
+export * as NavigationMenu from './index.parts';
+
+export { default as NavigationMenuRoot } from './root/NavigationMenuRoot.vue';
+export { default as NavigationMenuList } from './list/NavigationMenuList.vue';
+export { default as NavigationMenuItem } from './item/NavigationMenuItem.vue';
+export { default as NavigationMenuTrigger } from './trigger/NavigationMenuTrigger.vue';
+export { default as NavigationMenuIcon } from './icon/NavigationMenuIcon.vue';
+export { default as NavigationMenuContent } from './content/NavigationMenuContent.vue';
+export { default as NavigationMenuLink } from './link/NavigationMenuLink.vue';
+export { default as NavigationMenuBackdrop } from './backdrop/NavigationMenuBackdrop.vue';
+export { default as NavigationMenuPortal } from './portal/NavigationMenuPortal.vue';
+export { default as NavigationMenuPositioner } from './positioner/NavigationMenuPositioner.vue';
+export { default as NavigationMenuPopup } from './popup/NavigationMenuPopup.vue';
+export { default as NavigationMenuViewport } from './viewport/NavigationMenuViewport.vue';
+export { default as NavigationMenuArrow } from './arrow/NavigationMenuArrow.vue';
+
+export type * from './root/NavigationMenuRoot.vue';
+export type * from './list/NavigationMenuList.vue';
+export type * from './item/NavigationMenuItem.vue';
+export type * from './trigger/NavigationMenuTrigger.vue';
+export type * from './icon/NavigationMenuIcon.vue';
+export type * from './content/NavigationMenuContent.vue';
+export type * from './link/NavigationMenuLink.vue';
+export type * from './backdrop/NavigationMenuBackdrop.vue';
+export type * from './portal/NavigationMenuPortal.vue';
+export type * from './positioner/NavigationMenuPositioner.vue';
+export type * from './popup/NavigationMenuPopup.vue';
+export type * from './viewport/NavigationMenuViewport.vue';
+export type * from './arrow/NavigationMenuArrow.vue';
+
+export * as NavigationMenuContentDataAttributes from './content/NavigationMenuContentDataAttributes';
+export * as NavigationMenuTriggerDataAttributes from './trigger/NavigationMenuTriggerDataAttributes';
+export * as NavigationMenuPositionerCssVariables from './positioner/NavigationMenuPositionerCssVars';
+export * as NavigationMenuPositionerDataAttributes from './positioner/NavigationMenuPositionerDataAttributes';
+export * as NavigationMenuBackdropDataAttributes from './backdrop/NavigationMenuBackdropDataAttributes';
+export * as NavigationMenuPopupCssVariables from './popup/NavigationMenuPopupCssVars';
+export * as NavigationMenuPopupDataAttributes from './popup/NavigationMenuPopupDataAttributes';
+export * as NavigationMenuArrowDataAttributes from './arrow/NavigationMenuArrowDataAttributes';
+export * as NavigationMenuLinkDataAttributes from './link/NavigationMenuLinkDataAttributes';
+export * as NavigationMenuIconDataAttributes from './icon/NavigationMenuIconDataAttributes';

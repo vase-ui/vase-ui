@@ -19,6 +19,22 @@ const ProviderProbe = defineComponent({
   },
 });
 
+const TestCase = defineComponent({
+  props: { open: { type: Boolean, required: true } },
+  setup(props) {
+    return () => (
+      <Drawer.Provider>
+        <Drawer.IndentBackground data-testid="bg" />
+        <Drawer.Indent data-testid="indent">
+          <Drawer.Root open={props.open}>
+            <Drawer.Trigger>Open</Drawer.Trigger>
+          </Drawer.Root>
+        </Drawer.Indent>
+      </Drawer.Provider>
+    );
+  },
+});
+
 describe('<Drawer.Indent />', () => {
   const { render } = createRenderer();
 
@@ -26,6 +42,19 @@ describe('<Drawer.Indent />', () => {
     refInstanceof: window.HTMLDivElement,
     render: (node) => render(<Drawer.Provider>{node}</Drawer.Provider>),
   }));
+
+  it('sets data-active when any drawer is open', async () => {
+    const { setProps } = await render(<TestCase open={false} />);
+
+    expect(screen.getByTestId('indent')).toHaveAttribute('data-inactive', '');
+    expect(screen.getByTestId('indent')).not.toHaveAttribute('data-active');
+
+    await setProps({ open: true });
+
+    expect(screen.getByTestId('indent')).toHaveAttribute('data-active', '');
+    expect(screen.getByTestId('indent')).not.toHaveAttribute('data-inactive');
+    expect(screen.getByTestId('bg')).toHaveAttribute('data-active', '');
+  });
 
   it('keeps the swipe progress of the gesture when it renders again', async () => {
     let context!: DrawerProviderContext;
