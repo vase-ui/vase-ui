@@ -10,6 +10,8 @@ const props = defineProps<{
   name?: string | undefined;
   items?: readonly string[] | undefined;
   defaultInputValue?: string | undefined;
+  defaultOpen?: boolean | undefined;
+  submitOnItemClick?: boolean | undefined;
 }>();
 
 const emit = defineEmits<{ inputValueChange: [inputValue: string] }>();
@@ -31,7 +33,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     required: undefined,
     readOnly: undefined,
     disabled: undefined,
-    defaultOpen: undefined,
+    get defaultOpen() {
+      return props.defaultOpen;
+    },
     open: undefined,
     openOnInputClick: false,
     autoHighlight: undefined,
@@ -62,7 +66,9 @@ const { hiddenInputProps } = useAriaCombobox<string>(
     autoComplete: undefined,
     formAutoComplete: undefined,
     locale: undefined,
-    submitOnItemClick: undefined,
+    get submitOnItemClick() {
+      return props.submitOnItemClick;
+    },
     fillInputOnItemPress: true,
   },
   {
