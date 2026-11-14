@@ -8,12 +8,13 @@ import ParityChanges from './.vitepress/components/ParityChanges.vue';
 import ParityEdgeCases from './.vitepress/components/ParityEdgeCases.vue';
 import ParityFamilies from './.vitepress/components/ParityFamilies.vue';
 import ParityNotPorted from './.vitepress/components/ParityNotPorted.vue';
+import ParityOwnComponents from './.vitepress/components/ParityOwnComponents.vue';
 import ParitySummary from './.vitepress/components/ParitySummary.vue';
 </script>
 
 # Parity
 
-This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports, and the column Component shows which families are components. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
+This page shows the state of each Vase UI family against Base UI. A family is one folder of Base UI that Vase UI ports, and the column Component shows which families are components. A component that Base UI does not have is not a family. The site build makes this page from the `parity` folder of the repository, with the functions of `pnpm parity:check`. The build fails when that check fails.
 
 <ParitySummary />
 
@@ -50,6 +51,12 @@ A change that touches no family has one of two other states:
 Where Vue or the browser lets us handle an edge case better than the original, we do, and we list each one with its test.
 
 <ParityEdgeCases />
+
+## Components of Vase UI's own
+
+A component of Vase UI's own is a component that Base UI does not have. Its behavior follows a standard, and its API follows the convention of the families. `parity/own` holds one record for each component.
+
+<ParityOwnComponents />
 
 ## Not ported
 

@@ -4,6 +4,7 @@ import {
   validateBetterRow,
   validateExtract,
   validateFamilyFile,
+  validateOwnComponent,
   validateUpstreamFile,
 } from './parityFiles.ts';
 
@@ -261,6 +262,147 @@ for (const { name, change, message } of wrongFamilies) {
     const family = makeFamily();
     change(family);
     const problems = validateFamilyFile(FILE, family);
+    assert.equal(
+      problems.some((problem) => message.test(problem)),
+      true,
+      problems.join('\n'),
+    );
+  });
+}
+
+const OWN_COMPONENT_FILE = 'parity/own/sample.json';
+
+function makeOwnComponent(): Json {
+  return {
+    standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/'],
+    reason: 'Base UI has no sample.',
+    parts: ['Root', 'Panel'],
+    functions: ['useSample'],
+    types: ['Sample.Layout'],
+  };
+}
+
+test('a correct record of an own component has no problem, with or without functions and types', () => {
+  assert.deepEqual(validateOwnComponent(OWN_COMPONENT_FILE, makeOwnComponent()), []);
+  const record = makeOwnComponent();
+  delete record.functions;
+  delete record.types;
+  assert.deepEqual(validateOwnComponent(OWN_COMPONENT_FILE, record), []);
+});
+
+const wrongOwnComponents: { name: string; change: (record: Json) => void; message: RegExp }[] = [
+  {
+    name: 'an unknown key',
+    change: (record) => {
+      record.upstreamPaths = [];
+    },
+    message: /^parity\/own\/sample\.json: has the key "upstreamPaths", which is not known\.$/,
+  },
+  {
+    name: 'a missing standard',
+    change: (record) => {
+      delete record.standard;
+    },
+    message: /^parity\/own\/sample\.json: needs the key "standard"\.$/,
+  },
+  {
+    name: 'a missing reason',
+    change: (record) => {
+      delete record.reason;
+    },
+    message: /^parity\/own\/sample\.json: needs the key "reason"\.$/,
+  },
+  {
+    name: 'a missing list of parts',
+    change: (record) => {
+      delete record.parts;
+    },
+    message: /^parity\/own\/sample\.json: needs the key "parts"\.$/,
+  },
+  {
+    name: 'a standard with no link',
+    change: (record) => {
+      record.standard = [];
+    },
+    message: /standard: must have at least one item\./,
+  },
+  {
+    name: 'a standard that is not an https link',
+    change: (record) => {
+      record.standard = ['http://example.com/pattern'];
+    },
+    message: /standard\[0\]: must be a link that starts with https:\/\//,
+  },
+  {
+    name: 'a reason with no text',
+    change: (record) => {
+      record.reason = ' ';
+    },
+    message: /reason: must be a string with text\./,
+  },
+  {
+    name: 'no part',
+    change: (record) => {
+      record.parts = [];
+    },
+    message: /parts: must have at least one item\./,
+  },
+  {
+    name: 'a part with no text',
+    change: (record) => {
+      record.parts = [''];
+    },
+    message: /parts\[0\]: must be a string with text\./,
+  },
+  {
+    name: 'an empty list of functions',
+    change: (record) => {
+      record.functions = [];
+    },
+    message: /functions: must have at least one item\./,
+  },
+  {
+    name: 'an empty list of types',
+    change: (record) => {
+      record.types = [];
+    },
+    message: /types: must have at least one item\./,
+  },
+  {
+    name: 'a part that the list has twice',
+    change: (record) => {
+      record.parts = ['Root', 'Panel', 'Root'];
+    },
+    message: /parts\[2\]: names the same thing as parts\[0\]\. Keep one row\./,
+  },
+  {
+    name: 'a function that the list has twice',
+    change: (record) => {
+      record.functions = ['useSample', 'useSample'];
+    },
+    message: /functions\[1\]: names the same thing as functions\[0\]\. Keep one row\./,
+  },
+  {
+    name: 'a type that the list has twice',
+    change: (record) => {
+      record.types = ['A', 'A'];
+    },
+    message: /types\[1\]: names the same thing as types\[0\]\. Keep one row\./,
+  },
+  {
+    name: 'a standard that the list has twice',
+    change: (record) => {
+      record.standard = ['https://example.com/a', 'https://example.com/a'];
+    },
+    message: /standard\[1\]: names the same thing as standard\[0\]\. Keep one row\./,
+  },
+];
+
+for (const { name, change, message } of wrongOwnComponents) {
+  test(`validateOwnComponent reports ${name} with its place`, () => {
+    const record = makeOwnComponent();
+    change(record);
+    const problems = validateOwnComponent(OWN_COMPONENT_FILE, record);
     assert.equal(
       problems.some((problem) => message.test(problem)),
       true,
