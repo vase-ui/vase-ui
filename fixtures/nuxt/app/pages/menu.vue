@@ -12,9 +12,7 @@ const handle = Menu.createHandle<string>();
       <Menu.Trigger data-testid="closed">Closed</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner>
-          <Menu.Popup data-testid="closed-popup">
-            <Menu.Item>Item</Menu.Item>
-          </Menu.Popup>
+          <Menu.Popup data-testid="closed-popup">Closed popup</Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>
@@ -22,10 +20,7 @@ const handle = Menu.createHandle<string>();
       <Menu.Trigger id="open-trigger" data-testid="open">Open</Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner>
-          <Menu.Popup data-testid="open-popup">
-            <Menu.Item>First</Menu.Item>
-            <Menu.Item>Second</Menu.Item>
-          </Menu.Popup>
+          <Menu.Popup data-testid="open-popup">Open popup</Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>
@@ -35,9 +30,7 @@ const handle = Menu.createHandle<string>();
     <Menu.Root :handle="handle">
       <Menu.Portal>
         <Menu.Positioner>
-          <Menu.Popup data-testid="detached-popup">
-            <Menu.Item>Item</Menu.Item>
-          </Menu.Popup>
+          <Menu.Popup data-testid="detached-popup">Detached popup</Menu.Popup>
         </Menu.Positioner>
       </Menu.Portal>
     </Menu.Root>

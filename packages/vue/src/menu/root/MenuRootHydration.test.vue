@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import MenuItem from '../item/MenuItem.vue';
 import MenuPopup from '../popup/MenuPopup.vue';
 import MenuPortal from '../portal/MenuPortal.vue';
 import MenuPositioner from '../positioner/MenuPositioner.vue';
@@ -16,9 +15,7 @@ const handle = createMenuHandle<string>();
     <MenuTrigger id="in-root">Open</MenuTrigger>
     <MenuPortal>
       <MenuPositioner>
-        <MenuPopup>
-          <MenuItem>Item</MenuItem>
-        </MenuPopup>
+        <MenuPopup>Popup</MenuPopup>
       </MenuPositioner>
     </MenuPortal>
   </MenuRoot>
@@ -26,9 +23,7 @@ const handle = createMenuHandle<string>();
   <MenuRoot :handle="handle">
     <MenuPortal>
       <MenuPositioner>
-        <MenuPopup>
-          <MenuItem>Item</MenuItem>
-        </MenuPopup>
+        <MenuPopup>Popup</MenuPopup>
       </MenuPositioner>
     </MenuPortal>
   </MenuRoot>

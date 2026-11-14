@@ -63,7 +63,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
     activeTimeouts.splice(0).forEach((timeout) => timeout.clear());
   });
 
-  it('does not play the enter transition for a menu that is open on the first render', async () => {
+  it('does not play the enter transition for a popup that is open on the first render', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
     const menuTracker = trackStartingStyle('menu-popup');
@@ -73,9 +73,7 @@ describe.skipIf(isJSDOM)('Menu enter transition', () => {
         <Menu.Trigger>Trigger</Menu.Trigger>
         <Menu.Portal>
           <Menu.Positioner>
-            <Menu.Popup data-testid="menu-popup">
-              <Menu.Item>Item</Menu.Item>
-            </Menu.Popup>
+            <Menu.Popup data-testid="menu-popup">Popup</Menu.Popup>
           </Menu.Positioner>
         </Menu.Portal>
       </Menu.Root>,

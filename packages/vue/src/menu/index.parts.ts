@@ -2,8 +2,6 @@ import MenuArrow from './arrow/MenuArrow.vue';
 import type { MenuArrowProps, MenuArrowState } from './arrow/MenuArrow.vue';
 import MenuBackdrop from './backdrop/MenuBackdrop.vue';
 import type { MenuBackdropProps, MenuBackdropState } from './backdrop/MenuBackdrop.vue';
-import MenuItem from './item/MenuItem.vue';
-import type { MenuItemProps, MenuItemState } from './item/MenuItem.vue';
 import MenuPopup from './popup/MenuPopup.vue';
 import type { MenuPopupProps, MenuPopupState } from './popup/MenuPopup.vue';
 import MenuPortal from './portal/MenuPortal.vue';
@@ -42,16 +40,6 @@ export const Backdrop: typeof MenuBackdrop = MenuBackdrop;
 export namespace Backdrop {
   export type State = MenuBackdropState;
   export type Props = MenuBackdropProps;
-}
-
-/**
- * An individual interactive item in the menu.
- * Renders a `<div>` element.
- */
-export const Item: typeof MenuItem = MenuItem;
-export namespace Item {
-  export type State = MenuItemState;
-  export type Props = MenuItemProps;
 }
 
 /**
@@ -110,7 +98,5 @@ export namespace Trigger {
   export type Props<Payload = unknown> = MenuTriggerProps<Payload>;
   export type State = MenuTriggerState;
 }
-
-export { Separator } from '../separator';
 
 export { MenuHandle as Handle, createMenuHandle as createHandle } from './store/MenuHandle';

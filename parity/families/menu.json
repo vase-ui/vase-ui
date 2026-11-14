@@ -158,6 +158,26 @@
       "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
     },
     {
+      "upstream": "packages/react/src/menu/item/MenuItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/MenuItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItem.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
+      "upstream": "packages/react/src/menu/item/useMenuItemCommonProps.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have this file of the `item` folder of Menu. The pull request that adds the part ports it."
+    },
+    {
       "upstream": "packages/react/src/menu/link-item/MenuLinkItem.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have this file of the `link-item` folder of Menu. The pull request that adds the part ports it."
@@ -383,42 +403,9 @@
     },
     {
       "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />"],
-      "title": "preserves focus moved by onClick after $press activation",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />"],
-      "title": "does not close the menu when onClick prevents Base UI handler",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />"],
-      "title": "perf: does not rerender menu items unnecessarily",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />", "prop: closeOnClick"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />", "disabled state"],
-      "title": "skips a natively disabled item during keyboard navigation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/interactions/useListNavigation.ts",
-      "reason": "The case moves the highlight with the keys. Vase UI has no list navigation for Menu yet."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The file tests a part that Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/link-item/MenuLinkItem.test.tsx",
@@ -497,6 +484,14 @@
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
       "describe": ["Menu enter transition"],
+      "title": "does not play the enter transition for a menu that is open on the first render",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
+      "describe": ["Menu enter transition"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
       "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
@@ -515,6 +510,14 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/portal/MenuPortal.test.tsx",
+      "describe": ["<Menu.Portal />", "prop: container"],
+      "title": "keeps a closed menu inside an ancestor ref when opening",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -570,6 +573,13 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
       "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
+      "describe": ["<Menu.Positioner />", "prop: anchor"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -802,8 +812,8 @@
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "Item",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The entry point of Menu exports `Menu.Item`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
@@ -963,8 +973,8 @@
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "MenuItemDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The entry point of Menu exports `MenuItemDataAttributes`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/menu/item/MenuItemDataAttributes.ts",
+      "reason": "Vase UI does not have the file that `MenuItemDataAttributes` comes from."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",

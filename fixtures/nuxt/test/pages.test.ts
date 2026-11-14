@@ -845,7 +845,7 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('open').getAttribute('aria-controls')).toBe(
     await popup.getAttribute('id'),
   );
-  expect(await popup.getByRole('menuitem').allTextContents()).toEqual(['First', 'Second']);
+  expect(await popup.textContent()).toBe('Open popup');
 
   expect(await page.getByTestId('closed').getAttribute('aria-expanded')).toBe('false');
   expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');

@@ -312,9 +312,7 @@ describe('<Menu.Popup />', () => {
           <Menu.Trigger>Open</Menu.Trigger>
           <Menu.Portal>
             <Menu.Positioner>
-              <Menu.Popup data-testid="popup">
-                <Menu.Item>Item</Menu.Item>
-              </Menu.Popup>
+              <Menu.Popup data-testid="popup">Popup</Menu.Popup>
             </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>
