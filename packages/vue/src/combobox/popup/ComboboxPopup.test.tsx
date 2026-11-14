@@ -445,9 +445,13 @@ describe('<Combobox.Popup />', () => {
 
       await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
       record();
-      for (const animation of await animationsRead) {
+      const animations = await animationsRead;
+      for (const animation of animations) {
         animation.finish();
       }
+      // A busy machine can stall the page for some seconds, so the wait for the end of the
+      // animations has no time limit.
+      await Promise.all(animations.map((animation) => animation.finished));
       await waitFor(() => {
         expect(popup.isConnected).toBe(false);
       });
