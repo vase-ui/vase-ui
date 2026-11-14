@@ -7,6 +7,7 @@ import { Toggle } from '@vase-ui/vue/toggle';
 import { ToggleGroup } from '@vase-ui/vue/toggle-group';
 import { createRenderer, describeConformance, isJSDOM, screen, waitFor } from '#test-utils';
 import { NOOP } from '../../internals/noop';
+import * as Menu from '../../menu/index.parts';
 import { ToolbarRootContext } from '../root/ToolbarRootContext';
 import { CompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 
@@ -308,6 +309,36 @@ describe('<Toolbar.Button />', () => {
         await user.click(switchElement);
         expect(handleCheckedChange).toHaveBeenCalledTimes(0);
         expect(handleClick).toHaveBeenCalledTimes(0);
+      });
+    });
+
+    describe('Menu', () => {
+      it('renders a menu trigger', async () => {
+        await render(
+          <Toolbar.Root>
+            <Menu.Root>
+              <Toolbar.Button
+                data-testid="button"
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Menu.Trigger {...props}>Toggle</Menu.Trigger>
+                  ),
+                }}
+              />
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item data-testid="item-1">1</Menu.Item>
+                    <Menu.Item data-testid="item-2">2</Menu.Item>
+                    <Menu.Item data-testid="item-3">3</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Toolbar.Root>,
+        );
+
+        expect(screen.getByTestId('button')).toHaveAttribute('aria-haspopup', 'menu');
       });
     });
 
