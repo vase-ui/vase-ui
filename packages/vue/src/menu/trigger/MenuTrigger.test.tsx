@@ -13,6 +13,7 @@ import {
 import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
+import * as Popover from '../../popover/index.parts';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
 
@@ -443,6 +444,48 @@ describe('<Menu.Trigger />', () => {
       expect(items.map((item) => item.textContent)).toEqual(['File', 'Edit']);
       expect(items.map((item) => item.getAttribute('tabindex'))).toEqual(['0', '-1']);
     });
+  });
+
+  it('does not have role prop inside a Popover', async () => {
+    await render(
+      <Popover.Root open>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Menu.Root>
+                <Menu.Trigger data-testid="menu-trigger" />
+              </Menu.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    await flushMicrotasks();
+
+    const button = screen.getByTestId('menu-trigger');
+    expect(button).not.toHaveAttribute('role');
+  });
+
+  it('has a role prop inside a Popover when not a native button', async () => {
+    await render(
+      <Popover.Root open>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Menu.Root>
+                <Menu.Trigger data-testid="menu-trigger" as="span" nativeButton={false} />
+              </Menu.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    await flushMicrotasks();
+
+    const button = screen.getByTestId('menu-trigger');
+    expect(button).toHaveAttribute('role', 'button');
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
