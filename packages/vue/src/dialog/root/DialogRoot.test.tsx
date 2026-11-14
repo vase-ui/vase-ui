@@ -11,7 +11,7 @@ import {
   onUnmounted,
   shallowRef,
 } from 'vue';
-import type { PropType } from 'vue';
+import type { PropType, VNode } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
 import { Dialog } from '@vase-ui/vue/dialog';
@@ -42,6 +42,7 @@ import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
 import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
+import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
 import * as Select from '../../select/index.parts';
 import { DialogStore } from '../store/DialogStore';
@@ -96,6 +97,9 @@ const DialogOpenChangeSpy = defineComponent({
 
 type PartProps = Record<string, unknown>;
 
+// Gets a function that renders the trigger with the props of a `#render` slot.
+type TriggerWrapper = (renderTrigger: (slotProps?: PartProps) => VNode) => VNode;
+
 const testDialogProps = {
   rootProps: { type: Object as PropType<PartProps>, default: undefined },
   // `children` is the text of the trigger.
@@ -105,6 +109,7 @@ const testDialogProps = {
   popupProps: { type: Object as PropType<PartProps>, default: undefined },
   omitTrigger: { type: Boolean, default: false },
   includeBackdrop: { type: Boolean, default: false },
+  triggerWrapper: { type: Function as PropType<TriggerWrapper>, default: undefined },
 };
 
 const ContainedTriggerDialog = defineComponent({
@@ -113,14 +118,19 @@ const ContainedTriggerDialog = defineComponent({
     return () => {
       const { children: triggerChildren, ...restTriggerProps } = props.triggerProps ?? {};
       const { children: popupChildren, ...restPopupProps } = props.popupProps ?? {};
+      const renderTrigger = (slotProps?: PartProps) => (
+        <Dialog.Trigger {...slotProps} data-testid="trigger" {...restTriggerProps}>
+          {triggerChildren ?? 'Open'}
+        </Dialog.Trigger>
+      );
 
       return (
         <Dialog.Root {...props.rootProps}>
-          {!props.omitTrigger ? (
-            <Dialog.Trigger data-testid="trigger" {...restTriggerProps}>
-              {triggerChildren ?? 'Open'}
-            </Dialog.Trigger>
-          ) : null}
+          {!props.omitTrigger
+            ? props.triggerWrapper
+              ? props.triggerWrapper(renderTrigger)
+              : renderTrigger()
+            : null}
           <Dialog.Portal {...props.portalProps}>
             {props.includeBackdrop ? (
               <Dialog.Backdrop
@@ -156,12 +166,20 @@ const DetachedTriggerDialog = defineComponent({
 
     return () => {
       const { children: triggerChildren, ...restTriggerProps } = props.triggerProps ?? {};
+      const renderTrigger = (slotProps?: PartProps) => (
+        <Dialog.Trigger
+          {...slotProps}
+          data-testid="trigger"
+          {...restTriggerProps}
+          handle={dialogHandle}
+        >
+          {triggerChildren ?? 'Open'}
+        </Dialog.Trigger>
+      );
 
       return (
         <>
-          <Dialog.Trigger data-testid="trigger" {...restTriggerProps} handle={dialogHandle}>
-            {triggerChildren ?? 'Open'}
-          </Dialog.Trigger>
+          {props.triggerWrapper ? props.triggerWrapper(renderTrigger) : renderTrigger()}
           <ContainedTriggerDialog
             {...props}
             rootProps={{ ...props.rootProps, handle: dialogHandle }}
@@ -180,12 +198,20 @@ const MultipleDetachedTriggersDialog = defineComponent({
 
     return () => {
       const { children: triggerChildren, ...restTriggerProps } = props.triggerProps ?? {};
+      const renderTrigger = (slotProps?: PartProps) => (
+        <Dialog.Trigger
+          {...slotProps}
+          data-testid="trigger"
+          {...restTriggerProps}
+          handle={dialogHandle}
+        >
+          {triggerChildren ?? 'Open'}
+        </Dialog.Trigger>
+      );
 
       return (
         <>
-          <Dialog.Trigger data-testid="trigger" {...restTriggerProps} handle={dialogHandle}>
-            {triggerChildren ?? 'Open'}
-          </Dialog.Trigger>
+          {props.triggerWrapper ? props.triggerWrapper(renderTrigger) : renderTrigger()}
           <Dialog.Trigger data-testid="trigger-2" handle={dialogHandle}>
             Open another
           </Dialog.Trigger>
@@ -1207,6 +1233,66 @@ describe('<Dialog.Root />', () => {
     });
 
     describe.skipIf(isJSDOM)('nested popups', () => {
+      it('should not dismiss the dialog when dismissing outside a nested modal menu', async () => {
+        const { user } = await render(
+          <TestDialog
+            popupProps={{
+              children: () => (
+                <Menu.Root>
+                  <Menu.Trigger>Open menu</Menu.Trigger>
+                  <Menu.Portal>
+                    <Menu.Positioner data-testid="menu-positioner">
+                      <Menu.Popup>
+                        <Menu.Item>Item</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.Root>
+              ),
+            }}
+          />,
+        );
+
+        const dialogTrigger = screen.getByRole('button', { name: 'Open' });
+        await user.click(dialogTrigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+        await waitForLaterMillisecond();
+
+        const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
+
+        await user.click(menuTrigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).not.toBe(null);
+        });
+        await waitForLaterMillisecond();
+
+        const menuPositioner = screen.getByTestId('menu-positioner');
+        const menuInternalBackdrop = menuPositioner.previousElementSibling as HTMLElement;
+
+        await user.click(menuInternalBackdrop);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).toBe(null);
+        });
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        const dialogPopup = screen.getByTestId('dialog-popup');
+        const dialogInternalBackdrop = dialogPopup.previousElementSibling
+          ?.previousElementSibling as HTMLElement;
+
+        await user.click(dialogInternalBackdrop);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+      });
+
       it('should not dismiss the dialog when dismissing outside a nested select popup', async () => {
         const { user } = await render(
           <TestDialog
@@ -1264,6 +1350,55 @@ describe('<Dialog.Root />', () => {
 
         await waitFor(() => {
           expect(screen.queryByRole('dialog')).toBe(null);
+        });
+      });
+
+      it('should not close the parent menu when Escape is pressed in a nested dialog', async () => {
+        const { user } = await render(
+          <Menu.Root>
+            <Menu.Trigger>Open menu</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <TestDialog
+                    triggerProps={{ children: 'Open dialog' }}
+                    triggerWrapper={(renderTrigger) => (
+                      <Menu.Item
+                        closeOnClick={false}
+                        nativeButton
+                        v-slots={{
+                          render: ({ props }: { props: PartProps }) => renderTrigger(props),
+                        }}
+                      />
+                    )}
+                  />
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>,
+        );
+
+        const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
+        await user.click(menuTrigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).not.toBe(null);
+        });
+
+        const dialogTrigger = screen.getByRole('menuitem', { name: 'Open dialog' });
+        await user.click(dialogTrigger);
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).not.toBe(null);
+        });
+
+        await user.keyboard('[Escape]');
+
+        await waitFor(() => {
+          expect(screen.queryByRole('dialog')).toBe(null);
+        });
+        await waitFor(() => {
+          expect(screen.queryByRole('menu')).not.toBe(null);
         });
       });
     });
@@ -2092,6 +2227,72 @@ describe('<Dialog.Root />', () => {
       });
     });
   });
+
+  it.skipIf(isJSDOM)(
+    'returns focus to the menu trigger when a detached dialog trigger unmounts',
+    async () => {
+      const MenuDialog = defineComponent(() => {
+        const dialogHandle = Dialog.createHandle();
+
+        return () => (
+          <>
+            <Menu.Root>
+              <Menu.Trigger>Open menu</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item
+                      nativeButton
+                      v-slots={{
+                        render: ({ props }: { props: PartProps }) => (
+                          <Dialog.Trigger {...props} handle={dialogHandle}>
+                            Open dialog
+                          </Dialog.Trigger>
+                        ),
+                      }}
+                    />
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+
+            <Dialog.Root handle={dialogHandle}>
+              <Dialog.Portal>
+                <Dialog.Popup>Dialog content</Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        );
+      });
+
+      const { user } = await render(<MenuDialog />);
+
+      const menuTrigger = screen.getByRole('button', { name: 'Open menu' });
+      await user.click(menuTrigger);
+
+      const menu = await screen.findByRole('menu');
+      await waitFor(() => {
+        expect(menu).toHaveFocus();
+      });
+
+      const dialogTrigger = await screen.findByRole('menuitem', { name: 'Open dialog' });
+      await user.click(dialogTrigger);
+
+      await screen.findByRole('dialog');
+      await waitFor(() => {
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
+
+      await user.keyboard('[Escape]');
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBe(null);
+      });
+      await waitFor(() => {
+        expect(menuTrigger).toHaveFocus();
+      });
+    },
+  );
 
   it.skipIf(isJSDOM)(
     'keeps focus trapped when dialog content contains a non-scrollable scroll area',
