@@ -191,9 +191,29 @@ describe('FloatingPortal', () => {
     expect(document.querySelector('[aria-owns]')).toHaveAttribute('aria-owns', 'custom-portal');
   });
 
+  test('FloatingPortalLite forwards HTML props to the portal element', async () => {
+    await render(
+      <FloatingPortalLite data-testid="lite-portal">
+        <div />
+      </FloatingPortalLite>,
+    );
+
+    await flushMicrotasks();
+
+    const portal = document.querySelector('[data-testid="lite-portal"]');
+    expect(portal).not.toBeNull();
+  });
+});
+
+describe.each([
+  { name: 'FloatingPortal', Portal: FloatingPortal },
+  { name: 'FloatingPortalLite', Portal: FloatingPortalLite },
+])('$name slot: render', ({ Portal }) => {
+  const { render } = createRenderer();
+
   test('puts the content of children in the portal element of the #render slot', async () => {
     await render(
-      <FloatingPortal
+      <Portal
         v-slots={{
           render: ({ props, children }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element">
@@ -213,7 +233,7 @@ describe('FloatingPortal', () => {
   test('warns when the #render slot does not mount children', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await render(
-      <FloatingPortal
+      <Portal
         v-slots={{
           render: ({ props }: RenderSlotProps) => (
             <section {...props} data-testid="portal-element" />
@@ -225,19 +245,6 @@ describe('FloatingPortal', () => {
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy.mock.calls[0][0]).toContain('The `#render` slot did not mount `children`');
-  });
-
-  test('FloatingPortalLite forwards HTML props to the portal element', async () => {
-    await render(
-      <FloatingPortalLite data-testid="lite-portal">
-        <div />
-      </FloatingPortalLite>,
-    );
-
-    await flushMicrotasks();
-
-    const portal = document.querySelector('[data-testid="lite-portal"]');
-    expect(portal).not.toBeNull();
   });
 });
 
