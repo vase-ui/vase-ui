@@ -16,8 +16,8 @@
       "describe": ["<CSPProvider />"],
       "title": "does not render Select inline style tags when disableStyleElements is true",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/popup/SelectPopup.tsx",
-      "reason": "The case renders `Select.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/select/popup/utils.ts",
+      "reason": "The case tests the style element that `Select.Popup` renders for a popup that is placed over the trigger (`alignItemWithTrigger`). Vase UI does not have that placement, so its popup renders no style element."
     }
   ],
   "surfaceAdditions": [],
