@@ -11,6 +11,8 @@ export interface ContextMenuRootState {}
 
 export interface ContextMenuRootProps extends Omit<
   MenuRootProps,
+  // Context Menu does not support a detached trigger. It opens from a right-click or a long press
+  // on `ContextMenu.Trigger`, not from a registered trigger, so these inherited props do not apply.
   'handle' | 'triggerId' | 'defaultTriggerId' | 'modal' | 'closeParentOnEsc'
 > {}
 
