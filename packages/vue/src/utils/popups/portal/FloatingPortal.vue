@@ -26,14 +26,16 @@ export interface FloatingPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, onUpdated, provide, shallowRef, useTemplateRef, watch } from 'vue';
+import { computed, onUpdated, provide, shallowRef, watch } from 'vue';
 import type { Component } from 'vue';
 import { EMPTY_OBJECT } from '../../../common/empty';
 import { ownerVisuallyHidden } from '../../../internals/constants';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import type { HTMLProps } from '../../../internals/types';
-import FocusGuard from '../focus/FocusGuard.vue';
+import { createFocusGuardElement } from '../focus/createFocusGuardElement';
+import { useElementSiblings } from '../focus/useElementSiblings';
+import type { ElementSiblings } from '../focus/useElementSiblings';
 import {
   disableFocusInside,
   enableFocusInside,
@@ -125,10 +127,81 @@ function readNodeId() {
 
 onUpdated(readNodeId);
 
-const beforeOutsideGuard = useTemplateRef('beforeOutsideGuard');
-const afterOutsideGuard = useTemplateRef('afterOutsideGuard');
-const beforeOutsideRef = computed(() => beforeOutsideGuard.value?.element ?? null);
-const afterOutsideRef = computed(() => afterOutsideGuard.value?.element ?? null);
+// Vue gives a ref of a `Teleport` the node that marks the place of the `Teleport`: a comment in a
+// development build, and an empty text node in a production build. The guards and the owner
+// element are not in the template, so the part has one root node: its `Teleport`.
+const teleportStart = shallowRef<Comment | Text | null>(null);
+
+function setTeleportStart(node: unknown) {
+  teleportStart.value = node as Comment | Text | null;
+}
+
+interface PlaceNodes {
+  owner: HTMLSpanElement;
+  before: HTMLSpanElement;
+  after: HTMLSpanElement;
+  withGuards: ElementSiblings;
+  ownerOnly: ElementSiblings;
+}
+
+let placeNodes: PlaceNodes | null = null;
+
+function createPlaceNodes(document: Document): PlaceNodes {
+  const owner = document.createElement('span');
+  Object.assign(owner.style, ownerVisuallyHidden);
+  const before = createFocusGuardElement(document);
+  const after = createFocusGuardElement(document);
+  before.setAttribute('data-type', 'outside');
+  after.setAttribute('data-type', 'outside');
+  before.addEventListener('focusin', handleBeforeGuardFocusin);
+  after.addEventListener('focusin', handleAfterGuardFocusin);
+  return {
+    owner,
+    before,
+    after,
+    withGuards: { before: [before, owner], after: [after] },
+    ownerOnly: { before: [owner] },
+  };
+}
+
+const placeSiblings = computed<ElementSiblings | null>(() => {
+  const start = teleportStart.value;
+  if (!start || !shouldRenderOwner.value) {
+    return null;
+  }
+  placeNodes ??= createPlaceNodes(start.ownerDocument);
+  return shouldRenderGuards.value ? placeNodes.withGuards : placeNodes.ownerOnly;
+});
+
+useElementSiblings(teleportStart, placeSiblings);
+
+// `placeSiblings` is a source because it makes the owner element.
+watch(
+  [placeSiblings, () => props.portalOwnerRole, nodeId],
+  ([, role, id]) => {
+    if (!placeNodes) {
+      return;
+    }
+    setOrRemoveAttribute(placeNodes.owner, 'role', role);
+    setOrRemoveAttribute(placeNodes.owner, 'aria-owns', id);
+  },
+  { flush: 'post' },
+);
+
+function setOrRemoveAttribute(target: Element, name: string, value: string | undefined) {
+  if (value === undefined) {
+    target.removeAttribute(name);
+  } else {
+    target.setAttribute(name, value);
+  }
+}
+
+const beforeOutsideRef = computed(() =>
+  placeSiblings.value === placeNodes?.withGuards ? placeNodes.before : null,
+);
+const afterOutsideRef = computed(() =>
+  placeSiblings.value === placeNodes?.withGuards ? placeNodes.after : null,
+);
 const beforeInsideRef = shallowRef<HTMLSpanElement | null>(null);
 const afterInsideRef = shallowRef<HTMLSpanElement | null>(null);
 
@@ -169,34 +242,19 @@ defineExpose({ element });
 </script>
 
 <template>
-  <template v-if="containerElement">
-    <FocusGuard
-      v-if="shouldRenderGuards"
-      ref="beforeOutsideGuard"
-      data-type="outside"
-      @focusin="handleBeforeGuardFocusin"
+  <Teleport
+    v-if="containerElement"
+    :ref="setTeleportStart"
+    :to="containerElement"
+    :disabled="deactivated"
+  >
+    <slot
+      v-if="$slots.render"
+      name="render"
+      :props="elementProps()"
+      :state="state"
+      :children="FloatingPortalChildren"
     />
-    <span
-      v-if="shouldRenderOwner"
-      :role="portalOwnerRole"
-      :aria-owns="nodeId"
-      :style="ownerVisuallyHidden"
-    />
-    <Teleport :to="containerElement" :disabled="deactivated">
-      <slot
-        v-if="$slots.render"
-        name="render"
-        :props="elementProps()"
-        :state="state"
-        :children="FloatingPortalChildren"
-      />
-      <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
-    </Teleport>
-    <FocusGuard
-      v-if="shouldRenderGuards"
-      ref="afterOutsideGuard"
-      data-type="outside"
-      @focusin="handleAfterGuardFocusin"
-    />
-  </template>
+    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  </Teleport>
 </template>

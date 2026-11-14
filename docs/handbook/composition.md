@@ -17,7 +17,7 @@ For example, most triggers render a `<button>` by default. The sample below uses
 
 Give a component to `as` when you set none of its own props. Use `#render` when you set a prop of the component, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
 
-The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element.
+The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element. If the component sets `element` later than its `onMounted` hook, for example after an `await`, expose `element` as a ref so that the part sees the change.
 
 Under `#render`, the part does not render its default slot. Put the content in your element.
 
