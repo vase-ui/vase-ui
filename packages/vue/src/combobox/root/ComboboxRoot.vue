@@ -100,7 +100,13 @@ export type ComboboxRootHighlightEventReason = AriaCombobox.HighlightEventReason
 export type ComboboxRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
 </script>
 
-<script setup lang="ts" generic="Value, Multiple extends boolean | undefined = false, Item = Value">
+<script
+  setup
+  lang="ts"
+  generic="Value = never, Multiple extends boolean | undefined = false, Item = Value"
+>
+// vue-tsc resolves `Value` before it checks a listener of a template.
+// With the default `never`, that check accepts a typed parameter and keeps `null` in the type.
 import { useAriaCombobox } from './AriaCombobox';
 
 const props = withDefaults(defineProps<ComboboxRootProps<Value, Multiple, Item>>(), {
