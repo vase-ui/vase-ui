@@ -228,14 +228,6 @@
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />"],
-      "title": "moves focus into the items when the last item is already highlighted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />", "prop: finalFocus"],
       "title": "receives the interaction type of the item press that closed the menu",
       "kind": "waits-on",
@@ -259,20 +251,20 @@
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The file imports the entry point of Menu, which Vase UI does not have. Some cases have counterparts. The other cases are not ported yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The file imports the entry point of Menu. The cases of `prop: modal`, `scroll locking` and the press cases of `mouse interaction` have counterparts. Many other cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
+      "reason": "The file imports the entry point of Menu, which Vase UI does not have. Some cases have counterparts. The other cases are not ported yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Most cases move the highlight with the keys, and Menu has no keys yet. The other cases are not ported yet."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The file imports the entry point of Menu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
@@ -316,30 +308,6 @@
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "opens the submenu with $openKey and highlights a single item in $direction direction",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the submenu with an arrow key. Menu has no keys yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "sets tabIndex to 0 on the submenu trigger after opening the submenu with a keydown event",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the submenu with an arrow key. Menu has no keys yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "uses the label prop for text navigation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with a typeahead. Menu has no keys and no typeahead yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
       "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
       "title": "warns without an owner stack when React cannot provide one",
       "kind": "not-applicable",
@@ -373,8 +341,8 @@
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
       "describe": ["<Menu.Trigger />", "keyboard navigation"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The cases open the menu and move the highlight with the keys. Menu has no list navigation yet. The pull request that adds it also ports the shared suite `popupListConformanceTests`."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Two rows of the `it.each` open the menu with Enter and Space on a trigger that is not a native button. The trigger of Vase UI has no press yet. The arrow keys open the menu."
     },
     {
       "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
@@ -383,108 +351,12 @@
       "reason": "The file tests a part that Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />"],
-      "title": "perf: does not rerender menu items unnecessarily",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
-      "describe": ["<Menu.Item />", "disabled state"],
-      "title": "skips a natively disabled item during keyboard navigation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/link-item/MenuLinkItem.test.tsx",
-      "describe": ["<Menu.LinkItem />", "rendering links"],
-      "title": "does not navigate when Space is pressed during an active typeahead session",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
-      "describe": ["<Menu.CheckboxItem />"],
-      "title": "perf: does not rerender menu items unnecessarily",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
-      "describe": ["<Menu.CheckboxItem />", "state management"],
-      "title": "toggles the checked state when Space is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
       "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
       "describe": ["<Menu.CheckboxItem />", "state management"],
       "title": "toggles with Space after closing during typeahead and reopening",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
       "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
-      "describe": ["<Menu.CheckboxItem />", "state management"],
-      "title": "does not toggle when Space is pressed during an active typeahead session",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
-      "describe": ["<Menu.CheckboxItem />", "state management"],
-      "title": "toggles the checked state when Enter is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
-      "describe": ["<Menu.RadioItem />"],
-      "title": "perf: does not rerender menu items unnecessarily",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
-      "describe": ["<Menu.RadioItem />", "state management"],
-      "title": "selects the item when $key is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
-      "describe": ["<Menu.RadioItem />", "state management"],
-      "title": "does not select when Space is pressed during an active typeahead session",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
-      "describe": ["<Menu.RadioItem />", "prop: focusableWhenDisabled"],
-      "title": "can be focused but not interacted with when a radio group is disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/radio-item/MenuRadioItem.test.tsx",
-      "describe": ["<Menu.RadioItem />"],
-      "title": "can be focused but not interacted with when individual items are disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds them also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "packages/react/src/menu/list/MenuList.test.tsx",

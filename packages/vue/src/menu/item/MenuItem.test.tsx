@@ -9,6 +9,7 @@ import {
   isJSDOM,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import {
   ContextMenuProvider,
@@ -140,6 +141,73 @@ describe('<Menu.Item />', () => {
     await fireEvent.mouseDown(item);
   });
 
+  it('perf: does not rerender menu items unnecessarily', async ({ skip }) => {
+    if (isJSDOM) {
+      skip();
+    }
+
+    const renderItem1Spy = vi.fn();
+    const renderItem2Spy = vi.fn();
+    const renderItem3Spy = vi.fn();
+    const renderItem4Spy = vi.fn();
+
+    // The slot runs in each render of the item.
+    function loggingRoot(renderSpy: () => void, label: string) {
+      return {
+        render: ({ props }: { props: HTMLProps }) => {
+          renderSpy();
+          return <li {...props}>{label}</li>;
+        },
+      };
+    }
+
+    const { user } = await render(
+      <Menu.Root open>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item v-slots={loggingRoot(renderItem1Spy, '1')} id="item-1" />
+              <Menu.Item v-slots={loggingRoot(renderItem2Spy, '2')} id="item-2" />
+              <Menu.Item v-slots={loggingRoot(renderItem3Spy, '3')} id="item-3" />
+              <Menu.Item v-slots={loggingRoot(renderItem4Spy, '4')} id="item-4" />
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    const menuItems = screen.getAllByRole('menuitem');
+    menuItems[0].focus();
+    await flushMicrotasks();
+
+    renderItem1Spy.mockClear();
+    renderItem2Spy.mockClear();
+    renderItem3Spy.mockClear();
+    renderItem4Spy.mockClear();
+
+    expect(renderItem1Spy.mock.calls.length).toBe(0);
+
+    await user.keyboard('{ArrowDown}'); // highlights '2'
+
+    await waitFor(
+      () => {
+        expect(renderItem1Spy.mock.calls.length).toBe(1); // '1' rerenders as it loses highlight
+      },
+      { timeout: 1000 },
+    );
+    await waitFor(
+      () => {
+        expect(renderItem2Spy.mock.calls.length).toBe(1); // '2' rerenders as it receives highlight
+      },
+      { timeout: 1000 },
+    );
+
+    // neither the highlighted nor the selected state of these options changed,
+    // so they don't need to rerender:
+    expect(renderItem3Spy.mock.calls.length).toBe(0);
+    expect(renderItem4Spy.mock.calls.length).toBe(0);
+  });
+
   describe('disabled state', () => {
     it('can be focused but not interacted with when disabled', async () => {
       const handleClick = vi.fn();
@@ -194,6 +262,45 @@ describe('<Menu.Item />', () => {
       const item = screen.getByRole('menuitem');
       expect(item).toHaveAttribute('data-disabled');
       expect(item).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('skips a natively disabled item during keyboard navigation', async () => {
+      const { user } = await render(
+        <Menu.Root open>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.Item
+                  nativeButton
+                  v-slots={{
+                    render: ({ props }: { props: HTMLProps }) => (
+                      <button {...props} type="button" disabled>
+                        2
+                      </button>
+                    ),
+                  }}
+                />
+                <Menu.Item>3</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const [firstItem, , lastItem] = screen.getAllByRole('menuitem');
+      firstItem.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => {
+        expect(lastItem).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowUp}');
+      await waitFor(() => {
+        expect(firstItem).toHaveFocus();
+      });
     });
   });
 
