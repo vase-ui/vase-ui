@@ -58,10 +58,10 @@ import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { DISABLED_TRANSITIONS_STYLE } from '../../internals/constants';
+import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
-import { REASONS } from '../../internals/reasons';
 import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
@@ -87,7 +87,10 @@ const transitionStatus = computed(() => store.select('transitionStatus'));
 const floatingTreeRoot = computed(() => store.select('floatingTreeRoot'));
 const mounted = computed(() => store.select('mounted'));
 const parent = computed(() => store.select('parent'));
-const activeTriggerElement = computed(() => store.select('activeTriggerElement'));
+// The store types a trigger as an `Element`. A trigger part renders an `HTMLElement`.
+const activeTriggerElement = computed(
+  () => store.select('activeTriggerElement') as HTMLElement | null,
+);
 
 const popupId = computed(() => props.id ?? generatedPopupId);
 

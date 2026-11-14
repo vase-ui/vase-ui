@@ -460,7 +460,9 @@ describe('<Menu.Trigger />', () => {
 
       const trigger = screen.getByRole('menuitem', { name: 'File' });
       expect(trigger).toHaveAttribute('aria-expanded', 'true');
-      expect(trigger.parentElement!.querySelectorAll(`[${createAttribute('focus-guard')}]`)).toHaveLength(0);
+      expect(
+        trigger.parentElement!.querySelectorAll(`[${createAttribute('focus-guard')}]`),
+      ).toHaveLength(0);
     });
   });
 

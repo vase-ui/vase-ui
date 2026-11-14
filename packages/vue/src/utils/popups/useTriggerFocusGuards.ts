@@ -9,7 +9,8 @@ import { useElementSiblings } from './focus/useElementSiblings';
 import type { ElementSiblings } from './focus/useElementSiblings';
 
 /**
- * The part of a popup store that the focus guards of a trigger use. The store of Menu has it.
+ * The part of a popup store that the focus guards of a trigger use. The stores of Popover and Menu
+ * have it.
  */
 export interface TriggerFocusGuardStore {
   setOpen(open: boolean, eventDetails: VaseUIChangeEventDetails<typeof REASONS.focusOut>): void;
@@ -27,9 +28,9 @@ export interface TriggerFocusGuardStore {
 
 /**
  * Keeps a focus guard before and after the element of a popup trigger while `enabled` is `true`.
- * When the Tab key moves the focus onto a guard, the popup closes and the focus moves to the
- * tabbable element on the side of that guard. A focus that comes from outside the popup onto the
- * guard after the trigger goes into the popup.
+ * A guard that gets the focus closes the popup and moves the focus to the tabbable element on its
+ * side. A focus that comes from outside the popup onto the guard after the trigger goes into the
+ * popup.
  *
  * The guards are not in the template, so the trigger keeps one root node.
  */
