@@ -2827,8 +2827,8 @@ describe('FloatingFocusManager', () => {
           writable: true,
           value(options: any) {
             // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            options && options.preventScroll;
-            return originalFocus.call(this, options);
+            options?.preventScroll;
+            originalFocus.call(this, options);
           },
         });
         onTestFinished(() => {
