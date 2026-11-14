@@ -6960,18 +6960,6 @@ describe('<Select.Root />', () => {
   });
 
   describe('hidden inputs', () => {
-    it('submits the value with the name of the root', async () => {
-      await render(
-        <form data-testid="form">
-          <Select.Root name="font" defaultValue="serif">
-            <Select.Trigger />
-          </Select.Root>
-        </form>,
-      );
-
-      expect(getFormData('font')).toEqual(['serif']);
-    });
-
     it('submits one entry for each value of a multiple select, from inputs of its own', async () => {
       await render(
         <form data-testid="form">

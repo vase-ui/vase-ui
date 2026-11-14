@@ -109,8 +109,8 @@ function syncValue() {
   store.context.valuesRef.value[currentIndex] = props.value;
 }
 
-// The root checks the values in a watcher that runs after the DOM update. That watcher can run
-// before the watchers of the items, so a value that changes in place goes in first.
+// The root reads the values in a watcher that runs after the DOM update, and that watcher can run
+// before the post watchers of the items. An item thus writes a changed value before the update.
 watch(
   () => props.value,
   (value) => {
