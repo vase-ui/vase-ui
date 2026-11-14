@@ -17,6 +17,7 @@ export * from './wait';
 export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
+export { detachedTriggersConformanceTests } from './detachedTriggersConformanceTests';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
 export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
