@@ -1,47 +1,18 @@
-import { onActivated, onDeactivated, onMounted, onScopeDispose, watch } from 'vue';
-import type { ComputedRef, WatchSource } from 'vue';
+import { watch } from 'vue';
+import type { ComputedRef } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { ownerWindow } from '../../common/owner';
 import { useAnimationFrame } from '../../common/useAnimationFrame';
 import * as TransitionStatusDataAttributes from '../../internals/TransitionStatusDataAttributes';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { getCssDimensions } from '../../utils/getCssDimensions';
+import { useDomEffect } from '../../utils/popups/useDomEffect';
 import * as NavigationMenuPopupCssVars from '../popup/NavigationMenuPopupCssVars';
 import * as NavigationMenuPositionerCssVars from '../positioner/NavigationMenuPositionerCssVars';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { setSharedFixedSize } from '../utils/setSharedFixedSize';
 
 const DEFAULT_SIZE = { width: 0, height: 0 };
-
-/**
- * Runs `effect` after the mount and after each DOM update that follows a change of `sources`. The
- * function that `effect` returns runs before the next run, at the unmount and while `KeepAlive`
- * holds the part.
- */
-function watchAfterMount(sources: WatchSource[], effect: () => (() => void) | undefined) {
-  let cleanup: (() => void) | undefined;
-  let deactivated = false;
-
-  function run() {
-    cleanup?.();
-    cleanup = deactivated ? undefined : effect();
-  }
-
-  onMounted(run);
-  watch(sources, run, { flush: 'post' });
-  onDeactivated(() => {
-    deactivated = true;
-    run();
-  });
-  // `onActivated` also runs at the first mount in a `KeepAlive`.
-  onActivated(() => {
-    if (deactivated) {
-      deactivated = false;
-      run();
-    }
-  });
-  onScopeDispose(() => cleanup?.());
-}
 
 /**
  * Gives the popup the size of the content of the active item. While the active item changes, the
@@ -253,7 +224,7 @@ export function useNavigationMenuPopupSize(
     }
   });
 
-  watchAfterMount([popupElement], () => {
+  useDomEffect([popupElement], () => {
     const popup = popupElement.value;
     if (!popup || typeof ResizeObserver !== 'function') {
       return undefined;
@@ -271,7 +242,7 @@ export function useNavigationMenuPopupSize(
     return () => resizeObserver.disconnect();
   });
 
-  watchAfterMount([open, isActiveItem, popupElement, positionerElement], () => {
+  useDomEffect([open, isActiveItem, popupElement, positionerElement], () => {
     const popup = popupElement.value;
     const positioner = positionerElement.value;
     if (!open.value || !isActiveItem.value || !popup || !positioner) {
@@ -291,7 +262,7 @@ export function useNavigationMenuPopupSize(
     };
   });
 
-  watchAfterMount(
+  useDomEffect(
     [currentContentRef, popupElement, positionerElement, isActiveItem, transitionStatus],
     () => {
       const observedElement = currentContentRef.value;
@@ -341,7 +312,7 @@ export function useNavigationMenuPopupSize(
     },
   );
 
-  watchAfterMount([open, popupElement, positionerElement, transitionStatus], () => {
+  useDomEffect([open, popupElement, positionerElement, transitionStatus], () => {
     const popup = popupElement.value;
     const positioner = positionerElement.value;
     if (!isActiveItem.value || !open.value || !popup || !positioner) {

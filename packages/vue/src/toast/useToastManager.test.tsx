@@ -12,6 +12,7 @@ import { ToastContext } from './provider/ToastProviderContext';
 import { ToastStore } from './store';
 import { useToastManager } from './useToastManager';
 import type { UseToastManagerReturnValue } from './useToastManager';
+import { List } from './utils/test-utils';
 
 function createStore() {
   return new ToastStore({
@@ -62,6 +63,43 @@ describe('useToast', () => {
 
   describe('add', () => {
     const { render } = createRenderer();
+
+    it('adds a toast to the viewport that auto-dismisses after 5s by default', async () => {
+      const AddButton = defineComponent({
+        setup() {
+          const { add } = useToastManager();
+          return () => (
+            <button
+              onClick={() => {
+                add({
+                  title: 'test',
+                });
+              }}
+            >
+              add
+            </button>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <List />
+          </Toast.Viewport>
+          <AddButton />
+        </Toast.Provider>,
+      );
+
+      const button = screen.getByRole('button', { name: 'add' });
+      await fireEvent.click(button);
+
+      expect(screen.queryByTestId('root')).not.toBe(null);
+
+      await tick(5000);
+
+      expect(screen.queryByTestId('root')).toBe(null);
+    });
 
     it('keeps multiple providers isolated when one provider updates', async () => {
       const ProviderContents = defineComponent({
@@ -131,6 +169,72 @@ describe('useToast', () => {
       expect(screen.getByText('Second toast')).not.toBe(null);
     });
 
+    it('replaces a closing toast when adding again with the same id', async () => {
+      const Buttons = defineComponent({
+        setup() {
+          const { add, close, toasts } = useToastManager();
+          let toastId: string | null = null;
+
+          return () => (
+            <Fragment>
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saving…',
+                    timeout: 0,
+                  });
+                }}
+              >
+                add
+              </button>
+              <button
+                onClick={() => {
+                  if (toastId) {
+                    close(toastId);
+                  }
+                }}
+              >
+                close
+              </button>
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saved',
+                    timeout: 0,
+                  });
+                }}
+              >
+                re-add
+              </button>
+              <div data-testid="toast-count">{toasts.value.length}</div>
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Toast.Viewport>
+            <List />
+          </Toast.Viewport>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('title')).toHaveTextContent('Saving…');
+      expect(screen.queryAllByTestId('root')).toHaveLength(1);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await fireEvent.click(screen.getByRole('button', { name: 're-add' }));
+
+      expect(screen.getByTestId('title')).toHaveTextContent('Saved');
+      expect(screen.queryAllByTestId('root')).toHaveLength(1);
+      expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
+    });
+
     it('does not call onRemove when replacing an ending toast', async () => {
       const onRemoveSpy = vi.fn();
 
@@ -193,6 +297,81 @@ describe('useToast', () => {
 
       expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
       expect(onRemoveSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('calls onRemove once after replacing an ending toast and later removing the replacement', async () => {
+      const onRemoveSpy = vi.fn();
+
+      const Buttons = defineComponent({
+        setup() {
+          const { add, close, toasts } = useToastManager();
+          let toastId: string | null = null;
+          const showViewport = shallowRef(false);
+
+          return () => (
+            <Fragment>
+              {showViewport.value ? (
+                <Toast.Viewport>
+                  <List />
+                </Toast.Viewport>
+              ) : null}
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saving…',
+                    timeout: 0,
+                    onRemove: onRemoveSpy,
+                  });
+                }}
+              >
+                add
+              </button>
+              <button
+                onClick={() => {
+                  if (toastId) {
+                    close(toastId);
+                  }
+                }}
+              >
+                close
+              </button>
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saved',
+                    timeout: 0,
+                    onRemove: onRemoveSpy,
+                  });
+                }}
+              >
+                re-add
+              </button>
+              <button onClick={() => (showViewport.value = true)}>show viewport</button>
+              <div data-testid="toast-count">{toasts.value.length}</div>
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await fireEvent.click(screen.getByRole('button', { name: 're-add' }));
+
+      expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
+      expect(onRemoveSpy).toHaveBeenCalledTimes(0);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'show viewport' }));
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+
+      expect(onRemoveSpy).toHaveBeenCalledTimes(1);
     });
 
     it('ignores transitionStatus when upserting an existing toast', async () => {
@@ -290,6 +469,35 @@ describe('useToast', () => {
 
       await fireEvent.click(screen.getByRole('button', { name: 'add' }));
       expect(screen.getByTestId('update-key')).toHaveTextContent('1');
+    });
+
+    describe('option: timeout', () => {
+      it('dismisses the toast after the specified timeout', async () => {
+        const AddButton = defineComponent({
+          setup() {
+            const { add } = useToastManager();
+            return () => <button onClick={() => add({ title: 'test', timeout: 1000 })}>add</button>;
+          },
+        });
+
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <List />
+            </Toast.Viewport>
+            <AddButton />
+          </Toast.Provider>,
+        );
+
+        const button = screen.getByRole('button', { name: 'add' });
+        await fireEvent.click(button);
+
+        expect(screen.queryByTestId('root')).not.toBe(null);
+
+        await tick(1000);
+
+        expect(screen.queryByTestId('root')).toBe(null);
+      });
     });
 
     describe('option: title', () => {
@@ -426,6 +634,196 @@ describe('useToast', () => {
 
         expect(screen.queryByTestId('title')).toHaveTextContent('test');
         expect(screen.queryByText('success')).not.toBe(null);
+      });
+    });
+
+    describe('option: onClose', () => {
+      it('calls onClose when the toast is closed', async () => {
+        const onCloseSpy = vi.fn();
+
+        const AddButton = defineComponent({
+          setup() {
+            const { add, close } = useToastManager();
+            let id: string | null = null;
+            return () => (
+              <Fragment>
+                <button
+                  onClick={() => {
+                    id = add({
+                      title: 'test',
+                      onClose: onCloseSpy,
+                    });
+                  }}
+                >
+                  add
+                </button>
+                <button
+                  onClick={() => {
+                    if (id) {
+                      close(id);
+                    }
+                  }}
+                >
+                  close
+                </button>
+              </Fragment>
+            );
+          },
+        });
+
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <List />
+            </Toast.Viewport>
+            <AddButton />
+          </Toast.Provider>,
+        );
+
+        const addButton = screen.getByRole('button', { name: 'add' });
+        await fireEvent.click(addButton);
+
+        expect(onCloseSpy.mock.calls.length).toBe(0);
+
+        const closeButton = screen.getByRole('button', { name: 'close' });
+        await fireEvent.click(closeButton);
+
+        expect(onCloseSpy.mock.calls.length).toBe(1);
+      });
+
+      it('calls onClose when the toast auto-dismisses', async () => {
+        const onCloseSpy = vi.fn();
+
+        const AddButton = defineComponent({
+          setup() {
+            const { add } = useToastManager();
+            return () => (
+              <button
+                onClick={() => {
+                  add({
+                    title: 'test',
+                    timeout: 1000,
+                    onClose: onCloseSpy,
+                  });
+                }}
+              >
+                add
+              </button>
+            );
+          },
+        });
+
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <List />
+            </Toast.Viewport>
+            <AddButton />
+          </Toast.Provider>,
+        );
+
+        const button = screen.getByRole('button', { name: 'add' });
+        await fireEvent.click(button);
+
+        expect(onCloseSpy.mock.calls.length).toBe(0);
+
+        await tick(1000);
+
+        expect(onCloseSpy.mock.calls.length).toBe(1);
+      });
+    });
+
+    describe('option: onRemove', () => {
+      it('calls onRemove when the toast is removed', async () => {
+        const onRemoveSpy = vi.fn();
+
+        const AddButton = defineComponent({
+          setup() {
+            const { add, close } = useToastManager();
+            let id: string | null = null;
+            return () => (
+              <Fragment>
+                <button
+                  onClick={() => {
+                    id = add({
+                      title: 'test',
+                      onRemove: onRemoveSpy,
+                    });
+                  }}
+                >
+                  add
+                </button>
+                <button
+                  onClick={() => {
+                    if (id) {
+                      close(id);
+                    }
+                  }}
+                >
+                  close
+                </button>
+              </Fragment>
+            );
+          },
+        });
+
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <List />
+            </Toast.Viewport>
+            <AddButton />
+          </Toast.Provider>,
+        );
+
+        const addButton = screen.getByRole('button', { name: 'add' });
+        await fireEvent.click(addButton);
+
+        expect(onRemoveSpy.mock.calls.length).toBe(0);
+
+        const closeButton = screen.getByRole('button', { name: 'close' });
+        await fireEvent.click(closeButton);
+
+        expect(onRemoveSpy.mock.calls.length).toBe(1);
+      });
+    });
+
+    describe('option: priority', () => {
+      it('applies correct ARIA attributes for high priority toasts', async () => {
+        const AddButton = defineComponent({
+          setup() {
+            const { add } = useToastManager();
+            return () => (
+              <button onClick={() => add({ title: 'high priority', priority: 'high' })}>
+                add high
+              </button>
+            );
+          },
+        });
+
+        await render(
+          <Toast.Provider>
+            <Toast.Viewport>
+              <List />
+            </Toast.Viewport>
+            <AddButton />
+          </Toast.Provider>,
+        );
+
+        const highPriorityButton = screen.getByRole('button', { name: 'add high' });
+        await fireEvent.click(highPriorityButton);
+
+        const highRoot = screen.getByTestId('root');
+
+        expect(highRoot.getAttribute('role')).toBe('alertdialog');
+        expect(highRoot.getAttribute('aria-modal')).toBe('false');
+        expect(screen.getByRole('alert')).not.toBe(null);
+        expect(screen.getByRole('alert').getAttribute('aria-atomic')).toBe('true');
+
+        const closeHighButton = screen.getByLabelText('close-press');
+        await fireEvent.click(closeHighButton);
+
+        expect(screen.queryByRole('alert')).toBe(null);
       });
     });
   });
@@ -1174,7 +1572,7 @@ describe('useToast', () => {
 
         await render(
           <Toast.Provider>
-            <Toast.Viewport data-testid="viewport" style={{ pointerEvents: 'none' }}>
+            <Toast.Viewport data-testid="viewport">
               <CustomList />
             </Toast.Viewport>
             <AddButton />
@@ -1526,6 +1924,45 @@ describe('useToast', () => {
       const closeButton = screen.getByRole('button', { name: 'close' });
       await fireEvent.click(closeButton);
 
+      expect(screen.queryByTestId('root')).toBe(null);
+    });
+  });
+
+  describe('prop: timeout', () => {
+    const { render } = createRenderer();
+
+    it('applies a changed timeout to toasts added afterwards', async () => {
+      const AddButton = defineComponent({
+        setup() {
+          const { add } = useToastManager();
+          return () => <button onClick={() => add({ title: 'test' })}>add</button>;
+        },
+      });
+
+      const App = defineComponent({
+        props: { timeout: { type: Number, required: true } },
+        setup(props) {
+          return () => (
+            <Toast.Provider timeout={props.timeout}>
+              <Toast.Viewport>
+                <List />
+              </Toast.Viewport>
+              <AddButton />
+            </Toast.Provider>
+          );
+        },
+      });
+
+      const { setProps } = await render(<App timeout={5000} />);
+
+      await setProps({ timeout: 1000 });
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+
+      await tick(999);
+      expect(screen.queryByTestId('root')).not.toBe(null);
+
+      await tick(2);
       expect(screen.queryByTestId('root')).toBe(null);
     });
   });
