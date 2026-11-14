@@ -1,0 +1,13 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/popover/demos",
+  "files": {
+    "_index.module.css": "ccc45718216c6d380ce20a041771f75c0e6f9de3f2e6c34fa84c038770530385",
+    "detached-triggers-controlled/css-modules/index.tsx": "24d64a0f935b5c8818dd5956f96dd7ede02d26444f9a09e6df1cb22126209447",
+    "detached-triggers-full/css-modules/index.module.css": "f81a0dcd4feaeb383177c2fa9b7987633d48193e7d9e7bc8133b66ecea27fc92",
+    "detached-triggers-full/css-modules/index.tsx": "d6bd91440ef44a8ed64d5121523ba35e50cdaf4611cadecb2cdf8f712d921930",
+    "detached-triggers-simple/css-modules/index.tsx": "c542d33edf4066e427fa436662fa11c11372182e131755566b136aea26da9898",
+    "hero/css-modules/index.tsx": "280258634fcd8aee058ff415afa1f3bf288418aa7956d34eec5e027f8762128e",
+    "open-on-hover/css-modules/index.tsx": "519d6c6fbb72d92b389c6f53d9f60b8cc5cf7c6973ed83dd371868110368ce40"
+  }
+}

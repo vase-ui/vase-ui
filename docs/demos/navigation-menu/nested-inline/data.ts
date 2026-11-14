@@ -40,9 +40,9 @@ export const audienceMenus = [
         description: 'Set one clear pattern for lightweight help, hints, and field guidance.',
       },
       {
-        href: `${base}components/preview-card`,
-        title: 'Preview Card',
-        description: 'Preview the page behind a link in a popup.',
+        href: `${base}components/popover`,
+        title: 'Popover',
+        description: 'Handle richer anchored panels like menus, inspectors, and onboarding.',
       },
     ],
   },

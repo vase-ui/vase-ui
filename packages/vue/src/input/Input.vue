@@ -71,6 +71,9 @@ defineSlots<{
 
 // As in Base UI, this part renders `Field.Control` and makes no element of its own. The two parts
 // then share the value, the state and the validation.
+// The template has one form for `#render` and one for no slot. A `v-if` on a slot template makes
+// the slots of `Field.Control` dynamic. Vue then renders `Field.Control` again each time this part
+// renders.
 const control = useTemplateRef('control');
 const element = computed(() => control.value?.element ?? null);
 
@@ -91,13 +94,21 @@ defineExpose({ element });
 
 <template>
   <FieldControl
+    v-if="$slots.render"
     ref="control"
     v-bind="{ ...$attrs, ...props }"
     @value-change="emitValueChange"
     @update:value="emitUpdateValue"
   >
-    <template v-if="$slots.render" #render="slotProps">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
   </FieldControl>
+  <FieldControl
+    v-else
+    ref="control"
+    v-bind="{ ...$attrs, ...props }"
+    @value-change="emitValueChange"
+    @update:value="emitUpdateValue"
+  />
 </template>

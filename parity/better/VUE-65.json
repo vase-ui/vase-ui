@@ -3,6 +3,6 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/items/createItems.ts#L45-L49"
   ],
-  "behavior": "`Combobox.createItems` gives `getValue` and `getLabel` the leaf item of grouped data, and the result has the type of the leaf item. In Base UI, TypeScript takes the group as the item, so a call with grouped data does not type-check.",
+  "behavior": "`Combobox.createItems` gives `getValue` and `getLabel` the leaf item of grouped data, and the result has the type of the leaf item. This holds with TypeScript 5.9 and 6.0. With these versions, the order of the members of the data type of Base UI gives the group as the item, so such a call does not type-check there. TypeScript 7.0 accepts both orders.",
   "dueWith": "packages/react/src/combobox/items/createItems.ts"
 }

@@ -39,6 +39,9 @@ defineSlots<{
 }>();
 
 // As in Base UI, this part renders `ListboxSeparator` and makes no element of its own.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of `ListboxSeparator` dynamic. Vue then renders `ListboxSeparator` again each
+// time this part renders. It also renders again each part in that slot that has slot content.
 const separator = useTemplateRef('separator');
 const element = computed(() => separator.value?.element ?? null);
 
@@ -46,11 +49,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <ListboxSeparator ref="separator" v-bind="{ ...$attrs, ...props }">
-    <template v-if="$slots.render" #render="slotProps">
+  <ListboxSeparator v-if="$slots.render" ref="separator" v-bind="{ ...$attrs, ...props }">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
+  </ListboxSeparator>
+  <ListboxSeparator v-else ref="separator" v-bind="{ ...$attrs, ...props }">
+    <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </ListboxSeparator>
