@@ -35,6 +35,7 @@
       <li><NuxtLink to="/popover">Popover</NuxtLink></li>
       <li><NuxtLink to="/alert-dialog">Alert Dialog</NuxtLink></li>
       <li><NuxtLink to="/tooltip">Tooltip</NuxtLink></li>
+      <li><NuxtLink to="/drawer">Drawer</NuxtLink></li>
       <li><NuxtLink to="/dialog">Dialog</NuxtLink></li>
     </ul>
   </main>

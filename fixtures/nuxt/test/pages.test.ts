@@ -1301,6 +1301,58 @@ async function expectHydratedTooltipPage(page: Page) {
   expect(await readTooltipTriggers(page)).toEqual([null, '', null, '']);
 }
 
+async function expectDrawerPageOnServer(page: Page) {
+  const triggerAttributes = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
+  expect(await readAttributes(page.getByTestId('closed-trigger'), triggerAttributes)).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await readAttributes(page.getByTestId('open-trigger'), triggerAttributes)).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+  });
+  expect(
+    await readAttributes(page.getByTestId('swipe-area'), [
+      'role',
+      'aria-hidden',
+      'data-closed',
+      'data-swipe-direction',
+    ]),
+  ).toEqual({
+    role: 'presentation',
+    'aria-hidden': 'true',
+    'data-closed': '',
+    'data-swipe-direction': 'up',
+  });
+  // A server render reports no drawer to the provider, so the indent is not active.
+  expect(
+    await readAttributes(page.getByTestId('indent'), ['data-active', 'data-inactive']),
+  ).toEqual({ 'data-active': null, 'data-inactive': '' });
+  expect(await page.locator('[data-vase-ui-portal], [role="dialog"]').count()).toBe(0);
+}
+
+// After the mount, the open drawer renders its popup in `<body>` and reports to the provider.
+async function expectHydratedDrawerPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('dialog');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await popup.textContent()).toBe('Open title');
+  expect(
+    await readAttributes(page.getByTestId('indent'), ['data-active', 'data-inactive']),
+  ).toEqual({ 'data-active': '', 'data-inactive': null });
+  expect(await page.getByTestId('open-trigger').getAttribute('aria-expanded')).toBe('true');
+  expect(await page.getByTestId('closed-trigger').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+}
+
 // A server renders no popup and no portal. The trigger of an open root has the open state. The
 // trigger of a handle has the closed form, because a server attaches no store to a handle.
 async function expectDialogPageOnServer(page: Page) {
@@ -1456,6 +1508,11 @@ const PAGES: PageCase[] = [
     path: '/tooltip',
     expectPage: expectTooltipPageOnServer,
     expectHydratedPage: expectHydratedTooltipPage,
+  },
+  {
+    path: '/drawer',
+    expectPage: expectDrawerPageOnServer,
+    expectHydratedPage: expectHydratedDrawerPage,
   },
   {
     path: '/dialog',
@@ -1980,6 +2037,19 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await link.getAttribute('data-popup-open')).toBe('');
     expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the closed drawer of /drawer on a click of its trigger after hydration', async () => {
+    const page = await createPage('/drawer');
+    const messages = collectMessages(page);
+    const trigger = page.getByTestId('closed-trigger');
+
+    await trigger.click();
+    await page.getByTestId('closed-popup').waitFor();
+
+    expect(await trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(await page.getByTestId('closed-popup').getAttribute('data-open')).toBe('');
     expect(messages).toEqual([]);
   });
 
