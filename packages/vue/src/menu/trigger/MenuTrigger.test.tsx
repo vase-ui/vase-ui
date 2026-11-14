@@ -557,22 +557,6 @@ describe('<Menu.Trigger />', () => {
       expect(screen.queryByTestId('popup')).toBe(null);
     });
 
-    it('closes a menu that hover opened after closeDelay when the pointer leaves the trigger', async () => {
-      const tick = useFakeClock();
-      await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
-      const trigger = screen.getByRole('button', { name: 'Open' });
-      await hover(trigger);
-      await tick(0);
-      expect(trigger).toHaveAttribute('data-popup-open');
-
-      await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
-      await tick(39);
-      expect(trigger).toHaveAttribute('data-popup-open');
-
-      await tick(1);
-      expect(trigger).not.toHaveAttribute('data-popup-open');
-    });
-
     it('closes a menu that hover opened after closeDelay when the pointer leaves the popup', async () => {
       const tick = useFakeClock();
       await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
