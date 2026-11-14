@@ -639,31 +639,6 @@ const RootProbe = defineComponent({
   },
 });
 
-const TestDrawer = defineComponent({
-  props: {
-    open: { type: Boolean, default: undefined },
-    defaultOpen: Boolean,
-    onOpenChange: Function as PropType<
-      (open: boolean, details: Drawer.Root.ChangeEventDetails) => void
-    >,
-  },
-  setup(props, { slots }) {
-    return () => (
-      <Drawer.Root
-        open={props.open}
-        defaultOpen={props.defaultOpen}
-        onOpenChange={props.onOpenChange}
-      >
-        <Drawer.Portal>
-          <Drawer.Viewport>
-            <Drawer.Popup>{slots.default ? slots.default() : 'Drawer'}</Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.Root>
-    );
-  },
-});
-
 function createProvider() {
   const calls: string[] = [];
   const names = new Map<object, string>();
@@ -1856,6 +1831,31 @@ describe('<Drawer.Root />', () => {
 
     afterEach(() => {
       win.CloseWatcher = originalCloseWatcher;
+    });
+
+    const TestDrawer = defineComponent({
+      props: {
+        open: { type: Boolean, default: undefined },
+        defaultOpen: Boolean,
+        onOpenChange: Function as PropType<
+          (open: boolean, details: Drawer.Root.ChangeEventDetails) => void
+        >,
+      },
+      setup(props, { slots }) {
+        return () => (
+          <Drawer.Root
+            open={props.open}
+            defaultOpen={props.defaultOpen}
+            onOpenChange={props.onOpenChange}
+          >
+            <Drawer.Portal>
+              <Drawer.Viewport>
+                <Drawer.Popup>{slots.default ? slots.default() : 'Drawer'}</Drawer.Popup>
+              </Drawer.Viewport>
+            </Drawer.Portal>
+          </Drawer.Root>
+        );
+      },
     });
 
     function currentWatcher() {
