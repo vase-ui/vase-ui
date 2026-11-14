@@ -4,8 +4,9 @@
     "https://vuejs.org/api/sfc-css-features.html#child-component-root-elements",
     "https://vuejs.org/guide/reusability/custom-directives.html#usage-on-components",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx#L713-L777",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx#L131",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/toast/viewport/ToastViewport.tsx#L286-L300"
   ],
-  "behavior": "A part that keeps nodes beside its element has one root node: a trigger with focus guards, and `Toast.Viewport` with its focus guard and its alert region. A rule of `<style scoped>`, `v-show`, a custom directive and `<Transition>` of the consumer thus apply to the element of the part, also while the nodes are in the document.",
+  "behavior": "A part that keeps nodes beside its element has one root node: a trigger with focus guards, `NavigationMenu.Viewport` in a positioner with its focus guards, and `Toast.Viewport` with its focus guard and its alert region. A rule of `<style scoped>`, `v-show`, a custom directive and `<Transition>` of the consumer thus apply to the element of the part, also while the nodes are in the document.",
   "dueWith": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx"
 }

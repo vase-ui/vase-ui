@@ -1,0 +1,14 @@
+{
+  "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "describe": "v1.0.0",
+  "release": "1.0.0",
+  "components": ["button"],
+  "commits": [
+    {
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "date": "2026-01-01T00:00:00+00:00",
+      "subject": "First",
+      "paths": []
+    }
+  ]
+}
