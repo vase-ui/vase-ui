@@ -1,6 +1,6 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
-import type { PropType } from 'vue';
+import { KeepAlive, defineComponent, nextTick, onMounted, provide, shallowRef } from 'vue';
+import type { MaybeRefOrGetter, PropType } from 'vue';
 import {
   createRenderer,
   createTransitionRunCounter,
@@ -12,14 +12,22 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
-import { createPopupFixtureHandle } from '../../../test/fixtures/PopupFixture';
-import type { PopupFixtureStore } from '../../../test/fixtures/PopupFixture';
+import {
+  PopupFixtureContext,
+  PopupFixtureStore,
+  createPopupFixtureHandle,
+} from '../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../test/fixtures/PopupRootPart.vue';
 import PopupTriggerPart from '../../../test/fixtures/PopupTriggerPart.vue';
 import { ValuePopupFixtureStore } from '../../../test/fixtures/ValuePopupFixture';
 import type { ValuePopupFixtureDetails } from '../../../test/fixtures/ValuePopupFixture';
-import { useImplicitActiveTrigger, usePopupRootSync, useSingleAnchorPopupRoot } from './popupRoot';
+import {
+  useImplicitActiveTrigger,
+  usePopupRootSync,
+  usePopupRootWithPopupId,
+  useSingleAnchorPopupRoot,
+} from './popupRoot';
 import PopupRootHydration from './PopupRootHydration.test.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
@@ -1997,5 +2005,86 @@ describe('usePopupRootSync', () => {
     unmount();
 
     expect(store.state.openMethod).toBe(null);
+  });
+});
+
+describe('usePopupRootWithPopupId', () => {
+  const { render } = createRenderer();
+
+  function createRoot(popupId: MaybeRefOrGetter<string | undefined>) {
+    let store!: PopupFixtureStore<unknown>;
+    const Root = defineComponent({
+      setup(_props, { slots }) {
+        store = usePopupRootWithPopupId(
+          {},
+          (initialState, defaultPopupId) =>
+            new PopupFixtureStore<unknown>(initialState, defaultPopupId),
+          popupId,
+          { name: 'Root', onOpenChange() {}, onOpenChangeComplete() {} },
+        ).store;
+        provide(PopupFixtureContext, store);
+        return () => slots.default?.();
+      },
+    });
+
+    return { Root, getStore: () => store };
+  }
+
+  it.each<{ name: string; popupId: () => MaybeRefOrGetter<string | undefined> }>([
+    { name: 'a value', popupId: () => 'first' },
+    { name: 'a ref', popupId: () => shallowRef('first') },
+    { name: 'a getter', popupId: () => () => 'first' },
+  ])('gives the first id to the store when the id is $name', async ({ popupId }) => {
+    const { Root, getStore } = createRoot(popupId());
+
+    await render(<Root />);
+
+    expect(getStore().state.defaultPopupId).toBe('first');
+    expect(getStore().select('popupId')).toBe('first');
+  });
+
+  it('follows a change of the id', async () => {
+    const popupId = shallowRef<string | undefined>('first');
+    const { Root, getStore } = createRoot(popupId);
+    await render(<Root />);
+
+    popupId.value = 'second';
+    await flushMicrotasks();
+
+    expect(getStore().select('popupId')).toBe('second');
+
+    popupId.value = undefined;
+    await flushMicrotasks();
+
+    expect(getStore().select('popupId')).toBe(undefined);
+  });
+
+  it('names the id in aria-controls of the trigger that opens the popup', async () => {
+    const popupId = shallowRef('first');
+    const { Root } = createRoot(popupId);
+    const { getByRole } = await render(
+      <Root>
+        <PopupTriggerPart>trigger</PopupTriggerPart>
+      </Root>,
+    );
+    const trigger = getByRole('button');
+
+    await fireEvent.click(trigger);
+
+    expect(trigger.getAttribute('aria-controls')).toBe('first');
+
+    popupId.value = 'second';
+    await nextTick();
+
+    expect(trigger.getAttribute('aria-controls')).toBe('second');
+  });
+
+  it('leaves the popup with no default id for undefined', async () => {
+    const { Root, getStore } = createRoot(undefined);
+
+    await render(<Root />);
+
+    expect(getStore().state.defaultPopupId).toBe(undefined);
+    expect(getStore().select('popupId')).toBe(undefined);
   });
 });
