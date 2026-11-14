@@ -869,8 +869,10 @@ describe('<Menu.Root />', () => {
     it('reports the focus, the key or the pointer that moved the highlight', async () => {
       const events: unknown[] = [];
       const { user } = await renderMenu({
-        onItemHighlighted: (item: HTMLElement | undefined, details: MenuRootHighlightEventDetails) =>
-          events.push([item?.textContent, details.reason, details.event.type]),
+        onItemHighlighted: (
+          item: HTMLElement | undefined,
+          details: MenuRootHighlightEventDetails,
+        ) => events.push([item?.textContent, details.reason, details.event.type]),
       });
       await focusItem('One');
       await user.keyboard('[ArrowDown]');
@@ -924,7 +926,12 @@ describe('<Menu.Root />', () => {
     });
 
     it.each([
-      { name: 'horizontal', orientation: 'horizontal', openKey: 'ArrowDown', otherKey: 'ArrowRight' },
+      {
+        name: 'horizontal',
+        orientation: 'horizontal',
+        openKey: 'ArrowDown',
+        otherKey: 'ArrowRight',
+      },
       { name: 'vertical', orientation: 'vertical', openKey: 'ArrowRight', otherKey: 'ArrowDown' },
     ] as const)(
       'opens a menu of a $name menubar with $openKey only',
@@ -958,6 +965,43 @@ describe('<Menu.Root />', () => {
         });
       },
     );
+
+    it('VUE-46: moves the highlight of a horizontal parent menu with a key that closes the submenu', async () => {
+      const { user } = await render(
+        <Menu.Root open orientation="horizontal">
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>Alpha</Menu.Item>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup data-testid="submenu">
+                        <Menu.Item>Monthly</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      await focusItem('More');
+
+      await user.keyboard('[ArrowDown]');
+      await waitFor(() => {
+        expect(getItem('Monthly')).toHaveFocus();
+      });
+
+      await user.keyboard('[ArrowLeft]');
+
+      await waitFor(() => {
+        expect(getItem('Alpha')).toHaveFocus();
+      });
+      expect(screen.queryByTestId('submenu')).toBe(null);
+    });
 
     it('closes a context menu with Tab', async () => {
       const events: unknown[] = [];
