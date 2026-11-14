@@ -10,8 +10,8 @@
       "describe": ["<Dialog.Popup />", "return focus when opened from a popup item"],
       "title": "returns focus to the $name trigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "Two rows of the case open the dialog from `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Two rows of the case press the trigger of Menu to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
@@ -67,16 +67,16 @@
       "describe": ["<Dialog.Root />", "when using $name", "nested popups"],
       "title": "should not dismiss the dialog when dismissing outside a nested modal menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger of Menu to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "describe": ["<Dialog.Root />", "when using $name", "nested popups"],
       "title": "should not close the parent menu when Escape is pressed in a nested dialog",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "The case renders the trigger of the dialog as `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger of Menu to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
@@ -91,8 +91,8 @@
       "describe": ["<Dialog.Root />"],
       "title": "returns focus to the menu trigger when a detached dialog trigger unmounts",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "The case renders the detached trigger of the dialog as `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger of Menu to open the menu. The trigger of Vase UI has no press yet."
     }
   ],
   "surfaceAdditions": [

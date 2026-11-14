@@ -18,7 +18,7 @@ Every Base UI component and documented API has a Vase UI counterpart.
 
 <!-- status:start -->
 
-Status: 29 of 38 components. The guarantee starts with the first full release.
+Status: 30 of 38 components. The guarantee starts with the first full release.
 
 <!-- status:end -->
 
