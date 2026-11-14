@@ -517,12 +517,6 @@ describe('useHoverTriggerInteraction', () => {
     // The trigger is at 0, 0 and the popup is at 200, 0. Each one is 100 by 100.
     const BOX: CSSProperties = { position: 'fixed', top: '0px', width: '100px', height: '100px' };
 
-    // The browser keeps its real pointer where an earlier test left it. A trigger under that pointer
-    // gets a trusted `mouseenter` in a later frame, and the popup opens. Each app of this block
-    // renders in a wrapper with this style. A dispatched event still reaches the listeners. The
-    // style is not on the trigger, because the hover intent removes it from the trigger.
-    const NO_POINTER_EVENTS: CSSProperties = { pointerEvents: 'none' };
-
     // A trigger that opens a popup on hover. `calls` lists the open changes that the owner hears.
     // As a popup root does, the app moves the anchor to the trigger that opens the popup.
     function createHoverApp({
@@ -558,7 +552,7 @@ describe('useHoverTriggerInteraction', () => {
           };
 
           return () => (
-            <div style={NO_POINTER_EVENTS}>
+            <>
               <button
                 id="trigger"
                 data-testid="trigger"
@@ -581,7 +575,7 @@ describe('useHoverTriggerInteraction', () => {
               {open.value && (
                 <div data-testid="popup" style={{ ...BOX, left: '200px' }} ref={refs.setFloating} />
               )}
-            </div>
+            </>
           );
         },
       });
@@ -602,11 +596,7 @@ describe('useHoverTriggerInteraction', () => {
           };
           const store = computed(() => (second.value ? stores.second : stores.first));
           const hoverProps = useHoverTriggerInteraction(store, options);
-          return () => (
-            <div style={NO_POINTER_EVENTS}>
-              <button data-testid="trigger" {...hoverProps} />
-            </div>
-          );
+          return () => <button data-testid="trigger" {...hoverProps} />;
         },
       });
 
@@ -986,13 +976,11 @@ describe('useHoverTriggerInteraction', () => {
             context.rootStore.context.triggerElements.add('inner', inner.value!);
           });
           return () => (
-            <div style={NO_POINTER_EVENTS}>
-              <button id="outer" {...hoverProps} ref={outer}>
-                <span id="inner" ref={inner}>
-                  <b data-testid="content" />
-                </span>
-              </button>
-            </div>
+            <button id="outer" {...hoverProps} ref={outer}>
+              <span id="inner" ref={inner}>
+                <b data-testid="content" />
+              </span>
+            </button>
           );
         },
       });
@@ -1053,11 +1041,7 @@ describe('useHoverTriggerInteraction', () => {
       const App = defineComponent({
         setup() {
           const hoverProps = useHoverTriggerInteraction(store, { delay: 500 });
-          return () => (
-            <div style={NO_POINTER_EVENTS}>
-              <button data-testid="trigger" {...hoverProps} />
-            </div>
-          );
+          return () => <button data-testid="trigger" {...hoverProps} />;
         },
       });
       await render(<App />);

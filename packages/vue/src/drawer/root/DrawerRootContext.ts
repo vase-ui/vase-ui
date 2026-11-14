@@ -1,8 +1,9 @@
 import { inject } from 'vue';
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { DrawerRootSnapPointChangeEventDetails } from './DrawerRoot.vue';
+import type { SwipeDirection } from '../../utils/useSwipeDismiss';
 
-export type DrawerSwipeDirection = 'up' | 'down' | 'left' | 'right';
+export type DrawerSwipeDirection = SwipeDirection;
 export type DrawerSnapPoint = number | string;
 
 export interface DrawerNestedSwipeProgressStore {
