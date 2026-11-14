@@ -1538,7 +1538,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - The call for `ScrollArea.Corner` waits for the first measurement of the viewport, because the corner has no element before it. Its `render` option calls `await flushMicrotasks()`.
 - The call for a portal part, and for each part in it, such as `Tooltip.Popup`, also calls `await flushMicrotasks()` in its `render` option. The portal renders its element and its content in the flush after the mount.
 - `waitForPositioned(positioner)` waits until the positioner passes `toBeVisible()`. Before its first position, a positioner has `opacity: 0`.
-- `popupConformanceTests`, `positionerConformanceTests` and `detachedTriggersConformanceTests` are the shared suites of a popup family. `createComponent` of the first two gets the props of the parts and returns a vnode.
+- `popupConformanceTests`, `positionerConformanceTests`, `detachedTriggersConformanceTests` and `viewportConformanceTests` are the shared suites of a popup family. `createComponent` of each suite except `detachedTriggersConformanceTests` gets the props of the parts and returns a vnode.
 - `root.ref` of `popupConformanceTests` is a function ref that gets the exposed actions of the root. A case that sets it renders a function.
 - `popupConformanceTests` gives a hover trigger `pointer-events: none`, because the real pointer of the browser can rest on it.
 - `createComponent` of `positionerConformanceTests` gives `render` of the positioner props to the `#render` slot of the part. Under that slot, the part renders no popup.
