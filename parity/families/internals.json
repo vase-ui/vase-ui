@@ -206,29 +206,6 @@
       "reason": "The cases test `resolveRenderedAriaLabel`, which reads a React element that is given as `render`."
     },
     {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel", "%s"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The cases render the popup parts of Select and `Combobox.Label`, which Vase UI does not have. Combobox comes last, so the row names its file. The cases \"focuses the control of the provider when a label that is not native is clicked\" and \"focuses the control in the shadow root of the label when $name\" test the focus part of this behavior with a fixture label and control. The check that the popup stays closed waits for Select and Combobox."
-    },
-    {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "focuses a control in the light DOM from a label in a shadow root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The case renders `Combobox.Root`, `Combobox.Label` and `Combobox.Trigger`, which Vase UI does not have. The case \"focuses a control in the light DOM from a label in a shadow root\" in the block \"with a fixture label and control\" tests the same behavior with no Combobox."
-    },
-    {
-      "upstream": "packages/react/src/internals/labelable-provider/useLabel.test.tsx",
-      "describe": ["useLabel"],
-      "title": "focuses a control in an ancestor shadow root from a label in a nested shadow root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/label/ComboboxLabel.tsx",
-      "reason": "The case renders `Combobox.Root`, `Combobox.Label` and `Combobox.Trigger`, which Vase UI does not have. The case \"focuses a control in an ancestor shadow root from a label in a nested shadow root\" in the block \"with a fixture label and control\" tests the same behavior with no Combobox."
-    },
-    {
       "upstream": "packages/react/src/internals/composite/index.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/composite`, and Vase UI has no entry point for an internal module."
