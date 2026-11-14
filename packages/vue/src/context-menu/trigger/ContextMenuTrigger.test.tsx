@@ -5,6 +5,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  screen,
   takeReportedMessages,
 } from '#test-utils';
 import { useMenuRootContext } from '../../menu/root/MenuRootContext';
@@ -81,7 +82,7 @@ describe('<ContextMenu.Trigger />', () => {
   }));
 
   it('blocks the native context menu when onContextMenu skips the Base UI handler', async () => {
-    const { getByTestId } = await render(
+    await render(
       <ContextMenu.Root>
         <ContextMenu.Trigger
           data-testid="trigger"
@@ -92,8 +93,8 @@ describe('<ContextMenu.Trigger />', () => {
       </ContextMenu.Root>,
     );
 
-    const event = createContextMenuEvent();
-    getByTestId('trigger').dispatchEvent(event);
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    screen.getByTestId('trigger').dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
   });

@@ -240,6 +240,12 @@ A part that Base UI writes as another part renders that part and no element of i
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
+A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
+
+- The root renders no element, so it does not set `inheritAttrs`. It declares its own props with the text of Base UI, and binds each prop on the other root by name.
+- The rule above for the events applies: the root listens to each event of the other root and emits it again.
+- The root exposes the actions of the other root. Each exposed function calls the function of the same name on the other root. A function `ref` in the template writes that root to a `shallowRef`.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
@@ -597,6 +603,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
+- A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
 
 ### Popup store
 
@@ -996,6 +1003,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Base UI adds some listeners to the element of the part with `addEventListener`. Give such a handler in the props of the part. An example is `onBeforematch` of `Collapsible.Panel`. The element of a `#render` slot then gets the listener too.
 - A listener that Base UI adds with `{ passive: false }` also goes in the props. An example is the `wheel` listener of `ScrollArea.Scrollbar`. Vue adds the listener of an element with no `passive` option. A browser makes a `wheel` listener passive by default only on the window, the document, the root element and the body.
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
+- React adds the `touchstart` and `touchmove` listeners of a prop as passive listeners. A handler of a part for one of them that calls no `preventDefault()` thus has the suffix `Passive` on its key. `ContextMenu.Trigger` does this. A listener of the consumer stops such a handler with `event.preventVaseUIHandler()` only when it has the `.passive` modifier. A listener with no modifier has another key, so the handler of the part still runs.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example.
 - A text input part listens to `input` and to `change`. It handles `change` only when the value of the input is new. A value is not new when the input had it after the last event that the part handled. A value is also not new when the input had it after the last write of Vue, of the part or of a reset. React's `onChange` does the same, because its value tracker also follows the writes of React. A program that fills a form can send only `change`. A range input follows the same rule, as the input of `Slider.Thumb` does.

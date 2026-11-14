@@ -5,8 +5,8 @@ import { ContextMenuRootContext } from '../../src/internals/context-menu-root-co
 import type { MenubarContext as MenubarContextValue } from '../../src/internals/menubar-context/MenubarContext';
 import { MenubarContext } from '../../src/internals/menubar-context/MenubarContext';
 
-// The parents of a menu that no part provides yet: a menubar and a context menu. A test gives the
-// members that it reads, and the others have plain values.
+// The parents of a menu that a test makes by hand: a menubar, which no part provides yet, and a
+// context menu. A test gives the members that it reads, and the others have plain values.
 
 export function createMenubarContext(
   overrides: Partial<MenubarContextValue> = {},
