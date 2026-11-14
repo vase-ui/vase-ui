@@ -59,7 +59,7 @@ export interface PopoverPopupProps
 
 <script setup lang="ts">
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { computed, watch } from 'vue';
+import { computed, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
 import { REASONS } from '../../internals/reasons';
@@ -153,19 +153,19 @@ function handleKeydown(event: KeyboardEvent) {
 
 let popupElement: HTMLElement | null = null;
 
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old one then
+  // must not clear the element of the new one.
+  if (popup !== null || store.context.popupRef.value === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    useKeepAliveElementRef((popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old one then
-      // must not clear the element of the new one.
-      if (popup !== null || store.context.popupRef.value === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    }),
-  ],
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

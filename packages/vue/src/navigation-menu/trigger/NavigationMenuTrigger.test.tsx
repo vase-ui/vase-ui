@@ -983,6 +983,42 @@ describe('<NavigationMenu.Trigger />', () => {
       expect(popup.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const hasPopup = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () =>
+          hasPopup.value ? (
+            <NavigationMenu.Popup data-testid="popup">
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Popup>
+          ) : null,
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await renderMenu(() => (
+        <NavigationMenu.Portal>
+          <NavigationMenu.Positioner>
+            <KeepAlive>{visible.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+          </NavigationMenu.Positioner>
+        </NavigationMenu.Portal>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasPopup.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 
   describe('popup size', () => {

@@ -36,18 +36,18 @@ const state: SelectListState = EMPTY_OBJECT;
 
 let listElement: HTMLElement | null = null;
 
+function setListElement(list: HTMLElement | null) {
+  // A compiled template can mount a new list before it unmounts the old one. The old one then
+  // must not clear the element of the new one.
+  if (list !== null || toRaw(store.state).listElement === listElement) {
+    store.set('listElement', list as HTMLDivElement | null);
+  }
+  listElement = list;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    useKeepAliveElementRef((list) => {
-      // A compiled template can mount a new list before it unmounts the old one. The old one then
-      // must not clear the element of the new one.
-      if (list !== null || toRaw(store.state).listElement === listElement) {
-        store.set('listElement', list as HTMLDivElement | null);
-      }
-      listElement = list;
-    }),
-  ],
+  ref: useKeepAliveElementRef(setListElement, () => toRaw(store.state).triggerElement),
   props: (attrs) => [
     {
       id: `${store.select('id')}-list`,

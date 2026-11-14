@@ -1346,6 +1346,91 @@ describe('<Menu.Trigger />', () => {
       expect(list.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', list.id);
     });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const hasPopup = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () =>
+          hasPopup.value ? (
+            <Menu.Popup>
+              <Menu.Item>Item</Menu.Item>
+            </Menu.Popup>
+          ) : null,
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <KeepAlive>
+                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
+              </KeepAlive>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasPopup.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const popup = screen.getByRole('menu');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the popup while the list mounts in a branch that KeepAlive holds', async () => {
+      const hasList = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () =>
+          hasList.value ? (
+            <Menu.List data-testid="list">
+              <Menu.Item>Item</Menu.Item>
+            </Menu.List>
+          ) : null,
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup">
+                <KeepAlive>
+                  {visible.value ? <Branch key="branch" /> : <Other key="other" />}
+                </KeepAlive>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasList.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

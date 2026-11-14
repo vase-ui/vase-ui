@@ -319,6 +319,38 @@ describe('<Dialog.Trigger />', () => {
       expect(popup.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const hasPopup = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () => (hasPopup.value ? <Dialog.Popup>popup</Dialog.Popup> : null),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Dialog.Root defaultOpen modal={false}>
+          <Dialog.Trigger>Open</Dialog.Trigger>
+          <Dialog.Portal>
+            <KeepAlive>{visible.value ? <Branch key="branch" /> : <Other key="other" />}</KeepAlive>
+          </Dialog.Portal>
+        </Dialog.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasPopup.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

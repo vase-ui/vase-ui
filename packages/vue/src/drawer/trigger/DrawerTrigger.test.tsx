@@ -107,5 +107,41 @@ describe('<Drawer.Trigger />', () => {
       expect(popup.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const hasPopup = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () => (hasPopup.value ? <Drawer.Popup>popup</Drawer.Popup> : null),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Drawer.Root defaultOpen modal={false}>
+          <Drawer.Trigger>Open</Drawer.Trigger>
+          <Drawer.Portal>
+            <Drawer.Viewport>
+              <KeepAlive>
+                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
+              </KeepAlive>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        </Drawer.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasPopup.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const popup = screen.getByRole('dialog');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
   });
 });

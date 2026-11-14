@@ -786,6 +786,91 @@ describe('<Select.Trigger />', () => {
       expect(named.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', named.id);
     });
+
+    it('has no aria-controls while the popup mounts in a branch that KeepAlive holds', async () => {
+      const hasPopup = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () =>
+          hasPopup.value ? (
+            <Select.Popup data-testid="popup">
+              <Select.Item value="a">A</Select.Item>
+            </Select.Popup>
+          ) : null,
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <KeepAlive>
+                {visible.value ? <Branch key="branch" /> : <Other key="other" />}
+              </KeepAlive>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasPopup.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the popup while the list mounts in a branch that KeepAlive holds', async () => {
+      const hasList = shallowRef(false);
+      const Branch = defineComponent({
+        setup: () => () =>
+          hasList.value ? (
+            <Select.List data-testid="list">
+              <Select.Item value="a">A</Select.Item>
+            </Select.List>
+          ) : null,
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger" />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup data-testid="popup">
+                <KeepAlive>
+                  {visible.value ? <Branch key="branch" /> : <Other key="other" />}
+                </KeepAlive>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      visible.value = false;
+      await flushMicrotasks();
+      hasList.value = true;
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger');
+      const popup = screen.getByTestId('popup');
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+    });
   });
 
   it('throws a descriptive error when rendered outside <Select.Root>', async () => {

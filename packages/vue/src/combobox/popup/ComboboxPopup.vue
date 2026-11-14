@@ -147,7 +147,7 @@ function handleFocusin(event: FocusEvent) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: useKeepAliveElementRef(setPopupElement),
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).triggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     store.select('popupProps'),

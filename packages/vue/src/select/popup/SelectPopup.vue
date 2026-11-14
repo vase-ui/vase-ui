@@ -45,7 +45,7 @@ export interface SelectPopupProps
 import { platform as floatingPlatform } from '@floating-ui/vue';
 import { rectToClientRect } from '@floating-ui/utils';
 import type { ClientRectObject } from '@floating-ui/utils';
-import { computed, onScopeDispose } from 'vue';
+import { computed, onScopeDispose, toRaw } from 'vue';
 import type { CSSProperties } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { clamp } from '../../common/clamp';
@@ -488,19 +488,19 @@ const listProps = computed(() =>
 
 let popupElement: HTMLElement | null = null;
 
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old one then
+  // must not clear the element of the new one.
+  if (popup !== null || store.context.popupRef.value === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    useKeepAliveElementRef((popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old one then
-      // must not clear the element of the new one.
-      if (popup !== null || store.context.popupRef.value === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    }),
-  ],
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).triggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => {
     const hasList = store.select('listElement') !== null;

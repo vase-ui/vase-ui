@@ -173,19 +173,19 @@ const state = computed<MenuPopupState>(() => ({
 
 let popupElement: HTMLElement | null = null;
 
+function setPopupElement(popup: HTMLElement | null) {
+  // A compiled template can mount a new popup before it unmounts the old one. The old popup
+  // then must not clear the element of the new one.
+  if (popup !== null || toRaw(store.state).popupElement === popupElement) {
+    store.context.popupRef.value = popup;
+    store.set('popupElement', popup);
+  }
+  popupElement = popup;
+}
+
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: [
-    useKeepAliveElementRef((popup) => {
-      // A compiled template can mount a new popup before it unmounts the old one. The old popup
-      // then must not clear the element of the new one.
-      if (popup !== null || toRaw(store.state).popupElement === popupElement) {
-        store.context.popupRef.value = popup;
-        store.set('popupElement', popup);
-      }
-      popupElement = popup;
-    }),
-  ],
+  ref: useKeepAliveElementRef(setPopupElement, () => toRaw(store.state).activeTriggerElement),
   stateAttributesMapping: popupTransitionStateMapping,
   props: (attrs) => [
     // This listener runs after each other listener of the popup.
