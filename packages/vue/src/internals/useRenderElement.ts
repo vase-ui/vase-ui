@@ -202,7 +202,7 @@ export function useRenderElement<
       if (params.children && !childrenMarker.mounted) {
         warn(
           'The `#render` slot did not mount `children`.',
-          'The part then lacks the nodes of its own, so it does not work.',
+          'The element then does not have the content of the part, so the part does not work.',
           'Mount it in the element: `<component :is="children">`.',
         );
       }
