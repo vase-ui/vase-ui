@@ -1273,10 +1273,11 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - The call for `ScrollArea.Corner` waits for the first measurement of the viewport, because the corner has no element before it. Its `render` option calls `await flushMicrotasks()`.
 - The call for a portal part, and for each part in it, such as `Tooltip.Popup`, also calls `await flushMicrotasks()` in its `render` option. The portal renders its element and its content in the flush after the mount.
 - `waitForPositioned(positioner)` waits until the positioner passes `toBeVisible()`. Before its first position, a positioner has `opacity: 0`.
-- `popupConformanceTests` and `positionerConformanceTests` are the shared suites of a popup family. `createComponent` gets the props of the parts and returns a vnode.
+- `popupConformanceTests`, `positionerConformanceTests` and `detachedTriggersConformanceTests` are the shared suites of a popup family. `createComponent` of the first two gets the props of the parts and returns a vnode.
 - `root.ref` of `popupConformanceTests` is a function ref that gets the exposed actions of the root. A case that sets it renders a function.
 - `popupConformanceTests` gives a hover trigger `pointer-events: none`, because the real pointer of the browser can rest on it.
 - `createComponent` of `positionerConformanceTests` gives `render` of the positioner props to the `#render` slot of the part. Under that slot, the part renders no popup.
+- `detachedTriggersConformanceTests` gets the parts of the family as components. It puts `triggerProps` on each trigger. A family whose triggers open on hover gives `pointer-events: none` there, because the real pointer of the browser can rest on a trigger.
 - `createFormDataSpy(name)` returns a `vi.fn` for a `submit` listener. The spy calls `preventDefault()` on the event. It returns the entry of the form for `name`, or `null` when the form has no such entry. Read the last result with `spy.mock.results.at(-1)?.value`.
 - `hiddenInputSizeTests({ render, createComponent })` is a shared suite for a part with a hidden input that has no `name`. `createComponent` gets `{ required }` and returns a vnode. The suite makes the input invalid and asserts that it has zero size. After `reportValidity()` and `await flushMicrotasks()`, it asserts that the input is 1px by 1px.
 - `mockRuntimeLocale(locale)` makes `Intl.NumberFormat` use `locale` when a call gives no locale, until the test ends. `getFormatter` keeps each formatter by locale and options. Thus format with options that no earlier test of the file formatted with no locale.
@@ -1353,6 +1354,7 @@ The hydration helpers:
 - Assert the start state before the action when the end state can be true already.
 - Use the `firePointer` test helper when a test depends on the time of an event.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
+- `user.hover` and `user.unhover` throw for an element with `pointer-events: none`. A case that uses them sets `pointer-events: auto` on the element, also where a shared test component sets `none`.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.

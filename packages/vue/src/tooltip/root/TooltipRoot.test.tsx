@@ -51,7 +51,13 @@ type TestTooltipProps = {
   popupProps?: Record<string, unknown>;
 };
 
-const testTooltipProps = ['rootProps', 'triggerProps', 'portalProps', 'positionerProps', 'popupProps'];
+const testTooltipProps: Array<keyof TestTooltipProps> = [
+  'rootProps',
+  'triggerProps',
+  'portalProps',
+  'positionerProps',
+  'popupProps',
+];
 
 // The cases dispatch hover events. The real pointer of the browser can rest on a trigger and send
 // events of its own, so each trigger ignores it. A dispatched event still reaches the trigger.

@@ -37,7 +37,9 @@ describe('<Tooltip.Root />', () => {
       resume = resolve;
     });
 
-    const container = await insertServerHtml('src/tooltip/root/TooltipDefaultOpenHydration.test.vue');
+    const container = await insertServerHtml(
+      'src/tooltip/root/TooltipDefaultOpenHydration.test.vue',
+    );
     const trigger = within(container).getByRole('button', { name: 'Trigger' });
     expect(trigger).not.toHaveAttribute('data-popup-open');
 
@@ -93,9 +95,7 @@ describe('<Tooltip.Root />', () => {
     triggerBApp.mount(triggerBContainer);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Trigger B' })).toHaveAttribute(
-        'data-popup-open',
-      );
+      expect(screen.getByRole('button', { name: 'Trigger B' })).toHaveAttribute('data-popup-open');
     });
     expect(takeReportedMessages()).toEqual([]);
   });
@@ -265,9 +265,7 @@ describe('<Tooltip.Root />', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute(
-          'data-popup-open',
-        );
+        expect(screen.getByRole('button', { name: 'Trigger' })).toHaveAttribute('data-popup-open');
       });
 
       expect(handle.isOpen).toBe(true);
@@ -409,7 +407,10 @@ describe('<Tooltip.Root />', () => {
       const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
 
       await waitFor(() => {
-        expect(onOpenChange).toHaveBeenCalledWith(false, expect.objectContaining({ reason: 'none' }));
+        expect(onOpenChange).toHaveBeenCalledWith(
+          false,
+          expect.objectContaining({ reason: 'none' }),
+        );
       });
       expect(screen.queryByRole('button', { name: 'Trigger 1' })).toBe(null);
       expect(trigger2).not.toHaveAttribute('data-popup-open');

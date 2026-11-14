@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
+import type { Component } from 'vue';
 import * as Tooltip from '../index.parts';
 
 const props = defineProps<{
@@ -9,10 +10,11 @@ const props = defineProps<{
 
 // A server render gets no handle, because the props go to the server as JSON.
 const tooltipHandle = props.handle ?? Tooltip.createHandle();
-// The trigger in `<Suspense>` hydrates after its root, when the gate resolves.
+// The trigger in `<Suspense>` hydrates after its root, when the gate resolves. The type of
+// `defineAsyncComponent` does not accept a generic SFC.
 const DelayedTrigger = defineAsyncComponent(async () => {
   await props.hydrationGate;
-  return Tooltip.Trigger;
+  return Tooltip.Trigger as unknown as Component;
 });
 </script>
 
