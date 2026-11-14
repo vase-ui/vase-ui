@@ -1,5 +1,7 @@
 import { vi, describe, it, expect } from 'vitest';
-import { defineComponent } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import type { PropType } from 'vue';
+import { REASONS } from '../../internals/reasons';
 import {
   createRenderer,
   describeConformance,
@@ -7,6 +9,7 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  waitFor,
 } from '#test-utils';
 import * as NavigationMenu from '../index.parts';
 
@@ -221,6 +224,154 @@ describe('<NavigationMenu.List />', () => {
       await flushMicrotasks();
 
       expect(middle).toHaveFocus();
+    });
+  });
+
+  describe('dismissal', () => {
+    const DismissMenu = defineComponent({
+      props: {
+        onValueChange: {
+          type: Function as PropType<(value: unknown, details: { reason: string }) => void>,
+          default: undefined,
+        },
+        stopKeydown: { type: Boolean, default: false },
+      },
+      setup(props) {
+        return () => (
+          <div onKeydown={props.stopKeydown ? (event) => event.stopPropagation() : undefined}>
+            <NavigationMenu.Root onValueChange={props.onValueChange}>
+              <NavigationMenu.List>
+                <NavigationMenu.Item value="one">
+                  <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
+                  <NavigationMenu.Content>
+                    <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item value="two">
+                  <NavigationMenu.Trigger data-testid="trigger-two">Two</NavigationMenu.Trigger>
+                  <NavigationMenu.Content>
+                    <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <NavigationMenu.Link data-testid="top-link" href="#top">
+                    Top
+                  </NavigationMenu.Link>
+                </NavigationMenu.Item>
+              </NavigationMenu.List>
+              <NavigationMenu.Portal>
+                <NavigationMenu.Positioner>
+                  <NavigationMenu.Popup>
+                    <NavigationMenu.Viewport />
+                  </NavigationMenu.Popup>
+                </NavigationMenu.Positioner>
+              </NavigationMenu.Portal>
+            </NavigationMenu.Root>
+            <button type="button" data-testid="outside">
+              Outside
+            </button>
+          </div>
+        );
+      },
+    });
+
+    // A press with no hover and no focus. A real pointer hovers the trigger first, and the focus
+    // of the trigger makes a press outside a focus-out.
+    async function open(testId: string) {
+      await fireEvent.click(screen.getByTestId(testId));
+      await flushMicrotasks();
+      expect(screen.getByTestId(testId)).toHaveAttribute('aria-expanded', 'true');
+    }
+
+    it('closes the menu with Escape and returns the focus to the active trigger', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(<DismissMenu onValueChange={handleValueChange} />);
+      await open('trigger-one');
+      await open('trigger-two');
+      handleValueChange.mockClear();
+
+      await user.keyboard('{Escape}');
+      await flushMicrotasks();
+
+      const trigger = screen.getByTestId('trigger-two');
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.calls[0][0]).toBe(null);
+      expect(handleValueChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+    });
+
+    it('closes the menu with Escape on a trigger when an ancestor stops the event', async () => {
+      await render(<DismissMenu stopKeydown />);
+      await open('trigger-one');
+
+      await fireEvent.keyDown(screen.getByTestId('trigger-one'), { key: 'Escape' });
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('closes the menu for a press outside it', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(<DismissMenu onValueChange={handleValueChange} />);
+      await open('trigger-one');
+      handleValueChange.mockClear();
+
+      await user.click(screen.getByTestId('outside'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'false');
+      expect(handleValueChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
+    });
+
+    it('keeps the menu open for a press of a trigger of another menu', async () => {
+      await render(
+        <div>
+          <DismissMenu />
+          <NavigationMenu.Root>
+            <NavigationMenu.List>
+              <NavigationMenu.Item value="other">
+                <NavigationMenu.Trigger data-testid="other-trigger">Other</NavigationMenu.Trigger>
+              </NavigationMenu.Item>
+            </NavigationMenu.List>
+          </NavigationMenu.Root>
+        </div>,
+      );
+      await open('trigger-one');
+
+      await fireEvent.click(screen.getByTestId('other-trigger'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('keeps the menu open for a press in the list', async () => {
+      const { user } = await render(<DismissMenu />);
+      await open('trigger-one');
+
+      await user.click(screen.getByTestId('top-link'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('does not close the menu for Escape while KeepAlive holds it, and closes it after the activation', async () => {
+      const visible = shallowRef(true);
+      await render(() => <KeepAlive>{visible.value ? <DismissMenu /> : null}</KeepAlive>);
+      await open('trigger-one');
+      const trigger = screen.getByTestId('trigger-one');
+
+      visible.value = false;
+      await flushMicrotasks();
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      visible.value = true;
+      await flushMicrotasks();
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
   });
 
