@@ -91,7 +91,8 @@ export namespace Root {
 
 /**
  * A button that opens the menu.
- * Renders a `<button>` element.
+ * Renders a `<button>` element. While the trigger owns the open menu, a focus guard is before the
+ * button and a focus guard is after it in the DOM. A trigger in a menubar has no guards.
  */
 export const Trigger: typeof MenuTrigger = MenuTrigger;
 export namespace Trigger {

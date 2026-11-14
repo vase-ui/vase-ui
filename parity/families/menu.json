@@ -456,23 +456,23 @@
       "describe": ["<Menu.Popup />"],
       "title": "keeps focus on an input that autofocuses when the trigger is hidden as the menu closes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu, and it renders `Menu.Item`. The trigger of Vase UI has no press yet, and Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />"],
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
-      "reason": "The call renders `Menu.Item`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The suite presses the trigger to open the menu, and the call renders `Menu.Item`. The trigger of Vase UI has no press yet, and Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />", "prop: finalFocus"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu, and they press or release the mouse button on a `Menu.Item`. The trigger of Vase UI has no press yet, and Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
@@ -501,8 +501,8 @@
       "describe": ["<Menu.Portal />", "prop: container"],
       "title": "mounts and focuses an initially open menu inside an ancestor ref (controlled=$controlled, keepMounted=$keepMounted)",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/item/MenuItem.tsx",
+      "reason": "The case renders `Menu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/portal/MenuPortal.test.tsx",
@@ -595,19 +595,19 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
@@ -631,8 +631,8 @@
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
       "describe": ["<Menu.Trigger />", "tabbing backward from the open trigger"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu, and it renders `Menu.Item`. The trigger of Vase UI has no press yet, and Vase UI does not have `Menu.Item`."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",

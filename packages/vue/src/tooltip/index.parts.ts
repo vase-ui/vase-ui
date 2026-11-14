@@ -9,6 +9,8 @@ import type {
   TooltipPositionerProps,
   TooltipPositionerState,
 } from './positioner/TooltipPositioner.vue';
+import TooltipProvider from './provider/TooltipProvider.vue';
+import type { TooltipProviderProps, TooltipProviderState } from './provider/TooltipProvider.vue';
 import TooltipRoot from './root/TooltipRoot.vue';
 import type {
   TooltipRootActions,
@@ -82,6 +84,16 @@ export const Arrow: typeof TooltipArrow = TooltipArrow;
 export namespace Arrow {
   export type State = TooltipArrowState;
   export type Props = TooltipArrowProps;
+}
+
+/**
+ * Provides a shared delay for multiple tooltips. The grouping logic ensures that
+ * once a tooltip becomes visible, the adjacent tooltips will be shown instantly.
+ */
+export const Provider: typeof TooltipProvider = TooltipProvider;
+export namespace Provider {
+  export type State = TooltipProviderState;
+  export type Props = TooltipProviderProps;
 }
 
 export {
