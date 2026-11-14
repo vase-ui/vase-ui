@@ -12,8 +12,8 @@ export interface ElementSiblings {
 /**
  * Keeps nodes that the caller made beside a node of a part, such as its element or the start node
  * of its `Teleport`. The part then has one root node. Vue gives the scope id, the directives and the
- * `Transition` of a consumer to a root element. Vue 3.5.41 and later also give the `Transition` to
- * the element in a root `Teleport`.
+ * `Transition` of a consumer to a root element. From Vue 3.5.41, and from 3.6.0-rc.3 in Vue 3.6,
+ * Vue also gives the `Transition` to the element in a root `Teleport`.
  *
  * `siblings` gives the same object while the nodes do not change. `null` removes the nodes.
  */

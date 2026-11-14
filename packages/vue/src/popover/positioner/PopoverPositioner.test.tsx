@@ -761,8 +761,8 @@ describe('<Popover.Positioner />', () => {
     });
   });
 
-  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and each later case of
-  // the file then gets a warning about a slot. The case thus comes last.
+  // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and a later case of the
+  // file can then get a warning about a slot. The case thus comes last.
   it('throws a descriptive error when rendered outside <Popover.Portal>', async () => {
     await expect(
       render(

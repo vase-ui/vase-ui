@@ -12,9 +12,9 @@ import * as Select from '../../../select/index.parts';
 import { createAttribute } from '../createAttribute';
 import FloatingPortal from './FloatingPortal.vue';
 
-// Vue 3.5.41 is the first version that gives a `Transition` to the element in a `Teleport` that is
-// the root node of a component (https://github.com/vuejs/core/pull/11959). An earlier version warns
-// and animates nothing.
+// Vue 3.5.41 and 3.6.0-rc.3 are the first versions that give a `Transition` to the element in a
+// `Teleport` that is the root node of a component (https://github.com/vuejs/core/pull/11959). An
+// earlier version warns and animates nothing.
 function givesTransitionToTeleportChild() {
   const container = document.createElement('div');
   const entered: Element[] = [];
