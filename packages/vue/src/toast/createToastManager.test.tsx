@@ -60,7 +60,7 @@ describe('createToastManager', () => {
       expect(screen.queryByTestId('title')).toBe(null);
     });
 
-    it('returns a toast id', async () => {
+    it('returns a toast id', () => {
       const toastManager = Toast.createToastManager();
 
       const toastId = toastManager.add({
@@ -142,7 +142,7 @@ describe('createToastManager', () => {
       const toastManager = Toast.createToastManager();
 
       function add() {
-        toastManager.promise(
+        void toastManager.promise(
           new Promise((resolve) => {
             setTimeout(() => {
               resolve('success');
@@ -188,7 +188,7 @@ describe('createToastManager', () => {
       const toastManager = Toast.createToastManager();
 
       function add() {
-        toastManager.promise(
+        void toastManager.promise(
           new Promise((resolve) => {
             setTimeout(() => {
               resolve('success');
@@ -293,7 +293,7 @@ describe('createToastManager', () => {
           resolvePromise = resolve;
         });
 
-        toastManager.promise(pendingPromise, {
+        void toastManager.promise(pendingPromise, {
           loading: 'loading',
           success: 'success',
           error: 'error',
@@ -384,7 +384,7 @@ describe('createToastManager', () => {
 
       let toastId: string;
       const updater = vi.fn((prevToast: ToastObject<{ count: number }>) => ({
-        title: `${prevToast.title} updated`,
+        title: `${String(prevToast.title)} updated`,
         data: { count: prevToast.data!.count + 1 },
       }));
 

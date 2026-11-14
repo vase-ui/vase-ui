@@ -1167,7 +1167,7 @@ describe('<NavigationMenu.Root />', () => {
         expect(positioner.style.getPropertyValue('--positioner-width')).toBe('675px');
         expect(positioner.style.getPropertyValue('--positioner-height')).toBe('220px');
 
-        animations.finish();
+        void animations.finish();
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
@@ -1223,7 +1223,7 @@ describe('<NavigationMenu.Root />', () => {
         expect(exitingContent).toHaveAttribute('data-ending-style');
         expect(exitingContent).not.toHaveAttribute('data-activation-direction');
 
-        animations.finish();
+        void animations.finish();
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
@@ -1612,7 +1612,7 @@ describe('<NavigationMenu.Root />', () => {
 
         expect(screen.queryByTestId('popup-root')).toBe(null);
 
-        animations.finish(closingAnimation);
+        void animations.finish(closingAnimation);
         await flushMicrotasks();
       } finally {
         globalThis.VASE_UI_ANIMATIONS_DISABLED = previousAnimationsDisabled;
