@@ -9,6 +9,7 @@ import DemoFrame from '../.vitepress/components/DemoFrame.vue';
 import DemoAlertDialogDetachedTriggersControlled from '../demos/alert-dialog/detached-triggers-controlled/css-modules/index.vue';
 import DemoAlertDialogDetachedTriggersSimple from '../demos/alert-dialog/detached-triggers-simple/css-modules/index.vue';
 import DemoAlertDialogHero from '../demos/alert-dialog/hero/css-modules/index.vue';
+import DemoAlertDialogOpenFromMenu from '../demos/alert-dialog/open-from-menu/css-modules/index.vue';
 </script>
 
 # Alert Dialog
@@ -88,6 +89,22 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 <<< ../demos/alert-dialog/detached-triggers-controlled/css-modules/index.vue
 
 <<< ../demos/alert-dialog/_index.module.css
+
+:::
+
+### Open from a menu
+
+To open an alert dialog from a menu, control the open state of the alert dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
+
+<DemoFrame>
+  <DemoAlertDialogOpenFromMenu />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/alert-dialog/open-from-menu/css-modules/index.vue
+
+<<< ../demos/alert-dialog/open-from-menu/css-modules/index.module.css
 
 :::
 

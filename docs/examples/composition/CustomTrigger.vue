@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import { Menu } from '@vase-ui/vue/menu';
 import MyButton from './MyButton.vue';
 </script>
 
 <template>
-  <Tooltip.Root>
-    <Tooltip.Trigger>
+  <Menu.Root>
+    <Menu.Trigger>
       <template #render="{ props }">
-        <MyButton v-bind="props" size="md">Open tooltip</MyButton>
+        <MyButton v-bind="props" size="md">Open menu</MyButton>
       </template>
-    </Tooltip.Trigger>
-    <Tooltip.Portal>
-      <Tooltip.Positioner>
-        <Tooltip.Popup>Tooltip</Tooltip.Popup>
-      </Tooltip.Positioner>
-    </Tooltip.Portal>
-  </Tooltip.Root>
+    </Menu.Trigger>
+    <Menu.Portal>
+      <Menu.Positioner>
+        <Menu.Popup>
+          <Menu.Item>Add to Library</Menu.Item>
+        </Menu.Popup>
+      </Menu.Positioner>
+    </Menu.Portal>
+  </Menu.Root>
 </template>

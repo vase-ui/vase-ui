@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { Tooltip, TooltipPositionerCssVariables } from '@vase-ui/vue/tooltip';
+import { Menu, MenuPositionerCssVariables } from '@vase-ui/vue/menu';
 
 const popupStyle = {
-  maxHeight: `var(${TooltipPositionerCssVariables.availableHeight})`,
+  maxHeight: `var(${MenuPositionerCssVariables.availableHeight})`,
 };
 </script>
 
 <template>
-  <Tooltip.Root>
-    <Tooltip.Trigger>Song</Tooltip.Trigger>
-    <Tooltip.Portal>
-      <Tooltip.Positioner>
-        <Tooltip.Popup :style="popupStyle">Add to Library</Tooltip.Popup>
-      </Tooltip.Positioner>
-    </Tooltip.Portal>
-  </Tooltip.Root>
+  <Menu.Root>
+    <Menu.Trigger>Song</Menu.Trigger>
+    <Menu.Portal>
+      <Menu.Positioner>
+        <Menu.Popup :style="popupStyle">
+          <Menu.Item>Add to Library</Menu.Item>
+          <Menu.Item>Add to Playlist</Menu.Item>
+        </Menu.Popup>
+      </Menu.Positioner>
+    </Menu.Portal>
+  </Menu.Root>
 </template>

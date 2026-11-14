@@ -85,6 +85,6 @@ An imported `*.module.css` file works in the same way, as the demos of this site
 
 A library that gives you a class name can give it to the `class` attribute.
 
-The entry point of a component also exports the names of its data attributes and CSS variables, such as `TooltipPopupDataAttributes` and `TooltipPositionerCssVariables`. Use them in code that writes CSS in script. In this sample, `TooltipPositionerCssVariables.availableHeight` is `--available-height`:
+The entry point of a component also exports the names of its data attributes and CSS variables, such as `MenuItemDataAttributes` and `MenuPositionerCssVariables`. Use them in code that writes CSS in script. In this sample, `MenuPositionerCssVariables.availableHeight` is `--available-height`:
 
 <<< ../examples/styling/StyleNames.vue
