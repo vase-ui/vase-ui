@@ -181,7 +181,7 @@ Give the constant the type `typeof DialogRoot`. Without it, the declaration buil
 
 A family whose upstream folder has no `index.parts.ts` declares the constant and its namespace in `index.ts`. A family whose upstream folder has an `index.parts.ts` keeps that file, also when it has one part. `pnpm parity:check` finds a counterpart by its path.
 
-A family can land in more than one pull request. Its `index.ts` then comes in the last one, so the package exports nothing of the family before then. The tests of the earlier pull requests import `../index.parts`.
+A family can land in more than one pull request. Its `index.ts` then comes in the last one, so the package exports nothing of the family before then. The exception is an entry point that a demo of another family imports. That `index.ts` comes with the last part that the demo renders, as in Slider. The tests of the pull requests before the `index.ts` import `../index.parts`.
 
 ## API convention
 
