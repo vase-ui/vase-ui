@@ -94,34 +94,35 @@ describe('<Select.Positioner />', () => {
 
   it('places the selected item over the trigger again after an open that fell back to the anchored placement', async () => {
     const paddingTop = shallowRef('0px');
+    // With no portal, the same positioner stays mounted from one open to the next.
     const { user } = await render(() => (
       <div style={{ paddingTop: paddingTop.value, minHeight: '600px' }}>
         <Select.Root defaultValue="a">
           <Select.Trigger data-testid="trigger">
             <Select.Value />
           </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner data-testid="positioner">
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
+          <Select.Positioner data-testid="positioner">
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+              <Select.Item value="b">b</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
         </Select.Root>
       </div>
     ));
     const trigger = screen.getByTestId('trigger');
+    const positioner = screen.getByTestId('positioner');
+    const readPlacement = () => [positioner.hasAttribute('data-open'), positioner.dataset.side];
 
     // A trigger at the top of the viewport has no room for the placement over it.
     await user.click(trigger);
     await waitFor(() => {
-      expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'bottom');
+      expect(readPlacement()).toEqual([true, 'bottom']);
     });
 
     await user.keyboard('{Escape}');
     await waitFor(() => {
-      expect(screen.getByTestId('positioner')).toHaveAttribute('hidden');
+      expect(positioner).toHaveAttribute('hidden');
     });
 
     paddingTop.value = '200px';
@@ -129,7 +130,7 @@ describe('<Select.Positioner />', () => {
     await user.click(trigger);
 
     await waitFor(() => {
-      expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+      expect(readPlacement()).toEqual([true, 'none']);
     });
   });
 

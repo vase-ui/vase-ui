@@ -1218,7 +1218,7 @@ describe('<Select.Popup />', () => {
                   v-slots={actOnElement(
                     'span',
                     (node) => stubRect(node, 10, triggerTop, 60, 30),
-                    ({ children: Children }) => (Children ? <Children /> : null),
+                    ({ children }) => (children ? h(children) : null),
                   )}
                 />
               ),
@@ -1640,7 +1640,7 @@ describe('<Select.Popup />', () => {
                   v-slots={actOnElement(
                     'span',
                     (node) => stubRect(node, 10, 300, 60, 30),
-                    ({ children: Children }) => (Children ? <Children /> : null),
+                    ({ children }) => (children ? h(children) : null),
                   )}
                 />
               ),
@@ -1756,6 +1756,53 @@ describe('<Select.Popup />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
     expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
+  });
+
+  it('keeps the transform styles of the popup after it places the selected item over the trigger', async () => {
+    await render(
+      <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+        <Select.Root open defaultValue="1">
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner data-testid="positioner">
+              <Select.Popup
+                data-testid="popup"
+                v-slots={actOnElement(
+                  'div',
+                  (node) => {
+                    node.style.setProperty('transform', 'translateX(10px)');
+                    node.style.setProperty('scale', '0.8');
+                    node.style.setProperty('translate', '1px 2px');
+                  },
+                  () => [
+                    <Select.Item value="1">
+                      <Select.ItemText>Item 1</Select.ItemText>
+                    </Select.Item>,
+                    <Select.Item value="2">
+                      <Select.ItemText>Item 2</Select.ItemText>
+                    </Select.Item>,
+                  ],
+                )}
+              />
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </div>,
+    );
+
+    // The popup measures the item for the placement, so the transform origin is set after it.
+    await waitFor(() => {
+      expect(screen.getByTestId('popup').style.getPropertyValue('--transform-origin')).toMatch(
+        /^50% [\d.]+%$/,
+      );
+    });
+    const popup = screen.getByTestId('popup');
+    expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+    expect(popup.style.getPropertyValue('transform')).toBe('translateX(10px)');
+    expect(popup.style.getPropertyValue('scale')).toBe('0.8');
+    expect(popup.style.getPropertyValue('translate')).toBe('1px 2px');
   });
 
   it('hides the native scrollbar of a popup that is placed over the trigger', async () => {

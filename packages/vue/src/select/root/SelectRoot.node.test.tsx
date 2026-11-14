@@ -43,7 +43,8 @@ describe('<Select.Root /> on a server', () => {
       <Select.Root defaultOpen defaultValue="a">
         <Select.Trigger />
         <Select.Backdrop data-testid="backdrop" />
-        <Select.Positioner data-testid="positioner">
+        {/* A popup over the trigger renders no arrow. */}
+        <Select.Positioner data-testid="positioner" alignItemWithTrigger={false}>
           <Select.Popup>
             <Select.Arrow data-testid="arrow" />
             <Select.List data-testid="list">

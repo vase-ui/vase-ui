@@ -63,6 +63,15 @@
     },
     {
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "prop: highlightItemOnHover"],
+      "title": "highlights an item on mouse move by default",
+      "kind": "engine",
+      "engine": "webkit",
+      "link": "https://github.com/mui/base-ui/issues/4002",
+      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the hover of user-event sends one."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
       "reason": "Many cases and the suite calls need the modal state or the scroll arrows of Select, or the shared suite `popupListConformanceTests`, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
