@@ -31,7 +31,7 @@ A one-time password input with one slot for each character.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the field a `<label>` element, or put it in a `Field`. See [Labeling an OTP field](#labeling-an-otp-field).
+- **Form controls must have an accessible name**: Give the field a `<label>` element, or put it in a `Field`. See [Labeling an OTP field](#labeling-an-otp-field) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 

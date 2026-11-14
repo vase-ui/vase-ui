@@ -29,7 +29,7 @@ Provides shared state to a series of checkboxes.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Name the group with `aria-labelledby`, a `Field.Label` or a `Fieldset.Legend`. Name each checkbox with a `<label>` element, or with a `Field.Label` in a `Field.Item`. See [Labeling a checkbox group](#labeling-a-checkbox-group).
+- **Form controls must have an accessible name**: Name the group with `aria-labelledby`, a `Field.Label` or a `Fieldset.Legend`. Name each checkbox with a `<label>` element, or with a `Field.Label` in a `Field.Item`. See [Labeling a checkbox group](#labeling-a-checkbox-group) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 
