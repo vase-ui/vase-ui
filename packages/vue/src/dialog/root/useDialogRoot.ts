@@ -8,22 +8,13 @@ import {
   toRaw,
   watch,
 } from 'vue';
-import type { HTMLAttributes } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { contains, getTarget } from '../../common/shadowDom';
 import { createIdRegistry } from '../../internals/labelable-provider/createIdRegistry';
-import type { HTMLProps } from '../../internals/types';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
 import { popupStoreSelectors } from '../../utils/popups/store';
-import type { InteractionProps } from '../../utils/popups/types';
 import type { DialogStore } from '../store/DialogStore';
-
-// The store types its props keys as `HTMLProps`, which has a required `ref`. The props of an
-// interaction composable have no `ref`.
-function toStoreProps(props: InteractionProps) {
-  return props as HTMLAttributes as HTMLProps;
-}
 
 /**
  * Gives a dialog its dismissal, the count of the open dialogs below it, and the registries of its
@@ -177,11 +168,11 @@ export function useDialogInteractions({
   );
 
   usePopupInteractionProps(store, () => ({
-    activeTriggerProps: toStoreProps(dismiss.reference),
-    inactiveTriggerProps: toStoreProps(dismiss.trigger),
+    activeTriggerProps: dismiss.reference,
+    inactiveTriggerProps: dismiss.trigger,
     // `Dialog.Popup` and `Drawer.Popup` bind `FOCUSABLE_POPUP_PROPS` themselves, so
     // this only needs to carry the dismiss handlers.
-    popupProps: toStoreProps(dismiss.floating),
+    popupProps: dismiss.floating,
     nestedOpenDialogCount: ownNestedOpenDialogs.value,
     nestedOpenDrawerCount: ownNestedOpenDrawers.value,
   }));
