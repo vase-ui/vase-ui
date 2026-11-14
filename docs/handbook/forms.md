@@ -69,9 +69,9 @@ To label a group of controls, compose `<Fieldset.Root>` with the group. A range 
 
 For a checkbox group and a radio group, wrap each option in `<Field.Item>`. Each control then has its own label and description:
 
-<<< ../components/radio-group/FieldsetLegend.vue{10-13}
+<<< ../components/radio-group/FieldsetLegend.vue{14,19-20,25}
 
-<<< ../components/checkbox-group/FieldsetLegend.vue{10-13}
+<<< ../components/checkbox-group/FieldsetLegend.vue{14,19-20,25}
 
 ## Building form fields
 

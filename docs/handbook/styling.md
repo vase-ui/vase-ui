@@ -61,7 +61,7 @@ For one property, `stateStyle` wins over `style`, and `style` wins over the styl
 
 A rule of `<style scoped>` matches the element of a part that has one root node.
 
-A part that renders a hidden input beside its element has more than one root node. `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root` and `OTPField.Root` are such parts. A rule of `<style scoped>` does not match their element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+A part that renders a hidden input beside its element has more than one root node. `Switch.Root`, `Checkbox.Root`, `Radio.Root`, `NumberField.Root` and `OTPField.Root` are such parts. `Toast.Viewport`, and `NavigationMenu.Viewport` in a positioner, render other nodes beside their element, so they also have more than one root node. A rule of `<style scoped>` does not match the element of such a part, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`. The API reference of each such part says this.
 
 In this sample, the rule `.thumb` matches `Switch.Thumb`, which has one root node. The rule `.field :deep(.switch)` reaches `Switch.Root` from an element of your own:
 

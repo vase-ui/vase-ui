@@ -56,7 +56,7 @@ A part or a utility can also export other types. The list below is not complete.
 
 A part whose types follow a value or a payload is a generic component. Its type parameter comes from its props.
 
-- `RadioGroup`, `ToggleGroup`, `Slider.Root` and `Accordion.Root` take their type parameter from `value` or `default-value`.
+- A part with a value, such as `RadioGroup`, `ToggleGroup`, `Slider.Root` or `Accordion.Root`, takes its type parameter from `value` or `default-value`.
 - A popup root and its trigger, such as `Tooltip.Root` and `Tooltip.Trigger`, take the type of their payload from `handle`. See [Multiple triggers](/components/tooltip#multiple-triggers).
 
 In this sample, the type of the listener follows `default-value`: a number for one thumb, and an array of numbers for a range. The type check refuses a listener with another type.

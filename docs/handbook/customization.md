@@ -39,7 +39,7 @@ interface VaseUIChangeEventDetails {
 - `allowPropagation` allows the DOM event to propagate where Vase UI stops the propagation.
 - `isCanceled` shows whether the change event is canceled.
 - `isPropagationAllowed` shows whether the DOM event is allowed to propagate.
-- `trigger` is the element that started the change, when there is one.
+- `trigger` is the element that started the change, when there is one. When a popup closes for a reason that names no element, such as <kbd>Esc</kbd> or a press outside, `trigger` is the trigger that opened the popup, if it is still in the document.
 
 ### Canceling a Vase UI event
 
@@ -65,7 +65,10 @@ To stop the handler of Vase UI for an event such as `paste`, call `event.prevent
 
 Use it as an escape hatch where no prop customizes the behavior yet.
 
-The method has no effect in two cases. The first case is a native event that the part declares as an emit, such as `submit` of `Form`. The second case is a listener that the part adds to the document. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
+The method has no effect in these cases:
+
+- A native event that the part declares as an emit, such as `submit` of `Form`. The part emits the event after its own work.
+- A listener that the part adds with `addEventListener`, such as a listener on the document or the window. A popup has such listeners for <kbd>Esc</kbd> and for a press outside. To stop that close, call `cancel()` on the change event.
 
 To add a listener of your own in a `#render` slot, merge it with [`mergeProps`](/utils/merge-props#preventing-vase-ui-s-default-behavior).
 
@@ -77,7 +80,7 @@ Parts are uncontrolled by default. They manage their own state internally.
 
 <<< ../examples/customization/Uncontrolled.vue
 
-To control a part, bind your state with `v-model`. The pairs are `v-model:open`, `v-model:value`, `v-model:checked` and `v-model:pressed`. There is no `modelValue`. The props `defaultOpen`, `defaultValue` and their kin give the first state of an uncontrolled part.
+To control a part, bind your state with `v-model` and the name of the prop, such as `v-model:open`, `v-model:value`, `v-model:checked`, `v-model:pressed` or `v-model:snapPoint`. There is no `modelValue`. The props `defaultOpen`, `defaultValue` and their kin give the first state of an uncontrolled part.
 
 For example, you can open [Dialog](/components/dialog) after a timeout, without a trigger:
 

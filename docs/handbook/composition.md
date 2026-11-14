@@ -15,7 +15,7 @@ For example, most triggers render a `<button>` by default. The sample below uses
 
 <<< ../examples/composition/CustomTrigger.vue{9-11}
 
-Give the component to `as` when it needs no props of its own: `:as="MyButton"`. Use `#render` when it has props of its own, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
+Give a component to `as` when you set none of its own props. Use `#render` when you set a prop of the component, such as `size`. With `strictTemplates`, the type check refuses a prop that the default element of the part does not have.
 
 The custom component needs one root element. Vue gives the attributes to that element by default. The part reads the element from the `element` that the component exposes. If the component exposes none, the part reads its root element.
 
