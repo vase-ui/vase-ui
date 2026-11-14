@@ -82,6 +82,7 @@ import {
 } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
+import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import type { PopoverHandleStore } from '../store/PopoverStore';
 import { OPEN_DELAY } from '../utils/constants';
@@ -122,6 +123,9 @@ const isPressOpenedByThisTrigger = computed(() =>
 );
 const popupId = computed(() => store.value.select('triggerPopupId', triggerId.value));
 const isTouchPressOpen = computed(() => store.value.select('isTouchPressOpen', props.openOnHover));
+const hasFocusGuards = computed(() =>
+  store.value.select('hasTriggerFocusGuards', triggerId.value),
+);
 
 const triggerElement = shallowRef<HTMLElement | null>(null);
 
@@ -204,6 +208,8 @@ const { element, elementProps } = useRenderElement('button', props, {
     getButtonProps,
   ],
 });
+
+useTriggerFocusGuards(store, triggerElement, hasFocusGuards);
 
 defineExpose({ element });
 </script>

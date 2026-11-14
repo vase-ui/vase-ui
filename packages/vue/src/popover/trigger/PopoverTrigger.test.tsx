@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
+import { nextTick, shallowRef } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 import {
   createRenderer,
@@ -12,7 +13,9 @@ import {
   waitFor,
 } from '#test-utils';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
+import { createAttribute } from '../../utils/popups/createAttribute';
 import * as Popover from '../index.parts';
+import PopoverTriggerScoped from './PopoverTriggerScoped.test.vue';
 
 async function press(element: HTMLElement) {
   await fireEvent.pointerDown(element, { pointerType: 'mouse' });
@@ -644,6 +647,37 @@ describe('<Popover.Trigger />', () => {
 
     await userEvent.keyboard('[Space]');
     expect(screen.queryByText('Content')).toBe(null);
+  });
+
+  describe('VUE-60: the trigger has one root node', () => {
+    it.each([
+      { name: 'a closed popover', open: false, modal: false, guards: false },
+      { name: 'an open popover', open: true, modal: false, guards: true },
+      { name: 'an open modal popover', open: true, modal: true, guards: false },
+    ])(
+      'gives the scope id, v-show and a custom directive of the consumer to the trigger of $name',
+      async ({ open, modal, guards }) => {
+        const shown = shallowRef(true);
+        await render(() => <PopoverTriggerScoped open={open} modal={modal} shown={shown.value} />);
+        await flushMicrotasks();
+        const trigger = screen.getByTestId('trigger');
+
+        expect(getComputedStyle(trigger).outlineStyle).toBe('dashed');
+        expect(trigger).toHaveAttribute('data-mark', 'marked');
+        // The guards of the trigger are its siblings. A modal popover with a close part traps the
+        // focus, so its trigger has no guards. The portal has guards of its own in its place.
+        expect(
+          [trigger.previousElementSibling, trigger.nextElementSibling].map(
+            (sibling) => sibling?.hasAttribute(createAttribute('focus-guard')) ?? false,
+          ),
+        ).toEqual([guards, guards]);
+
+        shown.value = false;
+        await nextTick();
+
+        expect(trigger).not.toBeVisible();
+      },
+    );
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
