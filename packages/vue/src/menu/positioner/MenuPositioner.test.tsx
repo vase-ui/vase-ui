@@ -768,18 +768,19 @@ describe('<Menu.Positioner />', () => {
       expect(lockCount()).toBe(locks);
     });
 
-    // A trigger in a menubar is an item of the composite of the menubar, so the menu opens from its
-    // store.
+    // A trigger in a menubar is an item of the composite of the menubar. The menu thus opens from
+    // its store, with an element of the frame as the trigger.
     it.each([
       { name: 'a modal menubar', modal: true, locks: 1 },
       { name: 'a menubar that is not modal', modal: false, locks: 0 },
     ])('follows the modal state of $name', async ({ modal, locks }) => {
+      const page = await createScrollDocument();
       const probe = createMenuStoreProbe();
       await render(
         <MenubarProvider context={createMenubarContext({ modal: computed(() => modal) })}>
           <Menu.Root>
             <probe.Probe />
-            <Menu.Portal>
+            <Menu.Portal container={page.body}>
               <Menu.Positioner>
                 <Menu.Popup />
               </Menu.Positioner>
@@ -788,7 +789,10 @@ describe('<Menu.Positioner />', () => {
         </MenubarProvider>,
       );
 
-      probe.store.setOpen(true, createChangeEventDetails(REASONS.triggerPress));
+      probe.store.setOpen(
+        true,
+        createChangeEventDetails(REASONS.triggerPress, undefined, page.reference),
+      );
       await flushMicrotasks();
 
       expect(probe.store.select('modal')).toBe(false);

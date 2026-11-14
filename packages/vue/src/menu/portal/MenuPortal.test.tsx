@@ -1,4 +1,5 @@
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { computed, defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import * as Menu from '../index.parts';
@@ -181,6 +182,29 @@ describe('<Menu.Portal />', () => {
         expect(screen.getByTestId('positioner').previousElementSibling).toBe(backdrop);
       },
     );
+
+    it('renders it before Menu.Backdrop, and a press on Menu.Backdrop closes the menu', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+          <Menu.Portal data-testid="portal">
+            <Menu.Backdrop data-testid="backdrop" style={{ position: 'fixed', inset: 0 }} />
+            <Menu.Positioner>
+              <Menu.Popup />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+      const backdrop = screen.getByTestId('backdrop');
+      expect(backdrop.previousElementSibling).toBe(getBackdrop());
+      expect(document.elementFromPoint(300, 300)).toBe(backdrop);
+
+      await userEvent.click(document.body, { position: { x: 300, y: 300 } });
+      await flushMicrotasks();
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+      expect(onOpenChange.mock.lastCall?.[1].reason).toBe(REASONS.outsidePress);
+    });
 
     it('renders it before the positioner in the element of the #render slot', async () => {
       await render(
