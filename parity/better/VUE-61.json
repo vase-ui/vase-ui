@@ -8,6 +8,6 @@
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/positioner/SelectPositioner.tsx#L227-L230",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/positioner/ComboboxPositioner.tsx#L70-L75"
   ],
-  "behavior": "`Menu.Positioner`, `Popover.Positioner`, `Select.Positioner` and `Combobox.Positioner` have one root node, also while their popup is modal: `Menu.Portal`, `Popover.Portal`, `Select.Portal` and `Combobox.Portal` render the internal backdrop of a modal popup. A rule of `<style scoped>`, `v-show` and a custom directive of the consumer thus apply to the element of the positioner. In Base UI, the positioner renders the backdrop beside its element.",
+  "behavior": "`Menu.Positioner`, `Popover.Positioner`, `Select.Positioner` and `Combobox.Positioner` have one root node, also while their popup is modal: `Menu.Portal`, `Popover.Portal`, `Select.Portal` and `Combobox.Portal` render the internal backdrop of a modal popup. A rule of `<style scoped>`, `v-show` and a custom directive of the consumer thus apply to the element of the positioner. `Autocomplete.Portal` and `Autocomplete.Positioner` are the parts of Combobox under other names. In Base UI, the positioner renders the backdrop beside its element.",
   "dueWith": "packages/react/src/menu/positioner/MenuPositioner.tsx"
 }
