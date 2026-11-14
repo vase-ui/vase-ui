@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The cases that have no counterpart and no row of their own render Menu, Popover, Select or `AlertDialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Some cases that have no counterpart and no row of their own render Menu, Popover or Select, which Vase UI does not have. The other cases render the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
@@ -55,7 +55,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Some cases also render Menu, Popover, Select, Number Field or `AlertDialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Some cases also render Menu, Popover, Select or Number Field, which Vase UI does not have. Other cases render the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
