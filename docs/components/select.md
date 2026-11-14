@@ -61,7 +61,7 @@ To stop the popup from overlapping the trigger, set `alignItemWithTrigger` to `f
 
 ### Typed component
 
-`Select.Root` is a generic component. Its `Value` type follows the `items`, `value` and `defaultValue` props. Its `Multiple` type follows `multiple`.
+`Select.Root` is a generic component. Its `Value` type follows the `value` and `defaultValue` props. Its `Multiple` type follows `multiple`.
 
 To fix both types, give the part its type arguments in an instantiation expression. Use the result as a component:
 

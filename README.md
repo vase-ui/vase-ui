@@ -1,4 +1,9 @@
-# Vase UI
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vase-ui/vase-ui/main/docs/public/wordmark-dark.svg">
+    <img src="https://raw.githubusercontent.com/vase-ui/vase-ui/main/docs/public/wordmark-light.svg" alt="Vase UI" height="28">
+  </picture>
+</h1>
 
 <!-- #region home -->
 
