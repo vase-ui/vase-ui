@@ -355,6 +355,8 @@ describe('<Checkbox.Indicator />', () => {
       observer.observe(container, { childList: true, subtree: true });
       onTestFinished(() => observer.disconnect());
 
+      // The batched lookup reads the animations of `indicator-0` on the element itself, and those
+      // of the other indicators on the root. `nextAnimationsRead` sees only a read on the element.
       const animations = await nextAnimationsRead(screen.getByTestId('indicator-0'), {
         action: () => user.click(screen.getByText('Uncheck')),
       });

@@ -477,7 +477,8 @@ describe('<Field.Error />', () => {
       expect(error).toHaveTextContent('Bad value');
 
       // After a stall, one frame can start and end the exit, and the part then removes the error.
-      // Chromium sends no `animationstart` to it, so the case reads the text at the read of the part.
+      // Chromium then sends no `animationstart` to it, so the case reads the text when the part
+      // reads its animations.
       const animations = await nextAnimationsRead(error, {
         action: () => fireEvent.input(input, { target: { value: 'good' } }),
       });
