@@ -18,7 +18,10 @@
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
+      "describe": [
+        "<Dialog.Popup />",
+        "prop: finalFocus"
+      ],
       "title": "respects finalFocus when initialFocus points outside the popup",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
@@ -26,7 +29,10 @@
     },
     {
       "upstream": "packages/react/src/dialog/popup/DialogPopup.test.tsx",
-      "describe": ["<Dialog.Popup />", "prop: finalFocus"],
+      "describe": [
+        "<Dialog.Popup />",
+        "prop: finalFocus"
+      ],
       "title": "moves final focus to trigger if initialFocus points outside the popup and finalFocus is not specified",
       "kind": "replaced",
       "test": "packages/vue/src/dialog/popup/DialogPopup.test.tsx",
@@ -34,7 +40,10 @@
     },
     {
       "upstream": "packages/react/src/dialog/portal/DialogPortal.test.tsx",
-      "describe": ["<Dialog.Portal />", "Suspense integration"],
+      "describe": [
+        "<Dialog.Portal />",
+        "Suspense integration"
+      ],
       "title": "should not throw \"Maximum update depth exceeded\" when Suspense boundary is outside Portal",
       "kind": "not-applicable",
       "reason": "The case guards a render loop of React (issue 3695) while a `Suspense` boundary outside the portal waits for a lazy component in the popup. The portal of Vase UI renders its content after the mount, so a Vue `<Suspense>` around it does not wait for that content and shows no fallback."
@@ -43,7 +52,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Most cases that have no counterpart render `Dialog.Popup`, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. The case `does not warn for a detached payload open in production` renders no part. It needs a production build, so its counterpart is a case of the Node project."
     },
     {
       "upstream": "packages/react/src/dialog/root/DialogRoot.spec.tsx",
@@ -55,7 +64,7 @@
       "upstream": "packages/react/src/dialog/root/DialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
-      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Most cases that have no counterpart render `Dialog.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Dialog, which Vase UI does not have. Some cases also render Menu, Popover, Select, Number Field or `AlertDialog.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/dialog/types.md",
