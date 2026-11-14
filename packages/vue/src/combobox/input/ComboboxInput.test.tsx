@@ -18,6 +18,7 @@ import {
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
 import { REASONS } from '../../internals/reasons';
+import type { VaseUIEvent } from '../../internals/types';
 import type { ComboboxStore } from '../store';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
 import ComboboxInputTriggerHydration from './ComboboxInputTriggerHydration.test.vue';
@@ -1622,6 +1623,68 @@ describe('<Combobox.Input />', () => {
       await flushMicrotasks();
 
       expect(handleValueChange.mock.lastCall?.[0]).toBe('Malmö');
+    });
+  });
+
+  describe('the focus listeners', () => {
+    it('keeps the highlight of an inline list and the state of the field when the focused input is replaced', async () => {
+      const InlineList = defineComponent(
+        (props: { inputKey?: string }) => () => (
+          <Field.Root data-testid="field">
+            <Combobox.Root inline items={['apple', 'banana']}>
+              <Combobox.Input key={props.inputKey} data-testid="input" />
+              <Combobox.List
+                v-slots={{
+                  item: ({ item }: { item: string }) => (
+                    <Combobox.Item key={item} value={item}>
+                      {item}
+                    </Combobox.Item>
+                  ),
+                }}
+              />
+            </Combobox.Root>
+          </Field.Root>
+        ),
+        { props: ['inputKey'] },
+      );
+      const { setProps, user } = await render(<InlineList inputKey="first" />);
+      const first = screen.getByTestId('input');
+      first.focus();
+      await user.keyboard('{ArrowDown}');
+      const apple = screen.getByRole('option', { name: 'apple' });
+      expect(first).toHaveAttribute('aria-activedescendant', apple.id);
+
+      await setProps({ inputKey: 'second' });
+      const second = screen.getByTestId('input');
+      expect(second).not.toBe(first);
+      second.focus();
+      await flushMicrotasks();
+
+      expect(second).toHaveAttribute('aria-activedescendant', apple.id);
+      expect(screen.getByTestId('field')).toHaveAttribute('data-focused');
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
+    });
+
+    it('lets a focusout listener of the consumer stop the focus handler of the input', async () => {
+      const handleFocusout = vi.fn((event: VaseUIEvent<FocusEvent>) => {
+        event.preventVaseUIHandler();
+      });
+      await render(
+        <Field.Root data-testid="field">
+          <Combobox.Root>
+            <Combobox.Input data-testid="input" onFocusout={handleFocusout} />
+          </Combobox.Root>
+        </Field.Root>,
+      );
+      const input = screen.getByTestId('input');
+      input.focus();
+      await flushMicrotasks();
+
+      input.blur();
+      await flushMicrotasks();
+
+      expect(handleFocusout).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
     });
   });
 });

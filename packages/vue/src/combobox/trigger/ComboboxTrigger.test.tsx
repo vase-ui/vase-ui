@@ -15,6 +15,7 @@ import {
   waitFor,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import type { HTMLProps } from '../../internals/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import type { ComboboxStore } from '../store';
 import ComboboxTriggerReplacement from './ComboboxTriggerReplacement.test.vue';
@@ -977,6 +978,31 @@ describe('<Combobox.Trigger />', () => {
       expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
       expect(popup.id).not.toBe('');
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
+    });
+
+    it('names the default id of the popup while the popup element has no id', async () => {
+      await render(
+        <Combobox.Root defaultOpen id="fruits">
+          <Combobox.Trigger data-testid="trigger" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup
+                v-slots={{
+                  render: ({ props }: { props: HTMLProps }) => (
+                    <div {...props} id={undefined} data-testid="popup">
+                      <Combobox.Input />
+                    </div>
+                  ),
+                }}
+              />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('popup').id).toBe('');
+      expect(screen.getByTestId('trigger')).toHaveAttribute('aria-controls', 'fruits-popup');
     });
   });
 
