@@ -3,8 +3,14 @@ import { dirname } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
+import tseslint from 'typescript-eslint';
 
-const eslint = new ESLint({ cwd: dirname(fileURLToPath(import.meta.url)) });
+// The samples are not files, so no TypeScript project has them. The tests are for rules that read
+// only the syntax.
+const eslint = new ESLint({
+  cwd: dirname(fileURLToPath(import.meta.url)),
+  overrideConfig: [tseslint.configs.disableTypeChecked],
+});
 
 async function lint(filePath, code) {
   const [{ messages }] = await eslint.lintText(code, { filePath });
