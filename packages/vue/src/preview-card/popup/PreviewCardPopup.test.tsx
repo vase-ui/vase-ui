@@ -1,14 +1,16 @@
-import { expect, describe, it, onTestFinished } from 'vitest';
+import { afterEach, beforeEach, expect, describe, it, onTestFinished, vi } from 'vitest';
 import { shallowRef } from 'vue';
 import * as PreviewCard from '../index.parts';
 import {
   createRenderer,
   describeConformance,
+  fireEvent,
   flushMicrotasks,
   screen,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import { REASONS } from '../../internals/reasons';
 import PreviewCardPopupReplace from './PreviewCardPopupReplace.test.vue';
 
 describe('<PreviewCard.Popup />', () => {
@@ -106,6 +108,51 @@ describe('<PreviewCard.Popup />', () => {
     await user.keyboard('[Escape]');
     await waitFor(() => {
       expect(screen.queryByTestId('new')).toBe(null);
+    });
+  });
+
+  describe('hover', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('closes `closeDelay` of its trigger after the pointer leaves it', async () => {
+      const onOpenChange = vi.fn();
+      await render(
+        <PreviewCard.Root onOpenChange={onOpenChange}>
+          <PreviewCard.Trigger href="#preview" delay={0} closeDelay={100}>
+            Link
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner data-testid="positioner">
+              <PreviewCard.Popup>Content</PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      const link = screen.getByRole('link', { name: 'Link' });
+      await fireEvent.pointerEnter(link, { pointerType: 'mouse' });
+      await fireEvent.mouseEnter(link);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+
+      await fireEvent.mouseEnter(positioner);
+      await fireEvent.mouseLeave(positioner);
+      vi.advanceTimersByTime(99);
+      await flushMicrotasks();
+      expect(link).toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(1);
+      await flushMicrotasks();
+      expect(link).not.toHaveAttribute('data-popup-open');
+      expect(onOpenChange).toHaveBeenLastCalledWith(
+        false,
+        expect.objectContaining({ reason: REASONS.triggerHover }),
+      );
     });
   });
 
