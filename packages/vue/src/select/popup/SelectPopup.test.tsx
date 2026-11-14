@@ -3,6 +3,7 @@ import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
 import type { Component, CSSProperties } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
+import { platform } from '../../common/platform';
 import * as Select from '../index.parts';
 import {
   createRenderer,
@@ -14,6 +15,8 @@ import {
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+
+const isWebKit = platform.engine.webkit;
 
 interface RenderArguments {
   props: Record<string, any>;
@@ -769,7 +772,9 @@ describe('<Select.Popup />', () => {
                       <Select.List class="rtlFixtureList">
                         {RTL_FIXTURE_OPTIONS.map(({ label, value }) => (
                           <Select.Item key={value} value={value} class="rtlFixtureItem">
-                            <Select.ItemIndicator class="rtlFixtureIndicator">✓</Select.ItemIndicator>
+                            <Select.ItemIndicator class="rtlFixtureIndicator">
+                              ✓
+                            </Select.ItemIndicator>
                             <Select.ItemText
                               class="rtlFixtureText"
                               data-testid={value === props.defaultValue ? 'item-text' : undefined}
@@ -1558,7 +1563,9 @@ describe('<Select.Popup />', () => {
       });
     });
 
-    it('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
+    // In WebKit, a pinch-zoomed popup uses the anchored placement by design.
+    // https://github.com/mui/base-ui/pull/1139
+    it.skipIf(isWebKit)('ignores a pinch-zoomed visual viewport outside WebKit', async () => {
       const { visualViewport } = window;
       if (visualViewport) {
         stubProperty(visualViewport, 'scale', 1.5);
@@ -1749,6 +1756,84 @@ describe('<Select.Popup />', () => {
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
     expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
+  });
+
+  it('hides the native scrollbar of a popup that is placed over the trigger', async () => {
+    await render(
+      <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+        <Select.Root defaultOpen defaultValue="a">
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner data-testid="positioner">
+              <Select.Popup data-testid="popup">
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+    });
+    expect(screen.getByTestId('popup')).toHaveClass('vase-ui-disable-scrollbar');
+    const styles = Array.from(document.querySelectorAll('style'));
+    expect(
+      styles.some((element) => element.textContent?.includes('.vase-ui-disable-scrollbar')),
+    ).toBe(true);
+  });
+
+  it('VUE-5: closes a popup that is placed over the trigger for a window resize only while KeepAlive shows it', async () => {
+    const changes: Array<[boolean, string]> = [];
+    const Page = defineComponent({
+      name: 'Page',
+      setup() {
+        return () => (
+          <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+            <Select.Root
+              defaultOpen
+              defaultValue="a"
+              onOpenChange={(open: boolean, details: Select.Root.OpenChangeEventDetails) => {
+                changes.push([open, details.reason]);
+              }}
+            >
+              <Select.Trigger>
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner data-testid="positioner">
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        );
+      },
+    });
+    const visible = shallowRef(true);
+    await render(() => (
+      <KeepAlive>{visible.value ? <Page key="page" /> : <p key="other">other</p>}</KeepAlive>
+    ));
+    await waitFor(() => {
+      expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
+    });
+
+    visible.value = false;
+    await flushMicrotasks();
+    await fireEvent(window, new UIEvent('resize'));
+    expect(changes).toEqual([]);
+
+    visible.value = true;
+    await flushMicrotasks();
+    await fireEvent(window, new UIEvent('resize'));
+    expect(changes).toEqual([[false, 'window-resize']]);
   });
 
   it('VUE-5: keeps its open state under KeepAlive and hears no Escape while deactivated', async () => {

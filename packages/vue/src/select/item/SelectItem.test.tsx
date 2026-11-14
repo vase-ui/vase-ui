@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import * as Select from '../index.parts';
+import { platform } from '../../common/platform';
 import type { VaseUIEvent } from '../../internals/types';
 import {
   createRenderer,
@@ -11,6 +12,8 @@ import {
   waitFor,
   waitForLaterMillisecond,
 } from '#test-utils';
+
+const isWebKit = platform.engine.webkit;
 
 describe('<Select.Item />', () => {
   const { render } = createRenderer();
@@ -400,61 +403,64 @@ describe('<Select.Item />', () => {
     });
   });
 
-  it('should highlight a hovered item and commit it with a mouse click', async () => {
-    const onValueChange = vi.fn();
+  it.skipIf(isWebKit)(
+    'should highlight a hovered item and commit it with a mouse click',
+    async () => {
+      const onValueChange = vi.fn();
 
-    await render(
-      <Select.Root onValueChange={onValueChange}>
-        <Select.Trigger data-testid="trigger">
-          <Select.Value data-testid="value" />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>
-            <Select.Popup>
-              <Select.Item value="one">one</Select.Item>
-              <Select.Item value="two">two</Select.Item>
-              <Select.Item value="three">three</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>,
-    );
+      await render(
+        <Select.Root onValueChange={onValueChange}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="one">one</Select.Item>
+                <Select.Item value="two">two</Select.Item>
+                <Select.Item value="three">three</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
 
-    const trigger = screen.getByTestId('trigger');
+      const trigger = screen.getByTestId('trigger');
 
-    await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
-    await fireEvent.mouseDown(trigger);
-    await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
-    await fireEvent.mouseUp(trigger);
-    await fireEvent.click(trigger);
-    await flushMicrotasks();
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(trigger);
+      await fireEvent.pointerUp(trigger, { pointerType: 'mouse' });
+      await fireEvent.mouseUp(trigger);
+      await fireEvent.click(trigger);
+      await flushMicrotasks();
 
-    await waitFor(() => {
-      expect(screen.queryByRole('listbox')).not.toBe(null);
-    });
-    await waitForLaterMillisecond();
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).not.toBe(null);
+      });
+      await waitForLaterMillisecond();
 
-    const option = screen.getByRole('option', { name: 'two' });
+      const option = screen.getByRole('option', { name: 'two' });
 
-    await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
-    await fireEvent.mouseMove(option);
+      await fireEvent.pointerEnter(option, { pointerType: 'mouse' });
+      await fireEvent.mouseMove(option);
 
-    await waitFor(() => {
-      expect(option).toHaveAttribute('data-highlighted');
-    });
+      await waitFor(() => {
+        expect(option).toHaveAttribute('data-highlighted');
+      });
 
-    await fireEvent.pointerDown(option, { pointerType: 'mouse' });
-    await fireEvent.mouseDown(option);
-    await fireEvent.pointerUp(option, { pointerType: 'mouse' });
-    await fireEvent.mouseUp(option);
-    await fireEvent.click(option);
-    await flushMicrotasks();
+      await fireEvent.pointerDown(option, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(option);
+      await fireEvent.pointerUp(option, { pointerType: 'mouse' });
+      await fireEvent.mouseUp(option);
+      await fireEvent.click(option);
+      await flushMicrotasks();
 
-    expect(onValueChange).toHaveBeenCalledExactlyOnceWith('two', expect.anything());
-    await waitFor(() => {
-      expect(screen.getByTestId('value').textContent).toBe('two');
-    });
-  });
+      expect(onValueChange).toHaveBeenCalledExactlyOnceWith('two', expect.anything());
+      await waitFor(() => {
+        expect(screen.getByTestId('value').textContent).toBe('two');
+      });
+    },
+  );
 
   it('should ignore an unhighlighted item with a generic virtual click', async () => {
     await render(

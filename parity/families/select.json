@@ -11,11 +11,6 @@
       "reason": "The file is the entry point of Select. It comes in the last pull request of the family, so the package exports nothing of Select before then."
     },
     {
-      "upstream": "packages/react/src/select/popup/utils.ts",
-      "kind": "waits-on",
-      "reason": "The file has the styles of a popup that is placed over the trigger (`alignItemWithTrigger`). Vase UI does not have that placement."
-    },
-    {
       "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Select.ScrollUpArrow` and `Select.ScrollDownArrow`."
@@ -70,7 +65,7 @@
       "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "Many cases and the suite calls need the list navigation, the typeahead, the focus manager, the modal state or the scroll arrows of Select, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
+      "reason": "Many cases and the suite calls need the modal state or the scroll arrows of Select, or the shared suite `popupListConformanceTests`, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
     },
     {
       "upstream": "packages/react/src/select/store.test.tsx",
@@ -79,22 +74,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
       "reason": "The case sets the `modal` prop of `Select.Root`, which comes with the modal state of Select. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
-      "describe": ["<Select.Trigger />"],
-      "title": "closes an aligned popup when focus lands on the trigger so it is not obscured",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
-      "describe": ["<Select.Trigger />", "style hooks"],
-      "title": "sets data-popup-side to the resolved side when alignItemWithTrigger is active",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
     },
     {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
@@ -107,208 +86,18 @@
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "describe": ["<Select.Item />"],
       "title": "should select the item and close popup when clicked",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "A click with no pointer selects only a highlighted item. The case needs the list navigation of Select, which highlights an item when the popup opens. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "navigating with keyboard should focus item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should select item when Enter key is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should focus disabled items",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should not select disabled item when Enter is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should call onClick exactly once for a regular click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "A click with no pointer selects only a highlighted item. The case needs the list navigation of Select, which highlights an item when the popup opens. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should select an unhighlighted item with the mouse",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `highlightItemOnHover` of `Select.Root`, which comes with the list navigation of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
+      "kind": "replaced",
+      "test": "packages/vue/src/select/item/SelectItem.test.tsx",
+      "reason": "The case renders `Select.Item` in `Select.Positioner` with no `Select.Popup`. The popup root unmounts after the exit animations of the popup element, so with no popup element the positioner stays mounted and visible after the close. The case \"selects the item with a click and hides the positioner after the popup closes\" renders the popup."
     },
     {
       "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
       "describe": ["<Select.Item />"],
       "title": "should highlight a hovered item and commit it with a mouse click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should ignore an unhighlighted item with a generic virtual click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `highlightItemOnHover` of `Select.Root`, which comes with the list navigation of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should focus the selected item upon opening the popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />"],
-      "title": "should allow pointer click after a typeahead sequence that ends with Space",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the typeahead of Select, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />", "quick selection"],
-      "title": "should not select an unselected item within the selected delay when aligned with the trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />", "quick selection"],
-      "title": "should select via drag-to-select when hover highlighting is disabled",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `highlightItemOnHover` of `Select.Root`, which comes with the list navigation of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />", "quick selection"],
-      "title": "focuses the selected item after drag-to-select so arrow navigation continues from it",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `highlightItemOnHover` of `Select.Root`, which comes with the list navigation of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />", "quick selection"],
-      "title": "should ignore an opening click that did not start on the item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `highlightItemOnHover` of `Select.Root`, which comes with the list navigation of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
-      "describe": ["<Select.Item />", "style hooks"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The cases need the list navigation of Select. It highlights an item when the popup opens, and a click with no pointer selects only a highlighted item. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "restores transform-related inline styles after measurement",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "keeps alignItemWithTrigger active at browser zoom",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "aligns the selected item with the trigger inline start in ltr",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "aligns the selected item with the trigger inline start in ltr when popup padding shifts the item text",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "aligns the selected item with the trigger inline end in rtl",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "aligns the popup with the trigger inline end in rtl when no selected item text is available",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "keeps item text aligned with the trigger after reopening",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "keeps scrolling the aligned list at browser zoom after the popup fills the available height",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "treats short popups as top-positioned when maxScrollTop is off by 1px",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "keeps alignItemWithTrigger active when the aligned height is fractionally below minHeight",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
+      "kind": "engine",
+      "engine": "webkit",
+      "link": "https://github.com/mui/base-ui/issues/4002",
+      "reason": "WebKit sends a `mousemove` with no movement when a list scrolls under a pointer that does not move. In WebKit, the list navigation thus ignores a `mousemove` with no movement, and the case dispatches one."
     },
     {
       "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
@@ -316,45 +105,7 @@
       "title": "does not resize the positioner when the list scrolls before the popup is placed",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />", "rtl alignment"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The cases need the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />", "aligned popup scroll resizing"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The cases need the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "keeps arrow keys inside the popup when the trigger lives in a toolbar",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case opens the popup with the keyboard and moves the focus into it. It needs the list navigation and the focus manager of Select, which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "moves focus into the items when the boundary item is already highlighted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the list navigation of Select, which moves the highlight with the keys and the pointer. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "title": "passes the keyboard close type of an item press to a finalFocus function",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case sets `finalFocus` of `Select.Popup`, which comes with the focus manager of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
+      "reason": "The case renders `Select.ScrollUpArrow`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
@@ -362,14 +113,7 @@
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The suite tests the focus props of the popup, which come with the focus manager of Select. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
-      "upstream": "packages/react/src/select/positioner/SelectPositioner.test.tsx",
-      "describe": ["<Select.Positioner />", "kept-mounted positioner"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "The case needs the focus manager of Select. It gives the focus back to the trigger when the popup closes, and the trigger then mounts the popup again. Vase UI does not have it. The scroll arrows are the last part of the family, so the row names their file."
+      "reason": "Vase UI does not have the shared suite `popupFocusPropsTests`. The scroll arrows are the last part of the family, so the row names their file."
     },
     {
       "upstream": "packages/react/src/select/store.test.tsx",

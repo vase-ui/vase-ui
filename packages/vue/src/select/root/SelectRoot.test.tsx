@@ -43,6 +43,15 @@ async function settleReset() {
   await flushMicrotasks();
 }
 
+// The trigger mounts the items in a 0 ms timer after it gets the focus. A browser delays a nested
+// timer by 4 ms or more, so `flushMicrotasks` can resolve before the items mount.
+async function focusTrigger(trigger: HTMLElement) {
+  trigger.focus();
+  await waitFor(() => {
+    expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(0);
+  });
+}
+
 function getHiddenInput() {
   return document.querySelector<HTMLInputElement>('input[aria-hidden]')!;
 }
@@ -92,6 +101,94 @@ describe('<Select.Root />', () => {
 
       await user.keyboard('[Tab]');
       expect(trigger).toHaveFocus();
+    });
+
+    it('does not commit a value with Enter on a highlighted item', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await flushMicrotasks();
+
+      await user.keyboard('{ArrowDown}');
+      await screen.findByRole('listbox');
+      await user.keyboard('{Enter}');
+
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
+    });
+
+    it('does not commit a value with typeahead on a closed trigger', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="apple">apple</Select.Item>
+                <Select.Item value="banana">banana</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await focusTrigger(screen.getByTestId('trigger'));
+
+      await user.keyboard('b');
+
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
+    });
+
+    it.skipIf(isJSDOM)('moves the highlight with typeahead while the popup is open', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root defaultOpen onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="apple">apple</Select.Item>
+                <Select.Item value="banana">banana</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const apple = await screen.findByRole('option', { name: 'apple' });
+      const banana = screen.getByRole('option', { name: 'banana' });
+
+      apple.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('b');
+
+      await waitFor(() => {
+        expect(banana).toHaveAttribute('data-highlighted');
+      });
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
     });
   });
 
@@ -283,15 +380,6 @@ describe('<Select.Root />', () => {
   });
 
   describe('typeahead', () => {
-    // The trigger mounts the items in a 0 ms timer after it gets the focus. A browser delays a
-    // nested timer by 4 ms or more, so `flushMicrotasks` can resolve before the items mount.
-    async function focusTrigger(trigger: HTMLElement) {
-      trigger.focus();
-      await waitFor(() => {
-        expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(0);
-      });
-    }
-
     it('matches an item by its label when the rendered text differs', async () => {
       const { user } = await render(
         <Select.Root>

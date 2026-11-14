@@ -100,9 +100,7 @@ watch(
 
 const alignItemWithTriggerActive = computed(
   () =>
-    mounted.value &&
-    controlledAlignItemWithTrigger.value &&
-    store.select('openMethod') !== 'touch',
+    mounted.value && controlledAlignItemWithTrigger.value && store.select('openMethod') !== 'touch',
 );
 
 // The trigger reads the value in its focus handler.

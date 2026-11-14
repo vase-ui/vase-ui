@@ -34,7 +34,7 @@ export interface SelectPopupProps
    * - `false`: Do not move focus.
    * - `true`: Move focus based on the default behavior (trigger or previously focused element).
    * - An element, a component, or a ref of one: Move focus to that element.
-   * - A function: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
+   * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
    *   Return an element to focus, `true` to use the default behavior, or `false`/`undefined` to do nothing.
    */
   finalFocus?: FocusOption | undefined;
@@ -452,7 +452,11 @@ useDomEffect(
 );
 
 useDomEffect(
-  [() => alignItemWithTriggerActive.value, () => store.select('positionerElement'), () => open.value],
+  [
+    () => alignItemWithTriggerActive.value,
+    () => store.select('positionerElement'),
+    () => open.value,
+  ],
   () => {
     const positionerElement = store.select('positionerElement');
     if (!alignItemWithTriggerActive.value || !positionerElement || !open.value) {
