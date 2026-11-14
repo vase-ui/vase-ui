@@ -1,0 +1,2242 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/context-menu/**",
+    "docs/src/app/(docs)/react/components/context-menu/**"
+  ],
+  "sources": [
+    "packages/react/src/context-menu/index.parts.ts",
+    "packages/react/src/context-menu/index.ts",
+    "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+    "packages/react/src/context-menu/positioner/ContextMenuPositionerCssVars.ts",
+    "packages/react/src/context-menu/positioner/ContextMenuPositionerDataAttributes.ts",
+    "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
+    "packages/react/src/context-menu/root/ContextMenuRootContext.ts",
+    "packages/react/src/context-menu/trigger/ContextMenuTrigger.tsx",
+    "packages/react/src/context-menu/trigger/ContextMenuTriggerDataAttributes.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ContextMenu.Root /> (non-Mac)",
+            "interactions"
+          ],
+          "title": "ignores context menu mouseup on non-Mac platforms"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "closes nested submenus when releasing the context menu pointer over an item"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not activate a submenu trigger when releasing the context menu pointer over it"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "ignores mouseup directly under the cursor when the context menu spawns there"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "ignores mouseup directly under the cursor when alignOffset is negative"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "allows mouseup after leaving the initial cursor point"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not open when disabled"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />"
+          ],
+          "title": "returns focus to the focused surface when closing with Shift+Tab"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />"
+          ],
+          "title": "returns focus to the focused surface when closing with Tab"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Root />",
+            "prop: collisionAvoidance"
+          ],
+          "title": "flips to the opposite side when side: flip is set and there is no space",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "throws when rendered outside ContextMenu.Root"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "should open menu on right click (context menu event)"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "adds open state attributes"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "should call onOpenChange when menu is opened via right click"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "does not cancel opening menu on mouseup after mousedown outside before 500ms"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "cancels opening menu on mouseup after mousedown outside after 500ms"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "keeps the menu open when the context-menu gesture ends inside its positioner"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "keeps the root menu open when the context-menu gesture ends in a portaled submenu"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "aborts the pending document mouseup listener when the trigger unmounts"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "does not open on right-click when disabled"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "prop: disabled"
+          ],
+          "title": "does not block the native context menu when disabled"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "blocks native context menus on both internal and external backdrops"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "blocks native context menus in a portal mounted inside the trigger DOM subtree"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "blocks the native context menu when onContextMenu skips the Base UI handler"
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "should open menu on long press on touchscreen devices",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "should cancel long press when touch moves beyond threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "keeps a pending long press when touch movement stays within the threshold",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "cancels a pending long press when the touch ends",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "cancels a pending long press when the gesture becomes multi-touch",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "delays outside-press dismissal after opening from a long press",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />",
+            "long press"
+          ],
+          "title": "does not open on long press when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<ContextMenu.Trigger />"
+          ],
+          "title": "should handle nested context menus correctly"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/context-menu/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: ContextMenu.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "highlightItemOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<ContextMenu.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "onItemHighlighted",
+              "required": false,
+              "type": "((highlightedItem: HTMLElement | undefined, eventDetails: MenuRoot.HighlightEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "MenuRoot.Orientation",
+              "default": "'vertical'"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuRootState",
+            "fields": [],
+            "code": "type ContextMenuRootState = {};"
+          },
+          "actions": {
+            "name": "ContextMenuRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type ContextMenuRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "ContextMenuRootChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "focus-out",
+              "list-navigation",
+              "escape-key",
+              "item-press",
+              "close-press",
+              "sibling-open",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type ContextMenuRootChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'focus-out' | 'list-navigation' | 'escape-key' | 'item-press' | 'close-press' | 'sibling-open' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ContextMenuRootChangeEventDetails",
+            "code": "type ContextMenuRootChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'sibling-open';\n    event: Event;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuTriggerState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuPortalState",
+            "fields": [],
+            "code": "type ContextMenuPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type ContextMenuBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'start'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": null
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": null
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": null
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "string | undefined"
+              }
+            ],
+            "code": "type ContextMenuPositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    nested: boolean;\n    instant: string | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-height",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuPopupState",
+            "fields": [
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "'dismiss' | 'click' | 'group' | 'trigger-change' | undefined"
+              }
+            ],
+            "code": "type ContextMenuPopupState = {\n    transitionStatus: TransitionStatus;\n    side: Side;\n    align: Align;\n    open: boolean;\n    nested: boolean;\n    instant: 'dismiss' | 'click' | 'group' | 'trigger-change' | undefined;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-instant",
+              "type": "'click' | 'dismiss' | 'group' | 'trigger-change'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "div",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "onClick",
+              "required": false,
+              "type": "((event: BaseUIEvent<React.MouseEvent<HTMLDivElement, MouseEvent>>) => void)",
+              "default": null
+            },
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuItemState = {\n    disabled: boolean;\n    highlighted: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Group",
+          "tag": "div",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.Group.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.Group.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.Group.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuGroupState",
+            "fields": [],
+            "code": "type ContextMenuGroupState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "GroupLabel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.GroupLabel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.GroupLabel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.GroupLabel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuGroupLabelState",
+            "fields": [],
+            "code": "type ContextMenuGroupLabelState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: SeparatorState) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: SeparatorState) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: SeparatorState) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuSeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type ContextMenuSeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "SubmenuRoot",
+          "tag": null,
+          "props": [
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: ContextMenu.SubmenuRoot.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "highlightItemOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<MenuRoot.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "closeParentOnEsc",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "onItemHighlighted",
+              "required": false,
+              "type": "((highlightedItem: HTMLElement | undefined, eventDetails: MenuRoot.HighlightEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "MenuRoot.Orientation",
+              "default": "'vertical'"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuSubmenuRootState",
+            "fields": [],
+            "code": "type ContextMenuSubmenuRootState = {};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "ContextMenuSubmenuRootChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "focus-out",
+              "list-navigation",
+              "escape-key",
+              "item-press",
+              "close-press",
+              "sibling-open",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type ContextMenuSubmenuRootChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'focus-out' | 'list-navigation' | 'escape-key' | 'item-press' | 'close-press' | 'sibling-open' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ContextMenuSubmenuRootChangeEventDetails",
+            "code": "type ContextMenuSubmenuRootChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'sibling-open';\n    event: Event;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "SubmenuTrigger",
+          "tag": "div",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "onClick",
+              "required": false,
+              "type": "((event: BaseUIEvent<React.MouseEvent<HTMLDivElement, MouseEvent>>) => void)",
+              "default": null
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "openOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "100"
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": "0"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.SubmenuTrigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.SubmenuTrigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.SubmenuTrigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuSubmenuTriggerState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuSubmenuTriggerState = {\n    disabled: boolean;\n    highlighted: boolean;\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "RadioGroup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "any",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "any",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: any, eventDetails: ContextMenu.RadioGroup.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.RadioGroup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.RadioGroup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.RadioGroup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuRadioGroupState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuRadioGroupState = {\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "ContextMenuRadioGroupChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "focus-out",
+              "list-navigation",
+              "escape-key",
+              "item-press",
+              "close-press",
+              "sibling-open",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type ContextMenuRadioGroupChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'focus-out' | 'list-navigation' | 'escape-key' | 'item-press' | 'close-press' | 'sibling-open' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ContextMenuRadioGroupChangeEventDetails",
+            "code": "type ContextMenuRadioGroupChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'sibling-open';\n    event: Event;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "RadioItem",
+          "tag": "div",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": true,
+              "type": "any",
+              "default": null
+            },
+            {
+              "name": "onClick",
+              "required": false,
+              "type": "((event: BaseUIEvent<React.MouseEvent<HTMLDivElement, MouseEvent>>) => void)",
+              "default": null
+            },
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.RadioItem.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.RadioItem.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.RadioItem.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuRadioItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuRadioItemState = {\n    disabled: boolean;\n    highlighted: boolean;\n    checked: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "RadioItemIndicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.RadioItemIndicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.RadioItemIndicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.RadioItemIndicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuRadioItemIndicatorState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type ContextMenuRadioItemIndicatorState = {\n    checked: boolean;\n    disabled: boolean;\n    highlighted: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "CheckboxItem",
+          "tag": "div",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultChecked",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "checked",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onCheckedChange",
+              "required": false,
+              "type": "((checked: boolean, eventDetails: ContextMenu.CheckboxItem.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "onClick",
+              "required": false,
+              "type": "((event: BaseUIEvent<React.MouseEvent<HTMLDivElement, MouseEvent>>) => void)",
+              "default": null
+            },
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.CheckboxItem.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.CheckboxItem.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.CheckboxItem.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuCheckboxItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuCheckboxItemState = {\n    disabled: boolean;\n    highlighted: boolean;\n    checked: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": {
+            "name": "ContextMenuCheckboxItemChangeEventReason",
+            "values": [
+              "trigger-hover",
+              "trigger-focus",
+              "trigger-press",
+              "outside-press",
+              "focus-out",
+              "list-navigation",
+              "escape-key",
+              "item-press",
+              "close-press",
+              "sibling-open",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type ContextMenuCheckboxItemChangeEventReason = 'trigger-hover' | 'trigger-focus' | 'trigger-press' | 'outside-press' | 'focus-out' | 'list-navigation' | 'escape-key' | 'item-press' | 'close-press' | 'sibling-open' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "ContextMenuCheckboxItemChangeEventDetails",
+            "code": "type ContextMenuCheckboxItemChangeEventDetails = ({\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'trigger-focus';\n    event: FocusEvent;\n} | {\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'focus-out';\n    event: FocusEvent | KeyboardEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'close-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'sibling-open';\n    event: Event;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "CheckboxItemIndicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.CheckboxItemIndicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.CheckboxItemIndicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: ContextMenu.CheckboxItemIndicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuCheckboxItemIndicatorState",
+            "fields": [
+              {
+                "name": "checked",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type ContextMenuCheckboxItemIndicatorState = {\n    checked: boolean;\n    disabled: boolean;\n    highlighted: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-checked",
+              "type": null
+            },
+            {
+              "name": "data-unchecked",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "LinkItem",
+          "tag": "a",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: ContextMenu.LinkItem.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: ContextMenu.LinkItem.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, state: ContextMenu.LinkItem.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "ContextMenuLinkItemState",
+            "fields": [
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type ContextMenuLinkItemState = {\n    highlighted: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-highlighted",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "ContextMenuArrowDataAttributes",
+          "code": "declare namespace ContextMenuArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuBackdropDataAttributes",
+          "code": "declare namespace ContextMenuBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuCheckboxItemDataAttributes",
+          "code": "declare namespace ContextMenuCheckboxItemDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const highlighted: 'data-highlighted';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuCheckboxItemIndicatorDataAttributes",
+          "code": "declare namespace ContextMenuCheckboxItemIndicatorDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuItemDataAttributes",
+          "code": "declare namespace ContextMenuItemDataAttributes {\n    const highlighted: 'data-highlighted';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuLinkItemDataAttributes",
+          "code": "declare namespace ContextMenuLinkItemDataAttributes {\n    const highlighted: 'data-highlighted';\n}",
+          "constants": [
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuPopupDataAttributes",
+          "code": "declare namespace ContextMenuPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuPositionerCssVariables",
+          "code": "declare namespace ContextMenuPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n    const positionerWidth: '--positioner-width';\n    const positionerHeight: '--positioner-height';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            },
+            {
+              "name": "positionerWidth",
+              "value": "--positioner-width"
+            },
+            {
+              "name": "positionerHeight",
+              "value": "--positioner-height"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuPositionerDataAttributes",
+          "code": "declare namespace ContextMenuPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuRadioItemDataAttributes",
+          "code": "declare namespace ContextMenuRadioItemDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const highlighted: 'data-highlighted';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuRadioItemIndicatorDataAttributes",
+          "code": "declare namespace ContextMenuRadioItemIndicatorDataAttributes {\n    const checked: 'data-checked';\n    const unchecked: 'data-unchecked';\n    const disabled: 'data-disabled';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "checked",
+              "value": "data-checked"
+            },
+            {
+              "name": "unchecked",
+              "value": "data-unchecked"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuSeparatorDataAttributes",
+          "code": "declare namespace ContextMenuSeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuSubmenuTriggerDataAttributes",
+          "code": "declare namespace ContextMenuSubmenuTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const highlighted: 'data-highlighted';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "ContextMenuTriggerDataAttributes",
+          "code": "declare namespace ContextMenuTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        },
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/context-menu/page.mdx",
+      "referenceTags": [
+        "TypesContextMenu.Root",
+        "TypesContextMenu.Trigger",
+        "TypesContextMenu.Portal",
+        "TypesContextMenu.Backdrop",
+        "TypesContextMenu.Positioner",
+        "TypesContextMenu.Popup",
+        "TypesContextMenu.Arrow",
+        "TypesContextMenu.Item",
+        "TypesContextMenu.LinkItem",
+        "TypesContextMenu.SubmenuRoot",
+        "TypesContextMenu.SubmenuTrigger",
+        "TypesContextMenu.Group",
+        "TypesContextMenu.GroupLabel",
+        "TypesContextMenu.RadioGroup",
+        "TypesContextMenu.RadioItem",
+        "TypesContextMenu.RadioItemIndicator",
+        "TypesContextMenu.CheckboxItem",
+        "TypesContextMenu.CheckboxItemIndicator",
+        "TypesContextMenu.Separator"
+      ]
+    }
+  ]
+}
