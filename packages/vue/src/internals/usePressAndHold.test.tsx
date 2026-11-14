@@ -91,9 +91,9 @@ describe('usePressAndHold', () => {
   });
 
   it.each([
-    { name: 'a move over the distance', scrollDistance: 3, ticks: [0, 0] },
-    { name: 'a move under the distance', scrollDistance: 8, ticks: [1, 2] },
-  ])('ends a touch hold for $name', async ({ scrollDistance, ticks }) => {
+    { name: 'no hold after a move over the distance', scrollDistance: 3, ticks: [0, 0] },
+    { name: 'a hold after a move under the distance', scrollDistance: 8, ticks: [1, 2] },
+  ])('a touch press starts $name', async ({ scrollDistance, ticks }) => {
     const tick = vi.fn(() => true);
     const Hold = defineHoldButton({ startDelay: 100, tickDelay: 10, scrollDistance }, tick);
     await render(<Hold />);

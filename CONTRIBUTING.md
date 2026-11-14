@@ -244,6 +244,12 @@ A part that Base UI writes as another part renders that part and no element of i
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
+Base UI can also give a part of another family a new name and new types, such as `DrawerTitle = DialogTitle as DrawerTitle`. That part is then the part of the other family:
+
+- Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
+- Its props and state types are aliases of the types of the other part.
+- `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
@@ -455,6 +461,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
+- `menubar/MenubarContext.ts` exports `MenubarContext` and `useMenubarContext` again from the path of Base UI.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
@@ -1095,7 +1102,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Base UI adds some listeners to the element of the part with `addEventListener`. Give such a handler in the props of the part. An example is `onBeforematch` of `Collapsible.Panel`. The element of a `#render` slot then gets the listener too.
 - A listener that Base UI adds with `{ passive: false }` also goes in the props. An example is the `wheel` listener of `ScrollArea.Scrollbar`. Vue adds the listener of an element with no `passive` option. A browser makes a `wheel` listener passive by default only on the window, the document, the root element and the body.
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
-- React adds the listener of `onTouchStart` as a passive listener. A part gives such a handler the suffix `Passive` too: `usePressAndHold` binds `onTouchstartPassive`. Without the suffix, the browser waits for the handler before each scroll step.
+- React adds the listener of `onTouchStart` as a passive listener. A part gives such a handler the suffix `Passive` too: `usePressAndHold` binds `onTouchstartPassive`. Without the suffix, the browser waits for the handler before it starts a scroll.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example.
 - A text input part can refuse a change. `NumberField.Input` is an example. No render follows a refused change, so the part writes the text of its state to the input in the `input` handler. The part does not write while the event has `isComposing`, because a write stops the composition. After `compositionend` it writes in a 0 ms timeout, because WebKit sends the last `input` event of a composition after `compositionend`.
@@ -1142,6 +1149,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Use `whileElementsMounted` with `autoUpdate` for a popup that stays mounted too. The reference is `null` while that popup is closed, so `autoUpdate` does not run then.
 - `useFloating` writes a position in microtasks. A popup has its position before the first paint after it opens.
 - A key that no rendered style has, such as `--anchor-width`, keeps the value that code writes on the element. A value that code writes for a key of the rendered style goes into a ref that the style reads, such as `--available-height`.
+- Some values change in each frame of a gesture, such as `--drawer-swipe-progress` of a swipe. Do not keep such a value in a ref, because a ref renders the part in each frame. Where the rendered style has the key of such a value, the style reads the value from a holder that is not reactive. `Drawer.Indent` reads the visual state store of `Drawer.Provider`. `Drawer.Backdrop` reads the value that its element holds.
 - A function ref of a composable reads no ref in the render, because the render then depends on that ref. Where the function ref must start work that depends on a ref, it reads the ref in a `queueMicrotask` callback. `arrowRef` of `useAnchorPositioning` does this.
 - The check for a rectangle must refuse a component. The ref of a component with no `expose` also gives its props. A component that has `width` and `height` props then has the names of a rectangle. A rectangle has no `nodeType` and no `$props`, and its `x`, `y`, `width` and `height` are numbers.
 
@@ -1417,6 +1425,7 @@ The hydration helpers:
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer can rest on the element and send events of its own. A dispatched event still reaches the element.
 - A case that asserts that a part ignores a scroll isolates the part from the real pointer with `pointer-events: none`. When the part renders under the pointer, the browser sends pointer events, and the part can take the next scroll for a user scroll.
 - A case that dispatches hover events gives the element `pointer-events: none`. The real pointer of the browser can rest on the element, and a dispatched event still reaches it.
+- A pointer call of `user` throws when the element has or inherits `pointer-events: none`. A case that clicks an element through `user` renders the element with no such style.
 - Use `it.each` with object rows and `$name` titles for tests that differ only in data.
 - A test of the order in which a template mounts a new part and unmounts the old part uses a `.test.vue` fixture. A render function in TSX reuses the component, so it does not show this order.
 - A test that replaces one child of `KeepAlive` with another child of the same component gives each child its own `key`. `KeepAlive` then keeps both children and deactivates the one that the other child replaces.
