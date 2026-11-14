@@ -8,7 +8,8 @@
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/detachedTriggersConformanceTests.tsx",
     "packages/react/test/dialogRootSharedTests.tsx",
-    "packages/react/test/popupFocusPropsTests.tsx"
+    "packages/react/test/popupFocusPropsTests.tsx",
+    "packages/react/test/popupListConformanceTests.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/CommonPopupDataAttributes.ts",
@@ -41,6 +42,7 @@
     "packages/react/test/dialogRootSharedTests.tsx",
     "packages/react/test/popupConformanceTests.tsx",
     "packages/react/test/popupFocusPropsTests.tsx",
+    "packages/react/test/popupListConformanceTests.tsx",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "typeTests": [
@@ -1654,6 +1656,367 @@
             "prop: finalFocus"
           ],
           "title": "passes the close type to a function"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/test/popupListConformanceTests.tsx",
+      "rows": [
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "highlights and focuses the hovered item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "clears the highlight when the pointer leaves the list without leaving focus on an item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "continues keyboard navigation from the hovered item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "activates the hovered item with Enter"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "lets the pointer take the highlight back after keyboard navigation"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "keeps the highlight when a touch scroll starts on the highlighted item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "keeps the highlight when the pointer moves straight onto content inside another item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "clears the highlight when the pointer leaves an item to outside the document"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "does not activate a disabled item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "ignores right clicks on the trigger and on items"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "keeps the keyboard highlight while the list scrolls under a resting pointer",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "pointer"
+          ],
+          "title": "does not scroll the list when hovering a partially visible item at either edge",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "starts without a highlight after a pointer opening"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "opens on the first item with ArrowDown"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "opens on the last item with ArrowUp"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "scrolls the last item into view when opening with ArrowUp",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "opens past a disabled first item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "opens with %s without activating an item"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "starts fresh when reopened after Escape"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "opens on the selected item with %s"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "marks only the selected item as selected"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "opening"
+          ],
+          "title": "reveals and highlights the selected item when opening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "moves the highlight one item at a time with the arrow keys"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "moves focus along with the highlight"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "activates the highlighted item once with %s"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "does not submit a surrounding form"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "stops on a disabled item while navigating"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "moves the highlight to the last and first items with End and Home"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "scrolls the last and first items into view with End and Home",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "moves to disabled ends with End and Home"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "scrolls the highlighted item into view in both directions, only as far as needed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "reveals an item reached by typing its label",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "starts a new typeahead search after a pause"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "keyboard"
+          ],
+          "title": "prevents the default scrolling of navigation keys"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "`${pastEndVerb} past the first item`"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "`${pastEndVerb} past the last item`"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "scrolls the first item into view when wrapping past the last item",
+          "conditions": [
+            "skipIf(isJSDOM || listEnd !== 'wrap')"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "keeps a single item reachable"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "opens and handles keys without losing focus when the list is empty"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "list boundaries"
+          ],
+          "title": "does not activate anything when every item is disabled"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes on Escape without committing, and keeps focus on the trigger"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes on Tab without committing, and moves focus past the trigger"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes on Shift+Tab without committing, and moves focus to the element before the popup"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes on an outside press without committing"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "`closes on a real outside click ${modal ? 'that the page underneath does not receive' : 'that reaches the page underneath'}`",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes when the trigger is clicked again"
+        },
+        {
+          "describe": [
+            "Popup list conformance",
+            "dismissal"
+          ],
+          "title": "closes only itself on Escape inside a dialog"
         }
       ]
     }
