@@ -37,6 +37,8 @@ Import the components and assemble their parts:
 
 `Radio.Root` renders its element and a hidden `<input type="radio">` after it. The group gives its name and its `form` to each input, so a form submits the value of the checked radio under that name. A group with a name and `required` blocks the submit of the form while it has no value. A group with `disabled` submits nothing.
 
+A reset of the form puts an uncontrolled group back to `defaultValue`, or to no value when it has none. A controlled group does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+
 Because of the hidden input, `Radio.Root` has more than one root node. A rule of `<style scoped>` does not match its element, and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
 
 Bind the value with `v-model:value`. The group emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The group then emits no `update:value` and keeps its value.
@@ -74,7 +76,5 @@ To put a native button in a `<label>`, use the `#render` slot. The hidden input 
 <<< ./radio-group/LabelInRenderSlot.vue{10-15}
 
 ## API reference
-
-The reference of `Radio.Root` and `Radio.Indicator` is on the [Radio](/components/radio) page.
 
 <ApiReference />
