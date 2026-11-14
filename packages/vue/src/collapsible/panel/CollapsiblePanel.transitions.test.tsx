@@ -9,15 +9,19 @@ import {
   nextEvent,
   openInTimerTask,
   probeFrameAfterExit,
+  probeFrameAfterExitBeforeRead,
   waitFor,
 } from '#test-utils';
-import type { FrameProbeResult } from '#test-utils';
+import type { EarlyExitProbeResult, FrameProbeResult } from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
 const TRANSITION = 'collapsible-transition-panel';
 const ANIMATION = 'collapsible-animation-panel';
 const LONG_EXIT = 'collapsible-long-exit-panel';
+const TWO_EXITS = 'collapsible-two-exits-panel';
+const OTHER_EXITS = 'collapsible-other-exits-panel';
+const CHILD = 'collapsible-panel-child';
 
 const STYLE = `
   .${TRANSITION} {
@@ -73,6 +77,32 @@ const STYLE = `
   .${ANIMATION}.${LONG_EXIT}[data-closed] {
     animation-duration: 100s;
   }
+
+  @keyframes collapsible-fade-out {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+
+  .${TWO_EXITS}[data-closed] {
+    animation:
+      collapsible-slide-up 100s linear,
+      collapsible-fade-out 100s linear;
+  }
+
+  .${OTHER_EXITS}[data-closed] > .${CHILD},
+  .${OTHER_EXITS}[data-closed]::before {
+    animation: collapsible-fade-out 100s linear;
+  }
+
+  .${OTHER_EXITS}::before {
+    content: '';
+    display: block;
+  }
 `;
 
 interface PanelRow {
@@ -106,7 +136,7 @@ describe('<Collapsible.Panel /> transitions', () => {
             hiddenUntilFound={row.hiddenUntilFound}
             onTransitionrun={onTransitionrun}
           >
-            {PANEL_CONTENT}
+            <div class={CHILD}>{PANEL_CONTENT}</div>
           </Collapsible.Panel>
         </Collapsible.Root>
       </>
@@ -224,5 +254,129 @@ describe('<Collapsible.Panel /> transitions', () => {
       },
       20_000,
     );
+  });
+
+  describe('VUE-71: a keyframe exit that ends before the part reads it', () => {
+    it.each<PanelRow & { name: string }>([
+      { name: 'unmounted' },
+      { name: 'keep-mounted', keepMounted: true },
+      { name: 'hiddenUntilFound', hiddenUntilFound: true },
+    ])(
+      'removes the panel in the frame in which the exit ends: $name',
+      async (row) => {
+        const open = shallowRef(false);
+        const { container, getPanel, isGone } = await renderPanel(
+          open,
+          `${ANIMATION} ${LONG_EXIT}`,
+          row,
+        );
+
+        const results: EarlyExitProbeResult[] = [];
+        for (let cycle = 0; cycle < 3; cycle += 1) {
+          const entered = nextEvent(container, 'animationend', { after: 'animationstart' });
+          openInTimerTask(open);
+          await entered;
+          await waitFor(() => {
+            expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
+          });
+
+          const panel = getPanel()!;
+          results.push(
+            await probeFrameAfterExitBeforeRead(
+              panel,
+              () =>
+                row.keepMounted || row.hiddenUntilFound
+                  ? panel.hidden !== false
+                  : !panel.isConnected,
+              () => closeInTimerTask(open),
+            ),
+          );
+
+          await waitFor(() => {
+            expect(isGone()).toBe(true);
+          });
+        }
+
+        expect(results.map(({ isReadBeforeEnd }) => isReadBeforeEnd)).toEqual([
+          false,
+          false,
+          false,
+        ]);
+        expect(results.map(({ isSameFrame }) => isSameFrame)).toEqual([true, true, true]);
+        expect(results.map(({ isGone }) => isGone)).toEqual([true, true, true]);
+      },
+      20_000,
+    );
+
+    async function openPanel(open: { value: boolean }, className: string) {
+      const { container, getPanel, isGone } = await renderPanel(
+        open,
+        `${className} ${LONG_EXIT}`,
+        {},
+      );
+      const isTransition = className.split(' ').includes(TRANSITION);
+      const startEvent = isTransition ? 'transitionrun' : 'animationstart';
+      const endEvent = isTransition ? 'transitionend' : 'animationend';
+      const entered = nextEvent(container, endEvent, { after: startEvent });
+      openInTimerTask(open);
+      await entered;
+      await waitFor(() => {
+        expect(getPanel()!.style.getPropertyValue('--collapsible-panel-height')).toBe('auto');
+      });
+      return { container, panel: getPanel()!, isGone };
+    }
+
+    // The listener of the case is on the container, so it runs after the listener of the part and
+    // after the update that the listener of the part makes.
+    it('keeps the panel until the last of its exit animations ends', async () => {
+      const open = shallowRef(false);
+      const { container, panel, isGone } = await openPanel(open, `${ANIMATION} ${TWO_EXITS}`);
+
+      const [first, second] = await nextAnimationsRead(panel, {
+        action: () => closeInTimerTask(open),
+      });
+      const firstEnd = nextEvent(container, 'animationend').then(() => panel.isConnected);
+      first!.finish();
+      expect(await firstEnd).toBe(true);
+
+      second!.finish();
+      await waitFor(() => {
+        expect(isGone()).toBe(true);
+      });
+    });
+
+    it.each<{ name: string; pseudoElement: string | null }>([
+      { name: 'a child', pseudoElement: null },
+      { name: '::before', pseudoElement: '::before' },
+    ])('keeps the panel when an animation of $name ends', async ({ pseudoElement }) => {
+      const open = shallowRef(false);
+      const { container, panel, isGone } = await openPanel(open, `${TRANSITION} ${OTHER_EXITS}`);
+
+      const closed = new Promise<void>((resolve) => {
+        new MutationObserver((_, observer) => {
+          observer.disconnect();
+          resolve();
+        }).observe(panel, { attributes: true, attributeFilter: ['data-closed'] });
+      });
+      closeInTimerTask(open);
+      await closed;
+      // The part waits only for the animations of the panel itself. The case ends the other
+      // animation before the exit of the panel starts.
+      const other = panel.getAnimations({ subtree: true }).find((animation) => {
+        const effect = animation.effect as KeyframeEffect;
+        return pseudoElement === null
+          ? effect.target !== panel
+          : effect.pseudoElement === pseudoElement;
+      })!;
+      const otherEnd = nextEvent(container, 'animationend').then(() => panel.isConnected);
+      other.finish();
+      expect(await otherEnd).toBe(true);
+
+      const animations = await nextAnimationsRead(panel);
+      animations.forEach((animation) => animation.finish());
+      await waitFor(() => {
+        expect(isGone()).toBe(true);
+      });
+    });
   });
 });

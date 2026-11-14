@@ -1,5 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushMicrotasks, nextAnimationsRead, nextEvent } from '#test-utils';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import {
+  flushMicrotasks,
+  nextAnimationsRead,
+  nextEvent,
+  probeFrameAfterExitBeforeRead,
+} from '#test-utils';
 
 interface LimitRow {
   name: string;
@@ -41,6 +46,13 @@ describe('the limits of the motion helpers', () => {
       message: 'No part read the animations of the element in 600 frames of the page.',
       wait: (action) => nextAnimationsRead(document.createElement('div'), { action }),
     },
+    {
+      name: 'probeFrameAfterExitBeforeRead',
+      frames: 180,
+      message: 'The panel got no data-ending-style in 180 frames of the page.',
+      wait: (action) =>
+        probeFrameAfterExitBeforeRead(document.createElement('div'), () => false, action),
+    },
   ])(
     '$name rejects in frame $frames after the end of its action',
     async ({ frames, message, wait }) => {
@@ -66,4 +78,44 @@ describe('the limits of the motion helpers', () => {
       expect(rejection).toBe(message);
     },
   );
+});
+
+describe('probeFrameAfterExitBeforeRead', () => {
+  interface RemovalRow {
+    name: string;
+    remove: (element: HTMLElement) => void;
+    isGone: boolean;
+  }
+
+  // A probe that cannot see a late removal proves nothing.
+  it.each<RemovalRow>([
+    { name: 'at the end', remove: (element) => element.remove(), isGone: true },
+    {
+      name: 'in a later task',
+      remove: (element) => setTimeout(() => element.remove()),
+      isGone: false,
+    },
+  ])('reports the removal of the element $name', async ({ remove, isGone }) => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes probe-exit { from { opacity: 1; } to { opacity: 0; } }
+      .probe-element[data-ending-style] { animation: probe-exit 100s linear; }
+    `;
+    const element = document.createElement('div');
+    element.className = 'probe-element';
+    document.body.append(style, element);
+    onTestFinished(() => {
+      style.remove();
+      element.remove();
+    });
+    element.addEventListener('animationend', () => remove(element));
+
+    const result = await probeFrameAfterExitBeforeRead(
+      element,
+      () => !element.isConnected,
+      () => element.setAttribute('data-ending-style', ''),
+    );
+
+    expect(result).toEqual({ isGone, isReadBeforeEnd: false, isSameFrame: true });
+  });
 });
