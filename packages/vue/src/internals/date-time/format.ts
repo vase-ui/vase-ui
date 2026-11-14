@@ -73,12 +73,17 @@ function toWeekInfo(info: unknown): WeekInfo | null {
   return { firstDay, weekend: [...weekend] };
 }
 
-// A string or a locale keeps its keywords, such as `-u-fw-mon`. `resolvedOptions` drops them.
-function toLocale(locale: Intl.LocalesArgument): Intl.Locale {
-  if (typeof locale === 'string' || locale instanceof Intl.Locale) {
-    return new Intl.Locale(locale);
-  }
-  return new Intl.Locale(new Intl.DateTimeFormat(locale).resolvedOptions().locale);
+// The first locale that `Intl` supports, with its keywords such as `-u-fw-mon`, which `resolvedOptions`
+// drops. A locale with no format data gives the week of its region.
+function localeTag(locale: Intl.LocalesArgument): string {
+  const list =
+    typeof locale === 'string' || locale instanceof Intl.Locale ? [locale] : (locale ?? []);
+  const tags = list.map(String);
+  return (
+    Intl.DateTimeFormat.supportedLocalesOf(tags)[0] ??
+    tags[0] ??
+    new Intl.DateTimeFormat().resolvedOptions().locale
+  );
 }
 
 /**
@@ -87,7 +92,7 @@ function toLocale(locale: Intl.LocalesArgument): Intl.Locale {
  * is the ISO 8601 week: it starts on Monday, and the weekend is Saturday and Sunday.
  */
 export function weekInfo(locale: Intl.LocalesArgument): WeekInfo {
-  const resolved = toLocale(locale);
+  const resolved = new Intl.Locale(localeTag(locale));
   const method: unknown = Reflect.get(resolved, 'getWeekInfo');
   const info: unknown =
     typeof method === 'function'

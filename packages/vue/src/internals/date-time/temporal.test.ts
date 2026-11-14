@@ -1,3 +1,4 @@
+import { Temporal as Polyfill } from 'temporal-polyfill/full/implementation';
 import { describe, expect, it } from 'vitest';
 import {
   compareDates,
@@ -45,6 +46,21 @@ describe('kindOf', () => {
     expect(kindOf(make())).toBe(expected);
   });
 
+  // An object of `temporal-polyfill` is not an instance of the native class, and an object of another
+  // realm is not an instance of the class of this realm. The tag is the same.
+  it.each([
+    { kind: 'date', make: () => Polyfill.PlainDate.from('2026-11-14') },
+    { kind: 'time', make: () => Polyfill.PlainTime.from('10:30') },
+    { kind: 'dateTime', make: () => Polyfill.PlainDateTime.from('2026-11-14T10:30') },
+    {
+      kind: 'zonedDateTime',
+      make: () => Polyfill.ZonedDateTime.from('2026-11-14T10:30[Asia/Tokyo]'),
+    },
+    { kind: 'yearMonth', make: () => Polyfill.PlainYearMonth.from('2026-11') },
+  ])('tells the kind $kind of a value that the polyfill made', ({ kind, make }) => {
+    expect(kindOf(make())).toBe(kind);
+  });
+
   it('checks one kind with isKind', () => {
     expect(isKind(day('2026-11-14'), 'date')).toBe(true);
     expect(isKind(day('2026-11-14'), 'yearMonth')).toBe(false);
@@ -88,11 +104,22 @@ describe('withDate', () => {
       expected: '2026-12-01T10:30:00',
     },
     {
+      name: 'a date and time in a Hebrew calendar',
+      like: () => dateTime('2026-11-14T10:30').withCalendar('hebrew'),
+      expected: '2026-12-01T10:30:00[u-ca=hebrew]',
+    },
+    {
       name: 'a date and time in a zone and a calendar',
       like: () => zoned('2026-11-14T10:30[America/New_York][u-ca=persian]'),
       expected: '2026-12-01T10:30:00-05:00[America/New_York][u-ca=persian]',
     },
     { name: 'a year and month', like: () => month('2026-11'), expected: '2026-12' },
+    {
+      name: 'a year and month in a Persian calendar',
+      like: () =>
+        month('2026-11').toPlainDate({ day: 1 }).withCalendar('persian').toPlainYearMonth(),
+      expected: '2026-11-22[u-ca=persian]',
+    },
   ])('keeps the kind, the calendar, the time and the zone of $name', ({ like, expected }) => {
     expect(withDate(like(), day('2026-12-01')).toString()).toBe(expected);
   });
@@ -245,6 +272,7 @@ describe('toInputText and parseInputText', () => {
     { kind: 'dateTime', text: '2026-11-14T10:30:15' },
     { kind: 'zonedDateTime', text: '2026-11-14T10:30:00+09:00[Asia/Tokyo]' },
     { kind: 'yearMonth', text: '2026-11' },
+    { kind: 'yearMonth', text: '2026-10-23[u-ca=persian]' },
   ] as const)('reads the text of the kind $kind', ({ kind, text }) => {
     const value = parseInputText(text, kind);
     expect(value?.toString()).toBe(text);

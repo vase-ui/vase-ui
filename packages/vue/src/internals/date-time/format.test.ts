@@ -141,7 +141,11 @@ describe('weekInfo', () => {
     { locale: 'en-GB', firstDay: 1, weekend: [6, 7] },
     { locale: 'ar-EG', firstDay: 6, weekend: [5, 6] },
     { locale: 'en-US-u-fw-mon', firstDay: 1, weekend: [6, 7] },
-    { locale: ['xx-YY', 'fr'], firstDay: 1, weekend: [6, 7] },
+    { locale: 'en-US-u-fw-sun', firstDay: 7, weekend: [6, 7] },
+    { locale: ['xx-YY', 'en-US'], firstDay: 7, weekend: [6, 7] },
+    { locale: ['en-GB', 'en-US'], firstDay: 1, weekend: [6, 7] },
+    { locale: 'tlh-GB', firstDay: 1, weekend: [6, 7] },
+    { locale: 'tlh-US', firstDay: 7, weekend: [6, 7] },
   ])('gives the week of the locale $locale', ({ locale, firstDay, weekend }) => {
     expect(weekInfo(locale)).toEqual({ firstDay, weekend });
   });
