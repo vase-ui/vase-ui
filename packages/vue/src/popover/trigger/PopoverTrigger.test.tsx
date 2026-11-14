@@ -231,22 +231,10 @@ describe('<Popover.Trigger />', () => {
           v-slots={{
             default: ({ payload }: { payload: unknown }) => (
               <>
-                <Popover.Trigger
-                  payload="One"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="One" openOnHover delay={0} closeDelay={0}>
                   One
                 </Popover.Trigger>
-                <Popover.Trigger
-                  payload="Two"
-                  openOnHover
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Popover.Trigger payload="Two" openOnHover delay={0} closeDelay={0}>
                   Two
                 </Popover.Trigger>
                 <Popover.Portal>
