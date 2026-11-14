@@ -59,7 +59,7 @@ const App = defineComponent(
   (inProps: AppProps) => {
     const { disableFirstItem, hideFirstItem, firstItemStyle, ...props } = inProps;
     const open = shallowRef(false);
-    const listRef = shallowRef<Array<HTMLLIElement | null>>([]);
+    const listRef = shallowRef<(HTMLLIElement | null)[]>([]);
     const activeIndex = shallowRef<null | number>(null);
     const { refs, context } = useFloating({
       open,
@@ -161,7 +161,7 @@ const VirtualizedGridRows = defineComponent(
 
     const open = shallowRef(true);
     const activeIndex = shallowRef<number | null>(initialActiveIndex);
-    const listRef = shallowRef<Array<HTMLButtonElement | null>>([]);
+    const listRef = shallowRef<(HTMLButtonElement | null)[]>([]);
 
     const { refs, context } = useFloating({
       open,
@@ -289,7 +289,7 @@ function createGrid(options: {
       const open = shallowRef(false);
       const activeIndex = shallowRef<number | null>(null);
 
-      const listRef = shallowRef<Array<HTMLElement | null>>([]);
+      const listRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const { refs, context } = useFloating({
         open,
@@ -392,7 +392,7 @@ const EmojiPicker = defineComponent(() => {
   const selectedEmoji = shallowRef<string | null>(null);
   const activeIndex = shallowRef<number | null>(null);
 
-  const listRef = shallowRef<Array<HTMLElement | null>>([]);
+  const listRef = shallowRef<(HTMLElement | null)[]>([]);
 
   const noResultsId = useId();
 
@@ -556,8 +556,8 @@ const Listbox = defineComponent((_props, { slots }) => {
     open: true,
   });
 
-  const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
-  const labelsRef = shallowRef<Array<string | null>>([]);
+  const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
+  const labelsRef = shallowRef<(string | null)[]>([]);
 
   function handleSelect(index: number | null) {
     selectedIndex.value = index;
@@ -1099,7 +1099,7 @@ describe('useListNavigation', () => {
       const inputValue = shallowRef('');
       const activeIndex = shallowRef<number | null>(null);
 
-      const listRef = shallowRef<Array<HTMLElement | null>>([]);
+      const listRef = shallowRef<(HTMLElement | null)[]>([]);
 
       const { context, refs } = useFloating({
         open,
@@ -2193,7 +2193,7 @@ describe('useListNavigation', () => {
   it('Home or End key press is ignored for typeable combobox reference', async () => {
     const ComboboxApp = defineComponent(() => {
       const open = shallowRef(false);
-      const listRef = shallowRef<Array<HTMLLIElement | null>>([]);
+      const listRef = shallowRef<(HTMLLIElement | null)[]>([]);
       const activeIndex = shallowRef<null | number>(null);
       const { refs, context } = useFloating({
         open,
