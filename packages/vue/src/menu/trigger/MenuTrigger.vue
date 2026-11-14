@@ -89,6 +89,7 @@ import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { isReleaseAtPressPoint } from '../../utils/popups/isReleaseAtPressPoint';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import {
@@ -222,6 +223,10 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
     return;
   }
 
+  if (press && isReleaseAtPressPoint(press, mouseEvent)) {
+    return;
+  }
+
   floatingTreeRoot.value.events.emit('close', {
     domEvent: mouseEvent,
     reason: REASONS.cancelOpen,
@@ -230,16 +235,20 @@ function handleDocumentMouseUp(mouseEvent: MouseEvent) {
 
 // The document that holds the `mouseup` listener, so that the unmount and `KeepAlive` remove it.
 let mouseUpDocument: Document | undefined;
+// A hover open adds the listener with no press.
+let press: MouseEvent | null = null;
 
-function listenForMouseUp(doc: Document) {
+function listenForMouseUp(doc: Document, pressEvent: MouseEvent | null) {
   removeMouseUpListener();
   mouseUpDocument = doc;
+  press = pressEvent;
   doc.addEventListener('mouseup', handleDocumentMouseUp, { once: true });
 }
 
 function removeMouseUpListener() {
   mouseUpDocument?.removeEventListener('mouseup', handleDocumentMouseUp);
   mouseUpDocument = undefined;
+  press = null;
 }
 
 // Whether the listener is the one of a hover open. Only that one goes when the open state changes:
@@ -258,7 +267,7 @@ function followHoverOpen() {
     store.value.select('lastOpenChangeReason') === REASONS.triggerHover
   ) {
     listensAfterHoverOpen = true;
-    listenForMouseUp(ownerDocument(triggerElement.value));
+    listenForMouseUp(ownerDocument(triggerElement.value), null);
   }
 }
 
@@ -327,7 +336,7 @@ const triggerListeners = {
       store.value.context.allowMouseUpTriggerRef.value = true;
     });
 
-    listenForMouseUp(ownerDocument(event.currentTarget as Element));
+    listenForMouseUp(ownerDocument(event.currentTarget as Element), event);
   },
 };
 

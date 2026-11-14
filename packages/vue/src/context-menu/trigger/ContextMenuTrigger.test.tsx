@@ -211,6 +211,37 @@ describe('<ContextMenu.Trigger />', () => {
     expect(screen.queryByRole('menu')).not.toBe(null);
   });
 
+  it('keeps the root menu open when the context-menu gesture ends in a portaled submenu', async () => {
+    const onOpenChange = vi.fn();
+
+    await render(
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup>
+              <ContextMenu.SubmenuRoot defaultOpen>
+                <ContextMenu.SubmenuTrigger>More</ContextMenu.SubmenuTrigger>
+                <ContextMenu.Portal>
+                  <ContextMenu.Positioner>
+                    <ContextMenu.Popup data-testid="submenu-popup" />
+                  </ContextMenu.Positioner>
+                </ContextMenu.Portal>
+              </ContextMenu.SubmenuRoot>
+            </ContextMenu.Popup>
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    await fireEvent.contextMenu(screen.getByTestId('trigger'));
+    await advance(501);
+    await fireEvent.mouseUp(screen.getByTestId('submenu-popup'));
+
+    expect(onOpenChange.mock.calls).toHaveLength(1);
+    expect(screen.queryByTestId('submenu-popup')).not.toBe(null);
+  });
+
   it('aborts the pending document mouseup listener when the trigger unmounts', async () => {
     const onOpenChange = vi.fn();
     const showTrigger = shallowRef(true);
