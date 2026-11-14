@@ -386,8 +386,6 @@ Rules:
 - Do not call a label function in `setup` or in a `computed`. The result is a vnode, and the next render uses it again.
 - The text of an item with a function label is the result of `itemToStringLabel`, or the text of its value. `stringifyAsLabel` gives it.
 
-- A popup trigger, such as `Menu.Trigger`, is a generic SFC, so that the types of its `payload` and its `handle` are checked. A consumer gives another part to the `as` prop or to the `#render` slot of the trigger: `<Menu.Trigger :as="Toolbar.Button">`. A consumer does not give the trigger to `as` of the other part.
-
 ### State and `v-model`
 
 Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each trio `x`, `defaultX`, `onXChange`:
@@ -718,7 +716,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - `inject` gives a part the tree and the node of the part above it, also when the part provides a tree or a node itself.
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - A part that listens to an event of `tree.events` adds its listener in a `watch` that has the tree as a source and the option `immediate`. The cleanup of the `watch` removes the listener, so the part listens to the new tree after a change. `Menu.Positioner` and `Menu.Popup` do this.
-- `Menu.Root` provides the tree of its store. A part below the root thus reads the tree that a detached trigger gave to the store (`VUE-55`).
+- A `Menu.Root` that starts a tree provides the tree of its store. A part below the root thus reads the tree that a detached trigger gave to the store (`VUE-55`).
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
