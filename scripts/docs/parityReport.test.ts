@@ -134,6 +134,7 @@ function makeInput(changes: Partial<ReportInput> = {}): ReportInput {
   return {
     upstream,
     families: [familyFiles('alpha', alpha), familyFiles('beta', beta)],
+    ownComponents: [],
     better: [],
     check: {
       problems: [],
@@ -303,6 +304,29 @@ test('a return type difference keeps its entry, its type and its reason', () => 
   assert.deepEqual(report.families[0].returnTypeDifferences, [row]);
 });
 
+test('the report lists each own component with its reason and its standard, and counts no component of it', () => {
+  const ownComponents = [
+    {
+      name: 'gamma',
+      record: {
+        standard: ['https://example.com/pattern', 'https://example.com/role'],
+        reason: 'Base UI has no gamma.',
+        parts: ['Root'],
+      },
+    },
+  ];
+  const report = buildParityReport(makeInput({ ownComponents }));
+  assert.deepEqual(report.ownComponents, [
+    {
+      name: 'gamma',
+      reason: 'Base UI has no gamma.',
+      standard: ['https://example.com/pattern', 'https://example.com/role'],
+    },
+  ]);
+  assert.deepEqual(report.status, buildParityReport(makeInput()).status);
+  assert.deepEqual(buildParityReport(makeInput()).ownComponents, []);
+});
+
 function betterRow(id: string): BetterRow {
   return {
     id,
@@ -379,6 +403,17 @@ test('loadParityReport throws when the check finds a problem', () => {
     () => loadParityReport(root),
     /^Error: The parity page needs a clean parity check\. Run `pnpm parity:check`[^\n]*\nalpha: parity\/families\/alpha\.upstream\.json does not exist/,
   );
+});
+
+test('loadParityReport gives the own components that it reads from parity/own', () => {
+  const report = loadParityReport(join(import.meta.dirname, '..', 'parity', 'fixtures'));
+  assert.deepEqual(report.ownComponents, [
+    {
+      name: 'sample',
+      reason: 'Base UI has no sample component.',
+      standard: ['https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/'],
+    },
+  ]);
 });
 
 test('readScope accepts parity/scope.json', () => {

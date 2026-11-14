@@ -65,6 +65,20 @@ export interface FamilyFile {
   notApplicableCommits: { sha: string; reason: string }[];
 }
 
+/** The record of a component that Base UI does not have. `parts`, `functions` and `types` are what the API reference shows, in their sequence. */
+export interface OwnComponent {
+  /** Links to the standards that the behavior follows. */
+  standard: string[];
+  /** Why Vase UI has the component. */
+  reason: string;
+  /** The titles of the parts, such as `Root`. */
+  parts: string[];
+  /** The titles of the functions and classes, such as `createHandle`. */
+  functions?: string[];
+  /** The paths of the types, such as `useRender.Parameters`. */
+  types?: string[];
+}
+
 export interface UpstreamCommit {
   sha: string;
   date: string;
@@ -380,6 +394,24 @@ const upstreamFile = withRule<UpstreamFile>(
   },
 );
 
+const ownComponent = withRule<OwnComponent>(
+  object(
+    {
+      standard: array(link, { nonEmpty: true }),
+      reason: nonEmptyString,
+      parts: array(nonEmptyString, { nonEmpty: true }),
+      functions: array(nonEmptyString, { nonEmpty: true }),
+      types: array(nonEmptyString, { nonEmpty: true }),
+    },
+    ['functions', 'types'],
+  ),
+  (component, _place, report) => {
+    for (const key of ['standard', 'parts', 'functions', 'types'] as const) {
+      checkDuplicates(component[key] ?? [], (item) => item, key, report);
+    }
+  },
+);
+
 const conditions = array(nonEmptyString, { nonEmpty: true });
 const caseRow = object({ describe: strings, title: string, conditions }, ['conditions']);
 const suiteRow = object({ describe: strings, suite: nonEmptyString, conditions }, ['conditions']);
@@ -450,6 +482,10 @@ const betterRow = object({
 
 export function validateFamilyFile(file: string, value: unknown): string[] {
   return problemsOf(file, familyFile, value);
+}
+
+export function validateOwnComponent(file: string, value: unknown): string[] {
+  return problemsOf(file, ownComponent, value);
 }
 
 export function validateExtract(file: string, value: unknown): string[] {

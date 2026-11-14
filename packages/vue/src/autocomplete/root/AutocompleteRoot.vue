@@ -164,7 +164,9 @@ export type AutocompleteRootHighlightEventReason = AriaCombobox.HighlightEventRe
 export type AutocompleteRootHighlightEventDetails = AriaCombobox.HighlightEventDetails;
 </script>
 
-<script setup lang="ts" generic="Items extends readonly any[]">
+<script setup lang="ts" generic="Items extends readonly any[] = never">
+// vue-tsc resolves `Items` before it checks a listener of a template.
+// With the default `never`, `itemHighlighted` accepts a typed parameter and keeps `undefined`.
 import { computed, nextTick, shallowRef, watch } from 'vue';
 import { useAriaCombobox } from '../../combobox/root/AriaCombobox';
 import { useCoreFilter } from '../../combobox/root/utils/useFilter';

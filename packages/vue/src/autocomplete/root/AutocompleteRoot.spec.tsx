@@ -154,10 +154,10 @@ declare const value: string;
   filter={(item, query) => item.label.includes(query)}
 />;
 
-// A root with no `items` gives `unknown`, as Base UI does.
+// A root with no `items` gives `undefined` to a listener with no type.
 <Autocomplete.Root
   onItemHighlighted={(item) => {
-    expectType<unknown, typeof item>(item);
+    expectType<undefined, typeof item>(item);
   }}
 />;
 

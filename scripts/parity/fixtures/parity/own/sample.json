@@ -1,0 +1,7 @@
+{
+  "standard": ["https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"],
+  "reason": "Base UI has no sample component.",
+  "parts": ["Root", "Popup"],
+  "functions": ["createHandle"],
+  "types": ["Sample.Handle", "SampleRootChangeEventReason"]
+}
