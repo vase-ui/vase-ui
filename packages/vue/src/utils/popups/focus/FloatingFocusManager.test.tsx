@@ -35,6 +35,13 @@ function setWebKit(webkit: boolean) {
   });
 }
 
+// The pointer of the browser stays where a case leaves it, for each later test.
+function releasePointerAfterTest() {
+  onTestFinished(async () => {
+    await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
+  });
+}
+
 type ManagerProps = Partial<Omit<FloatingFocusManagerProps, 'store'>>;
 type PopupStore = ReturnType<typeof useFloatingRootStore>;
 
@@ -933,7 +940,10 @@ describe('FloatingFocusManager', () => {
       }>([
         {
           name: 'a press of the mouse',
-          close: () => userEvent.click(screen.getByTestId('close')),
+          close: () => {
+            releasePointerAfterTest();
+            return userEvent.click(screen.getByTestId('close'));
+          },
           options: { preventScroll: true },
         },
         {
@@ -1384,25 +1394,18 @@ describe('FloatingFocusManager', () => {
       await waitFor(() => expect(screen.getByTestId('before')).toHaveFocus());
     });
 
-    it('moves the focus into the popup above when no element that had the focus can take it', async () => {
+    // A popup with two fields that holds a popup. The button of the inner popup removes the
+    // reference of the inner popup in the update that closes it. The first field has the focus.
+    async function renderPopupInPopup() {
       const removed = shallowRef(false);
       await render(() => (
         <Popup>
           {{
             default: () => [
               <input data-testid="parent-field" />,
+              <input data-testid="parent-second-field" />,
               <Popup name="child-" referenceRemoved={removed.value}>
-                {{
-                  default: ({ close }: { close: () => void }) => (
-                    <button
-                      data-testid="child-change"
-                      onClick={() => {
-                        removed.value = true;
-                        close();
-                      }}
-                    />
-                  ),
-                }}
+                {{ default: changeAndClose(() => (removed.value = true)) }}
               </Popup>,
             ],
           }}
@@ -1410,12 +1413,28 @@ describe('FloatingFocusManager', () => {
       ));
       await openPopup();
       await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
-      await openPopup(document, 'child-');
-      await waitFor(() => expect(screen.getByTestId('child-change')).toHaveFocus());
+    }
 
-      await fireEvent.click(screen.getByTestId('child-change'));
+    it('moves the focus into the popup above when no element that had the focus can take it', async () => {
+      await renderPopupInPopup();
+      await openPopup(document, 'child-');
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('change'));
 
       await waitFor(() => expect(screen.getByTestId('parent-field')).toHaveFocus());
+    });
+
+    it('moves the focus to the element that had it before the open, and not into the popup above', async () => {
+      await renderPopupInPopup();
+      screen.getByTestId('parent-second-field').focus();
+      // The click leaves the focus on the second field. `openPopup` would focus the reference.
+      await fireEvent.click(screen.getByTestId('child-reference'));
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('change'));
+
+      await waitFor(() => expect(screen.getByTestId('parent-second-field')).toHaveFocus());
     });
 
     // The focus is on the body at each open, so the focus manager records the reference.
