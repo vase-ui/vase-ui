@@ -134,4 +134,44 @@ describe('<Menu.Root /> on a server', () => {
 
     expect(warn).not.toHaveBeenCalled();
   });
+
+  it('renders the list, the groups and the items of an open menu', async () => {
+    const html = await renderToString(
+      <Menu.Root open>
+        <Menu.List id="list">
+          <Menu.Group id="group">
+            <Menu.GroupLabel id="label">Edit</Menu.GroupLabel>
+            <Menu.Item id="item">Copy</Menu.Item>
+            <Menu.LinkItem id="link" href="/docs">
+              Docs
+            </Menu.LinkItem>
+          </Menu.Group>
+          <Menu.CheckboxItem id="checkbox" defaultChecked>
+            Bold
+            <Menu.CheckboxItemIndicator />
+          </Menu.CheckboxItem>
+          <Menu.RadioGroup defaultValue="a">
+            <Menu.RadioItem id="radio" value="a">
+              A
+              <Menu.RadioItemIndicator />
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.List>
+      </Menu.Root>,
+    );
+
+    expect(html).toBe(
+      '<!--[--><div id="list" role="menu" tabindex="-1"><!--[-->' +
+        '<div role="group" id="group"><!--[--><div id="label" aria-hidden="true"><!--[-->' +
+        'Edit<!--]--></div><div role="menuitem" id="item" tabindex="-1"><!--[-->Copy<!--]-->' +
+        '</div><a role="menuitem" id="link" tabindex="-1" href="/docs"><!--[-->Docs<!--]-->' +
+        '</a><!--]--></div>' +
+        '<div data-checked role="menuitemcheckbox" id="checkbox" tabindex="-1" aria-checked="true">' +
+        '<!--[-->Bold<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--><!--]--></div><div role="group"><!--[-->' +
+        '<div data-checked role="menuitemradio" id="radio" tabindex="-1" aria-checked="true">' +
+        '<!--[-->A<!--[--><span data-checked aria-hidden="true"><!--[--><!--]--></span>' +
+        '<!--]--><!--]--></div><!--]--></div><!--]--></div><!--]-->',
+    );
+  });
 });

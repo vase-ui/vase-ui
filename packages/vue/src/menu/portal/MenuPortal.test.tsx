@@ -24,7 +24,7 @@ describe('<Menu.Portal />', () => {
   }));
 
   describe('prop: container', () => {
-    it('keeps a closed popup in the container of an ancestor ref when the menu opens', async () => {
+    it('keeps a closed menu inside an ancestor ref when opening', async () => {
       const Test = defineComponent({
         props: { open: { type: Boolean, required: true } },
         setup(props) {
@@ -39,7 +39,9 @@ describe('<Menu.Portal />', () => {
                 <Menu.Trigger>Open menu</Menu.Trigger>
                 <Menu.Portal container={container} keepMounted>
                   <Menu.Positioner>
-                    <Menu.Popup data-testid="popup">Popup</Menu.Popup>
+                    <Menu.Popup data-testid="popup">
+                      <Menu.Item>Item</Menu.Item>
+                    </Menu.Popup>
                   </Menu.Positioner>
                 </Menu.Portal>
               </Menu.Root>

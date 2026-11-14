@@ -104,35 +104,42 @@ describe('<Menu.Positioner />', () => {
     refInstanceof: window.HTMLDivElement,
   }));
 
-  describe('prop: anchor', () => {
+  describe.skipIf(isJSDOM)('prop: anchor', () => {
     function getTransform() {
       return screen.getByTestId('positioner').style.getPropertyValue('transform');
     }
 
-    it('places the positioner against the element of an anchor ref', async () => {
-      const anchor = shallowRef<HTMLElement | null>(null);
-      const setAnchor = (element: unknown) => {
-        anchor.value = element as HTMLElement | null;
-      };
+    it('should be placed near the specified element when a ref is passed', async () => {
+      const TestComponent = defineComponent(() => {
+        const anchor = shallowRef<HTMLElement | null>(null);
+        const setAnchor = (element: unknown) => {
+          anchor.value = element as HTMLElement | null;
+        };
 
-      await render(() => (
-        <div style={{ margin: '50px' }}>
-          <Menu.Root open>
-            <Menu.Portal>
-              <Menu.Positioner
-                side="bottom"
-                align="start"
-                anchor={anchor}
-                arrowPadding={0}
-                data-testid="positioner"
-              >
-                <Menu.Popup>Popup</Menu.Popup>
-              </Menu.Positioner>
-            </Menu.Portal>
-          </Menu.Root>
-          <div data-testid="anchor" style={{ marginTop: '100px' }} ref={setAnchor} />
-        </div>
-      ));
+        return () => (
+          <div style={{ margin: '50px' }}>
+            <Menu.Root open>
+              <Menu.Portal>
+                <Menu.Positioner
+                  side="bottom"
+                  align="start"
+                  anchor={anchor}
+                  arrowPadding={0}
+                  data-testid="positioner"
+                >
+                  <Menu.Popup>
+                    <Menu.Item>1</Menu.Item>
+                    <Menu.Item>2</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+            <div data-testid="anchor" style={{ marginTop: '100px' }} ref={setAnchor} />
+          </div>
+        );
+      });
+
+      await render(<TestComponent />);
 
       const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
 
@@ -143,7 +150,91 @@ describe('<Menu.Positioner />', () => {
       });
     });
 
-    it('places the positioner against a virtual anchor', async () => {
+    it('should be placed near the specified element when an element is passed', async () => {
+      const TestComponent = defineComponent(() => {
+        const anchor = shallowRef<HTMLElement | null>(null);
+        const handleRef = (element: unknown) => {
+          anchor.value = element as HTMLElement | null;
+        };
+
+        return () => (
+          <div style={{ margin: '50px' }}>
+            <Menu.Root open>
+              <Menu.Portal>
+                <Menu.Positioner
+                  side="bottom"
+                  align="start"
+                  anchor={anchor.value}
+                  arrowPadding={0}
+                  data-testid="positioner"
+                >
+                  <Menu.Popup>
+                    <Menu.Item>1</Menu.Item>
+                    <Menu.Item>2</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+            <div data-testid="anchor" style={{ marginTop: '100px' }} ref={handleRef} />
+          </div>
+        );
+      });
+
+      await render(<TestComponent />);
+
+      const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
+
+      await waitFor(() => {
+        expect(getTransform()).toBe(
+          `translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`,
+        );
+      });
+    });
+
+    it('should be placed near the specified element when a function returning an element is passed', async () => {
+      const TestComponent = defineComponent(() => {
+        const anchor = shallowRef<HTMLElement | null>(null);
+        const handleRef = (element: unknown) => {
+          anchor.value = element as HTMLElement | null;
+        };
+
+        const getAnchor = () => anchor.value;
+
+        return () => (
+          <div style={{ margin: '50px' }}>
+            <Menu.Root open>
+              <Menu.Portal>
+                <Menu.Positioner
+                  side="bottom"
+                  align="start"
+                  anchor={getAnchor}
+                  arrowPadding={0}
+                  data-testid="positioner"
+                >
+                  <Menu.Popup>
+                    <Menu.Item>1</Menu.Item>
+                    <Menu.Item>2</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+            <div data-testid="anchor" style={{ marginTop: '100px' }} ref={handleRef} />
+          </div>
+        );
+      });
+
+      await render(<TestComponent />);
+
+      const anchorPosition = screen.getByTestId('anchor').getBoundingClientRect();
+
+      await waitFor(() => {
+        expect(getTransform()).toBe(
+          `translate(${anchorPosition.left}px, ${anchorPosition.bottom}px)`,
+        );
+      });
+    });
+
+    it('should be placed at the specified position', async () => {
       const boundingRect = {
         x: 200,
         y: 100,
@@ -156,17 +247,22 @@ describe('<Menu.Positioner />', () => {
         toJSON: () => {},
       };
 
+      const virtualElement = { getBoundingClientRect: () => boundingRect };
+
       await render(
         <Menu.Root open>
           <Menu.Portal>
             <Menu.Positioner
               side="bottom"
               align="start"
-              anchor={{ getBoundingClientRect: () => boundingRect }}
+              anchor={virtualElement}
               arrowPadding={0}
               data-testid="positioner"
             >
-              <Menu.Popup>Popup</Menu.Popup>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.Item>2</Menu.Item>
+              </Menu.Popup>
             </Menu.Positioner>
           </Menu.Portal>
         </Menu.Root>,
@@ -174,6 +270,117 @@ describe('<Menu.Positioner />', () => {
 
       await waitFor(() => {
         expect(getTransform()).toBe('translate(200px, 100px)');
+      });
+    });
+
+    it('should accept a non-memoized function as an anchor', async () => {
+      const TestComponent = defineComponent(() => () => (
+        <div style={{ margin: '50px' }}>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner
+                side="bottom"
+                align="start"
+                anchor={() => null}
+                arrowPadding={0}
+                data-testid="positioner"
+              >
+                <Menu.Popup>
+                  <Menu.Item>1</Menu.Item>
+                  <Menu.Item>2</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      ));
+
+      await render(<TestComponent />);
+
+      expect(screen.getByTestId('positioner')).toBeInTheDocument();
+      expect(screen.getAllByRole('menuitem')).toHaveLength(2);
+    });
+
+    it('should react to the anchor changing from a ref to undefined and back', async () => {
+      const TestComponent = defineComponent(() => {
+        const anchorRef = shallowRef<HTMLElement | null>(null);
+        const setAnchorElement = (element: unknown) => {
+          anchorRef.value = element as HTMLElement | null;
+        };
+        // A ref that holds a ref gives the inner ref, so the choice of the anchor is a flag.
+        const anchorIsRef = shallowRef(true);
+
+        return () => (
+          <div style={{ margin: '50px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                anchorIsRef.value = false;
+              }}
+            >
+              undefined
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                anchorIsRef.value = true;
+              }}
+            >
+              ref
+            </button>
+            <Menu.Root open>
+              <Menu.Trigger>trigger</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner
+                  side="bottom"
+                  align="start"
+                  anchor={anchorIsRef.value ? anchorRef : undefined}
+                  arrowPadding={0}
+                  data-testid="positioner"
+                >
+                  <Menu.Popup>
+                    <Menu.Item>1</Menu.Item>
+                    <Menu.Item>2</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+            <div
+              data-testid="anchor"
+              style={{ marginTop: '100px', width: '10px', height: '10px' }}
+              ref={setAnchorElement}
+            />
+          </div>
+        );
+      });
+
+      const { user } = await render(<TestComponent />);
+
+      const anchorElement = screen.getByTestId('anchor');
+
+      const setUndefinedButton = screen.getByRole('button', { name: 'undefined' });
+      const setRefButton = screen.getByRole('button', { name: 'ref' });
+      const trigger = screen.getByRole('button', { name: 'trigger' });
+
+      let anchorRect = anchorElement.getBoundingClientRect();
+      await waitFor(() => {
+        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
+      });
+
+      await user.click(setUndefinedButton);
+
+      const triggerRect = trigger.getBoundingClientRect();
+      await waitFor(() => {
+        expect(getTransform()).toBe(
+          `translate(${Math.floor(triggerRect.left)}px, ${triggerRect.bottom}px)`,
+        );
+      });
+
+      await user.click(setRefButton);
+
+      anchorRect = anchorElement.getBoundingClientRect();
+      await waitFor(() => {
+        expect(getTransform()).toBe(`translate(${anchorRect.left}px, ${anchorRect.bottom}px)`);
       });
     });
   });
