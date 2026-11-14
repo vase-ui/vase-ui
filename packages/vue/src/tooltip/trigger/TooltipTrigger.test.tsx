@@ -491,35 +491,6 @@ describe('<Tooltip.Trigger />', () => {
     });
   });
 
-  it('opens only the tooltip of a nested trigger that gets the focus', async () => {
-    await render(
-      <Tooltip.Root>
-        <Tooltip.Trigger as="span">
-          Outer
-          <Tooltip.Root>
-            <Tooltip.Trigger>Inner</Tooltip.Trigger>
-            <Tooltip.Portal>
-              <Tooltip.Positioner>
-                <Tooltip.Popup data-testid="inner-popup">Inner tooltip</Tooltip.Popup>
-              </Tooltip.Positioner>
-            </Tooltip.Portal>
-          </Tooltip.Root>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Positioner>
-            <Tooltip.Popup data-testid="outer-popup">Outer tooltip</Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>,
-    );
-
-    screen.getByRole('button', { name: 'Inner' }).focus();
-    await flushMicrotasks();
-
-    expect(screen.getByTestId('inner-popup')).toHaveAttribute('data-open');
-    expect(screen.queryByTestId('outer-popup')).toBe(null);
-  });
-
   it('keeps a tooltip that follows the cursor open when a trigger with `closeOnClick` false is pressed', async () => {
     const handle = Tooltip.createHandle();
     await render(

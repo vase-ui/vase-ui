@@ -6,20 +6,22 @@ import { screen, waitFor } from '@testing-library/dom';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { isJSDOM } from '../src/common/testUtils';
 import type { Side } from '../src/internals/useAnchorPositioning';
+import { nextEvent } from './animation';
 import type { createRenderer } from './createRenderer';
 import { flushMicrotasks } from './flushMicrotasks';
 import { waitSingleFrame } from './wait';
 
+// The cases end each transition with `finish()`, so each transition lasts 100 s.
 const morphTransitionStyles = `
   [data-transitioning] [data-current] {
-    transition: transform 10s linear, opacity 10s linear;
+    transition: transform 100s linear, opacity 100s linear;
   }
   [data-transitioning] [data-current][data-starting-style] {
     transform: translateX(30%);
     opacity: 0;
   }
   [data-transitioning] [data-previous] {
-    transition: transform 10s linear, opacity 10s linear;
+    transition: transform 100s linear, opacity 100s linear;
   }
   [data-transitioning] [data-previous][data-ending-style] {
     transform: translateX(-30%);
@@ -55,9 +57,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           renderContent: () => <div data-testid="content">Content</div>,
         }),
       );
-      await flushMicrotasks();
 
-      const currentContainer = screen.getByTestId('content').closest('[data-current]');
+      const currentContainer = (await screen.findByTestId('content')).closest('[data-current]');
       expect(currentContainer).not.toBe(null);
       expect(currentContainer!.textContent).toBe('Content');
       expect(document.querySelector('[data-previous]')).toBe(null);
@@ -102,10 +103,9 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
     });
 
     it('does not restart a transition when the active trigger remounts while closed and retained (strict: $strict)', async () => {
-      const triggerKey = shallowRef('a');
-
-      const Test = defineComponent(
-        () => () =>
+      const Test = defineComponent({
+        props: { triggerKey: { type: String, required: true } },
+        setup: (props) => () =>
           createComponent({
             root: {
               defaultOpen: true,
@@ -116,23 +116,21 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
                 }
               },
             },
-            triggers: [{ key: triggerKey.value, id: 'trigger', children: 'Trigger' }],
+            triggers: [{ key: props.triggerKey, id: 'trigger', children: 'Trigger' }],
             popup: { 'data-testid': 'popup' },
             viewport: { 'data-testid': 'viewport' },
             renderContent: () => 'Content',
           }),
-      );
+      });
 
-      const { user } = await render(<Test />);
-      await flushMicrotasks();
+      const { user, rerender } = await render(<Test triggerKey="a" />);
 
       await user.keyboard('[Escape]');
       await waitFor(() => {
         expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
       });
 
-      triggerKey.value = 'b';
-      await flushMicrotasks();
+      await rerender(<Test triggerKey="b" />);
 
       expect(screen.getByTestId('popup')).toHaveAttribute('data-closed');
       expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
@@ -190,9 +188,14 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
             })}
           </DirectionProvider>,
         );
-        await flushMicrotasks();
 
-        const { style } = screen.getByTestId('popup');
+        // The positioner shows the popup after its first position pass. The side is then final.
+        const popup = await screen.findByTestId('popup');
+        await waitFor(() => {
+          expect(popup).toBeVisible();
+        });
+
+        const { style } = popup;
         expect(style.position).toBe(expected.position ?? '');
         expect(style.top).toBe(expected.top ?? '');
         expect(style.right).toBe(expected.right ?? '');
@@ -246,7 +249,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         const { user } = await renderPositionedTriggers(
           { top: 10, left: 10 },
           { top: 100, left: 200 },
-          '0.3s',
+          '100s',
         );
 
         await activateTrigger(screen.getByTestId('trigger1'), user);
@@ -281,6 +284,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         expect(currentContainer!.textContent).toBe('Content 1');
 
         // The previous container is removed once the animations finish.
+        finishAnimations();
         await waitFor(() => {
           expect(document.querySelector('[data-previous]')).toBe(null);
         });
@@ -317,9 +321,9 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
       it('creates morphing containers after a kept-mounted popup closes and reopens', async () => {
         const open = shallowRef(false);
 
-        const Test = defineComponent(() => () => (
+        const { user } = await render(() => (
           <div>
-            <style>{getMorphAnimationStyles('0.2s')}</style>
+            <style>{getMorphAnimationStyles('100s')}</style>
             {createComponent({
               root: {
                 open: open.value,
@@ -338,8 +342,6 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           </div>
         ));
 
-        const { user } = await render(<Test />);
-
         const trigger1 = screen.getByTestId('trigger1');
         const trigger2 = screen.getByTestId('trigger2');
 
@@ -352,19 +354,15 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitFor(() => {
           expect(document.querySelector('[data-previous]')).not.toBe(null);
         });
+        finishAnimations();
         await waitFor(() => {
           expect(document.querySelector('[data-previous]')).toBe(null);
         });
 
         open.value = false;
-        await flushMicrotasks();
-        // `toBeVisible` turns false once the exit animation reaches opacity 0, before the exit
-        // completes, so also wait for the ending state to clear before reopening.
+        // A kept-mounted positioner gets `hidden` when the exit completes.
         await waitFor(() => {
-          expect(screen.getByTestId('popup')).not.toBeVisible();
-        });
-        await waitFor(() => {
-          expect(screen.getByTestId('popup')).not.toHaveAttribute('data-ending-style');
+          expect(screen.getByTestId('popup').closest('[hidden]')).toBeInstanceOf(HTMLElement);
         });
 
         await activateTrigger(trigger1, user);
@@ -381,6 +379,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         });
 
         expect(previousContainer!.textContent).toBe('Content 0');
+        finishAnimations();
         await waitFor(() => {
           expect(screen.getByText('Content 1')).toBeVisible();
         });
@@ -417,7 +416,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
       it('keeps the latest transition active during rapid trigger changes', async () => {
         const { user } = await render(
           <div>
-            <style>{getMorphAnimationStyles('10s')}</style>
+            <style>{getMorphAnimationStyles('100s')}</style>
             {createComponent({
               triggers: [
                 { payload: 1, 'data-testid': 'trigger1', children: 'Trigger 1' },
@@ -434,12 +433,10 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitFor(() => {
           expect(screen.getByText('Content 1')).toBeVisible();
         });
-        await activateTrigger(screen.getByTestId('trigger2'), user);
-
-        await waitFor(() => {
-          expect(
-            screen.getByText('Content 2').closest('[data-current]')?.getAnimations(),
-          ).toHaveLength(1);
+        // The containers have an animation only while the viewport transitions, so the first
+        // `animationstart` comes from the morph.
+        await nextEvent(screen.getByTestId('viewport'), 'animationstart', {
+          action: () => activateTrigger(screen.getByTestId('trigger2'), user),
         });
         // Allow `useAnimationsFinished` to begin waiting before replacing the current container.
         await waitSingleFrame();
@@ -467,7 +464,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
       it('cleans up the transition when a lagging payload remounts the current container', async () => {
         const payload2 = shallowRef<string | undefined>(undefined);
 
-        const Test = defineComponent(() => () => (
+        const { user } = await render(() => (
           <div>
             <style>{morphTransitionStyles}</style>
             {createComponent({
@@ -490,29 +487,21 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           </div>
         ));
 
-        const { user } = await render(<Test />);
-
         await activateTrigger(screen.getByTestId('trigger1'), user);
         await waitFor(() => {
           expect(document.querySelector('[data-current]')).not.toBe(null);
         });
+        const runs = recordTransitionRuns(screen.getByTestId('viewport'));
 
         await activateTrigger(screen.getByTestId('trigger2'), user);
 
         // The morph is in progress: the previous snapshot exists and both containers
         // are running their (long) transitions.
         await waitFor(() => {
-          expect(document.querySelector('[data-previous]')).not.toBe(null);
+          expect(runs).toContain(document.querySelector('[data-previous]'));
         });
         await waitFor(() => {
-          expect(
-            document.querySelector('[data-previous]')?.getAnimations().length,
-          ).toBeGreaterThanOrEqual(1);
-        });
-        await waitFor(() => {
-          expect(
-            document.querySelector('[data-current]')?.getAnimations().length,
-          ).toBeGreaterThanOrEqual(1);
+          expect(runs).toContain(document.querySelector('[data-current]'));
         });
 
         // Allow `useAnimationsFinished` to begin waiting before the container is replaced.
@@ -534,9 +523,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         // The remounted container must restart its entry transition, otherwise the
         // cleanup watcher finds nothing to await and truncates the exit transition.
         await waitFor(() => {
-          expect(
-            document.querySelector('[data-current]')?.getAnimations().length,
-          ).toBeGreaterThanOrEqual(1);
+          expect(runs).toContain(document.querySelector('[data-current]'));
         });
 
         // The previous container's exit transition is still running, so it must not
@@ -548,17 +535,12 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         expect(document.querySelector('[data-previous]')).not.toBe(null);
 
         // Finish the live animations so the cleanup watcher can settle.
-        await waitFor(async () => {
-          document.querySelectorAll('[data-previous], [data-current]').forEach((element) => {
-            element.getAnimations().forEach((animation) => animation.finish());
-          });
-          await flushMicrotasks();
+        finishAnimations();
+        await waitFor(() => {
           expect(document.querySelector('[data-previous]')).toBe(null);
         });
 
-        await waitFor(() => {
-          expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
-        });
+        expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
       });
     });
   });
@@ -591,6 +573,26 @@ function getMorphAnimationStyles(duration: string) {
   `;
 }
 
+function finishAnimations() {
+  for (const container of document.querySelectorAll('[data-previous], [data-current]')) {
+    container.getAnimations().forEach((animation) => animation.finish());
+  }
+}
+
+/**
+ * Records the target of each `transitionrun` event of the containers. A transition can end before
+ * a case reads `getAnimations()`, and the record stays.
+ */
+function recordTransitionRuns(viewport: HTMLElement) {
+  const targets: EventTarget[] = [];
+  viewport.addEventListener('transitionrun', (event) => {
+    if (event.target !== null) {
+      targets.push(event.target);
+    }
+  });
+  return targets;
+}
+
 interface TriggerPosition {
   top: number;
   left: number;
@@ -609,7 +611,7 @@ function getTriggerStyle({ top, left }: TriggerPosition): CSSProperties {
 interface AnchoringCase {
   side: Side;
   direction: 'ltr' | 'rtl';
-  expected: CSSProperties;
+  expected: Pick<CSSProperties, 'position' | 'top' | 'right' | 'bottom' | 'left'>;
 }
 
 export interface ViewportTestConfig {
