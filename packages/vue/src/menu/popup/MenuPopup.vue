@@ -245,7 +245,7 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
-// Internal defaults rather than targets of the consumer, so a focus that already moved stays.
+// Internal defaults, not targets of the consumer: the focus manager keeps a focus that moved.
 const dynamicReturnFocus = computed(
   () => submenuRootContext.value?.getReturnElement ?? parentHandoff?.parentVirtualFocusRef,
 );

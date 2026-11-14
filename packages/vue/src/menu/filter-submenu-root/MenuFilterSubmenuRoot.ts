@@ -235,10 +235,10 @@ export function useMenuFilterSubmenuRoot(options: MenuFilterRootOptions): MenuFi
         stopEvent(event);
 
         if (open) {
-          // Entering a submenu that is already open gives the cursor to its own focus owner. The
-          // submenu always has virtual focus, so it has no branch of roving focus. The highlight
-          // stays, so an automatic highlight or an earlier keyboard position stays after the
-          // entry.
+          // The open key on the trigger of an open submenu gives the cursor to the focus owner of
+          // the submenu. The submenu always has virtual focus, so the real focus does not move to
+          // an item. The highlight stays, so an automatic highlight or an earlier keyboard
+          // position stays after the entry.
           handleSubmenuEnter(trigger, event);
           store.context.virtualFocusRef?.value?.focus({ preventScroll: true });
           return;

@@ -244,8 +244,8 @@ const { element, elementProps } = useRenderElement('div', props, {
     click.reference,
     hoverProps,
     rootTriggerProps.value,
-    // The filterable submenu root replaces the key handling of the generic trigger, because the
-    // entry and the exit depend on the orientations of both menus.
+    // The filterable submenu root replaces the key handler of the generic trigger, because the
+    // keys that enter and leave the submenu depend on the orientations of both menus.
     submenuRootContext?.onTriggerKeydown
       ? { onKeydown: submenuRootContext.onTriggerKeydown }
       : undefined,

@@ -46,7 +46,10 @@ export interface MenuFilterListParameters {
 export interface MenuFilterItem extends UseFilterDropdownItemReturnValue {
   /** Renders nothing and reads the text of the default slot of an item that the query hides. */
   HiddenItemText: Component | undefined;
-  /** The attributes and the listeners that the filter adds to the element, below those of the consumer. */
+  /**
+   * The attributes and the listeners that the filter adds to the element. The props of the consumer
+   * win over them.
+   */
   props?: HTMLAttributes | undefined;
 }
 
@@ -55,7 +58,7 @@ export interface MenuFilterSubmenuTrigger extends UseFilterDropdownItemReturnVal
 }
 
 export interface MenuFilterParentHandoff {
-  /** The input of the filterable parent, which a closing submenu gives the focus to. */
+  /** The input of the filterable parent. A submenu gives it the focus when the submenu closes. */
   parentVirtualFocusRef: Readonly<Ref<HTMLElement | null>> | undefined;
   /** Gives the focus that entered the popup to the popups above. */
   handleFocus: (event: FocusEvent) => void;

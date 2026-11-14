@@ -40,7 +40,7 @@ export function useMenuFilterSubmenuTrigger(
     retainGroup: mounted,
   });
 
-  // Filtering the trigger out removes its element and leaves its submenu open with no anchor.
+  // When the query hides the trigger, its element goes, and its open submenu has no anchor.
   watch([visible, open], () => {
     if (visible.value || !open.value) {
       return;
@@ -71,8 +71,8 @@ export function useMenuFilterSubmenuTrigger(
     },
     onFocusin(event: FocusEvent) {
       // A plain parent menu moves the focus to the item that the pointer crosses. While the
-      // submenu of this trigger is open and its input had the focus, hand the focus straight back
-      // so that crossing the trigger does not interrupt the typing.
+      // submenu of this trigger is open and its input had the focus, give the focus to the input
+      // again at once, so that the user can continue to type.
       const focusOwner = store.context.virtualFocusRef?.value;
       if (focusOwner && store.select('open') && event.relatedTarget === focusOwner) {
         (event as VaseUIEvent<FocusEvent>).preventVaseUIHandler();

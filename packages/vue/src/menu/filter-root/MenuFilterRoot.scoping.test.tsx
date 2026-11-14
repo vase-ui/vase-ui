@@ -424,7 +424,7 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       await user.keyboard('[Enter]');
 
       expect(screen.getByTestId('submenu')).toHaveAttribute('data-ending-style');
-      expect(input.isConnected).toBe(true);
+      expect(input).toBeInTheDocument();
       expect(input).not.toHaveFocus();
     });
 

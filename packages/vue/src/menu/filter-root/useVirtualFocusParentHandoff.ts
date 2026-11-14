@@ -52,7 +52,7 @@ export function useVirtualFocusParentHandoff(
       (reason === REASONS.listNavigation || reason === REASONS.escapeKey) &&
       toRaw(parentStore.state).activeIndex == null
     ) {
-      // The closing key is gone by this microtask, so there is no event to report it with.
+      // The key that closed the submenu is gone by this microtask, so no event can report it.
       parentStore.highlightItem(trigger, REASONS.none);
     }
   }
@@ -67,8 +67,9 @@ export function useVirtualFocusParentHandoff(
     queueMicrotask(() => returnToParent(trigger, reason));
   });
 
-  // Real focus entering this submenu is when a plain parent's trigger would blur: the parent has
-  // no active item until a keyboard close hands the cursor back to the trigger.
+  // When the real focus enters this submenu, the trigger of a plain parent would lose the focus.
+  // The parent then has no active item until a close by the keyboard returns the cursor to the
+  // trigger.
   function handleFocus(event: FocusEvent) {
     if (parentStore) {
       sendToParents(NESTED_FOCUSIN, event);

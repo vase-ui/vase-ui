@@ -738,13 +738,11 @@ describe('nested popups of a filterable menu', () => {
     await user.keyboard('[Escape]');
 
     await waitFor(() => {
-      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
+      expect(parentInput).toHaveFocus();
     });
-    expect(parentInput).toHaveFocus();
-    expect(parentInput).toHaveAttribute(
-      'aria-activedescendant',
-      screen.getByRole('menuitem', { name: 'Move to' }).id,
-    );
+    const trigger = screen.getByRole('menuitem', { name: 'Move to' });
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+    expect(parentInput).toHaveAttribute('aria-activedescendant', trigger.id);
   });
 
   it('moves the highlight of a horizontal parent on when a plain submenu closes with the main-axis key', async () => {
@@ -794,13 +792,14 @@ describe('nested popups of a filterable menu', () => {
     await user.keyboard('[ArrowLeft]');
 
     await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
+      expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
     });
-    expect(screen.getByRole('menuitem', { name: 'First' })).toHaveAttribute('data-highlighted');
     expect(trigger).not.toHaveAttribute('data-highlighted');
+    expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
   it('closes the submenu when the query filters out its trigger', async () => {
+    const onOpenChange = vi.fn();
     const { user } = await render(
       <Menu.FilterProvider>
         <Menu.Root defaultOpen>
@@ -812,7 +811,7 @@ describe('nested popups of a filterable menu', () => {
                 <Menu.List>
                   <Menu.Item>Rename</Menu.Item>
                   <Menu.FilterProvider>
-                    <Menu.SubmenuRoot defaultOpen>
+                    <Menu.SubmenuRoot defaultOpen onOpenChange={onOpenChange}>
                       <Menu.SubmenuTrigger>Move to</Menu.SubmenuTrigger>
                       <Menu.Portal>
                         <Menu.Positioner>
@@ -833,6 +832,7 @@ describe('nested popups of a filterable menu', () => {
         </Menu.Root>
       </Menu.FilterProvider>,
     );
+    await screen.findByRole('searchbox', { name: 'Filter folders' });
 
     // A press in the popup of the parent closes the submenu, so the query comes from the keyboard.
     const parentInput = screen.getByRole('searchbox', { name: 'Filter actions' });
@@ -840,11 +840,18 @@ describe('nested popups of a filterable menu', () => {
     await flushMicrotasks();
     await user.keyboard('rename');
 
+    // The reason tells this close from a close that the focus or a press starts.
     await waitFor(() => {
-      expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByRole('menuitem', { name: 'Move to' })).toBe(null);
+    expect(onOpenChange.mock.calls[0]?.[0]).toBe(false);
+    expect(onOpenChange.mock.calls[0]?.[1].reason).toBe('none');
+    // The trigger and the item of the submenu go when the submenu unmounts.
+    await waitFor(() => {
+      expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+    });
     expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+    expect(screen.queryByRole('searchbox', { name: 'Filter folders' })).toBe(null);
   });
 
   it('disables the submenu input while the parent menu is disabled', async () => {
