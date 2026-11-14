@@ -162,7 +162,7 @@ describe('createRenderer', () => {
       });
     });
 
-    describe('when the wall clock steps back by 3 ms', () => {
+    describe('when the wall clock steps by 3 ms', () => {
       let offset = 0;
       let stepAfter = Number.POSITIVE_INFINITY;
 
@@ -170,16 +170,17 @@ describe('createRenderer', () => {
         offset -= 3;
       }
 
-      // Each read of `Date.now()` or `performance.now()` moves both clocks by 0.1 ms. The cases
+      // Each read of `Date.now()` or `performance.now()` moves both clocks by 0.01 ms. The cases
       // thus do not depend on the timer resolution of the browser, which is 1 ms in Firefox and
-      // WebKit. `Date.now()` adds `offset`. At its first read that is later than `stepAfter`, it
-      // steps back.
+      // WebKit. A click right after a mount comes in the millisecond of the mount, unless the helper
+      // waits. `Date.now()` adds `offset`. At its first read that is later than `stepAfter`, it steps
+      // back.
       function mockClocks() {
         let microseconds = Date.now() * 1000;
         offset = 0;
         stepAfter = Number.POSITIVE_INFINITY;
         const read = () => {
-          microseconds += 100;
+          microseconds += 10;
           return microseconds / 1000;
         };
         const performanceNow = vi.spyOn(performance, 'now').mockImplementation(read);
@@ -198,7 +199,7 @@ describe('createRenderer', () => {
         });
       }
 
-      // Vue attaches the listeners of the target before it calls `onMounted` of a later sibling.
+      // Vue calls the `onMounted` hook of the step after it attaches the listeners of the target.
       const StepBackOnMount = defineComponent(() => {
         onMounted(stepBack);
         return () => null;
@@ -212,21 +213,27 @@ describe('createRenderer', () => {
         return () => null;
       });
 
+      // Vue runs the setup of the step before it attaches the listeners of the target.
+      const StepForwardOnSetup = defineComponent(() => {
+        offset += 3;
+        return () => null;
+      });
+
       function createTarget(step: VNode) {
         const capture = vi.fn();
         const bubble = vi.fn();
         return {
           vnode: (
             <>
-              <div data-testid="target" {...{ onClickCapture: capture }} onClick={bubble} />
               {step}
+              <div data-testid="target" {...{ onClickCapture: capture }} onClick={bubble} />
             </>
           ),
           calls: () => ({ capture: capture.mock.calls.length, bubble: bubble.mock.calls.length }),
         };
       }
 
-      it('runs both listeners when the step comes during the mount', async () => {
+      it('runs both listeners for a step back during the mount', async () => {
         mockClocks();
         const target = createTarget(<StepBackOnMount />);
         const { getByTestId } = await render(target.vnode);
@@ -236,7 +243,7 @@ describe('createRenderer', () => {
         expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
       });
 
-      it('runs both listeners when the step comes during the wait', async () => {
+      it('runs both listeners for a step back during the wait', async () => {
         mockClocks();
         const target = createTarget(<StepBackAfterMount />);
         const { getByTestId } = await render(target.vnode);
@@ -246,7 +253,7 @@ describe('createRenderer', () => {
         expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
       });
 
-      it('runs both listeners when the step comes during the action of waitForLaterMillisecond', async () => {
+      it('runs both listeners for a step back during the action of waitForLaterMillisecond', async () => {
         mockClocks();
         const target = createTarget(<StepBackOnMount />);
         const shown = shallowRef(false);
@@ -256,6 +263,16 @@ describe('createRenderer', () => {
           shown.value = true;
           return nextTick();
         });
+        getByTestId('target').click();
+
+        expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
+      });
+
+      it('runs both listeners for a step forward during the mount', async () => {
+        mockClocks();
+        const target = createTarget(<StepForwardOnSetup />);
+        const { getByTestId } = await render(target.vnode);
+
         getByTestId('target').click();
 
         expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
