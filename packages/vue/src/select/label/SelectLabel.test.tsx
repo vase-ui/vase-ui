@@ -12,6 +12,9 @@ describe('<Select.Label />', () => {
         <Select.Root>
           {node}
           <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner />
+          </Select.Portal>
         </Select.Root>,
       );
     },
