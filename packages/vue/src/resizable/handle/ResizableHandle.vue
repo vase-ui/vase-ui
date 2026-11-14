@@ -188,7 +188,7 @@ function onPointerdown(event: PointerEvent) {
       // Prevent a focus ring that a pointer press gives in browsers that support this option.
       // Chrome 144 and later support it.
       focusVisible: false,
-    } as FocusOptions);
+    });
   }
 }
 
