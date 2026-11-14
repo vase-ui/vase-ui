@@ -1283,12 +1283,7 @@ describe('<ScrollArea.Root />', () => {
         <KeepAlive>
           {visible.value ? (
             <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
-              {/* `pointer-events: none` isolates this from the browser's real pointer. A real
-                  pointer that enters the viewport makes the next scroll a user scroll. */}
-              <ScrollArea.Viewport
-                data-testid="viewport"
-                style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-              >
+              <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
                 <div style={{ width: '1000px', height: '1000px' }} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -1324,11 +1319,10 @@ describe('<ScrollArea.Root />', () => {
 
     it('ends a drag on deactivation, and restores the scroll snap of the viewport', async () => {
       const visible = shallowRef(true);
-      // `pointer-events: none` isolates this from the browser's real pointer.
       const App = defineComponent(() => () => (
         <KeepAlive>
           {visible.value ? (
-            <ScrollArea.Root style={{ width: '200px', height: '200px', pointerEvents: 'none' }}>
+            <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
               <ScrollArea.Viewport
                 data-testid="viewport"
                 style={{ width: '100%', height: '100%', scrollSnapType: 'y mandatory' }}
@@ -1371,14 +1365,10 @@ describe('<ScrollArea.Root />', () => {
 
     it('clears the hover state on deactivation', async () => {
       const visible = shallowRef(true);
-      // `pointer-events: none` isolates this from the browser's real pointer.
       const App = defineComponent(() => () => (
         <KeepAlive>
           {visible.value ? (
-            <ScrollArea.Root
-              data-testid="root"
-              style={{ width: '200px', height: '200px', pointerEvents: 'none' }}
-            >
+            <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
               <ScrollArea.Viewport style={{ width: '100%', height: '100%' }}>
                 <div style={{ width: '1000px', height: '1000px' }} />
               </ScrollArea.Viewport>

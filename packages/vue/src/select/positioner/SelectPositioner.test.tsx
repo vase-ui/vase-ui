@@ -349,7 +349,20 @@ describe('<Select.Positioner />', () => {
 
     it('locks the page while a modal select is open, and unlocks it when the select closes', async () => {
       const page = await createScrollDocument();
+      let actions!: Select.Root.Actions;
       const { open, ModalSelect } = createSelect(page, {
+        root: {
+          ref: (instance: unknown) => {
+            if (instance) {
+              actions = instance as Select.Root.Actions;
+            }
+          },
+          // The popup stays mounted after the close, so only the close can release the lock.
+          onOpenChange: (nextOpen: boolean, details: Select.Root.OpenChangeEventDetails) => {
+            details.preventUnmountOnClose();
+            open.value = nextOpen;
+          },
+        },
         positioner: { alignItemWithTrigger: false },
       });
       await render(<ModalSelect />);
@@ -357,9 +370,10 @@ describe('<Select.Positioner />', () => {
       open.value = true;
       await waitFor(() => expect(isPageLocked(page)).toBe(true), POLL);
 
-      open.value = false;
+      actions.close();
       await waitFor(() => expect(isPageLocked(page)).toBe(false), POLL);
       expect(lockCount()).toBe(0);
+      expect(getPositioner(page)?.isConnected).toBe(true);
     });
 
     it.each([
