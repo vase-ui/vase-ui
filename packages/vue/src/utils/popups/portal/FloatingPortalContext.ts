@@ -32,7 +32,7 @@ export interface PortalContextValue {
    */
   setFocusManagerState(state: FocusManagerState | null): void;
   /**
-   * The guards that the focus manager renders at the edges of the popup. The focus manager writes
+   * The guards that the focus manager keeps beside the popup element. The focus manager writes
    * them.
    */
   beforeInsideRef: ShallowRef<HTMLSpanElement | null>;

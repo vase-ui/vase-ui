@@ -105,6 +105,11 @@ export namespace Item {
  * A container for the content of the navigation menu item that is moved into the popup
  * when the item is active.
  * Renders a `<div>` element.
+ *
+ * The part renders its element in a `Teleport` in the viewport. Vue gives the scope id of
+ * `<style scoped>`, `v-show` and a custom directive only to a root element, so they do not reach
+ * this element. Put them on your element in the `#render` slot, or use a CSS module or a `style`
+ * binding.
  */
 export const Content: typeof NavigationMenuContent = NavigationMenuContent;
 export namespace Content {

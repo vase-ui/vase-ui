@@ -337,6 +337,20 @@ function withDefault<Value, Default>(value: Value | undefined, defaultValue: Def
   return value === undefined ? defaultValue : value;
 }
 
+function withDefaultProps(props: FloatingFocusManagerProps) {
+  return {
+    ...props,
+    openInteractionType: withDefault(props.openInteractionType, ''),
+    disabled: withDefault(props.disabled, false),
+    initialFocus: withDefault(props.initialFocus, true),
+    returnFocus: withDefault(props.returnFocus, true),
+    restoreFocus: withDefault(props.restoreFocus, false),
+    modal: withDefault(props.modal, true),
+    outsideElementsInert: withDefault(props.outsideElementsInert, false),
+    closeOnFocusOut: withDefault(props.closeOnFocusOut, true),
+  };
+}
+
 function haveSameNodes(first: ElementSiblings, second: ElementSiblings) {
   return (['before', 'after'] as const).every((side) => {
     const firstNodes = first[side] ?? [];
@@ -359,20 +373,16 @@ export function useFloatingFocusManager(
   props: () => FloatingFocusManagerProps,
   element: Readonly<Ref<HTMLElement | null>>,
 ): void {
-  const resolved = computed(() => {
-    const value = props();
-    return {
-      ...value,
-      openInteractionType: withDefault(value.openInteractionType, ''),
-      disabled: withDefault(value.disabled, false),
-      initialFocus: withDefault(value.initialFocus, true),
-      returnFocus: withDefault(value.returnFocus, true),
-      restoreFocus: withDefault(value.restoreFocus, false),
-      modal: withDefault(value.modal, true),
-      outsideElementsInert: withDefault(value.outsideElementsInert, false),
-      closeOnFocusOut: withDefault(value.closeOnFocusOut, true),
-    };
-  });
+  // The props change before each render of the part, as the props of a component do. A cleanup
+  // after the unmount thus reads the props of the last render, and not a state that changed at the
+  // unmount, such as the active trigger of a submenu.
+  const resolved = shallowRef(withDefaultProps(props()));
+  watch(
+    () => withDefaultProps(props()),
+    (value) => {
+      resolved.value = value;
+    },
+  );
 
   const open = computed(() => resolved.value.store.select('open'));
   const domReference = computed(() => resolved.value.store.select('anchorElement'));
