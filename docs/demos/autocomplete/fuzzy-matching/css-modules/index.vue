@@ -53,7 +53,7 @@ const fuzzyItems: FuzzyItem[] = [
   {
     title: 'Vue Composables Guide',
     description: 'Learn how to use Vue composables like ref, computed, and custom composables',
-    category: 'Vue',
+    category: 'Vue.js',
   },
   {
     title: 'JavaScript Array Methods',
@@ -73,7 +73,7 @@ const fuzzyItems: FuzzyItem[] = [
   {
     title: 'Vue Performance Optimization',
     description: 'Tips and techniques for optimizing Vue application performance',
-    category: 'Vue',
+    category: 'Vue.js',
   },
   {
     title: 'HTML Semantic Elements',
@@ -108,7 +108,7 @@ const fuzzyItems: FuzzyItem[] = [
   {
     title: 'Vue Testing Library',
     description: 'Testing Vue components with Vue Testing Library',
-    category: 'Vue',
+    category: 'Vue.js',
   },
   {
     title: 'MongoDB Queries',

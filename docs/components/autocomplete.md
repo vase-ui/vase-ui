@@ -48,7 +48,7 @@ Import the component and assemble its parts:
 
 Each `Autocomplete.Item` takes a `value` prop that identifies it. Pass the item being rendered, so that props like `itemToStringValue` receive it.
 
-To render each filtered item, give `Autocomplete.List` the `item` slot. The slot gets `{ item, index }`, and the examples on this page use it.
+To render each filtered item, give `Autocomplete.List` the `item` slot. The slot gets `{ item, index }`.
 
 ## Examples
 
@@ -174,7 +174,7 @@ Efficiently handle large datasets using a virtualization library like `@tanstack
 
 #### Memoizing items
 
-A child component that takes the item as a prop is a simpler alternative to virtualization for datasets up to roughly 1,000 items. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change, so unchanged items skip re-rendering. While this speeds up typing, it does not speed up opening; with a large enough number of items, the mount cost dominates, and virtualization becomes necessary to keep the open interaction fast on low-end devices.
+A child component that takes the item as a prop is a simpler alternative to virtualization for a short list. Vue renders a child component again only when its props, its slots or the reactive values that its render reads change, so unchanged items skip re-rendering. This speeds up typing. It does not speed up opening, because the popup still mounts each item. For a long list, use virtualization.
 
 ::: code-group
 
