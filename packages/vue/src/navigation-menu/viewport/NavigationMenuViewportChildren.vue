@@ -24,7 +24,7 @@ const {
   setAfterInsideGuard,
   handleBeforeInsideFocusin,
   handleAfterInsideFocusin,
-} = useNavigationMenuViewportGuards(false);
+} = useNavigationMenuViewportGuards();
 
 const setViewportTarget = createElementSetter(viewportTargetElement);
 </script>

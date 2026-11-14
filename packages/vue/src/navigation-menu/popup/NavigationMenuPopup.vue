@@ -74,7 +74,8 @@ const state = computed<NavigationMenuPopupState>(() => ({
   anchorHidden: positioning.anchorHidden.value,
 }));
 
-// Ensure popup size transitions correctly when anchored to `bottom` (side=top) or `right` (side=left).
+// With the side `top`, the popup is anchored at its bottom edge, and with the side `left` at its
+// right edge. Its size transition then moves the edge that is away from the trigger.
 const originSideStyle = computed<CSSProperties | undefined>(() => {
   const side = positioning.side.value;
   const isPhysicalLeft =

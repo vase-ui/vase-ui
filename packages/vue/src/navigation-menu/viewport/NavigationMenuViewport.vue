@@ -62,7 +62,7 @@ const {
 // In a positioner, the two inside focus guards are siblings of the element. With no positioner,
 // the element holds them.
 const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
-const guards = inPositioner ? useNavigationMenuViewportGuards(true) : undefined;
+const guards = inPositioner ? useNavigationMenuViewportGuards() : undefined;
 
 const domReference = computed(() => {
   const store: PopupInteractionStore = floatingRootStore.value ?? EMPTY_ROOT_STORE;

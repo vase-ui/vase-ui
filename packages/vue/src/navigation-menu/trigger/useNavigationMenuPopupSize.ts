@@ -331,8 +331,8 @@ export function useNavigationMenuPopupSize(
         childList: true,
         subtree: true,
         characterData: true,
-        // `keepMounted` submenu switches update dimensions by toggling hidden
-        // content rather than inserting or removing content nodes.
+        // A switch between kept contents changes their `hidden` attribute and adds or removes no
+        // node.
         attributes: true,
         attributeFilter: ['hidden'],
       });

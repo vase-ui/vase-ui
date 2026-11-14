@@ -194,7 +194,6 @@ export function useDismiss(
     externalTree,
   } = props;
 
-  // A handler reads the store when it runs, because the store can change.
   const getStore = () => toValue(store);
 
   const tree = useFloatingTree(externalTree);

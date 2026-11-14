@@ -10,11 +10,11 @@ import { createElementSetter } from '../utils/createElementSetter';
 /**
  * Gives the two inside focus guards of the viewport. In a positioner, the guards are siblings of
  * the viewport element. With no positioner, they are in the viewport element, around the element
- * that holds the content.
+ * that holds the content, while the root has the store of an active trigger (`hasGuards`).
  *
  * Call it in `setup`.
  */
-export function useNavigationMenuViewportGuards(inPositioner: boolean) {
+export function useNavigationMenuViewportGuards() {
   const {
     floatingRootStore,
     positionerElement,
@@ -25,7 +25,7 @@ export function useNavigationMenuViewportGuards(inPositioner: boolean) {
     afterOutsideRef,
   } = useNavigationMenuRootContext();
 
-  const hasGuards = computed(() => inPositioner || floatingRootStore.value !== undefined);
+  const hasGuards = computed(() => floatingRootStore.value !== undefined);
 
   function handleBeforeInsideFocusin(event: FocusEvent) {
     const referenceElement = positionerElement.value || viewportElement.value;

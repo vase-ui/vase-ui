@@ -102,12 +102,12 @@ const nodeId = useNavigationMenuTreeContext();
 const initialInstantTimeout = useTimeout();
 const resizeTimeout = useTimeout();
 
-// When the menu is initially open, disable the positioner's transition for one frame
-// so a default value does not animate in from the unpositioned portal state.
+// A menu that is open at the first render has no positioner transition for one frame. A default
+// value then does not animate in from the place of the portal before the first position.
 const instant = shallowRef(open.value);
 let needsInitialInstantReset = open.value;
 
-// The active trigger supplies the root store after the positioner has already rendered.
+// The active trigger gives its store to the root after the positioner rendered.
 const fallbackRootStore = useFloatingRootStore({
   open: () => (keepMounted.value ? mounted.value : undefined),
 });
@@ -132,8 +132,8 @@ const positioning = useAnchorPositioning({
   positionerElement,
   defaultAnchor: () => interactionStore.value.select('anchorElement'),
   shift: { rootBoundary: 'layoutViewport' },
-  // Allows the menu to remain anchored without wobbling while its size
-  // and position transition simultaneously when side=top or side=left.
+  // With the side `top` or `left`, the size and the position of the menu change in the same
+  // transition. The middleware keeps the menu at its anchor, with no wobble, while they change.
   adaptiveOrigin,
 });
 
@@ -207,23 +207,23 @@ watch(
     if (!positioner) {
       return;
     }
+    const element = positioner;
 
-    // Make sure elements inside the portal element are tabbable only when the
-    // portal has already been focused, either by tabbing into a focus trap
-    // element outside or using the mouse.
+    // The elements in the portal are tabbable only after the focus entered the portal, from a
+    // focus guard outside it or with the pointer.
     function handleFocus(event: FocusEvent) {
       if (isOutsideEvent(event)) {
         const manageFocus = event.type === 'focusin' ? enableFocusInside : disableFocusInside;
-        manageFocus(positioner!);
+        manageFocus(element);
       }
     }
 
-    // Listen to the event on the capture phase so they run before the focus
-    // trap elements onFocus prop is called.
+    // The listeners run in the capture phase, so they run before the focus handler of a focus
+    // guard.
     onCleanup(
       mergeCleanups(
-        addEventListener(positioner, 'focusin', handleFocus, true),
-        addEventListener(positioner, 'focusout', handleFocus, true),
+        addEventListener(element, 'focusin', handleFocus, true),
+        addEventListener(element, 'focusout', handleFocus, true),
       ),
     );
   },
