@@ -10,7 +10,7 @@ import {
   waitFor,
 } from '#test-utils';
 import ToastTextList from '../../../test/fixtures/ToastTextList.vue';
-import * as Toast from '../index.parts';
+import { Toast } from '@vase-ui/vue/toast';
 import type { ToastManagerAddOptions } from '../useToastManager';
 import { List, Button } from '../utils/test-utils';
 import { toastRootStateAttributesMapping } from './ToastRoot.vue';
