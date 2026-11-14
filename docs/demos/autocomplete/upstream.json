@@ -1,0 +1,22 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/autocomplete/demos",
+  "files": {
+    "async/css-modules/index.module.css": "acd0af9cb64a49b213510ed34aae2ad7fb2582745651f3c91d8147a1b93c4d1d",
+    "async/css-modules/index.tsx": "556b8efe9f1aef30332cbb6dd2edb9c677d0f11c24bb9f8afcaef962d6fd4084",
+    "auto-highlight/css-modules/index.module.css": "003efaa83cd708b1497d5ef3eea6e7fece32c696ada49d4413789bcf6fff0d84",
+    "auto-highlight/css-modules/index.tsx": "60c74de67274c53cdce8c496ebce8cd549e45edd43079282739aa5399b5edf5c",
+    "fuzzy-matching/css-modules/index.module.css": "85bda24fa772c61df2728c78b15b16bfd4ef7a9273113ec5a8a4edb53ffee4d4",
+    "fuzzy-matching/css-modules/index.tsx": "983c7a543623cbed7a2e222821638ff5470df5668d7a1327da34a3f1afa8d049",
+    "grouped/css-modules/index.module.css": "f109e5209c8a85e54637b3df031c47d8498cfd77393fd2b019fef85c96059b8a",
+    "grouped/css-modules/index.tsx": "2082e7df544881b3c2aec9dac3b8118fbd45f2d293511b1ca379ff50dca15e09",
+    "hero/css-modules/index.module.css": "ed9d98c2bc1a6e2e5f45dfb1f56e74cf87473badad774719c6318ee705186b92",
+    "hero/css-modules/index.tsx": "a3d74fb7bdb687c36acb36037fbf2c6039bd483b61b4c2e6618d94e7217c6c17",
+    "inline/css-modules/index.module.css": "1617b74f9a63bb0125a5a8f81df5b3b6e0f2ff420e100f1c9f2e5f39ed6dd9e3",
+    "inline/css-modules/index.tsx": "0bb6796bdba1470a5b5c0c7723b8f434cd2d0095e1161dd396568ec260c12718",
+    "limit/css-modules/index.module.css": "ec8d451da8abecb90405f5b0ba943bd05bd8c54a83d20bdbe8c2ab465f6efcf9",
+    "limit/css-modules/index.tsx": "075bd71da6181660b887f0f785b0cac27b50f19b402968a01733381ea332745a",
+    "virtualized/css-modules/index.module.css": "162be12b870472be2df4981916bb4d6d829975a7eef8ea8f1aff3fb9a0d6bb25",
+    "virtualized/css-modules/index.tsx": "a4c831d35cd145f6099cd178807319f038767b33239cc780a34db966b154296b"
+  }
+}

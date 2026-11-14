@@ -1303,6 +1303,24 @@ async function expectHydratedDialogPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+// The server filters the list with `en-US`, so "malmo" keeps "Malmö" and no other city. The root
+// renders the list and the input in the server HTML.
+async function expectAutocompletePage(page: Page) {
+  const input = page.getByTestId('input');
+  expect(
+    await readAttributes(input, ['role', 'aria-expanded', 'aria-autocomplete', 'name']),
+  ).toEqual({
+    role: 'combobox',
+    'aria-expanded': 'true',
+    'aria-autocomplete': 'list',
+    name: 'city',
+  });
+  expect(await input.inputValue()).toBe('malmo');
+  expect(await page.getByTestId('list').getAttribute('role')).toBe('listbox');
+  expect(await page.getByRole('option').allTextContents()).toEqual(['Malmö']);
+  expect(await readFormData(page)).toEqual(['city=malmo']);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -1407,6 +1425,7 @@ const PAGES: PageCase[] = [
     expectPage: expectDialogPageOnServer,
     expectHydratedPage: expectHydratedDialogPage,
   },
+  { path: '/autocomplete', expectPage: expectAutocompletePage },
 ];
 
 const MODES = [
@@ -1900,6 +1919,30 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await page.getByTestId('label-first-control').inputValue()).toBe(visitorText);
     expect(await page.getByTestId('label-last-control').inputValue()).toBe('7');
     expect(await readFormData(page)).toEqual(['amount=1234.5', 'quantity=7']);
+    expect(messages).toEqual([]);
+  });
+
+  it('filters the items of /autocomplete with the locale of the visitor after hydration', async () => {
+    const page = await createPage(undefined, { locale: 'sv-SE' });
+    const messages = collectMessages(page);
+
+    await page.goto(url('/autocomplete'), { waitUntil: 'hydration' });
+    await waitForTwoFrames(page);
+
+    // In Swedish, "ö" is not "o", so no city contains the text.
+    expect(await page.getByTestId('input').inputValue()).toBe('malmo');
+    expect(await page.getByRole('option').count()).toBe(0);
+    expect(messages).toEqual([]);
+  });
+
+  it('filters the items of /autocomplete while typing after hydration', async () => {
+    const page = await createPage('/autocomplete');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('input').fill('ma');
+
+    expect(await page.getByRole('option').allTextContents()).toEqual(['Malmö', 'Malta']);
+    expect(await readFormData(page)).toEqual(['city=ma']);
     expect(messages).toEqual([]);
   });
 
