@@ -30,8 +30,6 @@ export interface LabelIdRoot {
 export interface UseLabelIdReturnValue {
   /** The id of the label that the root has now. */
   labelId: ComputedRef<string | undefined>;
-  /** The id of a label that has no `id` of its own. */
-  defaultLabelId: ComputedRef<string>;
   labelRoot: LabelIdRoot;
   /**
    * Gives the `aria-labelledby` of the root. The root calls it with the attributes of the consumer,
@@ -104,7 +102,6 @@ export function useLabelId(
 
   return {
     labelId: computed(() => registeredId.value),
-    defaultLabelId,
     labelRoot: {
       setLabelId,
       defaultLabelId,

@@ -4,7 +4,7 @@ import type { MaybeRefOrGetter, Ref } from 'vue';
 export interface KeepAliveState {
   /**
    * Whether `KeepAlive` holds the part. A part that mounts in a held branch is held from its mount
-   * when `reaches` refuses its element.
+   * when its element is not in a document and `reaches` refuses the element.
    */
   isHeld: Readonly<Ref<boolean>>;
   /**
@@ -32,21 +32,27 @@ export function useKeepAliveState(
   const shown = shallowRef(0);
   let isMountFlush = false;
 
-  function checkTree() {
-    const partElement = toValue(element);
-    if (partElement && !partElement.isConnected && reaches && !reaches(partElement)) {
-      isHeld.value = true;
-    }
-  }
-
   onMounted(() => {
     isMountFlush = true;
     void nextTick(() => {
       isMountFlush = false;
     });
+
+    if (element === undefined || reaches === undefined) {
+      return;
+    }
+
+    const checkTree = () => {
+      const partElement = toValue(element);
+      if (partElement && !partElement.isConnected && !reaches(partElement)) {
+        isHeld.value = true;
+      }
+    };
+
     checkTree();
-    // A part can render its element after the mount, such as `Field.Error`. A part reads its
-    // element in `setup` only after it declares the element, so the `watch` starts here.
+    // A part can render its element after the mount, such as `Field.Error`. The `watch` starts
+    // here and not in `setup`: a `watch` reads its source at once, and a part declares its element
+    // after it calls this composable.
     watch(() => toValue(element), checkTree, { flush: 'post' });
   });
 

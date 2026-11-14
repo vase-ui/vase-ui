@@ -218,6 +218,52 @@ describe('useRegisteredLabelId', () => {
       await flushMicrotasks();
       expect(target).toHaveAttribute('aria-labelledby', 'label-c');
     });
+
+    it('names the label of the last show and not a label that an earlier show named', async () => {
+      const visibleA = shallowRef(true);
+      const visibleB = shallowRef(true);
+      const App = defineComponent(() => {
+        const target = shallowRef<HTMLElement | null>(null);
+        const { labelId, labelRoot } = useLabelId(target);
+
+        return () => (
+          <>
+            <div ref={target} data-testid="target" aria-labelledby={labelId.value} />
+            <KeepAlive>
+              {visibleA.value ? (
+                <Label key="a" id="label-a" root={labelRoot}>
+                  A
+                </Label>
+              ) : null}
+            </KeepAlive>
+            <KeepAlive>
+              {visibleB.value ? (
+                <Label key="b" id="label-b" root={labelRoot}>
+                  B
+                </Label>
+              ) : null}
+            </KeepAlive>
+          </>
+        );
+      });
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      expect(target).toHaveAttribute('aria-labelledby', 'label-b');
+
+      visibleB.value = false;
+      await flushMicrotasks();
+      visibleB.value = true;
+      await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-b');
+
+      visibleA.value = false;
+      await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-b');
+
+      visibleA.value = true;
+      await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-a');
+    });
   });
 
   describe('a label that mounts while KeepAlive holds its branch', () => {
