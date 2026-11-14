@@ -260,6 +260,12 @@ Base UI can also give a part of another family a new name and new types, such as
 - Its props and state types are aliases of the types of the other part.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
 
+A part whose new types change a prop is the exception. `AlertDialog.Trigger` is the example: its `handle` takes only a handle of Alert Dialog.
+
+- The part is an SFC that renders the other part. It follows the rules above for a part that Base UI writes as another part.
+- Its props interface extends an `Omit` of the props interface of the other part, and declares the changed prop.
+- The API reference then shows the type and the text of the changed prop. For an alias of the other SFC, it shows the prop of the other part.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
