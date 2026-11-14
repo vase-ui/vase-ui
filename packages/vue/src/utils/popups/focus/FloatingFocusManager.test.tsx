@@ -1236,27 +1236,33 @@ describe('FloatingFocusManager', () => {
       expect(off.mock.calls).toEqual(on.mock.calls);
     });
 
-    it('keeps only the newest 20 elements in the list', async () => {
+    // The 20 fields and the reference of the last open are 21 elements, so the list drops `field-0`.
+    // Each field but one is hidden. That field gets the focus only when the list kept it.
+    it.each<{ name: string; visible: number; focused: string }>([
+      { name: 'the 21st is dropped', visible: 0, focused: 'body' },
+      { name: 'the 20th is kept', visible: 1, focused: 'field-1' },
+    ])('keeps only the newest 20 elements in the list: $name', async ({ visible, focused }) => {
       const removed = shallowRef(false);
       const popup = captureStore();
       await render(() => (
         <div>
-          {Array.from({ length: 21 }, (_, index) => (
+          {Array.from({ length: 20 }, (_, index) => (
             <input data-testid={`field-${index}`} />
           ))}
           <Popup referenceRemoved={removed.value} onStore={popup.onStore} />
         </div>
       ));
       // Each open records the field that has the focus.
-      for (let index = 0; index < 21; index += 1) {
+      for (let index = 0; index < 20; index += 1) {
         screen.getByTestId(`field-${index}`).focus();
         await fireEvent.click(screen.getByTestId('reference'));
         popup.close();
         await flushMicrotasks();
       }
-      for (let index = 1; index < 21; index += 1) {
-        screen.getByTestId(`field-${index}`).hidden = true;
+      for (let index = 0; index < 20; index += 1) {
+        screen.getByTestId(`field-${index}`).hidden = index !== visible;
       }
+      // The body has the focus at the last open, so the focus manager records the reference.
       (document.activeElement as HTMLElement).blur();
       await fireEvent.click(screen.getByTestId('reference'));
 
@@ -1264,7 +1270,7 @@ describe('FloatingFocusManager', () => {
       popup.close();
       await flushMicrotasks();
 
-      expect(document.body).toHaveFocus();
+      expect(focused === 'body' ? document.body : screen.getByTestId(focused)).toHaveFocus();
     });
 
     it('moves no focus when KeepAlive deactivates the popup', async () => {
@@ -1471,6 +1477,28 @@ describe('FloatingFocusManager', () => {
         await waitFor(() => expect(screen.getByTestId(focused)).toHaveFocus());
       },
     );
+
+    // The first popup opens with a null interaction type while the body has the focus, so it
+    // records nothing. Its reference is then not in the list when the second popup closes.
+    it('leaves the reference out of the list when the open interaction type is null', async () => {
+      const removed = shallowRef(false);
+      await render(() => (
+        <div>
+          <Popup name="first-" manager={{ openInteractionType: null }} />
+          <Popup name="second-" referenceRemoved={removed.value}>
+            {{ default: changeAndClose(() => (removed.value = true)) }}
+          </Popup>
+        </div>
+      ));
+      await openAndClose('first-');
+      await fireEvent.click(screen.getByTestId('second-reference'));
+      await waitFor(() => expect(screen.getByTestId('change')).toHaveFocus());
+
+      await fireEvent.click(screen.getByTestId('change'));
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
 
     describe('press outside the popup, in a browser that gives no preventScroll option', () => {
       // A browser without the option does not read the options of `focus`. This function does not
