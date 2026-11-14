@@ -168,10 +168,7 @@ describe('useToastLabelPart', () => {
 
       toast.value = { id: 'test', [field]: 'Toast content' };
       await nextTick();
-      expect(screen.getByTestId('root')).toHaveAttribute(
-        attribute,
-        screen.getByTestId('part').id,
-      );
+      expect(screen.getByTestId('root')).toHaveAttribute(attribute, screen.getByTestId('part').id);
 
       toast.value = { id: 'test', [field]: '' };
       await nextTick();
@@ -191,7 +188,9 @@ describe('useToastLabelPart', () => {
         <Toast.Provider>
           <Toast.Viewport>
             <Toast.Root toast={{ id: 'test' }} data-testid="root">
-              <KeepAlive>{visible.value ? <Labelled key="labelled" /> : <Other key="other" />}</KeepAlive>
+              <KeepAlive>
+                {visible.value ? <Labelled key="labelled" /> : <Other key="other" />}
+              </KeepAlive>
             </Toast.Root>
           </Toast.Viewport>
         </Toast.Provider>

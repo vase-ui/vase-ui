@@ -36,6 +36,68 @@ describe('<Toast.Content />', () => {
     },
   }));
 
+  const App = defineComponent({
+    setup() {
+      const { toasts, add } = Toast.useToastManager();
+      const count = shallowRef(0);
+      return () => (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              const next = count.value + 1;
+              count.value = next;
+              add({ title: `toast-${next}` });
+            }}
+          >
+            add
+          </button>
+          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+            {toasts.value.map((toastItem) => (
+              <Toast.Root key={toastItem.id} toast={toastItem}>
+                <Toast.Content data-testid={`content-${toastItem.title}`}>
+                  <Toast.Title />
+                </Toast.Content>
+              </Toast.Root>
+            ))}
+          </Toast.Viewport>
+        </>
+      );
+    },
+  });
+
+  it('marks content behind the frontmost toast with data-behind', async () => {
+    await render(
+      <Toast.Provider>
+        <App />
+      </Toast.Provider>,
+    );
+
+    const addButton = screen.getByRole('button', { name: 'add' });
+    await fireEvent.click(addButton);
+    await fireEvent.click(addButton);
+
+    // The newest toast is at the front; the older one sits behind it.
+    expect(screen.getByTestId('content-toast-2')).not.toHaveAttribute('data-behind');
+    expect(screen.getByTestId('content-toast-1')).toHaveAttribute('data-behind');
+  });
+
+  it('reflects the expanded state when the viewport is hovered', async () => {
+    await render(
+      <Toast.Provider>
+        <App />
+      </Toast.Provider>,
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+
+    const content = screen.getByTestId('content-toast-1');
+    expect(content).not.toHaveAttribute('data-expanded');
+
+    await fireEvent.mouseEnter(screen.getByTestId('viewport'));
+    expect(content).toHaveAttribute('data-expanded');
+  });
+
   const ContentList = defineComponent({
     setup() {
       const { toasts } = Toast.useToastManager();

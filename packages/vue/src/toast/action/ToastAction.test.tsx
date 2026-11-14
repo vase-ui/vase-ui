@@ -75,7 +75,9 @@ describe('<Toast.Action />', () => {
     await render(
       <Toast.Provider>
         <Toast.Viewport>
-          <Toast.Root toast={{ id: 'test', actionProps: { id: 'action', children: 'Undo', onClick } }}>
+          <Toast.Root
+            toast={{ id: 'test', actionProps: { id: 'action', children: 'Undo', onClick } }}
+          >
             <Toast.Action data-testid="action" />
           </Toast.Root>
         </Toast.Viewport>

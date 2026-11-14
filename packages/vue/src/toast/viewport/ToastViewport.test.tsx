@@ -465,6 +465,170 @@ describe('<Toast.Viewport />', () => {
     });
   });
 
+  describe('real browser input', () => {
+    const TitleList = defineComponent({
+      setup() {
+        const { toasts } = Toast.useToastManager();
+        return () =>
+          toasts.value.map((toast) => (
+            <Toast.Root key={toast.id} toast={toast} data-testid={toast.id}>
+              <Toast.Title data-testid={`${toast.id}-title`} />
+            </Toast.Root>
+          ));
+      },
+    });
+
+    it('returns focus to the origin when onClose adds an unmounted replacement toast', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+      await render(
+        <Toast.Provider toastManager={manager} timeout={0}>
+          <button type="button">origin</button>
+          <Toast.Viewport data-testid="viewport">
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+      const origin = screen.getByRole('button', { name: 'origin' });
+      manager.add({
+        id: 'first',
+        title: 'first',
+        onClose: () => manager.add({ id: 'replacement', title: 'replacement' }),
+      });
+      origin.focus();
+      await flushMicrotasks();
+
+      await userEvent.keyboard('{F6}{Tab}');
+      await flushMicrotasks();
+      expect(screen.getByTestId('first')).toHaveFocus();
+
+      await userEvent.keyboard('{Escape}');
+      await flushMicrotasks();
+      expect(await screen.findByTestId('replacement')).toBeInTheDocument();
+      expect(screen.queryByTestId('first')).not.toBeInTheDocument();
+      expect(origin).toHaveFocus();
+    });
+
+    it('moves focus to a visible toast when the next one was limited', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+
+      await render(
+        <Toast.Provider toastManager={manager} limit={2} timeout={0}>
+          <Toast.Viewport data-testid="viewport">
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      manager.add({ id: 'oldest', title: 'oldest' });
+      manager.add({ id: 'middle', title: 'middle' });
+      manager.add({ id: 'newest', title: 'newest' });
+      await flushMicrotasks();
+
+      const middle = screen.getByTestId('middle');
+      expect(screen.getByTestId('oldest')).toHaveAttribute('inert');
+
+      await userEvent.keyboard('{F6}');
+      await flushMicrotasks();
+      expect(screen.getByTestId('viewport')).toHaveFocus();
+
+      middle.focus();
+      await flushMicrotasks();
+      expect(middle).toHaveFocus();
+      expect(middle.matches(':focus-visible')).toBe(true);
+
+      await userEvent.keyboard('{Escape}');
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(middle).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('newest')).toHaveFocus();
+    });
+
+    it('moves focus to a toast that stays open when onClose closes another', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+
+      await render(
+        <Toast.Provider toastManager={manager} timeout={0}>
+          <Toast.Viewport data-testid="viewport">
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      manager.add({ id: 'oldest', title: 'oldest' });
+      manager.add({
+        id: 'middle',
+        title: 'middle',
+        onClose: () => manager.close('oldest'),
+      });
+      manager.add({ id: 'newest', title: 'newest' });
+      await flushMicrotasks();
+
+      const middle = screen.getByTestId('middle');
+      const oldest = screen.getByTestId('oldest');
+
+      await userEvent.keyboard('{F6}');
+      await flushMicrotasks();
+      middle.focus();
+      await flushMicrotasks();
+      expect(middle.matches(':focus-visible')).toBe(true);
+
+      await userEvent.keyboard('{Escape}');
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(middle).not.toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(oldest).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('newest')).toHaveFocus();
+    });
+
+    it('moves focus to the next toast when the closed toast adds one in onClose', async () => {
+      const { userEvent } = await import('vitest/browser');
+      const manager = Toast.createToastManager();
+
+      await render(
+        <Toast.Provider toastManager={manager} timeout={0}>
+          <Toast.Viewport data-testid="viewport">
+            <TitleList />
+          </Toast.Viewport>
+        </Toast.Provider>,
+      );
+
+      manager.add({ id: 'oldest', title: 'oldest' });
+      manager.add({
+        id: 'middle',
+        title: 'middle',
+        onClose: () => manager.add({ id: 'added', title: 'added' }),
+      });
+      manager.add({ id: 'newest', title: 'newest' });
+      await flushMicrotasks();
+
+      const middle = screen.getByTestId('middle');
+
+      await userEvent.keyboard('{F6}');
+      await flushMicrotasks();
+      middle.focus();
+      await flushMicrotasks();
+      expect(middle.matches(':focus-visible')).toBe(true);
+
+      await userEvent.keyboard('{Escape}');
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(middle).not.toBeInTheDocument();
+      });
+
+      expect(screen.getByTestId('added')).toBeInTheDocument();
+      expect(screen.getByTestId('oldest')).toHaveFocus();
+    });
+  });
+
   // A case that throws in `setup` is the last case of its file.
   it('throws a descriptive error when rendered outside <Toast.Provider>', async () => {
     await expect(render(<Toast.Viewport />)).rejects.toThrow(
