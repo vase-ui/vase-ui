@@ -1,7 +1,7 @@
 import { isHTMLElement } from '@floating-ui/utils/dom';
-import { provide, watch } from 'vue';
+import { provide } from 'vue';
 import { ownerDocument } from '../../common/owner';
-import { activeElement, contains } from '../../common/shadowDom';
+import { activeElement } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { REASONS } from '../../internals/reasons';
@@ -101,15 +101,6 @@ export function useMenuFilterSubmenuRoot(options: MenuFilterRootOptions): MenuFi
       if (!nextOpen) {
         if (details.reason === REASONS.escapeKey && isHTMLElement(details.trigger)) {
           highlightTrigger(details.trigger, details.event);
-          // `Menu.Popup` returns the focus with `getReturnElement`, so point it at the element
-          // that can hold real focus: the input of the parent, not its trigger, which the focus
-          // cannot reach.
-          parentReference = {
-            reference: parent.virtualFocus
-              ? (parentStore.context.virtualFocusRef?.value ?? details.trigger)
-              : details.trigger,
-            trigger: details.trigger,
-          };
         }
         return;
       }
@@ -131,33 +122,10 @@ export function useMenuFilterSubmenuRoot(options: MenuFilterRootOptions): MenuFi
 
       function handleReturnFocus() {
         // A plain parent has no input to return to. Focus the trigger that this submenu opened
-        // from, as a plain submenu does, so that a hover close does not leave the focus on the
-        // body.
+        // from, as a plain submenu does.
         const [ownTrigger] = store.context.triggerElements.elements();
         return getReturnElement() ?? (isHTMLElement(ownTrigger) ? ownTrigger : null);
       }
-
-      // A hover close makes the focus manager skip its return focus, which would leave the focus
-      // of the input of the submenu on the body once the popup unmounts.
-      watch(
-        () => store.select('mounted'),
-        (mounted, wasMounted) => {
-          if (mounted || !wasMounted) {
-            return;
-          }
-
-          const returnElement = handleReturnFocus();
-          if (!returnElement || !parentStore.select('open')) {
-            return;
-          }
-          const doc = ownerDocument(returnElement);
-          const activeEl = activeElement(doc);
-          if (activeEl === doc.body || contains(store.select('popupElement'), activeEl)) {
-            returnElement.focus({ preventScroll: true });
-          }
-        },
-        { flush: 'post' },
-      );
 
       function moveInParent(from: HTMLElement, event: KeyboardEvent) {
         const item = moveHighlightFrom(parentStore, from, event, {

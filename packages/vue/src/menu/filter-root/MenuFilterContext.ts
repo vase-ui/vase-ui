@@ -58,8 +58,6 @@ export interface MenuFilterSubmenuTrigger extends UseFilterDropdownItemReturnVal
 }
 
 export interface MenuFilterParentHandoff {
-  /** The input of the filterable parent. A submenu gives it the focus when the submenu closes. */
-  parentVirtualFocusRef: Readonly<Ref<HTMLElement | null>> | undefined;
   /** Gives the focus that entered the popup to the popups above. */
   handleFocus: (event: FocusEvent) => void;
   /**

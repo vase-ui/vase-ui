@@ -107,5 +107,5 @@ export function useVirtualFocusParentHandoff(
     }
   }
 
-  return { parentVirtualFocusRef, handleFocus, stopParentNavigationKey, sendKeyToParentList };
+  return { handleFocus, stopParentNavigationKey, sendKeyToParentList };
 }
