@@ -65,7 +65,7 @@ The return value of the function replaces the props that are merged up to that p
 
 <<< ./merge-props/FunctionSet.vue#function{ts}
 
-A handler that such a function returns can call `event.preventVaseUIHandler()`. The call only sets `event.vaseUIHandlerPrevented`. Your handler calls the earlier handlers itself. It must read the flag, and call them only when it is not `true`.
+A handler that such a function returns can call `event.preventVaseUIHandler()`. The call only sets `event.vaseUIHandlerPrevented`, so call the earlier handlers only when the flag is not `true`.
 
 ## API reference
 

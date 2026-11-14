@@ -59,8 +59,8 @@ type HandlerValue = Handler | Handler[] | null | false | undefined;
  * handlers itself. `mergeProps` copies the result and does not change it.
  *
  * A handler that such a function returns can also call `event.preventVaseUIHandler()`. The call
- * only sets `event.vaseUIHandlerPrevented`. This handler calls the earlier handlers itself. It must
- * read the flag, and call them only when it is not `true`.
+ * only sets `event.vaseUIHandlerPrevented`, so this handler must call the earlier handlers only
+ * when the flag is not `true`.
  *
  * @important **`ref` is not merged.** Only the rightmost `ref` is kept.
  * @template T Tag of the element that gets the merged props. The sets and the result then have
