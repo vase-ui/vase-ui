@@ -535,6 +535,49 @@ describe('FloatingDelayGroup', () => {
       expect(isOpen('two')).toBe(true);
     });
 
+    it('VUE-48: a popup that unmounts does not stop the timer that another popup started', async () => {
+      const Test = defineComponent({
+        setup() {
+          const showFirst = shallowRef(true);
+
+          return () => (
+            <Group delay={{ open: 1000, close: 0 }} timeoutMs={500}>
+              {showFirst.value && <Tooltip label="one" />}
+              <Tooltip label="two" />
+              <Tooltip label="three" />
+              <button
+                type="button"
+                onClick={() => {
+                  showFirst.value = false;
+                }}
+              >
+                Remove first
+              </button>
+            </Group>
+          );
+        },
+      });
+      await render(<Test />);
+      // The first popup closes and then the second popup takes over the group. The second popup
+      // closes, so its timer is the one that ends the group.
+      await fireEvent.mouseEnter(screen.getByTestId('reference-one'));
+      await tick(1000);
+      await fireEvent.mouseLeave(screen.getByTestId('reference-one'));
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(1);
+      await fireEvent.mouseLeave(screen.getByTestId('reference-two'));
+      expect(isOpen('two')).toBe(false);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Remove first' }));
+      await tick(500);
+      await fireEvent.mouseEnter(screen.getByTestId('reference-three'));
+      await tick(999);
+      expect(isOpen('three')).toBe(false);
+
+      await tick(1);
+      expect(isOpen('three')).toBe(true);
+    });
+
     it('ends the instant phase on time while KeepAlive holds the group', async () => {
       const show = shallowRef(true);
       await render(() => (

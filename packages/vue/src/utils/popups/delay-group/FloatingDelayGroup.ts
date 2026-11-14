@@ -25,8 +25,8 @@ interface DelayGroup {
 
 /**
  * The parts that have no provider share this group, as they share the default context of Base UI.
- * It holds state, so a server render must not write it. Only a `watch` and `onMounted` write it,
- * and a server runs neither.
+ * The group holds state, so a server render must not join it. A server runs no `onMounted` hook
+ * and no `watch` of a member.
  */
 const DEFAULT_DELAY_GROUP: DelayGroup = {
   hasProvider: false,
@@ -42,7 +42,7 @@ const FloatingDelayGroupContext: InjectionKey<DelayGroup> = Symbol();
 
 export interface FloatingDelayGroupOptions {
   /**
-   * The delay of the group while it is not in the instant phase.
+   * The delay to use for the group when it is not in the instant phase.
    */
   delay: MaybeRefOrGetter<Delay>;
   /**
