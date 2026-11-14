@@ -1744,6 +1744,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - T is the number of names in `components` of `parity/upstream.json`. The parity page lists each of these names that no family has in its `upstreamPaths`.
 - The site extends the default theme of VitePress with the look of the Base UI docs. The folder `docs/.vitepress/theme` holds that extension and nothing else. Do not add a layout or a component there. A page imports its components from `docs/.vitepress/components`.
 - `docs/.vitepress/theme/tokens.css` sets the variables of the default theme. `docs/.vitepress/theme/look.css` holds each rule that a variable cannot give.
+- `look.css` gives `.Layout`, the root of the site, `isolation: isolate`, as the quick start of Base UI tells an app to do. A popup of a demo is outside `.Layout`, so it shows above each element of the page. Without the rule, a code block of VitePress, which has a `z-index`, shows above the popup.
 - Take each color, size and space from the style sheets of the Base UI docs, in `docs/src/css`, `docs/src/components` and `docs/src/app/(docs)/layout.css`. Where a Base UI value gives text less than the AA contrast of WCAG, use the nearest Base UI value that passes.
 - Base UI uses a commercial font. The site uses Hanken Grotesk for text and Geist Mono for code, from their npm packages. Do not load a font from another server.
 - `markdown.colorReplacements` in `docs/.vitepress/config.ts` changes the colors of the GitHub themes of Shiki to the syntax colors of Base UI.

@@ -1,7 +1,13 @@
 /* The rules come from the style sheets of the Base UI docs, in docs/src/css, docs/src/components
    and docs/src/app/(docs)/layout.css. A rule here sets what a variable of the default theme cannot. */
 
-/* `.Layout` is the root of the site. A popup of a demo is outside it, in the portal container. */
+/* `.Layout` is the root of the site. A popup of a demo is outside it, in the portal container.
+   The stacking context is the style that the quick start of Base UI gives to the root of an app.
+   Without it, a code block of VitePress, which has a `z-index`, shows above the popup. */
+.Layout {
+  isolation: isolate;
+}
+
 .Layout ::selection {
   background-color: var(--vase-color-selection);
 }
