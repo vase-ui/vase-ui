@@ -1687,4 +1687,59 @@ describe('<Combobox.Input />', () => {
       expect(screen.getByTestId('field')).not.toHaveAttribute('data-touched');
     });
   });
+
+  describe('VUE-77: aria-controls names only the list that exists', () => {
+    it('has no aria-controls while the list has an empty id', async () => {
+      await render(
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id="" data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(input).toHaveAttribute('aria-expanded', 'true');
+      expect(input).not.toHaveAttribute('aria-controls');
+    });
+
+    it('follows the id of the list while the popup is open', async () => {
+      const id = shallowRef('first');
+      await render(() => (
+        <Combobox.Root defaultOpen>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List id={id.value} data-testid="list" />
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
+      await flushMicrotasks();
+
+      const input = screen.getByTestId('input');
+      expect(input).toHaveAttribute('aria-controls', 'first');
+
+      id.value = 'second';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('second');
+      expect(input).toHaveAttribute('aria-controls', 'second');
+
+      id.value = '';
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('list').id).toBe('');
+      expect(input).not.toHaveAttribute('aria-controls');
+    });
+  });
 });

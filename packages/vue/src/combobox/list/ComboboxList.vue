@@ -16,7 +16,15 @@ export interface ComboboxListProps
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, shallowRef, toRaw, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onScopeDispose,
+  shallowRef,
+  toRaw,
+  watch,
+} from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
@@ -79,7 +87,13 @@ if (!toRaw(store.state).virtualized) {
 // A compiled template can mount a new list before it unmounts the old one. The old one then must
 // not clear the elements of the new one.
 let listElement: HTMLElement | null = null;
+// `KeepAlive` takes the list out of the document and calls no `ref` callback. While it holds the
+// list, the list gives no element to the store, so that the input and the trigger do not name it.
+let deactivated = false;
 function setElements(list: HTMLElement | null) {
+  if (deactivated) {
+    return;
+  }
   const current = toRaw(store.state);
   if (list !== null || current.listElement === listElement) {
     store.set('listElement', list as HTMLDivElement | null);
@@ -125,6 +139,19 @@ const { element, elementProps } = useRenderElement('div', props, {
       attrs,
     ];
   },
+});
+
+onDeactivated(() => {
+  setElements(null);
+  deactivated = true;
+});
+// `onActivated` also runs at the first mount in a `KeepAlive`. A render while `KeepAlive` held the
+// list can give a new element, so the list gives the element that it has now.
+onActivated(() => {
+  if (deactivated) {
+    deactivated = false;
+    setElements(element.value);
+  }
 });
 
 defineExpose({ element });
