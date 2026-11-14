@@ -664,7 +664,7 @@ describe('useListNavigation', () => {
     );
 
     it.each(forms)(
-      'VUE-42: gives a key that a list in $name does not stop to the list above one time',
+      'VUE-46: gives a key that a list in $name does not stop to the list above one time',
       async ({ teleport }) => {
         await openMore('horizontal', teleport);
 

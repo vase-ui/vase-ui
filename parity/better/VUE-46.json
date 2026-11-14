@@ -1,5 +1,5 @@
 {
-  "id": "VUE-42",
+  "id": "VUE-46",
   "evidence": [
     "https://vuejs.org/guide/built-ins/teleport.html",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/interactions/useListNavigation.ts#L575-L580"
