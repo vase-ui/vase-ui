@@ -2,8 +2,8 @@
 type ItemComparer<Item> = (a: Item, b: Item) => boolean;
 
 export function areArraysEqual<Item>(
-  array1: ReadonlyArray<Item>,
-  array2: ReadonlyArray<Item>,
+  array1: readonly Item[],
+  array2: readonly Item[],
   itemComparer: ItemComparer<Item> = Object.is,
 ): boolean {
   const { length } = array1;
@@ -13,7 +13,8 @@ export function areArraysEqual<Item>(
   }
 
   for (let i = 0; i < length; i += 1) {
-    if (!itemComparer(array1[i], array2[i])) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The length check above proves both indexes.
+    if (!itemComparer(array1[i]!, array2[i]!)) {
       return false;
     }
   }

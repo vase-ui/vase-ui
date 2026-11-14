@@ -386,7 +386,7 @@ provide(TabsRootContext, {
 });
 
 // The panels register their elements in this list, to get their `data-index`.
-const panelElements = shallowRef<Array<HTMLElement | null>>([]);
+const panelElements = shallowRef<(HTMLElement | null)[]>([]);
 useCompositeList({ elementsRef: panelElements });
 
 const state = computed<TabsRootState>(() => ({

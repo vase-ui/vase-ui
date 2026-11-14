@@ -196,13 +196,11 @@ const TestActiveItemDropsTrigger = defineComponent({
   },
 });
 
-function getPopupWidthCalls(calls: Array<[property: string, value: string, priority?: string]>) {
+function getPopupWidthCalls(calls: [property: string, value: string, priority?: string][]) {
   return calls.filter((call) => call[0] === '--popup-width').map((call) => call[1]);
 }
 
-function getPositionerWidthCalls(
-  calls: Array<[property: string, value: string, priority?: string]>,
-) {
+function getPositionerWidthCalls(calls: [property: string, value: string, priority?: string][]) {
   return calls.filter((call) => call[0] === '--positioner-width').map((call) => call[1]);
 }
 
@@ -1304,9 +1302,11 @@ describe('<NavigationMenu.Trigger />', () => {
     const setPropertySpy = vi.spyOn(popupRoot.style, 'setProperty');
     const getWidthCallsSince = (startIndex = 0) =>
       getPopupWidthCalls(
-        setPropertySpy.mock.calls.slice(startIndex) as Array<
-          [property: string, value: string, priority?: string]
-        >,
+        setPropertySpy.mock.calls.slice(startIndex) as [
+          property: string,
+          value: string,
+          priority?: string,
+        ][],
       );
 
     await waitFor(() => {
@@ -1350,9 +1350,11 @@ describe('<NavigationMenu.Trigger />', () => {
     const setPositionerPropertySpy = vi.spyOn(positioner.style, 'setProperty');
     const getPositionerWidthCallsSince = (startIndex = 0) =>
       getPositionerWidthCalls(
-        setPositionerPropertySpy.mock.calls.slice(startIndex) as Array<
-          [property: string, value: string, priority?: string]
-        >,
+        setPositionerPropertySpy.mock.calls.slice(startIndex) as [
+          property: string,
+          value: string,
+          priority?: string,
+        ][],
       );
 
     await waitFor(() => {

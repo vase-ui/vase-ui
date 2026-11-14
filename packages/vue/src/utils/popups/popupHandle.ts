@@ -79,6 +79,12 @@ export class BasePopupHandle<
    */
   private readonly attachedStoreRef = shallowRef<Store | null>(null);
 
+  protected readonly fallbackStore: HandleStore;
+
+  private readonly componentName: string;
+
+  private readonly throwOnMissingTrigger: boolean;
+
   /**
    * @param fallbackStore The inert, closed store that a detached trigger gets while no root is
    * attached. A trigger registers in the store that `store` gives, so a detached trigger is in the
@@ -90,11 +96,10 @@ export class BasePopupHandle<
    * Menu, Popover, Tooltip and Preview Card are anchored, so they need a trigger and they throw.
    * Dialog is not anchored. It opens with no trigger and warns in a development build.
    */
-  constructor(
-    protected readonly fallbackStore: HandleStore,
-    private readonly componentName: string,
-    private readonly throwOnMissingTrigger: boolean = true,
-  ) {
+  constructor(fallbackStore: HandleStore, componentName: string, throwOnMissingTrigger = true) {
+    this.fallbackStore = fallbackStore;
+    this.componentName = componentName;
+    this.throwOnMissingTrigger = throwOnMissingTrigger;
     // A reactive proxy of the handle, for example from `ref()` or from the `data` option, unwraps
     // `attachedStoreRef`. The next write to the pointer then fails.
     markRaw(this);
@@ -115,7 +120,7 @@ export class BasePopupHandle<
    * detaches.
    */
   protected get attachedStoreUntracked() {
-    return this.attachedStores[this.attachedStores.length - 1] ?? null;
+    return this.attachedStores.at(-1) ?? null;
   }
 
   /**
@@ -172,7 +177,7 @@ export class BasePopupHandle<
       // Control goes to the newest root that is still mounted. A reset to `null` would leave an
       // older root that is still mounted with no control when a newer overlapping root detaches
       // first, for example when a route transition is canceled.
-      this.attachedStoreRef.value = this.attachedStores[this.attachedStores.length - 1] ?? null;
+      this.attachedStoreRef.value = this.attachedStores.at(-1) ?? null;
     };
   }
 
@@ -210,7 +215,8 @@ export class BasePopupHandle<
     let triggerElement: Element | undefined;
     if (triggerId) {
       for (let i = this.attachedStores.length - 1; i >= 0 && !triggerElement; i -= 1) {
-        triggerElement = this.attachedStores[i].context.triggerElements.getById(triggerId);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The loop runs from the last index to 0.
+        triggerElement = this.attachedStores[i]!.context.triggerElements.getById(triggerId);
       }
       triggerElement ??= this.fallbackStore.context.triggerElements.getById(triggerId);
     }

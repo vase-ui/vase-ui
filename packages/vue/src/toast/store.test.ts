@@ -113,7 +113,7 @@ describe('ToastStore', () => {
     const store = createStore([{ id: 'a', title: 'Draft', data: { name: 'Draft', count: 1 } }]);
 
     store.updateToast('a', (prevToast) => ({
-      title: `${prevToast.title} (saved)`,
+      title: `${String(prevToast.title)} (saved)`,
       data: { ...prevToast.data, count: 2 },
     }));
     const toast = selectors.toast(store.state, 'a');
@@ -248,6 +248,29 @@ describe('ToastStore', () => {
 
     await pending;
     expect(store.state.toasts[0]?.data).toBe(successValue);
+  });
+
+  it('passes the promise that it returns to a setPromise of the options', async () => {
+    const store = createStore([]);
+    const setPromise = vi.fn();
+    const options = { loading: 'Saving', success: 'Saved', error: 'Failed', setPromise };
+
+    const handled = store.promiseToast(Promise.resolve('done'), options);
+    await handled;
+
+    expect(setPromise).toHaveBeenCalledTimes(1);
+    expect(setPromise.mock.calls[0][0]).toBe(handled);
+  });
+
+  it('does not call a setPromise that the options only inherit', async () => {
+    const store = createStore([]);
+    const setPromise = vi.fn();
+    const options = { loading: 'Saving', success: 'Saved', error: 'Failed' };
+    Object.setPrototypeOf(options, { setPromise });
+
+    await store.promiseToast(Promise.resolve('done'), options);
+
+    expect(setPromise).not.toHaveBeenCalled();
   });
 
   it('does not invoke onRemove for a toast that is no longer in the store', () => {

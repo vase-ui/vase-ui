@@ -60,9 +60,9 @@ function createInitialState(
 function createContext(): Context {
   return {
     ...createPopupStoreContext(),
-    listRef: shallowRef<Array<HTMLElement | null>>([]),
-    labelsRef: shallowRef<Array<string | null>>([]),
-    valuesRef: shallowRef<Array<any>>([]),
+    listRef: shallowRef<(HTMLElement | null)[]>([]),
+    labelsRef: shallowRef<(string | null)[]>([]),
+    valuesRef: shallowRef<any[]>([]),
   };
 }
 

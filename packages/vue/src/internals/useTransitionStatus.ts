@@ -42,9 +42,9 @@ function registerFrameEffect(sources: WatchSource[], effect: () => number | unde
  */
 export function useTransitionStatus(
   open: WatchSource<boolean>,
-  enableIdleState: boolean = false,
-  deferEndingState: boolean = false,
-  animateInitialOpen: boolean = false,
+  enableIdleState = false,
+  deferEndingState = false,
+  animateInitialOpen = false,
   element?: MaybeRefOrGetter<Element | null | undefined>,
 ): {
   mounted: Readonly<Ref<boolean>>;
