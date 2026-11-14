@@ -208,7 +208,8 @@ describe('usePopupAutoResize', () => {
 
     it('ends with the size of the last content when a content change interrupts the resize', async () => {
       const payload = shallowRef('narrow');
-      await renderOpen(payload);
+      // The transition lasts until the case finishes it.
+      await renderOpen(payload, () => ({ popup: { style: { transitionDuration: '10s' } } }));
       const popup = screen.getByTestId('popup');
       const positioner = screen.getByTestId('positioner');
       const widths = recordVariable(popup, '--popup-width');
@@ -219,6 +220,10 @@ describe('usePopupAutoResize', () => {
 
       payload.value = 'wider';
 
+      await waitFor(() => {
+        expect(widths.values).toEqual(['auto', '120px', '160px', '200px']);
+      });
+      popup.getAnimations().forEach((animation) => animation.finish());
       await waitFor(() => {
         expect(widths.values).toEqual(['auto', '120px', '160px', '200px', 'auto']);
       });

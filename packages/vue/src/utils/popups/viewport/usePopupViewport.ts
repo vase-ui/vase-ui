@@ -180,8 +180,8 @@ export function usePopupViewport(parameters: UsePopupViewportParameters): UsePop
 
   let cleanupController: AbortController | undefined;
 
-  // A lagging payload mounts the current container again while the transition runs. The new
-  // container needs the starting style, and the wait of the old container ends.
+  // A payload that comes later mounts the current container again while the transition runs. The
+  // new container needs the starting style, and the wait of the old container ends.
   watch([currentContentKey, previousContent], () => {
     if (previousContent.value === null) {
       return;

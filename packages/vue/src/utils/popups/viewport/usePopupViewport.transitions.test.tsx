@@ -81,6 +81,10 @@ function getPreviousContainer() {
   return document.querySelector<HTMLElement>('[data-previous]');
 }
 
+function getRadios(container: HTMLElement | null) {
+  return Array.from(container!.querySelectorAll('input'));
+}
+
 /**
  * Records the `transitionrun` events of the containers. The containers exist for the whole
  * transition, so a listener on the viewport gets each event.
@@ -201,7 +205,7 @@ describe('usePopupViewport', () => {
     }
 
     it('shows the old content in the previous container while the new content enters', async () => {
-      const { user } = await renderPositioned([10, 10], [100, 200], '0.3s');
+      const { user } = await renderPositioned([10, 10], [100, 200], '10s');
 
       await user.click(screen.getByTestId('trigger1'));
       await waitFor(() => {
@@ -231,6 +235,8 @@ describe('usePopupViewport', () => {
         /^\d+(?:\.\d+)?px$/,
       );
       expect(getCurrentContainer()!.textContent).toBe('Content 1');
+
+      finishAnimations();
 
       await waitFor(() => {
         expect(getPreviousContainer()).toBe(null);
@@ -424,7 +430,7 @@ describe('usePopupViewport', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const root = shallowRef<ViewportRootInstance | null>(null);
       const { user } = await renderMorph(
-        getMorphAnimationStyles('0.2s'),
+        getMorphAnimationStyles('10s'),
         [
           { payload: 0, style: placeTrigger(10, 10) },
           { payload: 1, style: placeTrigger(100, 200) },
@@ -439,6 +445,7 @@ describe('usePopupViewport', () => {
       await waitFor(() => {
         expect(getPreviousContainer()).not.toBe(null);
       });
+      finishAnimations();
       await waitFor(() => {
         expect(getPreviousContainer()).toBe(null);
       });
@@ -673,11 +680,21 @@ describe('usePopupViewport', () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
     });
 
+    // Content has ids on top nodes and in wrappers, and the picture must clear both.
     it('has the id of an HTML element one time during the morph, in the current container', async () => {
       const { user } = await renderMorph(
         getMorphAnimationStyles('10s'),
         [{ payload: 'first' }, { payload: 'second' }],
-        { content: (payload) => <h2 id="title">Title {String(payload)}</h2> },
+        {
+          content: (payload) => (
+            <>
+              <h2 id="title">Title {String(payload)}</h2>
+              <div>
+                <p id="description">Description {String(payload)}</p>
+              </div>
+            </>
+          ),
+        },
       );
       await user.click(screen.getByTestId('trigger1'));
 
@@ -686,10 +703,12 @@ describe('usePopupViewport', () => {
       await waitFor(() => {
         expect(getPreviousContainer()).not.toBe(null);
       });
-      expect(getPreviousContainer()!.textContent).toBe('Title first');
-      const titles = document.querySelectorAll('[id="title"]');
-      expect(titles).toHaveLength(1);
-      expect(getCurrentContainer()!.contains(titles[0])).toBe(true);
+      expect(getPreviousContainer()!.textContent).toBe('Title firstDescription first');
+      for (const id of ['title', 'description']) {
+        const elements = document.querySelectorAll(`[id="${id}"]`);
+        expect(elements).toHaveLength(1);
+        expect(getCurrentContainer()!.contains(elements[0])).toBe(true);
+      }
     });
 
     it('keeps the id of an SVG element, because url(#id) paints by it', async () => {
@@ -720,22 +739,34 @@ describe('usePopupViewport', () => {
       );
     });
 
+    // One radio is a child of the container and one is inside a wrapper. They are in two groups, so
+    // both can be checked.
     it('keeps the radio of the current container checked while the picture has a checked radio', async () => {
       const { user } = await renderMorph(
         getMorphAnimationStyles('10s'),
         [{ payload: 'first' }, { payload: 'second' }],
-        { content: () => <input type="radio" name="choice" checked /> },
+        {
+          content: () => (
+            <>
+              <input type="radio" name="choice" checked />
+              <label>
+                <input type="radio" name="other" checked />
+              </label>
+            </>
+          ),
+        },
       );
       await user.click(screen.getByTestId('trigger1'));
-      expect(getCurrentContainer()!.querySelector('input')!.checked).toBe(true);
+      expect(getRadios(getCurrentContainer()).map((radio) => radio.checked)).toEqual([true, true]);
 
       await user.click(screen.getByTestId('trigger2'));
 
       await waitFor(() => {
         expect(getPreviousContainer()).not.toBe(null);
       });
-      expect(getPreviousContainer()!.querySelector('input')).not.toHaveAttribute('name');
-      expect(getCurrentContainer()!.querySelector('input')!.checked).toBe(true);
+      const names = getRadios(getPreviousContainer()).map((radio) => radio.getAttribute('name'));
+      expect(names).toEqual([null, null]);
+      expect(getRadios(getCurrentContainer()).map((radio) => radio.checked)).toEqual([true, true]);
     });
   });
 
@@ -860,9 +891,7 @@ describe('usePopupViewport', () => {
       kept.visible.value = true;
       await flushMicrotasks();
 
-      await waitFor(() => {
-        expect(getPreviousContainer()).toBe(null);
-      });
+      expect(getPreviousContainer()).toBe(null);
       expect(screen.getByTestId('viewport')).not.toHaveAttribute('data-transitioning');
     });
   });
