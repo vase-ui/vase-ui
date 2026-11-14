@@ -43,7 +43,7 @@ Bind the value with `v-model:value`. The root emits `valueChange` with the new v
 
 With no `locale` prop, the server HTML has the text in the format of `en-US`. When the root is mounted, the text changes to the format of the locale of the browser. Give the root a `locale` prop to get the same text on the server and in the browser.
 
-`NumberField.ScrubAreaCursor` renders its element in `<body>`, and only while the user scrubs. It does not render for a touch, when the browser refuses to lock the pointer, or in a WebKit browser such as Safari.
+`NumberField.ScrubAreaCursor` renders its element in `<body>`, and only while the user scrubs. It does not render for a touch, in a WebKit browser such as Safari, or after `requestPointerLock()` throws or rejects.
 
 ## API reference
 
