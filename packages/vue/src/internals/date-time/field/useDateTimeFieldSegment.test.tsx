@@ -781,6 +781,19 @@ describe('useDateTimeFieldSegment', () => {
       expect([day.selectionStart, day.selectionEnd]).toEqual([0, 2]);
     });
 
+    it('selects the whole text again when the user presses the segment that has the focus', async () => {
+      const { container, user } = await setup({ defaultValue: '2026-11-14' });
+      const month = segmentOf(container, 'month');
+
+      await user.click(month);
+      await user.keyboard('1');
+      expect([month.selectionStart, month.selectionEnd]).toEqual([1, 1]);
+
+      await user.click(month);
+
+      expect([month.selectionStart, month.selectionEnd]).toEqual([0, 1]);
+    });
+
     it('gives the focus to the first segment for a press on the input outside a segment', async () => {
       const { container } = await setup({ referenceDate: '2026-11-14' });
 

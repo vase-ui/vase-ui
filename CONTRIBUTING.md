@@ -349,7 +349,11 @@ Some upstream parts render a hidden `<input>` beside their element. `Switch.Root
 - Vue writes `checked` to an input only when the value changes between two renders. Hydration does not write it. The part thus writes its state to the input after the mount and on each `pageshow` event of the window. Chromium restores the form state of a page after `load`.
 - The part also writes its state to the input in the tick after a click that it accepted. A parent that controls the part can keep the old value.
 - A part with an `indeterminate` state writes that property to the input in the same function as `checked`, and again after each change of `indeterminate`. A click on the input clears the property, and the write in the tick after an accepted click sets it again. A script that writes `checked` does not clear the property. A server cannot write it, because HTML has no attribute for it.
-- A part with a `value` input does not write its state after the mount, because hydration writes `value`. It writes its state on each `pageshow` event, and in the tick after each `input` and `change` event of the input. `NumberField.Root` and `OTPField.Root` do this.
+- A part with a `value` input does not write its state after the mount, because hydration writes `value`. It writes its state on each `pageshow` event, and in the tick after each `input` and `change` event of the input. `NumberField.Root`, `OTPField.Root` and `useDateTimeFieldRoot` do this.
+- The hidden input of a date or time field has the type of its value: `date`, `datetime-local` or `time`. Its `min` and `max` give `rangeUnderflow` and `rangeOverflow` to the field, and `required` gives `valueMissing`.
+- A zoned value and a year and month have `type="text"`. Only Chromium has `type="month"`, and no engine has an input for a zoned value. The root checks their range with `setCustomValidity`.
+- A date that is not available, and a field with some segments empty, are also a `customError` of the input. The error ends when the user fills each segment.
+- The text of the input is ISO 8601 in the ISO calendar. A zoned value has the RFC 9557 text, such as `2026-11-14T15:04+09:00[Asia/Tokyo]`. A year and month of another calendar names that calendar.
 - The input of a control with no native input, such as `Select.Root`, has the type that `getHiddenInputType` of `src/internals` gives. It is `type="hidden"` while the control has no `name`, no `autoComplete`, no `required` and no field. A password manager then skips the input.
 - Base UI also keeps a text input when the consumer gives `inputRef`. A part cannot know if a consumer reads its exposed `inputElement`, so `getHiddenInputType` has no parameter for it.
 - Such a part handles an `input` or a `change` event only when the value of the input is new. A program can send both events in one task, and the part then handles the first one. [What differs from the React source](#what-differs-from-the-react-source) says when a value is new.
@@ -718,6 +722,14 @@ The state of a field:
 - `focused`, `touched`, the validity and the initial value come after the mount. A control that has focus before the hydration gets `data-focused` when it is mounted.
 - The name of a control comes with its registration, after the mount. A form error for a `name` that only the control has thus shows after the mount. A field with the `name` on its root has the error in the server HTML.
 
+A date or time field and the `Intl` data of the server:
+
+- Each engine has its own `Intl` data for a locale. Chromium has no data for `is-IS` and uses `en-US`. The server and the browser then give another layout.
+- A layout can differ in the order of the segments, in the text of a literal and in the hour cycle.
+- While the field hydrates, `Input` binds `data-allow-mismatch="children"`. A segment binds `attribute`, and a literal binds `text`. Each part calls `useIsHydrating()` itself.
+- Vue writes no attribute while it hydrates. In `onMounted`, the root compares the `data-type` of each child of `Input` with its layout. On a difference, the root changes `listKey`, and the parts make the elements again.
+- A layout with another number of segments is not a mismatch that `data-allow-mismatch` covers. Vue then logs `Hydration completed but contains mismatches`. The DOM follows the layout of the browser.
+
 ### What Vue replaces
 
 - Vue reactivity replaces upstream's `Store`, `ReactStore`, `useStore`, `fastHooks` and `createSelector`.
@@ -778,6 +790,9 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
+- `getSegmentLayout` gives the order of the segments and the text of the literals of a date or time field. It reads the parts that `Intl` gives for a fixed sample. The digits, the padding and the placeholders come from the code.
+- A date or time field has a value only when each segment has a number. A field with some segments empty has no value.
+- The numbers of an empty segment come from `referenceDate`, and then from today.
 
 ### Popup store
 
@@ -1803,6 +1818,7 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - A `.node.test` file imports `mockRuntimeLocale` by a relative path to `test/mockRuntimeLocale`.
 - `useTemporalPolyfill()` replaces the global `Temporal` with `temporal-polyfill`, with all its calendars, until the test file ends. A `.node.test` file imports it by a relative path to `test/temporalPolyfill`.
 - A `.polyfill.node.test` file runs the cases of `.test` files on the polyfill. It calls `useTemporalPolyfill()` and then imports the `.test` files with `await import()`. A static import runs before the call, so a case table that reads `Temporal` when its file loads would get the native `Temporal`. `internals/date-time/temporal.polyfill.node.test.ts` is the model.
+- A `.polyfill.node.test` file does not import a `.node.test` file. Such a file can call `vi.unstubAllGlobals()`, which removes the polyfill. The file can render the server HTML of a part before it calls `useTemporalPolyfill()`, and compare that HTML with the HTML that the polyfill gives. `internals/date-time/field/field.polyfill.node.test.tsx` does this.
 - `test/animation.ts` has the helpers for a test of a transition or an animation. `nextEvent(target, type, { after, action })` resolves with the next event of that type. With `after`, it ignores each event of that type that comes before the next event of the type `after`. With `action`, it runs the function after it attached its listeners, and the count of frames starts when the function ends. It rejects when no event comes in 180 frames of the page. `nextAnimationsRead(element, { action })` resolves with the list that the next `getAnimations()` call on the element returns, and it rejects when no call comes in 600 frames of the page. A part makes that call when it starts to wait for the animations of the element. The `action` of `nextAnimationsRead` works as the `action` of `nextEvent`. `createTransitionRunCounter(isOpen)` returns `counts` and the handler `onTransitionrun`. The handler counts the `transitionrun` events of the element itself. An event counts as an enter when `isOpen()` is `true` at the event, and as an exit when it is `false`. `probeFrameAfterExit(panel, isGone, close)` calls `close` and waits until the part reads the animations of the panel. Then it moves each animation to 50 ms before its end. It tells if the panel was gone in the frame callback of the frame in which the exit ended. The exit must last 100 s. The probe rejects when the part finds no animation, and when the panel goes before the end of the exit. `openInTimerTask(open)` and `closeInTimerTask(open)` change a ref in a timer task.
 - Each limit of the helpers of `test/animation.ts` is a count of the frames that the page renders, not a time. A busy machine can stall the page for some seconds. The page renders no frame during the stall, so the stall uses no frame of a limit. The browser ends a transition or an animation only in a frame.
 - `useTestInteractions(propsList)` merges the props that the interaction composables return. It returns `getReferenceProps`, `getFloatingProps`, `getItemProps` and `getTriggerProps`.
@@ -1817,6 +1833,7 @@ The hydration helpers:
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
 - `test/fixtures/FocusManagerPart.vue` is a focus manager with a store of its own. The tests of the portal use it.
+- `test/fixtures/DateTimeFieldProbe.vue` is the test part of the date and time fields. It calls `useDateTimeFieldRoot` for the root and `useDateTimeFieldSegment` for each segment. The tests of `internals/date-time/field` render it.
 - `test/fixtures/HydrationFixture.vue`, `StyledElement.vue`, `ClassedElement.vue` and `LabelForControl.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.
 - The browser projects share one Node process for `renderOnServer`. A fixture for a server render reads no global.

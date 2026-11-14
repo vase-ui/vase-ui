@@ -303,32 +303,70 @@ describe('useDateTimeFieldRoot', () => {
       expect(value.toString()).toBe(row.expected);
     });
 
-    it('works with a value that another realm made, which `instanceof` does not know', async () => {
-      const frame = document.createElement('iframe');
-      document.body.append(frame);
-      onTestFinished(() => {
-        frame.remove();
-      });
-      const other = (frame.contentWindow as unknown as { Temporal: typeof Temporal }).Temporal;
-      const value = other.PlainDateTime.from('2026-11-14T15:04');
-      const onValueChange = vi.fn();
-      const { container, user } = await render(
-        <DateTimeFieldProbe
-          defaultValue={value}
-          locale="en-US"
-          hourCycle={24}
-          onValueChange={onValueChange}
-        />,
-      );
+    it.each([
+      {
+        name: 'a date',
+        make: (T: typeof Temporal) => T.PlainDate.from('2026-11-14'),
+        props: {},
+        segment: 'day',
+        expected: '2026-11-15',
+      },
+      {
+        name: 'a date and time',
+        make: (T: typeof Temporal) => T.PlainDateTime.from('2026-11-14T15:04'),
+        props: { hourCycle: 24 },
+        segment: 'minute',
+        expected: '2026-11-14T15:05:00',
+      },
+      {
+        name: 'a zoned value',
+        make: (T: typeof Temporal) => T.ZonedDateTime.from('2026-11-14T15:04[Asia/Tokyo]'),
+        props: {},
+        segment: 'day',
+        expected: '2026-11-15T15:04:00+09:00[Asia/Tokyo]',
+      },
+      {
+        name: 'a year and month',
+        make: (T: typeof Temporal) => T.PlainYearMonth.from('2026-11'),
+        props: {},
+        segment: 'month',
+        expected: '2026-12',
+      },
+      {
+        name: 'a time',
+        make: (T: typeof Temporal) => T.PlainTime.from('15:04:33'),
+        props: { family: 'time', hourCycle: 24 },
+        segment: 'minute',
+        expected: '15:05:33',
+      },
+    ])(
+      'works with $name that another realm made, which `instanceof` does not know',
+      async (row) => {
+        const frame = document.createElement('iframe');
+        document.body.append(frame);
+        onTestFinished(() => {
+          frame.remove();
+        });
+        const other = (frame.contentWindow as unknown as { Temporal: typeof Temporal }).Temporal;
+        const value = row.make(other);
+        const onValueChange = vi.fn();
+        const { container, user } = await render(
+          <DateTimeFieldProbe
+            defaultValue={value}
+            locale="en-US"
+            onValueChange={onValueChange}
+            {...row.props}
+          />,
+        );
 
-      expect(value).not.toBeInstanceOf(Temporal.PlainDateTime);
-      expect(segmentOf(container, 'minute').value).toBe('04');
+        expect(value).not.toBeInstanceOf(Temporal[value.constructor.name as 'PlainDate']);
 
-      await user.click(segmentOf(container, 'minute'));
-      await user.keyboard('{ArrowUp}');
+        await user.click(segmentOf(container, row.segment));
+        await user.keyboard('{ArrowUp}');
 
-      expect(onValueChange.mock.calls[0]![0].toString()).toBe('2026-11-14T15:05:00');
-    });
+        expect(onValueChange.mock.calls[0]![0].toString()).toBe(row.expected);
+      },
+    );
 
     it('emits valueChange, then update:value, and gives the reason of the key', async () => {
       const calls: string[] = [];
@@ -713,6 +751,26 @@ describe('useDateTimeFieldRoot', () => {
       expect(onValueChange.mock.calls[0]![0].toString()).toBe(
         '2027-02-03T10:30:00+09:00[Asia/Tokyo]',
       );
+    });
+
+    it('handles one text that an input event and a change event bring one time', async () => {
+      const onValueChange = vi.fn();
+      const { container } = await render(
+        <DateTimeFieldProbe
+          value={Temporal.PlainDate.from('2026-11-14')}
+          locale="en-US"
+          onValueChange={onValueChange}
+        />,
+      );
+      const input = hiddenInputOf(container);
+
+      input.value = '2026-12-25';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      await flushMicrotasks();
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+      expect(input.value).toBe('2026-11-14');
     });
 
     it('writes its text again when the page is shown from the cache', async () => {
