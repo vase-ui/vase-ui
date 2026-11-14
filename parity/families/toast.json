@@ -3,101 +3,11 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/toast/arrow/ToastArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Arrow`."
-    },
-    {
-      "upstream": "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Arrow`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/index.ts",
-      "kind": "waits-on",
-      "reason": "The entry point of Toast comes in the last pull request of the family. Until then, the package exports no part of Toast."
-    },
-    {
-      "upstream": "packages/react/src/toast/positioner/ToastPositioner.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/toast/positioner/ToastPositionerContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Positioner`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/positioner/ToastPositionerCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Positioner`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/positioner/ToastPositionerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Toast.Positioner`. The file comes with the part."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/test-utils.tsx",
-      "kind": "waits-on",
-      "reason": "The file has `List` and `Button`, two components for the tests. Vase UI adds it with the cases that render them."
-    },
-    {
-      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
-      "describe": ["<Toast.Action />"],
-      "title": "performs an action when clicked",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
-      "describe": ["<Toast.Action />"],
-      "title": "forwards actionProps to the button",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
-      "describe": ["<Toast.Action />"],
-      "title": "does not render if it has no children",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/toast/action/ToastAction.test.tsx",
       "describe": ["<Toast.Action />"],
       "title": "renders content passed through the render prop",
       "kind": "not-applicable",
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
-    },
-    {
-      "upstream": "packages/react/src/toast/arrow/ToastArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/arrow/ToastArrow.tsx",
-      "reason": "The cases render `Toast.Arrow`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/close/ToastClose.test.tsx",
-      "describe": ["<Toast.Close />"],
-      "title": "closes the toast when clicked",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/createToastManager.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "Each case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/positioner/ToastPositioner.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/positioner/ToastPositioner.tsx",
-      "reason": "The cases render `Toast.Positioner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/provider/ToastProvider.test.tsx",
@@ -107,50 +17,11 @@
       "reason": "The case suspends a React transition, and React then abandons a render. Vue has no render that it abandons."
     },
     {
-      "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
-      "describe": ["<Toast.Root />"],
-      "title": "sets the vertical offset CSS variable",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
-      "describe": ["<Toast.Root />"],
-      "title": "closes when pressing escape",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/root/ToastRoot.test.tsx",
-      "describe": ["<Toast.Root />"],
-      "title": "ignores Escape when focus is in portaled content",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "add"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "Each case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/toast/useToastManager.test.tsx",
       "describe": ["useToast", "in dialog"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/dialog/index.ts",
       "reason": "The file imports `Dialog` from the entry point of Dialog, which Vase UI does not have. Each case renders parts of `Dialog`."
-    },
-    {
-      "upstream": "packages/react/src/toast/useToastManager.test.tsx",
-      "describe": ["useToast", "prop: timeout"],
-      "title": "applies a changed timeout to toasts added afterwards",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/utils/isRenderableNode.test.ts",
@@ -159,30 +30,6 @@
       "kind": "replaced",
       "test": "packages/vue/src/toast/utils/useToastLabelPart.test.tsx",
       "reason": "The case builds React elements. A Vue part cannot read the children of a vnode, so Vase UI has no `hasRenderableChildren`. The cases of the label parts test the rule that replaces it: a part renders only while it has a default slot or a label with content."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />"],
-      "title": "`renders the toast ${field} by default`",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />"],
-      "title": "`adds ${attribute} to the root element`",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
-      "describe": ["useToastLabelPart", "<$name />"],
-      "title": "does not render if it has no children",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/toast/utils/useToastLabelPart.test.tsx",
@@ -206,212 +53,109 @@
       "reason": "The case gives its content in the React element of `render`, and the part reads the children of that element. A Vue part cannot read what its `#render` slot renders. It renders only while it has a default slot or the content of its toast."
     },
     {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "Each case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
-      "title": "leaves F6 to the browser when its origin becomes $name",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/utils/test-utils.tsx",
-      "reason": "The case renders `List` or `Button` of `utils/test-utils.tsx`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
-      "title": "keeps timers paused when a hovered toast is clicked while nothing had focus",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
-      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/toast/viewport/ToastViewport.test.tsx",
-      "describe": ["<Toast.Viewport />", "real browser input"],
-      "title": "keeps timers paused when the window regains focus while a toast is hovered",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/resetBrowserPointer.ts",
-      "reason": "The case calls `resetBrowserPointer` of the test helpers, which Vase UI does not have."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Provider",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Provider`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Portal`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "disableAnchorTracking",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `false`. The part has no Vue default: a prop that is absent takes `disableAnchorTracking` of `positionerProps` of the toast, and `false` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
       "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/positioner/ToastPositioner.tsx",
-      "reason": "Vase UI does not have `Toast.Positioner`."
+      "prop": "align",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `'center'`. The part has no Vue default: a prop that is absent takes `align` of `positionerProps` of the toast, and `'center'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/arrow/ToastArrow.tsx",
-      "reason": "Vase UI does not have `Toast.Arrow`."
+      "entry": "Positioner",
+      "prop": "alignOffset",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `alignOffset` of `positionerProps` of the toast, and `0` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Content",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Content`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "side",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `'top'`. The part has no Vue default: a prop that is absent takes `side` of `positionerProps` of the toast, and `'top'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Title`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "sideOffset",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `0`. The part has no Vue default: a prop that is absent takes `sideOffset` of `positionerProps` of the toast, and `0` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Description`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "arrowPadding",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `5`. The part has no Vue default: a prop that is absent takes `arrowPadding` of `positionerProps` of the toast, and `5` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Close",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Close`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "collisionBoundary",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `'clipping-ancestors'`. The part has no Vue default: a prop that is absent takes `collisionBoundary` of `positionerProps` of the toast, and `'clipping-ancestors'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Action",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Action`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "collisionPadding",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `5`. The part has no Vue default: a prop that is absent takes `collisionPadding` of `positionerProps` of the toast, and `5` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.Viewport`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "sticky",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `false`. The part has no Vue default: a prop that is absent takes `sticky` of `positionerProps` of the toast, and `false` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "createToastManager",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.createToastManager`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "useToastManager",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports `Toast.useToastManager`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastActionDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Action`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/arrow/ToastArrowDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastArrowDataAttributes.ts`, the file of these names."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastCloseDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastContentDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Content`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastDescriptionDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Description`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/positioner/ToastPositionerCssVars.ts",
-      "reason": "Vase UI does not have `ToastPositionerCssVars.ts`, the file of these names."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/positioner/ToastPositionerDataAttributes.ts",
-      "reason": "Vase UI does not have `ToastPositionerDataAttributes.ts`, the file of these names."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastRootCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the CSS variable names of `Toast.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastRootDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastTitleDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Title`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastViewportCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the CSS variable names of `Toast.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/toast/types.md",
-      "entry": "ToastViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/toast/index.ts",
-      "reason": "The entry point of Toast exports the attribute names of `Toast.Viewport`. Vase UI does not have that entry point."
+      "entry": "Positioner",
+      "prop": "positionMethod",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `'absolute'`. The part has no Vue default: a prop that is absent takes `positionMethod` of `positionerProps` of the toast, and `'absolute'` when the toast has none, as in Base UI. With a Vue default, the part cannot find out that the prop is absent."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Title",
+      "prop": "id",
+      "reason": "The part gives `id` to the root for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Description",
+      "prop": "id",
+      "reason": "The part gives `id` to the root for `aria-describedby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Close",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Action",
+      "prop": "disabled",
+      "reason": "The part reads `disabled` for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createToastManager",
+      "returns": "ToastManager<Data>",
+      "reason": "The source of Base UI returns the same type, `ToastManager<Data>`. Its `types.md` prints the type argument as `{}`."
+    },
+    {
+      "entry": "useToastManager",
+      "returns": "UseToastManagerReturnValue<Data>",
+      "reason": "`setup` runs one time, so a plain array does not follow a change of the toasts. `toasts` of the result is thus a `ComputedRef` of the array. The source of Base UI returns `UseToastManagerReturnValue<Data>`, and its `types.md` prints the type argument as `{}`."
+    }
+  ],
   "notApplicableCommits": []
 }

@@ -51,13 +51,18 @@ export default defineConfig({
               {
                 browser: 'firefox',
                 name: 'firefox',
-                // Vitest sets this preference to `true`. With that value, Firefox sometimes crashes
-                // a page when the page starts. With `false`, Vitest mocks a module by request
-                // interception, not by import map.
                 provider: playwright({
                   contextOptions,
                   launchOptions: {
-                    firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false },
+                    firefoxUserPrefs: {
+                      // Vitest sets this preference to `true`. With that value, Firefox sometimes
+                      // crashes a page when the page starts. With `false`, Vitest mocks a module by
+                      // request interception, not by import map.
+                      'dom.multiple_import_maps.enabled': false,
+                      // Without this preference, a test in Firefox has no `Touch` and no
+                      // `TouchEvent`. The ported touch cases of Base UI construct a `Touch`.
+                      'dom.w3c_touch_events.enabled': 1,
+                    },
                   },
                 }),
               },

@@ -18,6 +18,16 @@ export interface TooltipRootProps<Payload = unknown> {
    */
   open?: boolean | undefined;
   /**
+   * Whether the tooltip contents can be hovered without closing the tooltip.
+   * @default false
+   */
+  disableHoverablePopup?: boolean | undefined;
+  /**
+   * Determines which axis the tooltip should track the cursor on.
+   * @default 'none'
+   */
+  trackCursorAxis?: 'none' | 'x' | 'y' | 'both' | undefined;
+  /**
    * Whether the tooltip is disabled.
    * @default false
    */
@@ -68,6 +78,8 @@ export type TooltipRootChangeEventDetails =
 <script setup lang="ts" generic="Payload = unknown">
 import { onMounted, provide, watch } from 'vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { mergeProps } from '../../merge-props';
+import { useClientPoint } from '../../utils/popups/interactions/useClientPoint';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { usePopupRoot } from '../../utils/popups/popupRoot';
 import { usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
@@ -78,6 +90,8 @@ import { TooltipRootContext } from './TooltipRootContext';
 const props = withDefaults(defineProps<TooltipRootProps<Payload>>(), {
   open: undefined,
   defaultOpen: false,
+  disableHoverablePopup: false,
+  trackCursorAxis: 'none',
   disabled: false,
   handle: undefined,
   triggerId: undefined,
@@ -110,7 +124,15 @@ const {
 } = usePopupRoot(
   props,
   (initialState, defaultPopupId) =>
-    new TooltipStore<Payload>({ ...initialState, disabled: props.disabled }, defaultPopupId),
+    new TooltipStore<Payload>(
+      {
+        ...initialState,
+        disabled: props.disabled,
+        trackCursorAxis: props.trackCursorAxis,
+        disableHoverablePopup: props.disableHoverablePopup,
+      },
+      defaultPopupId,
+    ),
   {
     name: 'Tooltip',
     closeOnActiveTriggerUnmount: true,
@@ -129,8 +151,9 @@ const {
 );
 
 watch(
-  () => props.disabled,
-  (disabled) => store.set('disabled', disabled),
+  [() => props.disabled, () => props.trackCursorAxis, () => props.disableHoverablePopup],
+  ([disabled, trackCursorAxis, disableHoverablePopup]) =>
+    store.update({ disabled, trackCursorAxis, disableHoverablePopup }),
 );
 
 function closeWhileDisabled() {
@@ -179,9 +202,14 @@ const dismiss = useDismiss(store, {
   enabled: () => !props.disabled,
   referencePress: () => store.select('closeOnClick'),
 });
+const clientPoint = useClientPoint(store, {
+  enabled: () => !props.disabled && props.trackCursorAxis !== 'none',
+  axis: () => (props.trackCursorAxis === 'none' ? undefined : props.trackCursorAxis),
+});
+const triggerProps = mergeProps(clientPoint, dismiss.reference);
 usePopupInteractionProps(store, () => ({
-  activeTriggerProps: dismiss.reference,
-  inactiveTriggerProps: dismiss.reference,
+  activeTriggerProps: triggerProps,
+  inactiveTriggerProps: triggerProps,
   popupProps: dismiss.floating,
 }));
 

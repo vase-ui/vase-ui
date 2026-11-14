@@ -33,12 +33,6 @@
     },
     {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The other cases of the file have no counterpart yet. They need the rule for nested triggers, the cursor anchor or the hover of the popup. `Tooltip.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
       "describe": ["<Tooltip.Root />", "hover changes"],
       "title": "commits a hover open while the hover event is dispatched",
       "kind": "replaced",
@@ -46,12 +40,12 @@
       "reason": "Vue has no `flushSync`, so the popup renders in the update after the hover event, and a listener of the same event does not find it. The case `shows the popup after the awaited hover event` asserts the popup after the awaited event."
     },
     {
-      "upstream": "packages/react/src/tooltip/root/TooltipRoot.detached-triggers.test.tsx",
-      "describe": ["<Tooltip.Root />"],
-      "title": "closes a cursor-tracking tooltip when an inactive trigger is pressed",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The case needs `trackCursorAxis` of the root, which needs the cursor anchor. `Tooltip.Viewport` is the last part of the family, so the row names its file."
+      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
+      "describe": ["nested tooltips"],
+      "title": "should not re-announce an open outer tooltip when the pending reopen fires",
+      "kind": "replaced",
+      "test": "packages/vue/src/tooltip/root/TooltipRoot.test.tsx",
+      "reason": "Base UI renders the case in Strict Mode. There the popup runs the cleanup of its effects at its mount, and that cleanup stops the rest timer that the move on the inner trigger started. Vue has no Strict Mode, so that timer calls `onOpenChange` again, as Base UI does without Strict Mode. The case `does not report the open again when the reopen of an open outer tooltip fires` has no move on the inner trigger, so only the reopen of the outer trigger waits."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
