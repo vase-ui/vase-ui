@@ -6,6 +6,7 @@ import {
   flushMicrotasks,
   screen,
   takeReportedMessages,
+  viewportConformanceTests,
   waitFor,
 } from '#test-utils';
 
@@ -30,6 +31,31 @@ describe('<Menu.Viewport />', () => {
       return result;
     },
   }));
+
+  viewportConformanceTests({
+    render,
+    openOn: 'click',
+    createComponent: ({ root, triggers, portal, positioner, popup, viewport, renderContent }) => (
+      <Menu.Root {...root}>
+        {{
+          default: ({ payload }: { payload: unknown }) => [
+            ...triggers.map(({ key, children, ...triggerProps }, index) => (
+              <Menu.Trigger key={key ?? index} {...triggerProps}>
+                {children}
+              </Menu.Trigger>
+            )),
+            <Menu.Portal {...portal}>
+              <Menu.Positioner {...positioner}>
+                <Menu.Popup {...popup}>
+                  <Menu.Viewport {...viewport}>{renderContent(payload)}</Menu.Viewport>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>,
+          ],
+        }}
+      </Menu.Root>
+    ),
+  });
 
   async function renderViewport() {
     const result = await render(
@@ -68,81 +94,6 @@ describe('<Menu.Viewport />', () => {
       expect(popup).toHaveAttribute('data-closed');
     });
     expect(viewport).toHaveAttribute('data-instant', instant);
-  });
-
-  it('keeps the content of the previous trigger while the menu moves to another trigger', async () => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-    const handle = Menu.createHandle<number>();
-
-    await render(
-      <div>
-        <style>{`
-            [data-transitioning] [data-previous] {
-              animation: slide-out 100s linear forwards;
-            }
-            [data-transitioning] [data-current] {
-              animation: slide-in 100s linear forwards;
-            }
-            @keyframes slide-out {
-              from { opacity: 1; }
-              to { opacity: 0; }
-            }
-            @keyframes slide-in {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-          `}</style>
-        <Menu.Trigger handle={handle} id="trigger-1" payload={1}>
-          Trigger 1
-        </Menu.Trigger>
-        <Menu.Trigger handle={handle} id="trigger-2" payload={2}>
-          Trigger 2
-        </Menu.Trigger>
-        <Menu.Root handle={handle}>
-          {{
-            default: ({ payload }: { payload: number | undefined }) => (
-              <Menu.Portal>
-                <Menu.Positioner>
-                  <Menu.Popup>
-                    <Menu.Viewport data-testid="viewport">Content {payload}</Menu.Viewport>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            ),
-          }}
-        </Menu.Root>
-      </div>,
-    );
-
-    handle.open('trigger-1');
-    await waitFor(() => {
-      expect(screen.getByText('Content 1')).toBeVisible();
-    });
-    const viewport = screen.getByTestId('viewport');
-    expect(viewport).not.toHaveAttribute('data-transitioning');
-    expect(document.querySelector('[data-previous]')).toBe(null);
-
-    handle.open('trigger-2');
-
-    let previousContainer: Element | null = null;
-    await waitFor(() => {
-      previousContainer = document.querySelector('[data-previous]');
-      expect(previousContainer).not.toBe(null);
-    });
-    expect(viewport).toHaveAttribute('data-transitioning', '');
-    expect(previousContainer).toHaveTextContent('Content 1');
-    expect(document.querySelector('[data-current]')).toHaveTextContent('Content 2');
-
-    // The previous container goes away when the animations end.
-    for (const container of document.querySelectorAll('[data-previous], [data-current]')) {
-      for (const animation of container.getAnimations()) {
-        animation.finish();
-      }
-    }
-    await waitFor(() => {
-      expect(document.querySelector('[data-previous]')).toBe(null);
-    });
-    expect(viewport).not.toHaveAttribute('data-transitioning');
   });
 
   // A case that throws in `setup` is the last of its file.

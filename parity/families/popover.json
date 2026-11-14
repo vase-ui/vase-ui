@@ -6,21 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
-      "describe": ["<Popover.Root />", "when using $name", "nested menu interactions"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases open a nested menu with a press and with the Enter key. The trigger of Menu in Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
-      "describe": ["<Popover.Root />", "when using $name", "non-modal focus transitions"],
-      "title": "moves focus to the next element when tabbing out of a nested menu inside the popover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses the trigger of a nested menu to open it. The trigger of Menu in Vase UI has no press yet."
-    },
-    {
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
       "describe": ["<Popover.Root />"],
       "title": "hands off hover between detached triggers when the rendered component retains a stale ref",

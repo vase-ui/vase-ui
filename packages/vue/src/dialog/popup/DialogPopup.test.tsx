@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
+import type { PropType } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
@@ -14,7 +15,9 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import * as AlertDialog from '../../alert-dialog/index.parts';
+import * as Menu from '../../menu/index.parts';
 import * as Popover from '../../popover/index.parts';
+import * as Select from '../../select/index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPopupReplacement from './DialogPopupReplacement.test.vue';
 
@@ -192,6 +195,100 @@ describe('<Dialog.Popup />', () => {
         expect(screen.getByTestId('second-button')).toHaveFocus();
       });
       expect(popup.contains(document.activeElement)).toBe(true);
+    });
+  });
+
+  describe('return focus when opened from a popup item', () => {
+    type Source = 'select' | 'keepMounted menu';
+
+    const DialogFromItem = defineComponent({
+      props: {
+        source: { type: String as PropType<Source>, required: true },
+        preventTriggerFocus: Boolean,
+        keepMountedDialog: Boolean,
+      },
+      setup(props) {
+        const open = shallowRef(false);
+        const setOpen = (nextOpen: boolean) => {
+          open.value = nextOpen;
+        };
+        return () => (
+          <>
+            {props.source === 'select' ? (
+              <Select.Root>
+                <Select.Trigger data-testid="source-trigger">Select</Select.Trigger>
+                <Select.Portal>
+                  <Select.Positioner>
+                    <Select.Popup>
+                      <Select.Item value="custom" onClick={() => setOpen(true)}>
+                        Custom
+                      </Select.Item>
+                    </Select.Popup>
+                  </Select.Positioner>
+                </Select.Portal>
+              </Select.Root>
+            ) : (
+              <Menu.Root>
+                <Menu.Trigger
+                  data-testid="source-trigger"
+                  onMousedown={
+                    props.preventTriggerFocus
+                      ? (event: MouseEvent) => event.preventDefault()
+                      : undefined
+                  }
+                >
+                  Menu
+                </Menu.Trigger>
+                <Menu.Portal keepMounted>
+                  <Menu.Positioner>
+                    <Menu.Popup>
+                      <Menu.Item onClick={() => setOpen(true)}>Custom</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            )}
+            <Dialog.Root open={open.value} onOpenChange={setOpen}>
+              <Dialog.Portal keepMounted={props.keepMountedDialog}>
+                <Dialog.Popup>
+                  <Dialog.Close>Close</Dialog.Close>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </>
+        );
+      },
+    });
+
+    it.each([
+      { name: 'select', source: 'select' },
+      { name: 'keepMounted menu', source: 'keepMounted menu' },
+      { name: 'select (keepMounted dialog)', source: 'select', keepMountedDialog: true },
+      // Safari and Firefox on macOS don't focus a pressed button.
+      {
+        name: 'keepMounted menu that pressing did not focus',
+        source: 'keepMounted menu',
+        preventTriggerFocus: true,
+      },
+    ] as const)('returns focus to the $name trigger', async ({ name, source, ...props }) => {
+      const { user } = await render(<DialogFromItem source={source} {...props} />);
+      const sourceTrigger = screen.getByTestId('source-trigger');
+
+      await user.click(sourceTrigger);
+      await user.click(
+        await screen.findByRole(source === 'select' ? 'option' : 'menuitem', { name: 'Custom' }),
+      );
+
+      const close = await screen.findByRole('button', { name: 'Close' });
+      await waitFor(() => {
+        expect(close).toHaveFocus();
+      });
+
+      await user.keyboard('[Escape]');
+
+      await waitFor(() => {
+        expect(sourceTrigger).toHaveFocus();
+      });
     });
   });
 

@@ -245,6 +245,10 @@ const initialFocus = computed<FocusOption>(() => {
   };
 });
 
+// The input of a filtered parent menu holds the real focus while the parent highlights an item. It
+// is an internal default, not a target of the consumer: the focus manager keeps a focus that moved.
+const dynamicReturnFocus = computed(() => parentHandoff?.parentVirtualFocusRef);
+
 const returnFocus = computed(() => {
   const { type } = parent.value;
   return (
@@ -274,7 +278,8 @@ defineExpose({ element });
     :open-interaction-type="store.select('openMethod')"
     :modal="parent.type === 'context-menu'"
     :disabled="!mounted"
-    :return-focus="finalFocus ?? returnFocus"
+    :return-focus="finalFocus ?? dynamicReturnFocus ?? returnFocus"
+    :explicit-return-focus="finalFocus === undefined && dynamicReturnFocus ? false : undefined"
     :initial-focus="initialFocus"
     restore-focus
     :get-inside-elements="parent.type === undefined ? getInsideElements : undefined"
