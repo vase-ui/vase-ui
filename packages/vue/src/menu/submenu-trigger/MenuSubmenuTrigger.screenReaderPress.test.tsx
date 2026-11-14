@@ -10,6 +10,7 @@ import {
   pressWithScreenReader,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 
@@ -72,6 +73,8 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
     const submenuTrigger = await screen.findByTestId('submenu-trigger');
+    // The trigger mounts with the menu. Vue skips its listener for an event of that millisecond.
+    await waitForLaterMillisecond();
 
     await pressWithScreenReader(submenuTrigger);
 
@@ -99,6 +102,8 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
     const submenuTrigger = await screen.findByTestId('submenu-trigger');
+    // The trigger mounts with the menu. Vue skips its listener for an event of that millisecond.
+    await waitForLaterMillisecond();
 
     await fireScreenReaderMouseDown(submenuTrigger);
 
@@ -116,6 +121,8 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
     const submenuTrigger = await screen.findByTestId('submenu-trigger');
+    // The trigger mounts with the menu. Vue skips its listener for an event of that millisecond.
+    await waitForLaterMillisecond();
 
     await fireScreenReaderMouseDown(submenuTrigger);
     // The portal of the submenu renders its content in the flush after its own mount.
@@ -153,6 +160,8 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
     const submenuTrigger = await screen.findByTestId('submenu-trigger');
+    // The trigger mounts with the menu. Vue skips its listener for an event of that millisecond.
+    await waitForLaterMillisecond();
 
     await pressWithScreenReader(screen.getByTestId('icon'));
 
@@ -168,6 +177,8 @@ describe.skipIf(isJSDOM)('<Menu.SubmenuTrigger /> with a screen reader press', (
 
     await user.click(screen.getByRole('button', { name: 'Open menu' }));
     const submenuTrigger = await screen.findByTestId('submenu-trigger');
+    // The trigger mounts with the menu. Vue skips its listener for an event of that millisecond.
+    await waitForLaterMillisecond();
 
     // A real mouse press has a pressed button even when it reports no pressure.
     await fireEvent.pointerDown(submenuTrigger, {
