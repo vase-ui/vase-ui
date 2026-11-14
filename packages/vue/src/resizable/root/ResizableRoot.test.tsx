@@ -382,6 +382,35 @@ describe('<Resizable.Root />', () => {
       expect(grows('a', 'b', 'c')).toEqual(['43.334', '33.333', '23.333']);
     });
 
+    it('ends the drag when the handle unmounts', async () => {
+      const showHandle = shallowRef(true);
+      const onDraggingChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      await render(() => (
+        <div style={{ width: '1000px' }}>
+          <Resizable.Root
+            data-testid="root"
+            onDraggingChange={onDraggingChange}
+            onLayoutCommitted={onLayoutCommitted}
+          >
+            <Resizable.Panel id="a" />
+            {showHandle.value ? <Resizable.Handle data-testid="handle" /> : null}
+            <Resizable.Panel id="b" />
+          </Resizable.Root>
+        </div>
+      ));
+      const handle = screen.getByTestId('handle');
+      await fireEvent.pointerDown(handle, { ...pointer, clientX: 0, buttons: 1 });
+      await fireEvent.pointerMove(handle, { ...pointer, clientX: 100, buttons: 1 });
+
+      showHandle.value = false;
+      await nextTick();
+
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-dragging');
+      expect(onDraggingChange.mock.calls).toEqual([[true], [false]]);
+      expect(onLayoutCommitted).toHaveBeenCalledTimes(1);
+    });
+
     it('lets a handle of another root start its own drag', async () => {
       await render(
         <div style={{ width: '1000px' }}>

@@ -201,12 +201,14 @@ describe('<Resizable.Handle />', () => {
       expect(handle).not.toHaveAttribute('data-dragging');
     });
 
-    it('has the inline style that keeps the pointer for the drag', async () => {
+    it('has the inline style that keeps the pointer for the drag, and sets no cursor', async () => {
       await renderPanels();
-      const style = getComputedStyle(screen.getByTestId('handle-1'));
+      const handle = screen.getByTestId('handle-1');
+      const style = getComputedStyle(handle);
 
       expect(style.touchAction).toBe('none');
       expect(style.userSelect || style.getPropertyValue('-webkit-user-select')).toBe('none');
+      expect(handle.style.cursor).toBe('');
     });
 
     it('passes axe', async () => {
@@ -465,6 +467,47 @@ describe('<Resizable.Handle />', () => {
       expect(screen.getByTestId('handle-1')).toHaveAttribute('aria-valuenow', '65');
       expect(screen.getByTestId('handle-2')).toHaveAttribute('aria-valuenow', '20');
       expect(screen.getByTestId('panel-2').style.flexGrow).toBe('15');
+    });
+
+    it('focuses the handle with the press, and does not prevent the default of the press', async () => {
+      await renderPanels();
+      const handle = screen.getByTestId('handle-1');
+
+      expect(await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }))).toBe(true);
+
+      expect(handle).toHaveFocus();
+    });
+
+    it('prevents the default of the mousedown of a press that started a drag, so that no text is selected', async () => {
+      await renderPanels();
+      const handle = screen.getByTestId('handle-1');
+
+      await fireEvent.pointerDown(handle, pointerInit({ buttons: 1 }));
+      expect(await fireEvent.mouseDown(handle)).toBe(false);
+      await fireEvent.pointerUp(handle, pointerInit({}));
+
+      expect(await fireEvent.mouseDown(handle)).toBe(true);
+    });
+
+    it.each([
+      { name: 'another button', down: { button: 2, buttons: 2 } },
+      { name: 'a press that is prevented', down: { buttons: 1 }, prevent: true },
+    ])('keeps the default of a mousedown after $name', async ({ down, prevent }) => {
+      await renderPanels({
+        handle: prevent
+          ? {
+              onPointerdown: (event: PointerEvent) => {
+                event.preventDefault();
+              },
+            }
+          : undefined,
+      });
+      const handle = screen.getByTestId('handle-1');
+
+      await fireEvent.pointerDown(handle, pointerInit(down));
+
+      expect(await fireEvent.mouseDown(handle)).toBe(true);
+      expect(handle).not.toHaveFocus();
     });
 
     it('does not start a drag with another button', async () => {

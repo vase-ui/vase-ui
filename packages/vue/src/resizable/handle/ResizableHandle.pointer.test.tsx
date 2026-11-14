@@ -48,6 +48,15 @@ describe('<Resizable.Handle /> with the pointer of the browser', () => {
     expect(first.getBoundingClientRect().width - before).toBeCloseTo(100, 0);
   });
 
+  it('focuses the handle with the press', async () => {
+    const { at } = await renderPanels();
+    releasePointerAfterTest();
+
+    await userEvent.pointer({ coords: at, keys: '[MouseLeft>]' });
+
+    expect(screen.getByTestId('handle')).toHaveFocus();
+  });
+
   it('follows the pointer across an iframe', async () => {
     const { first, at } = await renderPanels(
       <iframe

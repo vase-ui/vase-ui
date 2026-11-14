@@ -176,6 +176,22 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
+function onPointerdown(event: PointerEvent) {
+  if (drag.start(event)) {
+    // The `mousedown` of the press does not focus the handle, as the next function says.
+    handleElement?.focus({ preventScroll: true });
+  }
+}
+
+// WebKit selects the text between the nearest selectable position and the pointer when a drag
+// starts on an element with `user-select: none`. Preventing the default of `mousedown` stops the
+// selection, and it also stops the focus that the press gives.
+function onMousedown(event: MouseEvent) {
+  if (drag.dragging.value) {
+    event.preventDefault();
+  }
+}
+
 // Firefox and Safari keep the focus on an element that becomes disabled.
 watch(isDisabled, (disabled) => {
   if (disabled) {
@@ -217,7 +233,8 @@ const { element, elementProps } = useRenderElement('div', props, {
       tabindex: isDisabled.value ? undefined : 0,
       ...valueAttributes.value,
       onKeydown,
-      onPointerdown: drag.start,
+      onMousedown,
+      onPointerdown,
       onPointermove: drag.move,
       onPointerup: drag.end,
       onPointercancel: drag.end,
