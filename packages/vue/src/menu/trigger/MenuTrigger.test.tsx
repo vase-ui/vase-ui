@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, shallowRef } from 'vue';
 import * as Menu from '../index.parts';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -15,6 +15,7 @@ import {
 import CompositeRootPart from '../../../test/fixtures/CompositeRootPart.vue';
 import { MenubarProvider, createMenubarContext } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
+import * as Popover from '../../popover/index.parts';
 import { provideFloatingNode, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import type { FloatingTreeType } from '../../utils/popups/types';
 
@@ -466,14 +467,30 @@ describe('<Menu.Trigger />', () => {
       await fireEvent.mouseMove(element);
     }
 
+    // A case that asserts the state before a delay ends runs the delay with a fake clock.
+    function useFakeClock() {
+      vi.useFakeTimers();
+      onTestFinished(() => {
+        vi.useRealTimers();
+      });
+      return async (ms: number) => {
+        vi.advanceTimersByTime(ms);
+        await flushMicrotasks();
+      };
+    }
+
     it('opens the menu when the pointer rests on the trigger for the delay', async () => {
+      const tick = useFakeClock();
       const onOpenChange = vi.fn();
       await renderMenu({ openOnHover: true, delay: 30 }, { onOpenChange });
+      const trigger = screen.getByRole('button', { name: 'Open' });
 
-      await hover(screen.getByRole('button', { name: 'Open' }));
-      expect(screen.queryByTestId('popup')).toBe(null);
+      await hover(trigger);
+      await tick(29);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
 
-      expect(await screen.findByTestId('popup')).not.toBe(null);
+      await tick(1);
+      expect(trigger).toHaveAttribute('data-popup-open');
       expect(onOpenChange.mock.lastCall?.[1].reason).toBe('trigger-hover');
     });
 
@@ -491,31 +508,36 @@ describe('<Menu.Trigger />', () => {
     });
 
     it('closes a menu that hover opened after closeDelay when the pointer leaves the trigger', async () => {
+      const tick = useFakeClock();
       await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
       const trigger = screen.getByRole('button', { name: 'Open' });
       await hover(trigger);
-      await screen.findByTestId('popup');
+      await tick(0);
+      expect(trigger).toHaveAttribute('data-popup-open');
 
       await fireEvent.mouseLeave(trigger, { clientX: 1000, clientY: 1000 });
-      expect(screen.queryByTestId('popup')).not.toBe(null);
+      await tick(39);
+      expect(trigger).toHaveAttribute('data-popup-open');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      await tick(1);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
     });
 
     it('closes a menu that hover opened after closeDelay when the pointer leaves the popup', async () => {
+      const tick = useFakeClock();
       await renderMenu({ openOnHover: true, delay: 0, closeDelay: 40 });
-      await hover(screen.getByRole('button', { name: 'Open' }));
-      const positioner = await screen.findByTestId('positioner');
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      await hover(trigger);
+      await tick(0);
+      const positioner = screen.getByTestId('positioner');
 
       await fireEvent.mouseEnter(positioner);
       await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
-      expect(screen.queryByTestId('popup')).not.toBe(null);
+      await tick(39);
+      expect(trigger).toHaveAttribute('data-popup-open');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('popup')).toBe(null);
-      });
+      await tick(1);
+      expect(trigger).not.toHaveAttribute('data-popup-open');
     });
 
     it('blocks pointer events outside a menu that hover opened', async () => {
@@ -584,6 +606,48 @@ describe('<Menu.Trigger />', () => {
 
       expect(screen.queryByTestId('edit-menu')).toBe(null);
     });
+  });
+
+  it('does not have role prop inside a Popover', async () => {
+    await render(
+      <Popover.Root open>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Menu.Root>
+                <Menu.Trigger data-testid="menu-trigger" />
+              </Menu.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    await flushMicrotasks();
+
+    const button = screen.getByTestId('menu-trigger');
+    expect(button).not.toHaveAttribute('role');
+  });
+
+  it('has a role prop inside a Popover when not a native button', async () => {
+    await render(
+      <Popover.Root open>
+        <Popover.Trigger>Open</Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <Popover.Popup>
+              <Menu.Root>
+                <Menu.Trigger data-testid="menu-trigger" as="span" nativeButton={false} />
+              </Menu.Root>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>,
+    );
+    await flushMicrotasks();
+
+    const button = screen.getByTestId('menu-trigger');
+    expect(button).toHaveAttribute('role', 'button');
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current

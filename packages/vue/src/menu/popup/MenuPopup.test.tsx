@@ -532,8 +532,9 @@ describe('<Menu.Popup />', () => {
     onTestFinished(() => frame.remove());
     await loaded;
     const onOpenChange = vi.fn();
+    // The backdrop of a modal menu covers the frame, so the press needs a menu that is not modal.
     await render(
-      <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+      <Menu.Root defaultOpen modal={false} onOpenChange={onOpenChange}>
         <Menu.Portal>
           <Menu.Positioner>
             <Menu.Popup />

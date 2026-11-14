@@ -25,6 +25,7 @@ import type { Component } from 'vue';
 import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
+import MenuPortalChildren from './MenuPortalChildren.vue';
 import { MenuPortalContext } from './MenuPortalContext';
 
 defineOptions({ inheritAttrs: false });
@@ -61,9 +62,11 @@ defineExpose({ element });
     ref="portal"
     v-bind="{ ...$attrs, as, stateClass, stateStyle, container, portalOwnerRole }"
   >
-    <template v-if="$slots.render" #render="slotProps"
-      ><slot name="render" v-bind="slotProps"
-    /></template>
-    <template #default="slotProps"><slot v-bind="slotProps" /></template>
+    <template v-if="$slots.render" #render="slotProps">
+      <slot name="render" v-bind="slotProps" :children="MenuPortalChildren" />
+    </template>
+    <template #default="slotProps">
+      <MenuPortalChildren><slot v-bind="slotProps" /></MenuPortalChildren>
+    </template>
   </FloatingPortal>
 </template>

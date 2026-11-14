@@ -55,6 +55,17 @@ describe('<Menu.SubmenuRoot />', () => {
     expect(probe.store.select('modal')).toBe(false);
   });
 
+  it('makes its trigger the active trigger of a submenu that is open at the mount', async () => {
+    const probe = createMenuStoreProbe();
+    await renderMenu({ probe });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+
+    await waitFor(() => {
+      expect(probe.store.select('activeTriggerElement')).toBe(trigger);
+    });
+    expect(probe.store.select('activeTriggerId')).toBe(trigger.id);
+  });
+
   it.each([
     { name: 'by default', closeParentOnEsc: false, parentOpen: true },
     { name: 'with closeParentOnEsc', closeParentOnEsc: true, parentOpen: false },
@@ -79,8 +90,10 @@ describe('<Menu.SubmenuRoot />', () => {
     expect(screen.queryByTestId('parent-menu')).not.toBe(null);
   });
 
-  it('keeps each menu open for a press in the submenu, and closes each menu for a press outside', async () => {
-    await renderMenu();
+  it('VUE-4: keeps each menu open for a press in the submenu, and closes each menu for a press outside', async () => {
+    // A press outside a modal menu is a press on its backdrop. The root is not modal here, so the
+    // press on the element outside closes the menus.
+    await renderMenu({ root: { modal: false } });
 
     await fireEvent.pointerDown(screen.getByRole('menuitem', { name: 'Beta' }));
     await flushMicrotasks();

@@ -120,7 +120,7 @@
     {
       "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
       "kind": "waits-on",
-      "reason": "Only the filter parts of Menu give members to this context: the element that takes the focus back and two key handlers. A plain submenu reads no member, so Vase UI does not have the context yet."
+      "reason": "Only the filter parts of Menu give members to this context: the element that takes the focus back and two key handlers. Vase UI does not have the filter parts, so each read of the context would give nothing, and Vase UI does not have the context yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
@@ -475,22 +475,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
-      "describe": ["<Menu.Trigger />"],
-      "title": "does not have role prop inside a Popover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
-      "describe": ["<Menu.Trigger />"],
-      "title": "has a role prop inside a Popover when not a native button",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
