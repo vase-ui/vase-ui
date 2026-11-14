@@ -491,22 +491,6 @@
       "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
     },
     {
-      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
-      "describe": ["<Menu.Trigger />"],
-      "title": "does not have role prop inside a Popover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
-      "describe": ["<Menu.Trigger />"],
-      "title": "has a role prop inside a Popover when not a native button",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Popup` and the parts around it, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",

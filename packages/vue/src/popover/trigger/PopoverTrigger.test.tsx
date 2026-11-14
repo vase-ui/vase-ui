@@ -93,32 +93,6 @@ describe('<Popover.Trigger />', () => {
     expect(trigger).not.toHaveAttribute('data-pressed');
   });
 
-  it('does not open while disabled', async () => {
-    await render(
-      <Popover.Root>
-        <Popover.Trigger disabled>Native</Popover.Trigger>
-        <Popover.Trigger disabled as="span" nativeButton={false}>
-          Custom
-        </Popover.Trigger>
-      </Popover.Root>,
-    );
-    const native = screen.getByRole('button', { name: 'Native' });
-    const custom = screen.getByRole('button', { name: 'Custom' });
-    expect(native).toBeDisabled();
-    expect(native).toHaveAttribute('data-disabled');
-    expect(custom).not.toHaveAttribute('disabled');
-    expect(custom).toHaveAttribute('aria-disabled', 'true');
-    expect(custom).toHaveAttribute('data-disabled');
-
-    await press(native);
-    await press(custom);
-
-    for (const trigger of [native, custom]) {
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      expect(trigger).not.toHaveAttribute('data-popup-open');
-    }
-  });
-
   it('takes a toolbar button as its as prop', async () => {
     await render(
       <Toolbar.Root>
@@ -134,6 +108,57 @@ describe('<Popover.Trigger />', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false');
     expect(button).toHaveAttribute('data-orientation', 'horizontal');
     expect(button).toHaveAttribute('tabindex', '0');
+  });
+
+  describe('prop: disabled', () => {
+    it('disables the popover', async () => {
+      const { user } = await render(
+        <Popover.Root>
+          <Popover.Trigger disabled />
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+
+      const trigger = screen.getByRole('button');
+      expect(trigger).toHaveAttribute('disabled');
+      expect(trigger).toHaveAttribute('data-disabled');
+
+      await user.click(trigger);
+      await flushMicrotasks();
+      expect(screen.queryByText('Content')).toBe(null);
+
+      await user.keyboard('[Tab]');
+      expect(document.activeElement).not.toBe(trigger);
+    });
+
+    it('custom element', async () => {
+      const { user } = await render(
+        <Popover.Root>
+          <Popover.Trigger disabled as="span" nativeButton={false} />
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>,
+      );
+
+      const trigger = screen.getByRole('button');
+      expect(trigger).not.toHaveAttribute('disabled');
+      expect(trigger).toHaveAttribute('data-disabled');
+      expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+      await user.click(trigger);
+      await flushMicrotasks();
+      expect(screen.queryByText('Content')).toBe(null);
+
+      await user.keyboard('[Tab]');
+      expect(document.activeElement).not.toBe(trigger);
+    });
   });
 
   describe('style hooks', () => {

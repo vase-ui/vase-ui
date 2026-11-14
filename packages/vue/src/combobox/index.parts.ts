@@ -1,3 +1,7 @@
+import ComboboxArrow from './arrow/ComboboxArrow.vue';
+import type { ComboboxArrowProps, ComboboxArrowState } from './arrow/ComboboxArrow.vue';
+import ComboboxBackdrop from './backdrop/ComboboxBackdrop.vue';
+import type { ComboboxBackdropProps, ComboboxBackdropState } from './backdrop/ComboboxBackdrop.vue';
 import ComboboxClear from './clear/ComboboxClear.vue';
 import type { ComboboxClearProps, ComboboxClearState } from './clear/ComboboxClear.vue';
 import ComboboxIcon from './icon/ComboboxIcon.vue';
@@ -9,6 +13,15 @@ import type {
   ComboboxInputGroupProps,
   ComboboxInputGroupState,
 } from './input-group/ComboboxInputGroup.vue';
+import ComboboxPopup from './popup/ComboboxPopup.vue';
+import type { ComboboxPopupProps, ComboboxPopupState } from './popup/ComboboxPopup.vue';
+import ComboboxPortal from './portal/ComboboxPortal.vue';
+import type { ComboboxPortalProps, ComboboxPortalState } from './portal/ComboboxPortal.vue';
+import ComboboxPositioner from './positioner/ComboboxPositioner.vue';
+import type {
+  ComboboxPositionerProps,
+  ComboboxPositionerState,
+} from './positioner/ComboboxPositioner.vue';
 import ComboboxRoot from './root/ComboboxRoot.vue';
 import type {
   ComboboxRootActions,
@@ -66,6 +79,65 @@ export const InputGroup: typeof ComboboxInputGroup = ComboboxInputGroup;
 export namespace InputGroup {
   export type Props = ComboboxInputGroupProps;
   export type State = ComboboxInputGroupState;
+}
+
+/**
+ * A portal element that moves the popup to a different part of the DOM.
+ * By default, the portal element is appended to `<body>`.
+ * Renders a `<div>` element.
+ */
+export const Portal: typeof ComboboxPortal = ComboboxPortal;
+export namespace Portal {
+  export type Props = ComboboxPortalProps;
+  export type State = ComboboxPortalState;
+}
+
+/**
+ * An overlay displayed beneath the popup.
+ * Renders a `<div>` element.
+ */
+export const Backdrop: typeof ComboboxBackdrop = ComboboxBackdrop;
+export namespace Backdrop {
+  export type Props = ComboboxBackdropProps;
+  export type State = ComboboxBackdropState;
+}
+
+/**
+ * Positions the popup against the trigger.
+ * Renders a `<div>` element.
+ *
+ * The part has more than one root node: the internal backdrop of a modal popup, then its element.
+ * A rule of `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
+ * `:deep()`, a CSS module, a `style` binding or `v-if`.
+ */
+export const Positioner: typeof ComboboxPositioner = ComboboxPositioner;
+export namespace Positioner {
+  export type Props = ComboboxPositionerProps;
+  export type State = ComboboxPositionerState;
+}
+
+/**
+ * A container for the list.
+ * Renders a `<div>` element.
+ *
+ * The part has more than one root node: its element, and the focus guards and the dismiss button
+ * that it renders beside its element. A rule of `<style scoped>` thus does not match its element,
+ * and `v-show` has no effect on it. Use `:deep()`, a CSS module, a `style` binding or `v-if`.
+ */
+export const Popup: typeof ComboboxPopup = ComboboxPopup;
+export namespace Popup {
+  export type Props = ComboboxPopupProps;
+  export type State = ComboboxPopupState;
+}
+
+/**
+ * Displays an element positioned against the anchor.
+ * Renders a `<div>` element.
+ */
+export const Arrow: typeof ComboboxArrow = ComboboxArrow;
+export namespace Arrow {
+  export type Props = ComboboxArrowProps;
+  export type State = ComboboxArrowState;
 }
 
 /**
