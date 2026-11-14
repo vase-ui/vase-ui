@@ -1451,6 +1451,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A case that fires its own `load` and `error` events on a real `<img>` holds the events of the browser. A capture listener on `document` stops each event that has `isTrusted`. See `holdBrowserImageEvents` in `avatar/image/AvatarImage.test.tsx`.
 - ESLint reports an `eslint-disable` comment that names a rule of a plugin that this repository does not have. It also reports a comment that disables nothing.
 - `#test-utils` is `packages/vue/test/index.ts`. It replaces the `#test-utils` and `@mui/internal-test-utils` of upstream.
+- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name. The lint refuses a `.tsx` file in `src` that is not a test. See [Test helpers](#test-helpers).
 - `toErrorDev` and `toWarnDev` are custom matchers of upstream. For `.not.toErrorDev()`, assert that the spy got no call.
 - `renderHook` is a function of `@testing-library/react`. A composable needs the `setup` of a component.
 - Without `inheritAttrs: false`, Vue also puts the attributes on the root element of the test component. Each listener then runs two times.
@@ -1506,7 +1507,6 @@ The hydration helpers:
 - The render runs in Node with no DOM, as a server makes it. A Vue warning in that render fails the test.
 - A composition of parts, or a composable, needs a fixture SFC as `file`. Give it a name that ends in `.test.vue`, and keep it in the folder of its test. Vitest does not run such a file, and the lint rules of the source do not apply to it. Examples are `ProgressRootHydration.test.vue` and `UseIsHydratingProbe.test.vue`.
 - A fixture part is a part that tests use in place of a part of a family, such as `CompositeRootPart.vue`. It is an SFC in `packages/vue/test/fixtures`. A composition of parts stays in the folder of its tests, also when more than one test file imports it.
-- The counterpart of an upstream file of test components, such as `toast/utils/test-utils.tsx`, is a `.ts` file with the same name. It exports each component of the upstream file from an SFC with a `.test.vue` name, because a TSX component in `src` fails the lint.
 - `test/fixtures/FocusManagerPart.vue` is a focus manager with a store of its own. The tests of the portal use it.
 - `test/fixtures/HydrationFixture.vue`, `StyledElement.vue`, `ClassedElement.vue` and `LabelForControl.vue` are exceptions. They are the fixtures of `test/hydration.test.tsx`, which tests the hydration helpers. They have no `.test.vue` name, and they are not in the folder of their test. The file is outside `packages/vue/src`, so the lint rules of the source do not apply to it.
 - The props go to Node as JSON, so a prop cannot be a function.

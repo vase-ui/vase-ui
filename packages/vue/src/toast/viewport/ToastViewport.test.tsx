@@ -16,7 +16,6 @@ import {
   fireEvent,
   flushMicrotasks,
   hydrate,
-  isJSDOM,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -32,10 +31,6 @@ import { List, Button } from '../utils/test-utils';
 import ToastViewportHydration from './ToastViewportHydration.test.vue';
 
 const HYDRATION_FILE = 'src/toast/viewport/ToastViewportHydration.test.vue';
-
-// The real pointer of the browser can rest on the viewport. A dispatched event still reaches the
-// viewport, and the real pointer sends no event of its own.
-const noRealPointer = { pointerEvents: 'none' } as const;
 
 describe('<Toast.Viewport />', () => {
   const { render } = createRenderer();
@@ -75,7 +70,7 @@ describe('<Toast.Viewport />', () => {
         <button type="button" data-testid="origin">
           origin
         </button>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <ToastTextList />
         </Toast.Viewport>
       </Toast.Provider>,
@@ -98,7 +93,7 @@ describe('<Toast.Viewport />', () => {
     expect(viewport).toHaveAttribute('tabindex', '-1');
   });
 
-  it.skipIf(isJSDOM)('sets the measured frontmost toast height CSS variable', async () => {
+  it('sets the measured frontmost toast height CSS variable', async () => {
     const { user } = await render(
       <Toast.Provider>
         <Toast.Viewport data-testid="viewport">
@@ -713,6 +708,19 @@ describe('<Toast.Viewport />', () => {
     expect(viewport).not.toHaveAttribute('data-expanded');
   });
 
+  it('stays expanded on a mouseover inside the viewport', async () => {
+    const manager = Toast.createToastManager();
+    await renderViewport(manager);
+    manager.add({ id: 'toast', title: 'toast', timeout: 0 });
+    await flushMicrotasks();
+    const viewport = screen.getByTestId('viewport');
+
+    await fireEvent.mouseEnter(viewport);
+    await fireEvent.mouseOver(screen.getByTestId('toast'));
+
+    expect(viewport).toHaveAttribute('data-expanded');
+  });
+
   it('keeps expanded on mouseleave when focus-visible is inside', async () => {
     const { user } = await render(
       <Toast.Provider>
@@ -927,7 +935,7 @@ describe('<Toast.Viewport />', () => {
       await render(
         <Toast.Provider toastManager={manager}>
           <Probe />
-          <Toast.Viewport data-testid="viewport" style={noRealPointer} />
+          <Toast.Viewport data-testid="viewport" />
         </Toast.Provider>,
       );
       manager.add({ id: 'leaving', title: 'toast', timeout: 0 });
@@ -2022,7 +2030,7 @@ describe('<Toast.Viewport />', () => {
       name: 'Page',
       setup: () => () => (
         <Toast.Provider toastManager={manager}>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <ToastTextList />
           </Toast.Viewport>
         </Toast.Provider>
