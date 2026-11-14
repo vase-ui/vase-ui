@@ -749,6 +749,22 @@ describe('<Resizable.Panel />', () => {
       expect([flexOf(0), flexOf(1)]).toEqual(['60', '40']);
     });
 
+    it('pushes the panels after the next panel with a root that does not push', async () => {
+      await renderPanels({
+        root: { pushPanels: false, defaultLayout: { a: 0, b: 20, c: 80 } },
+        panels: [
+          { ...withRef('a'), collapsible: true, minSize: 20 },
+          { ...withRef('b'), minSize: 20 },
+          withRef('c'),
+        ],
+      });
+
+      instances.a.expand();
+      await nextTick();
+
+      expect([flexOf(0), flexOf(1), flexOf(2)]).toEqual(['20', '20', '60']);
+    });
+
     it('emits the change and the commit with the reason imperative-action', async () => {
       const calls: string[] = [];
       const reasons: string[] = [];

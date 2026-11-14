@@ -797,6 +797,26 @@ describe('<Resizable.Handle />', () => {
       expect([grow(0), grow(1)]).toEqual(['20', '80']);
     });
 
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, expected: ['20', '20', '60'] },
+      { name: 'stops at the next panel', pushPanels: false, expected: ['0', '20', '80'] },
+    ])('expands with Enter and a root that $name', async ({ pushPanels, expected }) => {
+      await renderPanels({
+        root: { pushPanels, defaultLayout: { a: 0, b: 20, c: 80 } },
+        panels: [
+          { id: 'a', collapsible: true, minSize: 20 },
+          { id: 'b', minSize: 20 },
+          { id: 'c' },
+        ],
+      });
+      const handle = screen.getByTestId('handle-1');
+      handle.focus();
+
+      await fireEvent.keyDown(handle, { key: 'Enter' });
+
+      expect([grow(0), grow(1), grow(2)]).toEqual(expected);
+    });
+
     it('ignores Enter while the handle drags', async () => {
       const onLayoutChange = vi.fn();
       await renderPanels({ root: { onLayoutChange }, panels: [collapsible, { id: 'b' }] });
@@ -971,6 +991,30 @@ describe('<Resizable.Handle />', () => {
         expect(onLayoutCommitted.mock.calls[0]?.[0]).toEqual(onLayoutChange.mock.calls[0]?.[0]);
       },
     );
+
+    it.each([
+      { name: 'pushes the next panel', pushPanels: true, called: 1 },
+      { name: 'stops at the next panel', pushPanels: false, called: 0 },
+    ])('gives the first size with a root that $name', async ({ pushPanels, called }) => {
+      const onLayoutChange = vi.fn();
+      // The panel b has its least size, so only a push gives the panel a its size from the start.
+      await renderPanels({
+        root: {
+          pushPanels,
+          layout: { a: 30, b: 20, c: 50 },
+          defaultLayout: { a: 50, b: 20, c: 30 },
+          onLayoutChange,
+        },
+        panels: [{ id: 'a' }, { id: 'b', minSize: 20 }, { id: 'c' }],
+      });
+
+      await fireEvent.dblClick(screen.getByTestId('handle-1'));
+
+      expect(onLayoutChange).toHaveBeenCalledTimes(called);
+      if (called > 0) {
+        expect(onLayoutChange.mock.calls[0]?.[0]).toEqual({ a: 50, b: 20, c: 30 });
+      }
+    });
 
     it('does nothing for a second double click, and leaves the event to the browser', async () => {
       const onLayoutChange = vi.fn();
