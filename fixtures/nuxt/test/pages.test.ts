@@ -855,6 +855,43 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+const TOAST_VIEWPORT_ATTRIBUTES = [
+  'role',
+  'tabindex',
+  'aria-live',
+  'aria-atomic',
+  'aria-relevant',
+  'aria-label',
+];
+
+async function expectToastViewport(page: Page) {
+  expect(await readAttributes(page.getByTestId('viewport'), TOAST_VIEWPORT_ATTRIBUTES)).toEqual({
+    role: 'region',
+    tabindex: '-1',
+    'aria-live': 'polite',
+    'aria-atomic': 'false',
+    'aria-relevant': 'additions text',
+    'aria-label': 'Notifications',
+  });
+  expect(await page.getByTestId('toast').count()).toBe(0);
+}
+
+// The viewport in the page is in the server HTML. A portal renders after the mount, so the server
+// HTML has no element of the viewport in `Toast.Portal`.
+async function expectToastPageOnServer(page: Page) {
+  await expectToastViewport(page);
+  expect(await page.getByTestId('anchored-viewport').count()).toBe(0);
+}
+
+async function expectHydratedToastPage(page: Page) {
+  await expectToastViewport(page);
+  expect(
+    await page
+      .getByTestId('anchored-viewport')
+      .evaluate((element) => element.parentElement?.hasAttribute('data-vase-ui-portal')),
+  ).toBe(true);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -916,6 +953,11 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
+  },
+  {
+    path: '/toast',
+    expectPage: expectToastPageOnServer,
+    expectHydratedPage: expectHydratedToastPage,
   },
 ];
 
@@ -1079,6 +1121,30 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await control.blur();
 
     expect(await control.inputValue()).toBe(new Intl.NumberFormat('en-US', EURO_FORMAT).format(42));
+    expect(messages).toEqual([]);
+  });
+
+  it('adds a toast to /toast after hydration, and positions an anchored toast against its anchor', async () => {
+    const page = await createPage('/toast');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('add').click();
+    const toast = page.getByTestId('toast');
+    await toast.waitFor();
+    const titleId = await page.getByTestId('title').getAttribute('id');
+    expect(titleId).toBeTruthy();
+    expect(await toast.getAttribute('aria-labelledby')).toBe(titleId);
+
+    const anchor = page.getByTestId('anchor');
+    await anchor.click();
+    const positioner = page.getByTestId('anchored-positioner');
+    await positioner.waitFor();
+    await expect.poll(() => positioner.getAttribute('data-side')).toBe('bottom');
+    expect(await page.getByTestId('arrow').getAttribute('data-side')).toBe('bottom');
+    const anchorBox = await anchor.boundingBox();
+    await expect
+      .poll(async () => (await positioner.boundingBox())?.y)
+      .toBeCloseTo(anchorBox!.y + anchorBox!.height + 8, 0);
     expect(messages).toEqual([]);
   });
 

@@ -740,6 +740,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
+- `Toast.Positioner` has no popup store and no node in the popup tree. It thus calls only `useAnchorPositioning` and `usePositioner`.
 - A positioner part provides the `positioning` of the result as the context of its popup and its arrow. `tooltip/positioner/TooltipPositioner.vue` is the model.
 - The positioning context is `store.context.positioning`. The `context` of the node of the popup in the tree is the same object.
 - The context is one plain object with five members: `open`, `placement`, `nodeId`, `elements` and `rootStore`. `elements` has `reference`, `floating` and `domReference`.
@@ -1008,6 +1009,7 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - A label part and `Toast.Action` read `$slots.default` again before each render, because `$slots` is not reactive. A parent that adds or removes the slot renders the part again.
 - A label that is `undefined` or `''` is empty. A function is a label with content. `<component :is>` renders it, so no part calls it in `setup` or in a `computed`.
 - `Toast.Close` has `aria-hidden` until the viewport expands or the button has the focus, as in Base UI.
+- A prop of `Toast.Positioner` that is not set takes its value from `positionerProps` of the toast, as in Base UI. The positioning props thus have no Vue default. `sticky` and `disableAnchorTracking` have the default `undefined`, because Vue changes an absent Boolean prop to `false`.
 
 ### Composite
 
