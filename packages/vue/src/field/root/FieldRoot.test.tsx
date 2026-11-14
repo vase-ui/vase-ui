@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import type { PropType, VNode } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import { NumberField } from '@vase-ui/vue/number-field';
@@ -764,6 +765,51 @@ describe('<Field.Root />', () => {
         input2: 'two',
       });
       expect(onSubmit).toHaveBeenCalledTimes(2);
+    });
+
+    it('excludes registration-gated controls from onFormSubmit when their field name is removed', async () => {
+      const handleSubmit = vi.fn();
+
+      const App = defineComponent(() => {
+        const name = shallowRef<string | undefined>('fruits');
+
+        return () => (
+          <Form onFormSubmit={handleSubmit}>
+            <Field.Root name={name.value}>
+              <CheckboxGroup defaultValue={['apple']}>
+                <Field.Item>
+                  <Checkbox.Root value="apple" />
+                </Field.Item>
+                <Field.Item>
+                  <Checkbox.Root value="banana" />
+                </Field.Item>
+              </CheckboxGroup>
+            </Field.Root>
+            <button
+              type="button"
+              onClick={() => {
+                name.value = undefined;
+              }}
+            >
+              Clear name
+            </button>
+            <button type="submit">submit</button>
+          </Form>
+        );
+      });
+
+      await render(<App />);
+
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({ fruits: ['apple'] });
+
+      await fireEvent.click(screen.getByText('Clear name'));
+      await fireEvent.click(screen.getByText('submit'));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(2);
+      expect(handleSubmit.mock.lastCall?.[0]).toEqual({});
     });
 
     it('uses the Field.Control name for form submission and form validation values', async () => {
