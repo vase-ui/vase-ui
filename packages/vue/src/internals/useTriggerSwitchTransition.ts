@@ -78,8 +78,8 @@ export function useTriggerSwitchTransition(parameters: UseTriggerSwitchTransitio
     }
 
     // A trigger element can also change while the popup closes, when a new element replaces a
-    // trigger. There is no move to animate. The cancel effect above has already run for this
-    // update, so a write that this effect schedules would stay for the next open.
+    // trigger. There is no move to animate. The cancel effect above runs only when `open`
+    // changes, so a write that this effect schedules after the close would stay for the next open.
     if (!store.select('open')) {
       return undefined;
     }

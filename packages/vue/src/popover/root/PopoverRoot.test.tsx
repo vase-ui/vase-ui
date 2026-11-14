@@ -8,6 +8,8 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
+  nextEvent,
   popupConformanceTests,
   renderOnServer,
   screen,
@@ -719,8 +721,8 @@ describe('<Popover.Root />', () => {
           await fireEvent.mouseLeave(positioner);
 
           expect(screen.queryByRole('dialog')).not.toBe(null);
-          // The code removes the listener with an `options` argument, so the case checks the
-          // listener and not the arguments of the call.
+          // The code removes the listener with an `options` argument, so the case checks the type
+          // and the listener of the call, and not its third argument.
           expect(
             removeEventListenerSpy.mock.calls.some(
               ([eventName, listener]) =>
@@ -866,10 +868,14 @@ describe('<Popover.Root />', () => {
             expect(screen.getByTestId('popover-popup')).toHaveAttribute('data-open');
           });
 
-          await user.unhover(trigger);
-          await waitFor(() => {
-            expect(screen.getByTestId('popover-popup')).toHaveAttribute('data-ending-style');
+          // The ending style lasts only while the exit runs, so the case waits for the start of the
+          // exit animation.
+          const popup = screen.getByTestId('popover-popup');
+          const exit = await nextEvent(popup, 'animationstart', {
+            action: () => user.unhover(trigger),
           });
+          expect((exit as AnimationEvent).animationName).toBe('popover-reopen-during-close');
+          expect(popup).toHaveAttribute('data-ending-style');
 
           // Re-enter without a follow-up mousemove so this only passes if the
           // close-transition fast path runs from `onMouseEnter`.
@@ -1646,7 +1652,11 @@ describe('<Popover.Root />', () => {
           const trigger = screen.getByTestId('trigger');
           await user.click(trigger);
           const popup = await screen.findByTestId('popover-popup');
-          await user.click(trigger);
+          // The popup reads its animations in a frame after the open. That read must not be the
+          // read that the close takes.
+          await waitSingleFrame();
+          await waitSingleFrame();
+          const animations = await nextAnimationsRead(popup, { action: () => user.click(trigger) });
 
           expect(popup).toHaveAttribute('data-ending-style');
           expect(trigger).toHaveFocus();
@@ -1654,7 +1664,7 @@ describe('<Popover.Root />', () => {
           await user.tab();
 
           expect(screen.getByTestId('focus-target')).toHaveFocus();
-          popup.getAnimations().forEach((animation) => animation.finish());
+          animations.forEach((animation) => animation.finish());
           await waitFor(() => {
             expect(screen.queryByTestId('popover-popup')).toBe(null);
           });
@@ -1683,8 +1693,8 @@ describe('<Popover.Root />', () => {
         }
 
         beforeEach(() => {
-          // With animations enabled the popup stays mounted for a microtask after it closes.
-          // Trigger guards that outlived `open` used to bounce focus between each other then.
+          // With animations enabled the popup stays mounted for a short time after it closes.
+          // Trigger guards that outlive `open` must not move the focus between them then.
           globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
         });
 
