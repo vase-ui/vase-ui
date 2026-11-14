@@ -7,50 +7,10 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "ignores a delayed touch click immediately after focus opens another menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "closes on a touch item click immediately after focus opens another menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "Most cases of the block press a trigger of the menubar. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "renders contained top-level portal ownership as an allowed menubar child",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["<Menubar />"],
-      "title": "renders detached top-level portal ownership without an accessibility role",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "Most cases of the block that have no counterpart move the focus or the highlight with the keys, and Menu has no keys yet. The other cases of the block are not ported yet."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",

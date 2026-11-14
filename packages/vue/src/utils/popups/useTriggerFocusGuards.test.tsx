@@ -1,12 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { shallowRef } from 'vue';
+import { defineComponent, shallowRef } from 'vue';
 import type { ShallowRef, VNodeChild } from 'vue';
+import * as Dialog from '../../dialog/index.parts';
 import * as Menu from '../../menu/index.parts';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import { createAttribute } from './createAttribute';
+import type { FocusOption } from './focus/FloatingFocusManager.vue';
 
 // The children of the element that holds a trigger, in document order. A guard of the trigger is a
 // sibling of its element.
@@ -164,128 +166,218 @@ describe('useTriggerFocusGuards', () => {
       expect(reasons).toEqual([]);
     });
 
-    it.each([
-      { name: 'Tab, trigger tabindex 0', shift: false, tabindex: 0 },
-      { name: 'Tab, trigger tabindex -1', shift: false, tabindex: -1 },
-      { name: 'Shift+Tab, trigger tabindex 0', shift: true, tabindex: 0 },
-      { name: 'Shift+Tab, trigger tabindex -1', shift: true, tabindex: -1 },
-    ])(
-      'returns the focus to the trigger when no element outside is tabbable ($name)',
-      async ({ shift, tabindex }) => {
-        const { trigger } = await renderMenu({ tabindex });
-        if (shift) {
-          trigger.focus();
-        }
-
-        await userEvent.tab({ shift });
-
-        expect(trigger).toHaveFocus();
-        await waitForClose();
-        expect(trigger).toHaveFocus();
-        expect(trigger).toHaveAttribute('tabindex', String(tabindex));
-      },
-    );
-
-    // The close changes the tab order. The guard reads it after the DOM update of the close.
-    it.each([
-      { name: 'Tab', shift: false },
-      { name: 'Shift+Tab', shift: true },
-    ])('uses the tab order after the close for $name', async ({ shift }) => {
-      const open = shallowRef(true);
-      const controls = () => [
-        <button data-testid="candidate" disabled={!open.value}>
-          Candidate
-        </button>,
-        <button data-testid="target">Target</button>,
-      ];
-      const { trigger } = await renderMenu({
-        open,
-        tabindex: -1,
-        before: () => (shift ? controls().reverse() : null),
-        after: () => (shift ? null : controls()),
+    // The cases of Base UI for Menu. They open the menu with a press of the trigger.
+    describe.each(['forward', 'backward'] as const)('tabbing %s', (direction) => {
+      beforeEach(() => {
+        // The guards outlive `open` by a microtask only while exit animations run.
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       });
-      if (shift) {
-        trigger.focus();
+
+      function renderTestPopup(
+        props: {
+          tabindex?: number;
+          open?: boolean;
+          onOpenChange?: (open: boolean) => void;
+          class?: string;
+          finalFocus?: FocusOption;
+        } = {},
+      ) {
+        return (
+          <Menu.Root
+            modal={false}
+            open={props.open}
+            onOpenChange={(nextOpen: boolean) => props.onOpenChange?.(nextOpen)}
+          >
+            <Menu.Trigger tabindex={props.tabindex}>Toggle</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup class={props.class} data-testid="popup" finalFocus={props.finalFocus}>
+                  <Menu.Item data-testid="inside">Inside</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        );
       }
 
-      await userEvent.tab({ shift });
-
-      expect(screen.getByTestId('target')).toHaveFocus();
-      await waitForClose();
-      expect(screen.getByTestId('target')).toHaveFocus();
-    });
-
-    // The popup stays in the document until its exit transition ends, and the focus manager returns
-    // the focus when the popup leaves. A `finalFocus` target is explicit, so only the guard in the
-    // details of the close stops that return.
-    it.each([
-      { name: 'a ref', finalFocus: (target: ShallowRef<HTMLElement | null>) => target },
-      { name: 'a function', finalFocus: () => () => true },
-    ])(
-      'keeps the focus on the element before the trigger after the exit transition, with finalFocus as $name',
-      async ({ finalFocus }) => {
-        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
-        const open = shallowRef(true);
-        const finalTarget = shallowRef<HTMLElement | null>(null);
-        let reportExit!: () => void;
-        const exit = new Promise<void>((resolve) => {
-          reportExit = resolve;
+      async function openPopup() {
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await userEvent.click(trigger);
+        // Menu moves focus to the popup itself.
+        await waitFor(() => {
+          expect(screen.getByTestId('popup')).toHaveFocus();
         });
+        return trigger;
+      }
+
+      /** Puts focus on the element the upcoming Tab should leave from. */
+      async function focusTabOrigin(trigger: HTMLElement) {
+        (direction === 'backward' ? trigger : screen.getByTestId('inside')).focus();
+        await flushMicrotasks();
+      }
+
+      it.each([
+        ['ref', 0],
+        ['function', 0],
+        ['ref', -1],
+        ['function', -1],
+      ] as const)(
+        'preserves the tab destination after the exit transition with finalFocus as a %s and trigger tabIndex=%s',
+        async (finalFocusType, tabindex) => {
+          const finalFocusRef = shallowRef<HTMLElement | null>(null);
+
+          await render(() => (
+            <div>
+              <style>{`
+                .popup { transition: opacity 200ms; }
+                .popup[data-ending-style] { opacity: 0; }
+              `}</style>
+              <button data-testid="before">Before</button>
+              {renderTestPopup({
+                tabindex,
+                class: 'popup',
+                finalFocus: finalFocusType === 'ref' ? finalFocusRef : () => true,
+              })}
+              <button data-testid="after">After</button>
+              <button
+                ref={(element) => {
+                  finalFocusRef.value = element as HTMLElement | null;
+                }}
+              >
+                Final focus
+              </button>
+            </div>
+          ));
+
+          const trigger = await openPopup();
+
+          // Menu closes on Shift+Tab from its content, so focus the trigger directly instead.
+          await focusTabOrigin(trigger);
+
+          expect(direction === 'backward' ? trigger : screen.getByTestId('inside')).toHaveFocus();
+          expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+          await userEvent.tab({ shift: direction === 'backward' });
+
+          const destination = screen.getByTestId(direction === 'backward' ? 'before' : 'after');
+          expect(destination).toHaveFocus();
+          await waitFor(() => {
+            expect(screen.queryByTestId('popup')).toBe(null);
+          });
+          expect(destination).toHaveFocus();
+          expect(trigger).toHaveAttribute('tabindex', String(tabindex));
+        },
+      );
+
+      it.each(['disabled', 'tabIndex', 'hidden', 'removed', 'inserted', 'reordered'] as const)(
+        'uses the current tab order when an adjacent control is %s during close',
+        async (change) => {
+          const Fixture = defineComponent(() => {
+            const open = shallowRef(false);
+            return () => {
+              const target = (
+                <button key="target" data-testid="target">
+                  Target
+                </button>
+              );
+              const candidate = (
+                <button
+                  key="candidate"
+                  disabled={change === 'disabled' && !open.value}
+                  tabindex={change === 'tabIndex' && !open.value ? -1 : 0}
+                  hidden={change === 'hidden' && !open.value}
+                >
+                  Candidate
+                </button>
+              );
+              let controls: VNodeChild[];
+              if (change === 'inserted') {
+                controls = [!open.value && target, candidate];
+              } else if (change === 'reordered') {
+                controls = open.value ? [candidate, target] : [target, candidate];
+              } else {
+                controls = [change === 'removed' && !open.value ? null : candidate, target];
+              }
+
+              return (
+                <div>
+                  {direction === 'backward' && controls.reverse()}
+                  {renderTestPopup({
+                    tabindex: -1,
+                    open: open.value,
+                    onOpenChange: (nextOpen) => {
+                      open.value = nextOpen;
+                    },
+                  })}
+                  {direction === 'forward' && controls}
+                </div>
+              );
+            };
+          });
+
+          await render(<Fixture />);
+          await focusTabOrigin(await openPopup());
+          await userEvent.tab({ shift: direction === 'backward' });
+
+          expect(screen.getByTestId('target')).toHaveFocus();
+          await waitFor(() => {
+            expect(screen.queryByTestId('popup')).toBe(null);
+          });
+          expect(screen.getByTestId('target')).toHaveFocus();
+        },
+      );
+
+      it('preserves the surrounding modal dialog focus trap', async () => {
         await render(() => (
           <div>
-            <style>{`
-              .popup { transition: opacity 200ms; }
-              .popup[data-ending-style] { opacity: 0; }
-            `}</style>
-            <button data-testid="before">Before</button>
-            <Menu.Root
-              modal={false}
-              open={open.value}
-              triggerId="trigger"
-              onUpdate:open={(nextOpen) => {
-                open.value = nextOpen;
-              }}
-              onOpenChangeComplete={(nextOpen) => {
-                if (!nextOpen) {
-                  reportExit();
-                }
-              }}
-            >
-              <Menu.Trigger id="trigger">Toggle</Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Positioner>
-                  <Menu.Popup
-                    class="popup"
-                    data-testid="popup"
-                    finalFocus={finalFocus(finalTarget)}
-                  >
-                    <button data-testid="inside">Inside</button>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.Root>
-            <button
-              ref={(element) => {
-                finalTarget.value = element as HTMLElement | null;
-              }}
-            >
-              Final focus
-            </button>
+            <button>Outside dialog</button>
+            <Dialog.Root defaultOpen>
+              <Dialog.Portal>
+                <Dialog.Popup style={{ position: 'relative' }}>
+                  {direction === 'forward' && <button>Inside dialog</button>}
+                  {renderTestPopup({ tabindex: -1 })}
+                  {direction === 'backward' && <button>Inside dialog</button>}
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
           </div>
         ));
+
+        const destination = screen.getByRole('button', { name: 'Inside dialog' });
         await waitFor(() => {
-          expect(screen.getByTestId('inside')).toHaveFocus();
+          expect(destination).toHaveFocus();
         });
-        screen.getByRole('button', { name: 'Toggle' }).focus();
 
-        await userEvent.tab({ shift: true });
+        await focusTabOrigin(await openPopup());
+        await userEvent.tab({ shift: direction === 'backward' });
 
-        expect(screen.getByTestId('before')).toHaveFocus();
-        await exit;
-        await waitForClose();
-        expect(screen.getByTestId('before')).toHaveFocus();
-      },
-    );
+        await waitFor(() => {
+          expect(screen.queryByTestId('popup')).toBe(null);
+        });
+        await waitFor(() => {
+          expect(destination).toHaveFocus();
+        });
+      });
+
+      it.each([0, -1])(
+        'returns focus to the trigger when no outside element is tabbable and trigger tabIndex=%s',
+        async (tabindex) => {
+          await render(() => renderTestPopup({ tabindex }));
+
+          const trigger = await openPopup();
+          await focusTabOrigin(trigger);
+
+          await userEvent.tab({ shift: direction === 'backward' });
+
+          expect(trigger).toHaveFocus();
+          await waitFor(() => {
+            expect(screen.queryByTestId('popup')).toBe(null);
+          });
+          expect(trigger).toHaveFocus();
+          expect(trigger).toHaveAttribute('tabindex', String(tabindex));
+        },
+      );
+    });
 
     it('gives its guards to the store, and takes them back at the close and at the unmount', async () => {
       const shown = shallowRef(true);

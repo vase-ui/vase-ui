@@ -8,11 +8,14 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  popupFocusPropsTests,
   screen,
   takeReportedMessages,
+  wait,
   waitFor,
   waitSingleFrame,
 } from '#test-utils';
+import * as Dialog from '../../dialog/index.parts';
 import {
   ContextMenuProvider,
   MenubarProvider,
@@ -163,6 +166,181 @@ describe('<Menu.Popup />', () => {
 
     await user.keyboard('[ArrowUp]');
     await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Two' })).toHaveFocus());
+  });
+
+  it.each([
+    { name: 'its trigger', live: false },
+    // Live regions outside a modal stay exposed to assistive tech.
+    { name: 'its trigger in a live region', live: true },
+  ])(
+    'does not move focus behind a modal dialog to $name when an item hides the menu trigger',
+    async ({ live }) => {
+      const App = defineComponent(() => {
+        const step = shallowRef(1);
+        return () => {
+          const dialogTrigger = <Dialog.Trigger>Create</Dialog.Trigger>;
+          return (
+            <Dialog.Root>
+              {live ? <div aria-live="polite">{dialogTrigger}</div> : dialogTrigger}
+              <Dialog.Portal>
+                <Dialog.Popup>
+                  <div hidden={step.value !== 1}>
+                    <Menu.Root>
+                      <Menu.Trigger>Template</Menu.Trigger>
+                      <Menu.Portal>
+                        <Menu.Positioner>
+                          <Menu.Popup>
+                            <Menu.Item
+                              onClick={() => {
+                                step.value = 2;
+                              }}
+                            >
+                              Blank
+                            </Menu.Item>
+                          </Menu.Popup>
+                        </Menu.Positioner>
+                      </Menu.Portal>
+                    </Menu.Root>
+                  </div>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
+          );
+        };
+      });
+
+      const { user } = await render(<App />);
+      const dialogTrigger = screen.getByRole('button', { name: 'Create' });
+      await user.click(dialogTrigger);
+      await user.click(await screen.findByRole('button', { name: 'Template' }));
+      await user.click(await screen.findByRole('menuitem', { name: 'Blank' }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('menuitem', { name: 'Blank' })).toBe(null);
+      });
+      await flushMicrotasks();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(dialogTrigger).not.toHaveFocus();
+    },
+  );
+
+  it('keeps focus on an input that autofocuses when the trigger is hidden as the menu closes', async () => {
+    const App = defineComponent(() => {
+      const renaming = shallowRef(false);
+      let renameRequested = false;
+      return () => (
+        <div>
+          <Menu.Root>
+            <Menu.Trigger>Other</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>Item</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          {renaming.value && (
+            <input
+              aria-label="Name"
+              ref={(element) => (element as HTMLInputElement | null)?.focus()}
+            />
+          )}
+          <Menu.Root
+            onOpenChangeComplete={(open: boolean) => {
+              if (!open && renameRequested) {
+                renameRequested = false;
+                renaming.value = true;
+              }
+            }}
+          >
+            <Menu.Trigger hidden={renaming.value}>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item
+                    onClick={() => {
+                      renameRequested = true;
+                    }}
+                  >
+                    Rename
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </div>
+      );
+    });
+
+    const { user } = await render(<App />);
+    // Leaves the other trigger in the return-focus history.
+    await user.click(screen.getByRole('button', { name: 'Other' }));
+    await screen.findByRole('menuitem', { name: 'Item' });
+    await user.keyboard('[Escape]');
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Item' })).toBe(null);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Rename' }));
+
+    const input = await screen.findByRole('textbox', { name: 'Name' });
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitem', { name: 'Rename' })).toBe(null);
+    });
+    await flushMicrotasks();
+    expect(input).toHaveFocus();
+  });
+
+  popupFocusPropsTests({
+    render,
+    initialFocus: false,
+    createComponent: ({ children, finalFocus }) => (
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup finalFocus={finalFocus}>
+              {children}
+              <Menu.Item>Close</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
+  });
+
+  describe('prop: finalFocus', () => {
+    it('receives the mouse interaction type after a drag-release item selection', async () => {
+      const finalFocus = vi.fn(() => true);
+
+      await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup finalFocus={finalFocus}>
+                <Menu.Item>Close</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByText('Open');
+      await fireEvent.mouseDown(trigger);
+      const item = await screen.findByText('Close');
+
+      // Drag-release selection is only armed 200ms after the trigger press.
+      await wait(200);
+      await fireEvent.mouseUp(item);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Close')).toBe(null);
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('mouse');
+    });
   });
 
   describe('attributes', () => {

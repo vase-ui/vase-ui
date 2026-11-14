@@ -16,6 +16,7 @@ import {
   screen,
   takeReportedMessages,
   waitFor,
+  waitForLaterMillisecond,
 } from '#test-utils';
 import type { Orientation } from '../internals/types';
 import * as Menu from '../menu/index.parts';
@@ -52,6 +53,72 @@ function createTreeProvider() {
   return { TreeProvider, getTree: () => tree!.value };
 }
 
+const ContainedTriggerMenubar = defineComponent(() => () => (
+  <Menubar style={{ maxWidth: '25vw', display: 'flex' }}>
+    <Menu.Root>
+      <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner data-testid="file-menu">
+          <Menu.Popup>
+            <Menu.Item data-testid="file-item-1">Open</Menu.Item>
+            <Menu.Item data-testid="file-item-2">Save</Menu.Item>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger data-testid="share-trigger">Share</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner data-testid="share-menu">
+                  <Menu.Popup>
+                    <Menu.Item data-testid="share-item-1">Email</Menu.Item>
+                    <Menu.Item data-testid="share-item-2">Print</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+    <Menu.Root>
+      <Menu.Trigger data-testid="edit-trigger">Edit</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner data-testid="edit-menu">
+          <Menu.Popup>
+            <Menu.Item data-testid="edit-item-1">Copy</Menu.Item>
+            <Menu.Item data-testid="edit-item-2">Paste</Menu.Item>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+    <Menu.Root>
+      <Menu.Trigger data-testid="view-trigger">View</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner data-testid="view-menu">
+          <Menu.Popup>
+            <Menu.Item data-testid="view-item-1">Zoom In</Menu.Item>
+            <Menu.Item data-testid="view-item-2">Zoom Out</Menu.Item>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger data-testid="layout-trigger">Layout</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner data-testid="layout-menu">
+                  <Menu.Popup>
+                    <Menu.RadioGroup defaultValue="single">
+                      <Menu.RadioItem value="single" data-testid="layout-item-1">
+                        Single column
+                      </Menu.RadioItem>
+                      <Menu.RadioItem value="two" data-testid="layout-item-2">
+                        Two columns
+                      </Menu.RadioItem>
+                    </Menu.RadioGroup>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+  </Menubar>
+));
+
 type MenuDefinition = {
   label: string;
   triggerTestId: string;
@@ -63,21 +130,6 @@ const menus: MenuDefinition[] = [
   { label: 'Edit', triggerTestId: 'edit-trigger', menuTestId: 'edit-menu' },
   { label: 'View', triggerTestId: 'view-trigger', menuTestId: 'view-menu' },
 ];
-
-const ContainedTriggerMenubar = defineComponent(() => () => (
-  <Menubar>
-    {menus.map((menu) => (
-      <Menu.Root key={menu.label}>
-        <Menu.Trigger data-testid={menu.triggerTestId}>{menu.label}</Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Positioner data-testid={menu.menuTestId}>
-            <Menu.Popup />
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
-    ))}
-  </Menubar>
-));
 
 const DynamicMenu = defineComponent(
   (props: { handle?: Menu.Handle<MenuDefinition> }, { slots }) =>
@@ -615,6 +667,185 @@ describe('<Menubar />', () => {
       expect(menubar).toHaveAttribute('aria-orientation', orientation);
       expect(readTabindexes(container)).toEqual(['0', '-1', '-1']);
     });
+  });
+
+  it('ignores a delayed touch click immediately after focus opens another menu', async () => {
+    const { user } = await render(<ContainedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+    await screen.findByTestId('file-menu');
+
+    const editTrigger = screen.getByTestId('edit-trigger');
+
+    // The focus-open below starts a 300ms wall-clock cooldown during which touch clicks
+    // are ignored. Freeze timers so the cooldown cannot expire before the first click
+    // on a loaded machine, and advance past its expiry explicitly.
+    vi.useFakeTimers();
+    try {
+      editTrigger.focus();
+      await flushMicrotasks();
+      screen.getByTestId('edit-menu');
+
+      await fireEvent(
+        editTrigger,
+        new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
+      );
+      expect(screen.queryByTestId('edit-menu')).not.toBe(null);
+
+      vi.advanceTimersByTime(310);
+      await flushMicrotasks();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    await fireEvent(
+      editTrigger,
+      new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('edit-menu')).toBe(null);
+    });
+  });
+
+  it('keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends', async () => {
+    const onEditOpenChange = vi.fn();
+
+    const ControlledEditMenubar = defineComponent(() => {
+      const editOpen = shallowRef(false);
+      return () => (
+        <Menubar>
+          <Menu.Root>
+            <Menu.Trigger data-testid="file-trigger">File</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="file-menu">
+                <Menu.Popup>
+                  <Menu.Item>Open</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+          <Menu.Root
+            open={editOpen.value}
+            onOpenChange={(nextOpen: boolean, eventDetails: Menu.Root.ChangeEventDetails) => {
+              onEditOpenChange(nextOpen, eventDetails.reason);
+              editOpen.value = nextOpen;
+            }}
+          >
+            <Menu.Trigger data-testid="edit-trigger">Edit</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner data-testid="edit-menu">
+                <Menu.Popup>
+                  <Menu.Item>Copy</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menubar>
+      );
+    });
+
+    const { user } = await render(<ControlledEditMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+    await screen.findByTestId('file-menu');
+
+    const editTrigger = screen.getByTestId('edit-trigger');
+
+    // Freeze timers so the 300ms touch-click cooldown started by the focus-open is still
+    // active when the trigger is clicked.
+    vi.useFakeTimers();
+    try {
+      editTrigger.focus();
+      await flushMicrotasks();
+      screen.getByTestId('edit-menu');
+      expect(onEditOpenChange).toHaveBeenLastCalledWith(true, 'trigger-focus');
+
+      await fireEvent(
+        editTrigger,
+        new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
+      );
+      expect(onEditOpenChange).toHaveBeenLastCalledWith(true, 'trigger-focus');
+      expect(editTrigger).toHaveAttribute('data-popup-open');
+
+      vi.advanceTimersByTime(310);
+      await flushMicrotasks();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    // Once the cooldown ends, a touch click closes the menu again.
+    await fireEvent(
+      editTrigger,
+      new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
+    );
+
+    expect(onEditOpenChange).toHaveBeenLastCalledWith(false, 'trigger-press');
+    await waitFor(() => {
+      expect(screen.queryByTestId('edit-menu')).toBe(null);
+    });
+  });
+
+  it('closes on a touch item click immediately after focus opens another menu', async () => {
+    const { user } = await render(<ContainedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+    await screen.findByTestId('file-menu');
+
+    // Freeze timers so the 300ms touch-click cooldown started by the focus-open is still
+    // active when the item is clicked.
+    vi.useFakeTimers();
+    try {
+      screen.getByTestId('edit-trigger').focus();
+      await flushMicrotasks();
+      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
+      await waitForLaterMillisecond();
+
+      await fireEvent(
+        screen.getByTestId('edit-item-1'),
+        new PointerEvent('click', { bubbles: true, cancelable: true, pointerType: 'touch' }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('edit-menu')).toBe(null);
+    });
+  });
+
+  it('renders contained top-level portal ownership as an allowed menubar child', async () => {
+    const { user } = await render(<ContainedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = screen.getByRole('menubar').querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('role', 'group');
+    expect(owner).not.toHaveAttribute('aria-hidden');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+  });
+
+  it('renders detached top-level portal ownership without an accessibility role', async () => {
+    const { user } = await render(<DetachedTriggerMenubar />);
+
+    await user.click(screen.getByTestId('file-trigger'));
+
+    const fileMenu = await screen.findByTestId('file-menu');
+    const fileMenuPortal = fileMenu.closest('[data-vase-ui-portal]');
+    const fileMenuPortalId = fileMenuPortal?.id ?? '';
+    const owner = fileMenu.ownerDocument.querySelector('span[aria-owns]');
+
+    expect(fileMenuPortalId).not.toBe('');
+    expect(owner).toHaveAttribute('aria-owns', fileMenuPortalId);
+    // The portal renders outside the menubar, so the `group` workaround would only add a stray
+    // accessible group.
+    expect(screen.getByRole('menubar')).not.toContainElement(owner as HTMLElement | null);
+    expect(owner).not.toHaveAttribute('role');
   });
 
   it('keeps focus on an outside target when a triggerless menubar menu closes', async () => {

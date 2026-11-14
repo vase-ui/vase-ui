@@ -19,8 +19,47 @@ vi.mock('../../common/platform', async () => {
   };
 });
 
+function Test() {
+  return (
+    <Menu.Root>
+      <Menu.Trigger>Open menu</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup data-testid="submenu">
+                    <Menu.Item>Alpha</Menu.Item>
+                    <Menu.Item>Beta</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+  );
+}
+
 describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
   const { render } = createRenderer();
+
+  it('keeps the expanded state when the submenu is opened with a pointer', async () => {
+    const { user } = await render(<Test />);
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    await user.click(submenuTrigger);
+
+    await screen.findByTestId('submenu');
+
+    // Focus stays on the trigger, so there is no item announcement to talk over.
+    expect(submenuTrigger).toHaveAttribute('aria-expanded', 'true');
+  });
 
   function renderSubmenu(probe: ReturnType<typeof createMenuStoreProbe>) {
     return render(

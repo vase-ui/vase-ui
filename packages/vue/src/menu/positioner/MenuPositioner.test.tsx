@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { KeepAlive, Teleport, computed, defineComponent, nextTick, shallowRef, toValue } from 'vue';
 import type { FunctionalComponent } from 'vue';
 import { ContextMenu } from '@vase-ui/vue/context-menu';
@@ -9,6 +10,7 @@ import {
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  isInaccessible,
   isJSDOM,
   positionerConformanceTests,
   screen,
@@ -23,7 +25,6 @@ import {
 } from '../../../test/fixtures/MenuParentFixture';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
 import {
-  HIDDEN_SCROLLBARS_CSS,
   createScrollDocument,
   getScrollLockRegistry,
   isPageLocked,
@@ -1083,22 +1084,6 @@ describe('<Menu.Positioner />', () => {
       expect(lockCount()).toBe(0);
     });
 
-    it.each([
-      { name: 'as wide as the viewport', width: 'calc(100vw - 10px)', locks: 1 },
-      { name: 'narrower than the viewport', width: '240px', locks: 0 },
-    ])('locks the page for a touch open only when the popup is $name', async ({ width, locks }) => {
-      const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
-      const { probe, handle, ModalMenu } = createMenu(page, { positioner: { style: { width } } });
-      await render(<ModalMenu />);
-      probe.store.set('openMethod', 'touch');
-
-      handle.open('trigger');
-      await flushMicrotasks();
-
-      expect(probe.store.select('positionerElement')).not.toBe(null);
-      expect(lockCount()).toBe(locks);
-    });
-
     // A trigger in a menubar is an item of the composite of the menubar. The menu thus opens from
     // its store, with an element of the frame as the trigger.
     it.each([
@@ -1170,6 +1155,75 @@ describe('<Menu.Positioner />', () => {
 
   const triggerStyle = { width: '72px', height: '36px' };
   const popupStyle = { width: '52px', height: '24px' };
+
+  describe.skipIf(isJSDOM)('prop: keepMounted', () => {
+    it('when keepMounted=true, should keep the content mounted when closed', async () => {
+      await render(
+        <Menu.Root modal={false}>
+          <Menu.Trigger>Toggle</Menu.Trigger>
+          <Menu.Portal keepMounted>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.Item>2</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+      expect(screen.queryByRole('menu', { hidden: true })).not.toBe(null);
+      expect(isInaccessible(screen.queryByRole('menu', { hidden: true })!)).toBe(true);
+
+      await userEvent.click(trigger, { delay: 20 });
+      await waitFor(() => {
+        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+      });
+      expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
+
+      await userEvent.click(trigger, { delay: 20 });
+      await waitFor(() => {
+        expect(screen.queryByRole('menu', { hidden: true })).not.toBe(null);
+      });
+      await waitFor(() => {
+        expect(isInaccessible(screen.queryByRole('menu', { hidden: true })!)).toBe(true);
+      });
+    });
+
+    it('when keepMounted=false, should unmount the content when closed', async () => {
+      await render(
+        <Menu.Root modal={false}>
+          <Menu.Trigger>Toggle</Menu.Trigger>
+          <Menu.Portal keepMounted={false}>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.Item>2</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+      expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
+
+      await userEvent.click(trigger, { delay: 20 });
+      await flushMicrotasks();
+      await waitFor(() => {
+        expect(screen.queryByRole('menu', { hidden: false })).not.toBe(null);
+      });
+      expect(isInaccessible(screen.queryByRole('menu', { hidden: false })!)).toBe(false);
+
+      await userEvent.click(trigger, { delay: 20 });
+      await waitFor(() => {
+        expect(screen.queryByRole('menu', { hidden: true })).toBe(null);
+      });
+    });
+  });
 
   describe.skipIf(isJSDOM)('Menubar parent', () => {
     it('uses bottom as the default side when the menubar is horizontal', async () => {

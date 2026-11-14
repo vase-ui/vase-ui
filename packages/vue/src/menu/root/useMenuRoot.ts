@@ -24,8 +24,9 @@ import { mergeProps } from '../../merge-props';
 import { getHighlightReason } from '../../utils/getHighlightReason';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
+import { useOpenMethodTriggerProps } from '../../utils/popups/interactions/useOpenInteractionType';
 import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
-import { usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
+import { usePopupRootSync, usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
   usePopupInteractionProps,
@@ -198,6 +199,11 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       { immediate: true },
     );
   }
+
+  const interactionTypeProps = useOpenMethodTriggerProps(open, (interactionType) =>
+    store.set('openMethod', interactionType),
+  );
+  usePopupRootSync(store, open);
 
   watch(
     () => ({
@@ -503,6 +509,18 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     },
   };
 
+  // The props of an inactive trigger depend on no state. One object keeps each inactive trigger from
+  // a render when the menu opens.
+  const inactiveTriggerProps = mergeProps(
+    listNavigation.value.trigger,
+    dismiss.trigger,
+    interactionTypeProps,
+    {
+      'aria-haspopup': 'menu',
+      'aria-expanded': false,
+    },
+  );
+
   // Under virtual focus an element inside the popup holds real focus, so it takes the
   // navigation's reference props (`aria-activedescendant` and the key handling) and the trigger
   // keeps only the props that open the menu.
@@ -521,16 +539,14 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       typeahead.reference,
       getOpenTriggerProps(),
       dismiss.reference,
-      { onMousemove: allowMouseEnter },
       {
+        onMousemove: allowMouseEnter,
         'aria-haspopup': 'menu',
         'aria-expanded': open.value,
       },
+      interactionTypeProps,
     ),
-    inactiveTriggerProps: mergeProps(listNavigation.value.trigger, dismiss.trigger, {
-      'aria-haspopup': 'menu',
-      'aria-expanded': false,
-    }),
+    inactiveTriggerProps,
     popupProps: mergeProps(
       FOCUSABLE_POPUP_PROPS,
       popupListeners,

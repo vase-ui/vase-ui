@@ -350,6 +350,55 @@ describe('<Toolbar.Button />', () => {
 
         expect(screen.getByTestId('button')).toHaveAttribute('aria-haspopup', 'menu');
       });
+
+      it('disabled state', async () => {
+        const handleOpenChange = vi.fn();
+        const handleClick = vi.fn();
+        const { user } = await render(
+          <Toolbar.Root>
+            <Menu.Root onOpenChange={handleOpenChange}>
+              <Toolbar.Button
+                data-testid="button"
+                disabled
+                onClick={handleClick}
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Menu.Trigger {...props}>Toggle</Menu.Trigger>
+                  ),
+                }}
+              />
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Item data-testid="item-1">1</Menu.Item>
+                    <Menu.Item data-testid="item-2">2</Menu.Item>
+                    <Menu.Item data-testid="item-3">3</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Toolbar.Root>,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        expect(trigger).not.toHaveAttribute('disabled');
+        expect(trigger).toHaveAttribute('data-disabled');
+        expect(trigger).toHaveAttribute('aria-disabled', 'true');
+
+        expect(screen.queryByRole('menu')).toBe(null);
+
+        await user.keyboard('[Tab]');
+        expect(trigger).toHaveFocus();
+
+        await user.keyboard('[Enter]');
+        await user.keyboard('[Space]');
+        await user.keyboard('[ArrowUp]');
+        await user.keyboard('[ArrowDown]');
+
+        expect(handleClick).toHaveBeenCalledTimes(0);
+        expect(handleOpenChange).toHaveBeenCalledTimes(0);
+        expect(screen.queryByRole('menu')).toBe(null);
+      });
     });
 
     describe('Select', () => {
