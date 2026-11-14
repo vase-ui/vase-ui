@@ -5,8 +5,11 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -136,11 +139,6 @@ describe('<Checkbox.Indicator />', () => {
   it('should remove the indicator when the animation finishes', async () => {
     globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-    let animationFinished = false;
-    const notifyAnimationFinished = () => {
-      animationFinished = true;
-    };
-
     const style = `
       @keyframes test-anim {
         to {
@@ -169,7 +167,6 @@ describe('<Checkbox.Indicator />', () => {
             <Checkbox.Indicator
               class="animation-test-indicator"
               data-testid="indicator"
-              onAnimationend={notifyAnimationFinished}
               keepMounted
             />
           </Checkbox.Root>
@@ -181,10 +178,9 @@ describe('<Checkbox.Indicator />', () => {
     expect(screen.getByTestId('indicator')).not.toBe(null);
 
     const closeButton = screen.getByText('Close');
-    await user.click(closeButton);
-
-    await waitFor(() => {
-      expect(animationFinished).toBe(true);
+    await nextEvent(screen.getByTestId('indicator'), 'animationend', {
+      after: 'animationstart',
+      action: () => user.click(closeButton),
     });
   });
 
@@ -196,12 +192,7 @@ describe('<Checkbox.Indicator />', () => {
     it('triggers enter animation via data-starting-style when mounting', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      let transitionFinished = false;
       const getAnimations = vi.fn((): Animation[] => []);
-
-      function notifyTransitionFinished() {
-        transitionFinished = true;
-      }
 
       function handleIndicatorRef(element: HTMLSpanElement | null) {
         if (element) {
@@ -235,7 +226,6 @@ describe('<Checkbox.Indicator />', () => {
               <Checkbox.Indicator
                 class="animation-test-indicator"
                 data-testid="indicator"
-                onTransitionend={notifyTransitionFinished}
                 v-slots={{
                   render: ({ props }: { props: Record<string, any> }) => (
                     <span
@@ -253,13 +243,13 @@ describe('<Checkbox.Indicator />', () => {
         );
       });
 
-      const { user } = await render(<Test />);
+      const { container, user } = await render(<Test />);
       expect(screen.queryByTestId('indicator')).toBe(null);
 
-      await user.click(screen.getByText('Check'));
-
-      await waitFor(() => {
-        expect(transitionFinished).toBe(true);
+      // The indicator mounts with the click, so the wait is on its container.
+      await nextEvent(container, 'transitionend', {
+        after: 'transitionrun',
+        action: () => user.click(screen.getByText('Check')),
       });
 
       expect(screen.getByTestId('indicator')).not.toBe(null);
@@ -300,16 +290,21 @@ describe('<Checkbox.Indicator />', () => {
       });
 
       await render(<Test />);
-      expect(screen.getByTestId('indicator')).not.toBe(null);
+      const indicator = screen.getByTestId('indicator');
+      expect(indicator).not.toBe(null);
+
+      const read = nextAnimationsRead(indicator);
 
       // `user.click` can yield a frame, which is long enough for the 1ms animation to finish.
       await fireEvent.click(screen.getByText('Uncheck'));
 
-      expect(screen.getByTestId('indicator')).toHaveAttribute('data-ending-style');
+      expect(indicator).toHaveAttribute('data-ending-style');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator')).toBe(null);
-      });
+      const animations = await read;
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('indicator')).toBe(null);
     });
 
     it('removes all indicators in a single commit when multiple checkboxes are unchecked', async () => {
@@ -360,11 +355,13 @@ describe('<Checkbox.Indicator />', () => {
       observer.observe(container, { childList: true, subtree: true });
       onTestFinished(() => observer.disconnect());
 
-      await user.click(screen.getByText('Uncheck'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('indicator-0')).toBe(null);
+      const animations = await nextAnimationsRead(screen.getByTestId('indicator-0'), {
+        action: () => user.click(screen.getByText('Uncheck')),
       });
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('indicator-0')).toBe(null);
       expect(screen.queryByTestId('indicator-9')).toBe(null);
 
       expect(indicatorCounts).toContain(0);
