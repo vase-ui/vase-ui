@@ -58,14 +58,17 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
+import { getDelay } from '../../utils/popups/interactions/useHoverShared';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
 import { usePopupHandleStore } from '../../utils/popups/usePopupHandleStore';
+import { useTooltipProviderContext } from '../provider/TooltipProviderContext';
 import { useTooltipRootContext } from '../root/TooltipRootContext';
 import type { TooltipHandleStore } from '../store/TooltipStore';
 import { OPEN_DELAY } from '../utils/constants';
@@ -112,17 +115,36 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
   }),
 );
 
+const providerDelay = useTooltipProviderContext();
+const delayGroup = useDelayGroup(store, { open: isOpenedByThisTrigger });
+watch([store, delayGroup.isInstantPhase], ([currentStore, isInstantPhase]) => {
+  currentStore.set('isInstantPhase', isInstantPhase);
+});
+
 const isDisabled = computed(() => props.disabled || store.value.select('disabled'));
 const rootTriggerProps = computed(() =>
   store.value.select('appliedTriggerProps', isMountedByThisTrigger.value),
 );
 
+function getOpenDelay() {
+  // Adjacent tooltips open instantly while the group is active.
+  if (delayGroup.hasProvider && delayGroup.activeId() != null) {
+    return 0;
+  }
+  return props.delay ?? providerDelay?.value ?? OPEN_DELAY;
+}
+
 const hoverProps = useHoverTriggerInteraction(store, {
   enabled: () => !isDisabled.value,
   mouseOnly: true,
   move: false,
-  restMs: () => props.delay ?? OPEN_DELAY,
-  delay: () => ({ close: props.closeDelay ?? 0 }),
+  restMs: getOpenDelay,
+  delay: () => {
+    if (props.closeDelay == null && delayGroup.hasProvider) {
+      return { close: getDelay(delayGroup.delay(), 'close') };
+    }
+    return { close: props.closeDelay ?? 0 };
+  },
   triggerElement,
 });
 
