@@ -154,14 +154,14 @@ function findAssociatedLabel(labelSource?: LabelSource | null) {
 
   // The parent and the next sibling are the usual label. They cost less than the search below.
   const parent = labelSource.parentElement;
-  if (parent && parent.tagName === 'LABEL') {
+  if (parent?.tagName === 'LABEL') {
     return parent as HTMLLabelElement;
   }
 
   const controlId = labelSource.id;
   if (controlId) {
     const nextSibling = labelSource.nextElementSibling as HTMLLabelElement | null;
-    if (nextSibling && nextSibling.htmlFor === controlId) {
+    if (nextSibling?.htmlFor === controlId) {
       return nextSibling;
     }
   }

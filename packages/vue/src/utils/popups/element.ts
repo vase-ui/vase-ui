@@ -91,5 +91,5 @@ export function getFloatingFocusElement(
   // attribute, because that child has the event handlers and the aria attributes of the popup.
   return positionerElement.hasAttribute(FOCUSABLE_ATTRIBUTE)
     ? positionerElement
-    : positionerElement.querySelector(`[${FOCUSABLE_ATTRIBUTE}]`) || positionerElement;
+    : (positionerElement.querySelector(`[${FOCUSABLE_ATTRIBUTE}]`) ?? positionerElement);
 }

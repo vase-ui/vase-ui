@@ -22,7 +22,7 @@ type RemoveIndexSignature<Type> = {
 /** Whether any constituent of `Item` explicitly declares an `items` field that may be an array. */
 type HasGroupShape<Item> = Item extends object
   ? 'items' extends keyof RemoveIndexSignature<Item>
-    ? [Extract<NonNullable<Item['items']>, ReadonlyArray<unknown>>] extends [never]
+    ? [Extract<NonNullable<Item['items']>, readonly unknown[]>] extends [never]
       ? never[] extends NonNullable<Item['items']>
         ? true
         : never
@@ -45,8 +45,8 @@ type RejectGroupShapedItems<Item> =
 // The group-shape guard stays outside this union because folding it in breaks tsc's leaf-item
 // inference for grouped data.
 type ComboboxItemsData<Item> =
-  | (Extract<Item, { items: ReadonlyArray<unknown> }> extends never ? readonly Item[] : never)
-  | readonly { items: ReadonlyArray<Item> }[];
+  | (Extract<Item, { items: readonly unknown[] }> extends never ? readonly Item[] : never)
+  | readonly { items: readonly Item[] }[];
 
 export interface CreateComboboxItemsOptions<
   Item,
@@ -148,7 +148,7 @@ export function createComboboxItems<Item, Value extends ComboboxPrimitiveValue>(
     label(
       itemValue: Value,
       isEqual: ItemEqualityComparer<Value>,
-      fallback?: ((itemValue: Value) => string) | undefined,
+      fallback?: (itemValue: Value) => string,
     ) {
       const item = findCollectionItem(ensureDerived(), itemValue, isEqual);
       if (item !== undefined) {

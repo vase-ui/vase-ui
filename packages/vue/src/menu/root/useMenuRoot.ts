@@ -388,6 +388,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `item` is defined only when `index` is not `null`.
     const itemIndex = item === undefined ? -1 : index!;
     if (lastHighlightIndex === itemIndex && store.context.reportedItem === item) {
       return;
@@ -435,6 +436,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       // when Menu.Root is nested inside Menubar, but with detached triggers we need to manually
       // forward the event to the CompositeRoot.
       const relay = store.select('keyboardEventRelay');
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (relay && !event.cancelBubble) {
         relay(event);
       }

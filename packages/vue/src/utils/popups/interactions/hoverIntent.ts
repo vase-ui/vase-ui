@@ -94,7 +94,10 @@ export class HoverIntent {
    */
   handleCloseOptions: HandleCloseOptions | undefined = undefined;
 
-  constructor(private readonly store: PopupInteractionStore) {
+  private readonly store: PopupInteractionStore;
+
+  constructor(store: PopupInteractionStore) {
+    this.store = store;
     // A close request while the popup is already closed isn't an open change, but it still
     // cancels a pending open. The emitter lives as long as this intent, so it needs no cleanup.
     store.context.events.on('droppedclose', () => this.cancel());
@@ -450,7 +453,7 @@ export class HoverIntent {
       this.handleCloseOptions?.getScope?.() ??
       cachedScopeElement ??
       parentScopeElement ??
-      (closest(triggerElement, '[data-rootownerid]') as PointerEventsScopeElement | null) ??
+      closest<PointerEventsScopeElement>(triggerElement, '[data-rootownerid]') ??
       doc.body;
 
     this.blockOutsidePointerEvents({ scopeElement, triggerElement, positionerElement });
@@ -552,7 +555,7 @@ export class HoverIntent {
       return false;
     }
 
-    const targetElement = target as Element;
+    const targetElement = target;
     return (
       allTriggers.hasMatchingElement((trigger) => contains(trigger, targetElement)) &&
       (!currentDomReference || !contains(currentDomReference, targetElement))

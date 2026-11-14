@@ -164,7 +164,8 @@ function handleTouchStart(event: TouchEvent) {
   }
 
   event.stopPropagation();
-  const touch = event.touches[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above proves that the list has one touch.
+  const touch = event.touches[0]!;
   startLongPress(touch.clientX, touch.clientY, event);
 }
 
@@ -174,7 +175,8 @@ function handleTouchMove(event: TouchEvent) {
     return;
   }
 
-  const touch = event.touches[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above proves that the list has one touch.
+  const touch = event.touches[0]!;
   cancelLongPressAfterMove(touch.clientX, touch.clientY);
 }
 

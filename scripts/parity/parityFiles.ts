@@ -462,7 +462,7 @@ export function validateUpstreamFile(file: string, value: unknown): string[] {
 
 export function validateBetterRow(file: string, value: unknown): string[] {
   const problems = problemsOf(file, betterRow, value);
-  const id = (value as { id?: unknown } | null)?.id;
+  const id = String((value as { id?: unknown } | null)?.id);
   if (problems.length === 0 && basename(file) !== `${id}.json`) {
     problems.push(`${file}: the file name must be ${id}.json, the id plus .json.`);
   }

@@ -59,6 +59,7 @@ function safelyChangePointerCapture(
   pointerId: number,
   method: 'setPointerCapture' | 'releasePointerCapture',
 ) {
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- The call below binds the method to the element with `call`.
   const pointerCaptureMethod = element[method];
   if (typeof pointerCaptureMethod !== 'function') {
     return;
@@ -195,8 +196,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
     if (details) {
       detailsChanged =
-        !lastProgressDetails ||
-        lastProgressDetails.deltaX !== details.deltaX ||
+        lastProgressDetails?.deltaX !== details.deltaX ||
         lastProgressDetails.deltaY !== details.deltaY ||
         lastProgressDetails.direction !== details.direction;
     }
@@ -225,9 +225,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
 
     const style = element.style;
     if (nextSwiping) {
-      if (!dragStyleSnapshot) {
-        dragStyleSnapshot = [style.transition, style.transform];
-      }
+      dragStyleSnapshot ??= [style.transition, style.transform];
 
       style.transition = 'none';
     } else if (dragStyleSnapshot) {
@@ -931,7 +929,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       return {
         [movementCssVars.x]: '0px',
         [movementCssVars.y]: '0px',
-      } as CSSProperties;
+      };
     }
 
     return {
@@ -941,7 +939,7 @@ export function useSwipeDismiss(options: UseSwipeDismissOptions): UseSwipeDismis
       transform: swiping.value ? getDragTransform(dragOffset, initialTransform.scale) : undefined,
       [movementCssVars.x]: `${deltaX}px`,
       [movementCssVars.y]: `${deltaY}px`,
-    } as CSSProperties;
+    };
   }
 
   // `KeepAlive` removes the element from the document, and the browser then releases the pointer

@@ -372,8 +372,10 @@ const snapPointRange = computed(() => {
 
   const offsets = resolvedSnapPoints.value.map((point) => point.offset).sort((a, b) => a - b);
 
-  const minOffset = offsets[0];
-  const nextOffset = offsets[1];
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- The check above gives `resolvedSnapPoints` two items or more, so `offsets` has two. */
+  const minOffset = offsets[0]!;
+  const nextOffset = offsets[1]!;
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const range = nextOffset - minOffset;
 
   return { minOffset, range };
@@ -800,7 +802,8 @@ const swipe = useSwipeDismiss({
       );
       const orderedOffsets = orderedSnapPoints.map((point) => point.offset);
       const currentIndex = closestSnapPointIndex(orderedOffsets, currentOffset);
-      let targetSnapPoint = orderedSnapPoints[closestSnapPointIndex(orderedOffsets, targetOffset)];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above returns when `resolvedSnapPoints` is empty, so the closest index is not -1.
+      let targetSnapPoint = orderedSnapPoints[closestSnapPointIndex(orderedOffsets, targetOffset)]!;
 
       const velocityDirection = Math.sign(resolvedDirectionalVelocity);
       const shouldAdvance =
@@ -813,7 +816,8 @@ const swipe = useSwipeDismiss({
       if (shouldAdvance) {
         const adjacentIndex = clamp(currentIndex + dragDirection, 0, orderedSnapPoints.length - 1);
         if (adjacentIndex !== currentIndex) {
-          const adjacentPoint = orderedSnapPoints[adjacentIndex];
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `clamp` keeps `adjacentIndex` in the range of `orderedSnapPoints`.
+          const adjacentPoint = orderedSnapPoints[adjacentIndex]!;
           const shouldForceAdjacent =
             dragDirection > 0
               ? targetOffset < adjacentPoint.offset
@@ -837,12 +841,13 @@ const swipe = useSwipeDismiss({
     }
 
     const closestSnapPoint =
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The check above returns when `resolvedSnapPoints` is empty, so the closest index is not -1.
       resolvedSnapPoints.value[
         closestSnapPointIndex(
           resolvedSnapPoints.value.map((point) => point.offset),
           targetOffset,
         )
-      ];
+      ]!;
 
     if (resolvedDirectionalVelocity >= FAST_SWIPE_VELOCITY && dragDelta > 0) {
       return closeFromSnapPoints(closestSnapPoint);

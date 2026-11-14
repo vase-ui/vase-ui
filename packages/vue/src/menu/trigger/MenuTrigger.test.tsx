@@ -787,7 +787,7 @@ describe('<Menu.Trigger />', () => {
     it('gives the tree and the node of a detached trigger to the menu', async () => {
       const handle = Menu.createHandle();
       const probe = createMenuStoreProbe();
-      const trees: Array<FloatingTreeType | null> = [];
+      const trees: (FloatingTreeType | null)[] = [];
       await render(
         <div>
           <Menu.Trigger handle={handle} id="detached">

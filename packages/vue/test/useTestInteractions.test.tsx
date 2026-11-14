@@ -58,7 +58,7 @@ describe('useTestInteractions', () => {
     expect(() =>
       // @ts-expect-error The prop getter returns unknown values; the interaction supplies a callable onClick.
       getReferenceProps({ onClick: undefined }).onClick(),
-    ).not.toThrowError();
+    ).not.toThrow();
   });
 
   it('does not break props that start with `on`', async () => {

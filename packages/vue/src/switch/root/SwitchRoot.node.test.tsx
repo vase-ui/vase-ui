@@ -12,7 +12,7 @@ function tag(html: string, pattern: RegExp) {
 }
 
 function readId(html: string, testId: string) {
-  return tag(html, new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`)).match(/ id="([^"]+)"/)?.[1];
+  return / id="([^"]+)"/.exec(tag(html, new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`)))?.[1];
 }
 
 describe('<Switch.Root />', () => {
@@ -89,8 +89,8 @@ describe('<Switch.Root />', () => {
       const root = tag(html, /<span[^>]*role="switch"[^>]*>/);
       const input = tag(html, /<input[^>]*type="checkbox"[^>]*>/);
       const labelTag = tag(html, /<label[^>]*data-testid="label"[^>]*>/);
-      const labelId = labelTag.match(/ id="([^"]+)"/)?.[1];
-      const inputId = input.match(/ id="([^"]+)"/)?.[1];
+      const labelId = / id="([^"]+)"/.exec(labelTag)?.[1];
+      const inputId = / id="([^"]+)"/.exec(input)?.[1];
 
       expect(labelId).toBeTruthy();
       expect(root).toContain(` aria-labelledby="${labelId}"`);
@@ -140,8 +140,8 @@ describe('<Switch.Root />', () => {
       const html = await renderToString(<SwitchRootHydration label="before" nativeButton />);
       const root = tag(html, /<button[^>]*role="switch"[^>]*>/);
       const input = tag(html, /<input[^>]*type="checkbox"[^>]*>/);
-      const labelFor = tag(html, /<label[^>]*data-testid="label"[^>]*>/).match(
-        / for="([^"]+)"/,
+      const labelFor = / for="([^"]+)"/.exec(
+        tag(html, /<label[^>]*data-testid="label"[^>]*>/),
       )?.[1];
 
       expect(labelFor).toBeTruthy();

@@ -6,7 +6,7 @@ import { serializeValue } from './serializeValue';
 export type ItemLabel = string | number | null | undefined | (() => VNodeChild);
 
 type ItemRecord = Record<string, ItemLabel>;
-type ItemsInput = ItemRecord | ReadonlyArray<LabeledItem> | ReadonlyArray<Group<any>> | undefined;
+type ItemsInput = ItemRecord | readonly LabeledItem[] | readonly Group[] | undefined;
 
 interface LabeledItem {
   value: any;
@@ -15,16 +15,16 @@ interface LabeledItem {
 
 export interface Group<Item = any> {
   [key: string]: unknown;
-  items: ReadonlyArray<Item>;
+  items: readonly Item[];
 }
 
-function isGroup(item: any): item is Group<any> {
+function isGroup(item: any): item is Group {
   return typeof item === 'object' && item != null && Array.isArray(item.items);
 }
 
 export function isGroupedItems(
-  items: ReadonlyArray<any | Group<any>> | undefined,
-): items is ReadonlyArray<Group<any>> {
+  items: readonly (any | Group)[] | undefined,
+): items is readonly Group[] {
   // A group must carry an actual `items` array: key presence alone would misclassify an item
   // with an unrelated or optional `items` field.
   return isGroup(items?.[0]);
@@ -33,9 +33,7 @@ export function isGroupedItems(
 export function flattenLeafItems<Item>(
   items: readonly Item[] | readonly Group<Item>[],
 ): readonly Item[] {
-  return isGroupedItems(items)
-    ? (items as readonly Group<Item>[]).flatMap((group) => group.items)
-    : (items as readonly Item[]);
+  return isGroupedItems(items) ? items.flatMap((group) => group.items) : items;
 }
 
 /**
@@ -46,7 +44,7 @@ export function hasNullItemLabel(items: ItemsInput): boolean {
     return items != null && 'null' in items;
   }
 
-  const arrayItems = items as ReadonlyArray<LabeledItem> | ReadonlyArray<Group<any>>;
+  const arrayItems = items as readonly LabeledItem[] | readonly Group[];
 
   if (isGroupedItems(arrayItems)) {
     for (const group of arrayItems) {
@@ -119,12 +117,12 @@ export function resolveSelectedLabel(
 
   // Items provided as array (flat or grouped)
   if (Array.isArray(items)) {
-    const arrayItems = items as ReadonlyArray<LabeledItem> | ReadonlyArray<Group<any>>;
+    const arrayItems = items as readonly LabeledItem[] | readonly Group[];
     const flatItems = flattenLeafItems<LabeledItem>(arrayItems);
 
     if (value == null || typeof value !== 'object') {
       const match = flatItems.find((item) => item.value === value);
-      if (match && match.label != null) {
+      if (match?.label != null) {
         return match.label;
       }
       return fallback();
@@ -133,7 +131,7 @@ export function resolveSelectedLabel(
     // Object without explicit label: try matching by its `value` property
     if ('value' in value) {
       const match = flatItems.find((item) => item && item.value === value.value);
-      if (match && match.label != null) {
+      if (match?.label != null) {
         return match.label;
       }
     }
