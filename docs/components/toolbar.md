@@ -41,7 +41,7 @@ Import the component and assemble its parts:
 
 ### Using with other components
 
-Give a part of another component to the `as` prop of a toolbar part. The two parts then share one element. The element joins the keyboard navigation of the toolbar and keeps the behavior of the other part. Use `as` for a part that is not generic and needs no props of its own. The demo at the top of this page does this for `Toggle`.
+Give a part of another component to the `as` prop of a toolbar part. The two parts then share one element. The element joins the keyboard navigation of the toolbar and keeps the behavior of the other part. The demo at the top of this page does this for `Toggle`.
 
 When the other part needs props or listeners of its own, render it in the `#render` slot. Bind `props` on it. Render a generic part in the `#render` slot too. The type of `as` does not accept a generic component. A popup trigger is a generic part. The demo at the top of this page renders `Select.Trigger` in the slot, and this sample renders `Menu.Trigger`:
 

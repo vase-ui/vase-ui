@@ -41,7 +41,7 @@ Form works together with [Field](/components/field). Import the components and p
 
 ### Submit to a server
 
-To submit the form to a server, send the `FormData` of the form in a `submit` listener. Give the errors of the response to the `errors` prop.
+To submit the form to a server, call `event.preventDefault()` in a `submit` listener. Then send the `FormData` of the form. Give the errors of the response to the `errors` prop.
 
 The demo keeps the response in one state object. It disables the button while the request runs.
 
@@ -63,7 +63,7 @@ Use `@form-submit` in place of the native `submit` listener to get the form valu
 
 <<< ./form/FormSubmit.vue
 
-`Form` then calls `preventDefault()` on the native submit event.
+When you use `@form-submit`, `Form` calls `preventDefault()` on the native submit event.
 
 ### Using with Zod
 
