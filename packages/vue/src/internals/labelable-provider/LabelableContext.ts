@@ -8,7 +8,7 @@ import { NOOP } from '../noop';
  * `getId` is `undefined`. The provider calls the getter each time it needs the `id`, so the part
  * registers one time and keeps its place in the order of the registrations. A part that registers
  * again after its removal goes to the end. The getter returns `undefined` for a part that has no
- * `id` now, such as a part that `KeepAlive` has deactivated.
+ * `id` now, such as a part that `KeepAlive` holds.
  */
 export type RegisterId<Id = string> = (
   source: symbol,
@@ -36,6 +36,8 @@ export interface LabelableContext {
   messageIds: ComputedRef<string[]>;
   registerMessageId: RegisterId;
   getDescriptionProps: (externalProps: Record<string, any>) => Record<string, any>;
+  /** Whether an id reference of the provider reaches `element`. */
+  reaches: (element: Element) => boolean;
 }
 
 /**
@@ -54,6 +56,7 @@ const DEFAULT_LABELABLE_CONTEXT: LabelableContext = {
   messageIds: computed(() => EMPTY_ARRAY),
   registerMessageId: NOOP,
   getDescriptionProps: (externalProps) => externalProps,
+  reaches: () => true,
 };
 
 /**

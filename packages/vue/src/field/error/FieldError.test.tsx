@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { defineComponent, h, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -8,6 +8,7 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   hydrate,
   isJSDOM,
   renderOnServer,
@@ -548,6 +549,50 @@ describe('<Field.Error />', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('error')).toBe(null);
       });
+    });
+  });
+
+  describe('KeepAlive', () => {
+    it('does not describe the control with an error that renders while KeepAlive holds it', async () => {
+      let root = null as InstanceType<typeof Field.Root> | null;
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      // The error mounts with no element, because the field is valid then.
+      const Branch = defineComponent(() => () => (
+        <div>
+          {extra.value ? (
+            <Field.Error key="error" data-testid="error">
+              Error
+            </Field.Error>
+          ) : null}
+        </div>
+      ));
+      await render(() => (
+        <Field.Root
+          ref={(instance) => {
+            root = instance as InstanceType<typeof Field.Root> | null;
+          }}
+          validate={() => 'Error'}
+        >
+          <Field.Control data-testid="control" />
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+      ));
+      const control = screen.getByTestId('control');
+
+      visible.value = false;
+      await flushMicrotasks();
+      extra.value = true;
+      await flushMicrotasks();
+      await root?.validate();
+      await flushMicrotasks();
+
+      expect(control).not.toHaveAttribute('aria-describedby');
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(control).toHaveAttribute('aria-describedby', screen.getByTestId('error').id);
     });
   });
 

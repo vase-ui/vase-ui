@@ -85,7 +85,7 @@ export interface RadioRootProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onActivated, onDeactivated, provide, shallowRef, watch } from 'vue';
+import { computed, onDeactivated, provide, shallowRef, watch } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { mergeCleanups } from '../../common/mergeCleanups';
 import { ownerWindow } from '../../common/owner';
@@ -109,6 +109,7 @@ import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useFormReset } from '../../internals/useFormReset';
+import { useKeepAliveState } from '../../internals/useKeepAliveState';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useRadioGroupContext } from '../../radio-group/RadioGroupContext';
 import { dispatchClickWithModifiers } from '../../utils/dispatchClickWithModifiers';
@@ -195,7 +196,7 @@ if (!group && checked.value) {
 }
 
 const rootId = useVaseUiId();
-const controlId = useLabelableId({ id: () => props.id });
+const controlId = useLabelableId({ id: () => props.id, element: () => element.value });
 const hiddenInputId = computed(() => (props.nativeButton ? undefined : controlId.value));
 
 const ariaLabelledBy = useAriaLabelledBy(
@@ -251,24 +252,30 @@ if (group) {
 
   // `KeepAlive` takes the input out of the document and calls no `ref` setter. The input must not
   // stay in the group and in the field: the field would validate an input that the user cannot reach.
-  const isDeactivated = shallowRef(false);
+  const { isHeld, shown } = useKeepAliveState(() => element.value, group.reaches);
 
-  onDeactivated(() => {
-    isDeactivated.value = true;
+  function releaseRegisteredInput() {
     releaseInput?.();
     releaseInput = undefined;
-  });
+  }
 
-  onActivated(() => {
-    isDeactivated.value = false;
+  onDeactivated(releaseRegisteredInput);
+
+  // The `ref` setter of a radio that mounts in a held branch registers the input.
+  watch(isHeld, (held) => {
+    if (held) {
+      releaseRegisteredInput();
+    }
   });
 
   // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A registration in
   // the hook would reverse the order of the inputs in the field, and the first radio would lose its
-  // place. A watcher runs in the order of the radios.
-  watch(isDeactivated, (deactivated) => {
+  // place. A watcher runs in the order of the radios. The release moves an input that is still
+  // registered to the end, because `Map.set` keeps the place of a key.
+  watch(shown, () => {
     const input = inputElement.value;
-    if (!deactivated && input) {
+    releaseRegisteredInput();
+    if (input) {
       registerInput(input);
     }
   });
@@ -279,7 +286,7 @@ if (group) {
     [checked, isDisabled],
     () => {
       const input = inputElement.value;
-      if (input && !isDeactivated.value && !(isDisabled.value && checked.value)) {
+      if (input && !isHeld.value && !(isDisabled.value && checked.value)) {
         group.registerInputRef(input);
       }
     },

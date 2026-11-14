@@ -83,6 +83,7 @@ import { useFormContext } from '../internals/form-context';
 import { useDeferredServerRender, useLabelableContext } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { RadioGroupContext } from './RadioGroupContext';
@@ -289,6 +290,7 @@ provide(RadioGroupContext, {
   touched,
   inputSyncRequest,
   reset,
+  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 // With a value, the server HTML has the tab stop on the checked radio. Base UI has `-1` on each radio.

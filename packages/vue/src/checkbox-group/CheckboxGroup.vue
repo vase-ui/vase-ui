@@ -67,6 +67,7 @@ import {
 } from '../internals/labelable-provider';
 import type { ComponentRenderFn, HTMLProps } from '../internals/types';
 import { useVaseUiId } from '../internals/useBaseUiId';
+import { isInTreeOf } from '../internals/useKeepAliveState';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
@@ -242,6 +243,7 @@ provide(CheckboxGroupContext, {
   validation,
   registerControlId,
   reset,
+  reaches: (target) => isInTreeOf(element.value, target),
 });
 
 const { element, elementProps } = useRenderElement('div', props, {

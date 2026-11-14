@@ -1,0 +1,77 @@
+import { nextTick, onActivated, onDeactivated, onMounted, shallowRef, toValue, watch } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
+
+export interface KeepAliveState {
+  /**
+   * Whether `KeepAlive` holds the part. A part that mounts in a held branch is held from its mount
+   * when `reaches` refuses its element.
+   */
+  isHeld: Readonly<Ref<boolean>>;
+  /**
+   * Counts the activations by `KeepAlive`. The activation in the flush of the mount does not count.
+   */
+  shown: Readonly<Ref<number>>;
+}
+
+/**
+ * Follows the `KeepAlive` state of a part. Call it in `setup`.
+ *
+ * A part that mounts in a branch that `KeepAlive` holds gets no `onDeactivated` call, and Vue has
+ * no public API for the state of the branch. `KeepAlive` mounts such a part in a detached element.
+ * The part is held when its element is not in a document and `reaches` refuses it. An app that
+ * mounts in a detached element is not held, because the owner of the part is in the same tree.
+ * @param element The element of the part.
+ * @param reaches Whether an id reference of the owner of the registry reaches an element.
+ * `isInTreeOf` makes it. Without it, a part that mounts in a held branch is not held.
+ */
+export function useKeepAliveState(
+  element?: MaybeRefOrGetter<Element | null | undefined>,
+  reaches?: (element: Element) => boolean,
+): KeepAliveState {
+  const isHeld = shallowRef(false);
+  const shown = shallowRef(0);
+  let isMountFlush = false;
+
+  function checkTree() {
+    const partElement = toValue(element);
+    if (partElement && !partElement.isConnected && reaches && !reaches(partElement)) {
+      isHeld.value = true;
+    }
+  }
+
+  onMounted(() => {
+    isMountFlush = true;
+    void nextTick(() => {
+      isMountFlush = false;
+    });
+    checkTree();
+    // A part can render its element after the mount, such as `Field.Error`. A part reads its
+    // element in `setup` only after it declares the element, so the `watch` starts here.
+    watch(() => toValue(element), checkTree, { flush: 'post' });
+  });
+
+  onDeactivated(() => {
+    isHeld.value = true;
+  });
+
+  // `onActivated` also runs in the flush of the first mount in a `KeepAlive`. A part that mounted
+  // in a held branch gets the next call with no `onDeactivated` before it, also when its owner is in
+  // that branch.
+  onActivated(() => {
+    if (isMountFlush) {
+      return;
+    }
+    isHeld.value = false;
+    shown.value += 1;
+  });
+
+  return { isHeld, shown };
+}
+
+/**
+ * Whether an id reference of `owner` reaches `element`: both have one root node. An owner with no
+ * element reaches each element.
+ */
+export function isInTreeOf(owner: Element | null | undefined, element: Element): boolean {
+  return !owner || owner.getRootNode() === element.getRootNode();
+}
