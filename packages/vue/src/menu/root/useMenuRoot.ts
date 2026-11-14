@@ -523,6 +523,32 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return rest;
   }
 
+  let previousFloating: Record<string, unknown> | undefined;
+  let previousPopupProps: ReturnType<typeof mergeProps<'div'>> | undefined;
+
+  // Under virtual focus the input holds `aria-activedescendant`, so the popup does not need it. The
+  // props of the popup then stay one object while the highlight moves. A new object renders the
+  // focus manager again, and Vue then patches each item again.
+  function getPopupProps() {
+    const { 'aria-activedescendant': _activeDescendant, ...floating } = listNavigation.value
+      .floating as Record<string, unknown>;
+    if (
+      previousFloating === undefined ||
+      Object.keys(floating).length !== Object.keys(previousFloating).length ||
+      Object.entries(floating).some(([key, value]) => previousFloating![key] !== value)
+    ) {
+      previousFloating = floating;
+      previousPopupProps = mergeProps(
+        FOCUSABLE_POPUP_PROPS,
+        popupListeners,
+        typeahead.floating,
+        floating,
+        dismiss.floating,
+      );
+    }
+    return previousPopupProps!;
+  }
+
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: mergeProps(
       typeahead.reference,
@@ -538,13 +564,15 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       'aria-haspopup': 'menu',
       'aria-expanded': false,
     }),
-    popupProps: mergeProps(
-      FOCUSABLE_POPUP_PROPS,
-      popupListeners,
-      typeahead.floating,
-      listNavigation.value.floating,
-      dismiss.floating,
-    ),
+    popupProps: virtualFocus
+      ? getPopupProps()
+      : mergeProps(
+          FOCUSABLE_POPUP_PROPS,
+          popupListeners,
+          typeahead.floating,
+          listNavigation.value.floating,
+          dismiss.floating,
+        ),
     itemProps: listNavigation.value.item,
     inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
   }));

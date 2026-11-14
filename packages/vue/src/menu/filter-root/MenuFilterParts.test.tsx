@@ -168,10 +168,10 @@ describe('Menu filter parts conformance', () => {
   });
 
   it.each([
-    { part: 'Input', element: <Menu.Input /> },
-    { part: 'Clear', element: <Menu.Clear /> },
-    { part: 'Empty', element: <Menu.Empty /> },
-  ])('throws when <Menu.$part> is rendered without a filter provider', async ({ part, element }) => {
+    ['Input', <Menu.Input />],
+    ['Clear', <Menu.Clear />],
+    ['Empty', <Menu.Empty />],
+  ])('throws when <Menu.%s> is rendered without a filter provider', async (part, element) => {
     await expect(render(element)).rejects.toThrow(
       `Vase UI: <Menu.${part}> must be placed in a menu wrapped in <Menu.FilterProvider>.`,
     );

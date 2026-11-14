@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Menu from '../index.parts';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
+import { reset as resetWarnings } from '../../common/warn';
 import { DirectionProvider } from '../../direction-provider';
 
 describe('<Menu.Popup /> filter input focus', () => {
@@ -58,40 +59,76 @@ describe('<Menu.Popup /> filter input focus', () => {
   });
 
   it.each([
-    { orientation: 'vertical', direction: 'ltr', key: 'ArrowLeft' },
-    { orientation: 'vertical', direction: 'rtl', key: 'ArrowRight' },
-    { orientation: 'horizontal', direction: 'ltr', key: 'ArrowUp' },
-    { orientation: 'horizontal', direction: 'rtl', key: 'ArrowUp' },
-  ] as const)(
-    'returns focus with the $orientation $direction close key',
-    async ({ orientation, direction, key }) => {
+    ['vertical', 'ltr', 'ArrowLeft'],
+    ['vertical', 'rtl', 'ArrowRight'],
+    ['horizontal', 'ltr', 'ArrowUp'],
+    ['horizontal', 'rtl', 'ArrowUp'],
+  ] as const)('returns focus with the %s %s close key', async (orientation, direction, key) => {
+    await render(
+      <DirectionProvider direction={direction}>
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen orientation={orientation}>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <button type="button">Extra action</button>
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>
+      </DirectionProvider>,
+    );
+
+    const action = screen.getByRole('button', { name: 'Extra action' });
+    action.focus();
+    await flushMicrotasks();
+    expect(action).toHaveFocus();
+    await fireEvent.keyDown(action, { key });
+    expect(screen.getByRole('searchbox')).toHaveFocus();
+  });
+
+  describe('without a Menu.Input', () => {
+    beforeEach(() => {
+      resetWarnings();
+    });
+
+    it('warns when the menu opens', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       await render(
-        <DirectionProvider direction={direction}>
-          <Menu.FilterProvider>
-            <Menu.Root defaultOpen orientation={orientation}>
-              <Menu.Trigger>Actions</Menu.Trigger>
-              <Menu.Portal>
-                <Menu.Positioner>
-                  <Menu.Popup>
-                    <Menu.Input aria-label="Filter actions" />
-                    <button type="button">Extra action</button>
-                    <Menu.List>
-                      <Menu.Item>Rename</Menu.Item>
-                    </Menu.List>
-                  </Menu.Popup>
-                </Menu.Positioner>
-              </Menu.Portal>
-            </Menu.Root>
-          </Menu.FilterProvider>
-        </DirectionProvider>,
+        <Menu.FilterProvider>
+          <Menu.Root open>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
       );
 
-      const action = screen.getByRole('button', { name: 'Extra action' });
-      action.focus();
-      await flushMicrotasks();
-      expect(action).toHaveFocus();
-      await fireEvent.keyDown(action, { key });
-      expect(screen.getByRole('searchbox')).toHaveFocus();
-    },
-  );
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        'A filterable menu opened without a <Menu.Input>.',
+      );
+    });
+
+    it('does not warn when the popup has the input', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await renderFilterMenu();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+  });
 });
