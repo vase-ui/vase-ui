@@ -1227,7 +1227,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A render of the other part can replace the declaration. The other part thus calls the root in `onUpdated`, and the root writes the declaration again.
 - For a declaration on the element of another part, do not use a record. Vue removes the property when the record loses the declaration. A value that the consumer wrote in script is then lost.
 - `Drawer.VirtualKeyboardProvider` writes the space for the keyboard to a scroll container of the consumer, which calls no function of the provider. The provider thus watches the `style` attribute of that element with a `MutationObserver`.
-- When a render replaces a declaration of the provider, the provider keeps the new value for the restore and writes its declaration again. The observer runs before the browser computes the layout, so the render does not move the content.
+- When a render replaces a declaration of the provider, the provider keeps the new value for the restore and writes its declaration again. The observer calls back in a microtask, before the next frame, so the content does not move.
 - An attribute key in a props object is the name in Vue's `HTMLAttributes`, such as `tabindex`. `mergeProps` merges by key, so the `tabindex` of a consumer then replaces the `tabindex` of the part.
 - With the key `tabIndex`, the merged props hold two keys. Vue then sets one as a DOM property and one as an attribute.
 - A parameter of a composable keeps upstream's name, such as `tabIndex` of `useButton`.

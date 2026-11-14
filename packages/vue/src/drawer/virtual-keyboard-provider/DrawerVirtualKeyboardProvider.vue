@@ -316,7 +316,7 @@ function writeKeyboardScrollSlack(adjustment: ScrollAdjustment) {
 
 // Vue writes each key of a rendered `style` again, so a render of the scroll container replaces
 // the slack. The values of that render are then the values to restore, and the slack goes back
-// on top of them before the browser computes the layout.
+// on top of them before the next frame.
 function keepKeyboardScrollSlack() {
   const adjustment = keyboardScrollAdjustment;
   if (!adjustment) {
