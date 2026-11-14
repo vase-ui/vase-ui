@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { KeepAlive, defineComponent, h, shallowRef } from 'vue';
 import type { CSSProperties } from 'vue';
 import { Toolbar } from '@vase-ui/vue/toolbar';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   describeConformance,
@@ -52,9 +52,7 @@ describe('<Tooltip.Trigger />', () => {
       const onOpenChange = vi.fn();
       await render(
         <Tooltip.Root onOpenChange={onOpenChange}>
-          <Tooltip.Trigger style={{ pointerEvents: 'none' }} {...triggerProps}>
-            Trigger
-          </Tooltip.Trigger>
+          <Tooltip.Trigger {...triggerProps}>Trigger</Tooltip.Trigger>
         </Tooltip.Root>,
       );
       return { trigger: screen.getByRole('button', { name: 'Trigger' }), onOpenChange };
@@ -200,9 +198,7 @@ describe('<Tooltip.Trigger />', () => {
     const Page = defineComponent({
       setup: () => () => (
         <Tooltip.Root onOpenChange={onOpenChange}>
-          <Tooltip.Trigger delay={0} style={{ pointerEvents: 'none' }}>
-            Trigger
-          </Tooltip.Trigger>
+          <Tooltip.Trigger delay={0}>Trigger</Tooltip.Trigger>
         </Tooltip.Root>
       ),
     });
@@ -240,12 +236,7 @@ describe('<Tooltip.Trigger />', () => {
             open.value = nextOpen;
           }}
         >
-          <Tooltip.Trigger
-            data-testid="trigger"
-            delay={0}
-            closeDelay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger data-testid="trigger" delay={0} closeDelay={0}>
             Trigger
           </Tooltip.Trigger>
           <Tooltip.Portal>

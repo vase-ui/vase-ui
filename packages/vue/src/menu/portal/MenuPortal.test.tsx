@@ -3,7 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { computed, defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
 import {
   ContextMenuProvider,
   MenubarProvider,
@@ -62,6 +62,45 @@ describe('<Menu.Portal />', () => {
   });
 
   describe('prop: container', () => {
+    it.each([
+      { controlled: false, keepMounted: false },
+      { controlled: true, keepMounted: false },
+      { controlled: false, keepMounted: true },
+    ])(
+      'mounts and focuses an initially open menu inside an ancestor ref (controlled=$controlled, keepMounted=$keepMounted)',
+      async ({ controlled, keepMounted }) => {
+        const Test = defineComponent(() => {
+          const container = shallowRef<HTMLElement | null>(null);
+          const setContainer = (element: unknown) => {
+            container.value = element as HTMLElement | null;
+          };
+
+          return () => (
+            <div ref={setContainer} data-testid="container">
+              <Menu.Root defaultOpen={!controlled} open={controlled ? true : undefined}>
+                <Menu.Trigger>Open menu</Menu.Trigger>
+                <Menu.Portal container={container} keepMounted={keepMounted} data-testid="portal">
+                  <Menu.Positioner>
+                    <Menu.Popup>
+                      <Menu.Item>Item</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.Root>
+            </div>
+          );
+        });
+
+        await render(<Test />);
+
+        expect(screen.getByTestId('container')).toContainElement(screen.getByTestId('portal'));
+        expect(screen.getByTestId('container')).toContainElement(screen.getByRole('menu'));
+        await waitFor(() => {
+          expect(screen.getByRole('menu')).toHaveFocus();
+        });
+      },
+    );
+
     it('keeps a closed menu inside an ancestor ref when opening', async () => {
       const Test = defineComponent({
         props: { open: { type: Boolean, required: true } },
