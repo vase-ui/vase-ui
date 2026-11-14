@@ -38,7 +38,18 @@ const transitionReachesTeleportChild = givesTransitionToTeleportChild();
 
 const open = { defaultOpen: true };
 
-const floatingPortalParts = [
+// A generic part, such as `Combobox.Root`, is a function that `Component` does not accept.
+type PartComponent = Component | ((...args: any[]) => any);
+
+interface FloatingPortalPart {
+  name: string;
+  root: PartComponent;
+  portal: PartComponent;
+  rootProps?: Record<string, unknown>;
+  portalProps?: Record<string, unknown>;
+}
+
+const floatingPortalParts: FloatingPortalPart[] = [
   { name: 'Combobox.Portal', root: Combobox.Root, portal: Combobox.Portal, rootProps: open },
   { name: 'Dialog.Portal', root: Dialog.Root, portal: Dialog.Portal, rootProps: open },
   { name: 'Menu.Portal', root: Menu.Root, portal: Menu.Portal, rootProps: open },
@@ -79,16 +90,17 @@ describe.runIf(transitionReachesTeleportChild)('VUE-60: the portal has one root 
     '$name gives a Transition of the consumer to its portal element',
     async (part) => {
       const entered: Element[] = [];
-      const Root = part.root as Component;
-      const Portal = part.portal as Component;
       await render(
-        <Root {...part.rootProps}>
-          <Transition appear onEnter={(element: Element) => entered.push(element)}>
-            <Portal data-testid="portal" {...part.portalProps}>
-              <span>content</span>
-            </Portal>
-          </Transition>
-        </Root>,
+        h(part.root, part.rootProps, () =>
+          h(
+            Transition,
+            { appear: true, onEnter: (element: Element) => entered.push(element) },
+            () =>
+              h(part.portal, { 'data-testid': 'portal', ...part.portalProps }, () =>
+                h('span', 'content'),
+              ),
+          ),
+        ),
       );
 
       const portal = await screen.findByTestId('portal');
