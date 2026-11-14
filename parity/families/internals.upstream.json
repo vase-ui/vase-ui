@@ -11,7 +11,6 @@
     "packages/react/src/internals/field-root-context/**",
     "packages/react/src/internals/filter.ts",
     "packages/react/src/internals/filter.test.ts",
-    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
@@ -23,12 +22,8 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
-    "packages/react/src/internals/resolvePopupLabel.ts",
-    "packages/react/src/internals/resolvePopupLabel.test.tsx",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
-    "packages/react/src/internals/resolveRenderedId.ts",
-    "packages/react/src/internals/resolveRenderedId.test.tsx",
     "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/resolveValueLabel.test.ts",
     "packages/react/src/internals/serializeValue.ts",
@@ -91,7 +86,6 @@
     "packages/react/src/internals/field-root-context/index.ts",
     "packages/react/src/internals/field-root-context/useSetFieldFocused.ts",
     "packages/react/src/internals/filter.ts",
-    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
     "packages/react/src/internals/itemEquality.ts",
@@ -105,9 +99,7 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
-    "packages/react/src/internals/resolvePopupLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
-    "packages/react/src/internals/resolveRenderedId.ts",
     "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/serializeValue.ts",
     "packages/react/src/internals/stateAttributesMapping.ts",
@@ -949,32 +941,6 @@
       ]
     },
     {
-      "file": "packages/react/src/internals/resolvePopupLabel.test.tsx",
-      "rows": [
-        {
-          "describe": [
-            "resolvePopupLabel"
-          ],
-          "title": "falls back to the trigger id"
-        },
-        {
-          "describe": [
-            "resolvePopupLabel"
-          ],
-          "title": "uses a render element's own label instead of the trigger"
-        },
-        {
-          "describe": [
-            "resolvePopupLabel"
-          ],
-          "title": "reads a server-created render element's label",
-          "conditions": [
-            "skipIf(reactMajor < 19)"
-          ]
-        }
-      ]
-    },
-    {
       "file": "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
       "rows": [
         {
@@ -1021,92 +987,6 @@
             "resolveRenderedAriaLabel"
           ],
           "title": "cannot see an aria-label applied by a render function"
-        }
-      ]
-    },
-    {
-      "file": "packages/react/src/internals/resolveRenderedId.test.tsx",
-      "rows": [
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "falls back to the generated id when nothing else is given"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "prefers an explicit id prop"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "treats an explicitly empty id prop as no id"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "prefers a render element's own id"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "treats an undefined id on a render element as no id"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "reads a server-created render element's id",
-          "conditions": [
-            "skipIf(reactMajor < 19)"
-          ]
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "ignores a render element that does not set an id"
-        },
-        {
-          "describe": [
-            "resolveRenderedId"
-          ],
-          "title": "cannot see an id applied by a render function"
-        },
-        {
-          "describe": [
-            "useRenderedId"
-          ],
-          "title": "does not publish a generated fallback as an override"
-        },
-        {
-          "describe": [
-            "useRenderedId"
-          ],
-          "title": "publishes the id that lands on the rendered element"
-        },
-        {
-          "describe": [
-            "useRenderedId"
-          ],
-          "title": "publishes an empty string for an explicitly empty id"
-        },
-        {
-          "describe": [
-            "useRenderedId"
-          ],
-          "title": "clears an explicit id after it is removed"
-        },
-        {
-          "describe": [
-            "useRenderedId"
-          ],
-          "title": "releases the override when the element unmounts"
         }
       ]
     },

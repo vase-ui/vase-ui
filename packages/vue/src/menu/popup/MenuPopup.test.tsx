@@ -112,6 +112,29 @@ describe('<Menu.Popup />', () => {
       expect(popup).not.toHaveAttribute('aria-orientation');
     });
 
+    it('names the popup with the live id of the element of its trigger', async () => {
+      await render(
+        <Menu.Root open>
+          <Menu.Trigger
+            v-slots={{
+              render: ({ props }: { props: Record<string, unknown> }) => (
+                <button {...props} id="live-trigger">
+                  Actions
+                </button>
+              ),
+            }}
+          />
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup />
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      expect(screen.getByRole('menu')).toHaveAttribute('aria-labelledby', 'live-trigger');
+    });
+
     it('gives an explicit aria-labelledby the place of the trigger label', async () => {
       await render(
         <Menu.Root open>
