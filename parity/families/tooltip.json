@@ -11,16 +11,6 @@
       "reason": "The file is the entry point of Tooltip. It comes in the last pull request of the family, so the package exports nothing of Tooltip before then."
     },
     {
-      "upstream": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tooltip.Provider`."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/provider/TooltipProviderContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Tooltip.Provider`."
-    },
-    {
       "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Tooltip.Viewport`."
@@ -36,22 +26,10 @@
       "reason": "Vase UI does not have `Tooltip.Viewport`."
     },
     {
-      "upstream": "packages/react/src/tooltip/provider/TooltipProvider.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
-      "reason": "The file tests `Tooltip.Provider`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/tooltip/viewport/TooltipViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
       "reason": "The file tests `Tooltip.Viewport`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/viewport/TooltipViewport.tsx",
-      "reason": "The other cases of the file render `Tooltip.Provider`, which Vase UI does not have. `Tooltip.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/tooltip/root/TooltipRoot.test.tsx",
@@ -93,8 +71,8 @@
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
       "entry": "Provider",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/tooltip/provider/TooltipProvider.tsx",
-      "reason": "Vase UI does not have `Tooltip.Provider`."
+      "waitsOn": "packages/react/src/tooltip/index.ts",
+      "reason": "The entry point of Tooltip exports `Tooltip.Provider`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/tooltip/types.md",
