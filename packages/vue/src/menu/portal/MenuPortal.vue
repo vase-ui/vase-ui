@@ -21,7 +21,8 @@ export interface MenuPortalProps
 
 <script setup lang="ts">
 import { computed, provide, useTemplateRef } from 'vue';
-import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import type { Component } from 'vue';
+import type { HTMLProps } from '../../internals/types';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { MenuPortalContext } from './MenuPortalContext';
@@ -32,7 +33,7 @@ const props = withDefaults(defineProps<MenuPortalProps>(), { as: 'div', keepMoun
 
 defineSlots<{
   default(props: { state: MenuPortalState }): unknown;
-  render: ComponentRenderFn<HTMLProps, MenuPortalState>;
+  render(props: { props: HTMLProps; state: MenuPortalState; children: Component }): unknown;
 }>();
 
 const { store, parent } = useMenuRootContext();
