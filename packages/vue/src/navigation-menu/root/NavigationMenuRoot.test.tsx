@@ -13,6 +13,7 @@ import {
   renderOnServer,
   screen,
   waitFor,
+  waitForLaterMillisecond,
   within,
 } from '#test-utils';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
@@ -665,9 +666,8 @@ describe('<NavigationMenu.Root />', () => {
         await fireEvent.pointerUp(trigger, { pointerType: 'touch' });
         await fireEvent.click(trigger);
         await flushMicrotasks();
-        // The click mounted the nested trigger in this millisecond of the fake clock. Vue skips the
-        // second and later listeners of an event in the millisecond when it attached them.
-        vi.setSystemTime(Date.now() + 1);
+        // The click mounted the nested trigger in this millisecond of the fake clock.
+        await waitForLaterMillisecond();
 
         const nestedTrigger2 = screen.getByTestId('nested-trigger-2');
         await fireEvent.pointerEnter(nestedTrigger2, { pointerType: 'touch' });

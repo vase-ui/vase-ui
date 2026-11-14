@@ -1455,7 +1455,6 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 - A case that changes a prop between `0` and `-0` writes a `shallowRef` that the composable reads. Vue compares vnode props with `!==`.
 - Vue has no `Profiler`. A `MutationObserver` gets one call for the DOM changes of one Vue flush.
 - Vue puts empty text nodes around a fragment. `childNodes` has them. `children` does not.
-- A case with fake timers can send an event to a part that an earlier event of the case mounted. Move the clock first: `vi.setSystemTime(Date.now() + 1)`. The fake clock stays in the millisecond of the mount, and Vue skips the second and later listeners of an event in that millisecond.
 - A case under `skipIf(isJSDOM)` runs.
 - A case that upstream runs only in jsdom (`skipIf(!isJSDOM)`) is ported to the browser, or it gets an exception row.
 - A case that upstream skips with a `skip()` call in its body runs when it passes in each engine. Remove the call, and state the removal in the body of the pull request.
