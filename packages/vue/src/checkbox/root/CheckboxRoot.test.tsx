@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { userEvent } from 'vitest/browser';
 import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
@@ -1349,6 +1350,33 @@ describe('<Checkbox.Root />', () => {
         await fireEvent.click(screen.getByText('clear'));
 
         expect(root).not.toHaveAttribute('data-filled');
+      });
+
+      it('adds [data-filled] attribute when any checkbox is filled when inside a group', async () => {
+        await render(
+          <Field.Root>
+            <CheckboxGroup defaultValue={['1', '2']}>
+              <Checkbox.Root name="1" data-testid="button-1" />
+              <Checkbox.Root name="2" data-testid="button-2" />
+            </CheckboxGroup>
+          </Field.Root>,
+        );
+
+        const button1 = screen.getByTestId('button-1');
+        const button2 = screen.getByTestId('button-2');
+
+        expect(button1).toHaveAttribute('data-filled');
+        expect(button2).toHaveAttribute('data-filled');
+
+        await fireEvent.click(button1);
+
+        expect(button1).toHaveAttribute('data-filled');
+        expect(button2).toHaveAttribute('data-filled');
+
+        await fireEvent.click(button2);
+
+        expect(button1).not.toHaveAttribute('data-filled');
+        expect(button2).not.toHaveAttribute('data-filled');
       });
     });
 
