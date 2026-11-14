@@ -89,6 +89,10 @@ const emit = defineEmits<{
    * Provides the new value as an argument.
    */
   valueChange: [value: string[], eventDetails: CheckboxGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: string[]];
 }>();
 

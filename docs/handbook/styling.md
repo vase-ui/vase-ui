@@ -67,6 +67,10 @@ In this sample, the rule `.thumb` matches `Switch.Thumb`, which has one root nod
 
 <<< ../examples/styling/ScopedStyle.vue
 
+Each `Portal` part renders its element in a `Teleport`, in another place of the document. A rule of `<style scoped>`, `v-show` and a custom directive on the part do not reach that element, and `:deep()` does not reach it either. Write the element in the `#render` slot of the part. It is then an element of your own template, so they apply to it. Bind `props` on it, and mount `children` in it:
+
+<<< ../examples/styling/ScopedPortal.vue
+
 ## Tailwind CSS
 
 Apply Tailwind CSS classes to each part with the `class` attribute. The variants that start with `data-` use the data attributes of the part.

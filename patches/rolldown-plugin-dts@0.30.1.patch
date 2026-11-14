@@ -1,0 +1,13 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index f086bb27666807ff5ebe12cc8b7d43dc516d9e5d..d7c4b8e794e114ebf54fdcbd57f2ef43198b8413 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -869,7 +869,7 @@ function isReferenceId(node) {
+ function isHelperImport(node) {
+ 	return node.type === "ImportDeclaration" && node.specifiers.length > 0 && node.specifiers.every((spec) => spec.type === "ImportSpecifier" && spec.imported.type === "Identifier" && ["__exportAll", "__reExport"].includes(spec.local.name));
+ }
+-const REFERENCE_RE = /\/\s*<reference\s+(?:path|types)=/;
++const REFERENCE_RE = /\/\s*<reference\s+(?:path|types|lib)=/;
+ function collectReferenceDirectives(comment, negative = false) {
+ 	return comment.filter((c) => REFERENCE_RE.test(c.value) !== negative);
+ }
