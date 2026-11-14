@@ -54,8 +54,8 @@ provide(
 const portalOwnerRole = parent.type === 'menu' || parent.type === 'menubar' ? 'group' : undefined;
 
 // The template has one form for `#render` and one for the content. A `v-if` on a slot template
-// makes the slots dynamic, and each part below it that has slot content then renders again with
-// its parent.
+// makes the slots of the portal dynamic. Each part below the portal that has slot content then
+// renders again with its parent.
 const portalRef = useTemplateRef('portal');
 const element = computed(() => portalRef.value?.element ?? null);
 
