@@ -57,7 +57,9 @@
     "packages/react/test/mockRuntimeLocale.ts",
     "packages/react/test/pointer.ts",
     "packages/react/test/pointer.test.tsx",
-    "packages/react/test/wait.ts"
+    "packages/react/test/positionerConformanceTests.tsx",
+    "packages/react/test/wait.ts",
+    "packages/react/test/waitForPositioned.ts"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [

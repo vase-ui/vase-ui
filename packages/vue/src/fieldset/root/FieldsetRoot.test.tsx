@@ -1,7 +1,11 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
+import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Fieldset } from '@vase-ui/vue/fieldset';
+import { RadioGroup } from '@vase-ui/vue/radio-group';
+import { Slider } from '@vase-ui/vue/slider';
 import {
   createRenderer,
   describeConformance,
@@ -13,6 +17,8 @@ import {
   within,
 } from '#test-utils';
 import FieldsetLegendHydration from '../legend/FieldsetLegendHydration.test.vue';
+
+type RenderSlotProps = { props: Record<string, unknown> };
 
 describe('<Fieldset.Root />', () => {
   const { render } = createRenderer();
@@ -100,6 +106,49 @@ describe('<Fieldset.Root />', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Enable outer' }));
     expect(screen.getByTestId('control')).not.toBeDisabled();
     expect(screen.getByTestId('root')).not.toHaveAttribute('data-disabled');
+  });
+
+  it('passes disabled to rendered Base UI roots', async () => {
+    await render(
+      <div>
+        <Fieldset.Root
+          disabled
+          v-slots={{
+            render: ({ props }: RenderSlotProps) => (
+              <RadioGroup {...props} data-testid="radio-group" />
+            ),
+          }}
+        />
+        <Fieldset.Root
+          disabled
+          v-slots={{
+            render: ({ props }: RenderSlotProps) => (
+              <CheckboxGroup {...props}>
+                <Checkbox.Root name="apple" data-testid="checkbox" />
+              </CheckboxGroup>
+            ),
+          }}
+        />
+        <Fieldset.Root
+          disabled
+          v-slots={{
+            render: ({ props }: RenderSlotProps) => (
+              <Slider.Root {...props} defaultValue={50}>
+                <Slider.Control data-testid="slider-control">
+                  <Slider.Track>
+                    <Slider.Thumb />
+                  </Slider.Track>
+                </Slider.Control>
+              </Slider.Root>
+            ),
+          }}
+        />
+      </div>,
+    );
+
+    expect(screen.getByTestId('radio-group')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByTestId('checkbox')).toHaveAttribute('data-disabled');
+    expect(screen.getByTestId('slider-control')).toHaveAttribute('data-disabled');
   });
 
   it('sets no disabled attribute on an enabled root that renders a div', async () => {
