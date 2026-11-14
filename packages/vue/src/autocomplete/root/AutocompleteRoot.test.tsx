@@ -104,10 +104,6 @@ async function writeOutside(target: { value: unknown }, next: unknown) {
 describe('<Autocomplete.Root />', () => {
   const { render } = createRenderer();
 
-  beforeEach(() => {
-    globalThis.VASE_UI_ANIMATIONS_DISABLED = true;
-  });
-
   // `getFilter` keeps the filter for no locale, with the runtime locale of its first use. The case
   // of the mocked locale is thus the first case of the file.
   describe('hydration', () => {
