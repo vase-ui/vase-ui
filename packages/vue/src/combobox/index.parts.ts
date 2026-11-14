@@ -4,6 +4,18 @@ import ComboboxBackdrop from './backdrop/ComboboxBackdrop.vue';
 import type { ComboboxBackdropProps, ComboboxBackdropState } from './backdrop/ComboboxBackdrop.vue';
 import ComboboxClear from './clear/ComboboxClear.vue';
 import type { ComboboxClearProps, ComboboxClearState } from './clear/ComboboxClear.vue';
+import ComboboxCollection from './collection/ComboboxCollection.vue';
+import type {
+  ComboboxCollectionProps,
+  ComboboxCollectionState,
+} from './collection/ComboboxCollection.vue';
+import ComboboxGroupLabel from './group-label/ComboboxGroupLabel.vue';
+import type {
+  ComboboxGroupLabelProps,
+  ComboboxGroupLabelState,
+} from './group-label/ComboboxGroupLabel.vue';
+import ComboboxGroup from './group/ComboboxGroup.vue';
+import type { ComboboxGroupProps, ComboboxGroupState } from './group/ComboboxGroup.vue';
 import ComboboxIcon from './icon/ComboboxIcon.vue';
 import type { ComboboxIconProps, ComboboxIconState } from './icon/ComboboxIcon.vue';
 import ComboboxInput from './input/ComboboxInput.vue';
@@ -13,6 +25,15 @@ import type {
   ComboboxInputGroupProps,
   ComboboxInputGroupState,
 } from './input-group/ComboboxInputGroup.vue';
+import ComboboxItemIndicator from './item-indicator/ComboboxItemIndicator.vue';
+import type {
+  ComboboxItemIndicatorProps,
+  ComboboxItemIndicatorState,
+} from './item-indicator/ComboboxItemIndicator.vue';
+import ComboboxItem from './item/ComboboxItem.vue';
+import type { ComboboxItemProps, ComboboxItemState } from './item/ComboboxItem.vue';
+import ComboboxList from './list/ComboboxList.vue';
+import type { ComboboxListProps, ComboboxListState } from './list/ComboboxList.vue';
 import ComboboxPopup from './popup/ComboboxPopup.vue';
 import type { ComboboxPopupProps, ComboboxPopupState } from './popup/ComboboxPopup.vue';
 import ComboboxPortal from './portal/ComboboxPortal.vue';
@@ -33,6 +54,13 @@ import type {
   ComboboxRootProps,
   ComboboxRootState,
 } from './root/ComboboxRoot.vue';
+import ComboboxRow from './row/ComboboxRow.vue';
+import type { ComboboxRowProps, ComboboxRowState } from './row/ComboboxRow.vue';
+import ComboboxSeparator from './separator/ComboboxSeparator.vue';
+import type {
+  ComboboxSeparatorProps,
+  ComboboxSeparatorState,
+} from './separator/ComboboxSeparator.vue';
 
 /**
  * Groups all parts of the combobox.
@@ -79,6 +107,19 @@ export const InputGroup: typeof ComboboxInputGroup = ComboboxInputGroup;
 export namespace InputGroup {
   export type Props = ComboboxInputGroupProps;
   export type State = ComboboxInputGroupState;
+}
+
+/**
+ * A list container for the items.
+ * Renders a `<div>` element.
+ *
+ * The default slot holds the content. The `item` slot renders each filtered item with the slot
+ * props `{ item, index }`, in the place of the function child of Base UI.
+ */
+export const List: typeof ComboboxList = ComboboxList;
+export namespace List {
+  export type Props = ComboboxListProps;
+  export type State = ComboboxListState;
 }
 
 /**
@@ -151,6 +192,70 @@ export namespace Icon {
 }
 
 /**
+ * Groups related items with the corresponding label.
+ * Renders a `<div>` element.
+ */
+export const Group: typeof ComboboxGroup = ComboboxGroup;
+export namespace Group {
+  export type Props = ComboboxGroupProps;
+  export type State = ComboboxGroupState;
+}
+
+/**
+ * An accessible label that is automatically associated with its parent group.
+ * Renders a `<div>` element.
+ */
+export const GroupLabel: typeof ComboboxGroupLabel = ComboboxGroupLabel;
+export namespace GroupLabel {
+  export type Props = ComboboxGroupLabelProps;
+  export type State = ComboboxGroupLabelState;
+}
+
+/**
+ * An individual item in the list.
+ * Renders a `<div>` element.
+ */
+export const Item: typeof ComboboxItem = ComboboxItem;
+export namespace Item {
+  export type Props = ComboboxItemProps;
+  export type State = ComboboxItemState;
+}
+
+/**
+ * Indicates whether the item is selected.
+ * Renders a `<span>` element.
+ */
+export const ItemIndicator: typeof ComboboxItemIndicator = ComboboxItemIndicator;
+export namespace ItemIndicator {
+  export type Props = ComboboxItemIndicatorProps;
+  export type State = ComboboxItemIndicatorState;
+}
+
+/**
+ * Displays a single row of items in a grid list.
+ * Enable `grid` on the root component to turn the listbox into a grid.
+ * Renders a `<div>` element.
+ */
+export const Row: typeof ComboboxRow = ComboboxRow;
+export namespace Row {
+  export type Props = ComboboxRowProps;
+  export type State = ComboboxRowState;
+}
+
+/**
+ * Renders filtered list items.
+ * Doesn't render its own HTML element.
+ *
+ * The default slot renders each item with the slot props `{ item, index }`. To render a flat
+ * list, give the `item` slot to the `List` part instead.
+ */
+export const Collection: typeof ComboboxCollection = ComboboxCollection;
+export namespace Collection {
+  export type Props = ComboboxCollectionProps;
+  export type State = ComboboxCollectionState;
+}
+
+/**
  * Clears the value when clicked.
  * Renders a `<button>` element.
  */
@@ -158,6 +263,16 @@ export const Clear: typeof ComboboxClear = ComboboxClear;
 export namespace Clear {
   export type Props = ComboboxClearProps;
   export type State = ComboboxClearState;
+}
+
+/**
+ * A visual separator between items or groups.
+ * Renders a `<div>` element.
+ */
+export const Separator: typeof ComboboxSeparator = ComboboxSeparator;
+export namespace Separator {
+  export type Props = ComboboxSeparatorProps;
+  export type State = ComboboxSeparatorState;
 }
 
 export { useComboboxFilter as useFilter } from './root/utils/useFilter';
