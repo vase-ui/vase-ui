@@ -39,10 +39,10 @@ function listPlaceOfTrigger(host: Element) {
   );
 }
 
-// A menu opens in the frame after the press, and it closes when the pointer is released off its
-// trigger. A control that appears or goes before the trigger on the screen moves the trigger in
-// that frame. The case then fails when the frame comes before the release. In a backward case the
-// controls come before the trigger in the DOM. A flex row in reverse order shows them after it.
+// A menu opens in the frame after the press, and it closes for a release off its trigger. A
+// control that appears or goes before the trigger on the screen moves the trigger in that frame.
+// The case then fails when the frame comes before the release. In a backward case the controls
+// come before the trigger in the DOM. A flex row in reverse order shows them after it.
 const triggerFirstRow = {
   display: 'flex',
   flexDirection: 'row-reverse',
