@@ -268,8 +268,9 @@
 }
 
 /* The badge of a heading, as `.MdHeadingBadge` of Base UI. `inline-block` keeps the badge out of the
-   underline that the heading gets on hover. The color of Base UI, poppy-t1, has 4.4:1 contrast on
-   the page in the light theme. A space before the badge takes the place of its margin. */
+   underline that the heading gets on hover. The color of Base UI, poppy-t1, has 4.38:1 contrast on
+   the page in the light theme, and WCAG AA needs 4.5:1. A space before the badge takes the place of
+   its margin. */
 .vp-doc .heading-badge {
   display: inline-block;
   vertical-align: middle;
