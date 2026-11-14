@@ -6,8 +6,8 @@ import { onActivated, onDeactivated } from 'vue';
  *
  * The callback gives the element to `setElement`. `KeepAlive` takes the element out of the
  * document and calls no `ref` callback. `setElement` thus gets `null` when `KeepAlive` deactivates
- * the part, and the element again when it activates the part. No trigger then names an element
- * that is out of the document.
+ * the part, and the element again when it activates the part. The trigger then names no element
+ * that `KeepAlive` took out of the document.
  *
  * A part that mounts in a branch that `KeepAlive` holds gets no `onDeactivated` call, so it gives
  * its element at once. Do not check `isConnected` in place of the hooks: a part in a pending
