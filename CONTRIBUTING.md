@@ -1862,7 +1862,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - A page that is not a component page has its samples in `docs/examples/<page>`. The page can import a sample and render it, as `docs/quick-start.md` does.
 - A handbook page is `docs/handbook/<page>.md`. The folder is the sidebar group Handbook. The `order` of a page follows the sequence of the pages of the Base UI handbook.
 - A demo that a handbook page renders is `docs/examples/<page>/demos/<demo>/index.vue`. `packages/vue/test/demos.test.tsx` tests it as it tests the demo of a component page. The text rules of a demo apply to it.
-- The family of a handbook page is `handbook-<page>`. Its `upstreamPaths` name `docs/src/app/(docs)/react/handbook/<page>/**`. `docs/demos/handbook-<page>` holds the record and the style sheets of the Base UI demos that wait for an entry point.
+- The family of a handbook page is `handbook-<page>`. Its `upstreamPaths` name `docs/src/app/(docs)/react/handbook/<page>/**`. Its Base UI demos are in `docs/demos/handbook-<page>`, and the rules of [Component pages](#component-pages) apply to the record, the style sheets and a demo that waits.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
