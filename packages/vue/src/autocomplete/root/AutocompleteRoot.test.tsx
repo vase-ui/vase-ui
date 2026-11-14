@@ -31,7 +31,8 @@ const itemSlot = {
   item: ({ item }: ItemSlotProps) => <Autocomplete.Item value={item}>{item}</Autocomplete.Item>,
 };
 
-// WebKit ignores a `pointermove` and a `mousemove` with no movement, and `user.hover` gives none.
+// In WebKit, a list ignores a `pointermove` and a `mousemove` with no movement, and `user.hover`
+// gives none.
 async function hover(user: VaseUIRenderResult['user'], element: Element) {
   await user.hover(element);
   await fireEvent.pointerMove(element, { pointerType: 'mouse', movementX: 1 });
@@ -198,7 +199,7 @@ describe('<Autocomplete.Root />', () => {
       return shallowRef<Autocomplete.Root.Actions | null>(null);
     }
 
-    function getCompletions(onOpenChangeComplete: (open: boolean) => void) {
+    function getCloseCompletions(onOpenChangeComplete: (open: boolean) => void) {
       return vi.mocked(onOpenChangeComplete).mock.calls.filter(([open]) => !open);
     }
 
@@ -214,12 +215,12 @@ describe('<Autocomplete.Root />', () => {
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
       actionsRef.value!.unmount();
       await flushMicrotasks();
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
     it('keeps the popup mounted until the unmount action completes closing', async () => {
@@ -244,13 +245,13 @@ describe('<Autocomplete.Root />', () => {
       actionsRef.value!.unmount();
       await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
 
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
       await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(2);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
     it('clears the opt-out when a controlled reopen interrupts a pending unmount', async () => {
@@ -273,7 +274,7 @@ describe('<Autocomplete.Root />', () => {
       await setProps({ open: true });
       await setProps({ open: false });
       await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
     it('ignores an opt-out on a canceled close', async () => {
@@ -333,7 +334,7 @@ describe('<Autocomplete.Root />', () => {
       actionsRef.value!.unmount();
       await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
     it('closes through the `close` action so `onOpenChange` can opt out', async () => {
@@ -400,7 +401,7 @@ describe('<Autocomplete.Root />', () => {
       await flushMicrotasks();
 
       expect(screen.queryByRole('listbox')).toBe(null);
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
 
     it('still unmounts on a later close after `unmount` was called while open', async () => {
@@ -457,12 +458,12 @@ describe('<Autocomplete.Root />', () => {
       actionsRef.value!.unmount();
       await flushMicrotasks();
       expect(screen.queryByRole('listbox')).not.toBe(null);
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
 
       optOut = false;
       await user.click(screen.getByRole('option'));
       await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(2);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(2);
     });
 
     it('does not call `onOpenChange` when the `close` action is called while closed', async () => {
@@ -499,7 +500,7 @@ describe('<Autocomplete.Root />', () => {
       actionsRef.value!.unmount();
       await flushMicrotasks();
       expect(screen.queryByRole('listbox')).toBe(null);
-      expect(getCompletions(onOpenChangeComplete)).toHaveLength(1);
+      expect(getCloseCompletions(onOpenChangeComplete)).toHaveLength(1);
     });
   });
 
@@ -581,13 +582,16 @@ describe('<Autocomplete.Root />', () => {
   });
 
   describe('input inside popup composition', () => {
+    // Base UI keeps this popup mounted in a browser, because there `act` cannot wrap the updates of
+    // its mount. Vue has no `act`, so the popup unmounts at the close and mounts again, as in the
+    // jsdom run of Base UI.
     it('commits a keyboard selection, restores trigger focus, and preserves it on reopen', async () => {
       const { user } = await render(
         <Autocomplete.Root items={['alpha', 'alpine', 'beta']} autoHighlight>
           <Autocomplete.Trigger data-testid="trigger">
             <Autocomplete.Value />
           </Autocomplete.Trigger>
-          <Autocomplete.Portal keepMounted>
+          <Autocomplete.Portal>
             <Autocomplete.Positioner>
               <Autocomplete.Popup aria-label="Commands">
                 <Autocomplete.Input data-testid="input" />
@@ -629,7 +633,7 @@ describe('<Autocomplete.Root />', () => {
           <Autocomplete.Trigger data-testid="trigger">
             <Autocomplete.Value />
           </Autocomplete.Trigger>
-          <Autocomplete.Portal keepMounted>
+          <Autocomplete.Portal>
             <Autocomplete.Positioner>
               <Autocomplete.Popup aria-label="Commands">
                 <Autocomplete.Input data-testid="input" />
@@ -941,6 +945,8 @@ describe('<Autocomplete.Root />', () => {
       });
       expect(onItemHighlighted.mock.lastCall?.[1].event).toBe(hoverEvent);
 
+      // React makes the leave event of the item from a `pointerout`. Vue listens to the
+      // `pointerleave` of the item.
       const leaveEvent = new PointerEvent('pointerleave', { pointerType: 'mouse' });
       await fireEvent(option, leaveEvent);
       await waitFor(() => {
