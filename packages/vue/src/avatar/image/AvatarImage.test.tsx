@@ -853,6 +853,15 @@ describe('<Avatar.Image />', () => {
       restoreImage = () => {};
       const onLoadingStatusChange = vi.fn();
 
+      // The part must find the first source in the image cache of the document. Without this load,
+      // the case passes only after an earlier case of the file loaded the same source.
+      await new Promise<void>((resolve, reject) => {
+        const img = new window.Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to preload test image'));
+        img.src = TRANSPARENT_IMAGE_DATA_URI;
+      });
+
       function Test({ src }: { src: string }) {
         return (
           <Avatar.Root>
@@ -868,11 +877,12 @@ describe('<Avatar.Image />', () => {
       }
 
       const { rerender } = await render(<Test src={TRANSPARENT_IMAGE_DATA_URI} />);
+      const image = screen.getByTestId('image');
 
       // A cached image fires its `load` event in a later task. Firefox does not cancel that event
       // when the source changes, so the new image would get it. Wait for the event first.
       const firstLoad = new Promise<void>((resolve) => {
-        screen.getByTestId('image').addEventListener('load', () => resolve(), { once: true });
+        image.addEventListener('load', () => resolve(), { once: true });
       });
 
       await waitFor(() => {
@@ -880,15 +890,21 @@ describe('<Avatar.Image />', () => {
       });
       await firstLoad;
 
+      // The server can answer the request for the missing source after the 1 s limit of `waitFor`.
+      // This listener comes after the listener of the part, so the part sets the status first.
+      const error = new Promise<void>((resolve) => {
+        image.addEventListener('error', () => resolve(), { once: true });
+      });
+
       // The browser reports `complete === false` synchronously after the source changes, which
       // is what the reset relies on.
       await rerender(<Test src="/missing-avatar.png" />);
 
-      expect(screen.getByTestId('image')).toHaveAttribute('data-loading');
+      expect(image).toHaveAttribute('data-loading');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('image')).toHaveAttribute('data-error');
-      });
+      await error;
+      await nextTick();
+      expect(image).toHaveAttribute('data-error');
       // The cached first source resolves in the first read, so it never reports
       // `loading`; the swap to an unloaded source does.
       expect(onLoadingStatusChange.mock.calls.map(([status]) => status)).toEqual([

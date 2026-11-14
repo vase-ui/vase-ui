@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { Suspense, createSSRApp, defineComponent, onMounted, shallowRef } from 'vue';
+import { Suspense, createSSRApp, defineComponent, nextTick, onMounted, shallowRef } from 'vue';
 import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
@@ -335,6 +335,49 @@ describe('<Dialog.Root />', () => {
     await user.click(screen.getByTestId('parent-backdrop'));
     expect(handleParentOpenChange).not.toHaveBeenCalled();
     expect(screen.getByTestId('parent')).toBeVisible();
+  });
+
+  it('BUG-4678: returns the focus to the active trigger after a trigger change in the task of the open', async () => {
+    const open = shallowRef(false);
+    const triggerId = shallowRef<string | null>(null);
+    const { user } = await render(() => (
+      <div>
+        <Dialog.Root
+          open={open.value}
+          triggerId={triggerId.value}
+          onOpenChange={(nextOpen: boolean) => {
+            open.value = nextOpen;
+          }}
+        >
+          <Dialog.Trigger id="trigger-1">Trigger 1</Dialog.Trigger>
+          <Dialog.Trigger id="trigger-2">Trigger 2</Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Close>Close</Dialog.Close>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
+        <button type="button">Outside</button>
+      </div>
+    ));
+    const outside = screen.getByRole('button', { name: 'Outside' });
+    const trigger2 = screen.getByRole('button', { name: 'Trigger 2' });
+
+    outside.focus();
+    open.value = true;
+    triggerId.value = 'trigger-1';
+    await nextTick();
+    // The open makes the outside button inert. The browser moves the focus off it only at the next
+    // rendering update, so the trigger changes while the inert button has the focus.
+    expect(outside).toHaveFocus();
+    triggerId.value = 'trigger-2';
+    await nextTick();
+
+    await waitForLaterMillisecond();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(trigger2).toHaveFocus();
+    });
   });
 
   describe('handle-backed root ownership', () => {

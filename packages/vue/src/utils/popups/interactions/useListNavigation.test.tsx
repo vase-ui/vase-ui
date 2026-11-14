@@ -17,6 +17,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextEvent,
   screen,
   useTestInteractions,
   waitFor,
@@ -952,12 +953,13 @@ async function renderList(props: InstanceType<typeof List>['$props'] = {}) {
 
 describe('useListNavigation', () => {
   it('does not add role-dependent aria-orientation', async () => {
-    await render(<App orientation="horizontal" />);
+    const { container } = await render(<App orientation="horizontal" />);
 
-    await fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' });
-    await waitFor(() => {
-      expect(screen.getByTestId('item-0')).toHaveFocus();
+    // The item takes the focus in an animation frame after the open.
+    await nextEvent(container, 'focusin', {
+      action: () => fireEvent.keyDown(screen.getByRole('button'), { key: 'ArrowRight' }),
     });
+    expect(screen.getByTestId('item-0')).toHaveFocus();
 
     expect(screen.getByRole('menu')).not.toHaveAttribute('aria-orientation');
   });

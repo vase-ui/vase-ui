@@ -1,0 +1,12 @@
+{
+  "id": "VUE-72",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useUnmountAfterClose.ts#L129-L157",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/useAnimationsFinished.ts#L110-L113",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/popupRoot.tsx#L509",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/popup/SelectPopup.tsx#L458",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/positioner/SelectPositioner.tsx#L133"
+  ],
+  "behavior": "A select with no `Select.Popup` waits for the animations of `Select.Positioner` when it closes. It then hides the positioner and emits `openChangeComplete` with `false`. Base UI waits for the animations of a popup element only. With no popup element, the wait does not start, and the select stays mounted.",
+  "dueWith": "packages/react/src/select/root/SelectRoot.tsx"
+}

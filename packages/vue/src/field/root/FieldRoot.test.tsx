@@ -268,6 +268,38 @@ describe('<Field.Root />', () => {
     expect(screen.getByTestId('label')).toHaveAttribute('for', 'email');
   });
 
+  it('does not give the form the value of a control that mounts while KeepAlive holds it', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const handleSubmit = vi.fn();
+    const Branch = defineComponent(() => () => (
+      <div>{extra.value ? <Field.Control key="held" defaultValue="held" /> : null}</div>
+    ));
+    const { user } = await render(() => (
+      <Form onFormSubmit={handleSubmit}>
+        <Field.Root name="email">
+          <Field.Control defaultValue="shown" />
+          <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+        </Field.Root>
+        <button type="submit">Submit</button>
+      </Form>
+    ));
+
+    visible.value = false;
+    await flushMicrotasks();
+    extra.value = true;
+    await flushMicrotasks();
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({ email: 'shown' });
+
+    visible.value = true;
+    await flushMicrotasks();
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(handleSubmit.mock.lastCall?.[0]).toEqual({ email: 'held' });
+  });
+
   it('keeps the group label suppressed while its subtree is hidden', async () => {
     const visible = shallowRef(true);
 

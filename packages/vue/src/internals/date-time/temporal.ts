@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 
-// No code in this folder reads `Temporal` when its module loads, so an engine that has no
+// No helper of this folder reads `Temporal` when its module loads, so an engine that has no
 // `Temporal` can import it. The first read is in a function that a part calls.
 
 export type DateValue = Temporal.PlainDate | Temporal.PlainDateTime | Temporal.ZonedDateTime;
@@ -125,7 +125,8 @@ export function isSameDay(a: DateValue, b: DateValue): boolean {
 
 /**
  * The text of a hidden input: ISO 8601 in the ISO calendar, and RFC 9557 for a zone. A year and
- * month of another calendar has no ISO text, so its text names the calendar.
+ * month of a calendar that has other months than ISO has no ISO text, so its text names the
+ * calendar.
  */
 export function toInputText(value: TemporalValue, showSeconds: boolean): string {
   const smallestUnit = showSeconds ? 'second' : 'minute';
@@ -133,7 +134,7 @@ export function toInputText(value: TemporalValue, showSeconds: boolean): string 
     return value.toString({ smallestUnit });
   }
   if (isKind(value, 'yearMonth')) {
-    return value.toString();
+    return (yearMonthInCalendar(value, 'iso8601') ?? value).toString();
   }
   if (isKind(value, 'date')) {
     return value.withCalendar('iso8601').toString();

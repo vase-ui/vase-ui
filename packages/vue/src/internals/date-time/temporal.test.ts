@@ -256,6 +256,20 @@ describe('toInputText and parseInputText', () => {
     },
     { name: 'a year and month', make: () => month('2026-11'), seconds: false, expected: '2026-11' },
     {
+      name: 'a year and month in a Gregorian calendar',
+      make: () =>
+        month('2026-11').toPlainDate({ day: 1 }).withCalendar('gregory').toPlainYearMonth(),
+      seconds: false,
+      expected: '2026-11',
+    },
+    {
+      name: 'a year and month in a Buddhist calendar',
+      make: () =>
+        month('2026-11').toPlainDate({ day: 1 }).withCalendar('buddhist').toPlainYearMonth(),
+      seconds: false,
+      expected: '2026-11',
+    },
+    {
       name: 'a year and month in a Persian calendar',
       make: () =>
         month('2026-11').toPlainDate({ day: 1 }).withCalendar('persian').toPlainYearMonth(),
@@ -273,7 +287,7 @@ describe('toInputText and parseInputText', () => {
     { kind: 'zonedDateTime', text: '2026-11-14T10:30:00+09:00[Asia/Tokyo]' },
     { kind: 'yearMonth', text: '2026-11' },
     { kind: 'yearMonth', text: '2026-10-23[u-ca=persian]' },
-  ] as const)('reads the text of the kind $kind', ({ kind, text }) => {
+  ] as const)('reads $text as a value of the kind $kind', ({ kind, text }) => {
     const value = parseInputText(text, kind);
     expect(value?.toString()).toBe(text);
     expect(kindOf(value)).toBe(kind);
@@ -322,12 +336,14 @@ describe('yearMonthInCalendar', () => {
     );
   });
 
-  it.each(['persian', 'hebrew', 'coptic', 'islamic-civil'])(
-    'gives null for the calendar %s, which has other months',
-    (calendar) => {
-      expect(yearMonthInCalendar(month('2026-11'), calendar)).toBeNull();
-    },
-  );
+  it.each([
+    { calendar: 'persian' },
+    { calendar: 'hebrew' },
+    { calendar: 'coptic' },
+    { calendar: 'islamic-civil' },
+  ])('gives null for the calendar $calendar, which has other months', ({ calendar }) => {
+    expect(yearMonthInCalendar(month('2026-11'), calendar)).toBeNull();
+  });
 
   it('gives null for a year and month of a calendar that has other months than the target', () => {
     const persian = month('2026-11')

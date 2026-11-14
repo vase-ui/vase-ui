@@ -91,6 +91,55 @@ describe('<Progress.Label />', () => {
     expect(progressbar).toHaveAttribute('aria-labelledby', label.id);
   });
 
+  it('names the last label after KeepAlive shows a label that mounted while held', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const Branch = defineComponent(() => () => (
+      <div>
+        <Progress.Label key="a" id="label-a">
+          A
+        </Progress.Label>
+        {extra.value ? (
+          <Progress.Label key="b" id="label-b">
+            B
+          </Progress.Label>
+        ) : null}
+      </div>
+    ));
+    const App = defineComponent(() => () => (
+      <Progress.Root value={40}>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Progress.Root>
+    ));
+    await render(<App />);
+    const progressbar = screen.getByRole('progressbar');
+    const seen = [progressbar.getAttribute('aria-labelledby')];
+    const changes = [
+      () => {
+        visible.value = false;
+      },
+      () => {
+        extra.value = true;
+      },
+      () => {
+        visible.value = true;
+      },
+      () => {
+        visible.value = false;
+      },
+      () => {
+        visible.value = true;
+      },
+    ];
+    for (const change of changes) {
+      change();
+      await flushMicrotasks();
+      seen.push(progressbar.getAttribute('aria-labelledby'));
+    }
+
+    expect(seen).toEqual(['label-a', null, null, 'label-b', null, 'label-b']);
+  });
+
   it('throws a descriptive error when rendered outside <Progress.Root>', async () => {
     await expect(render(<Progress.Label />)).rejects.toThrow(
       'Vase UI: A part of Progress must be inside <Progress.Root>. Without a root the part has no value and no status to show. Put the part inside <Progress.Root>.',

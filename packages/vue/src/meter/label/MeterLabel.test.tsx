@@ -87,6 +87,55 @@ describe('<Meter.Label />', () => {
     expect(meter).toHaveAttribute('aria-labelledby', label.id);
   });
 
+  it('names the last label after KeepAlive shows a label that mounted while held', async () => {
+    const visible = shallowRef(true);
+    const extra = shallowRef(false);
+    const Branch = defineComponent(() => () => (
+      <div>
+        <Meter.Label key="a" id="label-a">
+          A
+        </Meter.Label>
+        {extra.value ? (
+          <Meter.Label key="b" id="label-b">
+            B
+          </Meter.Label>
+        ) : null}
+      </div>
+    ));
+    const App = defineComponent(() => () => (
+      <Meter.Root value={40}>
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      </Meter.Root>
+    ));
+    await render(<App />);
+    const meter = screen.getByRole('meter');
+    const seen = [meter.getAttribute('aria-labelledby')];
+    const changes = [
+      () => {
+        visible.value = false;
+      },
+      () => {
+        extra.value = true;
+      },
+      () => {
+        visible.value = true;
+      },
+      () => {
+        visible.value = false;
+      },
+      () => {
+        visible.value = true;
+      },
+    ];
+    for (const change of changes) {
+      change();
+      await flushMicrotasks();
+      seen.push(meter.getAttribute('aria-labelledby'));
+    }
+
+    expect(seen).toEqual(['label-a', null, null, 'label-b', null, 'label-b']);
+  });
+
   it('throws a descriptive error when rendered outside <Meter.Root>', async () => {
     await expect(render(<Meter.Label />)).rejects.toThrow(
       'Vase UI: A part of Meter must be inside <Meter.Root>. Without a root the part has no value to show. Put the part inside <Meter.Root>.',
