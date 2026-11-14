@@ -49,8 +49,9 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed, onDeactivated, onScopeDispose, toRaw } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, toRaw, watch } from 'vue';
 import { ownerDocument } from '../../common/owner';
+import { useTimeout } from '../../common/useTimeout';
 import { contains, getTarget } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
@@ -74,6 +75,8 @@ import { useSelectRootContext } from '../root/SelectRootContext';
 import * as SelectTriggerDataAttributes from './SelectTriggerDataAttributes';
 
 defineOptions({ inheritAttrs: false });
+
+const SELECTED_DELAY = 400;
 
 const props = withDefaults(defineProps<SelectTriggerProps<Value>>(), {
   as: 'button',
@@ -171,7 +174,50 @@ function handleMouseUp(mouseEvent: MouseEvent) {
 }
 
 onScopeDispose(removeMouseUpListener);
-onDeactivated(removeMouseUpListener);
+
+const focusTimeout = useTimeout();
+const selectedDelayTimeout = useTimeout();
+
+function syncMouseUpSelection() {
+  if (isOpen.value) {
+    // A mousedown on the trigger can open the popup under the cursor. Keep mouseup selection
+    // disabled briefly so releasing over either the selected item or a neighboring item doesn't
+    // commit an accidental selection. SelectItem can still opt into unselected mouseup sooner
+    // after a real drag over the item.
+    selectedDelayTimeout.start(SELECTED_DELAY, () => {
+      store.context.selectionRef.value.allowUnselectedMouseUp = true;
+      store.context.selectionRef.value.allowSelectedMouseUp = true;
+    });
+    return;
+  }
+
+  selectedDelayTimeout.clear();
+  store.context.selectionRef.value = {
+    allowSelectedMouseUp: false,
+    allowUnselectedMouseUp: false,
+    dragY: 0,
+  };
+}
+
+onMounted(syncMouseUpSelection);
+watch(isOpen, syncMouseUpSelection);
+
+let isDeactivated = false;
+
+onDeactivated(() => {
+  isDeactivated = true;
+  removeMouseUpListener();
+  focusTimeout.clear();
+  selectedDelayTimeout.clear();
+});
+
+// `onActivated` also runs at the first mount in a `KeepAlive`.
+onActivated(() => {
+  if (isDeactivated) {
+    isDeactivated = false;
+    syncMouseUpSelection();
+  }
+});
 
 const state = computed<SelectTriggerState<Value>>(() => ({
   ...fieldState.value,
@@ -209,6 +255,13 @@ const { element, elementProps } = useRenderElement('button', props, {
       tabindex: isDisabled.value ? -1 : 0,
       onFocusin() {
         setFocused(true);
+
+        // Saves a re-render on initial click: `forceMounted === true` mounts
+        // the items before `open === true`. We could sync those cycles better
+        // without a timeout, but this is enough for now.
+        focusTimeout.start(0, () => {
+          store.set('forceMounted', true);
+        });
       },
       onFocusout(event: FocusEvent) {
         // If focus is moving into the popup, don't count it as a blur.

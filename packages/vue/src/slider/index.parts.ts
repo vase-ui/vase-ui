@@ -2,6 +2,8 @@ import SliderControl from './control/SliderControl.vue';
 import type { SliderControlProps, SliderControlState } from './control/SliderControl.vue';
 import SliderIndicator from './indicator/SliderIndicator.vue';
 import type { SliderIndicatorProps, SliderIndicatorState } from './indicator/SliderIndicator.vue';
+import SliderLabel from './label/SliderLabel.vue';
+import type { SliderLabelProps, SliderLabelState } from './label/SliderLabel.vue';
 import SliderRoot from './root/SliderRoot.vue';
 import type {
   SliderRootChangeEventDetails,
@@ -29,6 +31,16 @@ export namespace Root {
   export type ChangeEventDetails = SliderRootChangeEventDetails;
   export type CommitEventReason = SliderRootCommitEventReason;
   export type CommitEventDetails = SliderRootCommitEventDetails;
+}
+
+/**
+ * An accessible label that is automatically associated with the slider thumbs.
+ * Renders a `<div>` element.
+ */
+export const Label: typeof SliderLabel = SliderLabel;
+export namespace Label {
+  export type State = SliderLabelState;
+  export type Props = SliderLabelProps;
 }
 
 /**

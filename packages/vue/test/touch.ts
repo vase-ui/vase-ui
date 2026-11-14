@@ -24,8 +24,8 @@ function createTouchEvent(type: TouchType, target: Element, lists: TouchLists) {
       changedTouches: toTouchList(changedTouches),
     });
   } catch {
-    // Firefox on a desktop has no `Touch` and no `TouchEvent`. WebKit on a desktop cannot construct
-    // a `Touch`. A listener reads the same members from this event.
+    // WebKit on a desktop cannot construct a `Touch`. A listener reads the same members from this
+    // event.
     const event = new Event(type, eventInit);
     Object.defineProperties(event, {
       touches: { value: touches },
