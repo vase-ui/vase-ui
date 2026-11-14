@@ -118,8 +118,7 @@ export namespace Label {
  * The current value of the combobox.
  * Doesn't render its own HTML element.
  *
- * The default slot formats the selected value with the slot props `{ value }`, in the place of the
- * function child of Base UI.
+ * The default slot formats the selected value with the slot props `{ value }`.
  */
 export const Value: typeof ComboboxValue = ComboboxValue;
 export namespace Value {
@@ -166,7 +165,7 @@ export namespace Trigger {
  * Renders a `<div>` element.
  *
  * The default slot holds the content. The `item` slot renders each filtered item with the slot
- * props `{ item, index }`, in the place of the function child of Base UI.
+ * props `{ item, index }`.
  */
 export const List: typeof ComboboxList = ComboboxList;
 export namespace List {
