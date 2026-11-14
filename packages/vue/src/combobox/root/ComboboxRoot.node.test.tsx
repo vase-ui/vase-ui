@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
-import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 
 // Vue writes a comment around each fragment and slot. The style of a hidden input is long.
@@ -79,9 +79,9 @@ describe('<Combobox.Root /> on a server', () => {
 
   it('gives the name only to the input when the root selects nothing', async () => {
     const html = await renderToString(
-      <AutocompleteRootPart id="city" name="city" defaultInputValue="mal">
+      <Autocomplete.Root id="city" name="city" defaultValue="mal">
         <ComboboxInputPart />
-      </AutocompleteRootPart>,
+      </Autocomplete.Root>,
     );
 
     expect(normalize(html)).toBe(
@@ -96,9 +96,9 @@ describe('<Combobox.Root /> on a server', () => {
         .filter((tag) => tag.includes(' name="city"'));
 
     const noneHtml = await renderToString(
-      <AutocompleteRootPart id="city" name="city" defaultInputValue="mal">
+      <Autocomplete.Root id="city" name="city" defaultValue="mal">
         <Combobox.Input />
-      </AutocompleteRootPart>,
+      </Autocomplete.Root>,
     );
     const singleHtml = await renderToString(
       <Combobox.Root id="city" name="city" items={['Malmö']} defaultValue="Malmö">

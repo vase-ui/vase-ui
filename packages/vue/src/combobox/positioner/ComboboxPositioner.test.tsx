@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, KeepAlive, onMounted, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, onMounted, shallowRef } from 'vue';
 import type { VNode } from 'vue';
 import {
   createRenderer,
@@ -9,10 +9,10 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import ComboboxTriggerPart from '../../../test/fixtures/ComboboxTriggerPart.vue';
 import { getScrollLockRegistry } from '../../../test/fixtures/scrollDocument';
 import type { OffsetFunction } from '../../internals/useAnchorPositioning';
 import * as Combobox from '../index.parts';
+import ComboboxPositionerScoped from './ComboboxPositionerScoped.test.vue';
 
 describe('<Combobox.Positioner />', () => {
   const { render } = createRenderer();
@@ -102,7 +102,7 @@ describe('<Combobox.Positioner />', () => {
         content: (positioner: VNode) => (
           <>
             <Combobox.Input data-testid="anchor" style={{ width: '120px' }} />
-            <ComboboxTriggerPart style={{ width: '240px' }}>Open</ComboboxTriggerPart>
+            <Combobox.Trigger style={{ width: '240px' }}>Open</Combobox.Trigger>
             {positioner}
           </>
         ),
@@ -124,9 +124,9 @@ describe('<Combobox.Positioner />', () => {
         inputInPopup: true,
         content: (positioner: VNode) => (
           <>
-            <ComboboxTriggerPart data-testid="anchor" style={{ width: '200px' }}>
+            <Combobox.Trigger data-testid="anchor" style={{ width: '200px' }}>
               Open
-            </ComboboxTriggerPart>
+            </Combobox.Trigger>
             {positioner}
           </>
         ),
@@ -210,6 +210,24 @@ describe('<Combobox.Positioner />', () => {
     await flushMicrotasks();
 
     expect(screen.getByTestId('positioner').hasAttribute('data-empty')).toBe(empty);
+  });
+
+  describe('VUE-61: the positioner of a modal combobox has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <ComboboxPositionerScoped shown={shown.value} />);
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
+    });
   });
 
   describe('prop: modal', () => {
