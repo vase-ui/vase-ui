@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'vue';
 
+export const PATIENT_CLICK_THRESHOLD = 500;
+
 /**
  * The style of the `aria-owns` owner element. The element is an empty `span`, so it needs fewer
  * declarations than `visuallyHidden`. With these declarations, iOS, Safari and VoiceControl still
