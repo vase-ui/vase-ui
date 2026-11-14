@@ -291,6 +291,42 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     );
   });
 
+  it('announces a dialog from a detached trigger attached to a filterable root', async () => {
+    const Test = defineComponent(() => {
+      const handle = Menu.createHandle();
+
+      return () => (
+        <>
+          <Menu.Trigger handle={handle}>Actions</Menu.Trigger>
+          <Menu.FilterProvider>
+            <Menu.Root handle={handle}>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Input aria-label="Filter actions" />
+                    <Menu.List>
+                      <Menu.Item>Rename</Menu.Item>
+                    </Menu.List>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menu.FilterProvider>
+        </>
+      );
+    });
+
+    const { user } = await render(<Test />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
+    });
+  });
+
   it('enters and leaves a plain submenu with the cross-axis keys from the input', async () => {
     const { user } = await render(
       <Menu.FilterProvider>
@@ -797,6 +833,65 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
       expect(input).toHaveAttribute('aria-activedescendant', reportB.id);
       expect(onItemHighlighted).not.toHaveBeenCalled();
     });
+
+    it('keeps the highlight when an item is appended after reopening from a filtered session', async () => {
+      const ReopenMenu = defineComponent(
+        (props: { appended: boolean }) => () => (
+          <Menu.FilterProvider>
+            <Menu.Root>
+              <Menu.Trigger>Actions</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Input aria-label="Filter actions" />
+                    <Menu.List>
+                      <Menu.Item>Save</Menu.Item>
+                      <Menu.Item>Save as</Menu.Item>
+                      <Menu.Item>Delete</Menu.Item>
+                      {props.appended && <Menu.Item>Recent</Menu.Item>}
+                    </Menu.List>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menu.FilterProvider>
+        ),
+        { props: ['appended'] },
+      );
+
+      const { user, setProps } = await render(<ReopenMenu appended={false} />);
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+
+      trigger.focus();
+      await flushMicrotasks();
+      await user.keyboard('[Enter]');
+      await waitFor(() => {
+        expect(screen.getByRole('searchbox', { name: 'Filter actions' })).toHaveFocus();
+      });
+      await user.keyboard('sav[Escape]');
+      await waitFor(() => {
+        expect(screen.queryByRole('searchbox', { name: 'Filter actions' })).toBe(null);
+      });
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+
+      await user.keyboard('[Enter]');
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown]');
+      const saveAs = screen.getByRole('menuitem', { name: 'Save as' });
+      await waitFor(() => {
+        expect(input).toHaveAttribute('aria-activedescendant', saveAs.id);
+      });
+
+      await setProps({ appended: true });
+
+      expect(screen.getByRole('menuitem', { name: 'Recent' })).toBeVisible();
+      expect(input).toHaveAttribute('aria-activedescendant', saveAs.id);
+    });
   });
 });
 
@@ -924,6 +1019,19 @@ describe('independent menu focus inside a filterable menu', () => {
       expect(isHiddenFromAssistiveTechnology(screen.getByTestId('after'))).toBe(false);
     });
 
+    it('does not trap a popup opened by an assistive technology click', async () => {
+      await render(<OpenMethodMenu />);
+
+      // An assistive technology activation reports no pointer type.
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      await fireEvent.pointerDown(trigger, { pointerType: '' });
+      await fireEvent.mouseDown(trigger);
+      await fireEvent.click(trigger, { detail: 1 });
+      await screen.findByTestId('popup');
+
+      expect(isHiddenFromAssistiveTechnology(screen.getByTestId('after'))).toBe(false);
+    });
+
     it('lets Tab leave a modal filterable popup and closes it', async () => {
       await render(<FocusMenu />);
       const input = screen.getByRole('searchbox', { name: 'Filter actions' });
@@ -1009,6 +1117,34 @@ describe('independent menu focus inside a filterable menu', () => {
       await waitFor(() => {
         expect(screen.getByTestId('after')).toHaveFocus();
       });
+    });
+
+    it.skipIf(isJSDOM)('does not trap a menu opened by touch', async () => {
+      await render(
+        <Menu.FilterProvider>
+          <Menu.Root>
+            <input data-testid="after" />
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup data-testid="popup">
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    <Menu.Item>Rename</Menu.Item>
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>,
+      );
+
+      const trigger = screen.getByRole('button', { name: 'Actions' });
+      await fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+      await fireEvent.mouseDown(trigger);
+
+      await screen.findByTestId('popup');
+      expect(isHiddenFromAssistiveTechnology(screen.getByTestId('after'))).toBe(false);
     });
 
     it('leaves a filterable submenu accessible inside its parent', async () => {

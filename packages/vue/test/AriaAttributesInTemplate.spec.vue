@@ -1,6 +1,7 @@
 <!-- @strictTemplates true -->
 <script setup lang="ts">
 import * as Checkbox from '../src/checkbox/index.parts';
+import * as Combobox from '../src/combobox/index.parts';
 import * as OTPField from '../src/otp-field/index.parts';
 import * as Radio from '../src/radio/index.parts';
 import * as Slider from '../src/slider/index.parts';
@@ -68,4 +69,12 @@ const id = 'id';
   <Slider.Thumb :aria-describedby="5" />
   <!-- @vue-expect-error `aria-valuetext` is a string -->
   <Slider.Thumb :aria-valuetext="5" />
+
+  <Combobox.Chip aria-description="x" />
+  <Combobox.Chip :aria-description="id" />
+  <Combobox.Input aria-description="x" />
+  <!-- @vue-expect-error `aria-descripton` is not an attribute -->
+  <Combobox.Chip aria-descripton="x" />
+  <!-- @vue-expect-error `aria-description` is a string -->
+  <Combobox.Chip :aria-description="5" />
 </template>

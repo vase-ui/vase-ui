@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as Menu from '../index.parts';
-import { createRenderer, fireEvent, screen } from '#test-utils';
+import { createRenderer, fireEvent, screen, waitFor } from '#test-utils';
 import { createMenuStoreProbe } from '../../../test/fixtures/MenuStoreProbe';
-import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
-import { REASONS } from '../../internals/reasons';
 
 // Kept in a separate file so the module mock doesn't leak into `MenuSubmenuTrigger.test.tsx`.
 vi.mock('../../common/platform', async () => {
@@ -19,8 +17,93 @@ vi.mock('../../common/platform', async () => {
   };
 });
 
+function Test() {
+  return (
+    <Menu.Root>
+      <Menu.Trigger>Open menu</Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Positioner>
+          <Menu.Popup>
+            <Menu.SubmenuRoot>
+              <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup data-testid="submenu">
+                    <Menu.Item>Alpha</Menu.Item>
+                    <Menu.Item>Beta</Menu.Item>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.SubmenuRoot>
+          </Menu.Popup>
+        </Menu.Positioner>
+      </Menu.Portal>
+    </Menu.Root>
+  );
+}
+
 describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
   const { render } = createRenderer();
+
+  it('omits the expanded state when the submenu is opened with ArrowRight', async () => {
+    const { user } = await render(<Test />);
+
+    await user.keyboard('[Tab]');
+    await user.keyboard('[Enter]');
+
+    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    await waitFor(() => {
+      expect(submenuTrigger).toHaveFocus();
+    });
+    expect(submenuTrigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.keyboard('[ArrowRight]');
+
+    await screen.findByTestId('submenu');
+    // Focus moves into the submenu; this is the announcement VoiceOver must not talk over.
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Alpha' })).toHaveFocus();
+    });
+
+    expect(submenuTrigger).not.toHaveAttribute('aria-expanded');
+    // The submenu is still discoverable through `aria-haspopup`.
+    expect(submenuTrigger).toHaveAttribute('aria-haspopup', 'menu');
+  });
+
+  it('omits the expanded state when the submenu is opened with Enter', async () => {
+    const { user } = await render(<Test />);
+
+    await user.keyboard('[Tab]');
+    await user.keyboard('[Enter]');
+
+    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    await waitFor(() => {
+      expect(submenuTrigger).toHaveFocus();
+    });
+
+    await user.keyboard('[Enter]');
+
+    await screen.findByTestId('submenu');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Alpha' })).toHaveFocus();
+    });
+
+    expect(submenuTrigger).not.toHaveAttribute('aria-expanded');
+  });
+
+  it('keeps the expanded state when the submenu is opened with a pointer', async () => {
+    const { user } = await render(<Test />);
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    const submenuTrigger = await screen.findByRole('menuitem', { name: 'More' });
+    await user.click(submenuTrigger);
+
+    await screen.findByTestId('submenu');
+
+    // Focus stays on the trigger, so there is no item announcement to talk over.
+    expect(submenuTrigger).toHaveAttribute('aria-expanded', 'true');
+  });
 
   function renderSubmenu(probe: ReturnType<typeof createMenuStoreProbe>) {
     return render(
@@ -45,25 +128,6 @@ describe('<Menu.SubmenuTrigger /> with VoiceOver', () => {
       </Menu.Root>,
     );
   }
-
-  it('omits the expanded state while a submenu that list navigation opened is open', async () => {
-    const probe = createMenuStoreProbe();
-    await renderSubmenu(probe);
-    const submenuTrigger = screen.getByRole('menuitem', { name: 'More' });
-
-    probe.store.setOpen(
-      true,
-      createChangeEventDetails(
-        REASONS.listNavigation,
-        new KeyboardEvent('keydown', { key: 'ArrowRight' }),
-        submenuTrigger,
-      ),
-    );
-
-    await screen.findByTestId('submenu');
-    expect(submenuTrigger).not.toHaveAttribute('aria-expanded');
-    expect(submenuTrigger).toHaveAttribute('aria-haspopup', 'menu');
-  });
 
   it('keeps the expanded state when a hover opened the submenu', async () => {
     await renderSubmenu(createMenuStoreProbe());

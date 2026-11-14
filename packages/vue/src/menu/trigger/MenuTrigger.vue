@@ -63,15 +63,30 @@ export interface MenuTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  shallowRef,
+  watch,
+} from 'vue';
+import { ownerDocument } from '../../common/owner';
+import { contains, getTarget } from '../../common/shadowDom';
+import { useTimeout } from '../../common/useTimeout';
 import { useCompositeItem } from '../../internals/composite/item/useCompositeItem';
 import { useCompositeRootContext } from '../../internals/composite/root/CompositeRootContext';
 import { useButton } from '../../internals/use-button';
+import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
+import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { safePolygon } from '../../utils/popups/interactions/safePolygon';
+import { useClick } from '../../utils/popups/interactions/useClick';
 import { useFocus } from '../../utils/popups/interactions/useFocus';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
@@ -87,6 +102,8 @@ import { useTriggerFocusGuards } from '../../utils/popups/useTriggerFocusGuards'
 import type { MenuParent } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import type { MenuHandleStore } from '../store/MenuStore';
+import { findRootOwnerId } from '../utils/findRootOwnerId';
+import { useMixedToggleClickHandler } from './useMixedToggleClickHandler';
 
 defineOptions({ inheritAttrs: false });
 
@@ -167,6 +184,97 @@ const { getButtonProps, buttonRef } = useButton({
 // In a menubar the trigger is an item of the composite of the menubar.
 const compositeItem = isInMenubar ? useCompositeItem() : undefined;
 
+// A server runs no `onMounted` hook, so a server render writes nothing to the store of a handle.
+function resetMouseUpTrigger() {
+  if (!isOpenedByThisTrigger.value && parent.type === undefined) {
+    store.value.context.allowMouseUpTriggerRef.value = false;
+  }
+}
+onMounted(resetMouseUpTrigger);
+watch([store, isOpenedByThisTrigger], resetMouseUpTrigger);
+
+const allowMouseUpTriggerTimeout = useTimeout();
+
+function handleDocumentMouseUp(mouseEvent: MouseEvent) {
+  const trigger = triggerElement.value;
+  if (!trigger) {
+    return;
+  }
+
+  allowMouseUpTriggerTimeout.clear();
+  store.value.context.allowMouseUpTriggerRef.value = false;
+
+  const mouseUpTarget = getTarget(mouseEvent) as Element | null;
+
+  if (
+    contains(trigger, mouseUpTarget) ||
+    contains(store.value.select('positionerElement'), mouseUpTarget) ||
+    mouseUpTarget === trigger
+  ) {
+    return;
+  }
+
+  if (mouseUpTarget != null && findRootOwnerId(mouseUpTarget) === store.value.select('rootId')) {
+    return;
+  }
+
+  if (isMouseWithinBounds(mouseEvent, trigger as HTMLElement)) {
+    return;
+  }
+
+  floatingTreeRoot.value.events.emit('close', {
+    domEvent: mouseEvent,
+    reason: REASONS.cancelOpen,
+  });
+}
+
+// The document that holds the `mouseup` listener, so that the unmount and `KeepAlive` remove it.
+let mouseUpDocument: Document | undefined;
+
+function listenForMouseUp(doc: Document) {
+  removeMouseUpListener();
+  mouseUpDocument = doc;
+  doc.addEventListener('mouseup', handleDocumentMouseUp, { once: true });
+}
+
+function removeMouseUpListener() {
+  mouseUpDocument?.removeEventListener('mouseup', handleDocumentMouseUp);
+  mouseUpDocument = undefined;
+}
+
+// Whether the listener is the one of a hover open. Only that one goes when the open state changes:
+// the listener of a press stays for the release.
+let listensAfterHoverOpen = false;
+
+// `lastOpenChangeReason` is read when `isOpenedByThisTrigger` changes, not followed.
+function followHoverOpen() {
+  if (listensAfterHoverOpen) {
+    listensAfterHoverOpen = false;
+    removeMouseUpListener();
+  }
+
+  if (
+    isOpenedByThisTrigger.value &&
+    store.value.select('lastOpenChangeReason') === REASONS.triggerHover
+  ) {
+    listensAfterHoverOpen = true;
+    listenForMouseUp(ownerDocument(triggerElement.value));
+  }
+}
+
+function stopListening() {
+  listensAfterHoverOpen = false;
+  removeMouseUpListener();
+}
+
+onMounted(followHoverOpen);
+// The default flush runs before the `post` watcher of `useDismiss` in the root, as the effect of
+// Base UI runs before the effect of its parent.
+watch([store, isOpenedByThisTrigger], followHoverOpen);
+onActivated(followHoverOpen);
+onDeactivated(stopListening);
+onScopeDispose(stopListening);
+
 const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpen.value ?? false);
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
@@ -187,9 +295,66 @@ const hoverProps = useHoverTriggerInteraction(store, {
   isActiveTrigger: isTriggerActive,
 });
 
+// Whether to ignore clicks to open the menu.
+const stickIfOpen = useStickIfOpen();
+
+const click = useClick(store, {
+  enabled: () => !isDisabled.value,
+  event: () => (isOpenedByThisTrigger.value && isInMenubar ? 'click' : 'mousedown'),
+  toggle: true,
+  ignoreMouse: false,
+  stickIfOpen: () => (parent.type === undefined ? stickIfOpen.value : false),
+});
+
 const focusProps = useFocus(store, {
   enabled: () => !isDisabled.value && parentMenubarHasSubmenuOpen.value,
 });
+
+const mixedToggleHandlers = useMixedToggleClickHandler({
+  open: isOpenedByThisTrigger,
+  enabled: isInMenubar,
+  mouseDownAction: 'open',
+});
+
+const triggerListeners = {
+  onMousedown(event: MouseEvent) {
+    if (store.value.select('open')) {
+      return;
+    }
+
+    // mousedown -> mouseup on menu item should not trigger it within 200ms.
+    allowMouseUpTriggerTimeout.start(200, () => {
+      store.value.context.allowMouseUpTriggerRef.value = true;
+    });
+
+    listenForMouseUp(ownerDocument(event.currentTarget as Element));
+  },
+};
+
+/**
+ * Determines whether to ignore clicks after a hover-open.
+ * `lastOpenChangeReason` is read when `isOpenedByThisTrigger` changes, not followed.
+ */
+function useStickIfOpen() {
+  const stickIfOpenTimeout = useTimeout();
+  const value = shallowRef(false);
+
+  watch(isOpenedByThisTrigger, (open) => {
+    if (open && store.value.select('lastOpenChangeReason') === REASONS.triggerHover) {
+      // Only allow "patient" clicks to close the menu if it's open.
+      // If they clicked within 500ms of the menu opening, keep it open.
+      value.value = true;
+      stickIfOpenTimeout.start(PATIENT_CLICK_THRESHOLD, () => {
+        value.value = false;
+      });
+    } else if (!open) {
+      stickIfOpenTimeout.clear();
+      value.value = false;
+    }
+  });
+
+  return value;
+}
 
 const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
@@ -216,6 +381,7 @@ const { element, elementProps } = useRenderElement('button', props, {
   props: (attrs) => [
     compositeItem?.compositeProps.value,
     focusProps,
+    click.reference,
     hoverProps,
     rootTriggerProps.value,
     {
@@ -223,8 +389,10 @@ const { element, elementProps } = useRenderElement('button', props, {
       'aria-controls': controlsId.value,
       id: thisTriggerId.value,
     },
+    triggerListeners,
     filterTriggerProps.value,
     isInMenubar ? { role: 'menuitem' } : {},
+    mixedToggleHandlers,
     attrs,
     getButtonProps,
   ],

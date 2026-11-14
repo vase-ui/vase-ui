@@ -23,13 +23,25 @@ type WithPreventVaseUIHandler<T> = T extends (event: infer E) => any
     : T;
 
 /**
+ * WAI-ARIA 1.3 defines `aria-description` for each element. The types of Vue do not list it.
+ */
+interface AriaDescriptionAttribute {
+  /**
+   * Defines a string value that describes or annotates the current element.
+   * @see aria-describedby
+   */
+  'aria-description'?: string | undefined;
+}
+
+/**
  * Adds a `preventVaseUIHandler` method to all event handlers.
  * The type omits the key `as`. A part declares `as` itself, and a library can add `as` to the
  * attributes of each element.
+ * The type adds the attribute `aria-description`.
  */
 export type WithVaseUIEvent<T> = {
   [K in keyof T as K extends 'as' ? never : K]: WithPreventVaseUIHandler<T[K]>;
-};
+} & AriaDescriptionAttribute;
 
 /**
  * Props shared by all Vase UI parts that render an element.
