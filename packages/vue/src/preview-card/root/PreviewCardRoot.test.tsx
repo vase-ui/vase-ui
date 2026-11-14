@@ -554,6 +554,40 @@ describe('<PreviewCard.Root />', () => {
       const innerNode = outer.tree!.nodesRef.value.find((node) => node.id === inner.parentId);
       expect(innerNode?.parentId).toBe(outer.parentId);
     });
+
+    it('closes only the nested card on Escape', async () => {
+      const onOuterOpenChange = vi.fn();
+      const onInnerOpenChange = vi.fn();
+      const { user } = await render(
+        <PreviewCard.Root defaultOpen onOpenChange={onOuterOpenChange}>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup data-testid="parent-popup">
+                <PreviewCard.Root defaultOpen onOpenChange={onInnerOpenChange}>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup data-testid="child-popup">Child content</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+      expect(screen.queryByTestId('child-popup')).not.toBe(null);
+
+      await user.keyboard('[Escape]');
+      await flushMicrotasks();
+
+      expect(onInnerOpenChange).toHaveBeenCalledTimes(1);
+      expect(onInnerOpenChange.mock.calls[0][1].reason).toBe(REASONS.escapeKey);
+      expect(onOuterOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('parent-popup')).not.toBe(null);
+    });
   });
 
   describe('close requests', () => {
