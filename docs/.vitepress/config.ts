@@ -4,6 +4,8 @@ import { defineConfig, postcssIsolateStyles } from 'vitepress';
 import { createApiReferenceReader } from '../../scripts/docs/apiReference.ts';
 import { familyOfPage } from '../../scripts/docs/familyPages.ts';
 import { readNavigation } from '../../scripts/docs/navigation.ts';
+import { markdownHeadingBadge } from './markdownHeadingBadge.ts';
+import { postcssFollowSiteTheme } from './postcssFollowSiteTheme.ts';
 
 const docsRoot = join(import.meta.dirname, '..');
 const manifest: { description: string } = JSON.parse(
@@ -43,8 +45,9 @@ export default defineConfig({
   description: manifest.description,
   base: '/vase-ui/',
   cleanUrls: true,
-  // A demo is inside an element with the class `vp-raw`. This plugin keeps the styles of the theme
-  // out of it, so the style sheet of the demo is the only one that styles it.
+  // A demo is inside an element with the class `vp-raw`. The first plugin keeps the styles of the
+  // theme out of it, so the style sheet of the demo is the only one that styles it. The second
+  // plugin makes that style sheet follow the theme of the site.
   vite: {
     css: {
       postcss: {
@@ -52,11 +55,12 @@ export default defineConfig({
           postcssIsolateStyles({
             includeFiles: [/vp-doc\.css/, /base\.css/, /[\\/]\.vitepress[\\/]theme[\\/]/],
           }),
+          postcssFollowSiteTheme(),
         ],
       },
     },
   },
-  markdown: { colorReplacements: SYNTAX_COLORS },
+  markdown: { colorReplacements: SYNTAX_COLORS, config: markdownHeadingBadge },
   transformPageData(pageData) {
     const family = familyOfPage(pageData.relativePath);
     return family === undefined ? undefined : { apiReference: readApiReference(family) };

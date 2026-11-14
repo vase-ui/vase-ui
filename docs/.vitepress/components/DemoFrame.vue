@@ -3,8 +3,8 @@
 </template>
 
 <style scoped>
-/* The copied style sheets of Base UI follow the color scheme of the system and cannot change.
-   The frame follows it too, so the demo has the page colors that the style sheets assume.
+/* A copied style sheet of Base UI gives no color to the page of its demo. The frame gives the
+   page colors that the style sheets assume, for the theme of the site.
    The look is the demo playground of the Base UI docs: docs/src/components/Demo/Demo.css.
    The playground of Base UI is 8rem high inside the border of its card, so the height here
    includes the two borders of the frame. */
@@ -29,10 +29,8 @@
   border-end-end-radius: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .demo-frame {
-    background-color: black;
-    color: white;
-  }
+.dark .demo-frame {
+  background-color: black;
+  color: white;
 }
 </style>

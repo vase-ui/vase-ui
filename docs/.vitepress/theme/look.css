@@ -271,6 +271,25 @@
   }
 }
 
+/* The badge of a heading, as `.MdHeadingBadge` of Base UI. `inline-block` keeps the badge out of the
+   underline that the heading gets on hover. The color of Base UI, poppy-t1, has 4.4:1 contrast on
+   the page in the light theme. A space before the badge takes the place of its margin. */
+.vp-doc .heading-badge {
+  display: inline-block;
+  vertical-align: middle;
+  translate: 0 -0.15em;
+  padding-inline: 2px;
+  line-height: inherit;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--vase-color-red);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .vp-doc a:not(.header-anchor) {
   font-weight: inherit;
   color: inherit;
@@ -505,4 +524,15 @@
 
 .vp-doc td:first-child code {
   color: var(--vase-color-navy);
+}
+
+/* Popups of demos */
+
+/* The Navigation Menu sheets give the link description and the submenu hint the color gray-500.
+   On the hover color of the light theme, that text has 4.35:1 contrast. This rule gives gray-600,
+   the next darker gray of the sheets, which has 7.17:1. A popup is outside `.vp-doc`, and Vite adds
+   a prefix and a suffix to each class of a CSS module, so the selectors name only the middle part. */
+:root:not(.dark) [class*='_LinkDescription_'],
+:root:not(.dark) [class*='_SubmenuHint_'] {
+  color: oklch(43.9% 0 0deg);
 }
