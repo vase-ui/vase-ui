@@ -45,6 +45,7 @@ export interface PositionerPartProps
 
 <script setup lang="ts">
 import { computed, shallowRef } from 'vue';
+import { POPUP_COLLISION_AVOIDANCE } from '../../src/internals/constants';
 import { useAnchorPositioning } from '../../src/internals/useAnchorPositioning';
 import { useRenderElement } from '../../src/internals/useRenderElement';
 
@@ -61,9 +62,6 @@ defineSlots<{
   render: ComponentRenderFn<HTMLProps, PositionerPartState>;
 }>();
 
-// The collision avoidance that Base UI gives to a popup that can flip to any axis.
-const DEFAULT_COLLISION_AVOIDANCE = { fallbackAxisSide: 'end' } as const;
-
 const positionerElement = shallowRef<HTMLElement | null>(null);
 
 const positioning = useAnchorPositioning({
@@ -78,7 +76,7 @@ const positioning = useAnchorPositioning({
   sticky: () => props.sticky,
   arrowPadding: () => props.arrowPadding,
   disableAnchorTracking: () => props.disableAnchorTracking,
-  collisionAvoidance: () => props.collisionAvoidance ?? DEFAULT_COLLISION_AVOIDANCE,
+  collisionAvoidance: () => props.collisionAvoidance ?? POPUP_COLLISION_AVOIDANCE,
   keepMounted: () => props.keepMounted,
   mounted: () => props.mounted,
   positionerElement,

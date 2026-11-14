@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 
 import { userEvent } from 'vitest/browser';
 import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
 import {
@@ -544,6 +545,31 @@ describe('<Checkbox.Root />', () => {
       expect(screen.getByRole('checkbox')).toHaveAttribute('data-indeterminate', '');
       expect(screen.getByTestId('indicator')).toHaveAttribute('data-indeterminate', '');
     });
+
+    it('sets grouped parent aria when manually indeterminate', async () => {
+      await render(
+        <CheckboxGroup value={[]} allValues={['one']}>
+          <Checkbox.Root parent indeterminate data-testid="parent" />
+          <Checkbox.Root value="one" />
+        </CheckboxGroup>,
+      );
+
+      expect(screen.getByTestId('parent')).toHaveAttribute('aria-checked', 'mixed');
+    });
+
+    it('sets grouped parent native input state when manually indeterminate', async () => {
+      await render(
+        <CheckboxGroup value={[]} allValues={['one']}>
+          <Checkbox.Root parent indeterminate data-testid="parent" />
+          <Checkbox.Root value="one" />
+        </CheckboxGroup>,
+      );
+
+      const [, input] = screen.getAllByRole<HTMLInputElement>('checkbox', {
+        hidden: true,
+      });
+      expect(input.indeterminate).toBe(true);
+    });
   });
 
   it('should update its state if the underlying input is toggled', async () => {
@@ -676,6 +702,27 @@ describe('<Checkbox.Root />', () => {
 
       await fireEvent.click(label);
       expect(checkbox).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('assigns an input id to a valueless child in a parent checkbox group', async () => {
+      await render(
+        <CheckboxGroup allValues={['one']}>
+          <Checkbox.Root />
+        </CheckboxGroup>,
+      );
+
+      const input = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      expect(input.id).not.toBe('');
+    });
+
+    it('assigns a root id to a valueless native button in a parent checkbox group', async () => {
+      await render(
+        <CheckboxGroup allValues={['one']}>
+          <Checkbox.Root nativeButton as="button" />
+        </CheckboxGroup>,
+      );
+
+      expect(screen.getByRole('checkbox').id).not.toBe('');
     });
   });
 
@@ -1350,6 +1397,33 @@ describe('<Checkbox.Root />', () => {
 
         expect(root).not.toHaveAttribute('data-filled');
       });
+
+      it('adds [data-filled] attribute when any checkbox is filled when inside a group', async () => {
+        await render(
+          <Field.Root>
+            <CheckboxGroup defaultValue={['1', '2']}>
+              <Checkbox.Root name="1" data-testid="button-1" />
+              <Checkbox.Root name="2" data-testid="button-2" />
+            </CheckboxGroup>
+          </Field.Root>,
+        );
+
+        const button1 = screen.getByTestId('button-1');
+        const button2 = screen.getByTestId('button-2');
+
+        expect(button1).toHaveAttribute('data-filled');
+        expect(button2).toHaveAttribute('data-filled');
+
+        await fireEvent.click(button1);
+
+        expect(button1).toHaveAttribute('data-filled');
+        expect(button2).toHaveAttribute('data-filled');
+
+        await fireEvent.click(button2);
+
+        expect(button1).not.toHaveAttribute('data-filled');
+        expect(button2).not.toHaveAttribute('data-filled');
+      });
     });
 
     it('[data-focused]', async () => {
@@ -1919,6 +1993,102 @@ describe('<Checkbox.Root />', () => {
     });
   });
 
+  describe('prop: parent', () => {
+    it('has `data-parent` on the parent and on no child', async () => {
+      await render(
+        <CheckboxGroup allValues={['a']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <Checkbox.Root value="a" data-testid="a" />
+        </CheckboxGroup>,
+      );
+
+      expect(screen.getByTestId('parent')).toHaveAttribute('data-parent', '');
+      expect(screen.getByTestId('a')).not.toHaveAttribute('data-parent');
+    });
+
+    it('has no name on its input, also in a field with a name', async () => {
+      await render(
+        <Field.Root name="fruits">
+          <CheckboxGroup allValues={['a']}>
+            <Checkbox.Root parent />
+            <Checkbox.Root value="a" />
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      const [parentInput, childInput] = document.querySelectorAll('input[type="checkbox"]');
+
+      expect(parentInput).not.toHaveAttribute('name');
+      expect(childInput).toHaveAttribute('name', 'fruits');
+    });
+
+    it('keeps its own state in a group that has no `allValues`', async () => {
+      await render(
+        <Field.Root name="fruits">
+          <CheckboxGroup>
+            <Checkbox.Root parent data-testid="parent" />
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+
+      expect(screen.getByTestId('parent')).toHaveAttribute('aria-checked', 'false');
+
+      await fireEvent.click(screen.getByTestId('parent'));
+
+      expect(screen.getByTestId('parent')).toHaveAttribute('aria-checked', 'true');
+      expect(screen.getByTestId('parent')).not.toHaveAttribute('aria-controls');
+    });
+
+    it('leaves the validation of the form when the prop becomes true', async () => {
+      const handleSubmit = vi.fn();
+      const parent = shallowRef(false);
+      await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup allValues={['a']}>
+              <Checkbox.Root parent={parent.value} required data-testid="own" />
+              <Checkbox.Root value="a" />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      // A required checkbox that is off blocks the submit.
+      await fireEvent.click(screen.getByText('Submit'));
+      expect(handleSubmit).not.toHaveBeenCalled();
+
+      parent.value = true;
+      await flushMicrotasks();
+      await fireEvent.click(screen.getByText('Submit'));
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('own')).toHaveAttribute('data-parent', '');
+    });
+  });
+
+  describe('VUE-42: a checkbox with no value in a group that has `allValues`', () => {
+    it.each([
+      { name: 'after a click', props: {}, click: true },
+      { name: 'from `defaultChecked`', props: { defaultChecked: true }, click: false },
+    ])('shows its own state $name', async ({ props, click }) => {
+      await render(
+        <CheckboxGroup allValues={['a']}>
+          <Checkbox.Root data-testid="alone" {...props} />
+          <Checkbox.Root value="a" />
+        </CheckboxGroup>,
+      );
+      const alone = screen.getByTestId('alone');
+
+      if (click) {
+        await fireEvent.click(alone);
+      }
+
+      expect(alone).toHaveAttribute('aria-checked', 'true');
+      expect(alone).toHaveAttribute('data-checked', '');
+      expect(alone.nextElementSibling).toHaveProperty('checked', true);
+    });
+  });
+
   describe('v-model:checked', () => {
     it('emits `checkedChange` and then `update:checked`, before the click handler returns', async () => {
       const order: string[] = [];
@@ -1976,6 +2146,70 @@ describe('<Checkbox.Root />', () => {
 
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('emits `checkedChange`, `valueChange`, `update:value` and then `update:checked` for a child of a group that has a parent', async () => {
+      const order: string[] = [];
+      await render(
+        <CheckboxGroup
+          allValues={['a']}
+          onValueChange={() => order.push('valueChange')}
+          {...{ 'onUpdate:value': () => order.push('update:value') }}
+        >
+          <Checkbox.Root parent />
+          <Checkbox.Root
+            value="a"
+            data-testid="a"
+            onCheckedChange={() => order.push('checkedChange')}
+            {...{ 'onUpdate:checked': () => order.push('update:checked') }}
+          />
+        </CheckboxGroup>,
+      );
+
+      screen.getByTestId('a').click();
+      order.push('end of the click');
+
+      expect(order).toEqual([
+        'checkedChange',
+        'valueChange',
+        'update:value',
+        'update:checked',
+        'end of the click',
+      ]);
+    });
+
+    it.each([
+      { name: 'the parent', testId: 'parent' },
+      { name: 'a child', testId: 'a' },
+    ])('does not emit `update:checked` when the group cancels for $name', async ({ testId }) => {
+      const handleUpdateChecked = vi.fn();
+      const handleUpdateValue = vi.fn();
+      await render(
+        <CheckboxGroup
+          allValues={['a']}
+          onValueChange={(_value: string[], details: CheckboxGroup.ChangeEventDetails) =>
+            details.cancel()
+          }
+          {...{ 'onUpdate:value': handleUpdateValue }}
+        >
+          <Checkbox.Root
+            parent
+            data-testid="parent"
+            {...{ 'onUpdate:checked': handleUpdateChecked }}
+          />
+          <Checkbox.Root
+            value="a"
+            data-testid="a"
+            {...{ 'onUpdate:checked': handleUpdateChecked }}
+          />
+        </CheckboxGroup>,
+      );
+
+      await fireEvent.click(screen.getByTestId(testId));
+
+      expect(handleUpdateValue).not.toHaveBeenCalled();
+      expect(handleUpdateChecked).not.toHaveBeenCalled();
+      expect(screen.getByTestId(testId)).toHaveAttribute('aria-checked', 'false');
     });
   });
 
@@ -2147,6 +2381,52 @@ describe('<Checkbox.Root />', () => {
       await fireEvent.click(screen.getByRole('checkbox'));
 
       expect(handleChange.mock.calls.map(([checked]) => checked)).toEqual([true]);
+    });
+
+    it('of a parent after a click that leaves it mixed', async () => {
+      await render(
+        <CheckboxGroup allValues={['a', 'b']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <Checkbox.Root value="a" disabled />
+          <Checkbox.Root value="b" />
+        </CheckboxGroup>,
+      );
+      const parentInput = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+
+      await fireEvent.click(screen.getByTestId('parent'));
+
+      // The click made the input on and not mixed. The disabled child stays off, so the group keeps
+      // the parent mixed.
+      expect(screen.getByTestId('parent')).toHaveAttribute('aria-checked', 'mixed');
+      expect({ checked: parentInput.checked, indeterminate: parentInput.indeterminate }).toEqual({
+        checked: false,
+        indeterminate: true,
+      });
+    });
+
+    it('of a parent after the clicks on its children', async () => {
+      await render(
+        <CheckboxGroup allValues={['a', 'b']}>
+          <Checkbox.Root parent />
+          <Checkbox.Root value="a" data-testid="a" />
+          <Checkbox.Root value="b" data-testid="b" />
+        </CheckboxGroup>,
+      );
+      const parentInput = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+
+      await fireEvent.click(screen.getByTestId('a'));
+
+      expect({ checked: parentInput.checked, indeterminate: parentInput.indeterminate }).toEqual({
+        checked: false,
+        indeterminate: true,
+      });
+
+      await fireEvent.click(screen.getByTestId('b'));
+
+      expect({ checked: parentInput.checked, indeterminate: parentInput.indeterminate }).toEqual({
+        checked: true,
+        indeterminate: false,
+      });
     });
   });
 

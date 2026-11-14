@@ -1,0 +1,557 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/menubar/**",
+    "docs/src/app/(docs)/react/components/menubar/**"
+  ],
+  "sources": [
+    "packages/react/src/menubar/Menubar.tsx",
+    "packages/react/src/menubar/MenubarContext.ts",
+    "packages/react/src/menubar/MenubarDataAttributes.ts",
+    "packages/react/src/menubar/index.ts"
+  ],
+  "typeTests": [],
+  "cases": [
+    {
+      "file": "packages/react/src/menubar/Menubar.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "throws when the menubar context is missing"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "ignores a delayed touch click immediately after focus opens another menu"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "keeps a controlled menu open on a delayed touch click it ignores, until the cooldown ends"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "closes on a touch item click immediately after focus opens another menu"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "keeps focus on an outside target when a triggerless menubar menu closes"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "click interactions"
+          ],
+          "title": "should open the menu after clicking on its trigger and close it when clicking again",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "hover behavior"
+          ],
+          "title": "should not open submenus on hover when no submenu is already open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "hover behavior"
+          ],
+          "title": "should open submenus on hover when another submenu is already open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "hover behavior"
+          ],
+          "title": "should open nested submenus on hover when parent menu is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "hover behavior"
+          ],
+          "title": "should open another menu on hover when a nested submenu is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "focus behavior"
+          ],
+          "title": "focuses a menubar item without immediately opening the menu"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "closeOnClick on nested items behavior"
+          ],
+          "title": "should respect closeOnClick on nested items when the menu was opened on click",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "closeOnClick on nested items behavior"
+          ],
+          "title": "should respect closeOnClick on nested items when the menu was opened on hover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should navigate between menubar items with arrow keys"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "moves focus to the first and last triggers with Home and End"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should open the menu with Space key"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should navigate within the menu using arrow keys"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should open the submenu with right arrow key"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should close the menu with Escape key",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should close submenu with left arrow key and return focus to submenu trigger"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "closes open submenus when navigating to the next menubar item with ArrowRight",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "keyboard interactions"
+          ],
+          "title": "should navigate between menus using left/right arrow keys when menus are open",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "mixed mouse and keyboard interactions"
+          ],
+          "title": "should allow keyboard navigation after opening a menu with mouse click",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "mixed mouse and keyboard interactions"
+          ],
+          "title": "should allow clicking a menu trigger then navigating to another menu with keyboard",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "touch interactions"
+          ],
+          "title": "closes the entire tree on a single outside press after opening a submenu",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "scroll locking"
+          ],
+          "title": "applies scroll lock when a touch-opened submenu $name covers the viewport width",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "scroll locking"
+          ],
+          "title": "does not apply scroll lock when a touch-opened submenu is narrower than the viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "scroll locking"
+          ],
+          "title": "updates scroll lock when handing off between top-level touch-opened menus",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "prop: loopFocus",
+            "when loopFocus == true"
+          ],
+          "title": "should loop around to the first item after the last one",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "prop: loopFocus",
+            "when loopFocus == true"
+          ],
+          "title": "should loop around to the last item after the first one",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "prop: loopFocus",
+            "when loopFocus == false"
+          ],
+          "title": "should stay on the last item when navigating beyond it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "prop: loopFocus",
+            "when loopFocus == false"
+          ],
+          "title": "should stay on the first item when navigating before it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "prop: disabled"
+          ],
+          "title": "disables child menus when menubar is disabled"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name"
+          ],
+          "title": "correctly opens new menu on hover after clicking on its trigger and entering from hover (#2222)",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "role"
+          ],
+          "title": "sets role=\"menubar\" on the root element"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "role"
+          ],
+          "title": "sets aria-orientation on the root element"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "role"
+          ],
+          "title": "moves between triggers with the main-axis arrow keys when vertical"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "role"
+          ],
+          "title": "opens a menu of a vertical $direction menubar with $openKey"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "when using $name",
+            "role"
+          ],
+          "title": "sets role=\"menuitem\" on menu triggers"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "renders contained top-level portal ownership as an allowed menubar child"
+        },
+        {
+          "describe": [
+            "<Menubar />"
+          ],
+          "title": "renders detached top-level portal ownership without an accessibility role"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "disabled state"
+          ],
+          "title": "keeps the menubar reachable when the first trigger is disabled"
+        },
+        {
+          "describe": [
+            "<Menubar />",
+            "disabled state"
+          ],
+          "title": "disables menu items while the menubar is disabled"
+        },
+        {
+          "describe": [
+            "filterable menubar menus"
+          ],
+          "title": "preserves %s trigger navigation"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/menubar/types.md",
+      "parts": [
+        {
+          "name": "Menubar",
+          "tag": null,
+          "props": [
+            {
+              "name": "loopFocus",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "MenuRoot.Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Menubar.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Menubar.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Menubar.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "MenubarState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "MenuRoot.Orientation"
+              },
+              {
+                "name": "modal",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "hasSubmenuOpen",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type MenubarState = {\n    orientation: MenuRoot.Orientation;\n    modal: boolean;\n    hasSubmenuOpen: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            },
+            {
+              "name": "data-has-submenu-open",
+              "type": null
+            },
+            {
+              "name": "data-modal",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [],
+      "additionalTypes": [
+        {
+          "name": "MenubarDataAttributes",
+          "code": "declare namespace MenubarDataAttributes {\n    const modal: 'data-modal';\n    const orientation: 'data-orientation';\n    const hasSubmenuOpen: 'data-has-submenu-open';\n}",
+          "constants": [
+            {
+              "name": "modal",
+              "value": "data-modal"
+            },
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            },
+            {
+              "name": "hasSubmenuOpen",
+              "value": "data-has-submenu-open"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/menubar/page.mdx",
+      "referenceTags": [
+        "TypesMenubar"
+      ]
+    }
+  ]
+}

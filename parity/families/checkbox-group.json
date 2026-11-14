@@ -1,0 +1,50 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/checkbox-group/**",
+    "docs/src/app/(docs)/react/components/checkbox-group/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "describe": ["<CheckboxGroup />", "Field.Label"],
+      "title": "keeps checkbox ids unique in a shared Field.Root during SSR (nativeButton=%s)",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "describe": ["<CheckboxGroup />", "Field.Label"],
+      "title": "associates Field.Label with a grouped Checkbox during SSR (nativeButton=$nativeButton, parent=$parent)",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "describe": ["<CheckboxGroup />", "Form"],
+      "title": "validates an inputless controlled group on change with validationMode=onChange",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.test.tsx",
+      "reason": "The case reads the second argument of `validate`, and it expects the field `group` there. Base UI keeps the fields of a page that has no form in a variable of the module. Vase UI keeps no such variable, so a field with no form sees no other field, and the argument is an empty object. The case \"validates an inputless controlled group on change\" in the block \"a field with no form\" has the same steps and asserts that argument."
+    },
+    {
+      "upstream": "packages/react/src/checkbox-group/CheckboxGroup.test.tsx",
+      "describe": ["<CheckboxGroup />", "Form"],
+      "title": "validates an initially empty group through the imperative action",
+      "kind": "replaced",
+      "test": "packages/vue/src/checkbox-group/CheckboxGroup.test.tsx",
+      "reason": "The case reads the second argument of `validate`, and it expects the field `group` there. Base UI keeps the fields of a page that has no form in a variable of the module. Vase UI keeps no such variable, so a field with no form sees no other field, and the argument is an empty object. The case \"validates an initially empty group through the exposed `validate`\" in the block \"a field with no form\" has the same steps and asserts that argument."
+    }
+  ],
+  "surfaceAdditions": [
+    {
+      "entry": "CheckboxGroup",
+      "prop": "id",
+      "reason": "The part reads `id` to register its control with the field, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the element, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
