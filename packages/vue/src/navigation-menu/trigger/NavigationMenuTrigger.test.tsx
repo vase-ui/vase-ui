@@ -785,7 +785,7 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
-  describe('VUE-57: the trigger has one root node', () => {
+  describe('VUE-60: the trigger has one root node', () => {
     it.each([
       { name: 'a closed item', defaultValue: null },
       { name: 'an active item', defaultValue: 'one' },

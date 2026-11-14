@@ -195,7 +195,7 @@ describe('useElementSiblings', () => {
     expect(node.parentNode).toBe(null);
   });
 
-  describe('VUE-57: a part with nodes beside its element has one root node', () => {
+  describe('VUE-60: a part with nodes beside its element has one root node', () => {
     it('gives the scope id, the class and a custom directive of the consumer to the element', async () => {
       await render(<ElementSiblingsPage />);
       const element = screen.getByTestId('element');
