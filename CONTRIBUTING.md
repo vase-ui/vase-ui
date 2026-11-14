@@ -148,7 +148,8 @@ Vase UI can add a component that Base UI does not have. This is a component of V
 - `<name>` is the name of the folder of the component, `packages/vue/src/<name>`.
 - A record and a family file cannot have the same name. A record cannot have the name of a component in `components` of `parity/upstream.json`, because that component is a port.
 - `pnpm parity:check` reads `packages/vue/src/<name>/index.ts`. It fails when the file does not exist.
-- It also fails when a name in the record has no export of its kind, or when a title matches more than one export. It also fails on a type that has no property and is not a union of strings. The API reference leaves out each such name.
+- It also fails when a name in the record has no export of its kind, and on a type that has no property and is not a union of strings. The API reference leaves out such a name.
+- It also fails when a title matches more than one export. The API reference then takes the first match.
 - Add the record in the pull request that adds the `index.ts` of the component.
 
 ## Layout and names
@@ -2011,7 +2012,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - Run that command after each change of `matchedCommit`. Commit the result in the same pull request. A changed hash of an `index.tsx` shows that Base UI changed that demo.
 - `pnpm test:docs` fails when a family with a page or a demo folder has no record, or when the record is not at `matchedCommit`. It also fails when a style sheet is absent or differs from the record. It also fails when a Base UI demo has no Vue file and each entry point that the demo imports exists in Vase UI. It also fails when a demo folder has a style sheet that Base UI does not have.
 - A demo with no Vue file waits while one of its entry points does not exist in Vase UI. The page then has no such demo. When the last entry point exists, `pnpm test:docs` fails until the demo has its Vue file. The pull request that adds that entry point ports the demo.
-- A component of Vase UI's own has no `upstream.json`, and its demos have style sheets of their own. `pnpm test:docs` fails for a page that has neither a family file nor a record in `parity/own`.
+- A component of Vase UI's own has no `upstream.json`. Its demos have elements and style sheets of their own. `pnpm test:docs` fails for a page that has neither a family file nor a record in `parity/own`.
 - On the page, a demo is inside `<DemoFrame>`. The frame has the class `vp-raw`, so the styles of the site do not reach the demo. Show the Vue file and the style sheet directly below it in one `code-group`. The frame and the code group then make one card.
 - A demo declares its props itself, in a type literal: `defineProps<{ as?: string | Component | undefined }>()`. It does not extend a type of `@vase-ui/vue`. The SFC compiler then reads the props from the demo file, and not from a type of the built package.
 - A code sample that is not a demo is `docs/components/<family>/<Name>.vue`, or `docs/utils/<family>/<Name>.vue` on a utility page. The page shows its source and does not render it. `pnpm docs:typecheck` checks it.
