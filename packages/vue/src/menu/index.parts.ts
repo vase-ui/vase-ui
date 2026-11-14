@@ -55,6 +55,18 @@ import type {
   MenuRootProps,
   MenuRootState,
 } from './root/MenuRoot.vue';
+import MenuSubmenuRoot from './submenu-root/MenuSubmenuRoot.vue';
+import type {
+  MenuSubmenuRootChangeEventDetails,
+  MenuSubmenuRootChangeEventReason,
+  MenuSubmenuRootProps,
+  MenuSubmenuRootState,
+} from './submenu-root/MenuSubmenuRoot.vue';
+import MenuSubmenuTrigger from './submenu-trigger/MenuSubmenuTrigger.vue';
+import type {
+  MenuSubmenuTriggerProps,
+  MenuSubmenuTriggerState,
+} from './submenu-trigger/MenuSubmenuTrigger.vue';
 import MenuTrigger from './trigger/MenuTrigger.vue';
 import type { MenuTriggerProps, MenuTriggerState } from './trigger/MenuTrigger.vue';
 
@@ -227,6 +239,28 @@ export namespace Root {
   export type HighlightEventReason = MenuRootHighlightEventReason;
   export type HighlightEventDetails = MenuRootHighlightEventDetails;
   export type Orientation = MenuRootOrientation;
+}
+
+/**
+ * Groups all parts of a submenu.
+ * Doesn't render its own HTML element.
+ */
+export const SubmenuRoot: typeof MenuSubmenuRoot = MenuSubmenuRoot;
+export namespace SubmenuRoot {
+  export type Props = MenuSubmenuRootProps;
+  export type State = MenuSubmenuRootState;
+  export type ChangeEventReason = MenuSubmenuRootChangeEventReason;
+  export type ChangeEventDetails = MenuSubmenuRootChangeEventDetails;
+}
+
+/**
+ * A menu item that opens a submenu.
+ * Renders a `<div>` element.
+ */
+export const SubmenuTrigger: typeof MenuSubmenuTrigger = MenuSubmenuTrigger;
+export namespace SubmenuTrigger {
+  export type Props = MenuSubmenuTriggerProps;
+  export type State = MenuSubmenuTriggerState;
 }
 
 /**

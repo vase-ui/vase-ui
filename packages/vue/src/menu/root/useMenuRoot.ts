@@ -15,6 +15,7 @@ import { useContextMenuRootContext } from '../../internals/context-menu-root-con
 import { createGenericEventDetails } from '../../internals/createBaseUIEventDetails';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
 import { REASONS } from '../../internals/reasons';
+import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -120,7 +121,22 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   const floatingParentNodeIdFromContext = useFloatingParentNodeId();
 
-  const { store, open, payload, actions } = usePopupRootWithPopupId(
+  const parentMenuStore = parentFromContext.type === 'menu' ? parentFromContext.store : undefined;
+  const parentMenuState = parentMenuStore === undefined ? undefined : toRaw(parentMenuStore.state);
+  // An initially open submenu should animate in only when the user watches it appear, i.e. when
+  // its subtree mounts because the parent popup is playing its own enter transition. A parent
+  // that was `defaultOpen` at page load never passes through `'starting'`, and under a
+  // `keepMounted` parent the submenu mounts at page load while the parent's status is still
+  // `undefined` — in both cases the submenu is page-load content that must not animate. Gated on
+  // being open at mount so a closed submenu doesn't seed `instantType` it would never clear.
+  const animateInitialOpen =
+    (props.open ?? props.defaultOpen ?? false) && parentMenuState?.transitionStatus === 'starting';
+
+  // Mirror an instantly-opened parent (e.g. keyboard click) so `[data-instant]` styling
+  // suppresses the enter transition on both popups or neither.
+  const seededInstantType = animateInitialOpen ? parentMenuState?.instantType : undefined;
+
+  const { store, open, payload, transitionStatus, actions } = usePopupRootWithPopupId(
     props,
     (initialState, initialPopupId) => {
       const menuStore = new MenuStore<Payload>(
@@ -131,6 +147,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
           highlightItemOnHover: props.highlightItemOnHover ?? true,
           modal: parentFromContext.type === undefined ? props.modal : undefined,
           rootId: rootId.value,
+          instantType: seededInstantType,
         },
         initialPopupId,
       );
@@ -143,6 +160,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       handle: () => props.handle,
       onOpenChange: options.onOpenChange,
       onOpenChangeComplete: options.onOpenChangeComplete,
+      animateInitialOpen,
     },
   );
 
@@ -179,6 +197,57 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     }),
     (values) => store.update(values),
   );
+
+  if (seededInstantType !== undefined) {
+    clearSeededInstantTypeAfterReveal();
+  }
+
+  // An inherited `instantType` is only for the initial reveal. A later controlled `open` flip
+  // bypasses `setOpen`, so nothing would reset it and `[data-instant]` would wrongly suppress
+  // every subsequent transition. Clear it once the enter phase settles, unless an interactive
+  // open change already replaced it.
+  function clearSeededInstantTypeAfterReveal() {
+    const runOnceAnimationsFinish = useAnimationsFinished(store.context.popupRef);
+    let abortController: AbortController | undefined;
+
+    function clearSeededInstantType() {
+      if (toRaw(store.state).instantType === seededInstantType) {
+        store.set('instantType', undefined);
+      }
+    }
+
+    function followReveal() {
+      abortController?.abort();
+      abortController = undefined;
+
+      // A controlled close can interrupt the initial enter before the animations-finished
+      // callback runs, and a closed popup schedules no new one. Nothing is left to protect once
+      // closing starts, so clear now or the next reopen renders a stale `[data-instant]`.
+      if (!open.value) {
+        clearSeededInstantType();
+        return;
+      }
+
+      if (transitionStatus.value !== undefined) {
+        return;
+      }
+
+      // With no popup element there is no enter transition to protect, and
+      // `useAnimationsFinished` would return without calling back. A popup that appears after the
+      // reveal settles is page-load-like content.
+      if (store.context.popupRef.value == null) {
+        clearSeededInstantType();
+        return;
+      }
+
+      abortController = new AbortController();
+      runOnceAnimationsFinish(clearSeededInstantType, abortController.signal);
+    }
+
+    onMounted(followReveal);
+    watch([open, transitionStatus], followReveal, { flush: 'post' });
+    onScopeDispose(() => abortController?.abort());
+  }
 
   watch(
     [floatingParentNodeIdFromContext, () => store.select('activeTriggerElement')],

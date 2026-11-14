@@ -51,6 +51,7 @@ import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
@@ -108,6 +109,19 @@ watch(
   },
   { immediate: true },
 );
+
+useHoverPopupInteraction(store, {
+  enabled: () => {
+    const parentType = store.select('parent').type;
+    return (
+      store.select('hoverEnabled') &&
+      !store.select('disabled') &&
+      parentType !== 'context-menu' &&
+      parentType !== 'menubar'
+    );
+  },
+  closeDelay: () => store.select('closeDelay'),
+});
 
 const state = computed<MenuPopupState>(() => ({
   transitionStatus: transitionStatus.value,
