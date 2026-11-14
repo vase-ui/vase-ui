@@ -24,9 +24,11 @@ type WithPreventVaseUIHandler<T> = T extends (event: infer E) => any
 
 /**
  * Adds a `preventVaseUIHandler` method to all event handlers.
+ * The type omits the key `as`. A part declares `as` itself, and a library can add `as` to the
+ * attributes of each element.
  */
 export type WithVaseUIEvent<T> = {
-  [K in keyof T]: WithPreventVaseUIHandler<T[K]>;
+  [K in keyof T as K extends 'as' ? never : K]: WithPreventVaseUIHandler<T[K]>;
 };
 
 /**
