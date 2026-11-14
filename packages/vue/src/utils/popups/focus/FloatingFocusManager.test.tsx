@@ -1970,6 +1970,22 @@ describe('FloatingFocusManager', () => {
       expect(screen.getByTestId('floating')).toBeInTheDocument();
     });
 
+    it('keeps the popup open when the focus moves to a guard that previousFocusableElement gives at that time', async () => {
+      const guard = document.createElement('span');
+      guard.tabIndex = 0;
+      guard.setAttribute('data-vase-ui-focus-guard', '');
+      onTestFinished(() => guard.remove());
+      const handleOpenChange = await renderPopup({
+        previousFocusableElement: () => (guard.isConnected ? guard : null),
+      });
+      document.body.append(guard);
+
+      guard.focus();
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+    });
+
     it('keeps the popup open when the focus moves into the popup of a node below, in externalTree', async () => {
       const tree = new FloatingTreeStore();
       const handleOpenChange = vi.fn();
