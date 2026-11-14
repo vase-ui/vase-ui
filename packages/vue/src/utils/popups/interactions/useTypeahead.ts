@@ -13,7 +13,7 @@ export interface UseTypeaheadProps {
    * A ref which contains an array of strings whose indices match the HTML
    * elements of the list. The composable reads it only in a handler.
    */
-  listRef: Readonly<Ref<Array<string | null>>>;
+  listRef: Readonly<Ref<(string | null)[]>>;
   /**
    * The index of the active (focused or highlighted) item in the list.
    */
@@ -28,7 +28,7 @@ export interface UseTypeaheadProps {
    * `display: none`, `visibility: hidden|collapse`, other browser-reported
    * visibility checks, or native disabled state.
    */
-  elementsRef?: Readonly<Ref<Array<HTMLElement | null>>> | undefined;
+  elementsRef?: Readonly<Ref<(HTMLElement | null)[]>> | undefined;
   /**
    * Indices that are disabled, either as an array or a predicate (the same shape as
    * `useListNavigation`'s `disabledIndices`). Disabled items are skipped while matching,
@@ -102,7 +102,7 @@ export function useTypeahead(
       return disabledIndices == null || !isListIndexDisabled(EMPTY_ARRAY, index, disabledIndices);
     }
 
-    function getMatchingIndex(list: Array<string | null>, string: string, startIndex = 0) {
+    function getMatchingIndex(list: (string | null)[], string: string, startIndex = 0) {
       if (list.length === 0) {
         return -1;
       }
@@ -131,7 +131,7 @@ export function useTypeahead(
       onTyping?.(true);
     }
 
-    if (typed.length > 0 && typed[0] !== ' ') {
+    if (typed.length > 0 && !typed.startsWith(' ')) {
       if (getMatchingIndex(listContent, typed) === -1 && event.key !== ' ') {
         onTyping?.(false);
       }

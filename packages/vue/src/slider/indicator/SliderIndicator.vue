@@ -78,18 +78,20 @@ const { element, elementProps } = useRenderElement('div', props, {
     return [
       {
         'data-vase-ui-slider-indicator': renderBeforeHydration.value ? '' : undefined,
+        /* eslint-disable @typescript-eslint/no-non-null-assertion -- An empty `values` has no first or last value, and `valueToPercent` then gives `NaN`, as in Base UI. */
         style: getIndicatorStyles(
           orientation.value === 'vertical',
           sliderValues.length > 1,
           isInset,
           isInset
             ? indicatorPosition.value[0]
-            : valueToPercent(sliderValues[0], min.value, max.value),
+            : valueToPercent(sliderValues[0]!, min.value, max.value),
           isInset
             ? indicatorPosition.value[1]
-            : valueToPercent(sliderValues[sliderValues.length - 1], min.value, max.value),
+            : valueToPercent(sliderValues[sliderValues.length - 1]!, min.value, max.value),
           isInset && renderBeforeHydration.value && isHydrating.value,
         ),
+        /* eslint-enable @typescript-eslint/no-non-null-assertion */
         // The script of the server HTML writes the position to the style.
         'data-allow-mismatch':
           renderBeforeHydration.value && isHydrating.value ? 'style' : undefined,

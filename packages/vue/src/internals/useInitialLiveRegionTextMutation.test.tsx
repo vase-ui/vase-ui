@@ -40,7 +40,7 @@ describe('useInitialLiveRegionTextMutation', () => {
 
     await setProps({ present: true });
 
-    expect(screen.getByTestId('status').firstChild).toHaveProperty('nodeValue', 'Ready⁠');
+    expect(screen.getByTestId('status').firstChild).toHaveProperty('nodeValue', 'Ready\u2060');
   });
 
   it('skips empty text nodes when finding the announcement text', async () => {
@@ -69,7 +69,7 @@ describe('useInitialLiveRegionTextMutation', () => {
 
     await render(<Status />);
 
-    expect(text.data).toBe('Status⁠');
+    expect(text.data).toBe('Status\u2060');
     expect(empty.data).toBe('');
   });
 

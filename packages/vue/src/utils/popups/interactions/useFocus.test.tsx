@@ -239,7 +239,10 @@ describe('useFocus', () => {
     // The ways to release a trigger. `start` renders the trigger and gives the function that
     // releases it. A `KeepAlive` that unmounts deactivates its child first, so the unmount case
     // renders with no `KeepAlive`.
-    const releases = [
+    const releases: {
+      name: string;
+      start: (App: SingleTriggerApp) => Promise<() => void | Promise<void>>;
+    }[] = [
       {
         name: 'the trigger unmounts',
         async start(App: SingleTriggerApp) {

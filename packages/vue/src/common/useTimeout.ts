@@ -26,7 +26,7 @@ export class Timeout {
 
   clear = () => {
     if (this.currentId !== EMPTY) {
-      clearTimeout(this.currentId as TimeoutId);
+      clearTimeout(this.currentId);
       this.currentId = EMPTY;
     }
   };

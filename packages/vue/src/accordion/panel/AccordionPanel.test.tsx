@@ -137,7 +137,9 @@ describe('<Accordion.Panel />', () => {
         snapshots.push({
           panel1EndingStyle: panel1.hasAttribute('data-ending-style'),
           panel1Hidden: panel1.hasAttribute('hidden'),
-          panel1HeightInPx: /px$/.test(panel1.style.getPropertyValue('--accordion-panel-height')),
+          panel1HeightInPx: panel1.style
+            .getPropertyValue('--accordion-panel-height')
+            .endsWith('px'),
           panel2Open: panel2.hasAttribute('data-open'),
         });
       });

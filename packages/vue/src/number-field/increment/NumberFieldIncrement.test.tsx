@@ -41,15 +41,10 @@ describe('<NumberField.Increment />', () => {
       vi.useRealTimers();
     });
 
-    // A real pointer can rest over the button, and the browser then sends events of its own, such as
-    // a `mouseenter` event that starts a hold again. With `pointer-events: none` the button gets no
-    // such event. An event that a case dispatches still reaches the button.
-    const noRealPointer = { pointerEvents: 'none' } as const;
-
     function TestNumberField() {
       return (
         <NumberField.Root defaultValue={0}>
-          <NumberField.Increment style={noRealPointer} />
+          <NumberField.Increment />
           <NumberField.Input />
         </NumberField.Root>
       );
@@ -59,7 +54,7 @@ describe('<NumberField.Increment />', () => {
       await render(
         <div onPointerup={(event: PointerEvent) => event.stopPropagation()}>
           <NumberField.Root defaultValue={0}>
-            <NumberField.Increment style={noRealPointer} />
+            <NumberField.Increment />
             <NumberField.Input />
           </NumberField.Root>
         </div>,

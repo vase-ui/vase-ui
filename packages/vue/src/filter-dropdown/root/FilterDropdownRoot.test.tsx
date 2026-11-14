@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { Teleport, defineComponent, shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { defineComponent, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
+import { reset as resetWarnings } from '../../common/warn';
 import * as Menu from '../../menu/index.parts';
 import { useFilterDropdownRoot } from './FilterDropdownRoot';
 import type {
@@ -411,6 +412,72 @@ describe('useFilterDropdownRoot', () => {
 
     expect(rootContext?.inputFocusVisible.value).toBe(true);
     expect(rootContext?.keyboardModality.value).toBe(true);
+  });
+
+  it('compares a later query with the query of the mount', async () => {
+    const value = shallowRef('a');
+    const setActiveIndex = vi.fn();
+    const Host = defineComponent(() => {
+      useFilterDropdownRoot({
+        open: true,
+        value,
+        listRef: shallowRef([]),
+        getActiveIndex: getNoActiveIndex,
+        setActiveIndex,
+      });
+      return () => null;
+    });
+    await render(<Host />);
+    expect(setActiveIndex).not.toHaveBeenCalled();
+
+    value.value = '';
+    await flushMicrotasks();
+
+    // No item is registered, so only the change of the query clears the highlight.
+    expect(setActiveIndex).toHaveBeenCalledWith(null);
+  });
+});
+
+describe('useMenuFilterPopup', () => {
+  const { render } = createRenderer();
+
+  function spyOnWarnings() {
+    resetWarnings();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    onTestFinished(() => {
+      warn.mockRestore();
+    });
+    return warn;
+  }
+
+  const message =
+    'Vase UI: A filterable menu opened without a <Menu.Input>. The focus then has no input to stay on, so the user cannot type a query. Render the input inside <Menu.Popup>, or remove <Menu.FilterProvider> for a menu that does not filter.';
+
+  it('warns when the popup mounts open with no input', async () => {
+    const warn = spyOnWarnings();
+
+    await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup />
+      </TestFilterDropdownRoot>,
+    );
+
+    expect(warn.mock.calls).toEqual([[message]]);
+  });
+
+  it('warns when the popup opens later with no input', async () => {
+    const warn = spyOnWarnings();
+
+    const { setProps } = await render(
+      <TestFilterDropdownRoot open={false} value="">
+        <FilterDropdown.Popup />
+      </TestFilterDropdownRoot>,
+    );
+    expect(warn).not.toHaveBeenCalled();
+
+    await setProps({ open: true });
+
+    expect(warn.mock.calls).toEqual([[message]]);
   });
 });
 

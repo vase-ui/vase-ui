@@ -268,7 +268,7 @@ export interface UseFilterDropdownRootParameters {
   /**
    * The host's DOM-ordered list of item elements.
    */
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>;
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>;
   /**
    * Reads the host's highlighted index.
    */

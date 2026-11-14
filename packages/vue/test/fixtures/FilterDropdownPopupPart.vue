@@ -14,8 +14,8 @@ export interface FilterDropdownPopupPartProps extends /* @vue-ignore */ WithVase
 import { useAttrs } from 'vue';
 import { useFilterDropdownRootContext } from '../../src/filter-dropdown/root/FilterDropdownRootContext';
 import { useVaseUiId } from '../../src/internals/useBaseUiId';
-import { mergeProps } from '../../src/merge-props';
 import { useMenuFilterPopup } from '../../src/menu/filter-root/useMenuFilterPopup';
+import { mergeProps } from '../../src/merge-props';
 
 defineOptions({ inheritAttrs: false });
 

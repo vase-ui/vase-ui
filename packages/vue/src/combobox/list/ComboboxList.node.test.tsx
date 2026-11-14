@@ -4,7 +4,7 @@ import * as Combobox from '../index.parts';
 
 // The opening tag of the element that has `attribute`.
 function getTag(html: string, attribute: string) {
-  return html.match(new RegExp(`<[^>]*${attribute}[^>]*>`))?.[0];
+  return new RegExp(`<[^>]*${attribute}[^>]*>`).exec(html)?.[0];
 }
 
 describe('<Combobox.List /> on a server', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 
 describe('<Dialog.Backdrop /> on a server', () => {
   it('renders the backdrop of an open dialog with its state and its style', async () => {
@@ -15,7 +15,7 @@ describe('<Dialog.Backdrop /> on a server', () => {
       }),
     );
 
-    const backdrop = html.match(/<div [^>]*>/)?.[0];
+    const backdrop = /<div [^>]*>/.exec(html)?.[0];
     expect(backdrop).toContain('role="presentation"');
     expect(backdrop).toContain('data-open');
     expect(backdrop).not.toContain('hidden');

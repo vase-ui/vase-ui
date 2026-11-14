@@ -11,7 +11,7 @@ import type { MenuStore } from '../store/MenuStore';
 import { useMenuRootContext } from './MenuRootContext';
 
 function createTestTrigger() {
-  const stores: Array<MenuStore<unknown>> = [];
+  const stores: MenuStore<unknown>[] = [];
   const TestTrigger = defineComponent({
     props: { id: { type: String, required: true } },
     setup(props) {

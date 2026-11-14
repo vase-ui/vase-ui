@@ -1,25 +1,29 @@
 {
+  "extends": "@tsconfig/strictest/tsconfig.json",
   "compilerOptions": {
     "target": "es2022",
     "lib": ["es2022", "dom", "dom.iterable"],
     "module": "preserve",
     "moduleResolution": "bundler",
-    "strict": true,
     "noEmit": true,
-    "skipLibCheck": true,
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
+    "erasableSyntaxOnly": true,
     "allowImportingTsExtensions": true,
+    "exactOptionalPropertyTypes": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
     "types": ["node", "vitepress/client"]
   },
   "vueCompilerOptions": {
-    "strictTemplates": true
+    "strictTemplates": true,
+    "dataAttributes": ["data-*"]
   },
   "include": [
     ".vitepress/**/*.ts",
     ".vitepress/**/*.vue",
     "*.data.ts",
     "components/**/*.vue",
+    "demos/**/*.ts",
     "demos/**/*.vue",
     "examples/**/*.vue",
     "utils/**/*.vue"

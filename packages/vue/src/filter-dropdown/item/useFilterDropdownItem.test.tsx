@@ -4,6 +4,7 @@ import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import Item from '../../../test/fixtures/FilterDropdownItemPart.vue';
 import { NOOP } from '../../common/empty';
+import { useFilterDropdownItem } from './useFilterDropdownItem';
 
 describe('useFilterDropdownItem', () => {
   const { render } = createRenderer();
@@ -74,6 +75,23 @@ describe('useFilterDropdownItem', () => {
     });
   });
 
+  it('hides a visible item when its text changes to no match', async () => {
+    const name = shallowRef('Panama');
+    await render(() => (
+      <TestFilterDropdownRoot value="pan">
+        <Item>Spain</Item>
+        <Item>{name.value}</Item>
+      </TestFilterDropdownRoot>
+    ));
+    await flushMicrotasks();
+    expect(screen.getByRole('menuitem', { name: 'Panama' })).toBeVisible();
+
+    name.value = 'Mexico';
+    await flushMicrotasks();
+
+    expect(screen.queryByRole('menuitem')).toBe(null);
+  });
+
   it('matches the label in place of the rendered text', async () => {
     await render(
       <TestFilterDropdownRoot value="can">
@@ -85,5 +103,30 @@ describe('useFilterDropdownItem', () => {
 
     expect(screen.getByRole('menuitem', { name: 'Kanada' })).toBeVisible();
     expect(screen.queryByRole('menuitem', { name: 'Mexico' })).toBe(null);
+  });
+
+  it('runs the filter again when a label changes that the item does not render', async () => {
+    const label = shallowRef('Canada');
+    const LabelItem = defineComponent(() => {
+      const { visible, ref } = useFilterDropdownItem({ label });
+      return () =>
+        visible.value ? (
+          <div role="menuitem" ref={(element) => ref(element as HTMLElement | null)}>
+            North
+          </div>
+        ) : null;
+    });
+    await render(
+      <TestFilterDropdownRoot value="can">
+        <LabelItem />
+      </TestFilterDropdownRoot>,
+    );
+    await flushMicrotasks();
+    expect(screen.getByRole('menuitem', { name: 'North' })).toBeVisible();
+
+    label.value = 'Kanada';
+    await flushMicrotasks();
+
+    expect(screen.queryByRole('menuitem')).toBe(null);
   });
 });

@@ -10,7 +10,7 @@ export function handleInputPress(
   event: MaybeVaseUIEvent<MouseEvent>,
   store: ComboboxStore,
   disabled: boolean,
-  shouldIgnoreTarget?: ((target: Element | null) => boolean) | undefined,
+  shouldIgnoreTarget?: (target: Element | null) => boolean,
 ) {
   if (event.vaseUIHandlerPrevented) {
     return;

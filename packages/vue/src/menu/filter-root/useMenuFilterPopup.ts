@@ -1,6 +1,6 @@
+import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { onMounted, toValue, watch } from 'vue';
 import type { HTMLAttributes, MaybeRefOrGetter } from 'vue';
-import { isElement, isHTMLElement } from '@floating-ui/utils/dom';
 import { ownerDocument } from '../../common/owner';
 import { activeElement, contains, getTarget } from '../../common/shadowDom';
 import { warn } from '../../common/warn';
@@ -12,10 +12,10 @@ import { isCrossOrientationCloseKey } from '../../utils/popups/interactions/useL
 import type { MenuRootOrientation } from '../root/MenuRoot.vue';
 
 /**
- * Gives the popup of a filterable menu its attributes and its listeners: the input keeps the focus
- * while the pointer and the keys move over the popup. Call it in `setup`.
+ * Returns the attributes and the listeners of the popup of a filterable menu. The listeners keep
+ * the focus on the filter input while the user presses or hovers the popup.
  *
- * @param orientation The orientation of the menu, as a value, a ref or a getter.
+ * Call it in `setup`.
  */
 export function useMenuFilterPopup(
   orientation: MaybeRefOrGetter<MenuRootOrientation>,
@@ -37,17 +37,17 @@ export function useMenuFilterPopup(
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    const warnWithoutInput = () => {
+    const warnWhenInputIsAbsent = () => {
       if (context.open.value && focusOwnerRef.value === null) {
         warn(
           'A filterable menu opened without a <Menu.Input>.',
-          'Without the input, the menu has no field to filter with.',
-          'Render the input inside <Menu.Popup>, or drop <Menu.FilterProvider> for a menu that does not filter.',
+          'The focus then has no input to stay on, so the user cannot type a query.',
+          'Render the input inside <Menu.Popup>, or remove <Menu.FilterProvider> for a menu that does not filter.',
         );
       }
     };
-    onMounted(warnWithoutInput);
-    watch(context.open, warnWithoutInput, { flush: 'post' });
+    onMounted(warnWhenInputIsAbsent);
+    watch(context.open, warnWhenInputIsAbsent, { flush: 'post' });
   }
 
   function restoreInputFocus(event: MouseEvent, enteredTrigger: boolean) {
@@ -62,8 +62,9 @@ export function useMenuFilterPopup(
       return;
     }
 
-    // The composed path only contains this popup when the pointer is really over it, and a
-    // closing popup must not re-capture focus during its exit transition.
+    // An inline nested popup sends its events through this popup. The composed path only
+    // contains this popup as the nearest one when the pointer is really over it, and a closing
+    // popup must not re-capture focus during its exit transition.
     let submenuTrigger: HTMLElement | null = null;
     const nearestPopup = event.composedPath().find((node) => {
       if (!isHTMLElement(node)) {
@@ -127,11 +128,14 @@ export function useMenuFilterPopup(
       // `focusin` bubbles, so this also sees the owner itself being focused.
       const target = getTarget(event);
 
+      // In React, a portalled nested popup sends its focus events through this popup, while its
+      // elements sit outside this one in the DOM. A nested popup that `Teleport` moved sends
+      // none, so no target is outside this popup.
       if (target === focusOwnerRef.value) {
         nestedFocus = null;
       } else if (
         isHTMLElement(target) &&
-        !contains(event.currentTarget as Element, target) &&
+        !contains(event.currentTarget as HTMLElement, target) &&
         !isRefocusingOwner()
       ) {
         nestedFocus = target;
@@ -158,8 +162,8 @@ export function useMenuFilterPopup(
         )
       ) {
         focusOwnerRef.value?.focus({ preventScroll: true });
-        // A nested popup that is not teleported bubbles its keys to this popup, so keep the key
-        // from the parent.
+        // An inline nested popup sends its keys through this popup, so keep the key from the
+        // parent.
         event.stopPropagation();
       }
     },

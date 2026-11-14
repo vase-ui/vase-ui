@@ -85,7 +85,7 @@ export interface SliderRootContext {
   state: ComputedRef<SliderRootState>;
   step: ComputedRef<number>;
   thumbCollisionBehavior: ComputedRef<ThumbCollisionBehavior>;
-  thumbRefs: ShallowRef<Array<HTMLElement | null>>;
+  thumbRefs: ShallowRef<(HTMLElement | null)[]>;
   /**
    * The value(s) of the slider
    */

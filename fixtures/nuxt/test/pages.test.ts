@@ -1162,6 +1162,61 @@ async function expectHydratedPreviewCardPage(page: Page) {
   );
 }
 
+// A server renders no popup and no portal. The trigger of an open root has the open state and
+// names the id of its popup.
+async function expectAlertDialogPageOnServer(page: Page) {
+  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await read('open')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+  });
+  expect(await read('detached')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBeTruthy();
+  expect(await page.locator('[data-vase-ui-portal], [role="alertdialog"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`. The title and the description
+// label the popup.
+async function expectHydratedAlertDialogPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await readAttributes(popup, ['role', 'data-open'])).toEqual({
+    role: 'alertdialog',
+    'data-open': '',
+  });
+  expect(await popup.getAttribute('aria-labelledby')).toBe(
+    await page.getByTestId('open-title').getAttribute('id'),
+  );
+  expect(await popup.getAttribute('aria-describedby')).toBe(
+    await page.getByTestId('open-description').getAttribute('id'),
+  );
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBe(
+    await popup.getAttribute('id'),
+  );
+
+  expect(await page.getByTestId('closed').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('detached-popup').count()).toBe(0);
+}
+
 const TOOLTIP_TRIGGERS = ['closed', 'open', 'kept', 'detached'];
 
 function readTooltipTriggers(page: Page) {
@@ -1194,6 +1249,58 @@ async function expectHydratedTooltipPage(page: Page) {
   expect(await readPopup('kept-popup')).toEqual({ parent: 'body', isVisible: false });
   expect(await readPopup('detached-popup')).toEqual({ parent: 'body', isVisible: true });
   expect(await readTooltipTriggers(page)).toEqual([null, '', null, '']);
+}
+
+// A server renders no popup and no portal. The trigger of an open root has the open state. The
+// trigger of a handle has the closed form, because a server attaches no store to a handle.
+async function expectDialogPageOnServer(page: Page) {
+  const attributeNames = ['aria-haspopup', 'aria-expanded', 'data-popup-open'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await read('open')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'true',
+    'data-popup-open': '',
+  });
+  expect(await read('detached')).toEqual({
+    'aria-haspopup': 'dialog',
+    'aria-expanded': 'false',
+    'data-popup-open': null,
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="dialog"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`, named and described by its title
+// and its description.
+async function expectHydratedDialogPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('dialog');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await popup.getAttribute('aria-labelledby')).toBe(
+    await page.getByTestId('open-title').getAttribute('id'),
+  );
+  expect(await popup.getAttribute('aria-describedby')).toBe(
+    await page.getByTestId('open-description').getAttribute('id'),
+  );
+  expect(await page.getByTestId('open').getAttribute('aria-controls')).toBe(
+    await popup.getAttribute('id'),
+  );
+
+  expect(await page.getByTestId('closed').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('false');
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+  expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
 interface PageCase {
@@ -1286,9 +1393,19 @@ const PAGES: PageCase[] = [
     expectHydratedPage: expectHydratedPreviewCardPage,
   },
   {
+    path: '/alert-dialog',
+    expectPage: expectAlertDialogPageOnServer,
+    expectHydratedPage: expectHydratedAlertDialogPage,
+  },
+  {
     path: '/tooltip',
     expectPage: expectTooltipPageOnServer,
     expectHydratedPage: expectHydratedTooltipPage,
+  },
+  {
+    path: '/dialog',
+    expectPage: expectDialogPageOnServer,
+    expectHydratedPage: expectHydratedDialogPage,
   },
 ];
 
@@ -1808,6 +1925,55 @@ describe.each(MODES)('in $name', async ({ dev }) => {
 
     expect(await link.getAttribute('data-popup-open')).toBe('');
     expect(await page.getByTestId('closed-popup').textContent()).toBe('Closed preview');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the dialog of /dialog on a click on its trigger after hydration, and closes it on Escape', async () => {
+    const page = await createPage('/dialog');
+    const messages = collectMessages(page);
+    const trigger = page.getByTestId('closed');
+
+    await trigger.click();
+    const popup = page.getByTestId('closed-popup');
+    await popup.waitFor({ state: 'visible' });
+
+    expect(await trigger.getAttribute('aria-expanded')).toBe('true');
+    await expect
+      .poll(() => popup.evaluate((element) => element.contains(document.activeElement)))
+      .toBe(true);
+
+    await page.keyboard.press('Escape');
+    await popup.waitFor({ state: 'detached' });
+
+    await expect
+      .poll(() => trigger.evaluate((element) => element === document.activeElement))
+      .toBe(true);
+    expect(messages).toEqual([]);
+  });
+
+  it('keeps the alert dialog of /alert-dialog open on a press outside, closes it with its close button, and opens a detached trigger with its payload after hydration', async () => {
+    const page = await createPage('/alert-dialog');
+    const messages = collectMessages(page);
+    const openPopup = page.getByTestId('open-popup');
+    await openPopup.waitFor();
+
+    await page.mouse.click(1, 1);
+    await waitForTwoFrames(page);
+    expect(await openPopup.getAttribute('data-open')).toBe('');
+
+    await page.getByTestId('open-close').click();
+    await openPopup.waitFor({ state: 'detached' });
+    expect(await page.getByTestId('open').getAttribute('aria-expanded')).toBe('false');
+
+    await page.getByTestId('detached').click();
+    const detachedPopup = page.getByTestId('detached-popup');
+    await detachedPopup.waitFor();
+    expect(await detachedPopup.getAttribute('role')).toBe('alertdialog');
+    expect(await detachedPopup.textContent()).toBe('Detached payload');
+    expect(await page.getByTestId('detached').getAttribute('aria-expanded')).toBe('true');
+
+    await page.keyboard.press('Escape');
+    await detachedPopup.waitFor({ state: 'detached' });
     expect(messages).toEqual([]);
   });
 
