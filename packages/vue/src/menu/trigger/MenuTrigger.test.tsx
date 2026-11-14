@@ -466,7 +466,7 @@ describe('<Menu.Trigger />', () => {
     });
   });
 
-  describe('VUE-57: the trigger has one root node', () => {
+  describe('VUE-60: the trigger has one root node', () => {
     it.each([
       { name: 'a closed menu', open: false },
       { name: 'an open menu', open: true },
