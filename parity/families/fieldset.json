@@ -6,14 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/fieldset/root/FieldsetRoot.test.tsx",
-      "describe": ["<Fieldset.Root />"],
-      "title": "passes disabled to rendered Base UI roots",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/checkbox-group/CheckboxGroup.tsx",
-      "reason": "The case renders `CheckboxGroup`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/fieldset/legend/FieldsetLegend.test.tsx",
       "describe": ["<Fieldset.Legend />"],
       "title": "does not set `aria-labelledby` during SSR when legend is absent",
