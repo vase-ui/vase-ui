@@ -15,22 +15,20 @@ import SeparatorExample from './examples/quick-start/SeparatorExample.vue';
 ::: code-group
 
 ```sh [pnpm]
-pnpm add @vase-ui/vue@next
+pnpm add @vase-ui/vue
 ```
 
 ```sh [npm]
-npm install @vase-ui/vue@next
+npm install @vase-ui/vue
 ```
 
 ```sh [yarn]
-yarn add @vase-ui/vue@next
+yarn add @vase-ui/vue
 ```
 
 :::
 
 `vue` is a peer dependency, and the lowest version that the package accepts is 3.5.12.
-
-The package is published with the `next` tag, so each command above names that tag.
 
 ## Set up
 

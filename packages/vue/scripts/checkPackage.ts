@@ -5,7 +5,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build as buildPackage } from 'tsdown';
 import { build as bundle } from 'vite';
-import { buildOptions, familyEntries, writeBarrel } from './build.ts';
+import { TEMPORAL_REFERENCE, buildOptions, familyEntries, writeBarrel } from './build.ts';
 
 process.chdir(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -14,6 +14,8 @@ const DIST_DIRECTORY = `${PACKAGE_DIRECTORY}/dist`;
 const CONSUMER_DIRECTORY = 'test/package-check/consumer';
 const SOURCE_ROOTS = ['src', 'test/package-check/src'];
 const PREPACK_FILES = ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md'];
+const DECLARATION_IMPORT = /(?:from|import)\s*\(?\s*["'](\.{1,2}\/[^"']+)["']/g;
+const TEMPORAL_TYPE = /\bTemporal\./;
 
 function runBin(name: string, args: string[]): void {
   execFileSync(join('node_modules', '.bin', name), args, { stdio: 'inherit' });
@@ -37,6 +39,33 @@ async function bundleConsumerFile(file: string): Promise<string> {
     .join('\n');
 }
 
+// The declaration file and each declaration file that it reaches by a relative import, as a map of
+// the file name in `dist` to its text.
+function reachedDeclarations(declaration: string): Map<string, string> {
+  const files = new Map<string, string>();
+  const pending = [declaration];
+  for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+    if (!files.has(file)) {
+      const code = readFileSync(join(DIST_DIRECTORY, file), 'utf8');
+      files.set(file, code);
+      for (const [, specifier] of code.matchAll(DECLARATION_IMPORT)) {
+        pending.push(join(dirname(file), specifier.replace(/\.js$/, '.d.ts')));
+      }
+    }
+  }
+  return files;
+}
+
+function namesTemporal(declarations: Map<string, string>): boolean {
+  return [...declarations.values()].some((code) => TEMPORAL_TYPE.test(code));
+}
+
+// TypeScript loads the `lib` of a reference line from each declaration file that a program loads.
+// A line anywhere in the declarations that an entry reaches is thus enough for that entry.
+function hasTemporalReference(declarations: Map<string, string>): boolean {
+  return [...declarations.values()].some((code) => code.startsWith(TEMPORAL_REFERENCE));
+}
+
 function expectContent(file: string, code: string, text: string, expected: boolean): void {
   const found = code.includes(text);
   console.log(`  ${file}: ${found ? 'has' : 'has no'} ${text}`);
@@ -44,14 +73,14 @@ function expectContent(file: string, code: string, text: string, expected: boole
 }
 
 async function main(): Promise<void> {
-  console.log(`[1/9] Remove ${PACKAGE_DIRECTORY} and the files that prepack copies`);
+  console.log(`[1/10] Remove ${PACKAGE_DIRECTORY} and the files that prepack copies`);
   rmSync(PACKAGE_DIRECTORY, { recursive: true, force: true });
   // A copy from an earlier run can make npm pack a file that "prepack" does not copy.
   for (const file of PREPACK_FILES) {
     rmSync(file, { force: true });
   }
 
-  console.log('[2/9] Build the package with the fixture families');
+  console.log('[2/10] Build the package with the fixture families');
   writeBarrel('test/package-check/index.ts', SOURCE_ROOTS);
   const entry = {
     index: 'test/package-check/index.ts',
@@ -71,13 +100,43 @@ async function main(): Promise<void> {
     `Each index.js in dist must be the barrel or a family. Found: ${entryFiles.join(', ')}`,
   );
 
-  console.log(`[3/9] Write the manifest into ${PACKAGE_DIRECTORY}`);
+  console.log('[3/10] Check the declarations that name Temporal');
+  const barrelDeclarations = reachedDeclarations('index.d.ts');
+  for (const [file, code] of barrelDeclarations) {
+    assert.ok(
+      !TEMPORAL_TYPE.test(code) && !code.includes('esnext.temporal'),
+      `${file} is reachable from the barrel and names Temporal. A consumer on TypeScript 5 fails on it. Start the index.ts of each date entry with the reference line, so that the barrel leaves the entry out. Import no date entry in another family.`,
+    );
+  }
+  console.log(`  index.d.ts: ${barrelDeclarations.size} declaration files, none names Temporal`);
+  const temporalEntries: string[] = [];
+  for (const file of entryFiles.filter((name) => name !== 'index.js')) {
+    const declarations = reachedDeclarations(file.replace(/\.js$/, '.d.ts'));
+    if (namesTemporal(declarations)) {
+      temporalEntries.push(file);
+      assert.ok(
+        hasTemporalReference(declarations),
+        `The declarations of ${file} name Temporal, and none of them starts with ${TEMPORAL_REFERENCE}. Without the line, a consumer fails with TS2503 until it sets "lib" itself. Check that the patch of rolldown-plugin-dts is applied.`,
+      );
+      console.log(
+        `  ${file}: names Temporal, and a declaration that it reaches starts with the reference line`,
+      );
+    }
+  }
+  for (const fixture of ['temporal-part/index.js', 'temporal-reexport/index.js']) {
+    assert.ok(
+      temporalEntries.includes(fixture),
+      `The fixture ${fixture} must name Temporal in its declarations. Without it, this step checks nothing.`,
+    );
+  }
+
+  console.log(`[4/10] Write the manifest into ${PACKAGE_DIRECTORY}`);
   const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
   delete manifest.scripts;
   delete manifest.devDependencies;
   writeFileSync(`${PACKAGE_DIRECTORY}/package.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 
-  console.log('[4/9] Pack the package folder as a release does, through prepack');
+  console.log('[5/10] Pack the package folder as a release does, through prepack');
   const [pack]: { files: { path: string }[] }[] = JSON.parse(
     execFileSync('npm', ['pack', '--dry-run', '--json', '--foreground-scripts=false'], {
       encoding: 'utf8',
@@ -92,10 +151,10 @@ async function main(): Promise<void> {
     console.log(`  ${file}: packed`);
   }
 
-  console.log('[5/9] Run publint');
+  console.log('[6/10] Run publint');
   runBin('publint', ['run', '--strict', '--pack', 'npm', PACKAGE_DIRECTORY]);
 
-  console.log('[6/9] Run Are the Types Wrong');
+  console.log('[7/10] Run Are the Types Wrong');
   runBin('attw', [
     '--pack',
     PACKAGE_DIRECTORY,
@@ -107,16 +166,16 @@ async function main(): Promise<void> {
     ...entryFiles.filter((file) => file !== 'index.js').map((file) => dirname(file)),
   ]);
 
-  console.log('[7/9] Link the package into the consumer project');
+  console.log('[8/10] Link the package into the consumer project');
   const link = join(CONSUMER_DIRECTORY, 'node_modules/@vase-ui/vue');
   rmSync(link, { recursive: true, force: true });
   mkdirSync(dirname(link), { recursive: true });
   symlinkSync(resolve(PACKAGE_DIRECTORY), link, 'dir');
 
-  console.log('[8/9] Type-check the consumer project');
+  console.log('[9/10] Type-check the consumer project');
   runBin('tsc', ['-p', CONSUMER_DIRECTORY]);
 
-  console.log('[9/9] Bundle the consumer files and load the package in Node');
+  console.log('[10/10] Bundle the consumer files and load the package in Node');
   const singlePart = await bundleConsumerFile('singlePart.ts');
   const multiPartRoot = await bundleConsumerFile('multiPartRoot.ts');
   const scriptedPart = await bundleConsumerFile('scriptedPart.ts');

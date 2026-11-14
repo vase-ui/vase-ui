@@ -30,6 +30,8 @@ export interface CheckboxGroupContext {
    * member.
    */
   reset: (event: Event) => void;
+  /** Whether an id reference of the group reaches `element`. */
+  reaches: (element: Element) => boolean;
 }
 
 export const CheckboxGroupContext: InjectionKey<CheckboxGroupContext> = Symbol();

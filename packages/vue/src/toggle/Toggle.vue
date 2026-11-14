@@ -76,6 +76,10 @@ const emit = defineEmits<{
    * Callback fired when the pressed state is changed.
    */
   pressedChange: [pressed: boolean, eventDetails: ToggleChangeEventDetails];
+  /**
+   * Event handler called after `pressedChange` with the new value, unless a listener cancels the
+   * change. `v-model:pressed` uses it.
+   */
   'update:pressed': [pressed: boolean];
 }>();
 

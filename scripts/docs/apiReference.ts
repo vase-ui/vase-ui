@@ -100,7 +100,9 @@ const SHARED_PROPS = ['stateClass', 'stateStyle', 'as'];
 function propsOf({ props }: ComponentSurface, defaults: Map<string, string | null>): ApiProp[] {
   const rank = (name: string): number => SHARED_PROPS.indexOf(name);
   return [...props]
-    .map(([name, prop]) => ({ name, ...prop, default: defaults.get(name) ?? null }))
+    .flatMap(([name, { ignored, ...prop }]) =>
+      ignored ? [] : [{ name, ...prop, default: defaults.get(name) ?? null }],
+    )
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, 'en'));
 }
 

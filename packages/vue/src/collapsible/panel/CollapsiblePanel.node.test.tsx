@@ -5,8 +5,8 @@ import { Collapsible } from '@vase-ui/vue/collapsible';
 
 const PANEL_CONTENT = 'This is panel content';
 
-// Vue 3.5.41 is the first version whose server writes the value of `hidden`. An earlier server
-// writes a bare `hidden`.
+// Vue 3.5.41 is the first version whose server writes the value of `hidden`. In Vue 3.6, the
+// first such version is 3.6.0-rc.3. An earlier server writes a bare `hidden`.
 const canWriteUntilFound = (await renderToString(h('div', { hidden: 'until-found' }))).includes(
   'hidden="until-found"',
 );
@@ -198,7 +198,7 @@ describe('<Collapsible.Panel />', () => {
     });
 
     it.runIf(!canWriteUntilFound)(
-      'has a bare hidden, because a server before Vue 3.5.41 cannot write the value',
+      'has a bare hidden, because a server before Vue 3.5.41, or before 3.6.0-rc.3 in Vue 3.6, cannot write the value',
       async () => {
         const html = await renderToString(
           <Collapsible.Root>

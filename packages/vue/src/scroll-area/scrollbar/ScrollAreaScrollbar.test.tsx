@@ -30,8 +30,9 @@ function readAttributes(element: HTMLElement) {
   );
 }
 
-// The pointer of the browser stays where a case leaves it, for each later test. A call with no
-// coordinates would move the pointer to the element of the last press, which is gone by then.
+// A button of the real pointer stays pressed for each later test until a case releases it. A
+// call with no coordinates would move the pointer to the element of the last press, which is gone
+// by then.
 function releasePointerAfterTest() {
   onTestFinished(async () => {
     await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
@@ -213,8 +214,6 @@ describe('<ScrollArea.Scrollbar />', () => {
       const root = screen.getByTestId('root');
       const scrollbar = screen.getByTestId('scrollbar');
 
-      // The real pointer of the browser can be over the root. The start state has no hover.
-      await fireEvent.pointerLeave(root, { pointerType: 'mouse' });
       expect(scrollbar).not.toHaveAttribute('data-hovering');
 
       await fireEvent.pointerEnter(root, { pointerType: 'touch' });
@@ -233,7 +232,6 @@ describe('<ScrollArea.Scrollbar />', () => {
       const root = screen.getByTestId('root');
       const scrollbar = screen.getByTestId('scrollbar');
 
-      await fireEvent.pointerLeave(root, { pointerType: 'mouse' });
       expect(scrollbar).not.toHaveAttribute('data-hovering');
 
       await fireEvent.pointerEnter(root, { pointerType: 'mouse' });
