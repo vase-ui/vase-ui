@@ -820,6 +820,10 @@ describe('<Drawer.SwipeArea />', () => {
       await swipeUp(screen.getByTestId('swipe-area'), 120, 110, {
         startTimeMs: 1000,
         timeStepMs: 1000,
+        beforeRelease() {
+          expect(popup).not.toHaveAttribute('data-swiping');
+          expect(popup.style.getPropertyValue('--drawer-swipe-movement-y')).toBe('');
+        },
       });
 
       expect(handleOpenChange).toHaveBeenCalledWith(true, expect.anything());
@@ -882,15 +886,23 @@ describe('<Drawer.SwipeArea />', () => {
           }),
       },
       {
-        name: 'a canceled gesture',
+        name: 'a gesture that another button ends',
         end: (swipeArea: HTMLElement) =>
-          fireEvent.pointerCancel(swipeArea, { pointerId: 1, pointerType: 'mouse' }),
+          fireEvent.pointerMove(swipeArea, {
+            buttons: 2,
+            pointerId: 1,
+            clientX: 0,
+            clientY: 40,
+            pointerType: 'mouse',
+          }),
       },
     ])(
       'ignores the release click after $name, and closes the drawer at the next outside press',
       async ({ end }) => {
+        let store!: DialogStore<unknown>;
         await render(
           <Drawer.Root>
+            <DialogStoreProbe onStore={(value) => (store = value)} />
             <Drawer.SwipeArea data-testid="swipe-area" />
             <DialogPopupPart data-testid="popup">Drawer</DialogPopupPart>
           </Drawer.Root>,
@@ -899,20 +911,24 @@ describe('<Drawer.SwipeArea />', () => {
 
         await startOpeningSwipe(swipeArea, 40);
         expect(screen.getByTestId('popup')).toHaveAttribute('data-swiping', '');
+        expect(store.context.outsidePressEnabledRef.value).toBe(false);
 
         await end(swipeArea);
         await nextMacrotask();
         expect(screen.getByTestId('popup')).not.toHaveAttribute('data-swiping');
+        expect(swipeArea).not.toHaveAttribute('data-swiping');
 
         await releaseClick();
         await nextMacrotask();
         expect(screen.getByTestId('popup')).toBeVisible();
+        expect(store.context.outsidePressEnabledRef.value).toBe(false);
 
         await pressOutside();
 
         await waitFor(() => {
           expect(screen.queryByTestId('popup')).toBe(null);
         });
+        expect(store.context.outsidePressEnabledRef.value).toBe(true);
         expect(swipeArea).toHaveAttribute('data-closed', '');
       },
     );
