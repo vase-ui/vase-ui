@@ -836,7 +836,7 @@ useDomEffect([open, mounted, modal, nestedDrawerOpen, rootElement], () => {
     }
   };
 
-  const cleanupListeners: Array<() => void> = [];
+  const cleanupListeners: (() => void)[] = [];
 
   if (visualViewport) {
     cleanupListeners.push(
