@@ -157,7 +157,15 @@ type DragStyles = Record<string, string | undefined>;
 </script>
 
 <script setup lang="ts">
-import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  shallowRef,
+  watch,
+} from 'vue';
 import { EMPTY_OBJECT, NOOP } from '../../common/empty';
 import { error } from '../../common/error';
 import { useDialogPortalContext } from '../../dialog/portal/DialogPortalContext';
@@ -386,8 +394,7 @@ function popupStyle(): CSSProperties {
 
   return {
     ...movementStyles,
-    [DrawerBackdropCssVars.swipeProgress]:
-      nestedSwipeProgress > 0 ? `${nestedSwipeProgress}` : '0',
+    [DrawerBackdropCssVars.swipeProgress]: nestedSwipeProgress > 0 ? `${nestedSwipeProgress}` : '0',
     [DrawerPopupCssVars.nestedDrawers]: nestedOpenDrawerCount.value,
     [DrawerPopupCssVars.height]: popupHeightCssVarValue,
     [DrawerPopupCssVars.snapPointOffset]:
@@ -490,7 +497,10 @@ watch(
 
     const syncNestedSwipeProgress = () => {
       const progress = nestedSwipeProgressStore.getSnapshot();
-      popup.style.setProperty(DrawerBackdropCssVars.swipeProgress, progress > 0 ? `${progress}` : '0');
+      popup.style.setProperty(
+        DrawerBackdropCssVars.swipeProgress,
+        progress > 0 ? `${progress}` : '0',
+      );
     };
 
     syncNestedSwipeProgress();

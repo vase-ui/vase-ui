@@ -3,7 +3,10 @@ import type { HTMLAttributes } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { ownerWindow } from '../../common/owner';
 import { activeElement, closest, contains } from '../../common/shadowDom';
-import { VASE_UI_SWIPE_IGNORE_ATTRIBUTE, VASE_UI_SWIPE_IGNORE_SELECTOR } from '../../internals/constants';
+import {
+  VASE_UI_SWIPE_IGNORE_ATTRIBUTE,
+  VASE_UI_SWIPE_IGNORE_SELECTOR,
+} from '../../internals/constants';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import type { ScrollAxis } from '../../utils/scrollable';
@@ -479,7 +482,8 @@ function resolveSwipeRelease(
     (direction === 'down' || direction === 'up') && hasSnapPoints()
       ? (activeSnapPointOffset.value ?? 0)
       : 0;
-  const translationAlongDirection = snapPointBaseOffset + getDisplacement(direction, deltaX, deltaY);
+  const translationAlongDirection =
+    snapPointBaseOffset + getDisplacement(direction, deltaX, deltaY);
   const remainingDistance = Math.max(0, size - translationAlongDirection);
   if (remainingDistance <= 0) {
     return null;
@@ -487,7 +491,9 @@ function resolveSwipeRelease(
 
   const releaseVelocity = getDisplacement(direction, releaseVelocityX, releaseVelocityY);
   const directionalVelocity =
-    Math.abs(releaseVelocity) > 0 ? releaseVelocity : getDisplacement(direction, velocityX, velocityY);
+    Math.abs(releaseVelocity) > 0
+      ? releaseVelocity
+      : getDisplacement(direction, velocityX, velocityY);
   if (directionalVelocity <= MIN_SWIPE_RELEASE_VELOCITY) {
     return null;
   }
@@ -635,7 +641,9 @@ const swipe = useSwipeDismiss({
       // on a gesture that never started (e.g. a press inside `Drawer.Content`). Recomputing
       // from them would re-apply drag progress to a drawer that rests on its snap point.
       if (swiping && details && Number.isFinite(details.deltaY)) {
-        resolvedProgress = offsetToProgress(clamp(baseOffset + details.deltaY, 0, popupHeight.value));
+        resolvedProgress = offsetToProgress(
+          clamp(baseOffset + details.deltaY, 0, popupHeight.value),
+        );
       } else if (snapPointProgress.value !== null) {
         resolvedProgress = snapPointProgress.value;
       }
@@ -885,7 +893,10 @@ const swipe = useSwipeDismiss({
           // Parent rejected: revert animation and restore snap point.
           const pendingSnapPoint = pendingSwipeCloseSnapPoint;
           if (pendingSnapPoint !== undefined) {
-            setActiveSnapPoint(pendingSnapPoint, createChangeEventDetails(REASONS.swipe, savedEvent));
+            setActiveSnapPoint(
+              pendingSnapPoint,
+              createChangeEventDetails(REASONS.swipe, savedEvent),
+            );
           }
           pendingSwipeCloseSnapPoint = undefined;
           clearSwipeRelease();
@@ -1018,11 +1029,7 @@ function listenToTouchMove() {
 
 onMounted(listenToTouchMove);
 watch(
-  [
-    () => store.select('viewportElement') ?? store.select('popupElement'),
-    open,
-    mounted,
-  ],
+  [() => store.select('viewportElement') ?? store.select('popupElement'), open, mounted],
   listenToTouchMove,
   { flush: 'post' },
 );
@@ -1186,7 +1193,11 @@ const viewportHandlers = {
     }
 
     const rootElement = event.currentTarget as HTMLElement;
-    const elementAtPoint = getElementAtPoint(rootElement.getRootNode(), touch.clientX, touch.clientY);
+    const elementAtPoint = getElementAtPoint(
+      rootElement.getRootNode(),
+      touch.clientX,
+      touch.clientY,
+    );
     const eventTarget = getTarget(event);
     const target = isElement(eventTarget) ? eventTarget : rootElement;
     if (!contains(rootElement, target)) {

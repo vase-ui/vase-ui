@@ -192,7 +192,9 @@ describe('Drawer snap point composition', () => {
     await render(<SnapPointsCase snapPoints={['100px']} snapPoint="100px" />);
 
     await waitFor(() => {
-      expect(readProbe().resolvedSnapPoints).toEqual([{ value: '100px', height: 100, offset: 200 }]);
+      expect(readProbe().resolvedSnapPoints).toEqual([
+        { value: '100px', height: 100, offset: 200 },
+      ]);
     });
     expect(readProbe().activeSnapPointOffset).toBe(200);
   });
