@@ -7,9 +7,11 @@
   "exceptions": [
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
+      "describe": ["<Drawer.Popup />"],
+      "title": "does not treat alert dialogs inside nested drawers as nested drawers",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. The case that has no counterpart renders the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/alert-dialog/index.ts",
+      "reason": "The case renders the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
     },
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
