@@ -188,7 +188,14 @@ const wrongFamilies: { name: string; change: (family: Json) => void; message: Re
       family.surfaceAdditions[0].emit = 'x';
     },
     message:
-      /surfaceAdditions\[0\]: names one member\. Give exactly one of "prop", "emit", "slot" and "exposed"\./,
+      /surfaceAdditions\[0\]: names one member\. Give exactly one of "prop", "emit", "slot", "exposed" and "changeEventReason"\./,
+  },
+  {
+    name: 'a surfaceAdditions row with a prop and a change reason',
+    change: (family) => {
+      family.surfaceAdditions[0].changeEventReason = 'none';
+    },
+    message: /surfaceAdditions\[0\]: names one member\./,
   },
   {
     name: 'a surfaceAdditions row with no member key',
