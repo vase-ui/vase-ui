@@ -1608,11 +1608,10 @@ describe('usePopupRoot', () => {
 
       const triggers = readTriggers(container);
       expect(triggers).toEqual(client);
-      // `hydrate` mounts two apps, so an open popup is in the document two times. The portal puts
-      // the popup into the document after the mount, and `aria-controls` names it.
+      // The portal puts the popup into the document after the mount, and `aria-controls` names it.
       const controls = triggers.find((trigger) => trigger.open)?.controls;
       const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
-      expect(popups).toEqual(controls ? [controls, controls] : []);
+      expect(popups).toEqual(controls ? [controls] : []);
     });
   });
 });
