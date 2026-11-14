@@ -166,7 +166,7 @@ describe('Menu filter parts conformance', () => {
   }));
 
   // These cases are the last of the file. In Vue 3.5.12, a `setup` that throws leaves the current
-  // instance set, and each later case of the file then gets a warning about a slot.
+  // instance set, and a later case of the file can then get a warning about a slot.
   it('throws when Trigger is rendered without a root or handle', async () => {
     await expect(render(<Menu.Trigger />)).rejects.toThrow(
       'Vase UI: <Menu.Trigger> must be inside <Menu.Root>, or it must have a `handle`. Without a root the trigger has no menu to open. Put the trigger inside <Menu.Root>, or pass a `handle`.',
