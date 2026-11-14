@@ -6,24 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/drawer/content/DrawerContent.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Portal`, `Drawer.Viewport` and `Drawer.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/indent-background/DrawerIndentBackground.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.Trigger`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/indent/DrawerIndent.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its case renders `Drawer.Trigger`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/drawer/index.ts",
       "kind": "waits-on",
       "reason": "The file is the entry point of Drawer. It exports the parts, which Vase UI does not have."
@@ -32,17 +14,14 @@
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Popup` and other parts of Drawer, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Each case that has no counterpart renders `Dialog.Popup` or `AlertDialog.Popup`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/drawer/popup/DrawerPopup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/portal/DrawerPortal.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Portal`."
+      "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
+      "describe": ["<Drawer.Popup />"],
+      "title": "warns without relying on React owner-stack support",
+      "kind": "not-applicable",
+      "reason": "The case mocks `SafeReact.captureOwnerStack`, which only React has. The warning of `Drawer.Popup` has no owner stack."
     },
     {
       "upstream": "packages/react/src/drawer/provider/DrawerProvider.test.tsx",
@@ -56,25 +35,19 @@
       "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. It renders `Drawer.Trigger` and `Drawer.Portal`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/root/DrawerRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Each case that has no counterpart renders a part of Drawer that Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/root/DrawerSnapPoints.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Viewport` and `Drawer.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Each case that has no counterpart renders `Drawer.Portal`, `Drawer.Viewport` and `Drawer.Popup`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
@@ -91,35 +64,10 @@
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
     },
     {
-      "upstream": "packages/react/src/drawer/trigger/DrawerTrigger.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Trigger`."
-    },
-    {
       "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.Viewport` and other parts of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewportContext.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewportCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Viewport`."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewportDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Drawer.Viewport`."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardContext.tsx",
@@ -130,7 +78,7 @@
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.VirtualKeyboardProvider` and other parts of Drawer, which Vase UI does not have."
+      "reason": "The file imports the entry point of Drawer, which Vase UI does not have. Its cases render `Drawer.VirtualKeyboardProvider`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/drawer/virtual-keyboard-provider/DrawerVirtualKeyboardProvider.tsx",

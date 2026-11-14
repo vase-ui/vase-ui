@@ -78,8 +78,8 @@ const TestSnapPointsCase = defineComponent({
   },
 });
 
-// A function ref on a part runs after the mount hooks of the parts inside it, so the case gives
-// the heights in CSS and not as `offsetHeight` overrides.
+// The case gives the heights in CSS. The browser lays them out, so each part measures them at its
+// mount.
 const SnapPointsCase = defineComponent({
   props: {
     snapPoints: { type: Array as PropType<DrawerSnapPoint[]>, required: true },

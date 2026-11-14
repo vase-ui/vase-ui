@@ -1253,7 +1253,7 @@ const viewportHandlers = {
 };
 
 function viewportProps() {
-  return { ...mergeProps(attrs, viewportHandlers), ...props };
+  return { ...mergeProps(viewportHandlers, attrs), ...props };
 }
 
 // As in Base UI, this part renders `Dialog.Viewport` and makes no element of its own.

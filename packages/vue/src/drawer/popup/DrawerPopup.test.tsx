@@ -12,14 +12,28 @@ import {
 } from '#test-utils';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import type { DialogStore } from '../../dialog/store/DialogStore';
+import type { HTMLProps } from '../../internals/types';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
 
-function setHeight(instance: unknown, getValue: () => number) {
-  const element = (instance as { element?: HTMLElement | null } | null)?.element;
-  if (element) {
-    Object.defineProperty(element, 'offsetHeight', { configurable: true, get: getValue });
-  }
+// The popup measures its height with `offsetHeight`, which the case changes. The function ref of the
+// `#render` slot gives the element its height before the popup measures it.
+function renderPopupWithHeight(getHeight: () => number) {
+  let measured: HTMLElement | null = null;
+  return ({ props }: { props: HTMLProps }) => (
+    <div
+      {...props}
+      ref={(element) => {
+        props.ref(element);
+        if (element instanceof HTMLElement && element !== measured) {
+          measured = element;
+          Object.defineProperty(element, 'offsetHeight', { configurable: true, get: getHeight });
+        }
+      }}
+    >
+      Drawer
+    </div>
+  );
 }
 
 const PopupHeightProbe = defineComponent({
@@ -204,9 +218,7 @@ describe('<Drawer.Popup />', () => {
         <PopupHeightProbe />
         <Drawer.Portal>
           <Drawer.Viewport style={{ height: '400px' }}>
-            <Drawer.Popup ref={(instance: unknown) => setHeight(instance, () => popupHeight)}>
-              Drawer
-            </Drawer.Popup>
+            <Drawer.Popup v-slots={{ render: renderPopupWithHeight(() => popupHeight) }} />
           </Drawer.Viewport>
         </Drawer.Portal>
       </Drawer.Root>,
@@ -344,10 +356,7 @@ describe('<Drawer.Popup />', () => {
                 <ChildDrawerMethodProbe />
                 <Drawer.Portal keepMounted>
                   <Drawer.Viewport>
-                    <Drawer.Popup
-                      initialFocus={false}
-                      ref={(instance: unknown) => setHeight(instance, () => 100)}
-                    >
+                    <Drawer.Popup initialFocus={false} style={{ height: '100px' }}>
                       Child drawer
                     </Drawer.Popup>
                   </Drawer.Viewport>
@@ -839,10 +848,7 @@ describe('<Drawer.Popup />', () => {
           <Drawer.Root open modal={false}>
             <Drawer.Portal>
               <Drawer.Viewport>
-                <Drawer.Popup
-                  initialFocus={false}
-                  ref={(instance: unknown) => setHeight(instance, () => 100)}
-                >
+                <Drawer.Popup initialFocus={false} style={{ height: '100px' }}>
                   Child drawer
                 </Drawer.Popup>
               </Drawer.Viewport>
@@ -856,10 +862,7 @@ describe('<Drawer.Popup />', () => {
         <Drawer.Root open modal={false}>
           <Drawer.Portal>
             <Drawer.Viewport>
-              <Drawer.Popup
-                data-testid="parent-popup"
-                ref={(instance: unknown) => setHeight(instance, () => 50)}
-              >
+              <Drawer.Popup data-testid="parent-popup" style={{ height: '50px' }}>
                 <KeepAlive>{shown.value ? <Held key="held" /> : <Other key="other" />}</KeepAlive>
               </Drawer.Popup>
             </Drawer.Viewport>
