@@ -22,6 +22,7 @@ import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -34,6 +35,11 @@ defineSlots<{
 }>();
 
 const { store, orientation } = useMenuRootContext();
+
+// In a filterable menu the popup is the dialog that holds the input, and the input points at the
+// list with `aria-controls`. The filter gives the list its id and its label, and the list hands the
+// keys that land on it back to the input.
+const filterList = useMenuFilterImpl()?.useList({ id: () => props.id });
 
 const listId = useVaseUiId(() => props.id);
 
@@ -48,22 +54,20 @@ watch(listId, (id) => {
 
 const state: MenuListState = EMPTY_OBJECT;
 
-const { element, elementProps } = useRenderElement('div', props, {
-  state,
-  ref: [
-    (list) => {
-      // A compiled template can mount a new list before it unmounts the old one. The old list
-      // then must not clear the element of the new one.
-      if (list !== null || toRaw(store.state).listElement === listElement) {
-        store.update({
-          listElement: list,
-          listElementId: list === null ? undefined : listId.value,
-        });
-      }
-      listElement = list;
-    },
-  ],
-  props: (attrs) => [
+function setListElement(list: HTMLElement | null) {
+  // A compiled template can mount a new list before it unmounts the old one. The old list
+  // then must not clear the element of the new one.
+  if (list !== null || toRaw(store.state).listElement === listElement) {
+    store.update({
+      listElement: list,
+      listElementId: list === null ? undefined : listId.value,
+    });
+  }
+  listElement = list;
+}
+
+function getListProps(attrs: Record<string, any>) {
+  return [
     {
       id: listId.value,
       role: 'menu',
@@ -78,7 +82,13 @@ const { element, elementProps } = useRenderElement('div', props, {
       ),
     },
     attrs,
-  ],
+  ];
+}
+
+const { element, elementProps } = useRenderElement('div', props, {
+  state,
+  ref: filterList ? undefined : setListElement,
+  props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 
 defineExpose({ element });

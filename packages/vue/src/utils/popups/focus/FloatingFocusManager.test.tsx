@@ -716,6 +716,64 @@ describe('FloatingFocusManager', () => {
     });
   });
 
+  describe('popup element that holds the guards', () => {
+    // A popup part renders the focus manager in its positioner. When that part renders no element
+    // that has the focusable marker, the positioner is the popup element, and the guards are in it.
+    const PositionerPopup = defineComponent({
+      setup() {
+        const open = shallowRef(false);
+        const reference = shallowRef<HTMLElement | null>(null);
+        const positioner = shallowRef<HTMLElement | null>(null);
+        const store = useFloatingRootStore({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+          elements: { anchor: reference, positionerElement: positioner },
+        });
+
+        return () => (
+          <>
+            <button
+              data-testid="reference"
+              ref={(el) => {
+                reference.value = el as HTMLElement | null;
+              }}
+              onClick={() => {
+                open.value = true;
+              }}
+            />
+            {open.value ? (
+              <div
+                data-testid="positioner"
+                tabindex="-1"
+                ref={(el) => {
+                  positioner.value = el as HTMLElement | null;
+                }}
+              >
+                <FloatingFocusManager store={store}>
+                  <span>text</span>
+                </FloatingFocusManager>
+              </div>
+            ) : null}
+          </>
+        );
+      },
+    });
+
+    it('does not count its guards as tabbable content of the popup', async () => {
+      await render(<PositionerPopup />);
+      await openPopup();
+      const positioner = screen.getByTestId('positioner');
+      expect(getInsideGuards(positioner)).toHaveLength(2);
+
+      await waitFor(() => expect(positioner).toHaveFocus());
+
+      await userEvent.tab();
+      expect(positioner).toHaveFocus();
+    });
+  });
+
   describe('popup that is not modal, in a portal', () => {
     async function renderPortalPopup(manager: ManagerProps = {}) {
       const handleOpenChange = vi.fn();

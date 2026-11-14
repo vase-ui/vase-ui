@@ -1,0 +1,10 @@
+{
+  "id": "VUE-63",
+  "evidence": [
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/useTriggerFocusGuards.ts#L38-L69",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/portal/FloatingPortal.tsx#L293-L305",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/focus/FloatingFocusManager.tsx#L1029-L1071"
+  ],
+  "behavior": "A focus guard of a popup trigger closes the popup and then moves the focus to the next tabbable element. A popup can stay open, for example when its `open` prop does not change. The next tabbable element can then be a guard of the portal, which sends the focus into the popup. When the popup has no tabbable element, its guards send the focus back to the guard of the trigger. Vase UI then starts no new search and gives the focus to the trigger, so the Tab key ends there. In Base UI, the handler of each guard calls `focus()` on the next guard in the same call stack, and no handler ends the sequence.",
+  "dueWith": "packages/react/src/utils/popups/useTriggerFocusGuards.ts"
+}
