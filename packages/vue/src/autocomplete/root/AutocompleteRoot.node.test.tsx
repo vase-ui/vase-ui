@@ -1,7 +1,17 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
+import { Field } from '@vase-ui/vue/field';
+import { Form } from '@vase-ui/vue/form';
+import { Input } from '@vase-ui/vue/input';
 import { getFilter } from '../../internals/filter';
+import * as Autocomplete from '../index.parts';
 import AutocompleteRootHydration from './AutocompleteRootHydration.test.vue';
+
+type ItemSlotProps = { item: string };
+
+const itemSlot = {
+  item: ({ item }: ItemSlotProps) => <Autocomplete.Item value={item}>{item}</Autocomplete.Item>,
+};
 
 // Makes `Intl.Collator` use `locale` when a call gives no locale, until the test ends.
 function mockRuntimeCollatorLocale(locale: string) {
@@ -20,7 +30,9 @@ function removeComments(html: string) {
 }
 
 function getOptions(html: string) {
-  return [...html.matchAll(/role="option"[^>]*>([^<]*)</g)].map(([, text]) => text.trim());
+  return [...removeComments(html).matchAll(/role="option"[^>]*>([^<]*)</g)].map(([, text]) =>
+    text.trim(),
+  );
 }
 
 function getNamedInputs(html: string) {
@@ -69,5 +81,75 @@ describe('<Autocomplete.Root /> on a server', () => {
     expect(listHtml).toContain('aria-autocomplete="list"');
     expect(bothHtml).toContain('aria-autocomplete="both"');
     expect(readOnlyHtml).toContain('aria-autocomplete="none"');
+  });
+
+  describe('Form', () => {
+    it('server-renders only the inline input name for native FormData', async () => {
+      const html = await renderToString(
+        <Form>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']} inline>
+              <Autocomplete.Input data-testid="input" />
+              <Autocomplete.List v-slots={itemSlot} />
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      expect(getNamedInputs(html)).toEqual([expect.stringContaining('data-testid="input"')]);
+    });
+
+    it('server-renders only the outside-popup input name for native FormData', async () => {
+      const html = await renderToString(
+        <Form>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']}>
+              <Autocomplete.InputGroup>
+                <Autocomplete.Input data-testid="input" />
+                <Autocomplete.Trigger>Open</Autocomplete.Trigger>
+              </Autocomplete.InputGroup>
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      expect(getNamedInputs(html)).toEqual([expect.stringContaining('data-testid="input"')]);
+    });
+
+    it('server-renders the default popup input value without a form name before hydration', async () => {
+      const html = await renderToString(
+        <Form>
+          <Field.Root name="search">
+            <Autocomplete.Root items={['alpha', 'alpine']} defaultValue="alpha">
+              <Autocomplete.Trigger>
+                <Autocomplete.Value />
+              </Autocomplete.Trigger>
+              <Autocomplete.Portal>
+                <Autocomplete.Positioner>
+                  <Autocomplete.Popup>
+                    <Autocomplete.Input as={Input} data-testid="input" />
+                    <Autocomplete.List v-slots={itemSlot} />
+                  </Autocomplete.Popup>
+                </Autocomplete.Positioner>
+              </Autocomplete.Portal>
+            </Autocomplete.Root>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>,
+      );
+
+      expect(html).toMatch(/<input [^>]*value="alpha"/);
+      expect(getNamedInputs(html)).toEqual([]);
+      expect(html).not.toContain('data-testid="input"');
+    });
   });
 });

@@ -34,7 +34,7 @@ A popup that opens on top of the entire page.
 
 ## Usage guidelines
 
-- **Dialog does not support gestures**: Use Drawer for gestures or snap points. A panel that slides in from the edge of the screen and needs no gestures is a Dialog with a position.
+- **Dialog does not support gestures**: Use [Drawer](/components/drawer) for gestures or snap points. A panel that slides in from the edge of the screen and needs no gestures is a Dialog with a position.
 
 ## Anatomy
 

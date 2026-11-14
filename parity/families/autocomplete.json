@@ -8,50 +8,31 @@
     {
       "upstream": "packages/react/src/autocomplete/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Autocomplete. It exports the parts of Combobox under the names of Autocomplete, and Vase UI does not have all of those parts yet."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Item`, which `Autocomplete.Item` exports under another name."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/item/AutocompleteItemDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Autocomplete.Item`, whose attributes the file names."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/separator/AutocompleteSeparator.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Autocomplete.Separator`, which exports `ListboxSeparator` under another name. The part comes with the list parts of Autocomplete."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Combobox.Trigger`, which `Autocomplete.Trigger` exports under another name."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/trigger/AutocompleteTriggerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Autocomplete.Trigger`, whose attributes the file names."
-    },
-    {
-      "upstream": "packages/react/src/autocomplete/item/AutocompleteItem.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/autocomplete/index.ts",
-      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case renders `Autocomplete.Item`, which Vase UI does not have."
+      "reason": "The file is the entry point of Autocomplete. It exports `Empty` and `Status`, and Vase UI does not have `Combobox.Empty` and `Combobox.Status` yet."
     },
     {
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/autocomplete/index.ts",
-      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case that is left renders a part that Vase UI does not have, such as `Autocomplete.List`, `Autocomplete.Item` or `Autocomplete.Trigger`."
+      "describe": ["<Autocomplete.Root />", "Form"],
+      "title": "server-renders only the inline input name for native FormData",
+      "kind": "replaced",
+      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
-      "upstream": "packages/react/src/autocomplete/value/AutocompleteValue.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/autocomplete/index.ts",
-      "reason": "The file imports the entry point of Autocomplete, which Vase UI does not have. Each case renders `Autocomplete.List` and `Autocomplete.Item`, which Vase UI does not have."
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
+      "describe": ["<Autocomplete.Root />", "Form"],
+      "title": "server-renders only the outside-popup input name for native FormData",
+      "kind": "replaced",
+      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
+      "describe": ["<Autocomplete.Root />", "Form"],
+      "title": "server-renders the default popup input value without a form name before hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/autocomplete/root/AutocompleteRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/autocomplete/types.md",

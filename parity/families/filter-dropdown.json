@@ -1,0 +1,36 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/filter-dropdown/**",
+    "packages/react/test/filterDropdown.tsx"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />", "prop: filter with null"],
+      "title": "clears a stale highlight when the item set changes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "The case renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />", "prop: filter with null"],
+      "title": "keeps autoHighlight seeding the first item",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "The case renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/filter-dropdown/root/FilterDropdownRoot.test.tsx",
+      "describe": ["<FilterDropdown.Root />"],
+      "title": "clears a stale highlight when items change with an empty query",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
+      "reason": "The case renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}
