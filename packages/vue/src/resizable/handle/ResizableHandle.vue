@@ -170,6 +170,11 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   event.preventDefault();
+  // The next move of a drag computes the layout from the start of the drag again, and it would
+  // undo the key.
+  if (drag.dragging.value) {
+    return;
+  }
   const next = adjustLayout(root.constraints.value, root.shown.value, pivot.value, delta);
   if (areLayoutsEqual(next, root.shown.value)) {
     return;

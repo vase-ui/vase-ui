@@ -354,6 +354,23 @@ describe('<Resizable.Handle />', () => {
       expect(await fireEvent.keyDown(handle, { key: 'End' })).toBe(false);
     });
 
+    it('ignores a key while the handle drags', async () => {
+      const onLayoutChange = vi.fn();
+      const onLayoutCommitted = vi.fn();
+      await renderPanels({ root: { onLayoutChange, onLayoutCommitted } });
+      const handle = screen.getByTestId('handle-1');
+      await fireEvent.pointerDown(handle, pointerInit({ clientX: 0, buttons: 1 }));
+      await fireEvent.pointerMove(handle, pointerInit({ clientX: 100, buttons: 1 }));
+
+      expect(await fireEvent.keyDown(handle, { key: 'ArrowRight' })).toBe(false);
+
+      expect(handle).toHaveAttribute('aria-valuenow', '60');
+      expect(onLayoutChange).toHaveBeenCalledTimes(1);
+      expect(onLayoutCommitted).not.toHaveBeenCalled();
+      await fireEvent.pointerUp(handle, pointerInit({ clientX: 100 }));
+      expect(onLayoutCommitted).toHaveBeenCalledTimes(1);
+    });
+
     it.each([
       { name: 'Ctrl', modifier: { ctrlKey: true } },
       { name: 'Alt', modifier: { altKey: true } },
