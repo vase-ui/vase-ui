@@ -932,8 +932,6 @@ effect(
     const { modal, restoreFocus, store } = props;
     const storeContext = store.context;
     const untrappedTypeableCombobox = isUntrappedTypeableCombobox.value;
-    const nextFocusable = toValue(props.nextFocusableElement);
-    const previousFocusable = toValue(props.previousFocusableElement);
 
     if (isDisabled() || !props.closeOnFocusOut) {
       return undefined;
@@ -1026,8 +1024,8 @@ effect(
             portalContext?.afterInsideRef.value,
             portalContext?.beforeOutsideRef.value,
             portalContext?.afterOutsideRef.value,
-            previousFocusable,
-            nextFocusable,
+            toValue(props.previousFocusableElement),
+            toValue(props.nextFocusableElement),
           ].includes(relatedTarget);
 
         const movedToUnrelatedNode = !(
