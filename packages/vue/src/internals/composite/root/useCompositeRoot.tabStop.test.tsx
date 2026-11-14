@@ -49,7 +49,7 @@ async function blurItem(testId: string) {
   await flushMicrotasks();
 }
 
-describe('VUE-51: the tab stop follows the active item', () => {
+describe('VUE-54: the tab stop follows the active item', () => {
   const { render } = createRenderer();
 
   it('moves the tab stop to an item that becomes active while the focus is outside', async () => {

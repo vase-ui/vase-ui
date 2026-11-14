@@ -43,7 +43,7 @@ function createControlledGroup(initialValue: string, disabled?: string) {
   return { Group, value };
 }
 
-describe('VUE-51: the tab stop of <RadioGroup /> follows the checked radio', () => {
+describe('VUE-54: the tab stop of <RadioGroup /> follows the checked radio', () => {
   const { render } = createRenderer();
 
   it('moves the tab stop to the default radio after a native reset', async () => {

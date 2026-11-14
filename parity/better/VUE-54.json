@@ -1,5 +1,5 @@
 {
-  "id": "VUE-51",
+  "id": "VUE-54",
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/internals/composite/root/useCompositeRoot.ts#L115-L142",
     "https://www.w3.org/WAI/ARIA/apg/patterns/radio/",

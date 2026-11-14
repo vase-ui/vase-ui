@@ -7,7 +7,7 @@ function readTabindexes() {
   return screen.getAllByRole('tab').map((tab) => tab.tabIndex);
 }
 
-describe('VUE-51: the tab stop of <Tabs.List /> follows the active tab', () => {
+describe('VUE-54: the tab stop of <Tabs.List /> follows the active tab', () => {
   const { render } = createRenderer();
 
   it('enters the list on the active tab after the focus leaves it, with manual activation', async () => {
