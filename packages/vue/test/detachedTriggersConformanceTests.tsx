@@ -131,6 +131,7 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
               default: ({ payload }: { payload: unknown }) => [
                 !detached && triggers,
                 <span data-testid="root-payload">
+                  {/* eslint-disable-next-line @typescript-eslint/no-base-to-string -- The payload of the cases is a number or a string. */}
                   {payload === undefined ? 'No payload' : String(payload)}
                 </span>,
                 renderPopup(payload),

@@ -38,8 +38,8 @@ class Scheduler {
     this.startId = this.nextId;
 
     if (currentCallbacksCount > 0) {
-      for (let i = 0; i < currentCallbacks.length; i += 1) {
-        currentCallbacks[i]?.(timestamp);
+      for (const callback of currentCallbacks) {
+        callback?.(timestamp);
       }
     }
   };
@@ -109,7 +109,7 @@ export class AnimationFrame {
   }
 
   static cancel(id: AnimationFrameId) {
-    return scheduler.cancel(id);
+    scheduler.cancel(id);
   }
 
   currentId: AnimationFrameId | null = EMPTY;

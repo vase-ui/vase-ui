@@ -28,7 +28,7 @@ export function useNavigationMenuViewportGuards() {
   const hasGuards = computed(() => floatingRootStore.value !== undefined);
 
   function handleBeforeInsideFocusin(event: FocusEvent) {
-    const referenceElement = positionerElement.value || viewportElement.value;
+    const referenceElement = positionerElement.value ?? viewportElement.value;
 
     if (referenceElement && isOutsideEvent(event, referenceElement)) {
       getNextTabbable(referenceElement)?.focus();
@@ -38,7 +38,7 @@ export function useNavigationMenuViewportGuards() {
   }
 
   function handleAfterInsideFocusin(event: FocusEvent) {
-    const referenceElement = positionerElement.value || viewportElement.value;
+    const referenceElement = positionerElement.value ?? viewportElement.value;
 
     if (referenceElement && isOutsideEvent(event, referenceElement)) {
       getPreviousTabbable(referenceElement)?.focus();

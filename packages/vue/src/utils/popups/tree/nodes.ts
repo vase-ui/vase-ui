@@ -1,10 +1,10 @@
 import type { FloatingNodeType } from '../types';
 
 export function getNodeChildren(
-  nodes: Array<FloatingNodeType>,
+  nodes: FloatingNodeType[],
   id: string | undefined,
   onlyOpenChildren = true,
-): Array<FloatingNodeType> {
+): FloatingNodeType[] {
   const directChildren = nodes.filter((node) => node.parentId === id);
 
   return directChildren.flatMap((child) => [
@@ -13,8 +13,8 @@ export function getNodeChildren(
   ]);
 }
 
-export function getNodeAncestors(nodes: Array<FloatingNodeType>, id: string | undefined) {
-  let allAncestors: Array<FloatingNodeType> = [];
+export function getNodeAncestors(nodes: FloatingNodeType[], id: string | undefined) {
+  let allAncestors: FloatingNodeType[] = [];
   let currentParentId = nodes.find((node) => node.id === id)?.parentId;
 
   while (currentParentId) {

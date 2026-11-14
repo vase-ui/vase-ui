@@ -267,7 +267,7 @@ const [valueUnwrapped, setValueUnwrapped] = useControlled<string>({
   state: 'value',
 });
 
-const inputElements = shallowRef<Array<HTMLElement | null>>([]);
+const inputElements = shallowRef<(HTMLElement | null)[]>([]);
 const hiddenInputElement = shallowRef<HTMLInputElement | null>(null);
 const inputCount = shallowRef(0);
 
@@ -579,7 +579,7 @@ provide(OTPFieldRootContext, {
   value: otpValue,
 });
 
-function mergeAriaIds(...values: Array<string | undefined>) {
+function mergeAriaIds(...values: (string | undefined)[]) {
   const ids = values.flatMap((ids) => ids?.split(/\s+/).filter(Boolean) ?? []);
   return ids.length > 0 ? Array.from(new Set(ids)).join(' ') : undefined;
 }

@@ -49,6 +49,7 @@ function isStationaryWebKitPointer(event: MouseEvent | PointerEvent) {
 }
 
 function doSwitch(orientation: Orientation | undefined, vertical: boolean, horizontal: boolean) {
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check -- The `default` case covers `both` and no orientation, as in Base UI.
   switch (orientation) {
     case 'vertical':
       return vertical;
@@ -108,7 +109,7 @@ export interface UseListNavigationProps {
    * A ref that holds an array of list items. The composable reads it only in a handler and after a
    * DOM update, so it does not follow a change of the list.
    */
-  listRef: Readonly<Ref<Array<HTMLElement | null>>>;
+  listRef: Readonly<Ref<(HTMLElement | null)[]>>;
   /**
    * The index of the currently active (focused or highlighted) item, which may
    * or may not be selected.
@@ -161,7 +162,7 @@ export interface UseListNavigationProps {
    * The composable reads the option one time, so a function is the form that follows a change.
    * @default undefined
    */
-  disabledIndices?: ReadonlyArray<number> | ((index: number) => boolean) | undefined;
+  disabledIndices?: readonly number[] | ((index: number) => boolean) | undefined;
   /**
    * Determines whether focus can escape the list, such that nothing is selected
    * after navigating beyond the boundary of the list. In some
@@ -392,7 +393,7 @@ export function useListNavigation(
       : (callback: () => void) => focusFrame.request(callback);
 
     scheduler(() => {
-      const waitedItem = listRef.value[index] || initialItem;
+      const waitedItem = listRef.value[index] ?? initialItem;
 
       if (!waitedItem) {
         return;
@@ -418,8 +419,8 @@ export function useListNavigation(
   watch(getOrientation, writeOrientation);
 
   // The dependencies of each effect of Base UI, from the last run of that effect.
-  const lastDependencies = new Map<string, ReadonlyArray<unknown>>();
-  function haveChanged(effect: string, dependencies: ReadonlyArray<unknown>) {
+  const lastDependencies = new Map<string, readonly unknown[]>();
+  function haveChanged(effect: string, dependencies: readonly unknown[]) {
     const last = lastDependencies.get(effect);
     lastDependencies.set(effect, dependencies);
     return !last || dependencies.some((dependency, i) => !Object.is(dependency, last[i]));
@@ -656,6 +657,7 @@ export function useListNavigation(
     // don't appear to suffer from this. `event.isComposing` is avoided due to
     // Safari not supporting it properly (although it's not needed in the first
     // place for Safari, just avoiding any possible issues).
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- The key code 229 is the IME workaround of Base UI, and the code keeps it.
     if (event.keyCode === 229) {
       return;
     }
@@ -836,6 +838,7 @@ export function useListNavigation(
       if (isEnabled()) {
         handleFloatingKeydown(event, floatingFocusElement);
       }
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }
@@ -914,6 +917,7 @@ export function useListNavigation(
       if (isEnabled()) {
         handleFloatingKeydown(event, event.currentTarget as Element | null);
       }
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- `cancelBubble` is the only read that tells that a handler stopped the event.
       if (!event.cancelBubble) {
         parent?.handleFloatingKeydown(event);
       }

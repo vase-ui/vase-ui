@@ -17,9 +17,9 @@ export class NullStore<
   // `update` and `set` call `setState`, so an override of `setState` alone makes them do nothing
   // today. The store stays inert even if a later change of `ReactiveStore` stops a write from going
   // through `setState`, because each method has an override.
-  setState(_newState: State) {}
+  override setState(_newState: State) {}
 
-  update<const Key extends keyof State>(_changes: Pick<State, Key>) {}
+  override update<const Key extends keyof State>(_changes: Pick<State, Key>) {}
 
-  set<Key extends keyof State>(_key: Key, _value: State[Key]) {}
+  override set<Key extends keyof State>(_key: Key, _value: State[Key]) {}
 }

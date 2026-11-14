@@ -24,7 +24,7 @@ describe('<Toggle />', () => {
       expect(typeof document).toBe('undefined');
 
       const html = await renderToString(<ToggleHydration {...props} />);
-      const tag = html.match(/^<button[^>]*>/)?.[0] ?? '';
+      const tag = /^<button[^>]*>/.exec(html)?.[0] ?? '';
 
       expect(tag).toContain(' type="button"');
       expect(tag).toContain(' tabindex="0"');
