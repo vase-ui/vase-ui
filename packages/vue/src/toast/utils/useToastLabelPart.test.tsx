@@ -195,6 +195,28 @@ describe('useToastLabelPart', () => {
       expect(root).toHaveAttribute(attribute, 'new-part');
     });
 
+    it('VUE-56: points the root at the part that stays when the last of two parts unmounts', async () => {
+      const showLast = shallowRef(true);
+
+      await render(() => (
+        <Toast.Provider>
+          <Toast.Viewport>
+            <Toast.Root toast={{ id: 'test' }} data-testid="root">
+              <Part id="first-part">First</Part>
+              {showLast.value && <Part id="last-part">Last</Part>}
+            </Toast.Root>
+          </Toast.Viewport>
+        </Toast.Provider>
+      ));
+
+      const root = screen.getByTestId('root');
+      expect(root).toHaveAttribute(attribute, 'last-part');
+
+      showLast.value = false;
+      await nextTick();
+      expect(root).toHaveAttribute(attribute, 'first-part');
+    });
+
     it(`renders a function ${field} and points ${attribute} at it`, async () => {
       const label: ToastLabel = () => h('strong', 'Rich content');
       await renderInRoot(<Part data-testid="part" />, { id: 'test', [field]: label });

@@ -665,7 +665,7 @@ describe('<Toast.Viewport />', () => {
   it('removes expanded on mouseleave when focus-visible not inside', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -688,7 +688,7 @@ describe('<Toast.Viewport />', () => {
   it('collapses when the pointer moves away after the hovered toast was closed', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -716,7 +716,7 @@ describe('<Toast.Viewport />', () => {
   it('keeps expanded on mouseleave when focus-visible is inside', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -740,7 +740,7 @@ describe('<Toast.Viewport />', () => {
   it('keeps expanded during an active touch swipe even if mouseleave fires', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -798,7 +798,7 @@ describe('<Toast.Viewport />', () => {
   it('keeps expanded when a touch swipe is canceled without leaving the viewport', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -850,7 +850,7 @@ describe('<Toast.Viewport />', () => {
   it('collapses after a touch swipe is canceled if mouseleave already fired', async () => {
     const { user } = await render(
       <Toast.Provider>
-        <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+        <Toast.Viewport data-testid="viewport">
           <List />
         </Toast.Viewport>
         <Button />
@@ -1000,7 +1000,7 @@ describe('<Toast.Viewport />', () => {
     it('pauses timers when hovering', async () => {
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1020,7 +1020,7 @@ describe('<Toast.Viewport />', () => {
     it('resumes timers when not hovering', async () => {
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1098,11 +1098,7 @@ describe('<Toast.Viewport />', () => {
       await render(
         <Toast.Provider toastManager={manager}>
           <button type="button">origin</button>
-          <Toast.Viewport
-            data-testid="viewport"
-            style={noRealPointer}
-            onFocusin={() => manager.close()}
-          >
+          <Toast.Viewport data-testid="viewport" onFocusin={() => manager.close()}>
             <List />
           </Toast.Viewport>
         </Toast.Provider>,
@@ -1139,7 +1135,7 @@ describe('<Toast.Viewport />', () => {
       async (remainingInteraction) => {
         await render(
           <Toast.Provider>
-            <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+            <Toast.Viewport data-testid="viewport">
               <List />
             </Toast.Viewport>
             <Button />
@@ -1249,7 +1245,7 @@ describe('<Toast.Viewport />', () => {
     it('collapses and resumes timers on a touch outside the viewport', async () => {
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1278,7 +1274,7 @@ describe('<Toast.Viewport />', () => {
     it('stays expanded on a touch inside the viewport', async () => {
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1302,7 +1298,7 @@ describe('<Toast.Viewport />', () => {
     it('ignores a mouse pointerdown outside the viewport', async () => {
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1613,7 +1609,7 @@ describe('<Toast.Viewport />', () => {
 
       await render(
         <Toast.Provider>
-          <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+          <Toast.Viewport data-testid="viewport">
             <List />
           </Toast.Viewport>
           <Button />
@@ -1720,7 +1716,7 @@ describe('<Toast.Viewport />', () => {
 
         await render(
           <Toast.Provider>
-            <Toast.Viewport data-testid="viewport" style={noRealPointer}>
+            <Toast.Viewport data-testid="viewport">
               <List />
             </Toast.Viewport>
             <Button />
