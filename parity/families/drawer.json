@@ -8,14 +8,6 @@
     {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "describe": ["<Drawer.Popup />"],
-      "title": "does not treat alert dialogs inside nested drawers as nested drawers",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The case renders the parts of Alert Dialog from the entry point of Alert Dialog. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
-      "describe": ["<Drawer.Popup />"],
       "title": "warns without relying on React owner-stack support",
       "kind": "not-applicable",
       "reason": "The case mocks `SafeReact.captureOwnerStack`, which only React has. The warning of `Drawer.Popup` has no owner stack."
