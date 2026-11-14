@@ -82,7 +82,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
   }
 
   // The open mounts the control, and the press must not come in the millisecond of its listener.
-  function findClickableClose(open: () => Promise<unknown>) {
+  function openAndFindClickableClose(open: () => Promise<unknown>) {
     return waitForLaterMillisecond(async () => {
       await open();
       const close = await screen.findByText('Close');
@@ -95,7 +95,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
   }
 
   async function openAndCloseWithPointer(user: Awaited<ReturnType<typeof render>>['user']) {
-    await user.click(await findClickableClose(() => user.click(getTrigger())));
+    await user.click(await openAndFindClickableClose(() => user.click(getTrigger())));
   }
 
   if (testInitialFocus) {
@@ -235,7 +235,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
           />,
         );
 
-        const close = await findClickableClose(async () => {
+        const close = await openAndFindClickableClose(async () => {
           await user.click(getTrigger());
           await waitFor(() => {
             expect(screen.getByTestId('inside-2')).toHaveFocus();
@@ -343,7 +343,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
 
       // user-event's synthetic clicks carry no pointer type, so the mouse press is dispatched
       // directly.
-      const close = await findClickableClose(() => user.click(trigger));
+      const close = await openAndFindClickableClose(() => user.click(trigger));
       await fireEvent.pointerDown(close, { pointerType: 'mouse' });
       await fireEvent.click(close, { detail: 1 });
       await waitFor(() => {
