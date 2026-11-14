@@ -61,12 +61,14 @@ describe('<Popover.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     defaultCollisionAvoidance: 'popup',
     createComponent: ({
       root,
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <Popover.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -75,7 +77,9 @@ describe('<Popover.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <Popover.Popup {...popup}>Popup</Popover.Popup>
+            <Popover.Popup {...popup}>
+              {viewport ? <Popover.Viewport>Popup</Popover.Viewport> : 'Popup'}
+            </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
