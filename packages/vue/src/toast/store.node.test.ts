@@ -181,7 +181,7 @@ describe('ToastStore with no DOM', () => {
     {
       name: 'promiseToast',
       call: (store: ToastStore) =>
-        store.promiseToast(new Promise<void>(() => {}), {
+        void store.promiseToast(new Promise<void>(() => {}), {
           loading: { id: 'effect' },
           success: 'Done',
           error: 'Failed',

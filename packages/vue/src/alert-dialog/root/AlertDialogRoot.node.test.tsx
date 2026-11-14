@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import { AlertDialog } from '@vase-ui/vue/alert-dialog';
 import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
-import * as AlertDialog from '../index.parts';
 
 describe('<AlertDialog.Root /> on a server', () => {
   it('gives the alert dialog state to the parts and attaches no store to its handle', async () => {

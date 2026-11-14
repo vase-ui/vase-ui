@@ -10,7 +10,7 @@ function tag(html: string, pattern: RegExp) {
 }
 
 function attribute(element: string, name: string) {
-  return element.match(new RegExp(` ${name}="([^"]*)"`))?.[1];
+  return new RegExp(` ${name}="([^"]*)"`).exec(element)?.[1];
 }
 
 describe('<OTPField.Input />', () => {

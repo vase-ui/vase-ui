@@ -43,11 +43,11 @@ export type ValuePopupState = PopupStoreState<unknown> & {
  */
 export type ValuePopupContext<ChangeEventDetails> = PopupStoreContext<ChangeEventDetails> & {
   /** Item elements in list order. */
-  readonly listRef: ShallowRef<Array<HTMLElement | null>>;
+  readonly listRef: ShallowRef<(HTMLElement | null)[]>;
   /** Item text labels in list order, used for typeahead. */
-  readonly labelsRef: ShallowRef<Array<string | null>>;
+  readonly labelsRef: ShallowRef<(string | null)[]>;
   /** Item values in list order. */
-  readonly valuesRef: ShallowRef<Array<any>>;
+  readonly valuesRef: ShallowRef<any[]>;
 };
 
 type S = ValuePopupState;

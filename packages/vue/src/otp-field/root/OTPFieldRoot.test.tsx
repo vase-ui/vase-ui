@@ -35,7 +35,7 @@ function getHiddenInput(container: Element) {
 async function fillHiddenInput(
   input: HTMLInputElement,
   value: string,
-  types: Array<'input' | 'change'>,
+  types: ('input' | 'change')[],
 ) {
   input.value = value;
   for (const type of types) {
@@ -1889,8 +1889,8 @@ describe('<OTPField.Root />', () => {
 
     describe('autofill', () => {
       it.each([
-        { name: 'an `input` event', types: ['input'] as Array<'input' | 'change'> },
-        { name: 'a `change` event', types: ['change'] as Array<'input' | 'change'> },
+        { name: 'an `input` event', types: ['input'] as ('input' | 'change')[] },
+        { name: 'a `change` event', types: ['change'] as ('input' | 'change')[] },
         { name: 'an `input` and a `change` event', types: ['input', 'change'] as const },
         { name: 'a pair of `input` events', types: ['input', 'input'] as const },
       ])('takes a code that $name reports one time', async ({ types }) => {

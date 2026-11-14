@@ -4,7 +4,7 @@ import { addEventListener } from '../common/addEventListener';
 
 // A test environment of a consumer, such as jsdom, can have a `window` with no `matchMedia`.
 function getWindowMatchMedia(): typeof window.matchMedia | null {
-  // eslint-disable-next-line no-restricted-globals -- The composable has no element, so `ownerWindow` does not apply. The typeof check makes the read safe on a server.
+  // eslint-disable-next-line no-restricted-globals, @typescript-eslint/unbound-method -- The composable has no element, so `ownerWindow` does not apply. The typeof check makes the read safe on a server. `window.matchMedia` uses the window when it gets no `this`.
   return typeof window === 'undefined' ? null : (window.matchMedia ?? null);
 }
 

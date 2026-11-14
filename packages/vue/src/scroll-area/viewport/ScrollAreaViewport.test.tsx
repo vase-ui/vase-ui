@@ -299,10 +299,7 @@ describe('<ScrollArea.Viewport />', () => {
     it('ignores data-scrolling during programmatic scroll', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
-          <ScrollArea.Viewport
-            data-testid="viewport"
-            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-          >
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
@@ -311,7 +308,6 @@ describe('<ScrollArea.Viewport />', () => {
       const viewport = screen.getByTestId('viewport');
 
       // No user interaction before the scroll event, as with `scrollTo()`.
-      // `pointer-events: none` isolates this from the browser's real pointer.
       await fireEvent.scroll(viewport, { target: { scrollTop: 1 } });
 
       expect(viewport).not.toHaveAttribute('data-scrolling');
@@ -349,10 +345,7 @@ describe('<ScrollArea.Viewport />', () => {
     it('keeps ignoring programmatic scrolls in mouse modality', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
-          <ScrollArea.Viewport
-            data-testid="viewport"
-            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-          >
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
@@ -360,10 +353,9 @@ describe('<ScrollArea.Viewport />', () => {
 
       const viewport = screen.getByTestId('viewport');
 
-      // `pointer-events: none` isolates this from the browser's real pointer. A real pointer event
-      // marks the next scroll as a user scroll. The browser sends its own `scroll` event for the
-      // scroll below in a later frame, so the part can set `data-scrolling` after the timers ran.
-      // The observer also records a `data-scrolling` that a timer removes before the assertion.
+      // The browser sends its own `scroll` event for the scroll below in a later frame, so the part
+      // can set `data-scrolling` after the timers ran. The observer also records a `data-scrolling`
+      // that a timer removes before the assertion.
       const changes: (string | null)[] = [];
       const observer = new MutationObserver((records) => {
         changes.push(...records.map((record) => record.attributeName));
@@ -387,12 +379,7 @@ describe('<ScrollArea.Viewport />', () => {
     it('restores programmatic scroll suppression after modality flips back to mouse', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root data-testid="root" style={{ width: '200px', height: '200px' }}>
-          {/* `pointer-events: none` isolates this from the browser's real pointer. A real
-              pointer that enters the viewport makes the next scroll a user scroll. */}
-          <ScrollArea.Viewport
-            data-testid="viewport"
-            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-          >
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
@@ -452,10 +439,7 @@ describe('<ScrollArea.Viewport />', () => {
     it('ends the user scroll after 100 ms with no scroll event', async () => {
       await renderWithFakeTimers(
         <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
-          <ScrollArea.Viewport
-            data-testid="viewport"
-            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-          >
+          <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
             <div style={{ width: '1000px', height: '1000px' }} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>,
@@ -780,12 +764,7 @@ describe('<ScrollArea.Viewport />', () => {
         <KeepAlive>
           {visible.value ? (
             <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
-              {/* `pointer-events: none` isolates this from the browser's real pointer. A real
-                  pointer that enters the viewport makes the next scroll a user scroll. */}
-              <ScrollArea.Viewport
-                data-testid="viewport"
-                style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-              >
+              <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
                 <div style={{ width: '1000px', height: '1000px' }} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
@@ -835,11 +814,10 @@ describe('<ScrollArea.Viewport />', () => {
 
     it('reads the hover state again on activation', async () => {
       const visible = shallowRef(true);
-      // `pointer-events: none` isolates this from the browser's real pointer.
       const App = defineComponent(() => () => (
         <KeepAlive>
           {visible.value ? (
-            <ScrollArea.Root style={{ width: '200px', height: '200px', pointerEvents: 'none' }}>
+            <ScrollArea.Root style={{ width: '200px', height: '200px' }}>
               <ScrollArea.Viewport data-testid="viewport" style={{ width: '100%', height: '100%' }}>
                 <div style={{ width: '1000px', height: '1000px' }} />
               </ScrollArea.Viewport>

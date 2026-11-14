@@ -4,7 +4,7 @@ import { gridNavigation } from './gridNavigation';
 import { useListNavigation } from './useListNavigation';
 
 function useTypeTests(store: PopupInteractionStore) {
-  const listRef = shallowRef<Array<HTMLElement | null>>([]);
+  const listRef = shallowRef<(HTMLElement | null)[]>([]);
 
   useListNavigation(store, { listRef, activeIndex: null, grid: () => gridNavigation });
   useListNavigation(store, { listRef, activeIndex: null, grid: shallowRef(gridNavigation) });

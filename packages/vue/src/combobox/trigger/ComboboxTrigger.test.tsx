@@ -181,6 +181,7 @@ describe('<Combobox.Trigger />', () => {
       const store = useComboboxRootContext();
       onMounted(() => {
         store.context.labelsRef.value[0] = 'apple';
+        // eslint-disable-next-line @typescript-eslint/no-array-delete -- As in the Base UI case, the slot stays and has no value. `splice` would remove the slot.
         delete store.context.valuesRef.value[0];
       });
       return () => null;
