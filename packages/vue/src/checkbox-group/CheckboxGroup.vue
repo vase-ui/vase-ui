@@ -33,6 +33,10 @@ export interface CheckboxGroupProps
    */
   defaultValue?: string[] | undefined;
   /**
+   * Names of all checkboxes in the group. Use this when creating a parent checkbox.
+   */
+  allValues?: string[] | undefined;
+  /**
    * Whether the component should ignore user interaction.
    * @default false
    */
@@ -66,6 +70,7 @@ import { useVaseUiId } from '../internals/useBaseUiId';
 import { useRenderElement } from '../internals/useRenderElement';
 import { useValueChanged } from '../internals/useValueChanged';
 import { CheckboxGroupContext } from './CheckboxGroupContext';
+import { useCheckboxGroupParent } from './useCheckboxGroupParent';
 
 defineOptions({ inheritAttrs: false });
 
@@ -73,6 +78,7 @@ const props = withDefaults(defineProps<CheckboxGroupProps>(), {
   as: 'div',
   value: undefined,
   defaultValue: undefined,
+  allValues: undefined,
   disabled: false,
 });
 
@@ -126,6 +132,12 @@ function setValue(nextValue: string[], eventDetails: CheckboxGroupChangeEventDet
   emit('update:value', nextValue);
   setGroupValueState(nextValue);
 }
+
+const parent = useCheckboxGroupParent({
+  allValues: () => props.allValues,
+  value: groupValue,
+  onValueChange: setValue,
+});
 
 // The group is the control of the field and takes its name from `aria-labelledby`, so `Field.Label`
 // must not point `for` at one checkbox of the group.
@@ -198,13 +210,18 @@ function reset(event: Event) {
 
   const defaultValue = props.defaultValue ?? EMPTY_ARRAY;
 
-  if (props.value === undefined && !areArraysEqual(groupValue.value, defaultValue)) {
-    const details = createChangeEventDetails(REASONS.none, event);
-    setValue(defaultValue.slice(), details);
+  if (props.value === undefined) {
+    if (areArraysEqual(groupValue.value, defaultValue)) {
+      parent.reset(defaultValue.slice());
+    } else {
+      const details = createChangeEventDetails(REASONS.none, event);
+      setValue(defaultValue.slice(), details);
 
-    if (!details.isCanceled) {
-      isResetChangePending = true;
-      return;
+      if (!details.isCanceled) {
+        parent.reset(defaultValue.slice());
+        isResetChangePending = true;
+        return;
+      }
     }
   }
 
@@ -219,6 +236,8 @@ const state = computed<CheckboxGroupState>(() => ({
 provide(CheckboxGroupContext, {
   value: groupValue,
   setValue,
+  allValues: computed(() => props.allValues),
+  parent,
   disabled: isDisabled,
   validation,
   registerControlId,

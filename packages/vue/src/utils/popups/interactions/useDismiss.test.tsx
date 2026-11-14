@@ -1,23 +1,41 @@
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { defineComponent, inject, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
 import type { PropType } from 'vue';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  useTestInteractions,
+  wait,
+  waitFor,
+} from '#test-utils';
+import type { VaseUIRenderResult } from '#test-utils';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
-import { useFloating } from '../../../../test/fixtures/useFloating';
+import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
+import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
+import FloatingFocusManager from '../focus/FloatingFocusManager.vue';
+import FloatingPortal from '../portal/FloatingPortal.vue';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
-import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
-import type { PopupOpenChangeEventDetails } from '../store';
-import { useDismiss } from './useDismiss';
+import {
+  provideFloatingNode,
+  provideFloatingTree,
+  useFloatingNodeId,
+  useFloatingParentNodeId,
+} from '../tree/FloatingTree';
+import { useClick } from './useClick';
+import { normalizeProp, useDismiss } from './useDismiss';
 import type { UseDismissProps } from './useDismiss';
+import { useFocus } from './useFocus';
 
 // A module namespace is read-only. The mock gives `engine` as a plain object, so a case can set
 // the flag.
@@ -35,6 +53,21 @@ function setWebKit(webkit: boolean) {
     Object.defineProperty(platform.engine, 'webkit', { value: actual, configurable: true });
   });
 }
+
+// The focus manager moves the focus in an animation frame. As in the Base UI tests, that frame
+// runs at once.
+beforeEach(() => {
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation(
+    (callback: FrameRequestCallback): number => {
+      callback(0);
+      return 0;
+    },
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const DOCUMENT_LISTENER_TYPES = [
   'keydown',
@@ -100,10 +133,7 @@ const Popup = defineComponent({
   setup(props, { slots }) {
     const open = shallowRef(props.defaultOpen);
     const nodeId = props.node ? useFloatingNodeId() : undefined;
-    const {
-      refs: { setReference, setFloating },
-      context: { rootStore },
-    } = useFloating({
+    const { refs, context } = useFloating({
       open,
       nodeId,
       onOpenChange(nextOpen, details) {
@@ -121,7 +151,7 @@ const Popup = defineComponent({
     if (nodeId) {
       provideFloatingNode(nodeId);
     }
-    const dismiss = useDismiss(rootStore, props.dismiss);
+    const dismiss = useDismiss(context.rootStore, props.dismiss);
 
     function toggle() {
       open.value = !open.value;
@@ -131,7 +161,7 @@ const Popup = defineComponent({
       const popup = open.value && (
         <div
           data-testid={props.name}
-          {...mergeProps(dismiss.floating, { ref: setFloating })}
+          {...mergeProps(dismiss.floating, { ref: refs.setFloating })}
           style="position: absolute; left: 200px; top: 200px; padding: 20px"
         >
           {props.name}
@@ -143,7 +173,7 @@ const Popup = defineComponent({
           <button
             data-testid={`${props.name}-trigger`}
             {...mergeProps(dismiss.reference, {
-              ref: setReference,
+              ref: refs.setReference,
               [props.toggleOn === 'click' ? 'onClick' : 'onPointerdown']: toggle,
             })}
           >
@@ -225,8 +255,1943 @@ async function pressAndClick(target: Element) {
   await fireEvent.click(target, { detail: 1 });
 }
 
+const App = defineComponent({
+  props: {
+    escapeKey: { type: Boolean, default: undefined },
+    referencePress: { type: Function as PropType<() => boolean>, default: undefined },
+    outsidePress: {
+      type: [Boolean, Function] as PropType<UseDismissProps['outsidePress']>,
+      default: undefined,
+    },
+    outsidePressEvent: { type: String as PropType<'intentional' | 'sloppy'>, default: undefined },
+    onClose: { type: Function as PropType<() => void>, default: undefined },
+  },
+  setup(props) {
+    const open = shallowRef(true);
+    const { refs, context } = useFloating({
+      open,
+      onOpenChange(openArg, data) {
+        open.value = openArg;
+        const reason = data?.reason;
+        if (props.outsidePress) {
+          expect(reason).toBe(REASONS.outsidePress);
+        } else if (props.escapeKey) {
+          expect(reason).toBe(REASONS.escapeKey);
+          if (!openArg) {
+            props.onClose?.();
+          }
+        } else if (props.referencePress?.()) {
+          expect(reason).toBe(REASONS.triggerPress);
+        }
+      },
+    });
+    const { getReferenceProps, getFloatingProps } = useTestInteractions([
+      useDismiss(context.rootStore, {
+        escapeKey: () => props.escapeKey,
+        referencePress: props.referencePress,
+        outsidePress: props.outsidePress,
+        outsidePressEvent: () => props.outsidePressEvent,
+      }),
+    ]);
+
+    return () => (
+      <>
+        <button {...getReferenceProps({ ref: refs.setReference })} />
+        {open.value && (
+          <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+            <input />
+          </div>
+        )}
+      </>
+    );
+  },
+});
+
+interface TouchPoint {
+  identifier: number;
+  target: EventTarget;
+  clientX: number;
+  clientY: number;
+}
+
+// A browser refuses a plain object as a `Touch`. Firefox on a desktop has no `TouchEvent`, and
+// WebKit on a desktop refuses `new Touch()`. Those engines get an `Event` that has the two lists.
+async function fireTouch(
+  type: 'touchstart' | 'touchmove' | 'touchend',
+  target: Element,
+  init: { touches: TouchPoint[]; changedTouches: TouchPoint[] },
+) {
+  let event: Event;
+  try {
+    const toTouch = (point: TouchPoint) => new Touch(point);
+    event = new TouchEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      touches: init.touches.map(toTouch),
+      changedTouches: init.changedTouches.map(toTouch),
+    });
+  } catch {
+    event = new Event(type, { bubbles: true, cancelable: true, composed: true });
+    Object.defineProperty(event, 'touches', { value: init.touches });
+    Object.defineProperty(event, 'changedTouches', { value: init.changedTouches });
+  }
+  await fireEvent(target, event);
+}
+
 describe('useDismiss', () => {
   const { render } = createRenderer();
+
+  describe('default options', () => {
+    it('registers outside press touch listeners as passive', async () => {
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+
+      try {
+        await render(<App />);
+
+        await Promise.all(
+          ['touchstart', 'touchmove', 'touchend'].map((eventName) =>
+            waitFor(() => {
+              expect(addEventListenerSpy).toHaveBeenCalledWith(eventName, expect.any(Function), {
+                capture: true,
+                passive: true,
+              });
+            }),
+          ),
+        );
+      } finally {
+        addEventListenerSpy.mockRestore();
+      }
+    });
+
+    it('dismisses with escape key', async () => {
+      await render(<App />);
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      await flushMicrotasks();
+    });
+
+    it('calls preventDefault on escape key dismiss', async () => {
+      await render(<App />);
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      });
+      document.body.dispatchEvent(event);
+      await flushMicrotasks();
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('does not call preventDefault on escape key if close is canceled', async () => {
+      const CancelApp = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange(_openArg, data) {
+              data?.cancel();
+              open.value = true;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<CancelApp />);
+      const event = new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      });
+      document.body.dispatchEvent(event);
+      await flushMicrotasks();
+      expect(event.defaultPrevented).toBe(false);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('does not dismiss with escape key if IME is active', async () => {
+      const onClose = vi.fn();
+
+      await render(<App onClose={onClose} escapeKey />);
+
+      const textbox = screen.getByRole('textbox');
+
+      textbox.focus();
+      await flushMicrotasks();
+
+      // Simulate behavior when "あ" (Japanese) is entered and Esc is pressed for IME
+      // cancellation.
+      await fireEvent.input(textbox, { target: { value: 'あ' } });
+      await fireEvent.compositionStart(textbox);
+      await fireEvent.keyDown(textbox, { key: 'Escape', isComposing: true });
+      await fireEvent.compositionEnd(textbox);
+
+      // Wait for the compositionend timeout tick due to Safari. The window is 5 ms in WebKit, so
+      // the wait is longer.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20);
+      });
+
+      expect(onClose).toHaveBeenCalledTimes(0);
+
+      await fireEvent.keyDown(textbox, { key: 'Escape' });
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not dismiss with escape key while a composition spans a reopen', async () => {
+      const PersistentDismiss = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              <button onClick={() => (open.value = true)}>open</button>
+              <button onClick={() => (open.value = false)}>close</button>
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<PersistentDismiss />);
+
+      await fireEvent.compositionStart(document.body);
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await fireEvent.click(screen.getByRole('button', { name: 'open' }));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await fireEvent.keyDown(document.body, { key: 'Escape', isComposing: true });
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('dismisses with escape key after closing during IME composition', async () => {
+      const PersistentDismiss = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              <button onClick={() => (open.value = true)}>open</button>
+              <button onClick={() => (open.value = false)}>close</button>
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <input />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<PersistentDismiss />);
+
+      // The composable stays mounted while closed, so the composition that ends after closing must not
+      // keep blocking Escape once it reopens.
+      await fireEvent.compositionStart(screen.getByRole('textbox'));
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      await fireEvent.compositionEnd(document.body);
+
+      await fireEvent.click(screen.getByRole('button', { name: 'open' }));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it.each([6, 12])(
+      'does not dismiss a reopened popup when an old touch moves %s pixels and ends',
+      async (distance) => {
+        const ReopenApp = defineComponent({
+          setup() {
+            const open = shallowRef(true);
+            const { refs, context } = useFloating({
+              open,
+              onOpenChange: (value) => {
+                open.value = value;
+              },
+            });
+            const { getReferenceProps, getFloatingProps } = useTestInteractions([
+              useDismiss(context.rootStore),
+            ]);
+
+            return () => (
+              <>
+                <button
+                  {...getReferenceProps({
+                    ref: refs.setReference,
+                    onClick: () => {
+                      open.value = !open.value;
+                    },
+                  })}
+                />
+                {open.value && (
+                  <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />
+                )}
+              </>
+            );
+          },
+        });
+
+        await render(<ReopenApp />);
+
+        const touch = { identifier: 1, target: document.body, clientX: 10, clientY: 10 };
+        await fireTouch('touchstart', document.body, { touches: [touch], changedTouches: [touch] });
+
+        await fireEvent.click(screen.getByRole('button'));
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+        await fireEvent.click(screen.getByRole('button'));
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+        // Both the deferred touchend dismissal and the immediate touchmove dismissal belong
+        // to the previous session, even though the interaction composable never unmounted.
+        const movedTouch = { ...touch, clientX: touch.clientX + distance };
+        await fireTouch('touchmove', document.body, {
+          touches: [movedTouch],
+          changedTouches: [movedTouch],
+        });
+        await fireTouch('touchend', document.body, { touches: [], changedTouches: [movedTouch] });
+        expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+        // A new gesture in this session must still dismiss normally.
+        await fireTouch('touchstart', document.body, { touches: [touch], changedTouches: [touch] });
+        await fireTouch('touchmove', document.body, {
+          touches: [{ ...touch, clientX: 22 }],
+          changedTouches: [{ ...touch, clientX: 22 }],
+        });
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      },
+    );
+
+    it('dismisses with outside pointer press', async () => {
+      const { user } = await render(<App />);
+      await user.click(document.body);
+      await flushMicrotasks();
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('clears the inside marker when the interaction owner unmounts (strict: %s)', async () => {
+      const DismissInteraction = defineComponent({
+        props: {
+          context: {
+            type: Object as PropType<ReturnType<typeof useFloating>['context']>,
+            required: true,
+          },
+          outsidePress: { type: Boolean, required: true },
+        },
+        setup(props) {
+          const { getFloatingProps } = useTestInteractions([
+            useDismiss(props.context.rootStore, {
+              outsidePress: props.outsidePress,
+              outsidePressEvent: 'sloppy',
+            }),
+          ]);
+
+          return () => <button type="button" {...getFloatingProps()} />;
+        },
+      });
+
+      const PersistentRootApp = defineComponent({
+        props: {
+          interactionMounted: { type: Boolean, required: true },
+          outsidePress: { type: Boolean, required: true },
+        },
+        setup(props) {
+          const open = shallowRef(true);
+          const { context, refs } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+
+          return () =>
+            open.value && (
+              <div role="tooltip" ref={refs.setFloating}>
+                {props.interactionMounted && (
+                  <DismissInteraction context={context} outsidePress={props.outsidePress} />
+                )}
+              </div>
+            );
+        },
+      });
+
+      const { rerender } = await render(
+        <PersistentRootApp interactionMounted outsidePress={false} />,
+      );
+
+      await fireEvent.click(screen.getByRole('button'));
+      await rerender(<PersistentRootApp interactionMounted={false} outsidePress />);
+      await rerender(<PersistentRootApp interactionMounted outsidePress />);
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('dismisses with reference press', async () => {
+      await render(<App referencePress={() => true} />);
+      await fireEvent.pointerDown(screen.getByRole('button'));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('dismisses with native click', async () => {
+      await render(<App referencePress={() => true} />);
+      await fireEvent.click(screen.getByRole('button'));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('outsidePress function guard', async () => {
+      const { user } = await render(<App outsidePress={() => false} />);
+      await user.click(document.body);
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('dismisses when clicking outside a shared shadow root', async () => {
+      const App = defineComponent({
+        props: { shadowRoot: { type: Object as PropType<ShadowRoot>, required: true } },
+        setup(props) {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {isOpen.value && (
+                <FloatingPortal container={props.shadowRoot}>
+                  <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
+                </FloatingPortal>
+              )}
+            </>
+          );
+        },
+      });
+
+      const host = document.body.appendChild(document.createElement('div'));
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      const container = document.createElement('div');
+      shadowRoot.appendChild(container);
+
+      try {
+        const { user } = await render(
+          <Teleport to={container}>
+            <App shadowRoot={shadowRoot} />
+          </Teleport>,
+        );
+
+        await user.click(document.body);
+        await flushMicrotasks();
+
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
+      } finally {
+        host.remove();
+      }
+    });
+
+    it('dismisses when clicking outside a shared shadow root while focus is managed', async () => {
+      const App = defineComponent({
+        props: { shadowRoot: { type: Object as PropType<ShadowRoot>, required: true } },
+        setup(props) {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {isOpen.value && (
+                <FloatingPortal container={props.shadowRoot}>
+                  <FloatingFocusManager store={context.rootStore}>
+                    <div role="dialog" {...getFloatingProps({ ref: refs.setFloating })} />
+                  </FloatingFocusManager>
+                </FloatingPortal>
+              )}
+            </>
+          );
+        },
+      });
+
+      const host = document.body.appendChild(document.createElement('div'));
+      const shadowRoot = host.attachShadow({ mode: 'open' });
+      const container = document.createElement('div');
+      shadowRoot.appendChild(container);
+
+      try {
+        const { user } = await render(
+          <Teleport to={container}>
+            <App shadowRoot={shadowRoot} />
+          </Teleport>,
+        );
+        await flushMicrotasks();
+
+        await user.click(document.body);
+        await flushMicrotasks();
+
+        expect(shadowRoot.querySelector('[role="dialog"]')).toBe(null);
+      } finally {
+        host.remove();
+      }
+    });
+
+    it('outsidePress not ignored for nested floating elements', async () => {
+      const Popover = defineComponent({
+        props: {
+          id: { type: String, required: true },
+          modal: { type: Boolean as PropType<boolean | null>, default: null },
+        },
+        setup(props, { slots }) {
+          const isOpen = shallowRef(true);
+
+          const { context, refs } = useFloating({
+            open: isOpen,
+            onOpenChange: (value) => {
+              isOpen.value = value;
+            },
+          });
+
+          const dismiss = useDismiss(context.rootStore);
+
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([dismiss]);
+
+          return () => {
+            const dialogJsx = (
+              <div
+                role="dialog"
+                data-testid={props.id}
+                {...getFloatingProps({ ref: refs.setFloating })}
+              >
+                {slots.default?.()}
+              </div>
+            );
+
+            return (
+              <>
+                <button {...getReferenceProps({ ref: refs.setReference })} />
+                {isOpen.value && (
+                  <>
+                    {props.modal == null ? (
+                      dialogJsx
+                    ) : (
+                      <FloatingFocusManager store={context.rootStore} modal={props.modal}>
+                        {dialogJsx}
+                      </FloatingFocusManager>
+                    )}
+                  </>
+                )}
+              </>
+            );
+          };
+        },
+      });
+
+      const App = defineComponent({
+        props: {
+          modal: { type: Array as unknown as PropType<[boolean, boolean] | null>, default: null },
+        },
+        setup(props) {
+          return () => (
+            <Popover id="popover-1" modal={props.modal ? props.modal[0] : true}>
+              <Popover id="popover-2" modal={props.modal ? props.modal[1] : null} />
+            </Popover>
+          );
+        },
+      });
+
+      const { user, unmount } = await render(<App modal={[true, true]} />);
+      await flushMicrotasks();
+
+      let popover1 = screen.getByTestId('popover-1');
+      let popover2 = screen.getByTestId('popover-2');
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount();
+
+      const { unmount: unmount2 } = await render(<App modal={[true, false]} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount2();
+
+      const { unmount: unmount3 } = await render(<App modal={[false, true]} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+
+      unmount3();
+
+      await render(<App modal={null} />);
+      await flushMicrotasks();
+
+      popover1 = screen.getByTestId('popover-1');
+      popover2 = screen.getByTestId('popover-2');
+
+      await user.click(popover2);
+      expect(popover1).toBeInTheDocument();
+      expect(popover2).toBeInTheDocument();
+      await user.click(popover1);
+      await flushMicrotasks();
+      expect(popover2).not.toBeInTheDocument();
+    });
+  });
+
+  describe('options set to false', () => {
+    it('does not dismiss with escape key', async () => {
+      await render(<App escapeKey={false} />);
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      await flushMicrotasks();
+    });
+
+    it('does not dismiss with outside press', async () => {
+      const { user } = await render(<App outsidePress={false} />);
+      await user.click(document.body);
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('does not dismiss with reference pointer down', async () => {
+      const { user } = await render(<App referencePress={() => false} />);
+      await user.click(screen.getByRole('button'));
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('outsidePress function guard', async () => {
+      const { user } = await render(<App outsidePress={() => true} />);
+      await user.click(document.body);
+      await flushMicrotasks();
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('prop: bubbles', () => {
+    const dialogProps = {
+      testId: { type: String, required: true },
+      bubbles: {
+        type: [Boolean, Object] as PropType<UseDismissProps['bubbles']>,
+        default: undefined,
+      },
+    } as const;
+
+    const Dialog = defineComponent({
+      props: dialogProps,
+      setup(props, { slots }) {
+        const open = shallowRef(true);
+        const nodeId = useFloatingNodeId();
+
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+          nodeId,
+        });
+        provideFloatingNode(nodeId);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([
+          useDismiss(context.rootStore, props),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingFocusManager store={context.rootStore}>
+                <div {...getFloatingProps({ ref: refs.setFloating })} data-testid={props.testId}>
+                  {slots.default?.()}
+                </div>
+              </FloatingFocusManager>
+            )}
+          </>
+        );
+      },
+    });
+
+    const NestedDialog = defineComponent({
+      props: dialogProps,
+      setup(props, { slots }) {
+        const parentId = useFloatingParentNodeId();
+
+        return () =>
+          parentId.value == null ? (
+            <Tree>
+              <Dialog {...props}>{slots.default?.()}</Dialog>
+            </Tree>
+          ) : (
+            <Dialog {...props}>{slots.default?.()}</Dialog>
+          );
+      },
+    });
+
+    describe('normalizeProp', () => {
+      it('undefined', () => {
+        const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = normalizeProp();
+
+        expect(escapeKeyBubbles).toBe(false);
+        expect(outsidePressBubbles).toBe(true);
+      });
+
+      it('when false', () => {
+        const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } =
+          normalizeProp(false);
+
+        expect(escapeKeyBubbles).toBe(false);
+        expect(outsidePressBubbles).toBe(false);
+      });
+
+      it('{}', () => {
+        const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = normalizeProp(
+          {},
+        );
+
+        expect(escapeKeyBubbles).toBe(false);
+        expect(outsidePressBubbles).toBe(true);
+      });
+
+      it('{ escapeKey: false }', () => {
+        const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = normalizeProp({
+          escapeKey: false,
+        });
+
+        expect(escapeKeyBubbles).toBe(false);
+        expect(outsidePressBubbles).toBe(true);
+      });
+
+      it('{ outsidePress: false }', () => {
+        const { escapeKey: escapeKeyBubbles, outsidePress: outsidePressBubbles } = normalizeProp({
+          outsidePress: false,
+        });
+
+        expect(escapeKeyBubbles).toBe(false);
+        expect(outsidePressBubbles).toBe(false);
+      });
+    });
+
+    describe('prop: bubbles.outsidePress', () => {
+      it('when true', async () => {
+        await render(
+          <NestedDialog testId="outer">
+            <NestedDialog testId="inner">
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('when false', async () => {
+        await render(
+          <NestedDialog testId="outer" bubbles={{ outsidePress: false }}>
+            <NestedDialog testId="inner" bubbles={{ outsidePress: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('mixed', async () => {
+        await render(
+          <NestedDialog testId="outer" bubbles={{ outsidePress: true }}>
+            <NestedDialog testId="inner" bubbles={{ outsidePress: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await fireEvent.pointerDown(document.body);
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+    });
+
+    describe('prop: bubbles.escapeKey', () => {
+      it('without FloatingTree', async () => {
+        const App = defineComponent({
+          setup() {
+            const popoverOpen = shallowRef(true);
+            const tooltipOpen = shallowRef(false);
+
+            const popover = useFloating({
+              open: popoverOpen,
+              onOpenChange: (value) => {
+                popoverOpen.value = value;
+              },
+            });
+            const tooltip = useFloating({
+              open: tooltipOpen,
+              onOpenChange: (value) => {
+                tooltipOpen.value = value;
+              },
+            });
+
+            const popoverInteractions = useTestInteractions([
+              useDismiss(popover.context.rootStore),
+            ]);
+            const tooltipFocus = useFocus(tooltip.context.rootStore);
+            const tooltipInteractions = useTestInteractions([
+              useDismiss(tooltip.context.rootStore),
+            ]);
+
+            return () => (
+              <>
+                <button
+                  ref={popover.refs.setReference}
+                  {...popoverInteractions.getReferenceProps()}
+                />
+                {popoverOpen.value && (
+                  <div
+                    role="dialog"
+                    ref={popover.refs.setFloating}
+                    {...popoverInteractions.getFloatingProps()}
+                  >
+                    <button
+                      data-testid="focus-button"
+                      ref={tooltip.refs.setReference}
+                      {...tooltipFocus}
+                      {...tooltipInteractions.getReferenceProps()}
+                    />
+                  </div>
+                )}
+                {tooltipOpen.value && (
+                  <div
+                    role="tooltip"
+                    ref={tooltip.refs.setFloating}
+                    {...tooltipInteractions.getFloatingProps()}
+                  />
+                )}
+              </>
+            );
+          },
+        });
+
+        const { user } = await render(<App />);
+
+        await flushMicrotasks();
+        screen.getByTestId('focus-button').focus();
+
+        await waitFor(() => {
+          expect(screen.getByRole('tooltip')).toBeInTheDocument();
+        });
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      it('when true', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles>
+            <NestedDialog testId="inner" bubbles>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('when false', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles={{ escapeKey: false }}>
+            <NestedDialog testId="inner" bubbles={{ escapeKey: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      it('mixed', async () => {
+        const { user } = await render(
+          <NestedDialog testId="outer" bubbles={{ escapeKey: true }}>
+            <NestedDialog testId="inner" bubbles={{ escapeKey: false }}>
+              <button>test button</button>
+            </NestedDialog>
+          </NestedDialog>,
+        );
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByTestId('outer')).toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+      });
+
+      describe('when Escape reaches the document', () => {
+        // Layers that share no FloatingTree, like a Dialog opened from a Popover.
+        const Layer = defineComponent({
+          props: {
+            testId: { type: String, required: true },
+            defaultOpen: { type: Boolean, default: false },
+            bubbles: { type: Object as PropType<{ escapeKey?: boolean }>, default: undefined },
+            outsidePress: { type: Boolean, default: undefined },
+          },
+          setup(props, { slots }) {
+            const open = shallowRef(props.defaultOpen);
+            const { refs, context } = useFloating({
+              open,
+              onOpenChange: (value) => {
+                open.value = value;
+              },
+            });
+            const { getReferenceProps, getFloatingProps } = useTestInteractions([
+              useClick(context.rootStore),
+              useDismiss(context.rootStore, props),
+            ]);
+
+            return () => (
+              <>
+                <button
+                  data-testid={`${props.testId}-trigger`}
+                  {...getReferenceProps({ ref: refs.setReference })}
+                />
+                {open.value && (
+                  <div data-testid={props.testId} {...getFloatingProps({ ref: refs.setFloating })}>
+                    {slots.default?.()}
+                  </div>
+                )}
+              </>
+            );
+          },
+        });
+
+        async function openInnerAndBlur(user: VaseUIRenderResult['user']) {
+          await user.click(screen.getByTestId('inner-trigger'));
+          expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+          (document.activeElement as HTMLElement).blur();
+          await flushMicrotasks();
+          expect(document.activeElement).toBe(document.body);
+        }
+
+        it('closes only the most recently opened layer', async () => {
+          const { user } = await render(
+            <Layer testId="outer" defaultOpen>
+              <Layer testId="inner" />
+            </Layer>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+
+        it('closes the layers below when the layers above bubble', async () => {
+          const { user } = await render(
+            <Layer testId="outer" defaultOpen>
+              <Layer testId="inner" bubbles={{ escapeKey: true }} />
+            </Layer>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+
+        it('handles the Escape again once the layer above closed', async () => {
+          const { user } = await render(
+            <>
+              <Layer testId="outer" defaultOpen outsidePress={false} />
+              <Layer testId="inner" />
+            </>,
+          );
+
+          await openInnerAndBlur(user);
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await user.click(screen.getByTestId('inner-trigger'));
+          expect(screen.getByTestId('inner')).toBeInTheDocument();
+
+          (document.activeElement as HTMLElement).blur();
+          await flushMicrotasks();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('inner')).not.toBeInTheDocument();
+          expect(screen.getByTestId('outer')).toBeInTheDocument();
+
+          await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+          expect(screen.queryByTestId('outer')).not.toBeInTheDocument();
+        });
+      });
+    });
+  });
+
+  describe('prop: capture', () => {
+    describe('normalizeProp', () => {
+      it('undefined', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } = normalizeProp();
+
+        expect(escapeKeyCapture).toBe(false);
+        expect(outsidePressCapture).toBe(true);
+      });
+
+      it('{}', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } = normalizeProp(
+          {},
+        );
+
+        expect(escapeKeyCapture).toBe(false);
+        expect(outsidePressCapture).toBe(true);
+      });
+
+      it('when true', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } =
+          normalizeProp(true);
+
+        expect(escapeKeyCapture).toBe(true);
+        expect(outsidePressCapture).toBe(true);
+      });
+
+      it('when false', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } =
+          normalizeProp(false);
+
+        expect(escapeKeyCapture).toBe(false);
+        expect(outsidePressCapture).toBe(false);
+      });
+
+      it('{ escapeKey: true }', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } = normalizeProp({
+          escapeKey: true,
+        });
+
+        expect(escapeKeyCapture).toBe(true);
+        expect(outsidePressCapture).toBe(true);
+      });
+
+      it('{ outsidePress: false }', () => {
+        const { escapeKey: escapeKeyCapture, outsidePress: outsidePressCapture } = normalizeProp({
+          outsidePress: false,
+        });
+
+        expect(escapeKeyCapture).toBe(false);
+        expect(outsidePressCapture).toBe(false);
+      });
+    });
+
+    const Overlay = defineComponent({
+      setup(_, { slots }) {
+        return () => (
+          <div
+            style="width: 100vw; height: 100vh"
+            onPointerdown={(event: PointerEvent) => event.stopPropagation()}
+            onKeydown={(event: KeyboardEvent) => {
+              if (event.key === 'Escape') {
+                event.stopPropagation();
+              }
+            }}
+          >
+            <span>outside</span>
+            {slots.default?.()}
+          </div>
+        );
+      },
+    });
+
+    const Dialog = defineComponent({
+      props: { id: { type: String, required: true } },
+      setup(props, { slots }) {
+        const open = shallowRef(true);
+        const nodeId = useFloatingNodeId();
+
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+          nodeId,
+        });
+        provideFloatingNode(nodeId);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([
+          useDismiss(context.rootStore),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && (
+              <FloatingPortal>
+                <FloatingFocusManager store={context.rootStore}>
+                  <div {...getFloatingProps({ ref: refs.setFloating })}>
+                    <span>{props.id}</span>
+                    {slots.default?.()}
+                  </div>
+                </FloatingFocusManager>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      },
+    });
+
+    const NestedDialog = defineComponent({
+      props: { id: { type: String, required: true } },
+      setup(props, { slots }) {
+        const parentId = useFloatingParentNodeId();
+
+        return () =>
+          parentId.value == null ? (
+            <Tree>
+              <Dialog {...props}>{slots.default?.()}</Dialog>
+            </Tree>
+          ) : (
+            <Dialog {...props}>{slots.default?.()}</Dialog>
+          );
+      },
+    });
+
+    describe('prop: capture.outsidePress', () => {
+      it('when true', async () => {
+        const { user } = await render(
+          <Overlay>
+            <NestedDialog id="outer">
+              <NestedDialog id="inner" />
+            </NestedDialog>
+          </Overlay>,
+        );
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.getByText('inner')).toBeInTheDocument();
+
+        await user.click(screen.getByText('outer'));
+        await flushMicrotasks();
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+
+        await user.click(screen.getByText('outside'));
+        await flushMicrotasks();
+
+        expect(screen.queryByText('outer')).not.toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+      });
+    });
+
+    describe('prop: capture.escapeKey', () => {
+      it('when false', async () => {
+        const { user } = await render(
+          <Overlay>
+            <NestedDialog id="outer">
+              <NestedDialog id="inner" />
+            </NestedDialog>
+          </Overlay>,
+        );
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.getByText('inner')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.getByText('outer')).toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await flushMicrotasks();
+
+        expect(screen.queryByText('outer')).not.toBeInTheDocument();
+        expect(screen.queryByText('inner')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('outsidePressEvent: intentional', () => {
+    it('dragging outside the floating element does not close', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const floatingEl = screen.getByRole('tooltip');
+      await fireEvent.mouseDown(floatingEl);
+      await fireEvent.mouseUp(document.body);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      await flushMicrotasks();
+    });
+
+    it('dragging inside the floating element does not close', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const floatingEl = screen.getByRole('tooltip');
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.mouseUp(floatingEl);
+      // The browser fires the gesture's click on the common ancestor of the
+      // mousedown and mouseup targets; the mouseup inside the floating element
+      // marks the component tree so this click must not dismiss.
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+      await flushMicrotasks();
+    });
+
+    it('dragging outside the floating element then clicking outside closes', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const floatingEl = screen.getByRole('tooltip');
+      await fireEvent.mouseDown(floatingEl);
+      await fireEvent.mouseUp(document.body);
+      // A click event will have fired before the proper outside click.
+      await fireEvent.click(document.body);
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('dragging outside the floating element then clicking outside closes with mouse clicks', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const floatingEl = screen.getByRole('tooltip');
+      await fireEvent.pointerDown(floatingEl, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(floatingEl);
+      await fireEvent.mouseUp(document.body);
+
+      // Real mouse clicks carry `detail: 1`. This one passes the press-observed guard
+      // and is consumed by the one-shot drag suppression.
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // The next press-backed mouse click closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('an outside click stopped before its target does not close on a later click inside', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const input = screen.getByRole('textbox');
+
+      // Another document capture listener, like a drag library's after a drop, stops the click
+      // after useDismiss has seen it but before it reaches its target.
+      const stopClick = (event: MouseEvent) => event.stopPropagation();
+      document.addEventListener('click', stopClick, { capture: true, once: true });
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // This click bubbles to the body, where the stopped click was headed.
+      await fireEvent.pointerDown(input, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(input);
+      await fireEvent.mouseUp(input);
+      await fireEvent.click(input, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('mouse click whose press started before open does not close', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // The trailing click of a press that began before open, e.g. a menu item activated
+      // by drag-release opening a dialog.
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A press observed while open still closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('compatibility events whose pointerdown opened the floating element do not count as a new press', async () => {
+      const OpenOnPointerDownApp = defineComponent({
+        setup() {
+          const open = shallowRef(false);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button onPointerdown={() => (open.value = true)}>Open</button>
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<OpenOnPointerDownApp />);
+
+      const openButton = screen.getByRole('button', { name: 'Open' });
+      await fireEvent.pointerDown(openButton, { pointerType: 'mouse' });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // The pointerdown happened before the floating element opened. Its
+      // compatibility events arrive after opening but belong to the same press.
+      await fireEvent.mouseDown(openButton);
+      await fireEvent.mouseUp(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A new pointer press that begins while open still dismisses.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('keyboard-generated outside click without a prior press closes', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // Keyboard activations produce `detail: 0` clicks with no press.
+      await fireEvent.click(document.body, { detail: 0 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press-less outside click reporting a pointer type closes', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // Android assistive technology reports `pointerType: 'mouse'` with no press behind
+      // it, so the click count is what separates the two.
+      const click = new MouseEvent('click', { bubbles: true, detail: 0 });
+      Object.defineProperty(click, 'pointerType', { value: 'mouse' });
+      await fireEvent(document.body, click);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press seen in a previous open session does not leak into a reopen', async () => {
+      const ReopenApp = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button
+                {...getReferenceProps({
+                  ref: refs.setReference,
+                  onClick: () => {
+                    open.value = true;
+                  },
+                })}
+              />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<ReopenApp />);
+
+      // A genuine outside press closes and leaves a press on record.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      await fireEvent.click(screen.getByRole('button'));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // The reopened session must not inherit the previous session's press:
+      // a press-less trailing click still must not count as an outside press.
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A press observed in the new session still closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press seen before a same-batch close and reopen does not leak into the new session', async () => {
+      let context!: ReturnType<typeof useFloating>['context'];
+
+      const BatchReopenApp = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const floating = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          context = floating.context;
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: floating.refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: floating.refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<BatchReopenApp />);
+
+      // A press lands while the first session is open.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+
+      // Vue never shows `open === false` to a watcher here, so only `openchange` can observe the
+      // session boundary.
+      context.rootStore.setOpen(false, createChangeEventDetails(REASONS.none));
+      context.rootStore.setOpen(true, createChangeEventDetails(REASONS.none));
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // The gesture's trailing click belongs to the previous session and must
+      // not dismiss the reopened floating element.
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A press observed in the new session still closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press survives a redundant open dispatch while already open', async () => {
+      let context!: ReturnType<typeof useFloating>['context'];
+
+      const RedundantOpenApp = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const floating = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          context = floating.context;
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(floating.context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: floating.refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: floating.refs.setFloating })} />
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<RedundantOpenApp />);
+
+      // A genuine outside press lands while open.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+
+      // A redundant open dispatch mid-gesture (hovering an inactive trigger does this)
+      // does not end the session, so the press stays on record.
+      context.rootStore.setOpen(true, createChangeEventDetails(REASONS.none));
+      await flushMicrotasks();
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press survives listener re-attachment while open', async () => {
+      const { rerender } = await render(<App outsidePressEvent="intentional" />);
+
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.mouseDown(document.body);
+
+      // Changing a source of the listeners mid-gesture re-attaches the document listeners;
+      // the observed press must survive that.
+      await rerender(<App outsidePressEvent="intentional" escapeKey={false} />);
+
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('pointerdown-only press while open allows the outside click to close', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // Pointer-event browsers may deliver `pointerdown` without a compat
+      // `mousedown`; it must count as an observed press on its own.
+      await fireEvent.pointerDown(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('non-primary-button press does not count as an outside press', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // A right-button press produces `contextmenu`, not `click`, so it must
+      // not vouch for a later press-less click.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse', button: 2 });
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A primary-button press still closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('cancelled press does not count as an outside press', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+
+      // A press whose gesture is cancelled produces no click, so it must not
+      // vouch for a later press-less click.
+      await fireEvent.pointerDown(document.body, { pointerType: 'touch' });
+      await fireEvent.pointerCancel(document.body);
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // A completed press still closes.
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+      await fireEvent.click(document.body, { detail: 1 });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('inside click then programmatic outside click closes', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const insideInput = screen.getByRole('textbox');
+
+      await fireEvent.mouseDown(insideInput);
+      await fireEvent.mouseUp(insideInput);
+      await fireEvent.click(insideInput);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('inside click after drag does not cause immediate close on first outside click', async () => {
+      await render(<App outsidePressEvent="intentional" />);
+      const floatingEl = screen.getByRole('tooltip');
+      const insideInput = screen.getByRole('textbox');
+
+      await fireEvent.mouseDown(floatingEl);
+      await fireEvent.mouseUp(document.body);
+
+      // Inside clicks should never dismiss, and they should not consume the
+      // one-shot outside click suppression from the drag that started inside.
+      await fireEvent.click(insideInput);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // First true outside click after that drag is still ignored once.
+      await fireEvent.click(document.body);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      // The next outside click is a deliberate outside press and dismisses.
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('drag ending on outsidePress-ignored target does not consume next outside click', async () => {
+      await render(
+        <App
+          outsidePressEvent="intentional"
+          outsidePress={(event) => !(event.target as Element)?.closest('[data-testid="ignore"]')}
+        />,
+      );
+      const floatingEl = screen.getByRole('tooltip');
+      const ignored = document.createElement('div');
+      ignored.setAttribute('data-testid', 'ignore');
+      document.body.append(ignored);
+
+      await fireEvent.mouseDown(floatingEl);
+      await fireEvent.mouseUp(ignored);
+
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+      ignored.remove();
+    });
+
+    it('press start prevented inside does not require double outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<AppWithPreventedPressStart />);
+      const scrubber = screen.getByTestId('scrubber');
+
+      await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(scrubber, { button: 0 });
+      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseUp(document.body, { button: 0 });
+
+      // Wait a tick: if no immediate synthetic click occurred after pointerup,
+      // the next user click should still dismiss.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+      await flushMicrotasks();
+
+      await fireEvent.pointerDown(document.body, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(document.body, { button: 0 });
+      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseUp(document.body, { button: 0 });
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('press start prevented inside suppresses only immediate outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<AppWithPreventedPressStart />);
+      const scrubber = screen.getByTestId('scrubber');
+
+      await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(scrubber, { button: 0 });
+      await fireEvent.pointerUp(document.body, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseUp(document.body, { button: 0 });
+
+      await fireEvent.click(document.body);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+      await flushMicrotasks();
+
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('pointercancel after prevented press start suppresses immediate outside click', async () => {
+      const AppWithPreventedPressStart = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore, { outsidePressEvent: 'intentional' }),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })}>
+                  <div
+                    data-testid="scrubber"
+                    onPointerdown={(event: PointerEvent) => event.preventDefault()}
+                  />
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<AppWithPreventedPressStart />);
+      const scrubber = screen.getByTestId('scrubber');
+
+      await fireEvent.pointerDown(scrubber, { pointerType: 'mouse', button: 0 });
+      await fireEvent.mouseDown(scrubber, { button: 0 });
+      await fireEvent.pointerCancel(document.body, { pointerType: 'mouse' });
+
+      await fireEvent.click(document.body);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+      await flushMicrotasks();
+
+      await fireEvent.click(document.body);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+  });
+
+  it('nested floating elements with different portal containers', async () => {
+    const ButtonWithFloating = defineComponent({
+      props: {
+        portalContainer: { type: Object as PropType<HTMLElement>, default: undefined },
+        triggerText: { type: String, required: true },
+      },
+      setup(props, { slots }) {
+        const open = shallowRef(false);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange: (value) => {
+            open.value = value;
+          },
+        });
+
+        const click = useClick(context.rootStore);
+        const dismiss = useDismiss(context.rootStore);
+
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([click, dismiss]);
+
+        return () => (
+          <>
+            <button ref={refs.setReference} {...getReferenceProps()}>
+              {props.triggerText}
+            </button>
+            {open.value && (
+              <FloatingPortal container={props.portalContainer}>
+                <FloatingFocusManager store={context.rootStore} modal={false}>
+                  <div ref={refs.setFloating} {...getFloatingProps()}>
+                    {slots.default?.()}
+                  </div>
+                </FloatingFocusManager>
+              </FloatingPortal>
+            )}
+          </>
+        );
+      },
+    });
+
+    const App = defineComponent({
+      setup() {
+        const otherContainer = shallowRef<HTMLDivElement | null>(null);
+
+        return () => {
+          const portal1 = undefined;
+          const portal2 = otherContainer.value ?? undefined;
+
+          return (
+            <>
+              <ButtonWithFloating portalContainer={portal1} triggerText="open 1">
+                <ButtonWithFloating portalContainer={portal2} triggerText="open 2">
+                  <button>nested</button>
+                </ButtonWithFloating>
+              </ButtonWithFloating>
+              <div ref={otherContainer} />
+            </>
+          );
+        };
+      },
+    });
+
+    const { user } = await render(<App />);
+
+    await user.click(screen.getByText('open 1'));
+    expect(screen.getByText('open 2')).toBeInTheDocument();
+
+    // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
+    // them. The first click mounts the button of the second click.
+    await wait(1);
+    await user.click(screen.getByText('open 2'));
+    await flushMicrotasks();
+
+    expect(screen.getByText('open 1')).toBeInTheDocument();
+    expect(screen.getByText('open 2')).toBeInTheDocument();
+    expect(screen.getByText('nested')).toBeInTheDocument();
+  });
 
   describe('document listeners', () => {
     it('has none while the popup is closed, 13 while it is open, and none after a close or an unmount', async () => {
@@ -427,22 +2392,6 @@ describe('useDismiss', () => {
       expect(isOpen('popup')).toBe(false);
     });
 
-    it('keeps the popup open and the default action when a listener cancels the change', async () => {
-      await render(
-        <PopupRootPart
-          defaultOpen
-          onOpenChange={(_: boolean, details: PopupOpenChangeEventDetails) => details.cancel()}
-        >
-          <DismissedPopupPart />
-        </PopupRootPart>,
-      );
-
-      const notPrevented = await fireEvent.keyDown(document.body, { key: 'Escape' });
-
-      expect(notPrevented).toBe(true);
-      expect(isOpen('popup')).toBe(true);
-    });
-
     it('closes from a handler of its props only while it is enabled', async () => {
       const changes: Change[] = [];
       const enabled = shallowRef(false);
@@ -486,16 +2435,6 @@ describe('useDismiss', () => {
       await flushMicrotasks();
 
       expect(changes).toEqual([{ open: false, reason: REASONS.outsidePress, eventType }]);
-    });
-
-    it('does not close a popup with the press on its reference that opens it', async () => {
-      releasePointerAfterTest();
-      await render(<Popup name="popup" defaultOpen={false} toggleOn="pointerdown" />);
-
-      await userEvent.click(screen.getByTestId('popup-trigger'));
-      await flushMicrotasks();
-
-      expect(isOpen('popup')).toBe(true);
     });
   });
 
@@ -651,21 +2590,18 @@ describe('useDismiss', () => {
         return defineComponent({
           setup() {
             const open = shallowRef(false);
-            const {
-              refs: { setFloating },
-              context: { rootStore },
-            } = useFloating({
+            const { refs, context } = useFloating({
               open,
               onOpenChange(nextOpen) {
                 open.value = nextOpen;
               },
             });
-            const { floating } = dismiss(rootStore);
+            const { floating } = dismiss(context.rootStore);
             return () => (
               <>
                 <button data-testid={`open-${name}`} onClick={() => (open.value = true)} />
                 {open.value && (
-                  <div data-testid={name} {...mergeProps(floating, { ref: setFloating })} />
+                  <div data-testid={name} {...mergeProps(floating, { ref: refs.setFloating })} />
                 )}
               </>
             );
