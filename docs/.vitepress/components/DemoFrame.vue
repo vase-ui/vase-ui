@@ -3,7 +3,7 @@
 </template>
 
 <style scoped>
-/* A copied style sheet of Base UI gives no color to the page of its demo. The frame gives the
+/* A copied style sheet of Base UI sets no color on the page behind its demo. The frame sets the
    page colors that the style sheets assume, for the theme of the site.
    The look is the demo playground of the Base UI docs: docs/src/components/Demo/Demo.css.
    The playground of Base UI is 8rem high inside the border of its card, so the height here

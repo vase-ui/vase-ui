@@ -65,6 +65,11 @@ const CASES = [
       '.a { @supports (top: 0) { top: 0 } } :where(.dark) .a { @supports (top: 0) { color: white } }',
   },
   {
+    name: 'a query in upper case',
+    css: '.a { @media (PREFERS-COLOR-SCHEME: DARK) { color: white; } }',
+    expected: ':where(.dark) .a { color: white }',
+  },
+  {
     name: 'a media rule that holds a rule',
     css: '.a { @media (prefers-color-scheme: dark) { &::after { color: white; } } }',
     expected: ':where(.dark) .a { &::after { color: white } }',

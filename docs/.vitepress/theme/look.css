@@ -528,10 +528,10 @@
 
 /* Popups of demos */
 
-/* The Navigation Menu sheets give the link description and the submenu hint the color gray-500.
-   On the hover color of the light theme, that text has 4.35:1 contrast. This rule gives gray-600,
-   the next darker gray of the sheets, which has 7.17:1. A popup is outside `.vp-doc`, and Vite adds
-   a prefix and a suffix to each class of a CSS module, so the selectors name only the middle part. */
+/* The Navigation Menu sheets give the link description and the submenu hint `oklch(55.6% 0 0)`.
+   On the hover color of the light theme, that text has 4.35:1 contrast. This rule uses
+   `oklch(43.9% 0 0)`, the next darker gray of the sheets, which has 7.17:1. Vite adds a prefix and a
+   suffix to each class of a CSS module, so the selectors name only the middle part. */
 :root:not(.dark) [class*='_LinkDescription_'],
 :root:not(.dark) [class*='_SubmenuHint_'] {
   color: oklch(43.9% 0 0deg);

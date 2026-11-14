@@ -1,6 +1,7 @@
 import type { AtRule, Node, Plugin, Rule } from 'postcss';
 
-const DARK_SCHEME_QUERY = /^\(\s*prefers-color-scheme\s*:\s*dark\s*\)$/;
+const COLOR_SCHEME_QUERY = /prefers-color-scheme/i;
+const DARK_SCHEME_QUERY = /^\(\s*prefers-color-scheme\s*:\s*dark\s*\)$/i;
 
 /** `:where()` adds no specificity, so the rule has the place in the cascade that the media rule had. */
 const DARK_THEME_SELECTOR = ':where(.dark)';
@@ -49,7 +50,7 @@ export function postcssFollowSiteTheme(): Plugin {
     OnceExit(root, { Rule: StyleRule }) {
       const mediaRules: AtRule[] = [];
       root.walkAtRules('media', (atRule) => {
-        if (atRule.params.includes('prefers-color-scheme')) {
+        if (COLOR_SCHEME_QUERY.test(atRule.params)) {
           mediaRules.push(atRule);
         }
       });
