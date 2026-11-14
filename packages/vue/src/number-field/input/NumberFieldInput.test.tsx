@@ -21,6 +21,7 @@ import {
 import { platform } from '../../common/platform';
 import { REASONS } from '../../internals/reasons';
 import NumberFieldInputHydration from './NumberFieldInputHydration.test.vue';
+import NumberFieldInputReplace from './NumberFieldInputReplace.test.vue';
 
 const HYDRATION_FIXTURE = 'src/number-field/input/NumberFieldInputHydration.test.vue';
 
@@ -2166,6 +2167,38 @@ describe('<NumberField.Input />', () => {
       expect(onValueChange).toHaveBeenCalledTimes(1);
     });
 
+    it('ignores the `change` event of text that a new value of the parent put in the input', async () => {
+      const onValueChange = vi.fn();
+      const { setProps } = await render(
+        <NumberField.Root value={5} onValueChange={onValueChange}>
+          <NumberField.Input />
+        </NumberField.Root>,
+      );
+      const input = screen.getByRole('textbox');
+
+      await setProps({ value: 7 });
+      expect(input).toHaveValue('7');
+      await fireEvent.change(input);
+
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('ignores the `change` event of text that a step put in the input', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <NumberField.Root defaultValue={5} onValueChange={onValueChange}>
+          <NumberField.Input />
+        </NumberField.Root>,
+      );
+      const input = screen.getByRole('textbox');
+
+      await fireEvent.keyDown(input, { key: 'ArrowUp' });
+      expect(input).toHaveValue('6');
+      await fireEvent.change(input);
+
+      expect(onValueChange).toHaveBeenCalledTimes(1);
+    });
+
     it('puts the pasted text at the selection, and the caret behind it', async () => {
       const onValueChange = vi.fn();
       await render(
@@ -2326,6 +2359,17 @@ describe('<NumberField.Input />', () => {
         vi.useRealTimers();
       }
     });
+  });
+
+  it('uses an input that mounts before the old input unmounts as the input of the root', async () => {
+    const swapped = shallowRef(false);
+    const { user } = await render(() => <NumberFieldInputReplace swapped={swapped.value} />);
+
+    swapped.value = true;
+    await flushMicrotasks();
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(screen.getByTestId('new')).toHaveFocus();
   });
 
   describe('hydration', () => {
