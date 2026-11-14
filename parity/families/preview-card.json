@@ -6,69 +6,9 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Arrow`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Arrow`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdropDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Backdrop`."
-    },
-    {
       "upstream": "packages/react/src/preview-card/index.ts",
       "kind": "waits-on",
       "reason": "The file is the entry point of Preview Card. It comes with the last part of the family, so the package exports nothing of the family before then."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortal.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Portal`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortalContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Portal`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositionerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `PreviewCard.Positioner`."
     },
     {
       "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
@@ -86,48 +26,6 @@
       "reason": "Vase UI does not have `PreviewCard.Viewport`."
     },
     {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/positioner/PreviewCardPositioner.tsx",
-      "reason": "The type test reads the props of `PreviewCard.Positioner`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/portal/PreviewCardPortal.tsx",
-      "reason": "The type test renders `PreviewCard.Portal`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/arrow/PreviewCardArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/arrow/PreviewCardArrow.tsx",
-      "reason": "The file tests `PreviewCard.Arrow`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/backdrop/PreviewCardBackdrop.tsx",
-      "reason": "The file tests `PreviewCard.Backdrop`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/popup/PreviewCardPopup.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/popup/PreviewCardPopup.tsx",
-      "reason": "The file tests `PreviewCard.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/portal/PreviewCardPortal.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/portal/PreviewCardPortal.tsx",
-      "reason": "The file tests `PreviewCard.Portal`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/positioner/PreviewCardPositioner.tsx",
-      "reason": "The file tests `PreviewCard.Positioner`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/preview-card/viewport/PreviewCardViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
@@ -137,13 +35,29 @@
       "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "Each case of the file reads the popup of the preview card, which Vase UI does not have. Some cases also need the focus of the trigger, the hover of the popup or the shared suite `popupConformanceTests`. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
+      "reason": "The other cases of the file have no counterpart yet. Many of them need the focus of the trigger or the hover of the popup. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
       "reason": "Each case of the file reads the popup of the preview card, which Vase UI does not have. Some cases also need the focus of the trigger or the shared suite `detachedTriggersConformanceTests`. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
+      "describe": ["<PreviewCard.Positioner />", "multiline inline trigger"],
+      "title": "positions the popup relative to the side-aligned rect when opened via focus",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
+      "reason": "The case opens the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
+      "describe": ["<PreviewCard.Positioner />", "multiline inline trigger"],
+      "title": "clears hovered-line coords when opened via focus",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
+      "reason": "The case opens the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/preview-card/trigger/PreviewCardTrigger.test.tsx",
