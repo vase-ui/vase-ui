@@ -126,11 +126,9 @@ Add the `multiple` prop to `<Combobox.Root>` to let the user select more than on
 
 To let screen readers announce how to reach and remove the chips, give `aria-description` to `<Combobox.Chip>` and `<Combobox.Input>`. Also give `aria-label` to `<Combobox.Chips>` and `<Combobox.ChipRemove>`. Vase UI does not ship these strings. Translate them with the rest of your interface.
 
-The types of Vue do not list `aria-description`, so vue-tsc with `strictTemplates` refuses it on a part. Give it with `v-bind`, as the demo does.
-
 To limit the visible chips, slice the selected values that `<Combobox.Value>` gives to its slot:
 
-<<< ./combobox/LimitedChips.vue{27,34-36}
+<<< ./combobox/LimitedChips.vue{15,22-24}
 
 #### Keeping the filter after selection
 

@@ -6,18 +6,6 @@ import styles from './index.module.css';
 
 const id = useId();
 
-// The types of Vue do not list `aria-description`, so the demo gives it with `v-bind`.
-const CHIP_DESCRIPTION = { 'aria-description': 'Press Backspace or Delete to remove' };
-
-function getInputDescription(selectedCount: number) {
-  return {
-    'aria-description':
-      selectedCount > 0
-        ? `${selectedCount} selected. From the start of the input, press Left Arrow to focus the selected items`
-        : undefined,
-  };
-}
-
 const searchResults = shallowRef<DirectoryUser[]>([]);
 const selectedValues = shallowRef<DirectoryUser[]>([]);
 const searchValue = shallowRef('');
@@ -311,7 +299,7 @@ const allUsers: DirectoryUser[] = [
               :key="user.id"
               :class="styles.Chip"
               :aria-label="user.name"
-              v-bind="CHIP_DESCRIPTION"
+              aria-description="Press Backspace or Delete to remove"
             >
               {{ user.name }}
               <Combobox.ChipRemove :class="styles.ChipRemove" :aria-label="`Remove ${user.name}`">
@@ -321,7 +309,11 @@ const allUsers: DirectoryUser[] = [
             <Combobox.Input
               :id="id"
               :placeholder="value.length > 0 ? '' : 'e.g. Michael'"
-              v-bind="getInputDescription(value.length)"
+              :aria-description="
+                value.length > 0
+                  ? `${value.length} selected. From the start of the input, press Left Arrow to focus the selected items`
+                  : undefined
+              "
               :class="styles.Input"
             />
           </Combobox.Chips>

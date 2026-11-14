@@ -4,18 +4,6 @@ import { Combobox } from '@vase-ui/vue/combobox';
 const CHIP_LIMIT = 3;
 
 const fruits = ['Apple', 'Banana', 'Cherry', 'Grape', 'Mango'];
-
-// The types of Vue do not list `aria-description`, so the sample gives it with `v-bind`.
-const CHIP_DESCRIPTION = { 'aria-description': 'Press Backspace or Delete to remove' };
-
-function getInputDescription(selectedCount: number) {
-  return {
-    'aria-description':
-      selectedCount > 0
-        ? `${selectedCount} selected. From the start of the input, press Left Arrow to focus the selected items`
-        : undefined,
-  };
-}
 </script>
 
 <template>
@@ -26,7 +14,7 @@ function getInputDescription(selectedCount: number) {
           <Combobox.Chip
             v-for="item in selectedValue.slice(0, CHIP_LIMIT)"
             :key="item"
-            v-bind="CHIP_DESCRIPTION"
+            aria-description="Press Backspace or Delete to remove"
           >
             {{ item }}
             <Combobox.ChipRemove :aria-label="`Remove ${item}`" />
@@ -34,7 +22,13 @@ function getInputDescription(selectedCount: number) {
           <span v-if="selectedValue.length > CHIP_LIMIT">
             +{{ selectedValue.length - CHIP_LIMIT }} more
           </span>
-          <Combobox.Input v-bind="getInputDescription(selectedValue.length)" />
+          <Combobox.Input
+            :aria-description="
+              selectedValue.length > 0
+                ? `${selectedValue.length} selected. From the start of the input, press Left Arrow to focus the selected items`
+                : undefined
+            "
+          />
         </Combobox.Chips>
       </Combobox.Value>
     </Combobox.InputGroup>

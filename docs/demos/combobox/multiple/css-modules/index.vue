@@ -6,18 +6,6 @@ import styles from './index.module.css';
 
 const id = useId();
 
-// The types of Vue do not list `aria-description`, so the demo gives it with `v-bind`.
-const CHIP_DESCRIPTION = { 'aria-description': 'Press Backspace or Delete to remove' };
-
-function getInputDescription(selectedCount: number) {
-  return {
-    'aria-description':
-      selectedCount > 0
-        ? `${selectedCount} selected. From the start of the input, press Left Arrow to focus the selected items`
-        : undefined,
-  };
-}
-
 const ICON_PROPS = {
   width: '16',
   height: '16',
@@ -79,7 +67,7 @@ const langs: ProgrammingLanguage[] = [
               :key="language.id"
               :class="styles.Chip"
               :aria-label="language.value"
-              v-bind="CHIP_DESCRIPTION"
+              aria-description="Press Backspace or Delete to remove"
             >
               {{ language.value }}
               <Combobox.ChipRemove
@@ -92,7 +80,11 @@ const langs: ProgrammingLanguage[] = [
             <Combobox.Input
               :id="id"
               :placeholder="value.length > 0 ? '' : 'e.g. TypeScript'"
-              v-bind="getInputDescription(value.length)"
+              :aria-description="
+                value.length > 0
+                  ? `${value.length} selected. From the start of the input, press Left Arrow to focus the selected items`
+                  : undefined
+              "
               :class="styles.Input"
             />
           </Combobox.Chips>
