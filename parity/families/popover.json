@@ -251,7 +251,7 @@
       "title": "should toggle closed with Enter or Space when rendering a <div>",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",
