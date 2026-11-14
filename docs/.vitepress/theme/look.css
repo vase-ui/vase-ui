@@ -414,23 +414,18 @@
 
 /* Tables */
 
+/* The table keeps the scroll box of VitePress, so a wide table does not widen the page. */
 .vp-doc table {
   margin: 1.25rem 0;
   border: 1px solid var(--vase-color-border);
   border-collapse: separate;
   border-spacing: 0;
   border-radius: var(--vase-radius-12);
+  width: fit-content;
+  max-width: 100%;
   line-height: 1.25rem;
   font-size: var(--vase-font-size-14);
   color: var(--vase-gray-t1);
-}
-
-/* Below this width, the table keeps the scroll box of VitePress. */
-@media (min-width: 48rem) {
-  .vp-doc table {
-    display: table;
-    width: 100%;
-  }
 }
 
 .vp-doc tr,

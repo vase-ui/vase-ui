@@ -91,6 +91,7 @@
   --vp-code-link-hover-color: var(--vase-color-blue);
   --vp-code-bg: var(--vase-color-line-highlight);
   --vp-code-block-color: var(--vase-gray-t2);
+  /* Base UI gives the code of a demo the background gray-s1, where comments have 4.4:1 contrast. */
   --vp-code-block-bg: var(--vase-color-content);
   --vp-code-line-highlight-color: var(--vase-color-line-highlight);
   --vp-code-lang-color: var(--vase-gray-t1);
