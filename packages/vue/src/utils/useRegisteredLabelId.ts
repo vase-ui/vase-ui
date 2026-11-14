@@ -1,4 +1,12 @@
-import { computed, onScopeDispose, shallowRef, toValue, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onScopeDispose,
+  shallowRef,
+  toValue,
+  watch,
+} from 'vue';
 import type { ComputedRef, MaybeRefOrGetter } from 'vue';
 import { useIsHydrating } from '../common/hydration';
 import { useVaseUiId } from '../internals/useBaseUiId';
@@ -63,6 +71,7 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
 
 /**
  * The label calls it. It gives the id of the label to the root.
+ * When `KeepAlive` deactivates the label, the root does not have the id until the activation.
  * @param idProp The `id` of the consumer. It wins over `defaultLabelId`.
  * @param setLabelId The setter that `useLabelId` returns.
  * @param defaultLabelId The id that the root made, so that the id equals the id in the server HTML.
@@ -74,10 +83,27 @@ export function useRegisteredLabelId(
   defaultLabelId: MaybeRefOrGetter<string>,
 ): ComputedRef<string> {
   const id = computed(() => toValue(idProp) ?? toValue(defaultLabelId));
+  // `KeepAlive` takes the label out of the document, so the root must not name it.
+  const isDeactivated = shallowRef(false);
+
+  onDeactivated(() => {
+    isDeactivated.value = true;
+  });
+
+  onActivated(() => {
+    isDeactivated.value = false;
+  });
 
   setLabelId(id.value);
-  watch(id, (next) => {
-    setLabelId(next);
+  // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A write in the
+  // hook would give the root the first label of a branch. The watchers run in the order in which the
+  // labels mounted.
+  watch([id, isDeactivated], ([nextId, deactivated], [previousId]) => {
+    if (deactivated) {
+      setLabelId((current) => (current === previousId ? undefined : current));
+    } else {
+      setLabelId(nextId);
+    }
   });
   onScopeDispose(() => {
     setLabelId((current) => (current === id.value ? undefined : current));

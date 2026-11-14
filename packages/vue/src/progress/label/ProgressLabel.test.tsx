@@ -1,10 +1,11 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import { Progress } from '@vase-ui/vue/progress';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
+  flushMicrotasks,
   screen,
   takeReportedMessages,
 } from '#test-utils';
@@ -61,6 +62,33 @@ describe('<Progress.Label />', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Remove label' }));
     expect(progressbar).not.toHaveAttribute('aria-labelledby');
+  });
+
+  it('names the progress bar with the label only while KeepAlive shows the label', async () => {
+    const visible = shallowRef(true);
+    const App = defineComponent(() => () => (
+      <Progress.Root value={40}>
+        <KeepAlive>
+          {visible.value ? (
+            <Progress.Label data-testid="label">Upload progress</Progress.Label>
+          ) : null}
+        </KeepAlive>
+      </Progress.Root>
+    ));
+    await render(<App />);
+    const progressbar = screen.getByRole('progressbar');
+    const label = screen.getByTestId('label');
+    expect(progressbar).toHaveAttribute('aria-labelledby', label.id);
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(progressbar).not.toHaveAttribute('aria-labelledby');
+
+    visible.value = true;
+    await flushMicrotasks();
+    // The same element proves that `KeepAlive` kept the label and did not mount a new one.
+    expect(screen.getByTestId('label')).toBe(label);
+    expect(progressbar).toHaveAttribute('aria-labelledby', label.id);
   });
 
   it('throws a descriptive error when rendered outside <Progress.Root>', async () => {
