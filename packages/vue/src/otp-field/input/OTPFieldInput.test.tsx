@@ -1088,6 +1088,37 @@ describe('<OTPField.Input />', () => {
 
       expect(onValueChange).toHaveBeenCalledTimes(2);
     });
+
+    it.each([
+      { name: 'read-only', props: { readOnly: true } },
+      { name: 'disabled', props: { disabled: true } },
+    ] as const)(
+      'ignores a text that autofill writes two times with `change` into a slot of a $name field',
+      async ({ props }) => {
+        const onValueChange = vi.fn();
+
+        await render(<OTPFieldTest defaultValue="12" onValueChange={onValueChange} {...props} />);
+
+        const [firstInput] = screen.getAllByRole<HTMLInputElement>('textbox');
+
+        async function writeText(text: string) {
+          firstInput.value = text;
+          firstInput.dispatchEvent(new Event('change', { bubbles: true }));
+          await flushMicrotasks();
+        }
+
+        expect(firstInput.value).toBe('1');
+
+        await writeText('7');
+
+        expect(firstInput.value).toBe('1');
+
+        await writeText('7');
+
+        expect(firstInput.value).toBe('1');
+        expect(onValueChange).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('the attributes of a slot', () => {
