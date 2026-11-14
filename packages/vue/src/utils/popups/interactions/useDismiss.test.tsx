@@ -1087,4 +1087,96 @@ describe('useDismiss', () => {
       expect(isOpen('popup')).toBe(false);
     });
   });
+
+  describe('a store that changes', () => {
+    /**
+     * A popup element with the props of `useDismiss` for the store that `current` names. Both
+     * stores are open, and each records its changes.
+     */
+    function renderSwitchingStores(dismissProps: UseDismissProps = {}) {
+      const current = shallowRef<'a' | 'b'>('a');
+      const changes: (Change & { store: string })[] = [];
+      const stores: Record<'a' | 'b', ReturnType<typeof useFloatingRootStore>> = {} as never;
+
+      const Popup = defineComponent(() => {
+        const floating = shallowRef<HTMLElement | null>(null);
+        for (const name of ['a', 'b'] as const) {
+          stores[name] = useFloatingRootStore({
+            open: true,
+            onOpenChange(open, details) {
+              changes.push({
+                store: name,
+                open,
+                reason: details.reason,
+                eventType: details.event.type,
+              });
+            },
+            elements: { positionerElement: floating },
+          });
+        }
+        const dismiss = useDismiss(() => stores[current.value], dismissProps);
+
+        return () => (
+          <div
+            data-testid="popup"
+            {...mergeProps(dismiss.floating, {
+              ref: (element: unknown) => {
+                floating.value = element as HTMLElement | null;
+              },
+            })}
+          >
+            popup
+          </div>
+        );
+      });
+
+      return { current, changes, stores, Popup };
+    }
+
+    it('closes the popup of the store that the getter gives at the time of the press', async () => {
+      const { current, changes, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+      current.value = 'b';
+      await flushMicrotasks();
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      expect(changes).toEqual([
+        { store: 'a', open: false, reason: REASONS.escapeKey, eventType: 'keydown' },
+        { store: 'b', open: false, reason: REASONS.escapeKey, eventType: 'keydown' },
+      ]);
+    });
+
+    it('moves its openchange listener to the new store', async () => {
+      const { current, stores, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+      const offA = vi.spyOn(stores.a.context.events, 'off');
+      const onB = vi.spyOn(stores.b.context.events, 'on');
+
+      current.value = 'b';
+      await flushMicrotasks();
+
+      expect(offA).toHaveBeenCalledWith('openchange', expect.any(Function));
+      expect(onB).toHaveBeenCalledWith('openchange', offA.mock.calls[0][1]);
+    });
+
+    it('clears the inside marker of the last store, so that its next outside press closes it', async () => {
+      const { current, changes, Popup } = renderSwitchingStores();
+      await render(<Popup />);
+
+      // A press in the popup sets the marker of store a, and a 0 ms timer clears it.
+      await fireEvent.pointerDown(screen.getByTestId('popup'), mouse);
+      current.value = 'b';
+      await flushMicrotasks();
+      current.value = 'a';
+      await flushMicrotasks();
+
+      await fireEvent.pointerDown(document.body, mouse);
+
+      expect(changes).toEqual([
+        { store: 'a', open: false, reason: REASONS.outsidePress, eventType: 'pointerdown' },
+      ]);
+    });
+  });
 });

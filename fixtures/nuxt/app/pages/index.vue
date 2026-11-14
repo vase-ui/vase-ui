@@ -23,6 +23,7 @@
       <li><NuxtLink to="/use-render">useRender</NuxtLink></li>
       <li><NuxtLink to="/unstable-use-media-query">useMediaQuery</NuxtLink></li>
       <li><NuxtLink to="/portal">Portal</NuxtLink></li>
+      <li><NuxtLink to="/navigation-menu">Navigation Menu</NuxtLink></li>
     </ul>
   </main>
 </template>
