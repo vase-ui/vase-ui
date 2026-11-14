@@ -542,7 +542,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - In the source of the package, use only a JavaScript built-in that each browser of that list has. The compatibility table on the MDN page of the built-in gives the versions.
 - Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`. No browser of the list has `Map.groupBy`, `Object.groupBy` or `Promise.withResolvers`.
 - Do not use `using` or `Symbol.dispose`.
-- The scripts and the tests are not in the built package. A script and a `.node.test` file can use each built-in of the Node.js version in `.node-version`, if the `lib` of their project has the types of the built-in. A browser test can use only a built-in that each of the three engines of Playwright has.
+- The scripts and the tests are not in the built package. A file that runs in Node.js, such as a script or a `.node.test` file, can use each built-in of the Node.js version in `.node-version`. A test file that runs in the browsers can use only a built-in that each of the three engines of Playwright has. In both cases, the `lib` of the project must have the types of the built-in.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
 ### ESLint
