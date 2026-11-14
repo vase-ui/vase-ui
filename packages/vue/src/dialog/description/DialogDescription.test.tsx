@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { KeepAlive, defineComponent, shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import * as Dialog from '../index.parts';
 
 describe('<Dialog.Description />', () => {
@@ -13,7 +12,9 @@ describe('<Dialog.Description />', () => {
       render: (node) => {
         return render(
           <Dialog.Root open modal={false}>
-            <DialogPopupPart>{node}</DialogPopupPart>
+            <Dialog.Portal>
+              <Dialog.Popup>{node}</Dialog.Popup>
+            </Dialog.Portal>
           </Dialog.Root>,
         );
       },
@@ -24,9 +25,11 @@ describe('<Dialog.Description />', () => {
     it('describes the popup with the generated id of the description', async () => {
       await render(
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Description data-testid="description">Description</Dialog.Description>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Description data-testid="description">Description</Dialog.Description>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>,
       );
 
@@ -38,9 +41,11 @@ describe('<Dialog.Description />', () => {
     it('describes the popup with the id prop of the description', async () => {
       await render(
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Description id="custom-description">Description</Dialog.Description>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Description id="custom-description">Description</Dialog.Description>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>,
       );
 
@@ -52,9 +57,11 @@ describe('<Dialog.Description />', () => {
       const mounted = shallowRef(false);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            {mounted.value ? <Dialog.Description data-testid="description" /> : null}
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              {mounted.value ? <Dialog.Description data-testid="description" /> : null}
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -73,10 +80,12 @@ describe('<Dialog.Description />', () => {
       const secondMounted = shallowRef(true);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <Dialog.Description data-testid="first" />
-            {secondMounted.value ? <Dialog.Description data-testid="second" /> : null}
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <Dialog.Description data-testid="first" />
+              {secondMounted.value ? <Dialog.Description data-testid="second" /> : null}
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -92,10 +101,12 @@ describe('<Dialog.Description />', () => {
       const firstMounted = shallowRef(true);
       await render(() => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            {firstMounted.value ? <Dialog.Description data-testid="first" /> : null}
-            <Dialog.Description data-testid="second" />
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              {firstMounted.value ? <Dialog.Description data-testid="first" /> : null}
+              <Dialog.Description data-testid="second" />
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       const popup = screen.getByRole('dialog');
@@ -111,11 +122,13 @@ describe('<Dialog.Description />', () => {
       const visible = shallowRef(true);
       const App = defineComponent(() => () => (
         <Dialog.Root open modal={false}>
-          <DialogPopupPart>
-            <KeepAlive>
-              {visible.value ? <Dialog.Description data-testid="description" /> : null}
-            </KeepAlive>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup>
+              <KeepAlive>
+                {visible.value ? <Dialog.Description data-testid="description" /> : null}
+              </KeepAlive>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       await render(<App />);

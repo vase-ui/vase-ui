@@ -10,14 +10,13 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { REASONS } from '../../internals/reasons';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
 import DialogPortalHydration from './DialogPortalHydration.test.vue';
 
-const INTERNAL_BACKDROP_SELECTOR = '[data-vase-ui-inert]';
+const INTERNAL_BACKDROP_SELECTOR = '[role="presentation"][data-vase-ui-inert]';
 
 describe('<Dialog.Portal />', () => {
   const { render } = createRenderer();
@@ -36,7 +35,7 @@ describe('<Dialog.Portal />', () => {
       <Dialog.Root open={open.value} modal={false}>
         <Dialog.Portal keepMounted={keepMounted.value} data-testid="portal">
           <Dialog.Viewport data-testid="viewport">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Viewport>
         </Dialog.Portal>
       </Dialog.Root>
@@ -69,7 +68,7 @@ describe('<Dialog.Portal />', () => {
         <Dialog.Root defaultOpen modal={modal}>
           <DialogStoreProbe onStore={(value) => (store = value)} />
           <Dialog.Portal data-testid="portal">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>,
       );
@@ -97,7 +96,7 @@ describe('<Dialog.Portal />', () => {
           >
             <DialogStoreProbe onStore={(value) => (store = value)} />
             <Dialog.Portal keepMounted={keepMounted} data-testid="portal">
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           </Dialog.Root>
         ));
@@ -127,7 +126,7 @@ describe('<Dialog.Portal />', () => {
           <DialogStoreProbe onStore={(value) => (store = value)} />
           {showPortal.value ? (
             <Dialog.Portal>
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           ) : null}
         </Dialog.Root>
@@ -145,7 +144,7 @@ describe('<Dialog.Portal />', () => {
       await render(
         <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
           <Dialog.Portal data-testid="portal">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>,
       );

@@ -8,7 +8,6 @@ import {
   screen,
   takeReportedMessages,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../internals/constants';
 import { REASONS } from '../../internals/reasons';
@@ -38,7 +37,9 @@ describe('<Dialog.Trigger />', () => {
       await render(
         <Dialog.Root modal={false} onOpenChange={handleOpenChange}>
           <Dialog.Trigger>Open</Dialog.Trigger>
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>,
       );
       const trigger = screen.getByRole('button', { name: 'Open' });
@@ -129,7 +130,9 @@ describe('<Dialog.Trigger />', () => {
         <div onKeydown={handleKeydown}>
           <Dialog.Root defaultOpen modal={false}>
             <Dialog.Trigger>Open</Dialog.Trigger>
-            <DialogPopupPart />
+            <Dialog.Portal>
+              <Dialog.Popup />
+            </Dialog.Portal>
           </Dialog.Root>
         </div>,
       );

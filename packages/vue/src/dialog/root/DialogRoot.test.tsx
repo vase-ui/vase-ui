@@ -10,7 +10,6 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import {
   createScrollDocument,
@@ -113,9 +112,15 @@ describe('<Dialog.Root />', () => {
           {...{ 'onUpdate:open': (open: boolean) => calls.push(`update:open ${open}`) }}
           onOpenChangeComplete={(open) => calls.push(`openChangeComplete ${open}`)}
         >
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>
       ));
+      await waitFor(() => {
+        expect(calls).toEqual(['openChangeComplete true']);
+      });
+      calls.length = 0;
 
       root.close();
       await flushMicrotasks();
@@ -165,9 +170,15 @@ describe('<Dialog.Root />', () => {
           onOpenChangeComplete={handleComplete}
         >
           <DialogStoreProbe onStore={(value) => (store = value)} />
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>
       ));
+      await waitFor(() => {
+        expect(handleComplete.mock.calls).toEqual([[true]]);
+      });
+      handleComplete.mockClear();
 
       root.close();
       await flushMicrotasks();
@@ -241,7 +252,9 @@ describe('<Dialog.Root />', () => {
       await render(() => (
         <Dialog.Root defaultOpen>
           <DialogStoreProbe onStore={(value) => (store = value)} />
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>
       ));
 
@@ -304,7 +317,9 @@ describe('<Dialog.Root />', () => {
       const handleOpenChange = vi.fn();
       await render(() => (
         <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
         </Dialog.Root>
       ));
 
@@ -322,7 +337,9 @@ describe('<Dialog.Root />', () => {
         <div>
           <button>outside</button>
           <Dialog.Root defaultOpen modal={modal}>
-            <DialogPopupPart />
+            <Dialog.Portal>
+              <Dialog.Popup />
+            </Dialog.Portal>
           </Dialog.Root>
         </div>
       ));
@@ -343,7 +360,9 @@ describe('<Dialog.Root />', () => {
         <div>
           <button>outside</button>
           <Dialog.Root defaultOpen modal="trap-focus" {...props}>
-            <DialogPopupPart />
+            <Dialog.Portal>
+              <Dialog.Popup />
+            </Dialog.Portal>
           </Dialog.Root>
         </div>
       ));
@@ -360,7 +379,9 @@ describe('<Dialog.Root />', () => {
           <button>outside</button>
           <Dialog.Root defaultOpen onOpenChange={handleOpenChange}>
             <Dialog.Backdrop data-testid="backdrop" />
-            <DialogPopupPart />
+            <Dialog.Portal>
+              <Dialog.Popup />
+            </Dialog.Portal>
           </Dialog.Root>
         </div>
       ));
@@ -386,16 +407,20 @@ describe('<Dialog.Root />', () => {
       const result = render(() => (
         <Dialog.Root defaultOpen={options.parentOpen ?? true} modal={false}>
           <DialogStoreProbe onStore={(value) => (stores.parent = value)} />
-          <DialogPopupPart data-testid="parent">
-            <Dialog.Root defaultOpen={options.childOpen ?? false} modal={false}>
-              <DialogStoreProbe onStore={(value) => (stores.child = value)} />
-              <DialogPopupPart data-testid="child">
-                <Dialog.Root open={grandchildOpen.value} modal={false}>
-                  <DialogStoreProbe onStore={(value) => (stores.grandchild = value)} />
-                </Dialog.Root>
-              </DialogPopupPart>
-            </Dialog.Root>
-          </DialogPopupPart>
+          <Dialog.Portal>
+            <Dialog.Popup data-testid="parent">
+              <Dialog.Root defaultOpen={options.childOpen ?? false} modal={false}>
+                <DialogStoreProbe onStore={(value) => (stores.child = value)} />
+                <Dialog.Portal>
+                  <Dialog.Popup data-testid="child">
+                    <Dialog.Root open={grandchildOpen.value} modal={false}>
+                      <DialogStoreProbe onStore={(value) => (stores.grandchild = value)} />
+                    </Dialog.Root>
+                  </Dialog.Popup>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </Dialog.Popup>
+          </Dialog.Portal>
         </Dialog.Root>
       ));
       return { result, stores, grandchildOpen };
@@ -498,7 +523,9 @@ describe('<Dialog.Root />', () => {
       await render(() => (
         <Dialog.Root handle={handle} defaultOpen modal={false}>
           <DialogStoreProbe onStore={(value) => (parent = value)} />
-          <DialogPopupPart />
+          <Dialog.Portal>
+            <Dialog.Popup />
+          </Dialog.Portal>
           <Dialog.Root open modal={false} />
         </Dialog.Root>
       ));
@@ -546,7 +573,7 @@ describe('<Dialog.Root />', () => {
       return (
         <Dialog.Root defaultOpen {...rootProps}>
           <Dialog.Portal container={scrollDocument.body}>
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Portal>
         </Dialog.Root>
       );

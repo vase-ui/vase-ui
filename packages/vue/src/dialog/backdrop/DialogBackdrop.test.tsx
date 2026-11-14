@@ -10,7 +10,6 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
@@ -46,7 +45,9 @@ describe('<Dialog.Backdrop />', () => {
     await render(() => (
       <Dialog.Root open={open.value}>
         <Dialog.Backdrop data-testid="backdrop" />
-        <DialogPopupPart />
+        <Dialog.Portal>
+          <Dialog.Popup />
+        </Dialog.Portal>
       </Dialog.Root>
     ));
     const backdrop = screen.getByTestId('backdrop');

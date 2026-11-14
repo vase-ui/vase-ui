@@ -119,6 +119,13 @@ function setPopupElement(element: HTMLElement | null) {
   store.set('popupElement', element);
 }
 
+// The modal marks would set `inert` on the internal backdrop while the dialog is open. Their release
+// at the close would then remove the `inert` that the portal gives the backdrop while the dialog
+// closes, and the backdrop would take the presses of the exit animation.
+function getInsideElements() {
+  return [store.context.internalBackdropRef.value];
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (COMPOSITE_KEYS.has(event.key)) {
     event.stopPropagation();
@@ -159,6 +166,7 @@ defineExpose({ element });
     :modal="modal !== false"
     :outside-elements-inert="modal === true"
     restore-focus="popup"
+    :get-inside-elements="getInsideElements"
   >
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
     <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>

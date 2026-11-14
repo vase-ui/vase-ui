@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor } from '#test-utils';
-import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
@@ -18,7 +17,7 @@ describe('<Dialog.Viewport />', () => {
           <Dialog.Root open modal={false}>
             <Dialog.Portal>
               {node}
-              <DialogPopupPart />
+              <Dialog.Popup />
             </Dialog.Portal>
           </Dialog.Root>,
         );
@@ -32,7 +31,7 @@ describe('<Dialog.Viewport />', () => {
       <Dialog.Root open={open.value} modal={false}>
         <Dialog.Portal>
           <Dialog.Viewport data-testid="viewport">
-            <DialogPopupPart data-testid="popup">Content</DialogPopupPart>
+            <Dialog.Popup data-testid="popup">Content</Dialog.Popup>
           </Dialog.Viewport>
         </Dialog.Portal>
       </Dialog.Root>
@@ -54,7 +53,7 @@ describe('<Dialog.Viewport />', () => {
       <Dialog.Root open={open.value} modal={false}>
         <Dialog.Portal keepMounted>
           <Dialog.Viewport data-testid="viewport">
-            <DialogPopupPart />
+            <Dialog.Popup />
           </Dialog.Viewport>
         </Dialog.Portal>
       </Dialog.Root>
