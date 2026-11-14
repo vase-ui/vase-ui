@@ -53,6 +53,29 @@ describe('<Select.Trigger />', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it('mounts the items of a closed select when it gets the focus', async () => {
+    await render(
+      <Select.Root>
+        <Select.Trigger data-testid="trigger" />
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="a">a</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+    expect(document.querySelector('[role="option"]')).toBe(null);
+
+    screen.getByTestId('trigger').focus();
+
+    await waitFor(() => {
+      expect(document.querySelector('[role="option"]')).not.toBe(null);
+    });
+    expect(screen.getByTestId('trigger')).toHaveAttribute('aria-expanded', 'false');
+  });
+
   describe('releasing the opening press', () => {
     async function pressTrigger(
       options: {
@@ -448,6 +471,75 @@ describe('<Select.Trigger />', () => {
       expect(field).toHaveAttribute('data-touched', '');
       expect(validate).toHaveBeenCalledTimes(1);
       expect(validate.mock.lastCall?.[0]).toBe('sans');
+    });
+  });
+
+  describe('BUG-1425: a required select with no value after blur', () => {
+    function renderSelect(validationMode?: 'onBlur' | 'onSubmit') {
+      return render(
+        <div>
+          <Field.Root validationMode={validationMode} data-testid="root">
+            <Select.Root required>
+              <Select.Trigger data-testid="trigger">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+    }
+
+    it('is invalid when the focus leaves the trigger, with no change before', async () => {
+      const { user } = await renderSelect('onBlur');
+      const trigger = screen.getByTestId('trigger');
+
+      trigger.focus();
+      await flushMicrotasks();
+      expect(screen.queryByTestId('error')).toBe(null);
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      expect(trigger).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('is valid again when the user picks an item', async () => {
+      const { user } = await renderSelect('onBlur');
+
+      screen.getByTestId('trigger').focus();
+      await user.tab();
+      expect(screen.getByTestId('error')).toBeInTheDocument();
+
+      await user.click(screen.getByTestId('trigger'));
+      await user.click(await screen.findByRole('option', { name: 'a' }));
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+    });
+
+    it('stays valid when the focus leaves the trigger, with the default validation mode', async () => {
+      const { user } = await renderSelect();
+
+      screen.getByTestId('trigger').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
     });
   });
 

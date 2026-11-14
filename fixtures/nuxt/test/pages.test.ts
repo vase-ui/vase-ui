@@ -802,6 +802,28 @@ async function expectHydratedPortalPage(page: Page) {
   expect(await page.locator('[data-vase-ui-portal]').count()).toBe(3);
 }
 
+// The server HTML has the label of the value before any item exists, the hidden inputs of the
+// form, and no popup: a portal renders after the mount.
+async function expectSelectPage(page: Page) {
+  const triggerAttributes = ['id', 'role', 'aria-expanded', 'aria-haspopup', 'aria-labelledby'];
+  expect(await readAttributes(page.getByTestId('font-trigger'), triggerAttributes)).toEqual({
+    id: 'font',
+    role: 'combobox',
+    'aria-expanded': 'false',
+    'aria-haspopup': 'listbox',
+    'aria-labelledby': null,
+  });
+  expect(await page.getByTestId('font-value').textContent()).toBe('Serif');
+
+  const labelId = await page.getByTestId('size-label').getAttribute('id');
+  expect(labelId).toBeTruthy();
+  expect(await page.getByTestId('size-trigger').getAttribute('aria-labelledby')).toBe(labelId);
+
+  expect(await page.getByTestId('tags-value').textContent()).toBe('b');
+  expect(await readFormData(page)).toEqual(['font=serif', 'size=', 'tags=b']);
+  expect(await page.getByRole('listbox').count()).toBe(0);
+}
+
 interface PageCase {
   path: string;
   expectPage: (page: Page) => Promise<void>;
@@ -858,7 +880,7 @@ const PAGES: PageCase[] = [
     path: '/portal',
     expectPage: expectPortalPageOnServer,
     expectHydratedPage: expectHydratedPortalPage,
-  },
+  },  { path: '/select', expectPage: expectSelectPage },
 ];
 
 const MODES = [
@@ -995,6 +1017,25 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await control.blur();
 
     expect(await control.inputValue()).toBe(new Intl.NumberFormat('en-US', EURO_FORMAT).format(42));
+    expect(messages).toEqual([]);
+  });
+
+  it('opens the popup of /select in the body on a press after hydration, and selects an item', async () => {
+    const page = await createPage('/select');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('font-trigger').click();
+    const popup = page.getByTestId('font-popup');
+    await popup.waitFor({ state: 'visible' });
+
+    expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
+    expect(await page.getByTestId('font-trigger').getAttribute('aria-expanded')).toBe('true');
+
+    await page.getByRole('option', { name: 'Monospace' }).click();
+    await popup.waitFor({ state: 'detached' });
+
+    expect(await page.getByTestId('font-value').textContent()).toBe('Monospace');
+    expect(await readFormData(page)).toEqual(['font=mono', 'size=', 'tags=b']);
     expect(messages).toEqual([]);
   });
 

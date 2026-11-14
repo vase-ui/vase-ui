@@ -273,7 +273,9 @@ const { element, elementProps } = useRenderElement('button', props, {
         setFocused(false);
 
         if (validationMode.value === 'onBlur') {
-          void validation.commit(toRaw(store.state).selectedValue);
+          // A user leaves an empty select with no change, so a missing value counts with no
+          // earlier change.
+          void validation.commit(toRaw(store.state).selectedValue, true);
         }
       },
       onMousedown(event: MouseEvent) {
