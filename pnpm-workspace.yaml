@@ -9,6 +9,7 @@ packages:
   - packages/*
 patchedDependencies:
   '@vue/language-core@3.3.14': patches/@vue__language-core@3.3.14.patch
+  rolldown-plugin-dts@0.30.1: patches/rolldown-plugin-dts@0.30.1.patch
   vue-component-meta@3.3.14: patches/vue-component-meta@3.3.14.patch
 permissions:
   tsdown:

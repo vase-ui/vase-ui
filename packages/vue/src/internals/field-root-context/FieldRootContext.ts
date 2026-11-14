@@ -108,7 +108,7 @@ export interface FieldRootContext {
    * Registers a control by source, or removes the registration when `getRegistration` is
    * `undefined`. The field calls the getter each time it needs the control. The getter returns
    * `undefined` for a control that the field must not use now, such as a control that `KeepAlive`
-   * has deactivated. A control calls the function again with the same source when its `id`, its
+   * holds. A control calls the function again with the same source when its `id`, its
    * `name`, its value or `enabled` changes. The field uses the control of the last call whose
    * getter returns a registration.
    */
@@ -117,6 +117,8 @@ export interface FieldRootContext {
     getRegistration: (() => FieldControlRegistration | undefined) | undefined,
   ) => void;
   validation: UseFieldValidationReturnValue;
+  /** Whether an id reference of the field reaches `element`. */
+  reaches: (element: Element) => boolean;
 }
 
 const DEFAULT_VALIDITY_DATA: FieldValidityData = {
@@ -154,6 +156,7 @@ export const DEFAULT_FIELD_ROOT_CONTEXT: FieldRootContext = {
     change: NOOP,
     reset: NOOP,
   },
+  reaches: () => true,
 };
 
 export const FieldRootContext: InjectionKey<FieldRootContext> = Symbol();
