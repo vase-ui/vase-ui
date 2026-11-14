@@ -11,7 +11,7 @@ import FloatingPortal from '../../src/utils/popups/portal/FloatingPortal.vue';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
 import type { InteractionProps } from '../../src/utils/popups/types';
 import { useTestInteractions } from '../useTestInteractions';
-import { useFloating } from './useFloating';
+import { useFloating } from '../floating-ui-tests/useFloating';
 
 // The rules of the style sheet of Base UI, as style objects. The package has no type for a CSS
 // module. The media rule of the container has no counterpart, because a style object holds no

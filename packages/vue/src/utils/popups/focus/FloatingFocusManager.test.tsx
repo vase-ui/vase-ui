@@ -25,7 +25,7 @@ import {
   within,
 } from '#test-utils';
 import { Main as Navigation } from '../../../../test/fixtures/Navigation';
-import { useFloating } from '../../../../test/fixtures/useFloating';
+import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { platform } from '../../../common/platform';
 import type { InteractionType } from '../../../common/useEnhancedClickHandler';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
