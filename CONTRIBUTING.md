@@ -537,7 +537,12 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - The consumer project of `pnpm check:package` sets `exactOptionalPropertyTypes`. It passes `undefined` to an optional prop and to a listener.
 - `noPropertyAccessFromIndexSignature` is off. A bundler replaces `process.env.NODE_ENV` only in that form. The Vue documentation and the parts write `slots.default` and `$slots.render`.
 - `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` are also off in the root project and in `docs`, because the scripts do not obey them.
-- `lib` and `target` of the package are ES2024. Each API of ES2024 is Baseline Widely Available, except a resizable `ArrayBuffer`, a growable `SharedArrayBuffer` and `Atomics.waitAsync`. Do not use these three, `using` or `Symbol.dispose`.
+- `lib` and `target` of the package are ES2024, so the compiler accepts each built-in of ES2024. The browsers that the build supports have fewer built-ins.
+- The build has the target `baseline-widely-available`. tsdown gives that name a fixed list: Chrome 111, Edge 111, Firefox 114, Safari 16.4 and iOS 16.4. The build changes only the syntax for that list. It adds no polyfill.
+- In the source of the package, use only a JavaScript built-in that each browser of that list has. The compatibility table on the MDN page of the built-in gives the versions.
+- Each browser of the list has `Array.prototype.at`, `Array.prototype.findLast`, `Object.hasOwn` and `String.prototype.replaceAll`. Firefox 114 does not have the array methods `toSorted`, `toReversed`, `toSpliced` and `with`. No browser of the list has `Map.groupBy`, `Object.groupBy` or `Promise.withResolvers`.
+- Do not use `using` or `Symbol.dispose`.
+- The scripts and the tests are not in the built package. A script and a `.node.test` file can use each built-in of the Node.js version in `.node-version`, if the `lib` of their project has the types of the built-in. A browser test can use only a built-in that each of the three engines of Playwright has.
 - `erasableSyntaxOnly` is on. Do not write an `enum`, a parameter property or a namespace that has a value. A namespace of types is correct.
 
 ### ESLint

@@ -485,7 +485,7 @@ function incrementValue(
   amount: number,
   { direction, currentValue, event, reason }: IncrementValueParameters,
 ) {
-  const prevValue = currentValue == null ? valueRef.value : currentValue;
+  const prevValue = currentValue ?? valueRef.value;
   const nativeEvent = event as ReasonToEvent<IncrementValueParameters['reason']> | undefined;
 
   if (typeof prevValue !== 'number') {

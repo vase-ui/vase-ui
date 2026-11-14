@@ -106,7 +106,7 @@ if (process.env.NODE_ENV !== 'production' && groupContext) {
 
 const [isPressed, setPressedState] = useControlled({
   controlled: () =>
-    groupContext ? groupContext.value.value.indexOf(groupItemValue.value) > -1 : props.pressed,
+    groupContext ? groupContext.value.value.includes(groupItemValue.value) : props.pressed,
   default: () => props.defaultPressed,
   name: 'Toggle',
   state: 'pressed',

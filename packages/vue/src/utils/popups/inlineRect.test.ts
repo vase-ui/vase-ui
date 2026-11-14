@@ -462,4 +462,32 @@ describe('inlineRect', () => {
 
     expect(getElementRects).toHaveBeenCalledOnce();
   });
+
+  it('joins the client rects of the last line for bottom placements', async () => {
+    const rects: RectLike[] = [
+      { left: 0, top: 100, right: 80, bottom: 110, width: 80, height: 10 },
+      { left: 30, top: 120, right: 90, bottom: 130, width: 60, height: 10 },
+      { left: 10, top: 120, right: 50, bottom: 134, width: 40, height: 14 },
+    ];
+    const trigger = createTrigger(rects);
+    const middleware = createInlineMiddleware({ current: undefined });
+
+    expect(
+      await middleware.fn(
+        createMiddlewareState(trigger, 'bottom', { x: 0, y: 0, width: 10, height: 10 }) as never,
+      ),
+    ).toEqual({
+      reset: {
+        rects: {
+          reference: {
+            x: rects[2].left,
+            y: rects[0].top,
+            width: rects[1].right - rects[2].left,
+            height: rects[2].bottom - rects[0].top,
+          },
+          floating: { x: 0, y: 0, width: 20, height: 10 },
+        },
+      },
+    });
+  });
 });
