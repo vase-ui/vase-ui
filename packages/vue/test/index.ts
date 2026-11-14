@@ -1,7 +1,7 @@
 export * from '../src/common/testUtils';
 export { pasteText } from './clipboard';
 export { createFormDataSpy } from './formData';
-export { createRenderer } from './createRenderer';
+export { createRenderer, waitForLaterMillisecond } from './createRenderer';
 export type { Renderable, VaseUIRenderResult } from './createRenderer';
 export { mockRuntimeLocale } from './mockRuntimeLocale';
 export {
@@ -11,12 +11,14 @@ export {
   pressWithScreenReader,
   pressWithTouch,
 } from './pointer';
+export { fireTouch } from './touch';
 export { useTestInteractions } from './useTestInteractions';
 export * from './wait';
 export { waitForPositioned } from './waitForPositioned';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
+export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { popupConformanceTests } from './popupConformanceTests';
 export { positionerConformanceTests } from './positionerConformanceTests';
 export { isInaccessible, screen, waitFor, within } from '@testing-library/dom';

@@ -1,0 +1,244 @@
+import { expectType } from '#test-utils';
+import * as Select from '../index.parts';
+
+const objectItems = [
+  { value: 'a', label: 'apple' },
+  { value: 'b', label: 'banana' },
+  { value: 'c', label: 'cherry' },
+];
+
+const objectItemsReadonly = [
+  { value: 'a', label: 'apple' },
+  { value: 'b', label: 'banana' },
+  { value: 'c', label: 'cherry' },
+] as const;
+
+const groupedItemsReadonly = [
+  {
+    heading: 'Fruits',
+    items: [
+      { value: 'a', label: 'apple' },
+      { value: 'b', label: 'banana' },
+    ],
+  },
+] as const;
+
+<Select.Root items={groupedItemsReadonly} />;
+
+<Select.Root
+  items={objectItemsReadonly}
+  defaultValue="a"
+  itemToStringLabel={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  itemToStringValue={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  onValueChange={(value) => {
+    // @ts-expect-error The selection can be cleared, so value may be null.
+    value.startsWith('a');
+  }}
+/>;
+
+<Select.Root
+  items={objectItems}
+  defaultValue="a"
+  itemToStringLabel={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  itemToStringValue={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  onValueChange={(value) => {
+    // @ts-expect-error The selection can be cleared, so value may be null.
+    value.startsWith('a');
+  }}
+/>;
+
+<Select.Root
+  items={objectItems}
+  value="a"
+  itemToStringLabel={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  itemToStringValue={(item) => {
+    item.startsWith('a');
+    return item;
+  }}
+  onValueChange={(value) => {
+    // @ts-expect-error - possibly null
+    value.startsWith('a');
+  }}
+/>;
+
+type Obj = { code: string };
+const objectValueItems: Array<{ value: Obj; label: string }> = [
+  { value: { code: 'a' }, label: 'apple' },
+  { value: { code: 'b' }, label: 'banana' },
+];
+
+<Select.Root
+  items={objectValueItems}
+  defaultValue={objectValueItems[0].value}
+  itemToStringLabel={(item) => item.code}
+  itemToStringValue={(item) => item.code}
+  onValueChange={(value) => {
+    // @ts-expect-error The selected object may be null after clearing the selection.
+    value.code;
+  }}
+/>;
+
+<Select.Root
+  items={objectValueItems}
+  value={objectValueItems[0].value}
+  itemToStringLabel={(item) => item.code}
+  itemToStringValue={(item) => item.code}
+  onValueChange={(value) => {
+    // @ts-expect-error - possibly null
+    value.code;
+  }}
+/>;
+
+<Select.Root
+  value="a"
+  isItemEqualToValue={(item, value) => {
+    expectType<string, typeof item>(item);
+    expectType<string, typeof value>(value);
+    item.toUpperCase();
+    value?.toUpperCase();
+    return item === value;
+  }}
+/>;
+
+<Select.Root
+  value={objectValueItems[0]}
+  isItemEqualToValue={(item, value) => {
+    expectType<(typeof objectValueItems)[number], typeof item>(item);
+    expectType<(typeof objectValueItems)[number], typeof value>(value);
+    item.value.code;
+    value.value.code;
+    return value != null && item.value.code === value.value.code;
+  }}
+/>;
+
+<Select.Root
+  multiple
+  // @ts-expect-error Multiple selection requires an array default value.
+  defaultValue="javascript"
+  onValueChange={(value) => {
+    value.pop();
+  }}
+/>;
+
+<Select.Root
+  multiple
+  defaultValue={['javascript', 'typescript']}
+  onValueChange={(value) => {
+    value.pop();
+  }}
+/>;
+
+<Select.Root
+  multiple={false}
+  // @ts-expect-error Single selection does not accept an array default value.
+  defaultValue={['javascript', 'typescript']}
+  onValueChange={(value) => {
+    // @ts-expect-error Single selection does not produce an array.
+    value.pop();
+  }}
+/>;
+
+<Select.Root
+  defaultValue="javascript"
+  onValueChange={(value) => {
+    // @ts-expect-error Single selection does not produce an array.
+    value.pop();
+  }}
+/>;
+
+<Select.Root
+  multiple
+  onValueChange={(value) => {
+    value.pop();
+  }}
+/>;
+
+declare const multiple: boolean;
+
+<Select.Root
+  multiple={multiple}
+  onValueChange={(value) => {
+    // @ts-expect-error A dynamic multiple flag does not guarantee an array value.
+    value.pop();
+  }}
+/>;
+
+<Select.Root
+  defaultValue="test"
+  onValueChange={(value) => {
+    // @ts-expect-error The selection can be cleared, so value may be null.
+    value.length;
+  }}
+/>;
+
+<Select.Root
+  defaultValue={[{ id: 2, name: 'Bob' }]}
+  itemToStringLabel={(item) => item.name}
+  itemToStringValue={(item) => String(item.id)}
+  isItemEqualToValue={(item, value) => item.id === value.id}
+  defaultOpen
+  multiple
+/>;
+
+// Should accept null value
+<Select.Root items={objectItemsReadonly} value={null} />;
+
+declare function setString(value: string): void;
+
+<Select.Root
+  value="a"
+  onValueChange={(newValue) => {
+    // @ts-expect-error The selection can be cleared even when the current value is a string.
+    newValue.length;
+    // @ts-expect-error - a handler that takes only a string does not take a cleared selection
+    setString(newValue);
+  }}
+/>;
+
+declare function setNullableString(value: string | null): void;
+
+<Select.Root
+  value="a"
+  onValueChange={(newValue) => {
+    // @ts-expect-error The selected value may be null.
+    newValue.length;
+    setNullableString(newValue);
+  }}
+/>;
+
+declare function setValues(value: string[]): void;
+declare const readonlyValue: readonly string[];
+const tupleValue = ['javascript', 'typescript'] as const;
+
+<Select.Root multiple value={readonlyValue} onValueChange={setValues} />;
+<Select.Root multiple defaultValue={readonlyValue} onValueChange={setValues} />;
+<Select.Root
+  multiple
+  value={tupleValue}
+  onValueChange={(newValue) => {
+    expectType<('javascript' | 'typescript')[], typeof newValue>(newValue);
+    newValue.pop();
+  }}
+/>;
+<Select.Root multiple defaultValue={tupleValue} onValueChange={setValues} />;
+
+export function Wrapper<Value, Multiple extends boolean | undefined = false>(
+  props: Select.Root.Props<Value, Multiple>,
+) {
+  return <Select.Root {...props} />;
+}

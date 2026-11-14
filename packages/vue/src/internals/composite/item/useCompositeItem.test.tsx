@@ -149,13 +149,12 @@ describe('useCompositeItem', () => {
 
       releaseAsyncBranch();
       await waitFor(() => {
-        expect(b).toHaveAttribute('tabindex', '-1');
+        expect(findHydrationAttributes(container)).toBeNull();
       });
       await settle();
 
-      // b ends with no tab stop, as in Base UI for an item that comes late.
-      expect(readTabindexes(container)).toEqual(['0', '-1', '-1']);
-      expect(findHydrationAttributes(container)).toBeNull();
+      // The map that brings b moves the tab stop to it, so b keeps the tab stop of the server HTML.
+      expect(readTabindexes(container)).toEqual(['-1', '0', '-1']);
       expect(within(container).getByTestId('a')).toBe(a);
       expect(within(container).getByTestId('b')).toBe(b);
       expect(within(container).getByTestId('c')).toBe(c);
@@ -244,12 +243,11 @@ describe('useCompositeItem', () => {
 
       releaseAsyncBranch();
       await waitFor(() => {
-        expect(b).toHaveAttribute('tabindex', '-1');
+        expect(findHydrationAttributes(container)).toBeNull();
       });
       await settle();
 
-      expectTabindexes(['0', '-1', '-1']);
-      expect(findHydrationAttributes(container)).toBeNull();
+      expectTabindexes(['-1', '0', '-1']);
       expect(within(container).getByTestId('first')).toBe(first);
       expect(within(container).getByTestId('last')).toBe(last);
       expect(within(container).getByTestId('plain')).toBe(plain);
