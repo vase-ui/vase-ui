@@ -10,6 +10,7 @@ import {
   screen,
 } from '#test-utils';
 import { REASONS } from '../../internals/reasons';
+import { useFloatingParentNodeId, useFloatingTree } from '../../utils/popups/tree/FloatingTree';
 import * as PreviewCard from '../index.parts';
 import PreviewCardRootHydration from './PreviewCardRootHydration.test.vue';
 
@@ -505,6 +506,53 @@ describe('<PreviewCard.Root />', () => {
 
       expect(screen.queryByTestId('parent-popup')).not.toBe(null);
       expect(screen.queryByTestId('child-popup')).not.toBe(null);
+    });
+  });
+
+  describe('popup tree', () => {
+    it('registers the node of a nested card below the node of the outer card, in one tree', async () => {
+      const probes: Array<{
+        tree: ReturnType<typeof useFloatingTree>['value'];
+        parentId: string | null;
+      }> = [];
+      const TreeProbe = defineComponent({
+        setup() {
+          probes.push({ tree: useFloatingTree().value, parentId: useFloatingParentNodeId().value });
+          return () => null;
+        },
+      });
+
+      await render(
+        <PreviewCard.Root defaultOpen>
+          <PreviewCard.Trigger href="#">Parent</PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup>
+                <TreeProbe />
+                <PreviewCard.Root defaultOpen>
+                  <PreviewCard.Trigger href="#">Child</PreviewCard.Trigger>
+                  <PreviewCard.Portal>
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup>
+                        <TreeProbe />
+                      </PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  </PreviewCard.Portal>
+                </PreviewCard.Root>
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(probes).toHaveLength(2);
+      const [outer, inner] = probes;
+      expect(outer.tree).not.toBe(null);
+      expect(inner.tree).toBe(outer.tree);
+      expect(outer.parentId).not.toBe(null);
+      const innerNode = outer.tree!.nodesRef.value.find((node) => node.id === inner.parentId);
+      expect(innerNode?.parentId).toBe(outer.parentId);
     });
   });
 

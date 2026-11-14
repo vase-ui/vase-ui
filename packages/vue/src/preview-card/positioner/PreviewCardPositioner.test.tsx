@@ -358,6 +358,55 @@ describe('<PreviewCard.Positioner />', () => {
       expectWithin(positioner.getBoundingClientRect().y, firstLineRect.bottom + 5);
     });
 
+    it('keeps the hovered line of an open card when the pointer moves to another line', async () => {
+      const sideOffset = shallowRef(5);
+      await render(() => (
+        <div style={multilineWrapperStyle}>
+          <PreviewCard.Root>
+            <PreviewCard.Trigger delay={0} data-testid="trigger" style={multilineTriggerStyle}>
+              This is a long text that will wrap across multiple lines in the trigger element
+            </PreviewCard.Trigger>
+            <PreviewCard.Portal>
+              <PreviewCard.Positioner
+                data-testid="positioner"
+                side="bottom"
+                sideOffset={sideOffset.value}
+              >
+                <PreviewCard.Popup style={{ width: '80px', height: '40px' }}>
+                  Preview Content
+                </PreviewCard.Popup>
+              </PreviewCard.Positioner>
+            </PreviewCard.Portal>
+          </PreviewCard.Root>
+        </div>
+      ));
+
+      const trigger = screen.getByTestId('trigger');
+      const [firstLineRect, secondLineRect] = trigger.getClientRects();
+
+      await hoverAt(
+        trigger,
+        firstLineRect.left + firstLineRect.width / 2,
+        firstLineRect.top + firstLineRect.height / 2,
+      );
+      const positioner = await screen.findByTestId('positioner');
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, firstLineRect.bottom + 5);
+      });
+
+      await fireEvent.mouseMove(trigger, {
+        clientX: secondLineRect.left + secondLineRect.width / 2,
+        clientY: secondLineRect.top + secondLineRect.height / 2,
+      });
+      // A new offset starts a position pass, and the place after it shows the line that the pass
+      // used.
+      sideOffset.value = 15;
+
+      await waitFor(() => {
+        expectWithin(positioner.getBoundingClientRect().y, firstLineRect.bottom + 15);
+      });
+    });
+
     it('re-anchors to a newly entered line while reopening during close transition', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
       const style = `

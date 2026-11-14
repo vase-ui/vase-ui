@@ -22,24 +22,34 @@ describe('<PreviewCard.Arrow />', () => {
     },
   }));
 
-  it('is hidden from assistive technology and placed by the positioner', async () => {
+  it('is hidden from assistive technology and points at the center of the link', async () => {
     await render(
-      <PreviewCard.Root open>
-        <PreviewCard.Trigger href="#link">Link</PreviewCard.Trigger>
-        <PreviewCard.Portal>
-          <PreviewCard.Positioner>
-            <PreviewCard.Popup style={{ width: '200px', height: '40px' }}>
-              <PreviewCard.Arrow data-testid="arrow" style={{ width: '10px', height: '10px' }} />
-            </PreviewCard.Popup>
-          </PreviewCard.Positioner>
-        </PreviewCard.Portal>
-      </PreviewCard.Root>,
+      <div style={{ position: 'fixed', top: 0, left: 0 }}>
+        <PreviewCard.Root open>
+          <PreviewCard.Trigger
+            href="#link"
+            data-testid="link"
+            style={{ display: 'inline-block', width: '200px', height: '20px' }}
+          >
+            L
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner>
+              <PreviewCard.Popup style={{ width: '100px', height: '40px' }}>
+                <PreviewCard.Arrow data-testid="arrow" style={{ width: '10px', height: '10px' }} />
+              </PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>
+      </div>,
     );
     const arrow = await screen.findByTestId('arrow');
+    const link = screen.getByTestId('link').getBoundingClientRect();
 
-    // The arrow has a place only after the first position pass.
+    // The positioner measures the arrow, so the center of the arrow is on the center of the link.
     await waitFor(() => {
-      expect(arrow.style.left).toMatch(/px$/);
+      const { left, width } = arrow.getBoundingClientRect();
+      expect(Math.abs(left + width / 2 - (link.left + link.width / 2))).toBeLessThanOrEqual(1);
     });
 
     expect(arrow).toHaveAttribute('aria-hidden', 'true');
