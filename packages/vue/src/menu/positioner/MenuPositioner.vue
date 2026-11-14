@@ -66,6 +66,7 @@ import { useCompositeList } from '../../internals/composite/list/useCompositeLis
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
 import { provideFloatingNode } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
@@ -293,6 +294,13 @@ function emitOpenChange() {
 onMounted(emitOpenChange);
 watch([floatingTreeRoot, open, floatingNodeId, floatingParentNodeId], emitOpenChange, {
   flush: 'post',
+});
+
+useTriggerSwitchTransition({
+  store,
+  domReference: () => store.select('anchorElement'),
+  positionerElement: () => store.select('positionerElement'),
+  open,
 });
 
 useAnchoredPopupScrollLock(
