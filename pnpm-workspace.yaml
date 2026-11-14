@@ -1,6 +1,8 @@
 allowBuilds:
   # The install script only makes the launcher faster. The binary is in the platform package.
   esbuild: false
+  # The install script selects the build for Vue 2 or for Vue 3. The package ships the build for Vue 3.
+  vue-demi: false
 packages:
   - docs
   - fixtures/*

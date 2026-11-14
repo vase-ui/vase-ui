@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import { Combobox } from '@vase-ui/vue/combobox';
 
-function onOpenChange(open: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) {
-  const reason: Tooltip.Root.ChangeEventReason = eventDetails.reason;
-  console.log(open, reason);
+const fruits = ['Apple', 'Banana', 'Orange'];
+
+function onValueChange(value: string | null, eventDetails: Combobox.Root.ChangeEventDetails) {
+  console.log(value, eventDetails);
+}
+
+function onOpenChange(open: boolean, eventDetails: Combobox.Root.OpenChangeEventDetails) {
+  console.log(open, eventDetails);
 }
 </script>
 
 <template>
-  <Tooltip.Root @open-change="onOpenChange">
-    <Tooltip.Trigger>Trigger</Tooltip.Trigger>
-  </Tooltip.Root>
+  <Combobox.Root
+    :items="fruits"
+    default-value="Apple"
+    @value-change="onValueChange"
+    @open-change="onOpenChange"
+  >
+    <Combobox.Input />
+  </Combobox.Root>
 </template>
