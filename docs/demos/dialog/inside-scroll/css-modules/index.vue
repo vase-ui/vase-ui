@@ -13,7 +13,7 @@ const CONTENT_SECTIONS = [
   },
   {
     title: 'Opening and closing',
-    body: 'Control it using external state via the `open` and `onOpenChange` props, or let it manage state for you internally.',
+    body: 'Control it using external state via `v-model:open`, or let it manage state for you internally.',
   },
   {
     title: 'Keyboard and focus behavior',
@@ -77,7 +77,7 @@ const CONTENT_SECTIONS = [
   },
   {
     title: 'Performance',
-    body: 'Children are mounted lazily when the dialog opens. If the dialog can reopen often, consider the `keepMounted` prop sparingly to perform the work only once on mount to avoid re-initializing complex React trees on each open.',
+    body: 'Children are mounted lazily when the dialog opens. If the dialog can reopen often, consider the `keepMounted` prop sparingly to perform the work only once on mount to avoid re-initializing complex component trees on each open.',
   },
   {
     title: 'When a popover is better',
