@@ -1698,6 +1698,55 @@ describe('<Slider.Thumb />', () => {
     });
   });
 
+  describe.skipIf(isJSDOM)('server-side rendering', () => {
+    // A fragment of a range runs the inline script of the server HTML, as a page does.
+    async function insertServerHtml(props: {
+      defaultValue: number | number[];
+      alignment?: 'edge';
+    }) {
+      const serverHtml = await renderOnServer('src/slider/thumb/SliderThumbServer.test.vue', props);
+      const container = document.createElement('div');
+      document.body.append(container);
+      onTestFinished(() => container.remove());
+      container.append(document.createRange().createContextualFragment(serverHtml));
+      return container;
+    }
+
+    it('single thumb', async () => {
+      const container = await insertServerHtml({ defaultValue: 30 });
+
+      expect(
+        getComputedStyle(within(container).getByTestId('thumb')).getPropertyValue('left'),
+      ).toBe('30px');
+    });
+
+    it('renders the inline pre-hydration script for edge-aligned thumbs', async () => {
+      const container = await insertServerHtml({ defaultValue: 30, alignment: 'edge' });
+
+      expect(container.querySelector('script')).not.toBe(null);
+    });
+
+    it('renders a single pre-hydration script with the last thumb', async () => {
+      const container = await insertServerHtml({ defaultValue: [30, 40], alignment: 'edge' });
+
+      const scripts = container.querySelectorAll('script');
+      expect(scripts).toHaveLength(1);
+
+      // The script must render with the last thumb so all preceding thumbs are already in the DOM.
+      const thumbs = within(container).getAllByTestId('thumb');
+      expect(thumbs[thumbs.length - 1].contains(scripts[0])).toBe(true);
+    });
+
+    it('multiple thumbs', async () => {
+      const container = await insertServerHtml({ defaultValue: [30, 40] });
+
+      const [thumb0, thumb1] = within(container).getAllByTestId('thumb');
+
+      expect(getComputedStyle(thumb0).getPropertyValue('left')).toBe('30px');
+      expect(getComputedStyle(thumb1).getPropertyValue('left')).toBe('40px');
+    });
+  });
+
   describe('native input events', () => {
     it('puts the state back in the input when a listener cancels the change', async () => {
       const onValueChange = vi.fn((_value: number, details: { cancel: () => void }) => {

@@ -1,5 +1,6 @@
 import { expect, describe, it } from 'vitest';
-import { shallowRef } from 'vue';
+import { h, shallowRef } from 'vue';
+import type { Component } from 'vue';
 import * as PreviewCard from '../index.parts';
 import {
   createRenderer,
@@ -9,6 +10,8 @@ import {
   waitFor,
   waitForPositioned,
 } from '#test-utils';
+
+type RenderSlotProps = { props: Record<string, unknown>; children: Component };
 
 describe('<PreviewCard.Portal />', () => {
   const { render } = createRenderer();
@@ -21,6 +24,31 @@ describe('<PreviewCard.Portal />', () => {
       return result;
     },
   }));
+
+  describe('slot: render', () => {
+    it('puts the content of children in the element of the slot', async () => {
+      await render(
+        <PreviewCard.Root open>
+          <PreviewCard.Portal
+            v-slots={{
+              render: ({ props, children }: RenderSlotProps) => (
+                <section {...props} data-testid="portal">
+                  {h(children, null, () => (
+                    <PreviewCard.Positioner>
+                      <PreviewCard.Popup data-testid="popup">Content</PreviewCard.Popup>
+                    </PreviewCard.Positioner>
+                  ))}
+                </section>
+              ),
+            }}
+          />
+        </PreviewCard.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portal')).toContainElement(screen.getByTestId('popup'));
+    });
+  });
 
   describe('prop: keepMounted', () => {
     it('gives the positioner the prop, so a closed popup does not keep its last position', async () => {
