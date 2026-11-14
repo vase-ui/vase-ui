@@ -700,6 +700,36 @@ describe('<Select.Root />', () => {
 
       expect(store.state.selectedIndex).toBe(1);
     });
+
+    it('is null for a new value after the items unmount', async () => {
+      const value = shallowRef('a');
+      const open = shallowRef(true);
+      await render(() => (
+        <Select.Root value={value.value} open={open.value}>
+          <StoreProbe />
+          <Select.Trigger />
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ));
+      await flushMicrotasks();
+      expect(store.state.selectedIndex).toBe(0);
+
+      open.value = false;
+      await waitFor(() => {
+        expect(screen.queryByRole('option')).toBe(null);
+      });
+      value.value = 'b';
+      await flushMicrotasks();
+
+      expect(store.state.selectedIndex).toBe(null);
+    });
   });
 
   describe('BUG-6206: a native reset', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shallowRef } from 'vue';
+import { defineComponent, KeepAlive, shallowRef } from 'vue';
 import * as Select from '../index.parts';
 import {
   createRenderer,
@@ -152,6 +152,63 @@ describe('<Select.Positioner />', () => {
 
       expect(handleValueChange).toHaveBeenCalledTimes(1);
       expect(handleValueChange.mock.lastCall?.[0]).toEqual(['a']);
+    });
+
+    it('clears the value when each item leaves the list', async () => {
+      const items = shallowRef(['a', 'b', 'c']);
+      const value = shallowRef<unknown>('b');
+      const handleValueChange = vi.fn();
+      await renderItems({ items, value, onValueChange: handleValueChange });
+      await flushMicrotasks();
+
+      items.value = [];
+      await flushMicrotasks();
+
+      expect(handleValueChange).toHaveBeenCalledTimes(1);
+      expect(handleValueChange.mock.lastCall?.[0]).toBe(null);
+      expect(handleValueChange.mock.lastCall?.[1].reason).toBe('none');
+    });
+
+    it('keeps the value when the items change while KeepAlive holds the select', async () => {
+      const items = shallowRef(['a', 'b', 'c']);
+      const handleValueChange = vi.fn();
+      const Page = defineComponent({
+        name: 'Page',
+        setup() {
+          return () => (
+            <Select.Root open defaultValue="b" onValueChange={handleValueChange}>
+              <Select.Trigger />
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    {items.value.map((item) => (
+                      <Select.Item key={item} value={item}>
+                        {item}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          );
+        },
+      });
+      const visible = shallowRef(true);
+      await render(() => (
+        <KeepAlive>{visible.value ? <Page key="page" /> : <p key="other">other</p>}</KeepAlive>
+      ));
+      await flushMicrotasks();
+
+      visible.value = false;
+      await flushMicrotasks();
+      items.value = ['a', 'b', 'c', 'd'];
+      await flushMicrotasks();
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(handleValueChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('option', { name: 'd' })).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('aria-selected', 'true');
     });
   });
 });

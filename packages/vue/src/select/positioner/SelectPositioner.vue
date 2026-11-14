@@ -34,7 +34,7 @@ export interface SelectPositionerProps
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, toRaw, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, provide, toRaw, watch } from 'vue';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -138,7 +138,9 @@ useCompositeList({
     valuesRef.value = listRef.value.map((item) => (item ? itemValues.get(item) : undefined));
 
     const values = valuesRef.value;
-    if (values.length === 0) {
+    // `KeepAlive` takes the list out of the document, and the registry then has no item. No item
+    // left the select, so the value stays.
+    if (positionerElement?.isConnected === false) {
       return;
     }
 
@@ -180,6 +182,11 @@ useCompositeList({
       }
     }
   },
+});
+
+// The items leave with the positioner, and the root must then find no value of an item.
+onScopeDispose(() => {
+  store.context.valuesRef.value = [];
 });
 
 provide(SelectPositionerContext, positioning);
