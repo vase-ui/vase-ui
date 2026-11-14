@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  waitFor,
+} from '#test-utils';
 
 const PlainMenu = defineComponent({
   props: {
@@ -95,6 +102,44 @@ describe('<Menu.List /> in a plain menu', () => {
     expect(screen.getByTestId('popup')).not.toHaveAttribute('aria-orientation');
   });
 
+  it('navigates the items with the keyboard', async () => {
+    const { user } = await render(<PlainMenu />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+
+    trigger.focus();
+    await flushMicrotasks();
+    await user.keyboard('[Enter]');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('item-1')).toHaveFocus();
+    });
+
+    await user.keyboard('[ArrowDown]');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('item-2')).toHaveFocus();
+    });
+  });
+
+  it('focuses the list rather than the presentational popup on a pointer open', async () => {
+    const { user } = await render(<PlainMenu />);
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+
+    await fireEvent.mouseDown(trigger, { detail: 1 });
+    await fireEvent.click(trigger, { detail: 1 });
+
+    const list = await screen.findByTestId('list');
+    await waitFor(() => {
+      expect(list).toHaveFocus();
+    });
+
+    await user.keyboard('[ArrowDown]');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('item-1')).toHaveFocus();
+    });
+  });
+
   it('does not point an inactive trigger at the list', async () => {
     const TwoTriggers = defineComponent(() => {
       const handle = Menu.createHandle();
@@ -170,6 +215,37 @@ describe('<Menu.List /> in a plain menu', () => {
     });
 
     expect(secondTriggerPasses).toBe(passesBeforeOpen);
+  });
+
+  it('enters the list from the end with ArrowUp after a pointer open without looping', async () => {
+    const { user } = await render(
+      <Menu.Root loopFocus={false}>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.List data-testid="list">
+                <Menu.Item>Rename</Menu.Item>
+                <Menu.Item>Duplicate</Menu.Item>
+                <Menu.Item>Delete</Menu.Item>
+              </Menu.List>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    const list = await screen.findByTestId('list');
+    await waitFor(() => {
+      expect(list).toHaveFocus();
+    });
+
+    await user.keyboard('[ArrowUp]');
+
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveFocus();
+    });
   });
 
   it('gives the menu role back to the popup when the list unmounts', async () => {

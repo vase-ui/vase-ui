@@ -211,30 +211,6 @@
       "reason": "The file tests a part that Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />"],
-      "title": "enters the items at the list boundary when an arrow key leaves custom popup content",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />"],
-      "title": "moves focus into the items when the boundary item is already highlighted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
-      "describe": ["<Menu.Popup />", "prop: finalFocus"],
-      "title": "receives the interaction type of the item press that closed the menu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter and presses Enter on the first item, which the list navigation of Menu highlights and focuses. Menu has no keys yet."
-    },
-    {
       "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/index.ts",
@@ -284,14 +260,6 @@
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger />"],
-      "title": "keeps a hover-opened submenu open when pressing %s",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case needs the focus that the list navigation of Menu gives to a hovered item. Menu has no list navigation yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
       "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
       "title": "warns without an owner stack when React cannot provide one",
       "kind": "not-applicable",
@@ -306,41 +274,10 @@
       "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it. A server render calls no `onMounted` hook, so the Node case asserts only that a server render in a production build gives no warning."
     },
     {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger /> with VoiceOver"],
-      "title": "omits the expanded state when the submenu is opened with ArrowRight",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter, and it expects the focus on the first item, which the list navigation of Menu highlights. It then opens the submenu with a key. Menu has no keys yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
-      "describe": ["<Menu.SubmenuTrigger /> with VoiceOver"],
-      "title": "omits the expanded state when the submenu is opened with Enter",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case opens the menu with Enter, and it expects the focus on the first item, which the list navigation of Menu highlights. It then opens the submenu with a key. Menu has no keys yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has a case of its own for the expanded state of a submenu that list navigation opened."
-    },
-    {
-      "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
-      "describe": ["<Menu.Trigger />", "keyboard navigation"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "Two rows of the `it.each` open the menu with Enter and Space on a trigger that is not a native button. The trigger of Vase UI has no press yet. The arrow keys open the menu."
-    },
-    {
       "upstream": "packages/react/src/menu/viewport/MenuViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/viewport/MenuViewport.tsx",
       "reason": "The file tests a part that Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
-      "describe": ["<Menu.CheckboxItem />", "state management"],
-      "title": "toggles with Space after closing during typeahead and reopening",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
@@ -355,30 +292,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
       "reason": "The cases of the block render `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
-      "describe": ["<Menu.List /> in a plain menu"],
-      "title": "navigates the items with the keyboard",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
-      "describe": ["<Menu.List /> in a plain menu"],
-      "title": "focuses the list rather than the presentational popup on a pointer open",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
-    },
-    {
-      "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
-      "describe": ["<Menu.List /> in a plain menu"],
-      "title": "enters the list from the end with ArrowUp after a pointer open without looping",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case moves the highlight with the keys or with a typeahead, and Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",

@@ -246,6 +246,50 @@ describe('<Menu.Trigger />', () => {
     }
   });
 
+  describe('keyboard navigation', () => {
+    const cases = [
+      { buttonType: 'native', key: 'ArrowUp' },
+      { buttonType: 'native', key: 'ArrowDown' },
+      { buttonType: 'non-native', key: 'ArrowUp' },
+      { buttonType: 'non-native', key: 'ArrowDown' },
+      { buttonType: 'non-native', key: 'Enter' },
+      { buttonType: 'non-native', key: 'Space' },
+    ] as const;
+
+    it.each(cases)(
+      'opens the menu when pressing $key on a $buttonType button',
+      async ({ buttonType, key }) => {
+        const { user } = await render(
+          <Menu.Root>
+            {buttonType === 'native' ? (
+              <Menu.Trigger>Open</Menu.Trigger>
+            ) : (
+              <Menu.Trigger as="span" nativeButton={false}>
+                Open
+              </Menu.Trigger>
+            )}
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Item>1</Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>,
+        );
+
+        const button = screen.getByRole('button', { name: 'Open' });
+        expect(button.tagName).toBe(buttonType === 'native' ? 'BUTTON' : 'SPAN');
+        button.focus();
+        await flushMicrotasks();
+
+        await user.keyboard(`[${key}]`);
+
+        expect(screen.getByRole('menu', { hidden: false })).toBeInTheDocument();
+      },
+    );
+  });
+
   describe('style hooks', () => {
     it('should have the data-popup-open and data-pressed attributes when open', async () => {
       await render(

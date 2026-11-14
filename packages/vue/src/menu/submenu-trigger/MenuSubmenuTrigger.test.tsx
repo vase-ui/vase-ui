@@ -197,18 +197,6 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
-  it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
-    await renderSubmenu({ trigger: { delay: 0 } });
-    const trigger = screen.getByRole('menuitem', { name: 'More' });
-    await hover(trigger);
-    await screen.findByTestId('submenu');
-
-    await fireEvent.click(trigger, { detail: 0 });
-    await waitForAnimationFrame();
-
-    expect(screen.queryByTestId('submenu')).not.toBe(null);
-  });
-
   it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {
     await renderSubmenu({ trigger: { delay: 0 } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
@@ -313,6 +301,47 @@ describe('<Menu.SubmenuTrigger />', () => {
   });
 
   afterEach(waitForAnimationFrame);
+
+  it.skipIf(isJSDOM).each(['Enter', 'Space'])(
+    'keeps a hover-opened submenu open when pressing %s',
+    async (key) => {
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="parent-menu">
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>More</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup data-testid="submenu">
+                        <Menu.Item>Alpha</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Actions' }));
+      const trigger = await screen.findByRole('menuitem', { name: 'More' });
+      await user.hover(trigger);
+      await screen.findByTestId('submenu');
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+
+      await user.keyboard(`[${key}]`);
+      await waitForAnimationFrame();
+
+      expect(screen.getByTestId('submenu')).not.toBe(null);
+      expect(screen.getByTestId('parent-menu')).not.toBe(null);
+    },
+  );
 
   it.skipIf(isJSDOM)('closes a touch-opened submenu on a second tap', async () => {
     const { user } = await render(

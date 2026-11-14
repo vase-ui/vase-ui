@@ -13,6 +13,7 @@ import {
   takeReportedMessages,
   wait,
   waitFor,
+  waitForLaterMillisecond,
   waitSingleFrame,
 } from '#test-utils';
 import * as Dialog from '../../dialog/index.parts';
@@ -129,6 +130,78 @@ describe('<Menu.Popup />', () => {
     );
     expect(onParentKeyDown).toHaveBeenCalled();
     expect(onParentKeyDown.mock.calls.every(([event]) => event.key === 'F1')).toBe(true);
+  });
+
+  it('enters the items at the list boundary when an arrow key leaves custom popup content', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <button type="button">Custom</button>
+              <Menu.Item>One</Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+              <Menu.Item>Three</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    const one = await screen.findByRole('menuitem', { name: 'One' });
+    // The open gives the focus to the first tabbable element in an animation frame. That frame
+    // would take the focus back from the item.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Custom' })).toHaveFocus());
+    one.focus();
+    await flushMicrotasks();
+    await user.keyboard('[ArrowDown]');
+    // Mid-list, so continuing from the highlight would reach Three instead.
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Two' })).toHaveFocus());
+
+    screen.getByRole('button', { name: 'Custom' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[ArrowDown]');
+
+    await waitFor(() => expect(one).toHaveFocus());
+  });
+
+  it('moves focus into the items when the boundary item is already highlighted', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <a href="#profile">Profile</a>
+              <Menu.Item>One</Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+              <Menu.Item>Three</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[Enter]');
+
+    const one = await screen.findByRole('menuitem', { name: 'One' });
+    await waitFor(() => expect(one).toHaveAttribute('data-highlighted'));
+    // The open gives the focus to the item in an animation frame. That frame would take the focus
+    // back from the link.
+    await waitFor(() => expect(one).toHaveFocus());
+    screen.getByRole('link', { name: 'Profile' }).focus();
+    await flushMicrotasks();
+    expect(one).toHaveAttribute('data-highlighted');
+
+    await user.keyboard('[ArrowDown]');
+    await waitFor(() => expect(one).toHaveFocus());
+
+    await user.keyboard('[ArrowDown]');
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Two' })).toHaveFocus());
   });
 
   it('moves focus into the items when the last item is already highlighted', async () => {
@@ -312,6 +385,44 @@ describe('<Menu.Popup />', () => {
   });
 
   describe('prop: finalFocus', () => {
+    it('receives the interaction type of the item press that closed the menu', async () => {
+      const finalFocus = vi.fn(() => true);
+
+      const { user } = await render(
+        <Menu.Root>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup finalFocus={finalFocus}>
+                <Menu.Item>Close</Menu.Item>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>,
+      );
+
+      const trigger = screen.getByText('Open');
+
+      await user.click(trigger);
+      const item = await screen.findByText('Close');
+      // The item mounts with the menu. Vue skips its listener for an event of that millisecond.
+      await waitForLaterMillisecond();
+      await fireEvent.pointerDown(item, { pointerType: 'mouse' });
+      await fireEvent.click(item, { detail: 1 });
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('mouse');
+
+      await user.keyboard('{Enter}');
+      await screen.findByText('Close');
+      await user.keyboard('{Enter}');
+      await waitFor(() => {
+        expect(trigger).toHaveFocus();
+      });
+      expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
+    });
+
     it('receives the mouse interaction type after a drag-release item selection', async () => {
       const finalFocus = vi.fn(() => true);
 
