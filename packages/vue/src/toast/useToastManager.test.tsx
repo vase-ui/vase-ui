@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { defineComponent, provide } from 'vue';
-import { createRenderer, flushMicrotasks, screen, takeReportedMessages } from '#test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, Fragment, provide } from 'vue';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  takeReportedMessages,
+} from '#test-utils';
+import * as Toast from './index.parts';
 import { ToastContext } from './provider/ToastProviderContext';
 import { ToastStore } from './store';
 import { useToastManager } from './useToastManager';
@@ -18,6 +25,238 @@ function createStore() {
     prevFocusElement: null,
   });
 }
+
+describe('useToast', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('add', () => {
+    const { render } = createRenderer();
+
+    it('does not call onRemove when replacing an ending toast', async () => {
+      const onRemoveSpy = vi.fn();
+
+      const Buttons = defineComponent({
+        setup() {
+          const { add, close, toasts } = useToastManager();
+          let toastId: string | null = null;
+
+          return () => (
+            <Fragment>
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saving…',
+                    timeout: 0,
+                    onRemove: onRemoveSpy,
+                  });
+                }}
+              >
+                add
+              </button>
+              <button
+                onClick={() => {
+                  if (toastId) {
+                    close(toastId);
+                  }
+                }}
+              >
+                close
+              </button>
+              <button
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Saved',
+                    timeout: 0,
+                  });
+                }}
+              >
+                re-add
+              </button>
+              <div data-testid="toast-count">{toasts.value.length}</div>
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
+
+      await fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await fireEvent.click(screen.getByRole('button', { name: 're-add' }));
+
+      expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
+      expect(onRemoveSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('ignores transitionStatus when upserting an existing toast', async () => {
+      const Buttons = defineComponent({
+        setup() {
+          const { add, toasts } = useToastManager();
+
+          return () => (
+            <Fragment>
+              <button
+                onClick={() => {
+                  add({
+                    id: 'save',
+                    title: 'Saving…',
+                    timeout: 0,
+                  });
+                }}
+              >
+                add
+              </button>
+              <button
+                onClick={() => {
+                  add({
+                    id: 'save',
+                    title: 'Saved',
+                    timeout: 0,
+                    transitionStatus: 'ending',
+                  });
+                }}
+              >
+                upsert
+              </button>
+              {toasts.value.map((toast) => (
+                <Fragment key={toast.id}>
+                  <div data-testid="title-value">{toast.title}</div>
+                  <div data-testid="transition-status">{toast.transitionStatus}</div>
+                </Fragment>
+              ))}
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('title-value')).toHaveTextContent('Saving…');
+      expect(screen.getByTestId('transition-status')).toHaveTextContent('starting');
+
+      await fireEvent.click(screen.getByRole('button', { name: 'upsert' }));
+      expect(screen.getByTestId('title-value')).toHaveTextContent('Saved');
+      expect(screen.getByTestId('transition-status')).toHaveTextContent('starting');
+    });
+
+    it('increments updateKey when adding again with the same id', async () => {
+      const Buttons = defineComponent({
+        setup() {
+          const { add, toasts } = useToastManager();
+
+          return () => (
+            <Fragment>
+              <button
+                onClick={() => {
+                  add({
+                    id: 'save',
+                    title: 'Draft saved',
+                    timeout: 0,
+                  });
+                }}
+              >
+                add
+              </button>
+              {toasts.value.map((toast) => (
+                <div key={toast.id} data-testid="update-key">
+                  {toast.updateKey}
+                </div>
+              ))}
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('update-key')).toHaveTextContent('0');
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('update-key')).toHaveTextContent('1');
+    });
+  });
+
+  describe('update', () => {
+    const { render } = createRenderer();
+
+    it('increments updateKey when updating a toast', async () => {
+      const Buttons = defineComponent({
+        setup() {
+          const { add, update, toasts } = useToastManager();
+          let toastId: string | null = null;
+
+          return () => (
+            <Fragment>
+              <button
+                type="button"
+                onClick={() => {
+                  toastId = add({
+                    id: 'save',
+                    title: 'Draft saved',
+                    timeout: 0,
+                  });
+                }}
+              >
+                add
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (toastId) {
+                    update(toastId, { title: 'Draft synced' });
+                  }
+                }}
+              >
+                update
+              </button>
+              {toasts.value.map((toast) => (
+                <div key={toast.id} data-testid="update-key">
+                  {toast.updateKey}
+                </div>
+              ))}
+            </Fragment>
+          );
+        },
+      });
+
+      await render(
+        <Toast.Provider>
+          <Buttons />
+        </Toast.Provider>,
+      );
+
+      await fireEvent.click(screen.getByRole('button', { name: 'add' }));
+      expect(screen.getByTestId('update-key')).toHaveTextContent('0');
+
+      await fireEvent.click(screen.getByRole('button', { name: 'update' }));
+      expect(screen.getByTestId('update-key')).toHaveTextContent('1');
+    });
+  });
+});
 
 describe('useToastManager', () => {
   const { render } = createRenderer();

@@ -674,7 +674,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - When the result is `undefined`, the function throws an error that follows [Error messages](#error-messages).
 - A context that a part can be without does not throw. `useCompositeListContext()` returns `undefined`, because an item with no list is valid. `useCompositeRootContext(true)` also returns `undefined`. `useRadioGroupContext()` and `useCheckboxGroupContext()` return `undefined`, because a radio or a checkbox with no group is valid.
 - A context that Base UI creates with a default value has one default object in its file. `use<Name>Context()` then calls `inject(key, DEFAULT_<NAME>_CONTEXT)`, and a part works with no provider. `useLabelableContext()`, `useFieldRootContext()` and `useFormContext()` do this.
-- The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does.
+- The default holds no state, because all apps and all server requests share it. Each value that a provider can change is a `computed` with a constant. Each function does nothing, or returns a constant, or returns its argument where the default of Base UI does. The default delay group is the exception, because the default context of Base UI holds state too. Only a mounted part writes it. See [Popup interactions](#popup-interactions).
 - `DEFAULT_FIELD_ROOT_CONTEXT` has three more forms. A ref that parts write drops each write: `validation.inputRef` is a `customRef` that reads `null`. A member that only a provider can have is `null`: `focusOwnerRef`. A collection is empty and read-only: `registeredInputs`.
 - Base UI keeps three things in its default field and form contexts: the fields of the page that have no form, one focus owner and one input. Vase UI keeps none. With no form, `fields` is empty. With no field, `useSetFieldFocused` keeps the owner of its control.
 - To find out if a provider is there, compare a function of the context with `NOOP`, as Base UI does: `registerControlId === NOOP`, `setValidityData === NOOP`. `useFieldRootContext(false)` throws when there is no field.
@@ -911,6 +911,18 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - While it is enabled, `useClientPoint` adds one `mousemove` listener to the window of the positioner element. A mouse-like pointer keeps the listener while the store has that element, so the popup follows the pointer while it closes. A touch pointer keeps it only while the popup is open. The listener removes itself when the pointer moves over the positioner element. A `mouseenter` or `mousemove` event of the trigger adds it again while the popup is open. A popup that a non-mouse event opened, such as a focus or a key press, gets no listener and keeps the anchor of its trigger. While it is not enabled, `useClientPoint` has no listener. It writes the anchor element of the store to `anchorOverride`.
 - `store` of `useClientPoint` is a store, a ref or a getter. When the store changes, the composable removes its window listener. It writes `null` to `anchorOverride` of the old store. It then applies the rules above to the new store.
 
+The delay group is in `src/utils/popups/delay-group`. The popups of a group share a delay. While a popup of the group is open, and for `timeoutMs` after it closes, the open delay of the group is 0.
+
+- `provideFloatingDelayGroup({ delay, timeoutMs })` replaces the component `FloatingDelayGroup`. A part calls it in `setup`, and it gives the group to the parts below.
+- `useDelayGroup(store, { open })` makes the caller a member of the group above it. `store` is a store, a ref or a getter, because a detached trigger moves from the store of its handle to the store of a root. The store has `closeForSibling()`, which closes its popup because another popup of the group opened.
+- A group is one plain object. Its fields are not reactive, as the refs of the context of Base UI are not. A change of the delay thus renders no member.
+- `useDelayGroup` returns the active id and the delay as getters, `isInstantPhase` as a ref, and `hasProvider` as a Boolean.
+- A member updates the group in `onMounted` and in a `watch` of its open state and its popup id. The `watch` has the default flush, which runs before the render of the caller. A popup that the caller renders then has its instant phase when Vue inserts it. A closed member also updates the group in a second `watch` of `timeoutMs`. A new `timeoutMs` thus applies to the timer that runs.
+- A server runs no `onMounted` hook and no `watch` of a member. A server render thus writes nothing to a group, also not to the default group that all requests share.
+- A member that holds the group and unmounts while its popup is open ends the group. A member that holds the group and unmounts while its popup is closed leaves the timer of its close to end the group. A member that does not hold the group leaves the group and its timer as they are.
+- A part with no provider joins the default group of the module, as a part of Base UI joins its default context. All such parts share it, so a popup that opens closes the popup that was open.
+- `KeepAlive` does not stop the timer of a group. The instant phase thus ends on time while `KeepAlive` holds the provider.
+
 ### Popup dismissal
 
 `useDismiss(store, options)` closes a popup for an Escape press, for a press outside it and for a press of its reference. The code is in `src/utils/popups/interactions/useDismiss.ts`.
@@ -1001,6 +1013,15 @@ The toasts of one `Toast.Provider` are in a `ToastStore`. The code is in `src/to
 - A toast keeps no vnode in its data, because a vnode that mounts a second time on a page that Vue hydrated loses its components. The `title`, the `description` and the `children` of `actionProps` are a text, a number, or a function that returns the content.
 - `actionProps` of a toast has the attributes of a `<button>` and `children`, which is the content of the button.
 - `ref` of a toast object is a Vue ref of an element. Read it as `.value`.
+
+### Toast parts
+
+- `Toast.Provider` makes its store in `setup` and holds the timers of the store from `onMounted`. A toast that a `setup` adds on a server thus gets no timer.
+- The provider subscribes to its `toastManager` in `onMounted`. A manager that all server requests share thus gets no subscriber from a server render, and a toast of one request does not reach another request.
+- While `KeepAlive` holds the provider, it releases its timers and the subscription to its manager. The activation takes them back, and each timer continues with the time that was left.
+- The provider follows `timeout` and `limit` with a `watch` that has the default flush. A part that adds a toast in the same update thus sees the new values.
+- `Toast.Viewport` resumes the timers when the focus goes into a frame of the page (`BUG-6174`). The window gets `blur` for that move, so the viewport checks in a 0 ms timer after the event if the page has focus and a frame is the active element. Firefox reports no focus in the event itself.
+- `Toast.Root` catches the error of `setPointerCapture`. Firefox throws `NotFoundError` for a pointer that is not active, such as the pointer id of a dispatched event. The swipe then goes on with no capture (`VUE-50`).
 
 ### Composite
 
@@ -1341,6 +1362,7 @@ A ported test is a file at the mapped path with the same `describe` and `it` tit
 | A forced render of the parent that must render the part again, such as `forceRender` of `React.useReducer` | A `shallowRef` count that the test binds to an attribute of the part, such as `data-render`                                                                                                                                                               |
 | `setProps({ children: <Part … /> })`                                                                       | A `shallowRef` that the test component reads                                                                                                                                                                                                              |
 | `useIsoLayoutEffect` or `React.useEffect` in a test component                                              | `onMounted`. Where a dependency changes in the test, add the `watch` of [What differs from the React source](#what-differs-from-the-react-source).                                                                                                        |
+| A counter of renders that `React.useEffect` raises in a test component                                     | A counter that `onUpdated` raises. It counts no render of the mount, so the case asserts the numbers of Vue and not the numbers of React.                                                                                                                 |
 | `useStableCallback(fn)`                                                                                    | `fn`                                                                                                                                                                                                                                                      |
 | A case that compares the result of `React.useCallback` or `React.useMemo` in two renders                   | No counterpart. `setup` runs one time, so a function or an object that it makes keeps its identity. Give the case a `not-applicable` row.                                                                                                                 |
 | A commit count from `React.Profiler`                                                                       | A count of the calls of a `MutationObserver` that observes `container` with `childList` and `subtree`. For a popup in a portal, it observes `document.body`.                                                                                              |
