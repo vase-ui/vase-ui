@@ -66,8 +66,9 @@ function setBackdrop(element: HTMLElement | null) {
   ownBackdrop = backdrop;
 }
 
-// A swipe writes its progress to the element in each frame. Vue writes each key of the style again
-// when the part renders, so the render gives the value that the element holds.
+// A swipe can write its progress to the element in each frame. Vue writes each key of the style
+// again when the part renders. The render thus gives the value that the element holds, so that a
+// render does not replace the progress of the swipe.
 function swipeProgressValue() {
   return ownBackdrop?.style.getPropertyValue(DrawerBackdropCssVars.swipeProgress) || '0';
 }
