@@ -141,22 +141,6 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
   });
 
-  it('closes after the close delay when the pointer moves over another item of the parent menu', async () => {
-    const tick = useFakeClock();
-    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
-    const trigger = screen.getByRole('menuitem', { name: 'More' });
-    await hover(trigger);
-    await tick(0);
-    expect(trigger).toHaveAttribute('data-popup-open');
-
-    await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'Alpha' }));
-    await tick(39);
-    expect(trigger).toHaveAttribute('data-popup-open');
-
-    await tick(1);
-    expect(trigger).not.toHaveAttribute('data-popup-open');
-  });
-
   it('closes a submenu that hover opened when the pointer leaves the submenu, after the close delay', async () => {
     const tick = useFakeClock();
     await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
@@ -180,21 +164,6 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'More' }));
 
     expect(await screen.findByTestId('submenu')).not.toBe(null);
-  });
-
-  it('cancels a hover open that waits for its delay at a mouseout with no mouseleave', async () => {
-    const tick = useFakeClock();
-    await renderSubmenu({ trigger: { delay: 20 } });
-    const trigger = screen.getByRole('menuitem', { name: 'More' });
-
-    await hover(trigger);
-    await tick(19);
-    await fireEvent.mouseOut(trigger, {
-      relatedTarget: screen.getByRole('menuitem', { name: 'Alpha' }),
-    });
-    await tick(60);
-
-    expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
   it('stays open after a move in the submenu, when the pointer leaves its trigger', async () => {

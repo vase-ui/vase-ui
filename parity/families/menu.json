@@ -56,12 +56,6 @@
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The cases of the file that are not ported yet have no counterpart. Vase UI ports them with the entry point of Menu."
-    },
-    {
-      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "describe": ["<Menu.Root />"],
       "title": "warns that nested menus ignore the modal prop",
       "kind": "replaced",
@@ -75,6 +69,142 @@
       "kind": "replaced",
       "test": "packages/vue/src/menu/root/MenuRoot.node.test.tsx",
       "reason": "The case runs only in jsdom, and it sets `process.env.NODE_ENV` to `production`. Vitest sets that value when it transforms a file for a browser, so only the Node project can change it. The case 'gives no warning for modal in a production build' of the Node file covers it."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "nested menus"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "nested popups"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "focus management"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger with the Enter key or the mouse to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "focus guards"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "prop: modal"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu, and then read its internal backdrop. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "controlled open interactions"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "scroll locking"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger with the mouse or with a touch to open the menu, and then read the scroll lock. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "prop: actionsRef"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger with the Enter key and the mouse to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "prop: openOnHover", "modal behavior"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases click the trigger of a menu that a hover opened. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "mouse interaction"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger with the mouse, and then drag the pointer and release it. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "when using $name", "BaseUIChangeEventDetails"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open and close the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />"],
+      "title": "does not leave a tabbable item after tabbing out of a keepMounted menu before close",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger with the Enter key to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "opening a dialog from an item"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger with the mouse, and then drags the pointer to an item and releases it. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "trigger render cost"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "prop: onItemHighlighted"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger with the Enter key or the mouse to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "submenu parent store subscription"],
+      "title": "releases the subscriptions a submenu adds to its parent store when it unmounts",
+      "kind": "not-applicable",
+      "reason": "A submenu of Vase UI adds no subscription to the store of its parent. A selector of its store reads the reactive state of the parent."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "submenu parent store subscription"],
+      "title": "releases them under StrictMode",
+      "kind": "not-applicable",
+      "reason": "Vue has no Strict Mode. A submenu of Vase UI adds no subscription to the store of its parent."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "open change requests"],
+      "title": "reports two identical requests made in one tick twice",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a detached trigger with the mouse to open the menu. The trigger of Vase UI has no press yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
+      "describe": ["<Menu.Root />", "open change requests"],
+      "title": "reports the committed active trigger for a close that carries no trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses a detached trigger with the mouse to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
