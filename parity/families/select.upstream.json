@@ -1,0 +1,4584 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/select/**",
+    "docs/src/app/(docs)/react/components/select/**"
+  ],
+  "sources": [
+    "packages/react/src/select/arrow/SelectArrow.tsx",
+    "packages/react/src/select/arrow/SelectArrowDataAttributes.ts",
+    "packages/react/src/select/backdrop/SelectBackdrop.tsx",
+    "packages/react/src/select/backdrop/SelectBackdropDataAttributes.ts",
+    "packages/react/src/select/group-label/SelectGroupLabel.tsx",
+    "packages/react/src/select/group/SelectGroup.tsx",
+    "packages/react/src/select/group/SelectGroupContext.ts",
+    "packages/react/src/select/icon/SelectIcon.tsx",
+    "packages/react/src/select/icon/SelectIconDataAttributes.ts",
+    "packages/react/src/select/index.parts.ts",
+    "packages/react/src/select/index.ts",
+    "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
+    "packages/react/src/select/item-indicator/SelectItemIndicatorDataAttributes.ts",
+    "packages/react/src/select/item-text/SelectItemText.tsx",
+    "packages/react/src/select/item/SelectItem.tsx",
+    "packages/react/src/select/item/SelectItemContext.ts",
+    "packages/react/src/select/item/SelectItemDataAttributes.ts",
+    "packages/react/src/select/label/SelectLabel.tsx",
+    "packages/react/src/select/list/SelectList.tsx",
+    "packages/react/src/select/popup/SelectPopup.tsx",
+    "packages/react/src/select/popup/SelectPopupDataAttributes.ts",
+    "packages/react/src/select/popup/utils.ts",
+    "packages/react/src/select/portal/SelectPortal.tsx",
+    "packages/react/src/select/positioner/SelectPositioner.tsx",
+    "packages/react/src/select/positioner/SelectPositionerContext.ts",
+    "packages/react/src/select/positioner/SelectPositionerCssVars.ts",
+    "packages/react/src/select/positioner/SelectPositionerDataAttributes.ts",
+    "packages/react/src/select/root/SelectRoot.tsx",
+    "packages/react/src/select/root/SelectRootContext.ts",
+    "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+    "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
+    "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrowDataAttributes.ts",
+    "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
+    "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrowDataAttributes.ts",
+    "packages/react/src/select/separator/SelectSeparator.tsx",
+    "packages/react/src/select/store.ts",
+    "packages/react/src/select/trigger/SelectTrigger.tsx",
+    "packages/react/src/select/trigger/SelectTriggerDataAttributes.ts",
+    "packages/react/src/select/value/SelectValue.tsx",
+    "packages/react/src/select/value/SelectValueDataAttributes.ts"
+  ],
+  "typeTests": [
+    "packages/react/src/select/positioner/SelectPositioner.spec.tsx",
+    "packages/react/src/select/root/SelectRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/select/arrow/SelectArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Arrow />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/backdrop/SelectBackdrop.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Backdrop />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "is hidden from the accessibility tree by default"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "allows overriding aria-hidden"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Select.Group>"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "removes the group aria-labelledby attribute when unmounted"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "does not let an older label cleanup clear a newer label"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "updates explicit and generated ids independently of ref churn"
+        },
+        {
+          "describe": [
+            "<Select.GroupLabel />"
+          ],
+          "title": "replaces and unregisters its label in Strict Mode"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/group/SelectGroup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Group />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Group />"
+          ],
+          "title": "should render group with label"
+        },
+        {
+          "describe": [
+            "<Select.Group />"
+          ],
+          "title": "should associate label with group"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/icon/SelectIcon.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Icon />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/item-indicator/SelectItemIndicator.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.ItemIndicator />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.ItemIndicator />"
+          ],
+          "title": "settles out of its transition state after the item is deselected"
+        },
+        {
+          "describe": [
+            "<Select.ItemIndicator />"
+          ],
+          "title": "mounts only while selected when keepMounted is false"
+        },
+        {
+          "describe": [
+            "<Select.ItemIndicator />"
+          ],
+          "title": "preserves the kept-mounted element across selection changes"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/item-text/SelectItemText.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.ItemText />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.ItemText />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Select.Item>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/item/SelectItem.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "treats a null value as an empty selection in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "keeps the selection while grouped items are reordered and inserted"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should select the item and close popup when clicked"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "navigating with keyboard should focus item",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should select item when Enter key is pressed",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should focus disabled items"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should not select disabled item"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should not select disabled item when Enter is pressed"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "inherits the disabled state from the root"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should call onClick exactly once for a regular click"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should select an unhighlighted item with the mouse"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should highlight a hovered item and commit it with a mouse click"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should ignore an unhighlighted item with a generic virtual click"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should focus the selected item upon opening the popup"
+        },
+        {
+          "describe": [
+            "<Select.Item />"
+          ],
+          "title": "should allow pointer click after a typeahead sequence that ends with Space",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "calls onClick once for a click made after the opening delay",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not select an item on quick mouseup when showing a placeholder (no null item)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not select an unselected item within the selected delay when aligned with the trigger",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should call onClick when selecting via drag-to-select (mousedown on trigger, mouseup on item)",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "does not fire click handlers on a disabled item during drag-to-select",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not select a disabled item via drag-to-select",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not select on mouseup that follows a touch interaction",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should accumulate drag-to-select movement across items",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should select via drag-to-select when hover highlighting is disabled",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "focuses the selected item after drag-to-select so arrow navigation continues from it",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not treat small pointer movement as drag-to-select",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should allow small pointer movement to select after the opening delay",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should ignore an opening click that did not start on the item",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "quick selection"
+          ],
+          "title": "should not select item when onClick calls preventBaseUIHandler during drag-to-select",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "style hooks"
+          ],
+          "title": "should apply data-highlighted attribute when item is highlighted",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Item />",
+            "style hooks"
+          ],
+          "title": "should apply data-selected attribute when item is selected",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/label/SelectLabel.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Label />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/list/SelectList.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.List />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/popup/SelectPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Select.Positioner>"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "keeps arrow keys inside the popup when the trigger lives in a toolbar"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "moves focus into the items when the boundary item is already highlighted"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "has aria attributes when no Select.List is present"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "places aria attributes on Select.List instead if it is present"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "restores transform-related inline styles after measurement"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "keeps alignItemWithTrigger active at browser zoom",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "aligns the selected item with the trigger inline start in ltr",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "aligns the selected item with the trigger inline start in ltr when popup padding shifts the item text",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "aligns the selected item with the trigger inline end in rtl",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "aligns the popup with the trigger inline end in rtl when no selected item text is available",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "keeps item text aligned with the trigger after reopening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "rtl alignment"
+          ],
+          "title": "aligns the selected item with the trigger inline end on first open in the docs-style rtl layout",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "rtl alignment"
+          ],
+          "title": "seeds anchor width from the custom anchor on first open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "keeps scrolling the aligned list at browser zoom after the popup fills the available height",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "treats short popups as top-positioned when maxScrollTop is off by 1px",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "keeps alignItemWithTrigger active when the aligned height is fractionally below minHeight",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "does not resize the positioner when the list scrolls before the popup is placed"
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "anchors the popup to the viewport bottom when the selection sits near the list top",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "grows a bottom-anchored popup as the list is scrolled and re-pins it to the top",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "consumes a sub-pixel overscroll into the popup height",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "leaves the popup height alone when the list is already at the anchored edge",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "grows a top-anchored popup upward and keeps the list pinned to the bottom",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "stops growing a top-anchored popup once it fills the available height",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "pins a top-anchored popup that already fills the viewport to the end of the list",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "stops resizing once a max-height constrained popup is fully grown",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "treats a zero max-height as unconstrained rather than collapsing the popup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "centers the transform origin when the positioner has no measurable height",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "never applies a non-positive height when the viewport collapses below the margins",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "ignores a pinch-zoomed visual viewport outside WebKit",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "ignores scroll events bubbling to the popup while a Select.List owns scrolling",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "grows the popup when it is itself the scroll container",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />",
+            "aligned popup scroll resizing"
+          ],
+          "title": "closes the aligned popup when the window is resized",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "title": "passes the keyboard close type of an item press to a finalFocus function"
+        },
+        {
+          "describe": [
+            "<Select.Popup />"
+          ],
+          "suite": "popupFocusPropsTests"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/portal/SelectPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Portal />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/positioner/SelectPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Positioner />"
+          ],
+          "suite": "positionerConformanceTests"
+        },
+        {
+          "describe": [
+            "<Select.Positioner />",
+            "kept-mounted positioner"
+          ],
+          "title": "does not retain stale coordinates while closed",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing before the popup attaches"
+          ],
+          "title": "finishes closing when a layout effect closes it on mount"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing before the popup attaches"
+          ],
+          "title": "finishes closing when a layout effect closes it right after a press opens it"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "exposes the orientation attribute rendered by Separator"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "automatically unmounts with an actions ref and completes closing once"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "keeps the popup mounted until the unmount action completes closing"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "clears the opt-out when a controlled reopen interrupts a pending unmount"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "ignores an opt-out on a canceled close"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "keeps the opt-out when a controlled close is applied in a transition"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "closes through the `close` action so `onOpenChange` can opt out"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "ignores `unmount` while the popup is open"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "unmounts when `close` and `unmount` are called in one batch"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "still unmounts on a later close after `unmount` was called while open"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "still unmounts on a later close after `unmount` and a reopen in one batch"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "manual unmount lifecycle"
+          ],
+          "title": "completes closing once when `unmount` is called twice in one batch"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "conformance"
+          ],
+          "suite": "popupConformanceTests"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "conformance"
+          ],
+          "suite": "popupListConformanceTests"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "server-side rendering"
+          ],
+          "title": "does not link Select.Label before hydration"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: defaultValue"
+          ],
+          "title": "should select the item by default"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "should select the item specified by the value prop"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "selects the controlled value when the popup is mounted on the initial render"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "should update the selected item when the value prop changes"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "keeps a new controlled value and focus in $name mode when the previous item is removed in the same update"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "uses the current multiple setting when options and value change together"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "uses the current comparator when options and value change together"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "should not update the internal value if the controlled value prop does not change"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: value"
+          ],
+          "title": "updates <Select.Value /> label when the value prop changes before the popup opens"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: itemToStringValue"
+          ],
+          "title": "uses itemToStringValue for form submission"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: itemToStringValue"
+          ],
+          "title": "uses itemToStringValue for multiple selection form submission"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: itemToStringValue"
+          ],
+          "title": "does not invoke itemToStringValue with the value array in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: itemToStringLabel"
+          ],
+          "title": "uses itemToStringLabel for trigger text when value is object"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: itemToStringLabel"
+          ],
+          "title": "updates trigger text with itemToStringLabel after selecting object item"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should call onValueChange when an item is selected"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "is not called twice on select"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: defaultOpen"
+          ],
+          "title": "should open the select by default"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: defaultOpen"
+          ],
+          "title": "should select an item and close when clicked while opened by default"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "does not dismiss when pressing portalled content inside the popup but outside the list"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "should handle browser autofill"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "ignores browser autofill in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "leaves the value untouched when autofill matches no item"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "redirects focus to the trigger when the hidden input is focused"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "should pass autoComplete to the hidden input"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "should handle browser autofill with object values"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "should handle browser autofill with object values when autofill uses the label"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "matches browser autofill against an item rendered label for primitive values regardless of case"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "matches browser autofill by serialized value before an earlier rendered label"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "matches browser autofill when an earlier item has no rendered label"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "marks the field dirty and validates after successful autofill"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "does not update field state when autofill is canceled"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "removes [data-dirty] in multiple mode after returning to the initial value"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "compares object values with isItemEqualToValue when clearing [data-dirty] in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "does not invoke isItemEqualToValue with the value array in multiple mode when empty"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "keeps [data-dirty] in multiple mode when the same values return in a different order"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "ignores hidden-input autofill when $lockState $label"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "does not commit item selection when root is %s and forced open"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: modal"
+          ],
+          "title": "should render an internal backdrop when `true`"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: modal"
+          ],
+          "title": "should not render an internal backdrop when `false`"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "interaction type tracking (openMethod)"
+          ],
+          "title": "keeps touch interaction type when reopening quickly after close",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "interaction type tracking (openMethod)"
+          ],
+          "title": "keeps touch positioning during the close transition",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "interaction type tracking (openMethod)"
+          ],
+          "title": "keeps the selected item highlighted when reopening after a touch-driven mouseleave",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "interaction type tracking (openMethod)"
+          ],
+          "title": "recomputes positioning before the popup becomes visible again after touch dismiss",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "touch scroll lock"
+          ],
+          "title": "applies scroll lock when a touch-opened popup covers the viewport width",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll locking",
+            "touch scroll lock"
+          ],
+          "title": "does not apply scroll lock when a touch-opened popup is narrower than the viewport",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts the select when the `unmount` method is called"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "clears scroll arrow visibility when manually unmounted (strict: %s)"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "does not leave a tabbable option while closed and kept mounted after tabbing out"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll arrows"
+          ],
+          "title": "normalizes overlapping fractional scroll ranges when toggling scroll arrow visibility"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "scroll arrows"
+          ],
+          "title": "keeps a scroll arrow mounted while its exit animation runs",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "dismisses the popover with one outside press after reopening an aligned select",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "dismisses the popover after reopening a selected aligned select",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "keeps a modal popover open when choosing a non-modal aligned select item",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "does not bubble Escape from a non-modal select to the popover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "returns focus to the opener when a select is opened programmatically inside a popover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "select inside popover"
+          ],
+          "title": "does not consume the next outside press after a native drag from a modal select trigger outside all popups",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: disabled"
+          ],
+          "title": "sets the disabled state"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: disabled"
+          ],
+          "title": "updates the disabled state when the disabled prop changes"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "sets the readOnly state"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "opens the popup when clicked"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "marks the listbox as readonly when rendered with Select.List"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "opens the popup with $name"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "does not commit a value when an item is clicked in a popup the user opened"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "does not commit a value with Enter on a highlighted item"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "does not commit a value with typeahead on a closed trigger"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: readOnly"
+          ],
+          "title": "moves the highlight with typeahead while the popup is open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: id"
+          ],
+          "title": "sets the id on the trigger"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: id"
+          ],
+          "title": "sets a hidden input id when name is not provided"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: id"
+          ],
+          "title": "does not set a hidden input id when name is provided"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "suite": "hiddenInputTypeTests"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "suite": "hiddenInputSizeTests"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "with Field.Root parent"
+          ],
+          "title": "applies the root id to the trigger"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "with Field.Root parent"
+          ],
+          "title": "should receive disabled prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "with Field.Root parent"
+          ],
+          "title": "should receive name prop from Field.Root"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "resets selected index when value is set to null without a null item"
+        },
+        {
+          "describe": [
+            "<Select.Root />"
+          ],
+          "title": "does not force-mount the popup on a programmatic value change"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "submits stringified value to onFormSubmit when itemToStringValue is provided"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "submits to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "submits multiple values to an external form when `form` is provided",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "triggers native HTML validation on submit"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "clears external errors on change"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Form"
+          ],
+          "title": "revalidates immediately after form submission errors"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "[data-touched]"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "[data-dirty]"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when filled"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "adds [data-filled] attribute when already filled"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "does not add [data-filled] attribute when single value serializes to empty string"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "does not add [data-filled] attribute when a non-string value serializes to empty string"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "does not add [data-filled] attribute when multiple value is empty"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-filled]"
+          ],
+          "title": "does not add [data-filled] attribute when multiple defaultValue is empty array"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "[data-focused]"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused trigger becomes disabled"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field",
+            "[data-focused] without a blur event"
+          ],
+          "title": "is removed when the focused trigger unmounts"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "does not mark as touched when focus moves into the popup"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "validates when the popup is blurred"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "prop: validate"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "passes raw value to validate when itemToStringValue is provided"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "prop: validateMode=onSubmit"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onChange",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "revalidates when the controlled value changes externally"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "prop: validationMode=onBlur",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Field.Label"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Select.Label"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "does not set fallback aria-labelledby when no label is rendered"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "updates Select.Label linkage when root id changes"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Select.Label focuses trigger without opening"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Field.Label links to trigger and focuses it"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Field.Label links to trigger when trigger has an explicit id"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "Field"
+          ],
+          "title": "Field.Description"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "skips null items when navigating"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "unselects the selected item if removed"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets the value when the selected item is replaced and the item count is unchanged"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets the value when every item is replaced and the item count is unchanged"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "keeps the value when the items are only reordered"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets to default when the selected item is removed from the list"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets via onValueChange and does not break in controlled mode when the selected item is removed"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets aligned positioning after controlled value reset and option replacement",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets aligned positioning when value reset, option replacement, and controlled open happen together",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "resets aligned positioning when a stale controlled value, option replacement, and controlled open happen together",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "falls back to null when both selected and initial default are removed (uncontrolled)"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "dynamic items"
+          ],
+          "title": "falls back to null when both selected and initial default are removed (controlled)"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "matches an item by its label when the rendered text differs"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "starts a new search after focus leaves the select"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "does not trigger selection when Space is pressed during text navigation",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "skips disabled items and commits the next match via typeahead on a closed trigger"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "commits typeahead on a closed trigger when items are provided"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "commits nothing when the only typeahead match is disabled (closed trigger)"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "does not let a disabled double-letter item block rapid cycling among enabled matches"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "skips disabled items when highlighting via typeahead on an open popup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "starts from the first match after value reset (closed)"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "typeahead"
+          ],
+          "title": "does not jump matches after a closed-state value reset"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "removes selections that no longer exist"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "removes selections replaced without changing the item count"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should allow multiple selections when multiple is true"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "keeps the selection when items are added and none of the selected ones are removed"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should deselect items when clicked again in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should update selected items when the controlled value prop changes while open"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "keeps the active index on a deselected item in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "highlights the first selected item in rendered order regardless of value order"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "re-elects the anchor when the anchor item value changes in place"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "moves the anchor to the next selected item when the anchor item leaves the list"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "re-anchors backwards when a new isItemEqualToValue identity re-runs every item"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "aligns the first selected item with the trigger when alignItemWithTrigger is active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "anchors to the first selected item when opened with the keyboard"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "continues arrow navigation from the anchor rather than the top of the list"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "keeps the highlight on an item deselected with the keyboard"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "anchors to the first selected item in rendered order across groups"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "scrolls the first selected item into view on open",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should handle defaultValue as array in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should serialize multiple values correctly for form submission"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "does not submit multiple values when disabled",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should serialize empty array as empty string in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "does not mark the hidden input as required when selection exists"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "keeps the hidden input required when no selection exists"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should not close popup when selecting items in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should close popup in single select mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: multiple"
+          ],
+          "title": "should update selected items when value prop changes"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: isItemEqualToValue"
+          ],
+          "title": "matches object values using the provided comparator"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: isItemEqualToValue"
+          ],
+          "title": "matches object values when the popup is mounted on the initial render"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: isItemEqualToValue"
+          ],
+          "title": "passes item as the first comparator argument in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: highlightItemOnHover"
+          ],
+          "title": "highlights an item on mouse move by default"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: highlightItemOnHover"
+          ],
+          "title": "highlights the first item after opening when alignItemWithTrigger is active and no value is selected",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: highlightItemOnHover"
+          ],
+          "title": "does not highlight items from mouse movement when disabled"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "prop: highlightItemOnHover"
+          ],
+          "title": "does not remove highlight when mousing out of popup when disabled"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "groups"
+          ],
+          "title": "navigates across groups without stopping on labels or separators"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "item-aligned popup interaction"
+          ],
+          "title": "does not move the popup or its list when hovering items at its edges",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "item-aligned popup interaction"
+          ],
+          "title": "keeps the highlighted item visible while keyboard navigation grows the popup",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "opening"
+          ],
+          "title": "does not carry an ArrowUp opening over to a later pointer opening"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing"
+          ],
+          "title": "reports a close after the parent declined an open without canceling it"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing"
+          ],
+          "title": "does not report a close after the parent canceled an open"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing"
+          ],
+          "title": "does not notify the interactions of a close that onOpenChange cancels"
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "closing"
+          ],
+          "title": "keeps the highlight on the item while the popup animates out",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Root />",
+            "trigger render cost"
+          ],
+          "title": "does not re-render the trigger while navigating the list"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/scroll-arrow/SelectScrollArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "$name"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "does not start auto-scrolling for a mouse move that did not move the pointer"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "does not let continuous pointer movement postpone the scheduled scroll"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "stops auto-scrolling once the pointer leaves the arrow"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "snaps a sub-pixel offset to the exact top edge and then stops scrolling"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "scrolls the popup itself when no Select.List is rendered"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "reflects scrollability on the %s arrow when the popup has no registered items"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "hides the arrow when an item-less popup is already scrolled to its edge"
+        },
+        {
+          "describe": [
+            "<Select.ScrollArrow />"
+          ],
+          "title": "ignores pointer interaction when the arrow has no scrollable popup"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.ScrollDownArrow />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.ScrollUpArrow />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/store.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "select store synchronization"
+          ],
+          "title": "publishes synchronized values in a single store transaction"
+        },
+        {
+          "describe": [
+            "select store synchronization"
+          ],
+          "title": "provides setOpen to a descendant ref callback on the first commit"
+        },
+        {
+          "describe": [
+            "select store synchronization"
+          ],
+          "title": "synchronizes an updated disabled prop after descendant ref callbacks"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />"
+          ],
+          "title": "throws a descriptive error when rendered outside <Select.Root>"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />"
+          ],
+          "title": "closes an aligned popup when focus lands on the trigger so it is not obscured",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Trigger />"
+          ],
+          "title": "keeps a non-aligned popup open when focus lands on the trigger"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "releasing the opening press"
+          ],
+          "title": "ignores a later release when the opening press was released immediately"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "releasing the opening press"
+          ],
+          "title": "keeps the popup open when the press slips up to 5px off the trigger"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "releasing the opening press"
+          ],
+          "title": "closes the popup when the press is dragged off the trigger and released"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "releasing the opening press"
+          ],
+          "title": "keeps the popup open when the press is released inside a popup in a shadow root"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "disabled state"
+          ],
+          "title": "is removed from the tab order when disabled and not rendered as a button"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "disabled state"
+          ],
+          "title": "cannot be focused when disabled"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "disabled state"
+          ],
+          "title": "does not toggle the popup when disabled"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "placeholder state"
+          ],
+          "title": "should have the data-placeholder attribute when provided `null` value"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "placeholder state"
+          ],
+          "title": "should have the data-placeholder attribute when provided custom property with `itemToStringValue`"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "placeholder state"
+          ],
+          "title": "should have the data-placeholder attribute when provided { value: null }"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "placeholder state"
+          ],
+          "title": "should not have the data-placeholder attribute when provided a value"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "placeholder state"
+          ],
+          "title": "should not have the data-placeholder attribute when multiple mode has a default value"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "style hooks"
+          ],
+          "title": "sets data-popup-side to the current popup side",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "style hooks"
+          ],
+          "title": "sets data-popup-side to the resolved side when alignItemWithTrigger is active",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "style hooks"
+          ],
+          "title": "should have the data-popup-open and data-pressed attributes when open"
+        },
+        {
+          "describe": [
+            "<Select.Trigger />",
+            "prop: required"
+          ],
+          "title": "sets aria-required attribute when required"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/select/value/SelectValue.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<Select.Value />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: children"
+          ],
+          "title": "accepts a function with a value parameter"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: children"
+          ],
+          "title": "overrides the text when children is a string"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (object format)"
+          ],
+          "title": "displays the label from items object when no children are provided"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (object format)"
+          ],
+          "title": "updates the label when value changes with items object"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (object format)"
+          ],
+          "title": "falls back to raw value when value is not in items object"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (object format)"
+          ],
+          "title": "supports ReactNode labels in items object"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (object format)"
+          ],
+          "title": "can lookup null value"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (array format)"
+          ],
+          "title": "displays the label from items array when no children are provided"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (array format)"
+          ],
+          "title": "updates the label when value changes with items array"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (array format)"
+          ],
+          "title": "falls back to raw value when value is not in items array"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (array format)"
+          ],
+          "title": "supports ReactNode labels in items array"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: items (array format)"
+          ],
+          "title": "is not stale after being updated"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: itemToStringLabel"
+          ],
+          "title": "uses custom itemToStringLabel function"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: itemToStringLabel"
+          ],
+          "title": "falls back to label/value properties when functions are not provided"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: children (takes precedence over items)"
+          ],
+          "title": "uses children string over items object"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: children (takes precedence over items)"
+          ],
+          "title": "uses children function over items array"
+        },
+        {
+          "describe": [
+            "<Select.Value />"
+          ],
+          "title": "changes text when the value changes"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "displays comma-separated labels for multiple values with items object"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "displays comma-separated labels for multiple values with items array"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "supports ReactNode labels for multiple selections"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "falls back to raw values when no items are provided"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "displays single value when only one value is selected in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "displays empty when no values are selected in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "children function receives array of values in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "children prop takes precedence over items in multiple mode"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: multiple"
+          ],
+          "title": "defaults to empty array when no value is provided"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "displays placeholder when no value is selected"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "displays placeholder when value is null"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "does not display placeholder when value is selected"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "children prop takes precedence over placeholder"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "children function takes precedence over placeholder"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "null item label in items takes precedence over placeholder"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "uses placeholder when items have null value without label"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "displays placeholder when object items do not have a null key"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "null key label in object items takes precedence over placeholder"
+        },
+        {
+          "describe": [
+            "<Select.Value />",
+            "prop: placeholder"
+          ],
+          "title": "supports ReactNode as placeholder"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/select/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": null,
+          "props": [
+            {
+              "name": "name",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "Value[] | Value | null",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "Value[] | Value | null",
+              "default": null
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: Value[] | Value | null, eventDetails: Select.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "defaultOpen",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "open",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "onOpenChange",
+              "required": false,
+              "type": "((open: boolean, eventDetails: Select.Root.OpenChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "highlightItemOnHover",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<Select.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "autoComplete",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "form",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "isItemEqualToValue",
+              "required": false,
+              "type": "((itemValue: Value, value: Value) => boolean)",
+              "default": null
+            },
+            {
+              "name": "itemToStringLabel",
+              "required": false,
+              "type": "((itemValue: Value) => string)",
+              "default": null
+            },
+            {
+              "name": "itemToStringValue",
+              "required": false,
+              "type": "((itemValue: Value) => string)",
+              "default": null
+            },
+            {
+              "name": "items",
+              "required": false,
+              "type": "Record<string, React.ReactNode> | ({ label: React.ReactNode; value: any })[] | Group[]",
+              "default": null
+            },
+            {
+              "name": "modal",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "multiple",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "readOnly",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "required",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "inputRef",
+              "required": false,
+              "type": "React.Ref<HTMLInputElement>",
+              "default": null
+            },
+            {
+              "name": "id",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectRootState",
+            "fields": [],
+            "code": "type SelectRootState = {};"
+          },
+          "actions": {
+            "name": "SelectRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type SelectRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "SelectRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "outside-press",
+              "escape-key",
+              "window-resize",
+              "item-press",
+              "focus-out",
+              "list-navigation",
+              "cancel-open",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type SelectRootChangeEventReason = 'trigger-press' | 'outside-press' | 'escape-key' | 'window-resize' | 'item-press' | 'focus-out' | 'list-navigation' | 'cancel-open' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "SelectRootChangeEventDetails",
+            "code": "type SelectRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'window-resize';\n    event: UIEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "readOnly",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "popupSide",
+                "optional": false,
+                "type": "Side | null"
+              },
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any"
+              },
+              {
+                "name": "placeholder",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectTriggerState = {\n    open: boolean;\n    readOnly: boolean;\n    popupSide: Side | null;\n    value: any;\n    placeholder: boolean;\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-popup-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start' | null"
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            },
+            {
+              "name": "data-readonly",
+              "type": null
+            },
+            {
+              "name": "data-required",
+              "type": null
+            },
+            {
+              "name": "data-valid",
+              "type": null
+            },
+            {
+              "name": "data-invalid",
+              "type": null
+            },
+            {
+              "name": "data-dirty",
+              "type": null
+            },
+            {
+              "name": "data-touched",
+              "type": null
+            },
+            {
+              "name": "data-filled",
+              "type": null
+            },
+            {
+              "name": "data-focused",
+              "type": null
+            },
+            {
+              "name": "data-placeholder",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Value",
+          "tag": "span",
+          "props": [
+            {
+              "name": "placeholder",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode | ((value: any) => React.ReactNode)",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Value.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Value.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Value.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectValueState",
+            "fields": [
+              {
+                "name": "value",
+                "optional": false,
+                "type": "any"
+              },
+              {
+                "name": "placeholder",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectValueState = {\n    value: any;\n    placeholder: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-placeholder",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Icon",
+          "tag": "span",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Icon.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Icon.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Icon.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectIconState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectIconState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "List",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.List.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.List.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.List.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectListState",
+            "fields": [],
+            "code": "type SelectListState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectPortalState",
+            "fields": [],
+            "code": "type SelectPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type SelectBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "alignItemWithTrigger",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side | 'none'"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectPositionerState = {\n    open: boolean;\n    side: Side | 'none';\n    align: Align;\n    anchorHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'none' | 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "div",
+          "props": [
+            {
+              "name": "finalFocus",
+              "required": false,
+              "type": "boolean | React.RefObject<HTMLElement | null> | ((closeType: InteractionType) => boolean | void | HTMLElement | null)",
+              "default": null
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectPopupState",
+            "fields": [
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side | 'none'"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type SelectPopupState = {\n    side: Side | 'none';\n    align: Align;\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'none' | 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side | 'none'"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectArrowState = {\n    open: boolean;\n    side: Side | 'none';\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'none' | 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "div",
+          "props": [
+            {
+              "name": "label",
+              "required": false,
+              "type": "string",
+              "default": null
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "any",
+              "default": "null"
+            },
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectItemState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "selected",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "highlighted",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectItemState = {\n    disabled: boolean;\n    selected: boolean;\n    highlighted: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-selected",
+              "type": null
+            },
+            {
+              "name": "data-highlighted",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Group",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Group.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Group.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Group.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectGroupState",
+            "fields": [],
+            "code": "type SelectGroupState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "GroupLabel",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.GroupLabel.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.GroupLabel.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.GroupLabel.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectGroupLabelState",
+            "fields": [],
+            "code": "type SelectGroupLabelState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Separator",
+          "tag": "div",
+          "props": [
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "Orientation",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Separator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Separator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Separator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectSeparatorState",
+            "fields": [
+              {
+                "name": "orientation",
+                "optional": false,
+                "type": "Orientation"
+              }
+            ],
+            "code": "type SelectSeparatorState = {\n    orientation: Orientation;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-orientation",
+              "type": "'horizontal' | 'vertical'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Label",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectLabelState",
+            "fields": [
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "touched",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "dirty",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "valid",
+                "optional": false,
+                "type": "boolean | null"
+              },
+              {
+                "name": "filled",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "focused",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type SelectLabelState = {\n    disabled: boolean;\n    touched: boolean;\n    dirty: boolean;\n    valid: boolean | null;\n    filled: boolean;\n    focused: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "ItemText",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.ItemText.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.ItemText.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.ItemText.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectItemTextState",
+            "fields": [],
+            "code": "type SelectItemTextState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "ItemIndicator",
+          "tag": "span",
+          "props": [
+            {
+              "name": "children",
+              "required": false,
+              "type": "React.ReactNode",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.ItemIndicator.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.ItemIndicator.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.ItemIndicator.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectItemIndicatorState",
+            "fields": [
+              {
+                "name": "selected",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type SelectItemIndicatorState = {\n    selected: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "ScrollUpArrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.ScrollUpArrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.ScrollUpArrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.ScrollUpArrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectScrollUpArrowState",
+            "fields": [],
+            "code": "type SelectScrollUpArrowState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-direction",
+              "type": "'up'"
+            },
+            {
+              "name": "data-side",
+              "type": "'none' | 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-visible",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "ScrollDownArrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: Select.ScrollDownArrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: Select.ScrollDownArrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: Select.ScrollDownArrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "SelectScrollDownArrowState",
+            "fields": [],
+            "code": "type SelectScrollDownArrowState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-direction",
+              "type": "'down'"
+            },
+            {
+              "name": "data-side",
+              "type": "'none' | 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-visible",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.OpenChangeEventDetails",
+          "code": "type SelectRootOpenChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'window-resize';\n    event: UIEvent;\n} | {\n    reason: 'item-press';\n    event: MouseEvent | PointerEvent | KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'cancel-open';\n    event: MouseEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "SelectArrowDataAttributes",
+          "code": "declare namespace SelectArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "SelectBackdropDataAttributes",
+          "code": "declare namespace SelectBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "SelectIconDataAttributes",
+          "code": "declare namespace SelectIconDataAttributes {\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "SelectItemDataAttributes",
+          "code": "declare namespace SelectItemDataAttributes {\n    const selected: 'data-selected';\n    const highlighted: 'data-highlighted';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "selected",
+              "value": "data-selected"
+            },
+            {
+              "name": "highlighted",
+              "value": "data-highlighted"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        },
+        {
+          "name": "SelectItemIndicatorDataAttributes",
+          "code": "declare namespace SelectItemIndicatorDataAttributes {\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "SelectPopupDataAttributes",
+          "code": "declare namespace SelectPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "SelectPositionerCssVariables",
+          "code": "declare namespace SelectPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            }
+          ]
+        },
+        {
+          "name": "SelectPositionerDataAttributes",
+          "code": "declare namespace SelectPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "SelectScrollDownArrowDataAttributes",
+          "code": "declare namespace SelectScrollDownArrowDataAttributes {\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const direction: 'data-direction';\n    const visible: 'data-visible';\n    const side: 'data-side';\n}",
+          "constants": [
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "direction",
+              "value": "data-direction"
+            },
+            {
+              "name": "visible",
+              "value": "data-visible"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            }
+          ]
+        },
+        {
+          "name": "SelectScrollUpArrowDataAttributes",
+          "code": "declare namespace SelectScrollUpArrowDataAttributes {\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const direction: 'data-direction';\n    const visible: 'data-visible';\n    const side: 'data-side';\n}",
+          "constants": [
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "direction",
+              "value": "data-direction"
+            },
+            {
+              "name": "visible",
+              "value": "data-visible"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            }
+          ]
+        },
+        {
+          "name": "SelectSeparatorDataAttributes",
+          "code": "declare namespace SelectSeparatorDataAttributes {\n    const orientation: 'data-orientation';\n}",
+          "constants": [
+            {
+              "name": "orientation",
+              "value": "data-orientation"
+            }
+          ]
+        },
+        {
+          "name": "SelectTriggerDataAttributes",
+          "code": "declare namespace SelectTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n    const readonly: 'data-readonly';\n    const popupSide: 'data-popup-side';\n    const required: 'data-required';\n    const valid: 'data-valid';\n    const invalid: 'data-invalid';\n    const touched: 'data-touched';\n    const dirty: 'data-dirty';\n    const filled: 'data-filled';\n    const focused: 'data-focused';\n    const placeholder: 'data-placeholder';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            },
+            {
+              "name": "readonly",
+              "value": "data-readonly"
+            },
+            {
+              "name": "popupSide",
+              "value": "data-popup-side"
+            },
+            {
+              "name": "required",
+              "value": "data-required"
+            },
+            {
+              "name": "valid",
+              "value": "data-valid"
+            },
+            {
+              "name": "invalid",
+              "value": "data-invalid"
+            },
+            {
+              "name": "touched",
+              "value": "data-touched"
+            },
+            {
+              "name": "dirty",
+              "value": "data-dirty"
+            },
+            {
+              "name": "filled",
+              "value": "data-filled"
+            },
+            {
+              "name": "focused",
+              "value": "data-focused"
+            },
+            {
+              "name": "placeholder",
+              "value": "data-placeholder"
+            }
+          ]
+        },
+        {
+          "name": "SelectValueDataAttributes",
+          "code": "declare namespace SelectValueDataAttributes {\n    const placeholder: 'data-placeholder';\n}",
+          "constants": [
+            {
+              "name": "placeholder",
+              "value": "data-placeholder"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        },
+        {
+          "name": "InteractionType",
+          "code": "type InteractionType = 'mouse' | 'touch' | 'pen' | 'keyboard' | '';"
+        },
+        {
+          "name": "Orientation",
+          "code": "type Orientation = 'horizontal' | 'vertical';"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/select/page.mdx",
+      "referenceTags": [
+        "TypesSelect.Root",
+        "TypesSelect.Label",
+        "TypesSelect.Trigger",
+        "TypesSelect.Value",
+        "TypesSelect.Icon",
+        "TypesSelect.Backdrop",
+        "TypesSelect.Portal",
+        "TypesSelect.Positioner",
+        "TypesSelect.Popup",
+        "TypesSelect.List",
+        "TypesSelect.Arrow",
+        "TypesSelect.Item",
+        "TypesSelect.ItemText",
+        "TypesSelect.ItemIndicator",
+        "TypesSelect.Group",
+        "TypesSelect.GroupLabel",
+        "TypesSelect.ScrollUpArrow",
+        "TypesSelect.ScrollDownArrow",
+        "TypesSelect.Separator"
+      ]
+    }
+  ]
+}
