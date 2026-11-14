@@ -621,6 +621,10 @@ describe('<Popover.Trigger />', () => {
     await flushMicrotasks();
     await userEvent.keyboard('[Enter]');
     expect(screen.queryByText('Content')).not.toBe(null);
+    // The initial focus moves in the frame after the open.
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toHaveFocus();
+    });
 
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(trigger);
@@ -632,6 +636,9 @@ describe('<Popover.Trigger />', () => {
 
     await userEvent.keyboard('[Enter]');
     expect(screen.queryByText('Content')).not.toBe(null);
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toHaveFocus();
+    });
 
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(trigger);
@@ -641,6 +648,9 @@ describe('<Popover.Trigger />', () => {
 
     await userEvent.keyboard('[Space]');
     expect(screen.queryByText('Content')).not.toBe(null);
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toHaveFocus();
+    });
 
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(trigger);
