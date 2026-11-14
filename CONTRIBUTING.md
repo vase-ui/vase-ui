@@ -881,7 +881,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - `FloatingFocusManager.vue` moves the focus into a popup when it opens, and it returns the focus when the popup closes. It keeps the Tab key in a modal popup. A popup part renders it around its popup element, in the portal.
 - It renders no element. It reads the popup element from `positionerElement` of the store with `getFloatingFocusElement`, and the reference from `anchorElement`.
 - It renders two inside guards around its content, unless it is disabled. A modal popup has them. A popup that is not modal has them only in a `FloatingPortal`.
-- The guards do not count as tabbable content of the popup. A popup part that renders no element leaves the positioner as the popup element, and the guards are then in that element.
+- The two guards do not count as tabbable content of the popup. A popup part that renders no element leaves the positioner as the popup element, and the guards are then in that element.
 - `Combobox.Popup` disables its focus manager when the popup closes, not when it unmounts. During an exit animation, the popup then has no guards, and the focus returns at the close (`BUG-5519`).
 - A popup part renders its element in the default slot of `FloatingFocusManager`. A change of a value that only `elementProps()` reads renders the focus manager again. It does not render the part again, so `onUpdated` of the part does not run.
 - `Combobox.Popup` writes the rendered `id` of its element to the store in `onMounted` and `onUpdated`. A `watch` of its default id with `flush: 'post'` does the same, because only `elementProps()` reads that id.
