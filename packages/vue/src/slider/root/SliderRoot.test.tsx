@@ -2367,6 +2367,7 @@ describe('<Slider.Root />', () => {
     it('should not rely on the global event when cloning change events', async () => {
       const hadGlobalEvent = Object.hasOwn(globalThis, 'event');
       const previousDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'event');
+      // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- The class throws when code constructs it, and the case expects that no code does.
       const globalEventConstructor = class {
         constructor() {
           throw new Error('Should not construct global event');
