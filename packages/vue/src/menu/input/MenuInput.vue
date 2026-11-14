@@ -33,6 +33,7 @@ export interface MenuInputProps
 <script setup lang="ts">
 import { useFilterDropdownInput } from '../../filter-dropdown/input/FilterDropdownInput';
 import { useFilterDropdownValueContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
+import { addEventListener } from '../../common/addEventListener';
 import { ownerDocument } from '../../common/owner';
 import { activeElement } from '../../common/shadowDom';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
@@ -73,29 +74,35 @@ const input = useFilterDropdownInput({
   },
 });
 
-// A change of the element covers the removal of the input without a blur event.
+let stopListeningToFocus: (() => void) | undefined;
+
+// A change of the element covers the removal of the input without a blur event. The input listens
+// to the focus with the browser, because Vue skips a listener for an event that comes in the
+// millisecond when Vue attached it, and a popup can move the focus to a new input in that
+// millisecond.
 function setInputFocused(element: HTMLInputElement | null) {
+  stopListeningToFocus?.();
+  stopListeningToFocus = undefined;
   store.set('inputFocused', element !== null && activeElement(ownerDocument(element)) === element);
+  if (element === null) {
+    return;
+  }
+  const stopFocusin = addEventListener(element, 'focusin', () => {
+    store.set('inputFocused', true);
+  });
+  const stopFocusout = addEventListener(element, 'focusout', () => {
+    store.set('inputFocused', false);
+  });
+  stopListeningToFocus = () => {
+    stopFocusin();
+    stopFocusout();
+  };
 }
 
 const { element, elementProps } = useRenderElement('input', props, {
   state: input.state,
   ref: [input.ref, setInputFocused],
-  props: (attrs) =>
-    input.props(
-      mergeProps<'input'>(
-        {
-          onKeydown: handleKeydown,
-          onFocusin() {
-            store.set('inputFocused', true);
-          },
-          onFocusout() {
-            store.set('inputFocused', false);
-          },
-        },
-        attrs,
-      ),
-    ),
+  props: (attrs) => input.props(mergeProps<'input'>({ onKeydown: handleKeydown }, attrs)),
 });
 
 defineExpose({ element });
