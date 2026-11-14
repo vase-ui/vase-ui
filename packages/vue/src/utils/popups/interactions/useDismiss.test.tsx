@@ -1,37 +1,21 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import {
-  defineComponent,
-  inject,
-  KeepAlive,
-  nextTick,
-  onMounted,
-  shallowRef,
-  Teleport,
-  watch,
-} from 'vue';
-import type { PropType, Ref } from 'vue';
+import { defineComponent, inject, KeepAlive, nextTick, shallowRef, Teleport } from 'vue';
+import type { PropType } from 'vue';
 import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
 import { PopupFixtureContext } from '../../../../test/fixtures/PopupFixture';
 import PopupPart from '../../../../test/fixtures/PopupPart.vue';
 import PopupRootPart from '../../../../test/fixtures/PopupRootPart.vue';
+import { useFloating } from '../../../../test/fixtures/useFloating';
 import { ownerWindow } from '../../../common/owner';
 import { platform } from '../../../common/platform';
-import type { VaseUIChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { mergeProps } from '../../../merge-props/mergeProps';
 import { createAttribute } from '../createAttribute';
 import { getEmptyRootStore } from '../floating-root/getEmptyRootStore';
-import { useFloatingRootStore } from '../floating-root/useFloatingRootStore';
 import FloatingPortalLite from '../portal/FloatingPortalLite.vue';
-import {
-  provideFloatingNode,
-  provideFloatingTree,
-  useFloatingNodeId,
-  useFloatingTree,
-} from '../tree/FloatingTree';
+import { provideFloatingNode, provideFloatingTree, useFloatingNodeId } from '../tree/FloatingTree';
 import type { PopupOpenChangeEventDetails } from '../store';
-import type { PopupPositioningContext } from '../types';
 import { useDismiss } from './useDismiss';
 import type { UseDismissProps } from './useDismiss';
 
@@ -91,71 +75,6 @@ function countListeners(doc: Document = document) {
   return () => total;
 }
 
-/**
- * Gives a case a floating root store that follows `open`, with a `ref` setter for the reference
- * element and for the popup element. With `nodeId`, the node of the floating tree gets its
- * context, as the positioning composable of a popup gives it.
- */
-function useFloating(options: {
-  open: Ref<boolean>;
-  onOpenChange(open: boolean, eventDetails: VaseUIChangeEventDetails<string>): void;
-  nodeId?: string | undefined;
-}) {
-  const reference = shallowRef<Element | null>(null);
-  const floating = shallowRef<HTMLElement | null>(null);
-  const rootStore = useFloatingRootStore({
-    open: options.open,
-    onOpenChange: options.onOpenChange,
-    elements: { anchor: reference, positionerElement: floating },
-  });
-  const tree = useFloatingTree();
-  const context: PopupPositioningContext = {
-    open: options.open.value,
-    nodeId: options.nodeId,
-    elements: {
-      get reference() {
-        return reference.value;
-      },
-      get floating() {
-        return floating.value;
-      },
-      get domReference() {
-        return reference.value;
-      },
-    },
-    rootStore,
-  };
-
-  // `open` is the state of the last DOM update. A popup above reads it in the event in which this
-  // popup closes.
-  watch(
-    options.open,
-    (open) => {
-      context.open = open;
-    },
-    { flush: 'post' },
-  );
-
-  // The node registers in `onBeforeMount`, so it is in the tree here.
-  onMounted(() => {
-    rootStore.context.positioning = context;
-    const node = tree.value?.nodesRef.value.find((item) => item.id === options.nodeId);
-    if (node) {
-      node.context = context;
-    }
-  });
-
-  return {
-    rootStore,
-    setReference(element: unknown) {
-      reference.value = element as Element | null;
-    },
-    setFloating(element: unknown) {
-      floating.value = element as HTMLElement | null;
-    },
-  };
-}
-
 interface Change {
   open: boolean;
   reason: string;
@@ -181,7 +100,10 @@ const Popup = defineComponent({
   setup(props, { slots }) {
     const open = shallowRef(props.defaultOpen);
     const nodeId = props.node ? useFloatingNodeId() : undefined;
-    const { rootStore, setReference, setFloating } = useFloating({
+    const {
+      refs: { setReference, setFloating },
+      context: { rootStore },
+    } = useFloating({
       open,
       nodeId,
       onOpenChange(nextOpen, details) {
@@ -729,7 +651,10 @@ describe('useDismiss', () => {
         return defineComponent({
           setup() {
             const open = shallowRef(false);
-            const { rootStore, setFloating } = useFloating({
+            const {
+              refs: { setFloating },
+              context: { rootStore },
+            } = useFloating({
               open,
               onOpenChange(nextOpen) {
                 open.value = nextOpen;
