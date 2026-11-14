@@ -41,6 +41,10 @@
     "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useAnimationsFinished.test.tsx",
     "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
+    "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
+    "packages/react/src/internals/useItemRegistry.ts",
+    "packages/react/src/internals/useItemRegistry.test.tsx",
     "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/usePressAndHold.ts",
     "packages/react/src/internals/useRenderElement.tsx",
@@ -121,6 +125,8 @@
     "packages/react/src/internals/useAnchorPositioning.ts",
     "packages/react/src/internals/useAnimationsFinished.ts",
     "packages/react/src/internals/useBaseUiId.ts",
+    "packages/react/src/internals/useInitialLiveRegionTextMutation.ts",
+    "packages/react/src/internals/useItemRegistry.ts",
     "packages/react/src/internals/useOpenChangeComplete.tsx",
     "packages/react/src/internals/usePressAndHold.ts",
     "packages/react/src/internals/useRenderElement.tsx",
@@ -1636,6 +1642,59 @@
           "conditions": [
             "skipIf(isJSDOM)"
           ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useInitialLiveRegionTextMutation.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useInitialLiveRegionTextMutation"
+          ],
+          "title": "does nothing when its ref is not attached"
+        },
+        {
+          "describe": [
+            "useInitialLiveRegionTextMutation"
+          ],
+          "title": "marks the text when the element appears after mount"
+        },
+        {
+          "describe": [
+            "useInitialLiveRegionTextMutation"
+          ],
+          "title": "skips empty text nodes when finding the announcement text"
+        },
+        {
+          "describe": [
+            "useInitialLiveRegionTextMutation",
+            "with fake timers"
+          ],
+          "title": "does not overwrite text that changes before the reset"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/internals/useItemRegistry.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "useItemRegistry"
+          ],
+          "title": "publishes one immutable snapshot for all registrations in a commit"
+        },
+        {
+          "describe": [
+            "useItemRegistry"
+          ],
+          "title": "publishes every registration under StrictMode double effects"
+        },
+        {
+          "describe": [
+            "useItemRegistry"
+          ],
+          "title": "publishes an empty snapshot once the last item unregisters"
         }
       ]
     },
