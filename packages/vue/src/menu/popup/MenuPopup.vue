@@ -67,6 +67,7 @@ import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.
 import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import type { MenuRootChangeEventReason } from '../root/MenuRoot.vue';
 import { useMenuRootContext } from '../root/MenuRootContext';
@@ -83,6 +84,8 @@ defineSlots<{
 const { store, generatedPopupId, setRenderedPopupId, orientation } = useMenuRootContext();
 const { side, align } = useMenuPositionerContext();
 const insideToolbar = useToolbarRootContext(true) !== undefined;
+// A filterable menu makes the popup a dialog that holds the input, and the input takes the focus.
+const filterPopup = useMenuFilterImpl()?.usePopup();
 
 const open = computed(() => store.select('open'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
@@ -191,12 +194,15 @@ const { element, elementProps } = useRenderElement('div', props, {
       },
     },
     getDisabledMountTransitionStyles(transitionStatus.value),
-    attrs,
+    filterPopup ? filterPopup.props(attrs) : attrs,
     { 'data-rootownerid': store.select('rootId') },
   ],
 });
 
 const initialFocus = computed<FocusOption>(() => {
+  if (filterPopup) {
+    return filterPopup.initialFocus.value;
+  }
   if (parent.value.type === 'menu') {
     return false;
   }
