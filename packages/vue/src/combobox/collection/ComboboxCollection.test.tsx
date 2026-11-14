@@ -100,15 +100,13 @@ describe('<Combobox.Collection />', () => {
             <Combobox.Positioner>
               <Combobox.Popup>
                 <Combobox.List>
-                  <Combobox.Group>
-                    <Combobox.Collection>
-                      {({ item }: { item: string }) => (
-                        <Combobox.Item key={item} value={item}>
-                          {item}
-                        </Combobox.Item>
-                      )}
-                    </Combobox.Collection>
-                  </Combobox.Group>
+                  <Combobox.Collection>
+                    {({ item }: { item: string }) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.Collection>
                 </Combobox.List>
               </Combobox.Popup>
             </Combobox.Positioner>
