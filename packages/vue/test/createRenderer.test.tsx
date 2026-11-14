@@ -1,7 +1,7 @@
-import { expect, describe, it, vi, afterEach } from 'vitest';
-import { defineComponent, nextTick, onMounted, onUnmounted, ref } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
-import { createRenderer, flushMicrotasks, screen } from '#test-utils';
+import { expect, describe, it, vi, afterEach, onTestFinished } from 'vitest';
+import { defineComponent, nextTick, onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import type { ComponentPublicInstance, VNode } from 'vue';
+import { createRenderer, flushMicrotasks, screen, waitForLaterMillisecond } from '#test-utils';
 
 describe('createRenderer', () => {
   const { render } = createRenderer();
@@ -115,6 +115,130 @@ describe('createRenderer', () => {
       vi.useFakeTimers();
 
       expect(await mountAndClick()).toBe(true);
+    });
+
+    it('runs both listeners under fake timers that do not fake Date', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      let failures = 0;
+      for (let index = 0; index < 20; index += 1) {
+        if (!(await mountAndClick())) {
+          failures += 1;
+        }
+      }
+
+      expect(failures).toBe(0);
+    });
+
+    it('runs both listeners under fake timers that fake only Date, and render resolves', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+
+      expect(await mountAndClick()).toBe(true);
+    });
+
+    it('runs both listeners with a mocked system time and no fake timers, and render resolves', async () => {
+      vi.setSystemTime(new Date(2026, 0, 1));
+
+      expect(await mountAndClick()).toBe(true);
+    });
+
+    describe('when the wall clock steps back by 3 ms', () => {
+      let offset = 0;
+      let stepAfter = Number.POSITIVE_INFINITY;
+
+      function stepBack() {
+        offset -= 3;
+      }
+
+      // Each read of `Date.now()` or `performance.now()` moves both clocks by 0.1 ms. The cases
+      // thus do not depend on the timer resolution of the browser, which is 1 ms in Firefox and
+      // WebKit. `Date.now()` adds `offset`. At its first read that is later than `stepAfter`, it
+      // steps back.
+      function mockClocks() {
+        let microseconds = Date.now() * 1000;
+        offset = 0;
+        stepAfter = Number.POSITIVE_INFINITY;
+        const read = () => {
+          microseconds += 100;
+          return microseconds / 1000;
+        };
+        const performanceNow = vi.spyOn(performance, 'now').mockImplementation(read);
+        const dateNow = vi.spyOn(Date, 'now').mockImplementation(() => {
+          const now = Math.floor(read()) + offset;
+          if (now > stepAfter) {
+            stepAfter = Number.POSITIVE_INFINITY;
+            stepBack();
+            return now - 3;
+          }
+          return now;
+        });
+        onTestFinished(() => {
+          dateNow.mockRestore();
+          performanceNow.mockRestore();
+        });
+      }
+
+      // Vue attaches the listeners of the target before it calls `onMounted` of a later sibling.
+      const StepBackOnMount = defineComponent(() => {
+        onMounted(stepBack);
+        return () => null;
+      });
+
+      // The step comes when the clock first gives a later millisecond than the mount.
+      const StepBackAfterMount = defineComponent(() => {
+        onMounted(() => {
+          stepAfter = Date.now();
+        });
+        return () => null;
+      });
+
+      function createTarget(step: VNode) {
+        const capture = vi.fn();
+        const bubble = vi.fn();
+        return {
+          vnode: (
+            <>
+              <div data-testid="target" {...{ onClickCapture: capture }} onClick={bubble} />
+              {step}
+            </>
+          ),
+          calls: () => ({ capture: capture.mock.calls.length, bubble: bubble.mock.calls.length }),
+        };
+      }
+
+      it('runs both listeners when the step comes during the mount', async () => {
+        mockClocks();
+        const target = createTarget(<StepBackOnMount />);
+        const { getByTestId } = await render(target.vnode);
+
+        getByTestId('target').click();
+
+        expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
+      });
+
+      it('runs both listeners when the step comes during the wait', async () => {
+        mockClocks();
+        const target = createTarget(<StepBackAfterMount />);
+        const { getByTestId } = await render(target.vnode);
+
+        getByTestId('target').click();
+
+        expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
+      });
+
+      it('runs both listeners when the step comes during the action of waitForLaterMillisecond', async () => {
+        mockClocks();
+        const target = createTarget(<StepBackOnMount />);
+        const shown = shallowRef(false);
+        const { getByTestId } = await render(() => <div>{shown.value ? target.vnode : null}</div>);
+
+        await waitForLaterMillisecond(() => {
+          shown.value = true;
+          return nextTick();
+        });
+        getByTestId('target').click();
+
+        expect(target.calls()).toEqual({ capture: 1, bubble: 1 });
+      });
     });
   });
 

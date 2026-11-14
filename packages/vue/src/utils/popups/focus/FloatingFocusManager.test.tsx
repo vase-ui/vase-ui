@@ -2803,8 +2803,7 @@ describe('FloatingFocusManager', () => {
           </NestedDialog>,
         );
 
-        await user.click(screen.getByTestId('open-dialog'));
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(() => user.click(screen.getByTestId('open-dialog')));
         await user.click(screen.getByTestId('open-nested-dialog'));
 
         expect(screen.getByTestId('close-nested-dialog')).toBeInTheDocument();
@@ -3208,12 +3207,13 @@ describe('FloatingFocusManager', () => {
         // top-level document, so user-event needs an instance for the iframe's document.
         const user = testingLibraryUserEvent.setup({ document: iframeDoc });
 
-        await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
+        await waitForLaterMillisecond(async () => {
+          await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
 
-        // Vue makes each element with the document of the page, so the element has the class of
-        // that window. The DOM matchers refuse an element whose class is not of its own window.
-        expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
-        await waitForLaterMillisecond();
+          // Vue makes each element with the document of the page, so the element has the class of
+          // that window. The DOM matchers refuse an element whose class is not of its own window.
+          expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
+        });
 
         await user.tab();
         await user.tab();
@@ -3232,12 +3232,13 @@ describe('FloatingFocusManager', () => {
         // top-level document, so user-event needs an instance for the iframe's document.
         const user = testingLibraryUserEvent.setup({ document: iframeDoc });
 
-        await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
+        await waitForLaterMillisecond(async () => {
+          await user.click(iframeWithin.getByRole('button', { name: 'Open' }));
 
-        // Vue makes each element with the document of the page, so the element has the class of
-        // that window. The DOM matchers refuse an element whose class is not of its own window.
-        expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
-        await waitForLaterMillisecond();
+          // Vue makes each element with the document of the page, so the element has the class of
+          // that window. The DOM matchers refuse an element whose class is not of its own window.
+          expect(iframeWithin.getByTestId('popover').isConnected).toBe(true);
+        });
 
         await user.tab({ shift: true });
 
@@ -3505,8 +3506,7 @@ describe('FloatingFocusManager', () => {
 
         const { user } = await render(<Test />);
 
-        await user.click(screen.getByTestId('open-dialog'));
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(() => user.click(screen.getByTestId('open-dialog')));
         await user.click(screen.getByTestId('open-nested-dialog'));
 
         expect(screen.getByTestId('close-dialog')).toBeInTheDocument();
@@ -4384,11 +4384,12 @@ describe('FloatingFocusManager', () => {
       test('focuses inside element, tabbing out focuses last document element', async () => {
         const { user } = await render(<PortalApp />);
 
-        await user.click(screen.getByTestId('reference'));
-        await flushMicrotasks();
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('reference'));
+          await flushMicrotasks();
 
-        expect(screen.getByTestId('inside')).toHaveFocus();
-        await waitForLaterMillisecond();
+          expect(screen.getByTestId('inside')).toHaveFocus();
+        });
 
         await user.tab();
 
@@ -4476,9 +4477,10 @@ describe('FloatingFocusManager', () => {
       test('shift+tab', async () => {
         const { user } = await render(<PortalApp />);
 
-        await user.click(screen.getByTestId('reference'));
-        await flushMicrotasks();
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(async () => {
+          await user.click(screen.getByTestId('reference'));
+          await flushMicrotasks();
+        });
 
         await user.tab({ shift: true });
 
@@ -4511,9 +4513,10 @@ describe('FloatingFocusManager', () => {
 
       test('returns focus to reference when floating element was opened by hover but is closed by an explicit close button', async () => {
         await render(<Navigation />);
-        await testingLibraryUserEvent.hover(screen.getByText('Product'));
-        await flushMicrotasks();
-        await waitForLaterMillisecond();
+        await waitForLaterMillisecond(async () => {
+          await testingLibraryUserEvent.hover(screen.getByText('Product'));
+          await flushMicrotasks();
+        });
         await testingLibraryUserEvent.click(screen.getByText('Close').parentElement!);
         await testingLibraryUserEvent.keyboard('{Tab}');
         expect(screen.getByText('Close')).toHaveFocus();
@@ -4910,10 +4913,11 @@ describe('FloatingFocusManager', () => {
       });
 
       const { user } = await render(<Test />);
-      await user.click(screen.getByTestId('input'));
-      await flushMicrotasks();
-      expect(screen.getByTestId('input')).toHaveFocus();
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('input'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('input')).toHaveFocus();
+      });
       await user.tab();
       expect(screen.getByRole('button', { name: 'one' })).toHaveFocus();
       await user.tab({ shift: true });
@@ -4989,10 +4993,11 @@ describe('FloatingFocusManager', () => {
       });
 
       const { user } = await render(<Parent />);
-      await user.click(screen.getByTestId('parent-reference'));
-      await flushMicrotasks();
-      expect(screen.getByTestId('parent-floating-reference')).toHaveFocus();
-      await waitForLaterMillisecond();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('parent-reference'));
+        await flushMicrotasks();
+        expect(screen.getByTestId('parent-floating-reference')).toHaveFocus();
+      });
       await user.click(screen.getByTestId('parent-floating-reference'));
       await flushMicrotasks();
       expect(screen.getByTestId('child-reference')).toHaveFocus();
@@ -5390,12 +5395,13 @@ describe('FloatingFocusManager', () => {
       });
       const { user } = await render(<Test />);
 
-      await user.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
+      await waitForLaterMillisecond(async () => {
+        await user.click(screen.getByTestId('reference'));
+        await flushMicrotasks();
 
-      expect(screen.getByTestId('floating')).toHaveAttribute('tabindex', '-1');
-      expect(screen.getByTestId('inner')).toHaveFocus();
-      await waitForLaterMillisecond();
+        expect(screen.getByTestId('floating')).toHaveAttribute('tabindex', '-1');
+        expect(screen.getByTestId('inner')).toHaveFocus();
+      });
       await user.tab({ shift: true });
       expect(screen.getByTestId('reference')).toHaveFocus();
       await user.tab();

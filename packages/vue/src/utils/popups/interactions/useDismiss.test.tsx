@@ -2278,12 +2278,12 @@ describe('useDismiss', () => {
 
     const { user } = await render(<App />);
 
-    await user.click(screen.getByText('open 1'));
-    expect(screen.getByText('open 2')).toBeInTheDocument();
-
     // Vue skips the later listeners of an event that comes in the millisecond when Vue attached
     // them. The first click mounts the button of the second click.
-    await waitForLaterMillisecond();
+    await waitForLaterMillisecond(async () => {
+      await user.click(screen.getByText('open 1'));
+      expect(screen.getByText('open 2')).toBeInTheDocument();
+    });
     await user.click(screen.getByText('open 2'));
     await flushMicrotasks();
 
