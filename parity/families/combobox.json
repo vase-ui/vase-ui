@@ -95,22 +95,6 @@
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "input inside popup composition"],
-      "title": "clears a single-select query and restores the selection when reopening during the close animation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />", "input inside popup composition"],
-      "title": "preserves a typed query when input reopens single-select during the close animation",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
-      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "describe": ["<Combobox.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "not-applicable",

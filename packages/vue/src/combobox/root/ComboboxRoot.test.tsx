@@ -70,6 +70,16 @@ const StoreProbe = defineComponent(() => {
   return () => null;
 });
 
+const SelectedIndexProbe = defineComponent(() => {
+  const rootStore = useComboboxRootContext();
+  return () => {
+    const selectedIndex = rootStore.select('selectedIndex');
+    return (
+      <div data-testid="selected-index">{selectedIndex == null ? 'null' : `${selectedIndex}`}</div>
+    );
+  };
+});
+
 function getInput() {
   return screen.getByRole<HTMLInputElement>('combobox');
 }
@@ -880,6 +890,117 @@ describe('<Combobox.Root />', () => {
       expect(await screen.findByRole('option', { name: 'Banana' })).not.toBe(null);
       expect(screen.queryByRole('option', { name: 'Apple' })).toBe(null);
     });
+
+    it.skipIf(isJSDOM)(
+      'clears a single-select query and restores the selection when reopening during the close animation',
+      async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const { user } = await render(
+          <>
+            <style>{closeAnimationStyle}</style>
+            <Combobox.Root items={['Apple', 'Banana']} defaultValue="Banana">
+              <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+              <SelectedIndexProbe />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup data-testid="popup" class="animation-test-popup">
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.Empty>No matches</Combobox.Empty>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await user.click(trigger);
+        const input = await screen.findByTestId('input');
+        await user.clear(input);
+        await user.type(input, 'banana');
+
+        const popup = screen.getByTestId('popup');
+        await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+        expect(popup).toHaveAttribute('data-ending-style');
+
+        await user.click(trigger);
+
+        await waitFor(() => expect(popup).toHaveAttribute('data-open'));
+        // The popup removes the ending style in a frame after the reopen.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expect(popup).not.toHaveAttribute('data-ending-style');
+        expect(screen.getByTestId('selected-index')).toHaveTextContent('1');
+        expect(input).toHaveValue('');
+        expect(screen.getByRole('option', { name: 'Apple' })).not.toBe(null);
+        const bananaItem = screen.getByRole('option', { name: 'Banana' });
+        await waitFor(() => expect(bananaItem).toHaveAttribute('data-highlighted'));
+        await waitFor(() => expect(input).toHaveAttribute('aria-activedescendant', bananaItem.id));
+      },
+    );
+
+    it.skipIf(isJSDOM)(
+      'preserves a typed query when input reopens single-select during the close animation',
+      async () => {
+        globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
+
+        const { user } = await render(
+          <>
+            <style>{closeAnimationStyle}</style>
+            <Combobox.Root items={['Apple', 'Banana']}>
+              <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup data-testid="popup" class="animation-test-popup">
+                    <Combobox.Input data-testid="input" />
+                    <Combobox.Empty>No matches</Combobox.Empty>
+                    <Combobox.List>
+                      {{
+                        item: ({ item }: { item: string }) => (
+                          <Combobox.Item key={item} value={item}>
+                            {item}
+                          </Combobox.Item>
+                        ),
+                      }}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </>,
+        );
+
+        await user.click(screen.getByTestId('trigger'));
+        const input = await screen.findByTestId('input');
+        await user.type(input, 'ap');
+
+        const popup = screen.getByTestId('popup');
+        await nextEvent(popup, 'animationstart', { action: () => user.keyboard('{Escape}') });
+        expect(popup).toHaveAttribute('data-ending-style');
+
+        input.focus();
+        await user.type(input, 'b', { skipClick: true });
+
+        await waitFor(() => expect(popup).toHaveAttribute('data-open'));
+        // The popup removes the ending style in a frame after the reopen.
+        await waitSingleFrame();
+        await waitSingleFrame();
+        expect(popup).not.toHaveAttribute('data-ending-style');
+        expect(input).toHaveValue('apb');
+        expect(screen.getByRole('status')).toHaveTextContent('No matches');
+        expect(screen.queryByRole('option')).toBe(null);
+      },
+    );
   });
 
   it('does not aria-hide the input group when the input is outside the popup', async () => {
