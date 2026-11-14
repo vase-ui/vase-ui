@@ -87,4 +87,38 @@ describe('<NavigationMenu.Viewport />', () => {
 
     expect(screen.getByRole('link', { name: 'First link' })).toHaveFocus();
   });
+
+  describe('in a positioner', () => {
+    it('holds the content itself, with a focus guard before and after its element', async () => {
+      await render(
+        <NavigationMenu.Root>
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+              <NavigationMenu.Content data-testid="content">
+                <NavigationMenu.Link href="#first">First link</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal>
+            <NavigationMenu.Positioner>
+              <NavigationMenu.Popup data-testid="popup">
+                <NavigationMenu.Viewport data-testid="viewport" />
+              </NavigationMenu.Popup>
+            </NavigationMenu.Positioner>
+          </NavigationMenu.Portal>
+        </NavigationMenu.Root>,
+      );
+
+      await fireEvent.click(screen.getByTestId('trigger'));
+      await flushMicrotasks();
+
+      const viewport = screen.getByTestId('viewport');
+      const [before, middle, after] = Array.from(screen.getByTestId('popup').children);
+      expect(before).toHaveAttribute('data-vase-ui-focus-guard');
+      expect(middle).toBe(viewport);
+      expect(after).toHaveAttribute('data-vase-ui-focus-guard');
+      expect(screen.getByTestId('content').parentElement).toBe(viewport);
+    });
+  });
 });

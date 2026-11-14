@@ -265,7 +265,12 @@ export function useDismiss(
   }
 
   function closeOnEscapeKeyDown(event: KeyboardEvent) {
-    if (!getStore().select('open') || !isEnabled() || !isEscapeKeyEnabled() || event.key !== 'Escape') {
+    if (
+      !getStore().select('open') ||
+      !isEnabled() ||
+      !isEscapeKeyEnabled() ||
+      event.key !== 'Escape'
+    ) {
       return;
     }
 

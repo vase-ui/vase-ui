@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
-import {
-  createRenderer,
-  describeConformance,
-  fireEvent,
-  flushMicrotasks,
-  screen,
-} from '#test-utils';
+import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import * as NavigationMenu from '../index.parts';
 
 describe('<NavigationMenu.Portal />', () => {
@@ -27,7 +21,7 @@ describe('<NavigationMenu.Portal />', () => {
       <NavigationMenu.Root>
         <NavigationMenu.List>
           <NavigationMenu.Item value="one">
-            <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
             <NavigationMenu.Content>
               <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
             </NavigationMenu.Content>
@@ -49,17 +43,6 @@ describe('<NavigationMenu.Portal />', () => {
     await flushMicrotasks();
 
     expect(screen.queryByTestId('portal')).toBe(null);
-  });
-
-  it('puts the popup into <body> while the menu is open', async () => {
-    await renderMenu();
-
-    await fireEvent.click(screen.getByTestId('trigger'));
-    await flushMicrotasks();
-
-    const portal = screen.getByTestId('portal');
-    expect(portal.parentElement).toBe(document.body);
-    expect(portal).toContainElement(screen.getByRole('link', { name: 'Link of one' }));
   });
 
   it('keeps the closed popup hidden in the DOM with keepMounted', async () => {

@@ -1,5 +1,6 @@
 import { vi, describe, it, expect } from 'vitest';
 import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import type { PropType } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import {
   createRenderer,
@@ -229,13 +230,17 @@ describe('<NavigationMenu.List />', () => {
   describe('dismissal', () => {
     const DismissMenu = defineComponent({
       props: {
-        onValueChange: { type: Function, default: undefined },
+        onValueChange: {
+          type: Function as PropType<(value: unknown, details: { reason: string }) => void>,
+          default: undefined,
+        },
+        stopKeydown: { type: Boolean, default: false },
       },
       setup(props) {
         return () => (
-          <div>
+          <div onKeydown={props.stopKeydown ? (event) => event.stopPropagation() : undefined}>
             <NavigationMenu.Root onValueChange={props.onValueChange}>
-              <NavigationMenu.List data-testid="list">
+              <NavigationMenu.List>
                 <NavigationMenu.Item value="one">
                   <NavigationMenu.Trigger data-testid="trigger-one">One</NavigationMenu.Trigger>
                   <NavigationMenu.Content>
@@ -247,6 +252,16 @@ describe('<NavigationMenu.List />', () => {
                   <NavigationMenu.Content>
                     <NavigationMenu.Link href="#two">Link of two</NavigationMenu.Link>
                   </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item value="three">
+                  <NavigationMenu.Trigger data-testid="trigger-three" disabled>
+                    Three
+                  </NavigationMenu.Trigger>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <NavigationMenu.Link data-testid="top-link" href="#top">
+                    Top
+                  </NavigationMenu.Link>
                 </NavigationMenu.Item>
               </NavigationMenu.List>
               <NavigationMenu.Portal>
@@ -293,13 +308,11 @@ describe('<NavigationMenu.List />', () => {
       });
     });
 
-    it('closes the menu with Escape in the popup', async () => {
-      await render(<DismissMenu />);
+    it('closes the menu with Escape on a trigger when an ancestor stops the event', async () => {
+      await render(<DismissMenu stopKeydown />);
       await open('trigger-one');
 
-      await fireEvent.keyDown(screen.getByRole('link', { name: 'Link of one' }), {
-        key: 'Escape',
-      });
+      await fireEvent.keyDown(screen.getByTestId('trigger-one'), { key: 'Escape' });
 
       expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'false');
     });
@@ -317,20 +330,21 @@ describe('<NavigationMenu.List />', () => {
       expect(handleValueChange.mock.calls[0][1].reason).toBe(REASONS.outsidePress);
     });
 
-    it('keeps the menu open for a press of another trigger, and opens its item', async () => {
-      await render(<DismissMenu />);
-      await open('trigger-one');
-
-      await open('trigger-two');
-
-      expect(screen.getByRole('link', { name: 'Link of two' })).toBeVisible();
-    });
-
-    it('keeps the menu open for a press in the popup', async () => {
+    it('keeps the menu open for a press of a trigger that does not open its item', async () => {
       const { user } = await render(<DismissMenu />);
       await open('trigger-one');
 
-      await user.click(screen.getByRole('link', { name: 'Link of one' }));
+      await user.click(screen.getByTestId('trigger-three'));
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('keeps the menu open for a press in the list', async () => {
+      const { user } = await render(<DismissMenu />);
+      await open('trigger-one');
+
+      await user.click(screen.getByTestId('top-link'));
       await flushMicrotasks();
 
       expect(screen.getByTestId('trigger-one')).toHaveAttribute('aria-expanded', 'true');

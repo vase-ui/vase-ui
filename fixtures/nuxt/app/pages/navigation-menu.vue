@@ -12,7 +12,9 @@ import * as NavigationMenu from '../../../../packages/vue/src/navigation-menu/in
         <NavigationMenu.Item value="kept">
           <NavigationMenu.Trigger data-testid="kept-trigger">Kept</NavigationMenu.Trigger>
           <NavigationMenu.Content data-testid="kept-content" keep-mounted>
-            <NavigationMenu.Link data-testid="kept-link" href="#kept">Kept link</NavigationMenu.Link>
+            <NavigationMenu.Link data-testid="kept-link" href="#kept"
+              >Kept link</NavigationMenu.Link
+            >
           </NavigationMenu.Content>
         </NavigationMenu.Item>
         <NavigationMenu.Item value="dropped">
@@ -43,7 +45,9 @@ import * as NavigationMenu from '../../../../packages/vue/src/navigation-menu/in
         <NavigationMenu.Item value="open">
           <NavigationMenu.Trigger data-testid="open-trigger">Open</NavigationMenu.Trigger>
           <NavigationMenu.Content>
-            <NavigationMenu.Link data-testid="open-link" href="#open">Open link</NavigationMenu.Link>
+            <NavigationMenu.Link data-testid="open-link" href="#open"
+              >Open link</NavigationMenu.Link
+            >
           </NavigationMenu.Content>
         </NavigationMenu.Item>
       </NavigationMenu.List>

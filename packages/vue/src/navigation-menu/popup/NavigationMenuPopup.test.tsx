@@ -1,13 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  hydrate,
+  renderOnServer,
   screen,
+  within,
 } from '#test-utils';
 import * as NavigationMenu from '../index.parts';
+import NavigationMenuPopupHydration from './NavigationMenuPopupHydration.test.vue';
+
+const HYDRATION_FIXTURE = 'src/navigation-menu/popup/NavigationMenuPopupHydration.test.vue';
 
 describe('<NavigationMenu.Popup />', () => {
   const { render } = createRenderer();
@@ -126,4 +132,42 @@ describe('<NavigationMenu.Popup />', () => {
       }
     },
   );
+
+  it('has no transition while it starts to open', async () => {
+    await renderMenu();
+    const transitions: string[] = [];
+    // The popup has `data-starting-style` only until the next frame. The observer records the
+    // style of the popup in the update that adds it.
+    const observer = new MutationObserver(() => {
+      const popup = screen.queryByTestId('popup');
+      if (popup?.hasAttribute('data-starting-style')) {
+        transitions.push(popup.style.transition);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    onTestFinished(() => observer.disconnect());
+
+    await open();
+
+    expect(transitions[0]).toBe('none');
+  });
+
+  describe('hydration', () => {
+    it.each([
+      { name: 'a closed menu', props: {}, open: false },
+      { name: 'a closed menu with a kept portal', props: { keepMounted: true }, open: false },
+      { name: 'an open menu', props: { defaultValue: 'one' }, open: true },
+    ])('hydrates $name, with no popup in the server HTML', async ({ props, open }) => {
+      const serverHtml = await renderOnServer(HYDRATION_FIXTURE, props);
+      expect(serverHtml).not.toContain('data-testid="popup"');
+
+      const { container } = await hydrate(NavigationMenuPopupHydration, { serverHtml, props });
+
+      expect(within(container).getByTestId('trigger-one')).toHaveAttribute(
+        'aria-expanded',
+        String(open),
+      );
+      expect(within(container).getByTestId('backdrop').hasAttribute('hidden')).toBe(!open);
+    });
+  });
 });

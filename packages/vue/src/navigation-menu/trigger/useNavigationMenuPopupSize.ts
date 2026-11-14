@@ -18,10 +18,7 @@ const DEFAULT_SIZE = { width: 0, height: 0 };
  * function that `effect` returns runs before the next run, at the unmount and while `KeepAlive`
  * holds the part.
  */
-function watchAfterMount(
-  sources: WatchSource[],
-  effect: () => (() => void) | undefined,
-) {
+function watchAfterMount(sources: WatchSource[], effect: () => (() => void) | undefined) {
   let cleanup: (() => void) | undefined;
   let deactivated = false;
 
@@ -142,7 +139,10 @@ export function useNavigationMenuPopupSize(
 
     popup.style.setProperty(NavigationMenuPopupCssVars.popupWidth, `${currentWidth}px`);
     popup.style.setProperty(NavigationMenuPopupCssVars.popupHeight, `${currentHeight}px`);
-    positioner.style.setProperty(NavigationMenuPositionerCssVars.positionerWidth, `${measuredWidth}px`);
+    positioner.style.setProperty(
+      NavigationMenuPositionerCssVars.positionerWidth,
+      `${measuredWidth}px`,
+    );
     positioner.style.setProperty(
       NavigationMenuPositionerCssVars.positionerHeight,
       `${measuredHeight}px`,
