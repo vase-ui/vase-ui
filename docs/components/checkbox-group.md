@@ -43,7 +43,7 @@ A checkbox with no `value`, and with no `name` of its own or of its field, keeps
 
 A change of a checkbox emits `checkedChange` on the checkbox, then `valueChange` and `update:value` on the group, and then `update:checked` on the checkbox. `checkedChange` and `valueChange` get the same `eventDetails`. To stop the change, call `eventDetails.cancel()` in one of them. The change then emits no later event, and the checkbox and the group keep their state.
 
-A reset of the form sets an uncontrolled group to its `defaultValue`. The group emits `valueChange`, and a checkbox with a `value` emits no `checkedChange`. A controlled group does not change and emits nothing. In a `Field`, a reset clears the error of the field and starts no validation.
+A reset of the form sets an uncontrolled group to its `defaultValue`. When the reset changes the value, the group emits `valueChange`, and `eventDetails.event` is the `reset` event. A checkbox with a `value` emits no `checkedChange` for the reset. To keep the value, call `eventDetails.cancel()` in `valueChange`. A controlled group does not change and emits nothing. In a `Field`, a reset clears the error of the field and starts no validation.
 
 A native form submits one entry for each checked checkbox that has a name and is not disabled. The name is the `name` of the `Field.Root`, or the `name` of the checkbox when the field has none. A disabled group submits nothing.
 
