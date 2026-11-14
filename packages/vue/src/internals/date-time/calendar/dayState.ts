@@ -1,0 +1,139 @@
+import { matches } from '../matchers';
+import type { DateMatcher } from '../matchers';
+import { compareDates, isSameDay } from '../temporal';
+import type { DateValue, DayOfWeek } from '../temporal';
+import { isInMonth } from './monthGrid';
+
+export interface DayState {
+  /**
+   * Whether the day is in the selection.
+   */
+  selected: boolean;
+  /**
+   * Whether the day can neither take focus nor be selected: the calendar is disabled, the day is
+   * before `minDate` or after `maxDate`, or `disabledDates` matches it.
+   */
+  disabled: boolean;
+  /**
+   * Whether the day can take focus and cannot be selected: `unavailableDates` matches it.
+   */
+  unavailable: boolean;
+  /**
+   * Whether the day has no button: `hiddenDates` matches it, or it is in another month than the
+   * month of its page.
+   */
+  hidden: boolean;
+  /**
+   * Whether the day is today.
+   */
+  today: boolean;
+  /**
+   * Whether the day is in the month before or after the month of its page.
+   */
+  outsideMonth: boolean;
+  /**
+   * Whether the day is in the weekend of the locale.
+   */
+  weekend: boolean;
+  /**
+   * `true` for each modifier that matches the day, and `false` for each other modifier.
+   */
+  modifiers: Record<string, boolean>;
+}
+
+/** The rules of a calendar that tell the state of a day. */
+export interface DayRules {
+  today: Temporal.PlainDate;
+  weekend: readonly DayOfWeek[];
+  /** Whether the whole calendar ignores user interaction. */
+  disabled: boolean;
+  minDate: DateValue | undefined;
+  maxDate: DateValue | undefined;
+  disabledDates: DateMatcher | undefined;
+  unavailableDates: DateMatcher | undefined;
+  hiddenDates: DateMatcher | undefined;
+  modifiers: Readonly<Record<string, DateMatcher>> | undefined;
+  /** It reads the selection, so a `computed` that calls it follows the selection. */
+  isSelected: (date: Temporal.PlainDate) => boolean;
+}
+
+/** The state of `date` in the page of `yearMonth`. */
+export function getDayState(
+  date: Temporal.PlainDate,
+  yearMonth: Temporal.PlainYearMonth,
+  rules: DayRules,
+): DayState {
+  const outsideMonth = !isInMonth(date, yearMonth);
+  const isBeforeMin = rules.minDate !== undefined && compareDates(date, rules.minDate) < 0;
+  const isAfterMax = rules.maxDate !== undefined && compareDates(date, rules.maxDate) > 0;
+  return {
+    selected: rules.isSelected(date),
+    disabled: rules.disabled || isBeforeMin || isAfterMax || matches(date, rules.disabledDates),
+    unavailable: matches(date, rules.unavailableDates),
+    hidden: outsideMonth || matches(date, rules.hiddenDates),
+    today: isSameDay(date, rules.today),
+    outsideMonth,
+    weekend: rules.weekend.some((day) => day === date.dayOfWeek),
+    modifiers: Object.fromEntries(
+      Object.entries(rules.modifiers ?? {}).map(([name, matcher]) => [
+        name,
+        matches(date, matcher),
+      ]),
+    ),
+  };
+}
+
+/** Whether a day can take focus: the keys and the tab stop skip each other day. */
+export function canFocus(state: DayState): boolean {
+  return !state.disabled && !state.hidden;
+}
+
+/** Whether a press can select a day. */
+export function canSelect(state: DayState): boolean {
+  return canFocus(state) && !state.unavailable;
+}
+
+function toKebabCase(name: string): string {
+  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+const STATE_ATTRIBUTES = [
+  'selected',
+  'disabled',
+  'unavailable',
+  'hidden',
+  'today',
+  'outside-month',
+  'weekend',
+];
+
+/**
+ * Throws in a development build when a modifier has the name of a state of a day: its attribute
+ * would then have two meanings.
+ */
+export function assertModifierNames(
+  part: string,
+  modifiers: Readonly<Record<string, DateMatcher>> | undefined,
+): void {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+  for (const name of Object.keys(modifiers ?? {})) {
+    if (STATE_ATTRIBUTES.includes(toKebabCase(name))) {
+      throw new Error(
+        `Vase UI: The \`modifiers\` prop of <${part}> has the key \`${name}\`, which is the name of a state of a day. ` +
+          `The attribute \`data-${toKebabCase(name)}\` would then have two meanings. Rename the modifier.`,
+      );
+    }
+  }
+}
+
+/** The attributes of the modifiers that match a day: `data-holiday` for `holiday`. */
+export function getModifierAttributes(
+  modifiers: Record<string, boolean>,
+): Record<string, string> | null {
+  const attributes = Object.entries(modifiers)
+    .filter(([, isMatch]) => isMatch)
+    .map(([name]) => [`data-${toKebabCase(name)}`, ''] as const);
+  return attributes.length > 0 ? Object.fromEntries(attributes) : null;
+}
