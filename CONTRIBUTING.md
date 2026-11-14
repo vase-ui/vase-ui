@@ -244,6 +244,12 @@ A part that Base UI writes as another part renders that part and no element of i
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
+Base UI can also give a part of another family a new name and new types, such as `DrawerTitle = DialogTitle as DrawerTitle`. That part is then the part of the other family:
+
+- Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
+- Its props and state types are aliases of the types of the other part.
+- `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
+
 ### Parts with nodes of their own
 
 Some upstream parts put nodes of their own in the element. Examples are the range input of `Slider.Thumb` and the focus guards of `Toast.Viewport`.
@@ -455,6 +461,7 @@ Upstream has trios such as `open`, `defaultOpen` and `onOpenChange`. For each tr
 - To add or change a dependency of the package, run `pnpm --filter @vase-ui/vue add <name>@<range>`. Then commit `pnpm-lock.yaml`. Do not edit the lockfile. `THIRD_PARTY_NOTICES.md` names each run-time dependency.
 - When two families import each other, move the shared context or constant to `src/internals`.
 - `MenubarContext` and `ContextMenuRootContext` are in `src/internals`, because Menu reads them and Menubar and Context Menu render Menu.
+- `menubar/MenubarContext.ts` exports `MenubarContext` and `useMenubarContext` again from the path of Base UI.
 - `src/internals/constants.ts` has a part of the constants of Base UI. The pull request that first needs a constant adds it.
 - Base UI's `internals` folders import constants, types and functions of the Field and Form families. Those pieces are in `src/internals`: `field-constants/FieldControlDataAttributes.ts`, `field-root-context/getCombinedFieldValidityData.ts`, and the types in `field-root-context/FieldRootContext.ts` and `form-context/FormContext.ts`. The file of the family exports them again from the path of Base UI.
 - A file of `utils` that Base UI has keeps the path of Base UI, also when it imports a constant of a family. `utils` is a shared folder and not an entry point. An example is `utils/collapsibleOpenStateMapping.ts`.
@@ -1141,6 +1148,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - Use `whileElementsMounted` with `autoUpdate` for a popup that stays mounted too. The reference is `null` while that popup is closed, so `autoUpdate` does not run then.
 - `useFloating` writes a position in microtasks. A popup has its position before the first paint after it opens.
 - A key that no rendered style has, such as `--anchor-width`, keeps the value that code writes on the element. A value that code writes for a key of the rendered style goes into a ref that the style reads, such as `--available-height`.
+- Some values change in each frame of a gesture, such as `--drawer-swipe-progress` of a swipe. Do not keep such a value in a ref, because a ref renders the part in each frame. Where the rendered style has the key of such a value, the style reads the value from a holder that is not reactive. `Drawer.Indent` reads the visual state store of `Drawer.Provider`. `Drawer.Backdrop` reads the value that its element holds.
 - A function ref of a composable reads no ref in the render, because the render then depends on that ref. Where the function ref must start work that depends on a ref, it reads the ref in a `queueMicrotask` callback. `arrowRef` of `useAnchorPositioning` does this.
 - The check for a rectangle must refuse a component. The ref of a component with no `expose` also gives its props. A component that has `width` and `height` props then has the names of a rectangle. A rectangle has no `nodeType` and no `$props`, and its `x`, `y`, `width` and `height` are numbers.
 
