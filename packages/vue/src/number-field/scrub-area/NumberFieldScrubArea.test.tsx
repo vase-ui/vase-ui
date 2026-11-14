@@ -15,8 +15,8 @@ import { platform } from '../../common/platform';
 
 const isWebKit = platform.engine.webkit;
 
-// TODO (@Janpot): Contribute https://github.com/testing-library/user-event/issues/903 and
-// rely on `user.pointer()` instead.
+// The cases make their pointer events here, and not with `user.pointer()`.
+// See https://github.com/testing-library/user-event/issues/903.
 let currentPos = { clientX: 0, clientY: 0 };
 
 function createPointerDownEvent(elm: HTMLElement) {
