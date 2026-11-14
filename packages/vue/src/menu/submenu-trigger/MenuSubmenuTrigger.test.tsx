@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -369,6 +371,73 @@ describe('<Menu.SubmenuTrigger />', () => {
     expect(storeRef.current!.context.triggerElements.getById('first')).toBeUndefined();
     expect(storeRef.current!.context.triggerElements.getById('second')).toBe(submenuTrigger);
     expect(storeRef.current!.context.triggerElements.size).toBe(1);
+  });
+
+  function TestComponent({ direction = 'ltr' }: { direction: TextDirection }) {
+    return (
+      <DirectionProvider direction={direction}>
+        <Menu.Root open>
+          <Menu.Trigger>Open menu</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>2</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup>
+                        <Menu.Item>2.1</Menu.Item>
+                        <Menu.Item>2.2</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </DirectionProvider>
+    );
+  }
+
+  it.each([
+    { direction: 'ltr', openKey: 'ArrowRight' },
+    { direction: 'rtl', openKey: 'ArrowLeft' },
+  ] as const)(
+    'opens the submenu with $openKey and highlights a single item in $direction direction',
+    async ({ direction, openKey }) => {
+      await render(<TestComponent direction={direction} />);
+      const submenuTrigger = screen.getByText('2');
+
+      await fireEvent.focus(submenuTrigger);
+      await fireEvent.keyDown(submenuTrigger, { key: openKey });
+
+      const submenuItems = await screen.findAllByRole('menuitem');
+      const submenuItem1 = submenuItems.find((item) => item.textContent === '2.1');
+
+      await waitFor(() => {
+        expect(submenuItem1).toHaveFocus();
+      });
+
+      // Only the first submenu item is highlighted; no other submenu or parent menu item is.
+      const highlightedItems = screen
+        .getAllByRole('menuitem')
+        .filter((item) => item.hasAttribute('data-highlighted'));
+      expect(highlightedItems).toEqual([submenuItem1]);
+    },
+  );
+
+  it('sets tabIndex to 0 on the submenu trigger after opening the submenu with a keydown event', async () => {
+    await render(<TestComponent direction="ltr" />);
+    const submenuTrigger = screen.getByText('2');
+
+    await fireEvent.focus(submenuTrigger);
+    await fireEvent.keyDown(submenuTrigger, { key: 'ArrowRight' });
+
+    await waitFor(() => {
+      expect(submenuTrigger).toHaveAttribute('tabIndex', '0');
+    });
   });
 
   describe('prop: disabled', () => {

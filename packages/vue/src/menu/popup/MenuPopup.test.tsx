@@ -120,6 +120,40 @@ describe('<Menu.Popup />', () => {
     expect(onParentKeyDown.mock.calls.every(([event]) => event.key === 'F1')).toBe(true);
   });
 
+  it('moves focus into the items when the last item is already highlighted', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <a href="#profile">Profile</a>
+              <Menu.Item>One</Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+              <Menu.Item>Three</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[ArrowUp]');
+
+    const three = await screen.findByRole('menuitem', { name: 'Three' });
+    await waitFor(() => expect(three).toHaveAttribute('data-highlighted'));
+    screen.getByRole('link', { name: 'Profile' }).focus();
+    await flushMicrotasks();
+    expect(three).toHaveAttribute('data-highlighted');
+
+    await user.keyboard('[ArrowUp]');
+    await waitFor(() => expect(three).toHaveFocus());
+
+    await user.keyboard('[ArrowUp]');
+    await waitFor(() => expect(screen.getByRole('menuitem', { name: 'Two' })).toHaveFocus());
+  });
+
   describe('attributes', () => {
     it('has the menu role and the name of the trigger', async () => {
       await render(

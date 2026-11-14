@@ -875,13 +875,15 @@ describe('<Menu.Root />', () => {
       );
       probe.store.set('keyboardEventRelay', relay);
 
-      await fireEvent.keyDown(getByTestId('popup'), { key: 'a' });
+      // The list navigation and the typeahead of a vertical menu leave the horizontal arrow keys
+      // to the menubar.
+      await fireEvent.keyDown(getByTestId('popup'), { key: 'ArrowRight' });
 
       expect(relay).toHaveBeenCalledTimes(1);
-      expect(relay.mock.calls[0][0].key).toBe('a');
+      expect(relay.mock.calls[0][0].key).toBe('ArrowRight');
 
       stopKey = true;
-      await fireEvent.keyDown(getByTestId('popup'), { key: 'b' });
+      await fireEvent.keyDown(getByTestId('popup'), { key: 'ArrowLeft' });
 
       expect(relay).toHaveBeenCalledTimes(1);
     });
