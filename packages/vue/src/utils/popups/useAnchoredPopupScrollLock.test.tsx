@@ -70,11 +70,11 @@ describe('useAnchoredPopupScrollLock', () => {
   });
 
   it.each([
-    { name: 'the viewport', less: 0, locks: true },
-    { name: 'the viewport less 20 px', less: 20, locks: true },
-    { name: 'the viewport less 21 px', less: 21, locks: false },
+    { name: 'the viewport', less: 0, locks: true, outcome: 'locks' },
+    { name: 'the viewport less 20 px', less: 20, locks: true, outcome: 'locks' },
+    { name: 'the viewport less 21 px', less: 21, locks: false, outcome: 'does not lock' },
   ])(
-    'locks the page for a touch open when the positioner is as wide as $name',
+    '$outcome the page for a touch open when the positioner is as wide as $name',
     async ({ less, locks }) => {
       const page = await createPage();
       const positioner = addPositioner(page, page.html.clientWidth - less);

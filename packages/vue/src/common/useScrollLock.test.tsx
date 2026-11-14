@@ -443,7 +443,7 @@ describe('useScrollLock', () => {
 
   describe('scrollbar track and scroll containers', () => {
     it.runIf(hasInsetScrollbars)(
-      'keeps the scrollbar track of a page that has short content and a scrollbar that never goes',
+      'keeps the scrollbar track of a page that has short content and overflow-y: scroll',
       async () => {
         const page = await createScrollDocument({
           css: `${INSET_CSS} html { overflow-y: scroll } #content { width: 10px; height: 10px }`,
@@ -714,7 +714,7 @@ describe('useScrollLock', () => {
       await waitForLock(page);
     });
 
-    it('does not matter for a page that has overlay scrollbars', async () => {
+    it('locks a page that has overlay scrollbars at a pinch zoom, also in WebKit', async () => {
       setWebKit(true);
       const page = await createScrollDocument({ css: HIDDEN_SCROLLBARS_CSS });
       zoom(page, 2);
