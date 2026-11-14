@@ -118,6 +118,16 @@ describe('<Slider.Value />', () => {
     expect(output.textContent).toBe('40 – 65');
   });
 
+  it('renders no text node when the slider has no value', async () => {
+    await render(
+      <Slider.Root defaultValue={[]}>
+        <Slider.Value data-testid="output" />
+      </Slider.Root>,
+    );
+
+    expect(screen.getByTestId('output')).toBeEmptyDOMElement();
+  });
+
   describe('prop: children', () => {
     it('accepts a render function', async () => {
       const format: Intl.NumberFormatOptions = {
