@@ -214,7 +214,7 @@ describe('<Combobox.Root />', () => {
     );
 
     it('keeps the typed filter while the popup closes after a pick', async () => {
-      const root = shallowRef<InstanceType<typeof Combobox.Root> | null>(null);
+      const root = shallowRef<Combobox.Root.Actions | null>(null);
       await render(() => (
         <Combobox.Root
           ref={root}
