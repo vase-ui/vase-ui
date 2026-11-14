@@ -233,7 +233,7 @@ test('the functions are the parts and then the functions of the types.md that ha
   assert.deepEqual(names, ['Sample.closeHandle', 'Sample.createHandle']);
 });
 
-test('the types are the types and then the additional types of the types.md that have one property or more or are a union of strings, with the path of the export as name and the properties in the sequence of their names', () => {
+test('the types are the types and then the additional types of the types.md that have one property or more or are a union of strings, with the path of the export as name, the properties in the sequence of their names and the values in the sequence of the alphabet', () => {
   const file = {
     ...types,
     types: [
@@ -256,7 +256,7 @@ test('the types are the types and then the additional types of the types.md that
     ]),
     [
       ['Sample.Handle', ['close', 'open'], []],
-      ['SampleRootChangeEventReason', [], ['trigger-press', 'escape-key', 'none']],
+      ['SampleRootChangeEventReason', [], ['escape-key', 'none', 'trigger-press']],
       ['SampleRootChangeEventDetails', ['cancel', 'event', 'isCanceled', 'reason'], []],
     ],
   );

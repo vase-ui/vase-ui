@@ -74,7 +74,7 @@ export interface ApiType {
   /** `useRender.Parameters`. */
   name: string;
   properties: PropertySurface[];
-  /** The values of a union of strings, such as `ImageLoadingStatus`. Empty for a type with properties. */
+  /** The values of a union of strings, such as `ImageLoadingStatus`, in the sequence of the alphabet. Empty for a type with properties. */
   values: string[];
 }
 
@@ -199,9 +199,10 @@ export function buildApiFunctions(
 }
 
 /**
- * The types and then the additional types of a `types.md`, in its sequence, with the properties in
- * the sequence of their names. A type with no property is left out, unless it is a union of strings.
- * So is a name with no export in the entry file.
+ * The types and then the additional types of a `types.md`, in its sequence. The properties are in
+ * the sequence of their names, and the values of a union are in the sequence of the alphabet. A type
+ * with no property is left out, unless it is a union of strings. So is a name with no export in the
+ * entry file.
  */
 export function buildApiTypes(
   project: VaseProject,
@@ -212,13 +213,15 @@ export function buildApiTypes(
     const match = project
       .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
       .find(({ path }) => path === name);
-    // TypeScript gives the properties of a mapped type, such as an `Omit`, in an order that changes
-    // with the order in which it reads the program.
+    // TypeScript gives the properties of a mapped type, such as an `Omit`, and the members of a
+    // union in an order that changes with the order in which it reads the program.
     const properties = ((match && project.readProperties(match)) ?? []).sort((a, b) =>
       a.name.localeCompare(b.name, 'en'),
     );
     const values =
-      match && properties.length === 0 ? (project.readUnionValues(entryFile, name) ?? []) : [];
+      match && properties.length === 0
+        ? (project.readUnionValues(entryFile, name) ?? []).sort((a, b) => a.localeCompare(b, 'en'))
+        : [];
     return properties.length > 0 || values.length > 0 ? [{ name, properties, values }] : [];
   });
 }
