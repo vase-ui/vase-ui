@@ -42,7 +42,7 @@
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips, the trigger or the value, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/empty/ComboboxEmpty.test.tsx",
@@ -58,19 +58,19 @@
     {
       "upstream": "packages/react/src/combobox/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Combobox. It exports the parts, which Vase UI does not have."
+      "reason": "The file is the entry point of Combobox. It exports parts that Vase UI does not have, such as the chips."
     },
     {
       "upstream": "packages/react/src/combobox/input-group/ComboboxInputGroup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips or the trigger, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/input/ComboboxInput.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips or the value, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the chips, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
@@ -90,13 +90,13 @@
       "upstream": "packages/react/src/combobox/popup/ComboboxPopup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the trigger, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/positioner/ComboboxPositioner.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render the trigger, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.spec.tsx",
