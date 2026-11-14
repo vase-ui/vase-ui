@@ -85,7 +85,7 @@ You can take over the submission with the native `submit` event or with the `for
 
 `Form` emits `submit` only when each field is valid. It does not prevent the default action of the event, so call `event.preventDefault()` yourself:
 
-<<< ../examples/forms/NativeSubmit.vue{8-12}
+<<< ../examples/forms/NativeSubmit.vue{7-10,19}
 
 When a `formSubmit` listener exists, `Form` gives it the values of the named fields as an object, with `eventDetails` as the second argument. `Form` also calls `preventDefault()` on the native submit event:
 
@@ -120,7 +120,7 @@ Use the `validationMode` prop to set when the validation runs:
 
 An asynchronous `validate` function does not stop the submission of a form in `onSubmit` mode.
 
-<<< ../examples/forms/CustomValidation.vue{24-26}
+<<< ../examples/forms/CustomValidation.vue{23-25}
 
 ## Server-side validation
 

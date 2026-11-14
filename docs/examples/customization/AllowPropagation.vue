@@ -3,7 +3,6 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
 
 function onOpenChange(_open: boolean, eventDetails: Tooltip.Root.ChangeEventDetails) {
   if (eventDetails.reason === 'escape-key') {
-    // Allow the DOM event to propagate.
     eventDetails.allowPropagation();
   }
 }

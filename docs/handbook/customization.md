@@ -55,7 +55,7 @@ Call `cancel()` before the listener returns. A call after an `await` has no effe
 
 In a popup, the <kbd>Esc</kbd> key stops the propagation of the event, so that parent popups do not close at the same time. The `allowPropagation()` method changes this:
 
-<<< ../examples/customization/AllowPropagation.vue{5-8}
+<<< ../examples/customization/AllowPropagation.vue{5-7}
 
 ## Preventing Vase UI from handling an event
 

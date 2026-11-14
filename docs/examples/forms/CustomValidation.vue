@@ -5,7 +5,6 @@ declare function isUsernameAvailable(username: string): Promise<boolean>;
 
 async function validate(value: unknown) {
   if (value === 'admin') {
-    // Return an error message when the value is not valid.
     return 'Reserved for system use.';
   }
 
