@@ -1,14 +1,16 @@
 {
   "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "upstreamPaths": [
-    "packages/react/src/utils/popups/focus/**"
+    "packages/react/src/utils/popups/focus/**",
+    "packages/react/test/floating-ui-tests/Navigation.tsx"
   ],
   "sources": [
     "packages/react/src/utils/popups/focus/FloatingFocusManager.tsx",
     "packages/react/src/utils/popups/focus/FocusGuard.tsx",
     "packages/react/src/utils/popups/focus/enqueueFocus.ts",
     "packages/react/src/utils/popups/focus/markOthers.ts",
-    "packages/react/src/utils/popups/focus/tabbable.ts"
+    "packages/react/src/utils/popups/focus/tabbable.ts",
+    "packages/react/test/floating-ui-tests/Navigation.tsx"
   ],
   "typeTests": [],
   "cases": [

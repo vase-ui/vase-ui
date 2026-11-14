@@ -50,6 +50,7 @@ import { computed, shallowRef } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { getInlineRectTriggerProps } from '../../utils/popups/inlineRect';
+import { safePolygon } from '../../utils/popups/interactions/safePolygon';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { triggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useTriggerDataForwarding } from '../../utils/popups/popupStoreUtils';
@@ -80,6 +81,7 @@ if (rootStore === undefined && props.handle === undefined) {
 const store = computed<PreviewCardHandleStore<any>>(() => handleStore.value ?? rootStore!);
 
 const thisTriggerId = useVaseUiId(() => props.id);
+const isTriggerActive = computed(() => store.value.select('isTriggerActive', thisTriggerId.value));
 const isOpenedByThisTrigger = computed(() =>
   store.value.select('isOpenedByTrigger', thisTriggerId.value),
 );
@@ -96,11 +98,16 @@ const rootTriggerProps = computed(() =>
   store.value.select('triggerProps', isMountedByThisTrigger.value),
 );
 
+// The handlers that one safe polygon makes share its timer, so each trigger has its own.
+const handleClose = safePolygon();
+
 const hoverProps = useHoverTriggerInteraction(store, {
   mouseOnly: true,
   move: false,
+  handleClose: () => handleClose,
   delay: () => ({ open: props.delay, close: props.closeDelay }),
   triggerElement,
+  isActiveTrigger: isTriggerActive,
 });
 
 const inlineRectTriggerProps = getInlineRectTriggerProps(
