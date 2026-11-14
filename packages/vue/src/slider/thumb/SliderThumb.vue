@@ -8,10 +8,7 @@ export interface SliderThumbState extends SliderRootState {}
 export interface SliderThumbProps
   extends
     VaseUIComponentProps<SliderThumbState>,
-    /* @vue-ignore */ Omit<
-      WithVaseUIEvent<HTMLAttributes>,
-      'aria-label' | 'aria-labelledby' | 'aria-describedby' | 'aria-valuetext' | 'tabindex'
-    > {
+    /* @vue-ignore */ Omit<WithVaseUIEvent<HTMLAttributes>, 'tabindex'> {
   /**
    * Whether the thumb should ignore user interaction.
    * @default false
