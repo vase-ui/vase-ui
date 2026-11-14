@@ -10,6 +10,7 @@
     "packages/react/src/internals/field-root-context/**",
     "packages/react/src/internals/filter.ts",
     "packages/react/src/internals/filter.test.ts",
+    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
@@ -21,8 +22,12 @@
     "packages/react/src/internals/prehydrationScript.stub.ts",
     "packages/react/src/internals/reason-parts.ts",
     "packages/react/src/internals/reasons.ts",
+    "packages/react/src/internals/resolvePopupLabel.ts",
+    "packages/react/src/internals/resolvePopupLabel.test.tsx",
     "packages/react/src/internals/resolveRenderedAriaLabel.ts",
     "packages/react/src/internals/resolveRenderedAriaLabel.test.tsx",
+    "packages/react/src/internals/resolveRenderedId.ts",
+    "packages/react/src/internals/resolveRenderedId.test.tsx",
     "packages/react/src/internals/resolveValueLabel.tsx",
     "packages/react/src/internals/resolveValueLabel.test.ts",
     "packages/react/src/internals/serializeValue.ts",
@@ -210,6 +215,30 @@
       "upstream": "packages/react/src/internals/composite/index.ts",
       "kind": "not-applicable",
       "reason": "No Base UI component imports the file. It is the module of the package entry `./internals/composite`, and Vase UI has no entry point for an internal module."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "describe": ["resolvePopupLabel"],
+      "title": "uses a render element's own label instead of the trigger",
+      "kind": "not-applicable",
+      "reason": "The case reads the label of a React element that is given as `render`. A Vue part does not see an attribute that the element of its `#render` slot adds, so `resolvePopupLabel` reads the attributes of the part only."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolvePopupLabel.test.tsx",
+      "describe": ["resolvePopupLabel"],
+      "title": "reads a server-created render element's label",
+      "kind": "not-applicable",
+      "reason": "The case tests the lazy wrapper that the Flight client of React Server Components gives in place of a `render` element."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveRenderedId.ts",
+      "kind": "not-applicable",
+      "reason": "The file reads the `id` of a React element that is given as `render`. In Vue the `as` prop takes a tag or a component with no props of its own, and `#render` is a slot, which is a function. The popup part reads its `id` prop and gives it to the root."
+    },
+    {
+      "upstream": "packages/react/src/internals/resolveRenderedId.test.tsx",
+      "kind": "not-applicable",
+      "reason": "The cases test `resolveRenderedId` and `useRenderedId`, which read a React element that is given as `render`."
     }
   ],
   "surfaceAdditions": [],
