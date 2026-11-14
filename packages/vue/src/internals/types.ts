@@ -44,6 +44,12 @@ export type WithVaseUIEvent<T> = {
 } & AriaDescriptionAttribute;
 
 /**
+ * vue-tsc types a generic SFC as a function of its props and its context. `Component` refuses that
+ * function when the SFC has a required slot. At run time the SFC is a component object.
+ */
+export type GenericComponent = (props: any, ...args: any[]) => unknown;
+
+/**
  * Props shared by all Vase UI parts that render an element.
  * Contains `as`, `stateClass` and `stateStyle`.
  */
@@ -53,7 +59,7 @@ export interface VaseUIComponentProps<State> {
    * To give the element props or children of its own, use the `#render` slot.
    * If the part also has a `#render` slot, the slot wins.
    */
-  as?: string | Component | undefined;
+  as?: string | Component | GenericComponent | undefined;
   /**
    * Returns a CSS class from the state of the part.
    * The class comes after the `class` attribute.

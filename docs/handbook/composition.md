@@ -27,7 +27,7 @@ To compose more than one part with your own components, nest the `#render` slots
 
 <<< ../examples/composition/NestedTriggers.vue{13-23}
 
-In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`. A popup trigger is a generic component, and the type check refuses it as the value of `as`. Nest the `#render` slots instead.
+In this sample, `Tooltip.Trigger` renders `Dialog.Trigger`, `Dialog.Trigger` renders `Menu.Trigger`, and `Menu.Trigger` renders `MyButton`.
 
 ## How props are merged
 
