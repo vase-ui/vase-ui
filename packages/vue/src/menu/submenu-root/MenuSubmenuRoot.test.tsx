@@ -91,7 +91,9 @@ describe('<Menu.SubmenuRoot />', () => {
   });
 
   it('VUE-4: keeps each menu open for a press in the submenu, and closes each menu for a press outside', async () => {
-    await renderMenu();
+    // A press outside a modal menu is a press on its backdrop. The root is not modal here, so the
+    // press on the element outside closes the menus.
+    await renderMenu({ root: { modal: false } });
 
     await fireEvent.pointerDown(screen.getByRole('menuitem', { name: 'Beta' }));
     await flushMicrotasks();
