@@ -131,15 +131,7 @@
       "upstream": "packages/react/src/combobox/store.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases render `Autocomplete.Trigger` or `Autocomplete.Portal`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
-      "describe": ["<Combobox.Trigger />"],
-      "title": "validates the $name value when blurred",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/autocomplete/trigger/AutocompleteTrigger.tsx",
-      "reason": "The row `no selection` renders `Autocomplete.Trigger`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/value/ComboboxValue.test.tsx",
