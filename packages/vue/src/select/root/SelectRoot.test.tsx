@@ -13,6 +13,7 @@ import {
   hydrate,
   isJSDOM,
   popupConformanceTests,
+  popupListConformanceTests,
   pressWithTouch,
   renderOnServer,
   screen,
@@ -543,6 +544,40 @@ describe('<Select.Root />', () => {
       triggerMouseAction: 'click',
       expectedPopupRole: 'listbox',
       alwaysMounted: 'only-after-open',
+    });
+
+    // The suite owns the scroller geometry, which item-aligned positioning would override.
+    popupListConformanceTests({
+      createComponent: ({ root, items, disabledItems, scrollerStyle, itemStyle, onItemClick }) => (
+        <Select.Root {...root}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup data-testid="popup">
+                <Select.List data-testid="scroller" style={scrollerStyle}>
+                  {items.map((item) => (
+                    <Select.Item
+                      key={item}
+                      value={item}
+                      disabled={disabledItems.includes(item)}
+                      style={itemStyle}
+                      onClick={onItemClick}
+                    >
+                      <Select.ItemText>{item}</Select.ItemText>
+                    </Select.Item>
+                  ))}
+                </Select.List>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      ),
+      render,
+      itemRole: 'option',
+      selectable: true,
+      listEnd: 'stop',
     });
   });
 

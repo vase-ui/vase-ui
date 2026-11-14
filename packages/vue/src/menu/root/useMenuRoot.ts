@@ -9,16 +9,22 @@ import {
   watch,
 } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
+import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
 import { useTimeout } from '../../common/useTimeout';
 import { warn } from '../../common/warn';
+import { TYPEAHEAD_RESET_MS } from '../../internals/constants';
 import { useContextMenuRootContext } from '../../internals/context-menu-root-context/ContextMenuRootContext';
 import { createGenericEventDetails } from '../../internals/createBaseUIEventDetails';
+import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { useMenubarContext } from '../../internals/menubar-context/MenubarContext';
 import { REASONS } from '../../internals/reasons';
 import { useAnimationsFinished } from '../../internals/useAnimationsFinished';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
+import { getHighlightReason } from '../../utils/getHighlightReason';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
+import { useListNavigation } from '../../utils/popups/interactions/useListNavigation';
+import { useTypeahead } from '../../utils/popups/interactions/useTypeahead';
 import { usePopupRootWithPopupId } from '../../utils/popups/popupRoot';
 import {
   FOCUSABLE_POPUP_PROPS,
@@ -169,6 +175,11 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   const parent = computed(() => store.select('parent'));
   const nested = computed(() => store.select('floatingParentNodeId') != null);
+  const disabled = computed(() => store.select('disabled'));
+  const activeIndex = computed(() => store.select('activeIndex'));
+  const loopFocus = computed(() => props.loopFocus ?? true);
+  const orientation = computed(() => props.orientation ?? 'vertical');
+  const allowEscape = computed(() => toValue(options.allowEscape) ?? true);
 
   // A Boolean prop with the default `true` cannot tell an absent prop from `true`, so the check
   // runs only for `false`.
@@ -350,7 +361,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   );
 
   const dismiss = useDismiss(store, {
-    enabled: () => !store.select('disabled'),
+    enabled: () => !disabled.value,
     bubbles: () => ({
       escapeKey: (props.closeParentOnEsc ?? false) && parent.value.type === 'menu',
     }),
@@ -365,6 +376,61 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       return allowOutsidePressDismissal;
     },
     externalTree: () => (nested.value ? floatingTreeRoot.value : undefined),
+  });
+
+  const direction = useDirection();
+
+  const listNavigation = useListNavigation(store, {
+    enabled: () => !disabled.value,
+    listRef: store.context.itemDomElements,
+    activeIndex,
+    virtual: virtualFocus,
+    nested: () =>
+      parent.value.type === 'menubar' || (!virtualFocus && parent.value.type !== undefined),
+    parentOrientation: () =>
+      parent.value.type === 'menubar' ? parent.value.context.orientation.value : undefined,
+    loopFocus,
+    // Filtered menus keep DOM focus on the input, while keyboard and virtual opens initially
+    // highlight an item as ordinary menus do. The input stays in the arrow-key loop unless the
+    // filter highlights automatically.
+    focusItemOnOpen: () => (virtualFocus ? store.select('keyboardOpen') : undefined),
+    allowEscape: () => virtualFocus && loopFocus.value && allowEscape.value,
+    orientation,
+    // A virtual-focus list can navigate on either axis, but its trigger always opens on the
+    // vertical one.
+    triggerOrientation: () => (virtualFocus ? 'vertical' : orientation.value),
+    rtl: () => direction.value === 'rtl',
+    disabledIndices: EMPTY_ARRAY,
+    onNavigate(nextActiveIndex, event) {
+      store.setActiveIndex(nextActiveIndex, getHighlightReason(event), event);
+    },
+    // A virtual-focus submenu's keyboard opening is orchestrated by its navigation wrapper based
+    // on both menus' orientations; the generic arrow-key opening would also react to the parent's
+    // forwarded cross-axis keys while closed.
+    openOnArrowKeyDown: () => parent.value.type !== 'context-menu' && !(virtualFocus && isSubmenu),
+    // A root context menu's focus manager is modal, so its guard swallows Tab when no item is
+    // tabbable. Close it here instead, as a regular menu closes when Tab moves focus out.
+    closeOnTab: () => parent.value.type === 'context-menu',
+    externalTree: () => (!virtualFocus && nested.value ? floatingTreeRoot.value : undefined),
+    nestedReturnFocusRef: () => parentMenuStore?.context.virtualFocusRef?.value,
+    focusItemOnHover: () => props.highlightItemOnHover ?? true,
+  });
+
+  const typeahead = useTypeahead(store, {
+    // Under virtual focus the input owns typing, so typeahead would race the filter query.
+    enabled: () => !disabled.value && !virtualFocus,
+    listRef: store.context.itemLabels,
+    elementsRef: store.context.itemDomElements,
+    activeIndex,
+    resetMs: TYPEAHEAD_RESET_MS,
+    onMatch(index, event) {
+      if (store.select('open') && index !== store.select('activeIndex')) {
+        store.setActiveIndex(index, REASONS.keyboard, event);
+      }
+    },
+    onTyping(nextTyping) {
+      store.context.typingRef.value = nextTyping;
+    },
   });
 
   let lastHighlightIndex = -1;
@@ -437,8 +503,23 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     },
   };
 
+  // Under virtual focus an element inside the popup holds real focus, so it takes the
+  // navigation's reference props (`aria-activedescendant` and the key handling) and the trigger
+  // keeps only the props that open the menu.
+  function getOpenTriggerProps() {
+    if (!virtualFocus) {
+      return listNavigation.value.reference;
+    }
+    // Focusing the trigger while the menu is open must not seed the virtual highlight. This can
+    // happen before a pointer press closes the menu in Safari.
+    const { onFocusin, ...rest } = listNavigation.value.trigger;
+    return rest;
+  }
+
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: mergeProps(
+      typeahead.reference,
+      getOpenTriggerProps(),
       dismiss.reference,
       { onMousemove: allowMouseEnter },
       {
@@ -446,19 +527,27 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         'aria-expanded': open.value,
       },
     ),
-    inactiveTriggerProps: mergeProps(dismiss.trigger, {
+    inactiveTriggerProps: mergeProps(listNavigation.value.trigger, dismiss.trigger, {
       'aria-haspopup': 'menu',
       'aria-expanded': false,
     }),
-    popupProps: mergeProps(FOCUSABLE_POPUP_PROPS, popupListeners, dismiss.floating),
+    popupProps: mergeProps(
+      FOCUSABLE_POPUP_PROPS,
+      popupListeners,
+      typeahead.floating,
+      listNavigation.value.floating,
+      dismiss.floating,
+    ),
+    itemProps: listNavigation.value.item,
+    inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
   }));
 
   const context: MenuRootContext<Payload> = {
     store,
     parent: parentFromContext,
-    orientation: computed(() => props.orientation ?? 'vertical'),
-    loopFocus: computed(() => props.loopFocus ?? true),
-    allowEscape: computed(() => toValue(options.allowEscape) ?? true),
+    orientation,
+    loopFocus,
+    allowEscape,
     generatedPopupId: generatedPopupId.value,
     setRenderedPopupId(id) {
       renderedPopupId.value = id;

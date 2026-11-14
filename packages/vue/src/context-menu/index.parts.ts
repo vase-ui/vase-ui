@@ -40,7 +40,23 @@ export namespace Trigger {
   export type Props = ContextMenuTriggerProps;
 }
 
-export { Arrow, Backdrop, Popup, Portal } from '../menu/index.parts';
+export {
+  Arrow,
+  Backdrop,
+  CheckboxItem,
+  CheckboxItemIndicator,
+  Group,
+  GroupLabel,
+  Item,
+  LinkItem,
+  Popup,
+  Portal,
+  RadioGroup,
+  RadioItem,
+  RadioItemIndicator,
+  SubmenuRoot,
+  SubmenuTrigger,
+} from '../menu/index.parts';
 
 /**
  * Positions the context menu popup against the pointer or a custom anchor.
@@ -51,3 +67,5 @@ export namespace Positioner {
   export type State = ContextMenuPositionerState;
   export type Props = ContextMenuPositionerProps;
 }
+
+export { Separator } from '../separator';
