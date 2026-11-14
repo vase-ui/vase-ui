@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import { Menu } from '@vase-ui/vue/menu';
 </script>
 
 <template>
-  <Tooltip.Root>
-    <Tooltip.Trigger :class="$style.Button">Song</Tooltip.Trigger>
-    <Tooltip.Portal>
-      <Tooltip.Positioner :class="$style.Positioner" :side-offset="8">
-        <Tooltip.Popup :class="$style.Popup">Add to Library</Tooltip.Popup>
-      </Tooltip.Positioner>
-    </Tooltip.Portal>
-  </Tooltip.Root>
+  <Menu.Root>
+    <Menu.Trigger :class="$style.Button">Song</Menu.Trigger>
+    <Menu.Portal>
+      <Menu.Positioner :class="$style.Positioner" :side-offset="8">
+        <Menu.Popup :class="$style.Popup">
+          <Menu.Item :class="$style.Item">Add to Library</Menu.Item>
+          <Menu.Item :class="$style.Item">Add to Playlist</Menu.Item>
+        </Menu.Popup>
+      </Menu.Positioner>
+    </Menu.Portal>
+  </Menu.Root>
 </template>
 
 <style module>
@@ -24,12 +27,20 @@ import { Tooltip } from '@vase-ui/vue/tooltip';
 }
 
 .Popup {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0;
   transition: opacity 150ms;
 }
 
 .Popup[data-starting-style],
 .Popup[data-ending-style] {
   opacity: 0;
+}
+
+.Item {
+  padding: 0.5rem 1rem;
+}
+
+.Item[data-highlighted] {
+  outline: 1px solid currentColor;
 }
 </style>

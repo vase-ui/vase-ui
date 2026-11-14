@@ -86,9 +86,9 @@ export const audienceMenus = [
         description: 'Get the package installed and your first component working in minutes.',
       },
       {
-        href: `${base}components/navigation-menu`,
-        title: 'Navigation Menu',
-        description: 'Add navigation menus with keyboard support and focus handling already done.',
+        href: `${base}components/menu`,
+        title: 'Menu',
+        description: 'Add action menus with keyboard support and focus handling already done.',
       },
       {
         href: `${base}components/dialog`,

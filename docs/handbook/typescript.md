@@ -45,7 +45,7 @@ The namespace of a part also exports the types of the custom events.
 
 A part or a utility can also export other types. The list below is not complete. Each type is documented where it is needed.
 
-- A popup root exposes methods, and you read them through a template ref. `Tooltip.Root.Actions` is the type of the methods that `Tooltip.Root` exposes.
+- A popup root exposes methods, and you read them through a template ref. `Menu.Root.Actions` is the type of the methods that `Menu.Root` exposes.
 
   <<< ../examples/typescript/Actions.vue{5-10,15}
 

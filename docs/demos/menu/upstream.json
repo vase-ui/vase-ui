@@ -1,0 +1,27 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/menu/demos",
+  "files": {
+    "_index.module.css": "15b7e4b3de04d35b1ff68c49684dbaaa298e7773762de6d233f406c200750483",
+    "arrow/css-modules/index.module.css": "465f2133923e9f156d99306df3c0549a5c3e8d6435846fc2889a6176a7ece60b",
+    "arrow/css-modules/index.tsx": "1234e7b7c90d286b4fe88912f4711473e6cc1efcd493fb2b21f8bc9c9ed6a10f",
+    "checkbox-items/css-modules/index.module.css": "304084a336760fdd9c90cd1e31966c7ccd50adcad2403752162b1b930ced49fc",
+    "checkbox-items/css-modules/index.tsx": "19275c1cc2c476e1d6f173779372fa8c18237911a1889f82baff2842cb3bd1d7",
+    "detached-triggers-controlled/css-modules/index.tsx": "a6a4cb52450fd0e444b9a9679c9db0b825890835e7423426a2004a315f000f76",
+    "detached-triggers-full/css-modules/index.module.css": "3ca12a1788988f7784918d9d71967cc8c3ed0d36584bb312945cc1bb646b8638",
+    "detached-triggers-full/css-modules/index.tsx": "27e5bc75ed1b5c4d501fe9683c3fd7621cd17add3200991949683952b71092e9",
+    "detached-triggers-simple/css-modules/index.tsx": "0564b0ed8a3e57513d750ecf1461aaf2428c3c498809e300d5e0be07331bb194",
+    "filter/css-modules/index.module.css": "daeb1f1a584af35648a8e1531fa9e34e9750cfa9384602499cd6984e3948e222",
+    "filter/css-modules/index.tsx": "02021bfbeeee4f19577acf808cf8b9311a7ae9236e906dc2a94f8f9cd8a2439f",
+    "group-labels/css-modules/index.module.css": "c3b1758633011f48475d505512c244b23ae86eb3425d8bf2d2cf9b65924c7440",
+    "group-labels/css-modules/index.tsx": "ebbcc30a956347ac7cd31cbc2b6b69a8e0651a60449dd74de552b46362a1d06f",
+    "hero/css-modules/index.module.css": "723b49ee0841e5a751d5ce848a5090983e56a7fb56e50f3d632395678cdbd60e",
+    "hero/css-modules/index.tsx": "432ce398e3ea29c25cf42de49f10943e6566ccf7d5b2643fa77a837281ef78e9",
+    "open-on-hover/css-modules/index.module.css": "723b49ee0841e5a751d5ce848a5090983e56a7fb56e50f3d632395678cdbd60e",
+    "open-on-hover/css-modules/index.tsx": "00b09bec9377cde1830950917b40839e5808a8966067834d2789e1798f8ad56f",
+    "radio-items/css-modules/index.module.css": "7b00ecde8bf918b0c588d5966c2ce48121668179ba43210c0903dac2588d1680",
+    "radio-items/css-modules/index.tsx": "bdb663bee105517922cf80dc7931f46f4b1c4e330598a4c9f425dd958ab6d583",
+    "submenu/css-modules/index.module.css": "83508d3176947a2236984654fea2340af26c4d15c5ffa6cad9eab7ce1d536250",
+    "submenu/css-modules/index.tsx": "1ac8df0deb0c8c348d3ce855c0ad5865d67689f586906f66ed3e8b5e149adb79"
+  }
+}

@@ -37,15 +37,15 @@ With `#render`, the slot gets `props`. It holds the attributes, the listeners, t
 
 Attributes that you write beside `v-bind="props"` follow the rules of Vue. When `v-bind="props"` comes first, Vue joins the `class` values and merges the `style` values. Vue calls both listeners, and it calls the listener of `props` first. For another attribute, such as `id` or `title`, the attribute that comes last wins.
 
-For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a toggle:
+For your listener to run first, merge `props` with `mergeProps`. See [how merging works](/utils/merge-props#how-merging-works). In your listener, [`event.preventVaseUIHandler()`](/handbook/customization#preventing-vase-ui-from-handling-an-event) stops the listeners of the part. For example, this toolbar button renders a menu trigger:
 
-<<< ../examples/composition/MergedProps.vue{13-17,21-25}
+<<< ../examples/composition/MergedProps.vue{14-18,22-26}
 
 The rendered `<button>` gets:
 
-- `class="toggle toolbar-button"`: class names are combined, and the rightmost set comes first.
+- `class="menu-trigger toolbar-button"`: class names are combined, and the rightmost set comes first.
 - `style="color: blue; padding: 4px;"`: style objects are merged, and the rightmost set wins.
-- Both click listeners, and `handleToggleClick` runs first. `event.preventVaseUIHandler()` skips every listener that runs after it. When `handleToggleClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
+- Both click listeners, and `handleMenuClick` runs first. `event.preventVaseUIHandler()` skips every listener that runs after it. When `handleMenuClick` calls it, `handleToolbarClick` does not run. Some parts call it internally.
 
 An element takes one `ref`, and Vue keeps the last `ref` key. To keep the `ref` of the part and add one of your own, call `props.ref` in a function ref: `:ref="(element) => { props.ref(element); own = element }"`.
 

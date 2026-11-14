@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// No entry point exports a part of Menu yet, so the page imports them by their path.
-import * as Menu from '../../../../packages/vue/src/menu/index.parts';
+import { Menu } from '@vase-ui/vue/menu';
 
 // The page makes the handle in `setup`, so a request does not share it with another request.
 const handle = Menu.createHandle<string>();

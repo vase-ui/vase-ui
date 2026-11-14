@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
-import { Tooltip } from '@vase-ui/vue/tooltip';
+import { Menu } from '@vase-ui/vue/menu';
 
-const tooltip = useTemplateRef('tooltip');
+const menu = useTemplateRef('menu');
 
 function close() {
-  const actions: Tooltip.Root.Actions | null = tooltip.value;
+  const actions: Menu.Root.Actions | null = menu.value;
   actions?.close();
 }
 </script>
 
 <template>
-  <button type="button" @click="close">Close the tooltip</button>
-  <Tooltip.Root ref="tooltip">
-    <Tooltip.Trigger>Trigger</Tooltip.Trigger>
-  </Tooltip.Root>
+  <button type="button" @click="close">Close the menu</button>
+  <Menu.Root ref="menu">
+    <Menu.Trigger>Trigger</Menu.Trigger>
+  </Menu.Root>
 </template>

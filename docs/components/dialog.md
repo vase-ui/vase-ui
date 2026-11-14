@@ -12,6 +12,7 @@ import DemoDialogFocusManagement from '../demos/dialog/focus-management/css-modu
 import DemoDialogHero from '../demos/dialog/hero/css-modules/index.vue';
 import DemoDialogInsideScroll from '../demos/dialog/inside-scroll/css-modules/index.vue';
 import DemoDialogNested from '../demos/dialog/nested/css-modules/index.vue';
+import DemoDialogOpenFromMenu from '../demos/dialog/open-from-menu/css-modules/index.vue';
 import DemoDialogOutsideScroll from '../demos/dialog/outside-scroll/css-modules/index.vue';
 import DemoDialogUncontained from '../demos/dialog/uncontained/css-modules/index.vue';
 </script>
@@ -195,6 +196,22 @@ The root has no event for a change of the trigger id. The `openChange` event giv
 <<< ../demos/dialog/detached-triggers-controlled/css-modules/index.vue
 
 <<< ../demos/dialog/_index.module.css
+
+:::
+
+### Open from a menu
+
+To open a dialog from a menu, control the open state of the dialog with `v-model:open`. Set it to `true` in a `click` listener on the menu item. See [Menu](/components/menu) for the parts of the menu.
+
+<DemoFrame>
+  <DemoDialogOpenFromMenu />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/dialog/open-from-menu/css-modules/index.vue
+
+<<< ../demos/dialog/open-from-menu/css-modules/index.module.css
 
 :::
 

@@ -1,33 +1,35 @@
 <script setup lang="ts">
 import { mergeProps } from '@vase-ui/vue/merge-props';
-import { Toggle } from '@vase-ui/vue/toggle';
+import { Menu } from '@vase-ui/vue/menu';
 import { Toolbar } from '@vase-ui/vue/toolbar';
 
 function handleToolbarClick() {}
 
-function handleToggleClick() {}
+function handleMenuClick() {}
 </script>
 
 <template>
   <Toolbar.Root>
-    <Toolbar.Button
-      class="toolbar-button"
-      :style="{ color: 'red', padding: '4px' }"
-      @click="handleToolbarClick"
-    >
-      <template #render="{ props }">
-        <Toggle
-          v-bind="
-            mergeProps(props, {
-              class: 'toggle',
-              style: { color: 'blue' },
-              onClick: handleToggleClick,
-            })
-          "
-        >
-          Bold
-        </Toggle>
-      </template>
-    </Toolbar.Button>
+    <Menu.Root>
+      <Toolbar.Button
+        class="toolbar-button"
+        :style="{ color: 'red', padding: '4px' }"
+        @click="handleToolbarClick"
+      >
+        <template #render="{ props }">
+          <Menu.Trigger
+            v-bind="
+              mergeProps(props, {
+                class: 'menu-trigger',
+                style: { color: 'blue' },
+                onClick: handleMenuClick,
+              })
+            "
+          >
+            Open menu
+          </Menu.Trigger>
+        </template>
+      </Toolbar.Button>
+    </Menu.Root>
   </Toolbar.Root>
 </template>
