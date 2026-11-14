@@ -97,7 +97,7 @@ Use `<Menu.RadioGroup>` and `<Menu.RadioItem>` for items that work like radio bu
 
 Use the `closeOnClick` prop to set whether a click on an item closes the menu. `<Menu.Item>` closes the menu by default. `<Menu.CheckboxItem>`, `<Menu.RadioItem>` and `<Menu.LinkItem>` keep it open by default.
 
-<<< ./menu/CloseOnClick.vue
+<<< ./menu/CloseOnClick.vue{12,15}
 
 ### Group labels
 
@@ -137,7 +137,7 @@ To make a submenu, put a `<Menu.SubmenuRoot>` in the parent menu. Use `<Menu.Sub
 
 Use `<Menu.LinkItem>` to make a link.
 
-<<< ./menu/LinkItem.vue{6}
+<<< ./menu/LinkItem.vue{11}
 
 ### Detached triggers
 
@@ -244,15 +244,13 @@ Use `Menu.Viewport` only when one popup has more than one trigger, the content c
 
 :::
 
-### Filtering
-
-Filtering is a preview feature, so its API can change.
+### Filtering [Preview]
 
 Wrap `<Menu.Root>` in `<Menu.FilterProvider>`, add `<Menu.Input>` to the popup, and put the items in `<Menu.List>`.
 
 <<< ./menu/Filter.vue
 
-Label the input with `aria-label`, `aria-labelledby` or a visible `<label>`. Type to narrow the actions, then use the arrow keys to move through the matching items.
+Label the input with `aria-label`, `aria-labelledby` or a visible `<label>`. Type to narrow the actions, then use the arrow keys to move through the items that match.
 
 <DemoFrame>
   <DemoMenuFilter />
@@ -272,7 +270,7 @@ Label the input with `aria-label`, `aria-labelledby` or a visible `<label>`. Typ
 
 An item matches its text by default. Use `label` to change that text.
 
-<<< ./menu/Label.vue{6}
+<<< ./menu/Label.vue{14}
 
 A group with no matching items gets the `hidden` attribute and stays mounted. If your styles set `display` on a group, add a `[hidden]` rule, so that the group still hides.
 
@@ -288,7 +286,7 @@ A group with no matching items gets the `hidden` attribute and stays mounted. If
 
 `<Menu.Empty>` shows when no item matches.
 
-By default, an item matches when its text contains the query. The match ignores case, accents and punctuation. Use `filter` to replace the matching. It gets the text of each item and the trimmed query, and it keeps the item when it returns `true`. `Menu.useFilter` gives the same locale-aware comparisons.
+By default, an item matches when its text contains the query. The match ignores case, accents and punctuation. Use `filter` to set your own rule. It gets the text of each item and the trimmed query, and it keeps the item when it returns `true`. `Menu.useFilter` gives the same locale-aware comparisons.
 
 <<< ./menu/CustomMatching.vue{4,8}
 
@@ -302,7 +300,7 @@ Control the query with `v-model:value` on `<Menu.FilterProvider>`, or with its `
 
 #### Highlighting
 
-Set `autoHighlight` to highlight the first match while the query changes. Set it to `"always"` to highlight the first match when the query is empty too. The highlighted item has the `data-highlighted` attribute, and the `itemHighlighted` event of `<Menu.Root>` reports each change.
+Set `autoHighlight` to highlight the first match while the query is not empty. Set it to `"always"` to highlight the first match when the query is empty too. The highlighted item has the `data-highlighted` attribute, and the `itemHighlighted` event of `<Menu.Root>` reports each change.
 
 #### Focus and keyboard
 
