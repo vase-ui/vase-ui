@@ -727,6 +727,64 @@ describe('<NavigationMenu.Trigger />', () => {
     });
   });
 
+  describe('guards and owner element', () => {
+    it.each([
+      { name: 'its item closes', nextValue: null, mounted: true },
+      { name: 'the trigger unmounts', nextValue: 'one', mounted: false },
+    ])('clears the guard refs of the root when $name', async ({ nextValue, mounted }) => {
+      let rootContext!: ReturnType<typeof useNavigationMenuRootContext>;
+      const RootContextReader = defineComponent(() => {
+        rootContext = useNavigationMenuRootContext();
+        return () => null;
+      });
+      const value = shallowRef<string | null>('one');
+      const hasTrigger = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root value={value.value}>
+          <RootContextReader />
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              {hasTrigger.value ? <NavigationMenu.Trigger>One</NavigationMenu.Trigger> : null}
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Viewport />
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      expect(rootContext.beforeOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+      expect(rootContext.afterOutsideRef.value).toHaveAttribute('data-vase-ui-focus-guard');
+
+      value.value = nextValue;
+      hasTrigger.value = mounted;
+      await flushMicrotasks();
+
+      expect(rootContext.beforeOutsideRef.value).toBe(null);
+      expect(rootContext.afterOutsideRef.value).toBe(null);
+    });
+
+    it('removes aria-owns from the owner element when the viewport unmounts', async () => {
+      const hasViewport = shallowRef(true);
+      await render(() => (
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger data-testid="trigger">One</NavigationMenu.Trigger>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          {hasViewport.value ? <NavigationMenu.Viewport data-testid="viewport" /> : null}
+        </NavigationMenu.Root>
+      ));
+      await flushMicrotasks();
+      const owner = screen.getByTestId('trigger').parentElement!.children[2];
+      expect(owner).toHaveAttribute('aria-owns', screen.getByTestId('viewport').id);
+
+      hasViewport.value = false;
+      await flushMicrotasks();
+
+      expect(owner).not.toHaveAttribute('aria-owns');
+    });
+  });
+
   describe('VUE-57: the trigger has one root node', () => {
     it.each([
       { name: 'a closed item', defaultValue: null },
