@@ -414,18 +414,9 @@ describe('<Menu.SubmenuTrigger />', () => {
     });
   });
 
-  // A part that throws in `setup` leaves Vue in a state that can break a later case, so these two
-  // cases are the last of the file.
-  it('throws when rendered outside Menu.SubmenuRoot', async () => {
-    await expect(render(<Menu.SubmenuTrigger />)).rejects.toThrow(
-      'Vase UI: <Menu.SubmenuTrigger> must be inside <Menu.SubmenuRoot>. Without a submenu root the trigger has no submenu to open. Put the trigger inside <Menu.SubmenuRoot>.',
-    );
-
-    expect(takeReportedMessages()).toEqual([
-      expect.stringContaining('Unhandled error during execution of setup function'),
-    ]);
-  });
-
+  // These cases are the last ones of the file. In Vue 3.5.12, a `setup` that throws leaves the
+  // current instance set, and a later case that renders a slot gets a warning about that slot. So
+  // the case with slots comes first.
   it('throws when Menu.SubmenuRoot is rendered outside a menu', async () => {
     await expect(
       render(
@@ -435,6 +426,16 @@ describe('<Menu.SubmenuTrigger />', () => {
       ),
     ).rejects.toThrow(
       'Vase UI: A part of Menu must be inside <Menu.Root>. Without a root the part has no menu state. Put the part inside <Menu.Root>.',
+    );
+
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
+  });
+
+  it('throws when rendered outside Menu.SubmenuRoot', async () => {
+    await expect(render(<Menu.SubmenuTrigger />)).rejects.toThrow(
+      'Vase UI: <Menu.SubmenuTrigger> must be inside <Menu.SubmenuRoot>. Without a submenu root the trigger has no submenu to open. Put the trigger inside <Menu.SubmenuRoot>.',
     );
 
     expect(takeReportedMessages()).toEqual([
