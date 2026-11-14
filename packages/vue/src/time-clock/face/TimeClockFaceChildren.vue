@@ -17,8 +17,10 @@ markChildrenMounted();
 
 <template>
   <slot />
-  <template v-for="(number, index) in numbers" :key="number.value">
-    <slot name="number" :number="number" :index="index" />
+  <template v-if="$slots.number">
+    <template v-for="(number, index) in numbers" :key="number.value">
+      <slot name="number" :number="number" :index="index" />
+    </template>
   </template>
   <input v-bind="inputProps()" />
 </template>

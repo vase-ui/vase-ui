@@ -63,13 +63,11 @@ export namespace Hand {
  * A number of the face.
  * Renders a `<span>` element.
  */
-const NumberPart: typeof TimeClockNumber = TimeClockNumber;
-// A name of `Number` in this file would hide the global.
-namespace NumberPart {
+export const Number: typeof TimeClockNumber = TimeClockNumber;
+export namespace Number {
   export type State = TimeClockNumberState;
   export type Props = TimeClockNumberProps;
 }
-export { NumberPart as Number };
 
 /**
  * A button that selects the day period of a 12-hour clock. It renders nothing on a 24-hour clock.

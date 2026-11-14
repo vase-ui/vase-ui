@@ -71,10 +71,10 @@ const state = computed<TimeClockNumberState>(() => {
   };
 });
 
-// A zero has two digits, as the time shows it.
+// A minute, a second and the hour 0 have two digits, as the time shows them.
 const text = computed(() =>
   formatNumber(props.number.value, formatLocale.value, {
-    minimumIntegerDigits: props.number.value === 0 ? 2 : 1,
+    minimumIntegerDigits: root.view.value !== 'hour' || props.number.value === 0 ? 2 : 1,
     useGrouping: false,
   }),
 );

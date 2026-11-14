@@ -15,7 +15,7 @@ export interface TimeClockFaceProps
 import { computed, nextTick, onScopeDispose, provide, shallowRef } from 'vue';
 import type { Component } from 'vue';
 import { formatNumber } from '../../common/formatNumber';
-import { visuallyHidden } from '../../common/visuallyHidden';
+import { visuallyHiddenInput } from '../../common/visuallyHidden';
 import {
   ARROW_DOWN,
   ARROW_LEFT,
@@ -54,6 +54,16 @@ defineSlots<{
   number(props: { number: TimeClockFaceNumber; index: number }): unknown;
   render(props: { props: HTMLProps; state: TimeClockFaceState; children: Component }): unknown;
 }>();
+
+// The input fills the face, so that the focus ring of a screen reader fits the face. The face is
+// the containing block of the input, as it is of the hand and the numbers.
+const HIDDEN_INPUT_STYLE = {
+  ...visuallyHiddenInput,
+  inset: 0,
+  margin: 0,
+  width: '100%',
+  height: '100%',
+};
 
 const root = useTimeClockRootContext();
 const { state } = root;
@@ -109,7 +119,7 @@ function inputProps() {
       min: grid.value.first,
       onInput,
       step: grid.value.step,
-      style: { ...visuallyHidden, width: '100%', height: '100%' },
+      style: HIDDEN_INPUT_STYLE,
       type: 'range',
       value: root.selectedNumber.value.value,
     },
@@ -260,7 +270,7 @@ defineExpose({ element, inputElement });
   <component :is="as" v-else v-bind="elementProps()">
     <TimeClockFaceChildren>
       <slot :state="state" />
-      <template #number="slotProps"><slot name="number" v-bind="slotProps" /></template>
+      <template v-if="$slots.number" #number="slotProps"><slot name="number" v-bind="slotProps" /></template>
     </TimeClockFaceChildren>
   </component>
 </template>

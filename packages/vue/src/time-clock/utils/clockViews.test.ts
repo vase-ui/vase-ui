@@ -19,7 +19,7 @@ import {
   timeOfFaceNumber,
   viewsOf,
 } from './clockViews';
-import type { TimeLimits } from './clockViews';
+import type { TimeClockView, TimeLimits } from './clockViews';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const always = () => true;
@@ -387,7 +387,9 @@ describe('isTimeAllowed', () => {
   });
 
   it('asks disabledTimes with the time and the view', () => {
-    const disabledTimes = vi.fn((candidate: Temporal.PlainTime) => candidate.hour === 4);
+    const disabledTimes = vi.fn(
+      (candidate: Temporal.PlainTime, _view: TimeClockView) => candidate.hour === 4,
+    );
 
     expect(isTimeAllowed(time('04:10'), 'hour', { ...noLimits, disabledTimes })).toBe(false);
     expect(isTimeAllowed(time('05:10'), 'minute', { ...noLimits, disabledTimes })).toBe(true);
