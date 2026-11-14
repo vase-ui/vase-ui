@@ -7,6 +7,8 @@ import type {
   DialogDescriptionProps,
   DialogDescriptionState,
 } from './description/DialogDescription.vue';
+import DialogPortal from './portal/DialogPortal.vue';
+import type { DialogPortalProps, DialogPortalState } from './portal/DialogPortal.vue';
 import DialogRoot from './root/DialogRoot.vue';
 import type {
   DialogRootActions,
@@ -17,6 +19,8 @@ import type {
 } from './root/DialogRoot.vue';
 import DialogTitle from './title/DialogTitle.vue';
 import type { DialogTitleProps, DialogTitleState } from './title/DialogTitle.vue';
+import DialogTrigger from './trigger/DialogTrigger.vue';
+import type { DialogTriggerProps, DialogTriggerState } from './trigger/DialogTrigger.vue';
 import DialogViewport from './viewport/DialogViewport.vue';
 import type { DialogViewportProps, DialogViewportState } from './viewport/DialogViewport.vue';
 
@@ -51,6 +55,17 @@ export namespace Description {
 }
 
 /**
+ * A portal element that moves the popup to a different part of the DOM.
+ * By default, the portal element is appended to `<body>`.
+ * Renders a `<div>` element.
+ */
+export const Portal: typeof DialogPortal = DialogPortal;
+export namespace Portal {
+  export type State = DialogPortalState;
+  export type Props = DialogPortalProps;
+}
+
+/**
  * Groups all parts of the dialog.
  * Doesn't render its own HTML element.
  */
@@ -81,6 +96,16 @@ export const Title: typeof DialogTitle = DialogTitle;
 export namespace Title {
   export type Props = DialogTitleProps;
   export type State = DialogTitleState;
+}
+
+/**
+ * A button that opens the dialog.
+ * Renders a `<button>` element.
+ */
+export const Trigger: typeof DialogTrigger = DialogTrigger;
+export namespace Trigger {
+  export type Props<Payload = unknown> = DialogTriggerProps<Payload>;
+  export type State = DialogTriggerState;
 }
 
 export { createDialogHandle as createHandle, DialogHandle as Handle } from './store/DialogHandle';
