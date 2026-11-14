@@ -6,22 +6,26 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/context-menu/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Context Menu. It comes in the last pull request of the family, so the package exports nothing of Context Menu before then."
-    },
-    {
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.Item`, which Vase UI does not have."
+      "reason": "The other rows of this family that wait on parts of Menu name this file as their target. The file thus stays absent until the last of those parts exists. Its case needs only `ContextMenu.Item`."
     },
     {
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
       "describe": ["<ContextMenu.Root />"],
+      "title": "returns focus to the focused surface when closing with Shift+Tab",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "Each case renders `ContextMenu.Item`, or `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`. The Context Menu family does not export these parts of Menu again yet."
+      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
+    },
+    {
+      "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
+      "describe": ["<ContextMenu.Root />"],
+      "title": "returns focus to the focused surface when closing with Tab",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
+      "reason": "The case closes the menu with the Tab key. The list navigation of the menu root closes a menu for Tab and for Shift+Tab, and it gives the focus back to the trigger. `Menu.Root` has no list navigation yet, so the key does not close the menu."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -29,241 +33,53 @@
       "title": "keeps the root menu open when the context-menu gesture ends in a portaled submenu",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which the Context Menu family does not export again yet. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports the attribute names of `ContextMenu.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Backdrop`. Vase UI does not have that entry point."
+      "reason": "The trigger lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu. Vase UI does not have that file yet, so a `mouseup` in a submenu closes the menu."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Positioner`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Arrow",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports `ContextMenu.Arrow`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuArrowDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuPositionerCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuPositionerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Item",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Item`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "LinkItem",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.LinkItem`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Group",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Group`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "GroupLabel",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.GroupLabel`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "Separator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The family exports `Separator` of the Separator family. Vase UI does not have that export yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "CheckboxItem",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItem`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "CheckboxItemIndicator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItemIndicator`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "RadioGroup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioGroup`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "RadioItem",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItem`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "RadioItemIndicator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItemIndicator`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "SubmenuRoot",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuRoot`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "SubmenuTrigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuTrigger`. The Context Menu family does not export it again yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuCheckboxItemDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuCheckboxItemIndicatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuItemDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuLinkItemDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuRadioItemDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuRadioItemIndicatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuSeparatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/index.ts",
-      "reason": "The family exports the attribute names of the Separator family. Vase UI does not have that export yet."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
-      "entry": "ContextMenuSubmenuTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The constants are those of `Menu.SubmenuTrigger`. The Context Menu family does not export them again yet."
+      "prop": "side",
+      "kind": "not-applicable",
+      "reason": "The row gives the default `'bottom'`. The part has no Vue default: a prop that is absent lets `Menu.Positioner` take `'bottom'` for a root context menu and `'inline-end'` for a submenu, as in Base UI. Only an absent `side` gives a root context menu the offsets `-5` and `2`. With a Vue default, a submenu opens below its trigger and a root context menu loses those offsets."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Popup",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and gives the id to the root, which the trigger names in `aria-controls`. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    },
+    {
+      "entry": "Item",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    },
+    {
+      "entry": "LinkItem",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and renders it on the link. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    },
+    {
+      "entry": "SubmenuTrigger",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and registers the trigger in the store of the submenu with it. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    },
+    {
+      "entry": "GroupLabel",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and gives it to the group for `aria-labelledby`. It is thus a declared prop. Base UI reads it from the native attributes of the label, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "RadioItem",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    },
+    {
+      "entry": "CheckboxItem",
+      "prop": "id",
+      "reason": "The part replaces an absent `id` with a generated id and renders it on the item. Base UI declares `id` as a prop with the tag `@ignore`, so `types.md` has no row for it."
+    }
+  ],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
 }
