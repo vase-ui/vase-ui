@@ -17,7 +17,9 @@ const handle = AlertDialog.createHandle<string>();
       <AlertDialog.Trigger id="open-trigger" data-testid="open">Open</AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Backdrop data-testid="open-backdrop" />
-        <AlertDialog.Popup data-testid="open-popup">
+        <!-- The internal backdrop covers the page with `position: fixed`. A positioned popup
+        paints above it, so a click reaches the close button. -->
+        <AlertDialog.Popup data-testid="open-popup" style="position: relative">
           <AlertDialog.Title data-testid="open-title">Discard draft?</AlertDialog.Title>
           <AlertDialog.Description data-testid="open-description">
             You can't undo this action.
