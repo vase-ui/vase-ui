@@ -1,11 +1,11 @@
-import { expect, vi, describe, it, onTestFinished } from 'vitest';
+import { expect, vi, describe, it } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { KeepAlive, nextTick, shallowRef } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import {
   createRenderer,
   describeConformance,
-  fireEvent,
+  fireTouch,
   flushMicrotasks,
   isJSDOM,
   pasteText,
@@ -71,28 +71,7 @@ describe('<NumberField.ScrubArea />', () => {
   });
 
   describe('touch input', () => {
-    // A browser refuses a plain object as a `Touch`. Firefox on a desktop has no `TouchEvent`, and
-    // WebKit on a desktop refuses `new Touch()`. Those engines get an `Event` that has the list.
-    function fireTouchStart(target: HTMLElement, touchCount: number) {
-      const points = Array.from({ length: touchCount }, (_, identifier) => ({
-        identifier,
-        target,
-        clientX: 0,
-        clientY: 0,
-      }));
-      let event: Event;
-      try {
-        event = new TouchEvent('touchstart', {
-          bubbles: true,
-          cancelable: true,
-          touches: points.map((point) => new Touch(point)),
-        });
-      } catch {
-        event = new Event('touchstart', { bubbles: true, cancelable: true });
-        Object.defineProperty(event, 'touches', { value: points });
-      }
-      return fireEvent(target, event);
-    }
+    const touch = { clientX: 0, clientY: 0 };
 
     async function renderScrubArea() {
       await render(
@@ -106,13 +85,13 @@ describe('<NumberField.ScrubArea />', () => {
 
     it('blocks scrolling for a single-touch scrub', async () => {
       const { scrubArea } = await renderScrubArea();
-      const notCanceled = await fireTouchStart(scrubArea, 1);
+      const notCanceled = await fireTouch.start(scrubArea, { touches: [touch] });
       expect(notCanceled).toBe(false);
     });
 
     it('leaves multi-touch gestures such as pinch-zoom to the browser', async () => {
       const { scrubArea } = await renderScrubArea();
-      const notCanceled = await fireTouchStart(scrubArea, 2);
+      const notCanceled = await fireTouch.start(scrubArea, { touches: [touch, touch] });
       expect(notCanceled).toBe(true);
     });
   });
@@ -788,11 +767,6 @@ describe('<NumberField.ScrubArea />', () => {
         <NumberField.Input />
       </NumberField.Root>,
     );
-
-    // The pointer of the browser stays where a case leaves it, for each later test.
-    onTestFinished(async () => {
-      await userEvent.pointer({ coords: { x: 0, y: 0 }, keys: '[/MouseLeft]' });
-    });
 
     // Real browser input, so the native click and the synthesized one can both happen.
     await userEvent.click(screen.getByTestId('scrub-area'));
