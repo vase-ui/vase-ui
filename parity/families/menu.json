@@ -525,8 +525,8 @@
       "describe": ["<Menu.Positioner />", "collision avoidance"],
       "title": "uses the dropdown default for a context menu",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
-      "reason": "The case renders `ContextMenu`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -548,8 +548,8 @@
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
       "describe": ["<Menu.Positioner />", "layout viewport"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.tsx",
-      "reason": "The case renders `ContextMenu`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
+      "reason": "The case renders `ContextMenu.Positioner`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
