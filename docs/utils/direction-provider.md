@@ -5,11 +5,25 @@ description: A direction provider component that enables RTL behavior for Vase U
 
 <script setup lang="ts">
 import ApiReference from '../.vitepress/components/ApiReference.vue';
+import DemoFrame from '../.vitepress/components/DemoFrame.vue';
+import DemoDirectionProviderHero from '../demos/direction-provider/hero/css-modules/index.vue';
 </script>
 
 # Direction Provider
 
 Enables RTL behavior for Vase UI components.
+
+<DemoFrame>
+  <DemoDirectionProviderHero />
+</DemoFrame>
+
+::: code-group
+
+<<< ../demos/direction-provider/hero/css-modules/index.vue
+
+<<< ../demos/direction-provider/hero/css-modules/index.module.css
+
+:::
 
 ## Anatomy
 

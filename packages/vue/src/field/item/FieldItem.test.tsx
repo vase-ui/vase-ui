@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { Checkbox } from '@vase-ui/vue/checkbox';
+import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
 import { Radio } from '@vase-ui/vue/radio';
 import { RadioGroup } from '@vase-ui/vue/radio-group';
@@ -34,6 +36,27 @@ describe('<Field.Item />', () => {
       expect(renderItem.mock.lastCall?.[0].disabled).toBe(true);
     });
 
+    it('disables a wrapped checkbox', async () => {
+      const onValueChange = vi.fn();
+      const { user } = await render(
+        <Field.Root name="apple">
+          <CheckboxGroup defaultValue={[]} onValueChange={onValueChange}>
+            <Field.Item disabled>
+              <Checkbox.Root value="fuji-apple" />
+            </Field.Item>
+            <Field.Item>
+              <Checkbox.Root value="gala-apple" />
+            </Field.Item>
+          </CheckboxGroup>
+        </Field.Root>,
+      );
+      const [checkbox1, checkbox2] = screen.getAllByRole('checkbox');
+      await user.click(checkbox1);
+      expect(onValueChange.mock.calls.length).toBe(0);
+      await user.click(checkbox2);
+      expect(onValueChange.mock.calls.length).toBe(1);
+    });
+
     it('disables a wrapped radio', async () => {
       const onValueChange = vi.fn();
       const { user } = await render(
@@ -64,6 +87,33 @@ describe('<Field.Item />', () => {
 
       expect(screen.getByTestId('item')).toHaveAttribute('data-disabled');
     });
+  });
+
+  it('associates a Field.Item label with a parent checkbox', async () => {
+    const { user } = await render(
+      <Field.Root>
+        <CheckboxGroup allValues={['a', 'b']}>
+          <Field.Item>
+            <Field.Label>
+              <Checkbox.Root parent data-testid="parent" />
+              Toggle all
+            </Field.Label>
+          </Field.Item>
+          <Checkbox.Root value="a" data-testid="a" />
+          <Checkbox.Root value="b" data-testid="b" />
+        </CheckboxGroup>
+      </Field.Root>,
+    );
+
+    const label = screen.getByText('Toggle all').closest('label') as HTMLLabelElement;
+    const parent = screen.getByTestId('parent');
+
+    expect(label).toHaveAttribute('for');
+    expect(label.control).toHaveAttribute('type', 'checkbox');
+    await user.click(screen.getByText('Toggle all'));
+    expect(parent).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByTestId('a')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByTestId('b')).toHaveAttribute('aria-checked', 'true');
   });
 
   it('has the state of the field', async () => {

@@ -626,8 +626,13 @@ function writeValueToInputs() {
   });
 }
 
+// Some programs that fill a form send only `change`, and some send both events in one task. The
+// root handles an event only when the input has a new value.
 function handleHiddenInput(event: Event) {
   const rawValue = (event.currentTarget as HTMLInputElement).value;
+  if (rawValue === handledHiddenValue) {
+    return;
+  }
   handledHiddenValue = rawValue;
 
   if (!event.defaultPrevented && !isDisabled.value && !props.readOnly) {
@@ -655,13 +660,6 @@ function handleHiddenInput(event: Event) {
   void nextTick(writeValueToInputs);
 }
 
-// Some programs that fill a form send only `change`.
-function handleHiddenChange(event: Event) {
-  if ((event.currentTarget as HTMLInputElement).value !== handledHiddenValue) {
-    handleHiddenInput(event);
-  }
-}
-
 useFormReset(hiddenInputElement, (event) => {
   const committedValue =
     props.value === undefined
@@ -675,18 +673,22 @@ useFormReset(hiddenInputElement, (event) => {
   }
 });
 
+// A plain variable keeps the render of the hidden input part from depending on the element.
+let ownHiddenInput: HTMLInputElement | null = null;
+
 function setHiddenInput(input: unknown) {
   const next = input as HTMLInputElement | null;
   // Vue calls a function ref again on each patch, with the same element.
-  if (next === hiddenInputElement.value) {
+  if (next === ownHiddenInput) {
     return;
   }
 
   // A template can mount the root that replaces this root before it unmounts this root. This root
   // then clears the input of the field only when the input is its own.
-  if (next !== null || validation.inputRef.value === hiddenInputElement.value) {
+  if (next !== null || validation.inputRef.value === ownHiddenInput) {
     validation.inputRef.value = next;
   }
+  ownHiddenInput = next;
   hiddenInputElement.value = next;
 }
 
@@ -742,7 +744,7 @@ function hiddenInputProps() {
       focusInput(0);
     },
     onInput: handleHiddenInput,
-    onChange: handleHiddenChange,
+    onChange: handleHiddenInput,
   };
 }
 
