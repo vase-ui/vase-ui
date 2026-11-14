@@ -82,14 +82,6 @@
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
-      "describe": ["<Combobox.Root />"],
-      "suite": "popupListConformanceTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The shared suite is not in Vase UI yet. The pull request that adds the keys of Menu ports it."
-    },
-    {
-      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "describe": ["<Combobox.Root />", "server-side rendering"],
       "title": "sets combobox aria attributes on the input",
       "kind": "replaced",
