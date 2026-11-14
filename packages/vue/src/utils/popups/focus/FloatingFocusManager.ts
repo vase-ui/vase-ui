@@ -273,7 +273,7 @@ function getFirstTabbableElement(container: Element | null) {
     return container;
   }
 
-  return tabbable(container)[0] || container;
+  return tabbable(container)[0] ?? container;
 }
 
 // The first candidate that can take the focus. A candidate that is not in the document, or that is
@@ -596,11 +596,8 @@ export function useFloatingFocusManager(
 
         let focusableElements: FocusableElement[] | null = null;
         const getDefaultFocusElement = () => {
-          if (focusableElements == null) {
-            focusableElements = getTabbableContent(floatingFocusEl);
-          }
-
-          return focusableElements[0] || floatingFocusEl;
+          focusableElements ??= getTabbableContent(floatingFocusEl);
+          return focusableElements[0] ?? floatingFocusEl;
         };
 
         let elToFocus: FocusableElement | null | undefined;
@@ -609,7 +606,7 @@ export function useFloatingFocusManager(
         } else {
           elToFocus = resolvedInitialFocus;
         }
-        elToFocus ||= getDefaultFocusElement();
+        elToFocus ??= getDefaultFocusElement();
 
         const hadFocusInside = contains(floatingFocusEl, activeElement(doc));
 
@@ -910,10 +907,10 @@ export function useFloatingFocusManager(
       return () => {
         // A new focus manager can mount before this one unmounts. Each ref thus clears only its own
         // element.
-        if (beforeContentRef && beforeContentRef.value === before) {
+        if (beforeContentRef?.value === before) {
           beforeContentRef.value = null;
         }
-        if (afterContentRef && afterContentRef.value === after) {
+        if (afterContentRef?.value === after) {
           afterContentRef.value = null;
         }
         if (portalContext?.beforeInsideRef.value === before) {
@@ -1105,8 +1102,8 @@ export function useFloatingFocusManager(
         const tabbableContent = getTabbableContent(floatingFocusEl) as (Element | null)[];
         const prevTabbable = lastFocusedTabbable;
         const nodeToFocus =
-          (prevTabbable && tabbableContent.includes(prevTabbable) ? prevTabbable : null) ||
-          tabbableContent[tabbableContent.length - 1] ||
+          (prevTabbable && tabbableContent.includes(prevTabbable) ? prevTabbable : null) ??
+          tabbableContent.at(-1) ??
           floatingFocusEl;
 
         if (isHTMLElement(nodeToFocus)) {
@@ -1165,7 +1162,7 @@ export function useFloatingFocusManager(
                 (node) =>
                   contains(node.context?.elements.floating, relatedTarget) ||
                   contains(node.context?.elements.domReference, relatedTarget),
-              ) ||
+              ) ??
                 getNodeAncestors(currentTree.nodesRef.value, nodeId).find(
                   (node) =>
                     [
@@ -1297,7 +1294,7 @@ export function useFloatingFocusManager(
 
       // Don't hide portals nested within the parent portal.
       const portalNodes = Array.from(
-        portalNode.value?.querySelectorAll(`[${createAttribute('portal')}]`) || [],
+        portalNode.value?.querySelectorAll(`[${createAttribute('portal')}]`) ?? [],
       );
 
       const currentTree = tree.value;
@@ -1305,7 +1302,7 @@ export function useFloatingFocusManager(
         ? getNodeAncestors(currentTree.nodesRef.value, getNodeId())
         : [];
       const rootAncestorComboboxDomReference = ancestors.find((node) =>
-        isTypeableCombobox(node.context?.elements.domReference || null),
+        isTypeableCombobox(node.context?.elements.domReference ?? null),
       )?.context?.elements.domReference;
 
       const controlInsideElements = [

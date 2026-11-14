@@ -31,84 +31,115 @@ const vMark: Directive<HTMLElement, string> = {
   },
 };
 
-const open = { defaultOpen: true };
-
 const families: PopupFamily[] = [
   {
     name: 'Dialog.Popup',
     part: Dialog.Popup,
-    tree: (popup) => h(Dialog.Root, open, () => h(Dialog.Portal, null, () => popup)),
+    tree: (popup) => (
+      <Dialog.Root defaultOpen>
+        <Dialog.Portal>{popup}</Dialog.Portal>
+      </Dialog.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'AlertDialog.Popup',
     part: AlertDialog.Popup,
-    tree: (popup) => h(AlertDialog.Root, open, () => h(AlertDialog.Portal, null, () => popup)),
+    tree: (popup) => (
+      <AlertDialog.Root defaultOpen>
+        <AlertDialog.Portal>{popup}</AlertDialog.Portal>
+      </AlertDialog.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'Drawer.Popup',
     part: Drawer.Popup,
-    tree: (popup) =>
-      h(Drawer.Root, open, () =>
-        h(Drawer.Portal, null, () => h(Drawer.Viewport, null, () => popup)),
-      ),
+    tree: (popup) => (
+      <Drawer.Root defaultOpen>
+        <Drawer.Portal>
+          <Drawer.Viewport>{popup}</Drawer.Viewport>
+        </Drawer.Portal>
+      </Drawer.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'Popover.Popup',
     part: Popover.Popup,
-    tree: (popup) =>
-      h(Popover.Root, open, () =>
-        h(Popover.Portal, null, () => h(Popover.Positioner, null, () => popup)),
-      ),
+    tree: (popup) => (
+      <Popover.Root defaultOpen>
+        <Popover.Portal>
+          <Popover.Positioner>{popup}</Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'Menu.Popup',
     part: Menu.Popup,
-    tree: (popup) =>
-      h(Menu.Root, open, () => h(Menu.Portal, null, () => h(Menu.Positioner, null, () => popup))),
+    tree: (popup) => (
+      <Menu.Root defaultOpen>
+        <Menu.Portal>
+          <Menu.Positioner>{popup}</Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'ContextMenu.Popup',
     part: ContextMenu.Popup,
-    tree: (popup) =>
-      h(ContextMenu.Root, open, () => [
-        h(ContextMenu.Trigger, null, () => 'Area'),
-        h(ContextMenu.Portal, null, () => h(ContextMenu.Positioner, null, () => popup)),
-      ]),
+    tree: (popup) => (
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger>Area</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>{popup}</ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'Select.Popup',
     part: Select.Popup,
-    tree: (popup) =>
-      h(Select.Root, open, () => [
-        h(Select.Trigger, null, () => h(Select.Value)),
-        h(Select.Portal, null, () => h(Select.Positioner, null, () => popup)),
-      ]),
+    tree: (popup) => (
+      <Select.Root defaultOpen>
+        <Select.Trigger>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>{popup}</Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
     siblings: 'guards',
   },
   {
     name: 'Combobox.Popup',
     part: Combobox.Popup,
-    tree: (popup) =>
-      h(Combobox.Root, { ...open, items: ['a'] }, () => [
-        h(Combobox.Input),
-        h(Combobox.Portal, null, () => h(Combobox.Positioner, null, () => popup)),
-      ]),
+    tree: (popup) => (
+      <Combobox.Root defaultOpen items={['a']}>
+        <Combobox.Input />
+        <Combobox.Portal>
+          <Combobox.Positioner>{popup}</Combobox.Positioner>
+        </Combobox.Portal>
+      </Combobox.Root>
+    ),
     siblings: 'dismiss button',
   },
   {
     name: 'Autocomplete.Popup',
     part: Autocomplete.Popup,
-    tree: (popup) =>
-      h(Autocomplete.Root, { ...open, items: ['a'] }, () => [
-        h(Autocomplete.Input),
-        h(Autocomplete.Portal, null, () => h(Autocomplete.Positioner, null, () => popup)),
-      ]),
+    tree: (popup) => (
+      <Autocomplete.Root defaultOpen items={['a']}>
+        <Autocomplete.Input />
+        <Autocomplete.Portal>
+          <Autocomplete.Positioner>{popup}</Autocomplete.Positioner>
+        </Autocomplete.Portal>
+      </Autocomplete.Root>
+    ),
     siblings: 'dismiss button',
   },
 ];

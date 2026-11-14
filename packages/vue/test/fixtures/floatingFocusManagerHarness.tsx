@@ -39,7 +39,11 @@ export const FloatingFocusManager = defineComponent(
 
     return () => {
       const [content, ...rest] = slots.default?.() ?? [];
-      return content ? [cloneVNode(content, { ref: setElement }, true), ...rest] : null;
+      if (!content) {
+        return null;
+      }
+      const elementNode = cloneVNode(content, { ref: setElement }, true);
+      return rest.length > 0 ? [elementNode, ...rest] : elementNode;
     };
   },
   {

@@ -1719,12 +1719,16 @@ describe('<Combobox.Input />', () => {
         }
       }
 
-      await render(() =>
-        h(Combobox.Root, { defaultOpen: true, items: ['a'] }, () => [
-          renderInput(),
-          h(Combobox.Portal, null, () => h(Combobox.Positioner, null, () => h(Combobox.Popup))),
-        ]),
-      );
+      await render(() => (
+        <Combobox.Root defaultOpen items={['a']}>
+          {renderInput()}
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup />
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      ));
       const input = await screen.findByTestId('part');
 
       expect(input.previousElementSibling).toHaveAttribute('role', 'button');
