@@ -22,8 +22,7 @@ export interface DialogPortalProps
 </script>
 
 <script setup lang="ts">
-import { computed, provide, useTemplateRef } from 'vue';
-import type { ComponentPublicInstance } from 'vue';
+import { computed, onScopeDispose, provide, useTemplateRef, watch } from 'vue';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import InternalBackdrop from '../../utils/popups/InternalBackdrop.vue';
 import FloatingPortal from '../../utils/popups/portal/FloatingPortal.vue';
@@ -59,20 +58,31 @@ const portalProps = computed(() => {
 const portal = useTemplateRef('portal');
 const element = computed(() => portal.value?.element ?? null);
 
+const internalBackdrop = useTemplateRef('internalBackdrop');
 let internalBackdropElement: HTMLDivElement | null = null;
 
-// Vue calls this function before it sets the exposed `element` of the backdrop. `$el` is the
-// element of the backdrop at that time.
-function setInternalBackdrop(instance: Element | ComponentPublicInstance | null) {
-  const backdrop = (instance as ComponentPublicInstance | null)?.$el ?? null;
+function releaseInternalBackdrop() {
   const internalBackdropRef = store.context.internalBackdropRef;
-  if (backdrop) {
-    internalBackdropRef.value = backdrop;
-  } else if (internalBackdropRef.value === internalBackdropElement) {
+  if (internalBackdropElement !== null && internalBackdropRef.value === internalBackdropElement) {
     internalBackdropRef.value = null;
   }
-  internalBackdropElement = backdrop;
+  internalBackdropElement = null;
 }
+
+watch(
+  () => internalBackdrop.value?.element ?? null,
+  (backdrop) => {
+    releaseInternalBackdrop();
+    if (backdrop) {
+      internalBackdropElement = backdrop;
+      store.context.internalBackdropRef.value = backdrop;
+    }
+  },
+  { flush: 'sync' },
+);
+
+// Vue stops the watcher before it unmounts the backdrop with the portal.
+onScopeDispose(releaseInternalBackdrop);
 
 defineExpose({ element });
 </script>
@@ -83,7 +93,7 @@ defineExpose({ element });
       <slot name="render" v-bind="slotProps" />
     </template>
     <template #default="slotProps">
-      <InternalBackdrop v-if="mounted && modal === true" :ref="setInternalBackdrop" :inert="!open" />
+      <InternalBackdrop v-if="mounted && modal === true" ref="internalBackdrop" :inert="!open" />
       <slot v-bind="slotProps" />
     </template>
   </FloatingPortal>

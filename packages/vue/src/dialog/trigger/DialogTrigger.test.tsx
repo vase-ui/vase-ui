@@ -62,11 +62,12 @@ describe('<Dialog.Trigger />', () => {
     });
 
     it('marks only the trigger that opened the dialog, and names the popup in it', async () => {
+      let store!: DialogStore<unknown>;
       await render(
         <Dialog.Root modal={false}>
+          <DialogStoreProbe onStore={(value) => (store = value)} />
           <Dialog.Trigger>One</Dialog.Trigger>
           <Dialog.Trigger>Two</Dialog.Trigger>
-          <DialogPopupPart id="popup" />
         </Dialog.Root>,
       );
       const one = screen.getByRole('button', { name: 'One' });
@@ -79,7 +80,7 @@ describe('<Dialog.Trigger />', () => {
 
       expect(one).toHaveAttribute('aria-expanded', 'true');
       expect(one).toHaveAttribute('data-popup-open');
-      expect(one).toHaveAttribute('aria-controls', 'popup');
+      expect(one).toHaveAttribute('aria-controls', store.select('popupId'));
       expect(two).toHaveAttribute('aria-expanded', 'false');
       expect(two).not.toHaveAttribute('data-popup-open');
       expect(two).not.toHaveAttribute('aria-controls');
