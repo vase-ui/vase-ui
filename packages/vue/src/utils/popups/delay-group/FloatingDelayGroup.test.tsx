@@ -703,6 +703,27 @@ describe('FloatingDelayGroup', () => {
       expect(closed).toEqual([]);
     });
 
+    it('starts the timer of the group when its popup closes after a change of its store', async () => {
+      const open = shallowRef(true);
+      const { Member, useSecond } = createMemberWithChangingStore(open);
+      await render(
+        <Group delay={{ open: 1000, close: 0 }} timeoutMs={500}>
+          <Member />
+          <Tooltip label="two" />
+        </Group>,
+      );
+
+      useSecond.value = true;
+      await flushMicrotasks();
+      open.value = false;
+      await flushMicrotasks();
+      await fireEvent.mouseEnter(screen.getByTestId('reference-two'));
+      await tick(1);
+
+      // The timer of the group runs, so the open delay of the group is 0.
+      expect(isOpen('two')).toBe(true);
+    });
+
     it('keeps the group active while the popup is open for another trigger', async () => {
       const open = shallowRef(false);
       const active = shallowRef('a');
