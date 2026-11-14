@@ -2,5 +2,5 @@
   "id": "BUG-1425",
   "evidence": ["https://github.com/mui/base-ui/issues/1425"],
   "behavior": "A required Select and a required Radio Group are invalid after blur when they have no value.",
-  "dueWith": "packages/react/src/select/root/SelectRoot.tsx"
+  "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
 }

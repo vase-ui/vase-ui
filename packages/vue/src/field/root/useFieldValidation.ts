@@ -139,7 +139,7 @@ export function useFieldValidation(
     }
   }
 
-  async function commit(value: unknown, revalidate = false) {
+  async function commit(value: unknown, countValueMissing = false, revalidate = false) {
     validationCommitId += 1;
     const commitId = validationCommitId;
 
@@ -185,8 +185,9 @@ export function useFieldValidation(
       }
 
       // Only make `valueMissing` mark the field invalid if it's been changed
-      // to reduce error noise.
-      if (hasOnlyValueMissingError && !markedDirtyRef.value) {
+      // to reduce error noise. A control that has no text to type has no such change, so it asks
+      // for the error with `countValueMissing`.
+      if (hasOnlyValueMissingError && !markedDirtyRef.value && !countValueMissing) {
         computedState.valid = true;
         computedState.valueMissing = false;
       }
@@ -332,7 +333,7 @@ export function useFieldValidation(
         commit(value);
       });
     } else {
-      commit(value, !validateOnChange);
+      commit(value, false, !validateOnChange);
     }
   }
 

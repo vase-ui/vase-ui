@@ -76,7 +76,12 @@ export interface UseFieldValidationReturnValue {
   registeredInputs: RegisteredInputs;
   registerInput: (element: HTMLInputElement, registration: RegisteredInput) => void | (() => void);
   getInputControl: () => HTMLElement | null;
-  commit: (value: unknown) => Promise<void>;
+  /**
+   * Validates the value. Until the user changes the value, the field does not count `valueMissing`.
+   * A control that has no text to type gives `true` for `countValueMissing`. A missing value then
+   * makes the field invalid with no earlier change.
+   */
+  commit: (value: unknown, countValueMissing?: boolean) => Promise<void>;
   change: (value: unknown, cancelPending?: boolean) => void;
   reset: () => void;
 }
