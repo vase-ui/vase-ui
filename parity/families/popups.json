@@ -23,13 +23,6 @@
       "reason": "The pull request that first needs the file ports it, with its tests."
     },
     {
-      "upstream": "packages/react/src/utils/popups/popupHandle.test.ts",
-      "describe": ["concrete popup handles"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/store/MenuHandle.ts",
-      "reason": "The cases run for the handles of Alert Dialog, Dialog, Menu, Popover, Preview Card and Tooltip. Vase UI does not have all of them. Menu comes last, so the row names its file."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",

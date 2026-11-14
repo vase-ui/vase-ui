@@ -580,7 +580,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
             mountCommit = commits;
           }
         });
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        observer.observe(document.body, { childList: true, subtree: true });
         onTestFinished(() => observer.disconnect());
 
         function onOpenChangeComplete(open: boolean) {

@@ -20,6 +20,8 @@ import { useButton } from '../../../internals/use-button';
 import { useTriggerRegistration } from '../popupStoreUtils';
 import { useClick } from './useClick';
 import type { UseClickProps } from './useClick';
+import { useHoverPopupInteraction } from './useHoverPopupInteraction';
+import { useHoverTriggerInteraction } from './useHoverTriggerInteraction';
 
 type AppProps = UseClickProps & {
   initialOpen?: boolean | undefined;
@@ -106,6 +108,12 @@ function createPointerEvent(type: string, pointerType: PointerEvent['pointerType
 
 async function click(element: Element) {
   element.dispatchEvent(createMouseEvent('click'));
+  await flushMicrotasks();
+}
+
+async function hover(element: Element) {
+  element.dispatchEvent(createMouseEvent('mouseover', { relatedTarget: document.body }));
+  element.dispatchEvent(createMouseEvent('mouseenter', { relatedTarget: document.body }));
   await flushMicrotasks();
 }
 
@@ -370,6 +378,59 @@ describe('useClick', () => {
       true,
       expect.objectContaining({ reason: REASONS.inputPress }),
     );
+  });
+
+  function createHoverClickApp(stickIfOpen: boolean) {
+    return defineComponent({
+      setup() {
+        const open = shallowRef(false);
+        const { refs, context } = useFloating({
+          open,
+          onOpenChange(nextOpen) {
+            open.value = nextOpen;
+          },
+        });
+        const hoverReferenceProps = useHoverTriggerInteraction(context.rootStore, {
+          triggerElement: refs.reference,
+        });
+        useHoverPopupInteraction(context.rootStore);
+        const { getReferenceProps, getFloatingProps } = useTestInteractions([
+          { reference: hoverReferenceProps },
+          useClick(context.rootStore, { stickIfOpen }),
+        ]);
+
+        return () => (
+          <>
+            <button {...getReferenceProps({ ref: refs.setReference })} />
+            {open.value && <div role="tooltip" {...getFloatingProps({ ref: refs.setFloating })} />}
+          </>
+        );
+      },
+    });
+  }
+
+  it('stickIfOpen true keeps a hover-opened popup open on first click', async () => {
+    const HoverClickApp = createHoverClickApp(true);
+    await render(<HoverClickApp />);
+
+    const button = screen.getByRole('button');
+
+    await hover(button);
+    await click(button);
+
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+  });
+
+  it('stickIfOpen false closes a hover-opened popup on first click', async () => {
+    const HoverClickApp = createHoverClickApp(false);
+    await render(<HoverClickApp />);
+
+    const button = screen.getByRole('button');
+
+    await hover(button);
+    await click(button);
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 });
 

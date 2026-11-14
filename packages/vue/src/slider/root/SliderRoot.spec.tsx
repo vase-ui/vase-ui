@@ -1,6 +1,6 @@
 import { expectType } from '#test-utils';
+import { Slider } from '@vase-ui/vue/slider';
 import { REASONS } from '../../internals/reasons';
-import * as Slider from '../index.parts';
 
 const value: number = 25;
 const array = [25];

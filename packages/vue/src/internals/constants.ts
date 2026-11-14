@@ -11,6 +11,17 @@ export const POPUP_COLLISION_AVOIDANCE = {
 } as const;
 
 /**
+ * The time in milliseconds after a hover open in which a press of the trigger keeps the popup
+ * open.
+ */
+export const PATIENT_CLICK_THRESHOLD = 500;
+
+/**
+ * The attribute that marks a trigger that opens its popup with a press.
+ */
+export const CLICK_TRIGGER_IDENTIFIER = 'data-vase-ui-click-trigger';
+
+/**
  * The style of the `aria-owns` owner element. The element is an empty `span`, so it needs fewer
  * declarations than `visuallyHidden`. With these declarations, iOS, Safari and VoiceControl still
  * find the element that the owner owns.
