@@ -1,5 +1,5 @@
 import { shallowRef, toRaw } from 'vue';
-import type { ShallowRef } from 'vue';
+import type { HTMLAttributes, ShallowRef } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import { createEventEmitter } from './createEventEmitter';
 import { dispatchOpenChange } from './floating-root/dispatchOpenChange';
@@ -7,7 +7,6 @@ import { ReactiveStore } from './ReactiveStore';
 import type { PopupEvents, PopupInteractionContext, ReferenceType } from './types';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { PopupTriggerMap } from './popupTriggerMap';
-import type { HTMLProps } from '../../internals/types';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 
@@ -99,15 +98,15 @@ export type PopupStoreState<Payload> = {
   /**
    * The props of the active trigger element.
    */
-  activeTriggerProps: HTMLProps;
+  activeTriggerProps: HTMLAttributes;
   /**
    * The props of the inactive trigger elements.
    */
-  inactiveTriggerProps: HTMLProps;
+  inactiveTriggerProps: HTMLAttributes;
   /**
    * The props of the popup element.
    */
-  popupProps: HTMLProps;
+  popupProps: HTMLAttributes;
 };
 
 export function createInitialPopupStoreState<Payload>(
@@ -131,9 +130,9 @@ export function createInitialPopupStoreState<Payload>(
     popupElement: null,
     positionerElement: null,
     anchorOverride: null,
-    activeTriggerProps: EMPTY_OBJECT as HTMLProps,
-    inactiveTriggerProps: EMPTY_OBJECT as HTMLProps,
-    popupProps: EMPTY_OBJECT as HTMLProps,
+    activeTriggerProps: EMPTY_OBJECT as HTMLAttributes,
+    inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
+    popupProps: EMPTY_OBJECT as HTMLAttributes,
   };
 }
 
