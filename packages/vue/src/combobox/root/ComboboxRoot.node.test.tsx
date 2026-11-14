@@ -10,6 +10,11 @@ function normalize(html: string) {
   return html.replace(/<!--.*?-->/g, '').replace(/ style="[^"]+"/g, ' style');
 }
 
+// The opening tag of the element that has `attribute`.
+function getTag(html: string, attribute: string) {
+  return new RegExp(`<[^>]*${attribute}[^>]*>`).exec(html)?.[0];
+}
+
 function comboboxInput(expanded: 'true' | 'false', attributes: string) {
   return `<input autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" role="combobox" aria-expanded="${expanded}" aria-haspopup="listbox" aria-autocomplete="list" ${attributes}>`;
 }
@@ -110,5 +115,53 @@ describe('<Combobox.Root /> on a server', () => {
     expect(getNamedInputs(noneHtml)[0]).toContain('value="mal"');
     expect(getNamedInputs(singleHtml)).toEqual([expect.stringContaining('aria-hidden="true"')]);
     expect(getNamedInputs(singleHtml)[0]).toContain('value="Malmö"');
+  });
+
+  it('sets combobox aria attributes on the input', async () => {
+    const html = await renderToString(
+      <Combobox.Root>
+        <Combobox.Input data-testid="input" />
+        <Combobox.Portal>
+          <Combobox.Positioner />
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+
+    const input = getTag(html, 'data-testid="input"');
+
+    expect(input).toContain('role="combobox"');
+    expect(input).toContain('aria-expanded="false"');
+    expect(input).toContain('aria-autocomplete="list"');
+    expect(input).toContain('aria-haspopup="listbox"');
+  });
+
+  it('sets combobox aria attributes on the trigger when input is inside popup', async () => {
+    const html = await renderToString(
+      <Combobox.Root>
+        <Combobox.Trigger data-testid="trigger" />
+        <Combobox.Portal>
+          <Combobox.Positioner />
+        </Combobox.Portal>
+      </Combobox.Root>,
+    );
+
+    const trigger = getTag(html, 'data-testid="trigger"');
+
+    expect(trigger).toContain('role="combobox"');
+    expect(trigger).toContain('aria-expanded="false"');
+    expect(trigger).toContain('aria-haspopup="dialog"');
+  });
+
+  it('VUE-51: names the trigger with a label that comes before it', async () => {
+    const html = await renderToString(
+      <Combobox.Root id="food" inline>
+        <Combobox.Label data-testid="label">Food</Combobox.Label>
+        <Combobox.Trigger data-testid="trigger">Open</Combobox.Trigger>
+        <Combobox.Input data-testid="input" />
+      </Combobox.Root>,
+    );
+
+    expect(getTag(html, 'data-testid="label"')).toContain(' id="food-label"');
+    expect(getTag(html, 'data-testid="trigger"')).toContain(' aria-labelledby="food-label"');
   });
 });

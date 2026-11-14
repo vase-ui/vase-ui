@@ -1,0 +1,17 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/handbook/animation/demos",
+  "files": {
+    "animated-popover-motion-keep-mounted-false/css-modules/index.module.css": "1f5320b893941b2a857bc057277ed5a2da06dc2df0bd1e46b7fc742004650819",
+    "animated-popover-motion-keep-mounted-false/css-modules/index.tsx": "9161969a488ab989521efb665f886277669cfac9d4cfa4e4b8d670efcbfcdcc6",
+    "animated-popover-motion-keep-mounted-true/css-modules/index.module.css": "3facf7bc1e68124f443eef3c9c447cce0d4e4426fafdbb3afa417b32ac51d6a4",
+    "animated-popover-motion-keep-mounted-true/css-modules/index.tsx": "1d91e7e7b1b616efa2a0bb6b875604bb1243c3e36f1160fa780563bffc28b6d7",
+    "animated-select-motion/css-modules/index.module.css": "ea0b8ae954f0b3fb0f013672f4aa10b1445167d1f38fcbe7f8e866be9c978c43",
+    "animated-select-motion/css-modules/index.tsx": "a4e2f8feba4c0c6369c8a395cccef7f17a25f9cf55980c85c049afef3f91c615"
+  },
+  "entryPoints": {
+    "animated-popover-motion-keep-mounted-false": ["popover"],
+    "animated-popover-motion-keep-mounted-true": ["popover"],
+    "animated-select-motion": ["select"]
+  }
+}

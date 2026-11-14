@@ -27,7 +27,7 @@ An easily stylable checkbox component.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the checkbox a `<label>` element, or put it in a `Field`. See [Labeling a checkbox](#labeling-a-checkbox).
+- **Form controls must have an accessible name**: Give the checkbox a `<label>` element, or put it in a `Field`. See [Labeling a checkbox](#labeling-a-checkbox) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 

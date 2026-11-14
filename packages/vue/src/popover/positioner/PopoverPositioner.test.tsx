@@ -61,12 +61,14 @@ describe('<Popover.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     defaultCollisionAvoidance: 'popup',
     createComponent: ({
       root,
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <Popover.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -75,7 +77,9 @@ describe('<Popover.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <Popover.Popup {...popup}>Popup</Popover.Popup>
+            <Popover.Popup {...popup}>
+              {viewport ? <Popover.Viewport>Popup</Popover.Viewport> : 'Popup'}
+            </Popover.Popup>
           </Popover.Positioner>
         </Popover.Portal>
       </Popover.Root>
@@ -728,6 +732,33 @@ describe('<Popover.Positioner />', () => {
     expect(nodeIds.parent).toEqual(expect.any(String));
     const childNode = tree!.nodesRef.value.find((node) => node.id === nodeIds.child);
     expect(childNode?.parentId).toBe(nodeIds.parent);
+  });
+
+  it('sets `data-instant` to `trigger-change` on the popup after the popover moves to another trigger', async () => {
+    const handle = Popover.createHandle();
+    const { user } = await render(
+      <>
+        <Popover.Trigger handle={handle}>First</Popover.Trigger>
+        <Popover.Trigger handle={handle}>Second</Popover.Trigger>
+        <Popover.Root handle={handle}>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup data-testid="popup">Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'First' }));
+    const popup = await screen.findByTestId('popup');
+    expect(popup).not.toHaveAttribute('data-instant');
+
+    await user.click(screen.getByRole('button', { name: 'Second' }));
+
+    await waitFor(() => {
+      expect(popup).toHaveAttribute('data-instant', 'trigger-change');
+    });
   });
 
   // In Vue 3.5.12, a `setup` that throws leaves the current instance set, and each later case of

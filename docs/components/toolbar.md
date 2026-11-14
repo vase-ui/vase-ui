@@ -49,7 +49,7 @@ When the other part needs props or listeners of its own, render it in the `#rend
 
 Render a generic part, such as `Select.Trigger`, in the `#render` slot too. The type of `as` does not accept a generic component. The demo at the top of this page does this.
 
-See [how props are merged](/utils/merge-props#how-merging-works) for how the two parts combine.
+See [how props are merged](/handbook/composition#how-props-are-merged) for how the two parts combine.
 
 ## API reference
 

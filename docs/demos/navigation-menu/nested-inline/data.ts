@@ -15,7 +15,7 @@ export const audienceMenus = [
         description: 'Install Vase UI and get your first interactive component on screen fast.',
       },
       {
-        href: `${base}utils/use-render`,
+        href: `${base}handbook/composition`,
         title: 'Composition',
         description: 'Wrap and combine parts to match your product structure without hacks.',
       },
@@ -30,7 +30,7 @@ export const audienceMenus = [
       'Connect tokens, states, and accessibility rules once, then give every product team the same solid starting point.',
     links: [
       {
-        href: `${base}quick-start#style-a-part`,
+        href: `${base}handbook/styling`,
         title: 'Styling',
         description: 'Map tokens and component states to your own CSS or utility setup.',
       },
@@ -61,12 +61,12 @@ export const audienceMenus = [
           'Track which changes are mirrored and which are queued before upgrades surprise teams.',
       },
       {
-        href: `${base}utils/use-render#typescript`,
+        href: `${base}handbook/typescript`,
         title: 'TypeScript',
         description: 'See how Vase UI types custom wrappers and shared abstractions.',
       },
       {
-        href: `${base}components/field`,
+        href: `${base}handbook/forms`,
         title: 'Forms',
         description: 'Standardize validation and field patterns teams reach for constantly.',
       },
@@ -112,12 +112,12 @@ export const guideLinks = [
     description: 'Install the package and put your first component on the page.',
   },
   {
-    href: `${base}utils/use-render`,
+    href: `${base}handbook/composition`,
     title: 'Composition',
     description: 'Learn when to wrap parts, share behavior, and expose flexible APIs.',
   },
   {
-    href: `${base}quick-start#style-a-part`,
+    href: `${base}handbook/styling`,
     title: 'Styling',
     description: 'Apply tokens and state styles without fighting the underlying markup.',
   },

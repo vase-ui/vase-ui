@@ -740,3 +740,77 @@ describe('<Menu.FilterProvider><Menu.Root/></Menu.FilterProvider>', () => {
     });
   });
 });
+
+describe('filterable menu navigation regressions', () => {
+  const { render } = createRenderer();
+
+  describe.each([false, true])('with a filtered submenu: %s', (filterSubmenu) => {
+    it.each([
+      ['[ArrowRight]', '[ArrowLeft]'],
+      ['[ArrowRight]', '{Shift>}[Tab]{/Shift}'],
+      ['[Enter]', '[Escape]'],
+    ])(
+      'restores input focus after opening with %s and closing with %s',
+      async (openKey, closeKey) => {
+        const submenu = (
+          <Menu.SubmenuRoot>
+            <Menu.SubmenuTrigger openOnHover={false}>More</Menu.SubmenuTrigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  {filterSubmenu ? (
+                    <>
+                      <Menu.Input aria-label="Filter child actions" />
+                      <Menu.List>
+                        <Menu.Item>Child action</Menu.Item>
+                      </Menu.List>
+                    </>
+                  ) : (
+                    <Menu.Item>Child action</Menu.Item>
+                  )}
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.SubmenuRoot>
+        );
+        const { user } = await render(
+          <Menu.FilterProvider>
+            <Menu.Root defaultOpen>
+              <Menu.Trigger>Actions</Menu.Trigger>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.Input aria-label="Filter actions" />
+                    <Menu.List>
+                      {filterSubmenu ? (
+                        <Menu.FilterProvider>{submenu}</Menu.FilterProvider>
+                      ) : (
+                        submenu
+                      )}
+                      <Menu.Item>Rename</Menu.Item>
+                    </Menu.List>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </Menu.FilterProvider>,
+        );
+        const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+        await waitFor(() => expect(input).toHaveFocus());
+        await user.keyboard(`[ArrowDown]${openKey}`);
+        const child = filterSubmenu
+          ? await screen.findByRole('searchbox', { name: 'Filter child actions' })
+          : await screen.findByRole('menuitem', { name: 'Child action' });
+        await waitFor(() => expect(child).toHaveFocus());
+        await user.keyboard(closeKey);
+        await waitFor(() =>
+          expect(screen.queryByRole('menuitem', { name: 'Child action' })).toBe(null),
+        );
+        await waitFor(() => expect(input).toHaveFocus());
+        await user.keyboard('ren');
+        expect(input).toHaveValue('ren');
+        expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+      },
+    );
+  });
+});

@@ -13,7 +13,7 @@ import { useMenuFilterPopup } from './useMenuFilterPopup';
 export function useFilterPopup(): MenuFilterPopup {
   const { store, orientation } = useMenuRootContext();
 
-  const interactionProps = useMenuFilterPopup(orientation);
+  const interactionProps = useMenuFilterPopup(orientation, () => store.select('popupElement'));
 
   const initialFocus = computed<FocusOption>(() => {
     const open = store.select('open');

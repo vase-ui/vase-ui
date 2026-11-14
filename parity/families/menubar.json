@@ -51,13 +51,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "reason": "The case presses a trigger of the menubar to open its menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["filterable menubar menus"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/index.ts",
-      "reason": "The file imports the entry point of Menu, which Vase UI does not have."
     }
   ],
   "surfaceAdditions": [
