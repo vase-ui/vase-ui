@@ -1120,6 +1120,42 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+// A server renders the bar with its generated id and gives the tab stop to the first trigger. It
+// renders no popup and no portal.
+async function expectMenubarPage(page: Page) {
+  expect(
+    await readAttributes(page.getByTestId('menubar'), [
+      'role',
+      'aria-orientation',
+      'data-orientation',
+      'data-modal',
+      'data-has-submenu-open',
+    ]),
+  ).toEqual({
+    role: 'menubar',
+    'aria-orientation': 'horizontal',
+    'data-orientation': 'horizontal',
+    'data-modal': '',
+    'data-has-submenu-open': null,
+  });
+  expect(await page.getByTestId('menubar').getAttribute('id')).toBeTruthy();
+
+  const attributeNames = ['role', 'aria-haspopup', 'aria-expanded', 'tabindex'];
+  expect(await readAttributes(page.getByTestId('file'), attributeNames)).toEqual({
+    role: 'menuitem',
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    tabindex: '0',
+  });
+  expect(await readAttributes(page.getByTestId('edit'), attributeNames)).toEqual({
+    role: 'menuitem',
+    'aria-haspopup': 'menu',
+    'aria-expanded': 'false',
+    tabindex: '-1',
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
+}
+
 // A server renders no popup and no portal. The trigger of an open root has the open state, and no
 // guards beside it. The trigger of a handle has the closed form, because a server attaches no store
 // to a handle.
@@ -1586,6 +1622,7 @@ const PAGES: PageCase[] = [
     expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
   },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
+  { path: '/menubar', expectPage: expectMenubarPage },
   {
     path: '/context-menu',
     expectPage: expectContextMenuPageOnServer,
@@ -2197,6 +2234,23 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     expect(await trigger.getAttribute('data-popup-open')).toBe('');
     expect(await popup.getAttribute('role')).toBe('menu');
     expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
+    expect(messages).toEqual([]);
+  });
+
+  it('opens a menu of /menubar on a click and the next menu with ArrowRight after hydration', async () => {
+    const page = await createPage('/menubar');
+    const messages = collectMessages(page);
+
+    await page.getByTestId('file').click();
+    await page.getByTestId('file-popup').waitFor();
+
+    expect(await page.getByTestId('menubar').getAttribute('data-has-submenu-open')).toBe('');
+
+    await page.keyboard.press('ArrowRight');
+    await page.getByTestId('edit-popup').waitFor();
+    await page.getByTestId('file-popup').waitFor({ state: 'detached' });
+
+    expect(await page.getByTestId('edit').getAttribute('aria-expanded')).toBe('true');
     expect(messages).toEqual([]);
   });
 

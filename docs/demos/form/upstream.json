@@ -1,0 +1,17 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstream": "docs/src/app/(docs)/react/components/form/demos",
+  "files": {
+    "form-action/css-modules/index.module.css": "225cabb614a02379c80999febfefe41527adc94be280653ac24166032f779bc4",
+    "form-action/css-modules/index.tsx": "3681d4bb350bea1b1e95d6c7fad1f0b45b0abb4d713af9af58b8212f5208913f",
+    "hero/css-modules/index.module.css": "225cabb614a02379c80999febfefe41527adc94be280653ac24166032f779bc4",
+    "hero/css-modules/index.tsx": "e665e4aaf07b14ecb3b7945c1424f98815139d4c551ddc49f2ce22ae3c711240",
+    "zod/css-modules/index.module.css": "225cabb614a02379c80999febfefe41527adc94be280653ac24166032f779bc4",
+    "zod/css-modules/index.tsx": "204aec03c6f96107369ec22f7978174ea55986db4d60f08e0bf0dbdd68318922"
+  },
+  "entryPoints": {
+    "form-action": ["button", "field"],
+    "hero": ["button", "field"],
+    "zod": ["button", "field"]
+  }
+}

@@ -11,7 +11,7 @@ import DemoInputHero from '../demos/input/hero/css-modules/index.vue';
 
 # Input
 
-A native input element that works with Field.
+A native input element that works with [Field](/components/field).
 
 <DemoFrame>
   <DemoInputHero />

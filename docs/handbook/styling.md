@@ -35,7 +35,7 @@ A part sets data attributes for its states. For example, you can style [Switch](
 
 ### CSS variables
 
-A part exposes CSS variables to help you style it. They often hold dynamic numeric values for size or transform calculations. For example, `Tooltip.Positioner` of [Tooltip](/components/tooltip) sets `--available-height` and `--anchor-width`. A rule on the popup can read them.
+A part exposes CSS variables to help you style it. They often hold dynamic numeric values for size or transform calculations. For example, `Popover.Positioner` of [Popover](/components/popover) sets `--available-height` and `--anchor-width`. A rule on the popup can read them.
 
 ```css
 .Popup {

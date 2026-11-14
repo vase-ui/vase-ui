@@ -132,6 +132,8 @@ You can give the errors that a server returns after a submission to the `errors`
 
 After a change of a field clears its error, a write of an equal error value shows no error again, because Vue reports no change. Give a new object, or change a value.
 
+A demo on the [Form page](/components/form#submit-to-a-server) shows the errors of a server after a submission.
+
 ## Displaying errors
 
 Use `<Field.Error>` with no content to show the native error message of the field while it is invalid. The `match` prop customizes the message for a validity state, so that you can manage internationalization in your application:

@@ -854,7 +854,13 @@ describe('<Toolbar.Button />', () => {
         await render(
           <Toolbar.Root>
             <Popover.Root>
-              <Popover.Trigger as={Toolbar.Button} data-testid="trigger" />
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Popover.Trigger {...props} data-testid="trigger" />
+                  ),
+                }}
+              />
               <Popover.Portal>
                 <Popover.Positioner>
                   <Popover.Popup>Content</Popover.Popup>
@@ -873,7 +879,13 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Popover.Root onOpenChange={onOpenChange}>
-              <Popover.Trigger as={Toolbar.Button} />
+              <Toolbar.Button
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Popover.Trigger {...props} />
+                  ),
+                }}
+              />
               <Popover.Portal>
                 <Popover.Positioner>
                   <Popover.Popup>Content</Popover.Popup>
@@ -908,7 +920,14 @@ describe('<Toolbar.Button />', () => {
         const { user } = await render(
           <Toolbar.Root>
             <Popover.Root onOpenChange={onOpenChange}>
-              <Popover.Trigger as={Toolbar.Button} disabled />
+              <Toolbar.Button
+                disabled
+                v-slots={{
+                  render: ({ props }: { props: Record<string, unknown> }) => (
+                    <Popover.Trigger {...props} />
+                  ),
+                }}
+              />
               <Popover.Portal>
                 <Popover.Positioner>
                   <Popover.Popup>Content</Popover.Popup>
