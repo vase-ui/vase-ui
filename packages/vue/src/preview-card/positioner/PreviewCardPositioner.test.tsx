@@ -98,12 +98,14 @@ describe('<PreviewCard.Positioner />', () => {
 
   positionerConformanceTests({
     render,
+    viewport: true,
     defaultCollisionAvoidance: 'popup',
     createComponent: ({
       root,
       trigger,
       positioner: { render: renderPositioner, ...positioner },
       popup,
+      viewport,
     }) => (
       <PreviewCard.Root {...root}>
         <Trigger {...trigger}>Trigger</Trigger>
@@ -112,7 +114,9 @@ describe('<PreviewCard.Positioner />', () => {
             {...positioner}
             v-slots={renderPositioner ? { render: renderPositioner } : undefined}
           >
-            <PreviewCard.Popup {...popup}>Popup</PreviewCard.Popup>
+            <PreviewCard.Popup {...popup}>
+              {viewport ? <PreviewCard.Viewport>Popup</PreviewCard.Viewport> : 'Popup'}
+            </PreviewCard.Popup>
           </PreviewCard.Positioner>
         </PreviewCard.Portal>
       </PreviewCard.Root>
