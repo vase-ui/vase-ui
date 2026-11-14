@@ -143,11 +143,6 @@
       "reason": "Only code that the Base UI build generates calls it: a Babel plugin replaces each error message with a code. The Vase UI build keeps the full messages."
     },
     {
-      "upstream": "packages/utils/src/useScrollLock.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs a file adds it at the mapped path, with its tests."
-    },
-    {
       "upstream": "packages/utils/src/store/Store.test.ts",
       "kind": "not-applicable",
       "reason": "The cases test the subscriber list of the `Store` class and `Store.create`. `packages/vue/src/utils/popups/ReactiveStore.test.tsx` tests the writes of the Vue store."
