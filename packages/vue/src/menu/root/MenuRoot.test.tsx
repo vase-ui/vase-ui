@@ -35,6 +35,7 @@ import { isScrollLocked } from '../../../test/fixtures/scrollDocument';
 import * as AlertDialog from '../../alert-dialog/index.parts';
 import { platform } from '../../common/platform';
 import { reset as resetWarnings } from '../../common/warn';
+import * as ContextMenu from '../../context-menu/index.parts';
 import * as Dialog from '../../dialog/index.parts';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -403,11 +404,13 @@ describe('<Menu.Root />', () => {
     expect(trigger).toHaveFocus();
   });
 
-  it('keeps focus in the menu when a Shift+Tab close is canceled', async () => {
-    const { user } = await render(
+  it('VUE-69: moves the focus to the trigger for Shift+Tab when the root cancels the close', async () => {
+    const reasons: string[] = [];
+    await render(
       <Menu.Root
         defaultOpen
         onOpenChange={(open: boolean, details: Menu.Root.ChangeEventDetails) => {
+          reasons.push(details.reason);
           if (!open) {
             details.cancel();
           }
@@ -424,16 +427,62 @@ describe('<Menu.Root />', () => {
       </Menu.Root>,
     );
 
+    const trigger = screen.getByRole('button', { name: 'Toggle' });
     const menu = screen.getByRole('menu');
     await waitFor(() => {
       expect(menu).toHaveFocus();
     });
 
-    await user.tab({ shift: true });
+    await browserUserEvent.keyboard('{Shift>}[Tab]{/Shift}');
 
-    expect(menu).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('aria-expanded', 'true');
+    expect(trigger).toHaveFocus();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(menu).toBeInTheDocument();
+    expect(reasons).toEqual([REASONS.focusOut]);
+
+    await browserUserEvent.keyboard('[ArrowDown]');
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem')).toHaveFocus();
+    });
   });
+
+  it.each([
+    { name: 'Tab', shift: false },
+    { name: 'Shift+Tab', shift: true },
+  ])(
+    'VUE-69: keeps the focus in a context menu for $name when the root cancels the close',
+    async ({ shift }) => {
+      await render(
+        <ContextMenu.Root
+          onOpenChange={(open: boolean, details: ContextMenu.Root.ChangeEventDetails) => {
+            if (!open) {
+              details.cancel();
+            }
+          }}
+        >
+          <ContextMenu.Trigger as="button">Surface</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup>
+                <ContextMenu.Item>One</ContextMenu.Item>
+              </ContextMenu.Popup>
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const surface = screen.getByRole('button', { name: 'Surface' });
+      await fireEvent.contextMenu(surface, { clientX: 20, clientY: 20, button: 2 });
+      const menu = await screen.findByRole('menu');
+      await waitFor(() => {
+        expect(menu).toHaveFocus();
+      });
+
+      await browserUserEvent.keyboard(shift ? '{Shift>}[Tab]{/Shift}' : '[Tab]');
+
+      expect(menu).toHaveFocus();
+    },
+  );
 
   popupConformanceTests({
     createComponent: (props) => (

@@ -420,7 +420,7 @@ export abstract class BasePopupStore<
   ChangeEventDetails extends PopupOpenChangeEventDetails,
 > extends ReactiveStore<Readonly<State>, Context, Selectors> {
   // A new object for each open. A close uses it to know if the popup opened again since.
-  private openSession = {};
+  #openSession = {};
 
   // A render can give the popup element a new `id` and write nothing to the store. The id comes
   // from a prop, an attribute or the `#render` slot.
@@ -439,7 +439,7 @@ export abstract class BasePopupStore<
     // that a controlled `open` prop did not apply does not start one. A close that waits for the
     // parent then keeps its request.
     if (!openSelector(current) && openSelector(newState)) {
-      this.openSession = {};
+      this.#openSession = {};
     }
     let next = this.anchorsToActiveTrigger() ? syncAnchorState(current, newState) : newState;
     if (next.popupElement !== current.popupElement) {
@@ -503,7 +503,7 @@ export abstract class BasePopupStore<
       // A call after the close commits, such as after an `await` in `onOpenChange`, still applies
       // until the popup opens again. More closes can commit in the meantime. A controlled `open`
       // prop can lag behind the close.
-      if (closeSession === this.openSession) {
+      if (closeSession === this.#openSession) {
         this.set('preventUnmountingOnClose', true);
       }
     };
@@ -519,7 +519,7 @@ export abstract class BasePopupStore<
     const extraState = this.prepareOpenChange(nextOpen, details);
 
     if (!nextOpen) {
-      closeSession = this.openSession;
+      closeSession = this.#openSession;
     }
 
     this.update({
