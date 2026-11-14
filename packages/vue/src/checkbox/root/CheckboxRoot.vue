@@ -642,9 +642,10 @@ onMounted(readRenderedId);
 onUpdated(readRenderedId);
 
 // The parent checkbox of the group lists the id of each child in `aria-controls`, and it reads the
-// disabled state of each child when it changes the value. Both wait for the mount, because a server
-// has no element to read. `KeepAlive` takes the element out of the document, so a held child
-// reports neither.
+// disabled state of each child when it changes the value. The id waits for the mount, because a
+// server has no element to read. The disabled state needs no element. Its `watch` has a cleanup, so
+// it has no `immediate`, and `isHydrated` gives it the first run after the mount. `KeepAlive` takes
+// the element out of the document, so a held child reports neither.
 const isHydrated = useIsHydrated();
 
 watch(
