@@ -48,6 +48,8 @@ const Popup = defineComponent({
     manager: { type: Object as PropType<ManagerProps>, default: () => ({}) },
     name: { type: String, default: '' },
     portal: Boolean,
+    // The container of the portal.
+    container: { type: Object as PropType<HTMLElement>, default: undefined },
     keepMounted: Boolean,
     role: { type: String, default: undefined },
     popupTabindex: { type: String, default: undefined },
@@ -111,7 +113,11 @@ const Popup = defineComponent({
             </div>
           </FloatingFocusManager>
         ) : null;
-      const popup = props.portal ? <FloatingPortal>{content}</FloatingPortal> : content;
+      const popup = props.portal ? (
+        <FloatingPortal container={props.container}>{content}</FloatingPortal>
+      ) : (
+        content
+      );
       const referenceElement = props.referenceRemoved ? null : (
         <input
           data-testid={testId('reference')}
@@ -1558,6 +1564,492 @@ describe('FloatingFocusManager', () => {
     });
   });
 
+  describe('close when the focus leaves a popup that is not modal', () => {
+    // With `openFrom`, that field has the focus at the open. The list of the elements that had the
+    // focus then ends with that field, and not with the reference.
+    async function renderPopup(
+      manager: ManagerProps = {},
+      options: { portal?: boolean; openFrom?: string } = {},
+    ) {
+      const handleOpenChange = vi.fn();
+      await render(() => (
+        <div>
+          <Popup
+            portal={options.portal}
+            manager={{ modal: false, ...manager }}
+            onOpenChange={handleOpenChange}
+          />
+          <input data-testid="outside" />
+          <input data-testid="inside" />
+        </div>
+      ));
+      if (options.openFrom) {
+        screen.getByTestId(options.openFrom).focus();
+        await fireEvent.click(screen.getByTestId('reference'));
+      } else {
+        await openPopup();
+      }
+      if (manager.initialFocus !== false) {
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      }
+      return handleOpenChange;
+    }
+
+    async function moveFocusTo(testId: string) {
+      screen.getByTestId(testId).focus();
+      await flushMicrotasks();
+    }
+
+    it.each<{ name: string; manager: ManagerProps }>([
+      { name: 'popup', manager: {} },
+      { name: 'reference', manager: { initialFocus: false } },
+    ])(
+      'closes the popup when the focus moves from the $name to an element outside',
+      async ({ manager }) => {
+        const handleOpenChange = await renderPopup(manager);
+
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
+        expect(screen.queryByTestId('floating')).toBe(null);
+      },
+    );
+
+    it('returns no focus after the close, also for an explicit target', async () => {
+      await renderPopup({ explicitReturnFocus: true });
+
+      await moveFocusTo('outside');
+
+      expect(screen.getByTestId('outside')).toHaveFocus();
+    });
+
+    it.each<{ name: string; manager: ManagerProps; target: string }>([
+      { name: 'the reference', manager: {}, target: 'reference' },
+      {
+        name: 'an element of getInsideElements',
+        manager: { getInsideElements: () => [screen.getByTestId('inside')] },
+        target: 'inside',
+      },
+    ])('keeps the popup open when the focus moves to $name', async ({ manager, target }) => {
+      const handleOpenChange = await renderPopup(manager, { openFrom: 'outside' });
+
+      await moveFocusTo(target);
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('floating')).toBeInTheDocument();
+    });
+
+    it.each<{ name: string; manager: ManagerProps }>([
+      { name: 'the popup is modal', manager: { modal: true } },
+      { name: 'closeOnFocusOut is false', manager: { closeOnFocusOut: false } },
+    ])('keeps the popup open when the focus leaves it and $name', async ({ manager }) => {
+      const handleOpenChange = await renderPopup(manager);
+
+      await moveFocusTo('outside');
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+      expect(screen.getByTestId('floating')).toBeInTheDocument();
+    });
+
+    it('keeps the popup open when the focus moves into the popup of a node below, in externalTree', async () => {
+      const tree = new FloatingTreeStore();
+      const handleOpenChange = vi.fn();
+      await render(() => (
+        <div>
+          <Popup
+            manager={{ modal: false, externalTree: tree }}
+            onOpenChange={handleOpenChange}
+            onStore={(store) => {
+              store.context.positioning = {
+                open: true,
+                nodeId: 'parent',
+                elements: { reference: null, floating: null, domReference: null },
+                rootStore: store,
+              };
+            }}
+          />
+          <div data-testid="child-popup">
+            <input data-testid="child-field" />
+          </div>
+        </div>
+      ));
+      tree.addNode({
+        id: 'child',
+        parentId: 'parent',
+        context: {
+          open: true,
+          nodeId: 'child',
+          elements: {
+            reference: null,
+            floating: screen.getByTestId('child-popup'),
+            domReference: null,
+          },
+        } as PopupPositioningContext,
+      });
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      screen.getByTestId('child-field').focus();
+      await flushMicrotasks();
+
+      expect(handleOpenChange).not.toHaveBeenCalled();
+    });
+
+    it.each<{
+      name: string;
+      manager: ManagerProps;
+      pressed: string;
+      clickTrigger?: boolean;
+      calls: unknown[];
+    }>([
+      { name: 'a click trigger', manager: {}, pressed: 'outside', clickTrigger: true, calls: [] },
+      { name: 'the reference', manager: { initialFocus: false }, pressed: 'reference', calls: [] },
+      { name: 'another element', manager: {}, pressed: 'outside', calls: [[false, 'focus-out']] },
+    ])(
+      'handles a press on $name that moves the focus out',
+      async ({ manager, pressed, clickTrigger, calls }) => {
+        const handleOpenChange = await renderPopup(manager);
+        if (clickTrigger) {
+          screen.getByTestId(pressed).setAttribute('data-vase-ui-click-trigger', '');
+        }
+
+        await fireEvent.pointerDown(screen.getByTestId(pressed));
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange.mock.calls).toEqual(calls);
+      },
+    );
+
+    describe('popup in a portal', () => {
+      it('keeps the popup open when the focus leaves its popup element with no press', async () => {
+        const handleOpenChange = await renderPopup({}, { portal: true });
+
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange).not.toHaveBeenCalled();
+      });
+
+      it('keeps the popup open when the focus leaves it after a press outside ended', async () => {
+        const handleOpenChange = await renderPopup({}, { portal: true });
+
+        await fireEvent.pointerDown(screen.getByTestId('outside'));
+        await fireEvent.pointerUp(screen.getByTestId('outside'));
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange).not.toHaveBeenCalled();
+      });
+
+      it('closes the popup when a press outside moves the focus', async () => {
+        const handleOpenChange = await renderPopup({}, { portal: true });
+
+        await fireEvent.pointerDown(screen.getByTestId('outside'));
+        await moveFocusTo('outside');
+
+        expect(handleOpenChange.mock.calls).toEqual([[false, 'focus-out']]);
+      });
+    });
+  });
+
+  it('sets the tabindex of the popup again when the focus leaves the reference', async () => {
+    const hasField = shallowRef(false);
+    await render(() => (
+      <div>
+        <Popup role="dialog" manager={{ initialFocus: false }}>
+          {{ default: () => (hasField.value ? <input /> : <span>text</span>) }}
+        </Popup>
+        <input data-testid="outside" />
+      </div>
+    ));
+    await openPopup();
+    const floating = screen.getByTestId('floating');
+    expect(floating).toHaveAttribute('tabindex', '0');
+
+    hasField.value = true;
+    await nextTick();
+    screen.getByTestId('outside').focus();
+    await flushMicrotasks();
+
+    expect(floating).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('records the element that loses the focus to the body, for a later return of the focus', async () => {
+    const removed = shallowRef(false);
+    const second = captureStore();
+    await render(() => (
+      <div>
+        <Popup name="first-" />
+        <Popup name="second-" referenceRemoved={removed.value} onStore={second.onStore} />
+      </div>
+    ));
+    await openPopup(document, 'first-');
+    await waitFor(() => expect(screen.getByTestId('first-one')).toHaveFocus());
+    screen.getByTestId('first-two').focus();
+    screen.getByTestId('first-two').blur();
+    await flushMicrotasks();
+    await fireEvent.click(screen.getByTestId('second-reference'));
+    await waitFor(() => expect(screen.getByTestId('second-one')).toHaveFocus());
+
+    removed.value = true;
+    second.close();
+
+    await waitFor(() => expect(screen.getByTestId('first-two')).toHaveFocus());
+  });
+
+  describe('VUE-47: a focused element that Vue removes', () => {
+    async function renderAndFocusTwo(restoreFocus: ManagerProps['restoreFocus']) {
+      const removed = shallowRef(false);
+      await render(() => (
+        <Popup role="dialog" manager={{ restoreFocus }}>
+          {{
+            default: () => [
+              <input data-testid="one" />,
+              removed.value ? null : <input data-testid="two" />,
+              <input data-testid="three" />,
+            ],
+          }}
+        </Popup>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      screen.getByTestId('two').focus();
+      return removed;
+    }
+
+    it.each<{ name: string; restoreFocus: ManagerProps['restoreFocus']; focused: string }>([
+      { name: 'true', restoreFocus: true, focused: 'three' },
+      { name: 'popup', restoreFocus: 'popup', focused: 'floating' },
+    ])(
+      'moves the focus back into the popup for restoreFocus $name',
+      async ({ restoreFocus, focused }) => {
+        const removed = await renderAndFocusTwo(restoreFocus);
+
+        removed.value = true;
+
+        await waitFor(() => expect(screen.getByTestId(focused)).toHaveFocus());
+      },
+    );
+
+    it('moves the focus back into the popup in a browser that sends no focusout at the removal', async () => {
+      // Firefox and WebKit send no `focusout` when they remove the focused element. This listener
+      // makes Chromium the same.
+      const stop = (event: FocusEvent) => event.stopPropagation();
+      window.addEventListener('focusout', stop, true);
+      onTestFinished(() => window.removeEventListener('focusout', stop, true));
+      const removed = await renderAndFocusTwo(true);
+
+      removed.value = true;
+
+      await waitFor(() => expect(screen.getByTestId('three')).toHaveFocus());
+    });
+
+    it('moves no focus when the focus left the popup before the removal', async () => {
+      const removed = await renderAndFocusTwo(true);
+      screen.getByTestId('two').blur();
+      await flushMicrotasks();
+
+      removed.value = true;
+      await nextTick();
+      await flushMicrotasks();
+
+      expect(document.body).toHaveFocus();
+    });
+  });
+
+  describe('marks outside the popup', () => {
+    async function renderMarkedPopup(manager: ManagerProps = {}) {
+      await render(() => (
+        <div>
+          <div data-testid="outside">
+            <input data-testid="outside-field" />
+          </div>
+          <div data-testid="live" aria-live="polite" />
+          <div data-testid="inert-before" inert />
+          <Popup manager={manager} />
+        </div>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+    }
+
+    it('hides the outside elements of a modal popup, and removes the marks at the close', async () => {
+      await renderMarkedPopup();
+
+      const outside = screen.getByTestId('outside');
+      expect(outside).toHaveAttribute('aria-hidden', 'true');
+      expect(outside).toHaveAttribute('data-vase-ui-inert');
+      expect(screen.getByTestId('reference')).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.getByTestId('live')).not.toHaveAttribute('aria-hidden');
+      expect(screen.getByTestId('floating')).not.toHaveAttribute('aria-hidden');
+      expect(outside).not.toHaveAttribute('inert');
+
+      await fireEvent.click(screen.getByTestId('close'));
+
+      expect(outside).not.toHaveAttribute('aria-hidden');
+      expect(outside).not.toHaveAttribute('data-vase-ui-inert');
+      expect(screen.getByTestId('reference')).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('marks the outside elements of a popup that is not modal, and hides none', async () => {
+      await renderMarkedPopup({ modal: false });
+
+      const outside = screen.getByTestId('outside');
+      expect(outside).toHaveAttribute('data-vase-ui-inert');
+      expect(outside).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('leaves getInsideElements, previousFocusableElement and nextFocusableElement visible', async () => {
+      const previous: TargetRef = shallowRef(null);
+      await render(() => (
+        <div>
+          <div data-testid="outside" />
+          <input data-testid="inside" />
+          <input data-testid="previous" ref={previous} />
+          <input data-testid="next" />
+          <Popup
+            manager={{
+              getInsideElements: () => [screen.getByTestId('inside')],
+              previousFocusableElement: previous,
+              nextFocusableElement: () => screen.getByTestId('next'),
+            }}
+          />
+        </div>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      expect(screen.getByTestId('outside')).toHaveAttribute('aria-hidden', 'true');
+      expect(
+        ['inside', 'previous', 'next'].map((id) =>
+          screen.getByTestId(id).getAttribute('aria-hidden'),
+        ),
+      ).toEqual([null, null, null]);
+    });
+
+    it('leaves a portal in the portal of the popup free of the marks', async () => {
+      await render(() => (
+        <div>
+          <div data-testid="outside" />
+          <Popup portal keepMounted>
+            {{
+              default: () => [
+                <input data-testid="one" />,
+                <FloatingPortal>
+                  <input data-testid="nested" />
+                </FloatingPortal>,
+              ],
+            }}
+          </Popup>
+        </div>
+      ));
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+
+      const nestedPortal = screen.getByTestId('nested').closest('[data-vase-ui-portal]')!;
+      expect(screen.getByTestId('outside').closest('[aria-hidden="true"]')).not.toBe(null);
+      expect(nestedPortal).not.toHaveAttribute('aria-hidden');
+      expect(nestedPortal).not.toHaveAttribute('data-vase-ui-inert');
+    });
+
+    describe('BUG-4678: inert outside a modal popup', () => {
+      it('gives inert to the elements that it hides, and removes it at the close', async () => {
+        await renderMarkedPopup({ outsideElementsInert: true });
+
+        const outside = screen.getByTestId('outside');
+        expect(outside).toHaveAttribute('inert');
+        expect(screen.getByTestId('live')).not.toHaveAttribute('inert');
+        expect(screen.getByTestId('floating')).not.toHaveAttribute('inert');
+        screen.getByTestId('outside-field').focus();
+        expect(screen.getByTestId('one')).toHaveFocus();
+
+        await fireEvent.click(screen.getByTestId('close'));
+
+        expect(outside).not.toHaveAttribute('inert');
+        expect(screen.getByTestId('inert-before')).toHaveAttribute('inert');
+      });
+
+      it.each<{ name: string; manager: ManagerProps }>([
+        {
+          name: 'a popup that is not modal',
+          manager: { modal: false, outsideElementsInert: true },
+        },
+        { name: 'outsideElementsInert is false', manager: {} },
+      ])('gives no inert for $name', async ({ manager }) => {
+        await renderMarkedPopup(manager);
+
+        expect(screen.getByTestId('outside')).not.toHaveAttribute('inert');
+      });
+    });
+
+    describe('BUG-5577: a popup in a container that an earlier popup marked', () => {
+      it('takes the focus, and the container gets the marks back at its close', async () => {
+        const container = document.createElement('div');
+        const containerField = document.createElement('input');
+        container.append(containerField);
+        document.body.append(container);
+        onTestFinished(() => container.remove());
+        await render(() => (
+          <Popup portal manager={{ outsideElementsInert: true }}>
+            {{
+              default: () => [
+                <input data-testid="one" />,
+                <Popup name="child-" portal container={container} manager={{ modal: false }} />,
+              ],
+            }}
+          </Popup>
+        ));
+        await openPopup();
+        await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+        expect(container).toHaveAttribute('inert');
+
+        await openPopup(document, 'child-');
+
+        await waitFor(() => expect(screen.getByTestId('child-one')).toHaveFocus());
+        expect(container).not.toHaveAttribute('inert');
+        expect(container).not.toHaveAttribute('aria-hidden');
+        expect(containerField).toHaveAttribute('inert');
+
+        await fireEvent.click(screen.getByTestId('child-close'));
+
+        expect(container).toHaveAttribute('inert');
+        expect(containerField).not.toHaveAttribute('inert');
+      });
+    });
+
+    it('removes the marks while KeepAlive holds the popup, and puts them back', async () => {
+      const shown = shallowRef(true);
+      const Page = defineComponent({
+        setup: () => () => (
+          <Popup portal role="dialog">
+            {{ default: () => <input data-testid="one" /> }}
+          </Popup>
+        ),
+      });
+      await render(() => (
+        <div>
+          <input data-testid="outside" />
+          <KeepAlive>{shown.value ? <Page /> : null}</KeepAlive>
+        </div>
+      ));
+      // A focus guard has `aria-hidden` of its own.
+      const marks = () => [
+        document.querySelectorAll('[aria-hidden="true"]:not([data-vase-ui-focus-guard])').length,
+        document.querySelectorAll('[data-vase-ui-inert]').length,
+      ];
+      await openPopup();
+      await waitFor(() => expect(screen.getByTestId('one')).toHaveFocus());
+      const marksWhileOpen = marks();
+      expect(screen.getByTestId('outside').closest('[aria-hidden="true"]')).not.toBe(null);
+
+      shown.value = false;
+      await nextTick();
+      expect(marks()).toEqual([0, 0]);
+
+      shown.value = true;
+      await nextTick();
+      expect(marks()).toEqual(marksWhileOpen);
+    });
+  });
+
   it('releases its document listeners while KeepAlive holds the popup, and takes them back', async () => {
     const added = vi.spyOn(document, 'addEventListener');
     const removed = vi.spyOn(document, 'removeEventListener');
@@ -1565,8 +2057,8 @@ describe('FloatingFocusManager', () => {
       added.mock.calls.filter(([name]) => name === type).length -
       removed.mock.calls.filter(([name]) => name === type).length;
     const before = { keydown: count('keydown'), pointerdown: count('pointerdown') };
-    // The Tab stop and the record of the last interaction each hold a `keydown` listener. The
-    // record holds the `pointerdown` listener.
+    // The Tab stop and the record of the pointer state each hold a `keydown` listener. The record
+    // holds the `pointerdown` listener.
     const listeners = () => ({
       keydown: count('keydown') - before.keydown,
       pointerdown: count('pointerdown') - before.pointerdown,
