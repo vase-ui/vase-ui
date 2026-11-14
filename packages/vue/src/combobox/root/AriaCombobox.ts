@@ -45,7 +45,6 @@ import {
 } from '../../internals/itemEquality';
 import { useLabelableId } from '../../internals/labelable-provider';
 import { NOOP } from '../../internals/noop';
-import type { VaseUIEvent } from '../../internals/types';
 import { REASONS } from '../../internals/reasons';
 import {
   flattenLeafItems,
@@ -54,6 +53,7 @@ import {
   stringifyAsValue,
 } from '../../internals/resolveValueLabel';
 import type { Group } from '../../internals/resolveValueLabel';
+import type { VaseUIEvent } from '../../internals/types';
 import { useFormReset } from '../../internals/useFormReset';
 import { useValueChanged } from '../../internals/useValueChanged';
 import { mergeProps } from '../../merge-props';
@@ -954,7 +954,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
           queryChangedAfterOpen.value = true;
         }
         // Defer index updates until after the filtered items have been derived to ensure
-        // `onItemHighlighted` receives the latest item.
+        // `itemHighlighted` receives the latest item.
         pendingQueryHighlight = { hasQuery };
 
         // Virtualized lists own their scroller. Reset regular lists directly so a stale

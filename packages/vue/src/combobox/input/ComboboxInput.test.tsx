@@ -267,7 +267,7 @@ describe('<Combobox.Input />', () => {
       return screen.getByRole<HTMLInputElement>('combobox');
     }
 
-    async function type(text: string, inputType: string | undefined = 'insertText') {
+    async function type(text: string, inputType = 'insertText') {
       await fireEvent.input(getInput(), { target: { value: text }, inputType });
       await flushMicrotasks();
     }
@@ -288,7 +288,7 @@ describe('<Combobox.Input />', () => {
 
       await fireEvent.compositionStart(getInput());
       // The composed text opens the popup, and the input renders for the new open state.
-      await type('ma', undefined);
+      await type('ma', 'insertCompositionText');
 
       expect(handleOpenChange).toHaveBeenCalledTimes(1);
       expect(getInput()).toHaveAttribute('aria-expanded', 'true');
@@ -305,10 +305,10 @@ describe('<Combobox.Input />', () => {
       );
 
       await fireEvent.compositionStart(getInput());
-      await type('ma', undefined);
+      await type('ma', 'insertCompositionText');
       await fireEvent.compositionEnd(getInput());
       // WebKit sends the last `input` event of a composition after `compositionend`.
-      await type('ma', undefined);
+      await type('ma', 'insertCompositionText');
 
       expect(handleInputValueChange).toHaveBeenCalledTimes(1);
       expect(handleInputValueChange.mock.lastCall?.[0]).toBe('ma');
@@ -325,7 +325,7 @@ describe('<Combobox.Input />', () => {
       ));
 
       await fireEvent.compositionStart(getInput());
-      await type('ma', undefined);
+      await type('ma', 'insertCompositionText');
       value.value = 'Malta';
       await flushMicrotasks();
 
@@ -359,7 +359,9 @@ describe('<Combobox.Input />', () => {
         </Combobox.Root>,
       );
 
-      await type('Osl');
+      // Text with no `inputType`, as an autofill gives, does not open the popup. No render of the
+      // input then follows.
+      await type('Osl', '');
 
       expect(getInput().value).toBe('Oslo');
     });
