@@ -66,6 +66,7 @@ export function getMenuFilterKeyAction(
   } = context;
   const { key } = event;
   // Enter that commits an IME composition belongs to the input, not the list.
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- Base UI reads `which` to find the key of an IME composition.
   if (event.which === 229) {
     return 'ignore';
   }
@@ -203,11 +204,13 @@ export function useMenuFilterKeyDown(context: MenuRootContext, hasValue: () => b
         // it. Its propagation reaches the popup, which closes a submenu.
         stopEvent(event);
         const KeyboardEventConstructor = ownerWindow(activeItem).KeyboardEvent;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The action `submenu` comes only when an item is highlighted.
         activeItem!.dispatchEvent(new KeyboardEventConstructor(event.type, event));
         break;
       }
       case 'activate':
         event.preventDefault();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The action `activate` comes only when an item is highlighted.
         dispatchClickWithModifiers(activeItem!, event);
         break;
       case 'block':
@@ -224,7 +227,7 @@ export function useMenuFilterKeyDown(context: MenuRootContext, hasValue: () => b
         }
         break;
       }
-      default:
+      case 'ignore':
         break;
     }
   };

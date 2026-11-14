@@ -5,6 +5,7 @@ import type { MenuFilterKeyAction } from './useMenuFilterKeyDown';
 function key(value: string, init: Partial<KeyboardEvent> = {}) {
   return {
     key: value,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- The code under test reads `which`.
     which: 0,
     shiftKey: false,
     ctrlKey: false,

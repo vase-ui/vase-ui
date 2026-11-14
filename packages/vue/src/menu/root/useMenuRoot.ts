@@ -525,8 +525,8 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return rest;
   }
 
-  let previousFloating: Record<string, unknown> | undefined;
-  let previousPopupProps: ReturnType<typeof mergeProps<'div'>> | undefined;
+  let previousPopup:
+    { floating: Record<string, unknown>; props: ReturnType<typeof mergeProps<'div'>> } | undefined;
 
   // Under virtual focus the input holds `aria-activedescendant`, so the popup does not need it. The
   // props of the popup then stay one object while the highlight moves. A new object renders the
@@ -534,21 +534,19 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   function getPopupProps() {
     const { 'aria-activedescendant': _activeDescendant, ...floating } = listNavigation.value
       .floating as Record<string, unknown>;
-    if (
-      previousFloating === undefined ||
-      Object.keys(floating).length !== Object.keys(previousFloating).length ||
-      Object.entries(floating).some(([key, value]) => previousFloating![key] !== value)
-    ) {
-      previousFloating = floating;
-      previousPopupProps = mergeProps(
-        FOCUSABLE_POPUP_PROPS,
-        popupListeners,
-        typeahead.floating,
+    if (previousPopup === undefined || !isShallowEqual(previousPopup.floating, floating)) {
+      previousPopup = {
         floating,
-        dismiss.floating,
-      );
+        props: mergeProps(
+          FOCUSABLE_POPUP_PROPS,
+          popupListeners,
+          typeahead.floating,
+          floating,
+          dismiss.floating,
+        ),
+      };
     }
-    return previousPopupProps!;
+    return previousPopup.props;
   }
 
   usePopupInteractionProps(store, () => ({
@@ -602,4 +600,9 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   }
 
   return { payload, actions, context };
+}
+
+function isShallowEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
 }

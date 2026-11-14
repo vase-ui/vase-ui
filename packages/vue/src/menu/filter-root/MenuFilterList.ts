@@ -44,6 +44,7 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
     // focus, and the keys of a nested popup that is not teleported bubble from outside the list.
     if (owner == null || ownerFocused || fromNestedPopup) {
       if (
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Base UI reads `which` to find the key of an IME composition.
         event.which !== 229 &&
         !event.shiftKey &&
         !event.ctrlKey &&
@@ -100,13 +101,12 @@ export function useFilterList(params: MenuFilterListParameters): MenuFilterList 
   // the highlight against the settled registry only after the items change has been resolved here.
   function handleItemMapChange() {
     const items = [...listRef.value];
+    const previous = previousItems;
     const changed =
-      previousItems === null ||
-      previousItems.length !== items.length ||
-      items.some((item, index) => item !== previousItems![index]);
+      previous?.length !== items.length || items.some((item, index) => item !== previous?.[index]);
 
-    if (changed && previousItems !== null) {
-      onItemsChange(previousItems);
+    if (changed && previous !== null) {
+      onItemsChange(previous);
     }
     previousItems = items;
   }
