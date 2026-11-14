@@ -1462,8 +1462,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const selectedIndex = computed(() => store.select('selectedIndex'));
 
   // The dependencies of each block, from its last run.
-  const lastHighlightDependencies = new Map<string, ReadonlyArray<unknown>>();
-  function haveChanged(block: string, dependencies: ReadonlyArray<unknown>) {
+  const lastHighlightDependencies = new Map<string, readonly unknown[]>();
+  function haveChanged(block: string, dependencies: readonly unknown[]) {
     const last = lastHighlightDependencies.get(block);
     lastHighlightDependencies.set(block, dependencies);
     return !last || dependencies.some((dependency, i) => !Object.is(dependency, last[i]));
