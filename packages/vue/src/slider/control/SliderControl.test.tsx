@@ -1,5 +1,6 @@
 import { expect, describe, it, onTestFinished, vi } from 'vitest';
 import { shallowRef } from 'vue';
+import { Slider } from '@vase-ui/vue/slider';
 import type { HTMLProps } from '@vase-ui/vue/types';
 import {
   createRenderer,
@@ -10,7 +11,6 @@ import {
   takeReportedMessages,
 } from '#test-utils';
 import { ownerDocument } from '../../common/owner';
-import * as Slider from '../index.parts';
 
 // The mock calls through, so that a case can count the reads of the document.
 vi.mock('../../common/owner', async () => {

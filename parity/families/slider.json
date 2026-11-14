@@ -6,21 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/slider/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Slider. It exports the parts, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/indicator/SliderIndicatorDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Slider.Indicator`."
-    },
-    {
       "upstream": "packages/react/src/slider/label/SliderLabel.tsx",
       "kind": "waits-on",
       "reason": "Vase UI does not have `Slider.Label`."
@@ -29,16 +14,6 @@
       "upstream": "packages/react/src/slider/thumb/prehydrationScript.template.js",
       "kind": "not-applicable",
       "reason": "Base UI turns this file into `prehydrationScript.min.ts` with a minifier. No component imports the template. Vase UI has no minifier."
-    },
-    {
-      "upstream": "packages/react/src/slider/track/SliderTrack.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Slider.Track`."
-    },
-    {
-      "upstream": "packages/react/src/slider/track/SliderTrackDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Slider.Track`."
     },
     {
       "upstream": "packages/react/src/slider/utils/test-utils.ts",
@@ -143,12 +118,6 @@
       "reason": "The case uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/slider/indicator/SliderIndicator.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "Each case of the file renders `Slider.Indicator`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/slider/label/SliderLabel.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
@@ -160,7 +129,7 @@
       "title": "warns when max is not greater than min",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -168,7 +137,7 @@
       "title": "does not link Slider.Label before hydration",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Label`, which Vase UI does not have. `Slider.Label` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Label`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -176,14 +145,14 @@
       "title": "should not break when initial value is out of range",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "ARIA attributes"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -191,7 +160,7 @@
       "title": "should handle RTL",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -199,7 +168,7 @@
       "title": "should render data-disabled on all subcomponents",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -207,7 +176,7 @@
       "title": "explicitly blurs the focused thumb when disabled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -215,7 +184,7 @@
       "title": "should not respond to drag events after becoming disabled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -223,7 +192,7 @@
       "title": "should not respond to drag events if disabled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -231,7 +200,7 @@
       "title": "does not drag a thumb disabled via the `disabled` prop",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/utils/test-utils.ts",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `utils/test-utils.ts` comes last, so the row names its file."
+      "reason": "The case uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -239,7 +208,7 @@
       "title": "does not drag a disabled thumb with touch events",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/utils/test-utils.ts",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `utils/test-utils.ts` comes last, so the row names its file."
+      "reason": "The case uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -247,7 +216,7 @@
       "title": "does not change a single disabled thumb when pressing the track",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/utils/test-utils.ts",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `utils/test-utils.ts` comes last, so the row names its file."
+      "reason": "The case uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -255,35 +224,35 @@
       "title": "does not select a disabled thumb when pressing the track",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/utils/test-utils.ts",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `utils/test-utils.ts` comes last, so the row names its file."
+      "reason": "The case uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: orientation"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: step"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: max"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: min"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -291,7 +260,7 @@
       "title": "should enforce a minimum difference between range slider values",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -347,7 +316,7 @@
       "title": "does not commit when keyboard interaction leaves a range value unchanged",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -363,7 +332,7 @@
       "title": "does not commit a canceled track press",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -371,7 +340,7 @@
       "title": "does not commit a canceled drag",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -379,7 +348,7 @@
       "title": "commits the last applied value when a later move is canceled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -387,49 +356,42 @@
       "title": "commits the last applied range value when a later move is canceled",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "events"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "dragging state"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: onValueChange"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "keyboard interactions"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "Each case of the block renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: format"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
       "describe": ["<Slider.Root />", "prop: locale"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -437,15 +399,7 @@
       "title": "clears external errors on change",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "The case renders `Slider.Track`, `Slider.Indicator` and `Slider.Value`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
-      "describe": ["<Slider.Root />", "Field", "prop: validate"],
-      "title": "does not call validate on change when validationMode is omitted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "The case renders `Slider.Track`, which Vase UI does not have."
+      "reason": "The case renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -469,7 +423,7 @@
       "title": "Slider.Label does not focus a thumb on click for range sliders",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Label`, which Vase UI does not have. `Slider.Label` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Label`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -477,7 +431,7 @@
       "title": "does not set aria-labelledby when getAriaLabel is provided",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Label`, which Vase UI does not have. `Slider.Label` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Label`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/root/SliderRoot.test.tsx",
@@ -485,7 +439,7 @@
       "title": "updates Slider.Label linkage when root id changes",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Label`, which Vase UI does not have. `Slider.Label` comes last, so the row names its file."
+      "reason": "The case renders `Slider.Label`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
@@ -497,105 +451,17 @@
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "recomputes inset positions when the slider becomes visible (strict: $strict)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "recomputes range inset positions when the slider becomes visible (strict: $strict)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "recomputes inset positions when the control resizes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "The case renders `Slider.Track`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "recomputes inset positions when the value changes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "The case renders `Slider.Track`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "hides the thumb when min and max become equal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "The case renders `Slider.Track`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "moves the indicator end to a thumb that becomes the last thumb ($name)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "moves the indicator start to a thumb that becomes the first thumb",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "prop: thumbAlignment"],
-      "title": "disconnects its ResizeObserver when the slider unmounts during the mount measurement",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "The case renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": [
-        "<Slider.Thumb />",
-        "prop: thumbAlignment",
-        "updates inset positions before the next paint"
-      ],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "Each case of the block renders `Slider.Track`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
-      "describe": ["<Slider.Thumb />", "positioning styles"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/indicator/SliderIndicator.tsx",
-      "reason": "Each case of the block renders `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. The row names the file of `Slider.Indicator`."
-    },
-    {
-      "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "describe": ["<Slider.Thumb />", "positioning styles", "positions the thumb when dragged"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/utils/test-utils.ts",
-      "reason": "Each case of the block renders `Slider.Track` and `Slider.Indicator` and uses a helper of `utils/test-utils.ts`, which Vase UI does not have. `utils/test-utils.ts` comes last, so the row names its file."
+      "reason": "Each case of the block uses a helper of `utils/test-utils.ts`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/thumb/SliderThumb.test.tsx",
       "describe": ["<Slider.Thumb />", "server-side rendering"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
-      "reason": "Each case of the block renders `Slider.Value`, `Slider.Track` and `Slider.Indicator`, which Vase UI does not have. `Slider.Value` comes last, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/slider/track/SliderTrack.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/track/SliderTrack.tsx",
-      "reason": "Each case of the file renders `Slider.Track`, which Vase UI does not have."
+      "reason": "Each case of the block renders `Slider.Value`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/slider/value/SliderValue.test.tsx",
@@ -605,97 +471,77 @@
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Label",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Label`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/slider/label/SliderLabel.tsx",
+      "reason": "Vase UI does not have `Slider.Label`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "Value",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Value`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Control",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Control`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Track",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Track`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Indicator",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Indicator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "Thumb",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports `Slider.Thumb`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderControlDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Control`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderIndicatorDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Indicator`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderRootDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderThumbDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Thumb`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
-      "entry": "SliderTrackDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Track`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/slider/value/SliderValue.tsx",
+      "reason": "Vase UI does not have `Slider.Value`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
       "entry": "SliderValueDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/slider/index.ts",
-      "reason": "The entry point of Slider exports the attribute names of `Slider.Value`. Vase UI does not have that entry point."
+      "waitsOn": "packages/react/src/slider/value/SliderValueDataAttributes.ts",
+      "reason": "Vase UI does not have `Slider.Value`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Thumb",
+      "prop": "aria-valuetext",
+      "kind": "not-applicable",
+      "reason": "The part declares this prop as `ariaValuetext`, because Vue gives the attribute `aria-valuetext` to that prop. The prop has a row in `surfaceAdditions`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/slider/types.md",
+      "entry": "Thumb",
+      "prop": "tabIndex",
+      "kind": "not-applicable",
+      "reason": "The part declares this prop as `tabindex`, the name of the attribute in the types of Vue. The prop has a row in `surfaceAdditions`."
     }
   ],
-  "surfaceAdditions": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Root",
+      "prop": "id",
+      "reason": "The part reads `id` to make the id of `Slider.Label`, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Root",
+      "prop": "ariaLabelledby",
+      "reason": "The part reads `aria-labelledby` to name itself and the thumbs, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the root, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Thumb",
+      "prop": "ariaLabel",
+      "reason": "The part gives `aria-label` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Thumb",
+      "prop": "ariaLabelledby",
+      "reason": "The part gives `aria-labelledby` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Thumb",
+      "prop": "ariaDescribedby",
+      "reason": "The part gives `aria-describedby` to its input and not to its element, and `$attrs` is not reactive, so it is a declared prop. Base UI reads it from the native attributes of the thumb, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Thumb",
+      "prop": "ariaValuetext",
+      "reason": "The prop is `aria-valuetext` of Base UI. Vue gives the attribute `aria-valuetext` to the prop `ariaValuetext`."
+    },
+    {
+      "entry": "Thumb",
+      "prop": "tabindex",
+      "reason": "The prop is `tabIndex` of Base UI. A key in the types of Vue has the name of the attribute, `tabindex`."
+    }
+  ],
   "returnTypeDifferences": [],
   "notApplicableCommits": []
 }
