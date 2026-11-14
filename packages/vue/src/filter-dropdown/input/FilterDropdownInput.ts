@@ -219,6 +219,10 @@ export function useFilterDropdownInput(
  * Vue listener received the event first. A popup can move the focus to a new input in that
  * millisecond.
  *
+ * Chromium sends `focusout` when it removes a focused input. Vue calls the function ref with `null`
+ * before the removal, so that event reaches no listener and keeps the focus ring. React also drops
+ * a focus event in the mutation phase of its commit.
+ *
  * Vue attaches the listeners that the input has at its mount before it calls the function ref. A
  * listener of the consumer then runs first, and its `event.preventVaseUIHandler()` stops the
  * listener of the part.
