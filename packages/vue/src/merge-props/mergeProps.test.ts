@@ -897,33 +897,54 @@ describe('VUE-82: the scope of preventVaseUIHandler()', () => {
     return { parent, child };
   }
 
-  it('runs the handlers of a parent element after a call in a child element', () => {
-    const log: string[] = [];
-    const parentProps = mergeProps<'div'>(
-      { onClick: () => log.push('parent part') },
-      { onClick: () => log.push('parent consumer') },
-    );
-    const childProps = mergeProps<'button'>(
-      { onClick: () => log.push('child part') },
-      {
-        onClick(event) {
-          log.push('child consumer');
-          event.preventVaseUIHandler();
+  it.each([
+    {
+      name: 'a call in the child',
+      parentCalls: false,
+      expected: ['child consumer', 'parent consumer', 'parent part'],
+    },
+    {
+      name: 'a call in the child and the parent',
+      parentCalls: true,
+      expected: ['child consumer', 'parent consumer'],
+    },
+  ])(
+    'skips the part handler of a parent element only for a call in the parent: $name',
+    ({ parentCalls, expected }) => {
+      const log: string[] = [];
+      const parentProps = mergeProps<'div'>(
+        { onClick: () => log.push('parent part') },
+        {
+          onClick(event) {
+            log.push('parent consumer');
+            if (parentCalls) {
+              event.preventVaseUIHandler();
+            }
+          },
         },
-      },
-    );
-    const { parent, child } = appendParentAndChild();
+      );
+      const childProps = mergeProps<'button'>(
+        { onClick: () => log.push('child part') },
+        {
+          onClick(event) {
+            log.push('child consumer');
+            event.preventVaseUIHandler();
+          },
+        },
+      );
+      const { parent, child } = appendParentAndChild();
 
-    try {
-      parent.addEventListener('click', (event) => parentProps.onClick?.(event));
-      child.addEventListener('click', (event) => childProps.onClick?.(event));
-      child.click();
-    } finally {
-      parent.remove();
-    }
+      try {
+        parent.addEventListener('click', (event) => parentProps.onClick?.(event));
+        child.addEventListener('click', (event) => childProps.onClick?.(event));
+        child.click();
+      } finally {
+        parent.remove();
+      }
 
-    expect(log).toEqual(['child consumer', 'parent consumer', 'parent part']);
-  });
+      expect(log).toEqual(expected);
+    },
+  );
 
   it('runs the bubble handlers after a call in a capture handler of a parent', () => {
     const log: string[] = [];

@@ -267,7 +267,8 @@ function mergeEventHandlers(ourHandlers: HandlerValue, theirHandlers: HandlerVal
       makeEventPreventable(event as VaseUIEvent<typeof event>);
 
       // The DOM gives the same event object to each listener of a dispatch, so the flag can come
-      // from a listener of another element. Only a call during `theirHandler` stops `ourHandler`.
+      // from another listener or from an earlier call. Only a call during `theirHandler` stops
+      // `ourHandler`.
       const callsBefore = countPreventCalls(event);
       const result = theirHandler(...args);
 

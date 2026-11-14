@@ -406,9 +406,9 @@ Rules:
 - `class` values are joined, rightmost first.
 - `style` values are merged, and the rightmost wins.
 - `on[A-Z]…` handlers run from right to left. An array of handlers is made flat.
-- A merged handler skips the handlers to its left only when a handler to its right calls `event.preventVaseUIHandler()` during that call. A count of the calls for each event decides. A call in a listener of another element, or in the other phase of the event, thus does not skip them (`VUE-82`).
-- The DOM gives one event object to each listener of a dispatch. `event.vaseUIHandlerPrevented` is thus `true` after each call for the event, in each element and in each phase, for the rest of the dispatch. Do not use the flag in a handler of a props function to decide on the earlier handlers.
-- A part that handles the presses or the keys of its child parts reads the flag. It skips an event that a listener of a child part stopped. `Combobox.Chips` and `Combobox.InputGroup` do this for a press. `Menu.Popup` and `Select.Popup` do this for a key: their own `keydown` handler is to the right of the list navigation, and it calls `event.preventVaseUIHandler()` when the flag is `true`.
+- A merged handler skips the handlers to its left only when a handler to its right calls `event.preventVaseUIHandler()` during the call of the merged handler. A count of the calls for each event decides. A call in a listener of another element, in the other phase of the event or before the merged handler thus does not skip them (`VUE-82`).
+- The DOM gives one event object to each listener of a dispatch. `event.vaseUIHandlerPrevented` is thus `true` from the first call to the end of the dispatch, in each element and in each phase. Do not use the flag in a handler of a props function to decide on the earlier handlers.
+- `Combobox.Chips` and `Combobox.InputGroup` read the flag, and they do not handle a press that a listener of a child part stopped. `Menu.Popup` and `Select.Popup` read it for a key: their own `keydown` handler is to the right of the list navigation, and it calls `event.preventVaseUIHandler()` when the flag is `true`.
 - A composite root does not read the flag, so a call in a listener of an item does not stop its navigation.
 - A falsy handler value in a later set keeps the handler of an earlier set. Vue's own `mergeProps` does the same for `on` keys.
 - Code that calls a handler from a props set must accept a function, an array and a falsy value. A consumer can give each of them. The call `false?.()` throws.
