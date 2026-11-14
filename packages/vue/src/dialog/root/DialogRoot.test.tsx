@@ -438,6 +438,7 @@ describe('<Dialog.Root />', () => {
     const trigger1Controls = trigger1.getAttribute('aria-controls');
 
     expect(trigger1Controls).toBe(popup.getAttribute('id'));
+    await waitForLaterMillisecond();
 
     await user.click(screen.getByRole('button', { name: 'Mount trigger 2' }));
 
