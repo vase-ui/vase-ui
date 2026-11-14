@@ -7,7 +7,7 @@ import type { ExceptionRow, FamilyExtract, FamilyFile } from './parityFiles.ts';
 import { vaseFiles } from './paths.ts';
 import { listVaseFiles } from './repository.ts';
 import { readTypesMd } from './typesMd.ts';
-import { createVaseProject, readEmitDescriptions } from './vaseSurface.ts';
+import { createVaseProject, readEmits } from './vaseSurface.ts';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures');
 const SAMPLE = join(FIXTURES, 'packages/vue/src/sample');
@@ -503,7 +503,7 @@ test('the description of an event is the text of its JSDoc', () => {
   );
 });
 
-test('the type of a prop and the arguments of an event are the type texts of vue-component-meta', () => {
+test('the type of a prop is the type text of vue-component-meta, and the arguments of an event are the text of defineEmits', () => {
   const entry = join(SAMPLE, 'index.ts');
   const [popup] = project.findExports(entry, 'Popup');
   const [root] = project.findExports(entry, 'Root');
@@ -516,6 +516,25 @@ test('the type of a prop and the arguments of an event are the type texts of vue
     '[open: boolean, details: SampleRootChangeEventDetails]',
   );
   assert.equal(emits?.get('update:open')?.type, '[open: boolean]');
+});
+
+test('the arguments of an event keep the name of an alias that the checker resolves to an anonymous type', () => {
+  // A conditional alias with one literal, such as `RadioGroupChangeEventDetails`, resolves to an
+  // intersection with no name. vue-component-meta then writes its properties.
+  const emits = withEdits(
+    ROOT,
+    [
+      [
+        'export interface SampleRootChangeEventDetails {\n  reason: SampleRootChangeEventReason;\n  event: Event;\n  cancel: () => void;\n  isCanceled: boolean;\n}',
+        "type ChangeEventDetails<Reason extends string> = Reason extends string\n  ? { reason: Reason; event: Event; cancel: () => void; isCanceled: boolean } & {}\n  : never;\n\nexport type SampleRootChangeEventDetails = ChangeEventDetails<'none'>;",
+      ],
+    ],
+    () => project.readComponent(project.findExports(join(SAMPLE, 'index.ts'), 'Root')[0])?.emits,
+  );
+  assert.equal(
+    emits?.get('openChange')?.type,
+    '[open: boolean, details: SampleRootChangeEventDetails]',
+  );
 });
 
 test('the slot props of a slot are the properties of its first parameter', () => {
@@ -590,12 +609,15 @@ test('a constant has its JSDoc and the text of its @type tag', () => {
   });
 });
 
-test('readEmitDescriptions reads the property form and the call signature form', () => {
+test('readEmits reads the arguments as the source writes them and the JSDoc, in the property form and the call signature form', () => {
   const source = [
     '<script setup lang="ts">',
     'defineEmits<{',
     '  /** From a property. */',
-    '  change: [value: string];',
+    '  change: [',
+    '    value: string,',
+    '    details: ChangeDetails, // one line',
+    '  ];',
     '  /** From a call signature. */',
     "  (event: 'update', value: string): void;",
     '  noDocs: [];',
@@ -603,11 +625,11 @@ test('readEmitDescriptions reads the property form and the call signature form',
     '</script>',
   ].join('\n');
   assert.deepEqual(
-    [...readEmitDescriptions(source, 'x.vue')],
+    [...readEmits(source, 'x.vue')],
     [
-      ['change', 'From a property.'],
-      ['update', 'From a call signature.'],
-      ['noDocs', ''],
+      ['change', { type: '[value: string, details: ChangeDetails]', description: 'From a property.' }],
+      ['update', { type: '[value: string]', description: 'From a call signature.' }],
+      ['noDocs', { type: '[]', description: '' }],
     ],
   );
 });

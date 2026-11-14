@@ -92,6 +92,23 @@ test('a prop has its type, documented default, required mark and description, an
   assert.equal(props.find(({ name }) => name === 'keepMounted')?.default, null);
 });
 
+test('a prop with the tag @ignore is not in the reference', () => {
+  const { props } = withTexts(
+    [
+      [
+        POPUP,
+        '/** Whether the popup is disabled. */',
+        '/**\n   * Whether the popup is disabled.\n   * @ignore\n   */',
+      ],
+    ],
+    () => part('Sample.Popup'),
+  );
+  assert.equal(
+    props.some(({ name }) => name === 'disabled'),
+    false,
+  );
+});
+
 test('an event has its arguments and the text of its JSDoc', () => {
   assert.deepEqual(part('Sample.Root').events, [
     {
@@ -373,6 +390,19 @@ test('each family page has an API reference with one part, function or type or m
       `The API reference of ${family} has no part, function or type.`,
     );
   }
+});
+
+test('each prop and each event of each family page has a type, and each event has a description', () => {
+  const missing = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).flatMap(({ family }) =>
+    read(family).parts.flatMap((apiPart) => [
+      ...apiPart.props.flatMap(({ name, type }) => (type ? [] : [`${apiPart.name} prop ${name}: type`])),
+      ...apiPart.events.flatMap(({ name, type, description }) => [
+        ...(type ? [] : [`${apiPart.name} event ${name}: type`]),
+        ...(description ? [] : [`${apiPart.name} event ${name}: description`]),
+      ]),
+    ]),
+  );
+  assert.deepEqual(missing, []);
 });
 
 test('the reference of merge-props has mergeProps with a and b required, and c, d and e optional', () => {

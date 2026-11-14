@@ -8,9 +8,11 @@ export interface PropSurface {
   default: string | null;
   description: string;
   type: string;
+  /** Whether the JSDoc has the tag `@ignore`. The API reference then leaves the prop out, as the Base UI page does. */
+  ignored: boolean;
 }
 
-/** An emit or an exposed member. For an emit, `type` is the list of its arguments. */
+/** An emit or an exposed member. For an emit, `type` is the list of its arguments, as `defineEmits` writes them. */
 export interface MemberSurface {
   type: string;
   description: string;
@@ -130,12 +132,17 @@ function jsDocText(node: ts.Node): string {
     .join(' ');
 }
 
-/** vue-component-meta gives an empty description for an event, so the JSDoc of `defineEmits` gives it. */
-export function readEmitDescriptions(source: string, file: string): Map<string, string> {
+/**
+ * The events that the type literal of `defineEmits` declares, with the arguments as the source writes
+ * them and the JSDoc. vue-component-meta gives an empty description. Its type text can lose the name
+ * of an alias, such as `RadioGroupChangeEventDetails`, or give the name of another alias of the same
+ * type, such as `AriaCombobox.ChangeEventDetails`.
+ */
+export function readEmits(source: string, file: string): Map<string, MemberSurface> {
   const setup = parse(source, { filename: file }).descriptor.scriptSetup;
-  const descriptions = new Map<string, string>();
+  const emits = new Map<string, MemberSurface>();
   if (!setup) {
-    return descriptions;
+    return emits;
   }
   const sourceFile = ts.createSourceFile(
     'setup.ts',
@@ -144,6 +151,9 @@ export function readEmitDescriptions(source: string, file: string): Map<string, 
     true,
     ts.ScriptKind.TS,
   );
+  const printer = ts.createPrinter({ removeComments: true });
+  const print = (node: ts.Node): string =>
+    printer.printNode(ts.EmitHint.Unspecified, node, sourceFile);
   const visit = (node: ts.Node): void => {
     if (
       ts.isCallExpression(node) &&
@@ -152,24 +162,26 @@ export function readEmitDescriptions(source: string, file: string): Map<string, 
     ) {
       const type = node.typeArguments?.[0];
       for (const member of type && ts.isTypeLiteralNode(type) ? type.members : []) {
-        let name: string | undefined;
-        if (ts.isPropertySignature(member)) {
-          name = member.name.getText(sourceFile).replace(/^['"]|['"]$/g, '');
+        if (ts.isPropertySignature(member) && member.type && ts.isTupleTypeNode(member.type)) {
+          emits.set(member.name.getText(sourceFile).replace(/^['"]|['"]$/g, ''), {
+            type: `[${member.type.elements.map(print).join(', ')}]`,
+            description: jsDocText(member),
+          });
         } else if (ts.isCallSignatureDeclaration(member)) {
-          const first = member.parameters[0]?.type;
-          if (first && ts.isLiteralTypeNode(first) && ts.isStringLiteral(first.literal)) {
-            name = first.literal.text;
+          const [first, ...rest] = member.parameters;
+          if (first?.type && ts.isLiteralTypeNode(first.type) && ts.isStringLiteral(first.type.literal)) {
+            emits.set(first.type.literal.text, {
+              type: `[${rest.map(print).join(', ')}]`,
+              description: jsDocText(member),
+            });
           }
-        }
-        if (name !== undefined) {
-          descriptions.set(name, jsDocText(member));
         }
       }
     }
     ts.forEachChild(node, visit);
   };
   visit(sourceFile);
-  return descriptions;
+  return emits;
 }
 
 /** The prop names are the keys that the SFC compiler reports as props. They do not include the native attributes. */
@@ -316,6 +328,42 @@ export function createVaseProject(tsconfig: string): VaseProject {
 
   const readSource = (path: string): string => sources.get(path) ?? readFileSync(path, 'utf8');
 
+  // The props of a component: the `$props` of an instance, or the first parameter of the function
+  // that vue-tsc makes for a generic SFC. vue-component-meta reads them from the same places.
+  const propsTypeOf = (component: ts.Symbol): ts.Type | undefined => {
+    const type = typeChecker().getTypeOfSymbol(resolve(component));
+    for (const signature of type.getConstructSignatures()) {
+      const props = signature.getReturnType().getProperty('$props');
+      if (props) {
+        return typeChecker().getTypeOfSymbol(props);
+      }
+    }
+    const [parameter] = type.getCallSignatures().flatMap((signature) => signature.parameters);
+    return parameter && typeChecker().getTypeOfSymbol(parameter);
+  };
+
+  // The property of the props type is an intersection with the listener type that vue-tsc makes from
+  // the emit. Its type text and its documentation mix both, so the declaration gives them.
+  const declaredProp = (component: ts.Symbol, name: string, file: string): PropSurface => {
+    const declaration = propsTypeOf(component)
+      ?.getProperty(name)
+      ?.declarations?.find(
+        (node): node is ts.PropertySignature =>
+          ts.isPropertySignature(node) && node.name.getText() === name,
+      );
+    const prop = declaration && typeChecker().getSymbolAtLocation(declaration.name);
+    if (!declaration || !prop) {
+      throw new Error(`${file}: the props of the component have no declaration of "${name}".`);
+    }
+    return {
+      required: declaration.questionToken === undefined,
+      default: null,
+      description: documentationOf(prop),
+      type: typeText(typeChecker().getTypeOfSymbol(prop)),
+      ignored: ownTags(prop).some(({ tagName }) => tagName.text === 'ignore'),
+    };
+  };
+
   const project: VaseProject = {
     findExports(entryFile, name) {
       const entry = entrySymbol(entryFile);
@@ -347,8 +395,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
       const source = readSource(file);
       const meta = checker.getComponentMeta(file);
       const documented = new Map(meta.props.map((prop) => [prop.name, prop]));
-      // vue-component-meta leaves out a prop that has the name of the listener of an emit, such as
-      // `onFormSubmit` for the emit `formSubmit`. The SFC compiler lists it.
+      // vue-component-meta leaves out a prop that has the `on` name of an emit, such as `onFormSubmit`
+      // of the emit `formSubmit`. The declaration of such a prop gives its type and its text.
       const listenerProps = new Set(
         meta.events.map(({ name }) => `on${name.charAt(0).toUpperCase()}${name.slice(1)}`),
       );
@@ -361,7 +409,7 @@ export function createVaseProject(tsconfig: string): VaseProject {
               `${file}: the SFC compiler reads the prop "${name}", but vue-component-meta does not list it.`,
             );
           }
-          props.set(name, { required: false, default: null, description: '', type: '' });
+          props.set(name, declaredProp(symbol, name, file));
           continue;
         }
         props.set(name, {
@@ -369,16 +417,17 @@ export function createVaseProject(tsconfig: string): VaseProject {
           default: prop.default ?? null,
           description: prop.description,
           type: prop.type,
+          ignored: prop.tags.some((tag) => tag.name === 'ignore'),
         });
       }
-      const emitDescriptions = readEmitDescriptions(source, file);
+      const declaredEmits = readEmits(source, file);
       return {
         description: documentationOf(resolve(symbol)),
         props,
         emits: new Map(
           meta.events.map(({ name, type }) => [
             name,
-            { type, description: emitDescriptions.get(name) ?? '' },
+            declaredEmits.get(name) ?? { type, description: '' },
           ]),
         ),
         slots: new Map(

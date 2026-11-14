@@ -186,6 +186,10 @@ const emit = defineEmits<{
    * Event handler called when the drawer is opened or closed.
    */
   openChange: [open: boolean, eventDetails: DrawerRootChangeEventDetails];
+  /**
+   * Event handler called after `openChange` with the new value, unless a listener cancels the
+   * change. `v-model:open` uses it.
+   */
   'update:open': [open: boolean];
   /**
    * Event handler called after any animations complete when the drawer is opened or closed.
@@ -198,6 +202,10 @@ const emit = defineEmits<{
     snapPoint: DrawerSnapPoint | null,
     eventDetails: DrawerRootSnapPointChangeEventDetails,
   ];
+  /**
+   * Event handler called after `snapPointChange` with the new value, unless a listener cancels the
+   * change. `v-model:snapPoint` uses it.
+   */
   'update:snapPoint': [snapPoint: DrawerSnapPoint | null];
 }>();
 
