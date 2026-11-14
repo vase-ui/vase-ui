@@ -78,7 +78,7 @@
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render a part that Vase UI does not have, such as `Combobox.Empty`."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render a part that Vase UI does not have, such as `Combobox.Empty`. The calls of `popupConformanceTests` and `popupListConformanceTests` each wait for a change of one case of the shared suite."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
