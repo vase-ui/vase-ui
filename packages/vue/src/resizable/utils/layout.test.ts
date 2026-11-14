@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   adjustLayout,
+  adjustLayoutToSize,
   areConstraintsFeasible,
   areLayoutsEqual,
   getHandleLimits,
   getHandleRange,
   hasSamePanels,
   isCollapsed,
-  adjustLayoutToSize,
   resolveLayout,
   resolveSize,
   toRequestedLayout,
@@ -346,6 +346,41 @@ describe('layout', () => {
 
     expect(adjustLayout(panels, start, 0, 30)).toBe(start);
   });
+
+  // In each case, a sum of sizes with decimals misses a limit by a rounding error of floating point:
+  // 0.2 + (99.8 - 98) is less than 2, and 10.4 + 59.7 is more than 70.1.
+  it.each([
+    {
+      name: 'an expand from a collapsed size of 0.2',
+      panels: [panel('a', { minSize: 2, collapsible: true, collapsedSize: 0.2 }), panel('b')],
+      start: { a: 0.2, b: 99.8 },
+      delta: 1,
+      expected: { a: 2, b: 98 },
+    },
+    {
+      name: 'a collapse that fills a maximum of 70.1',
+      panels: [
+        panel('a', { minSize: 20, collapsible: true }),
+        panel('b', { maxSize: 70.1 }),
+        panel('c'),
+      ],
+      start: { a: 59.7, b: 10.4, c: 29.9 },
+      delta: -100,
+      expected: { a: 0, b: 70.1, c: 29.9 },
+    },
+    {
+      name: 'a step to a least size of 33.29',
+      panels: [panel('a', { minSize: 33.29, collapsible: true }), panel('b')],
+      start: { a: 35.22, b: 64.78 },
+      delta: -1.93,
+      expected: { a: 33.29, b: 66.71 },
+    },
+  ])(
+    'adjust: a rounding error of a sum does not change $name',
+    ({ panels, start, delta, expected }) => {
+      expect(adjustLayout(panels, start, 0, delta, { exact: true })).toEqual(expected);
+    },
+  );
 
   it.each([
     {

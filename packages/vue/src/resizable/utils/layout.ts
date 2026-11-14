@@ -93,7 +93,9 @@ export function resolveSize(
   direction: 'grow' | 'shrink',
   exact = false,
 ): number {
-  if (wanted >= panel.minSize || !panel.collapsible) {
+  // A size that comes from sizes with decimals can have a rounding error. A size that is less than
+  // `minSize` by such an error is at `minSize`.
+  if (!panel.collapsible || wanted >= panel.minSize - EPSILON) {
     return clamp(wanted, panel.minSize, panel.maxSize);
   }
   const distance = panel.minSize - panel.collapsedSize;
@@ -238,7 +240,7 @@ export function adjustLayout(
     }
     // A collapse can take more than the growing panel has room for. The panel then stays at its
     // least size.
-    if (growingStart + taken + (size - shrunk) > growing.maxSize) {
+    if (growingStart + taken + (size - shrunk) > growing.maxSize + EPSILON) {
       shrunk = Math.max(shrunk, panel.minSize);
     }
     shrunk = Math.min(shrunk, size);
@@ -247,7 +249,10 @@ export function adjustLayout(
   }
   const grown = growingStart + taken;
   // The growing panel cannot stop between its collapsed size and its least size.
-  if (taken <= 0 || (grown < growing.minSize && grown !== growing.collapsedSize)) {
+  if (
+    taken <= 0 ||
+    (grown < growing.minSize - EPSILON && Math.abs(grown - growing.collapsedSize) > EPSILON)
+  ) {
     return start;
   }
   next[growing.id] = grown;
