@@ -28,8 +28,8 @@ function haveSameItems(previous: readonly any[], next: readonly any[]) {
 }
 
 // The item is the key of its nodes, as the consumer of Base UI writes `key={item}`. An item then
-// keeps its element when the filter moves it. A key of the index would give the element to another
-// item. A `key` in the slot does not help, because the template puts the slot in a fragment.
+// keeps its element when the filter moves it. A `key` in the slot cannot do this: each item renders
+// in a fragment of its own, and Vue compares the keys of the children of one fragment only.
 </script>
 
 <template>
