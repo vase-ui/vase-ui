@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { KeepAlive, defineComponent, onMounted, reactive, shallowRef, toRaw, watch } from 'vue';
+import {
+  KeepAlive,
+  defineComponent,
+  nextTick,
+  onMounted,
+  reactive,
+  shallowRef,
+  toRaw,
+  watch,
+} from 'vue';
 import type { ComputedRef, ShallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
 import { Form } from '@vase-ui/vue/form';
@@ -392,7 +401,7 @@ describe('<Combobox.Root />', () => {
       await user.click(screen.getByRole('combobox'));
       await screen.findByRole('listbox');
       await user.keyboard('{Escape}');
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
 
       // Calling the action after the automatic unmount must not repeat the completion.
@@ -428,7 +437,7 @@ describe('<Combobox.Root />', () => {
       await setProps({ open: true });
       await screen.findByRole('listbox');
       await setProps({ open: false });
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
     });
 
@@ -451,7 +460,7 @@ describe('<Combobox.Root />', () => {
       expect(onOpenChangeComplete).not.toHaveBeenCalledWith(false);
       await setProps({ open: true });
       await setProps({ open: false });
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(1);
     });
 
@@ -474,7 +483,7 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
       cancel = false;
       await user.click(screen.getByRole('option'));
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
     });
 
     it('keeps the opt-out when a controlled close is applied in a transition', async () => {
@@ -491,8 +500,7 @@ describe('<Combobox.Root />', () => {
               if (!nextOpen) {
                 details.preventUnmountOnClose();
               }
-              // Base UI applies the close in a transition. A timer applies it in a later task.
-              setTimeout(() => {
+              void nextTick(() => {
                 open.value = nextOpen;
               });
             }}
@@ -594,7 +602,7 @@ describe('<Combobox.Root />', () => {
       expect(screen.queryByRole('listbox')).not.toBe(null);
 
       await user.keyboard('{Escape}');
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
       expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
     });
 
@@ -639,7 +647,7 @@ describe('<Combobox.Root />', () => {
 
       optOut = false;
       await user.click(screen.getByRole('option'));
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
       expect(onOpenChangeComplete.mock.calls.filter(([open]) => !open)).toHaveLength(2);
     });
 
@@ -745,8 +753,8 @@ describe('<Combobox.Root />', () => {
       await user.type(input, 'ban');
       await user.keyboard('{ArrowDown}{Enter}');
 
-      expect(screen.queryByRole('dialog')).toBe(null);
-      await waitFor(() => expect(trigger).toHaveFocus());
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('Banana');
 
       await user.click(trigger);
@@ -794,8 +802,8 @@ describe('<Combobox.Root />', () => {
       await user.type(await screen.findByTestId('input'), 'ban');
       await user.keyboard('{Escape}');
 
-      expect(screen.queryByRole('dialog')).toBe(null);
-      await waitFor(() => expect(trigger).toHaveFocus());
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBe(null));
+      expect(trigger).toHaveFocus();
       expect(trigger).toHaveTextContent('Apple');
       expect(onValueChange).not.toHaveBeenCalled();
 
@@ -914,7 +922,9 @@ describe('<Combobox.Root />', () => {
 
     await user.click(screen.getByTestId('pad'));
 
-    expect(screen.queryByRole('listbox')).toBe(null);
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).toBe(null);
+    });
   });
 
   it('does not dismiss when pressing content inside a nested popover', async () => {
@@ -1121,7 +1131,9 @@ describe('<Combobox.Root />', () => {
 
     await user.click(endDismissButton);
 
-    expect(screen.queryByRole('listbox')).toBe(null);
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).toBe(null);
+    });
   });
 
   it('renders an internal dismiss button for the input-outside-popup pattern', async () => {
@@ -1161,7 +1173,9 @@ describe('<Combobox.Root />', () => {
 
     await user.click(startDismissButton);
 
-    expect(screen.queryByRole('listbox')).toBe(null);
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).toBe(null);
+    });
   });
 
   describe('events', () => {

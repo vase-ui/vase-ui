@@ -86,96 +86,6 @@ function readCollection<Item, Value>(collection: ComboboxItemCollection<Item, Va
 describe('Combobox.createItems', () => {
   const { render } = createRenderer();
 
-  describe('lazy normalization', () => {
-    it('does not call the accessors when creating a flat collection', () => {
-      const getValue = vi.fn(getUserId);
-      const getLabel = vi.fn(getUserName);
-
-      Combobox.createItems(users, { getValue, getLabel });
-
-      expect(getValue).not.toHaveBeenCalled();
-      expect(getLabel).not.toHaveBeenCalled();
-    });
-
-    it('does not call the accessors when creating a grouped collection', () => {
-      const getValue = vi.fn(getUserId);
-      const getLabel = vi.fn(getUserName);
-
-      const groups = [{ value: 'Team', items: users }];
-      Combobox.createItems(groups, { getValue, getLabel });
-
-      expect(getValue).not.toHaveBeenCalled();
-      expect(getLabel).not.toHaveBeenCalled();
-    });
-
-    it('only projects the leaf items of the data', async () => {
-      const getValue = vi.fn(getUserId);
-      const getLabel = vi.fn(getUserName);
-      const collection = Combobox.createItems(users, { getValue, getLabel });
-
-      function App() {
-        return (
-          <Combobox.Root items={collection} defaultValue={3} defaultOpen>
-            <Combobox.Input data-testid="input" />
-            <Combobox.List>
-              {{
-                item: ({ item }: { item: User }) => (
-                  <Combobox.Item key={item.id} value={item.id}>
-                    {item.name}
-                  </Combobox.Item>
-                ),
-              }}
-            </Combobox.List>
-          </Combobox.Root>
-        );
-      }
-
-      const { user } = await render(<App />);
-
-      expect(screen.getByTestId('input')).toHaveValue('Carol');
-      expect(new Set(getValue.mock.calls.map(([item]) => item))).toEqual(new Set(users));
-
-      await user.clear(screen.getByTestId('input'));
-      await user.type(screen.getByTestId('input'), 'car');
-
-      expect(screen.getByRole('option', { name: 'Carol' })).not.toBe(null);
-      expect(screen.queryByRole('option', { name: 'Alice' })).toBe(null);
-      expect(new Set(getValue.mock.calls.map(([item]) => item))).toEqual(new Set(users));
-    });
-
-    it('resolves labels only for the values that need them', async () => {
-      const getValue = vi.fn(getUserId);
-      const getLabel = vi.fn(getUserName);
-      const collection = Combobox.createItems(users, { getValue, getLabel });
-
-      function App() {
-        return (
-          <Combobox.Root items={collection} defaultValue={3}>
-            <Combobox.Input data-testid="input" />
-          </Combobox.Root>
-        );
-      }
-
-      await render(<App />);
-
-      expect(screen.getByTestId('input')).toHaveValue('Carol');
-      expect(new Set(getLabel.mock.calls.map(([item]) => item))).toEqual(new Set([users[2]]));
-    });
-  });
-
-  describe('collection functions', () => {
-    const options = { getValue: getUserId, getLabel: getUserName };
-
-    it('keeps undefined data as the absence of items', () => {
-      const collection = readCollection(
-        Combobox.createItems(undefined as User[] | undefined, options),
-      );
-
-      expect(collection.data).toBe(undefined);
-      expect(collection.hasValue(1, defaultItemEquality)).toBe(false);
-    });
-  });
-
   describe('integration', () => {
     it('uses the derived value for selection and resolves the label while closed', async () => {
       const onValueChange = vi.fn();
@@ -302,7 +212,7 @@ describe('Combobox.createItems', () => {
 
       expect(api.saveAssignee).toHaveBeenCalledWith('user-3');
       expect(input).toHaveValue('Carol');
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
 
       await user.click(input);
 
@@ -445,7 +355,7 @@ describe('Combobox.createItems', () => {
       await user.click(screen.getByRole('option', { name: 'Carol' }));
 
       expect(input).toHaveValue('user-3');
-      expect(screen.queryByRole('listbox')).toBe(null);
+      await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
     });
 
     it('keeps nullish entries out of the accessors and out of filtered results', async () => {
@@ -845,8 +755,8 @@ describe('Combobox.createItems', () => {
     });
 
     it('updates a selected label when a stable accessor returns a new result', async () => {
-      // The root calls the accessor in a `computed`, so a plain variable would not make it call the
-      // accessor again.
+      // The root calls the accessor in a `computed`. A change of a plain variable does not make it
+      // call the accessor again.
       const language = shallowRef<'en' | 'es'>('en');
       const items = Combobox.createItems(users, {
         getValue: getUserId,
@@ -1890,6 +1800,83 @@ describe('Combobox.createItems', () => {
     });
   });
 
+  describe('lazy normalization', () => {
+    it('does not call the accessors when creating a flat collection', () => {
+      const getValue = vi.fn(getUserId);
+      const getLabel = vi.fn(getUserName);
+
+      Combobox.createItems(users, { getValue, getLabel });
+
+      expect(getValue).not.toHaveBeenCalled();
+      expect(getLabel).not.toHaveBeenCalled();
+    });
+
+    it('does not call the accessors when creating a grouped collection', () => {
+      const getValue = vi.fn(getUserId);
+      const getLabel = vi.fn(getUserName);
+
+      const groups = [{ value: 'Team', items: users }];
+      Combobox.createItems(groups, { getValue, getLabel });
+
+      expect(getValue).not.toHaveBeenCalled();
+      expect(getLabel).not.toHaveBeenCalled();
+    });
+
+    it('only projects the leaf items of the data', async () => {
+      const getValue = vi.fn(getUserId);
+      const getLabel = vi.fn(getUserName);
+      const collection = Combobox.createItems(users, { getValue, getLabel });
+
+      function App() {
+        return (
+          <Combobox.Root items={collection} defaultValue={3} defaultOpen>
+            <Combobox.Input data-testid="input" />
+            <Combobox.List>
+              {{
+                item: ({ item }: { item: User }) => (
+                  <Combobox.Item key={item.id} value={item.id}>
+                    {item.name}
+                  </Combobox.Item>
+                ),
+              }}
+            </Combobox.List>
+          </Combobox.Root>
+        );
+      }
+
+      const { user } = await render(<App />);
+
+      expect(screen.getByTestId('input')).toHaveValue('Carol');
+      expect(new Set(getValue.mock.calls.map(([item]) => item))).toEqual(new Set(users));
+
+      await user.clear(screen.getByTestId('input'));
+      await user.type(screen.getByTestId('input'), 'car');
+
+      expect(screen.getByRole('option', { name: 'Carol' })).not.toBe(null);
+      expect(screen.queryByRole('option', { name: 'Alice' })).toBe(null);
+      expect(new Set(getValue.mock.calls.map(([item]) => item))).toEqual(new Set(users));
+    });
+
+    it('resolves labels only for the values that need them', async () => {
+      const getValue = vi.fn(getUserId);
+      const getLabel = vi.fn(getUserName);
+      const collection = Combobox.createItems(users, { getValue, getLabel });
+
+      function App() {
+        return (
+          <Combobox.Root items={collection} defaultValue={3}>
+            <Combobox.Input data-testid="input" />
+          </Combobox.Root>
+        );
+      }
+
+      await render(<App />);
+
+      expect(screen.getByTestId('input')).toHaveValue('Carol');
+      expect(new Set(getLabel.mock.calls.map(([item]) => item))).toEqual(new Set([users[2]]));
+    });
+  });
+
   describe('grouped items', () => {
     interface Team {
       value: string;
@@ -2077,6 +2064,19 @@ describe('Combobox.createItems', () => {
       expect(new Set(getLabel.mock.calls.map(([item]) => item.name))).toEqual(
         new Set(['Alice', 'Bob', 'Carol']),
       );
+    });
+  });
+
+  describe('collection functions', () => {
+    const options = { getValue: getUserId, getLabel: getUserName };
+
+    it('keeps undefined data as the absence of items', () => {
+      const collection = readCollection(
+        Combobox.createItems(undefined as User[] | undefined, options),
+      );
+
+      expect(collection.data).toBe(undefined);
+      expect(collection.hasValue(1, defaultItemEquality)).toBe(false);
     });
   });
 
