@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, nextTick, shallowRef } from 'vue';
 import * as Select from '../index.parts';
 import {
   createRenderer,
@@ -10,6 +10,8 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
+import { getScrollLockRegistry, isScrollLocked } from '../../../test/fixtures/scrollDocument';
+import SelectPositionerScoped from './SelectPositionerScoped.test.vue';
 
 describe('<Select.Positioner />', () => {
   const { render } = createRenderer();
@@ -294,6 +296,131 @@ describe('<Select.Positioner />', () => {
       expect(handleValueChange).not.toHaveBeenCalled();
       expect(screen.getByRole('option', { name: 'd' })).toHaveAttribute('aria-selected', 'false');
       expect(screen.getByRole('option', { name: 'b' })).toHaveAttribute('aria-selected', 'true');
+    });
+  });
+
+  describe('scroll lock', () => {
+    function lockCount() {
+      return getScrollLockRegistry()?.lockCount ?? 0;
+    }
+
+    it('locks the page while a modal select is open, and unlocks it when the select closes', async () => {
+      const { user } = await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">Open</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await user.click(screen.getByTestId('trigger'));
+      await waitFor(() => {
+        expect(isScrollLocked()).toBe(true);
+      });
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(isScrollLocked()).toBe(false);
+      });
+      expect(lockCount()).toBe(0);
+    });
+
+    // The trigger has room for the placement over it, as in the case above that places the
+    // selected item over the trigger again.
+    it.each([
+      { name: 'over the trigger', alignItemWithTrigger: true, side: 'none', locks: 1 },
+      { name: 'beside the trigger', alignItemWithTrigger: false, side: 'bottom', locks: 0 },
+    ])(
+      'locks the page for a select that is not modal only while its popup is $name',
+      async ({ alignItemWithTrigger, side, locks }) => {
+        const { user } = await render(
+          <div style={{ paddingTop: '200px', minHeight: '600px' }}>
+            <Select.Root modal={false} defaultValue="a">
+              <Select.Trigger data-testid="trigger">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner
+                  data-testid="positioner"
+                  alignItemWithTrigger={alignItemWithTrigger}
+                >
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        await user.click(screen.getByTestId('trigger'));
+        await waitFor(() => {
+          expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', side);
+        });
+
+        expect(lockCount()).toBe(locks);
+      },
+    );
+
+    it('VUE-5: releases the lock while KeepAlive holds the select, and takes it back after', async () => {
+      const show = shallowRef(true);
+      const ModalSelect = defineComponent({
+        name: 'ModalSelect',
+        setup: () => () => (
+          <Select.Root defaultOpen>
+            <Select.Trigger>Open</Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner alignItemWithTrigger={false}>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        ),
+      });
+      const Other = defineComponent({ name: 'Other', setup: () => () => <p>other</p> });
+      await render(() => (
+        <KeepAlive>{show.value ? <ModalSelect key="select" /> : <Other key="other" />}</KeepAlive>
+      ));
+      await waitFor(() => {
+        expect(lockCount()).toBe(1);
+      });
+
+      show.value = false;
+      await flushMicrotasks();
+
+      expect(lockCount()).toBe(0);
+
+      show.value = true;
+      await waitFor(() => {
+        expect(lockCount()).toBe(1);
+      });
+    });
+  });
+
+  describe('VUE-61: the positioner of a modal select has one root node', () => {
+    it('gives the scope id, v-show and a custom directive of the consumer to the positioner', async () => {
+      const shown = shallowRef(true);
+      await render(() => <SelectPositionerScoped shown={shown.value} />);
+      await flushMicrotasks();
+      const positioner = screen.getByTestId('positioner');
+
+      expect(positioner.previousElementSibling).toHaveAttribute('role', 'presentation');
+      expect(getComputedStyle(positioner).outlineStyle).toBe('dashed');
+      expect(positioner).toHaveAttribute('data-mark', 'marked');
+      expect(positioner.style.display).not.toBe('none');
+
+      shown.value = false;
+      await nextTick();
+
+      expect(positioner.style.display).toBe('none');
     });
   });
 });
