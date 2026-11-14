@@ -4,6 +4,7 @@ import { NOOP } from '../../common/empty';
 import type { InteractionType } from '../../common/useEnhancedClickHandler';
 import { Timeout } from '../../common/useTimeout';
 import { PATIENT_CLICK_THRESHOLD } from '../../internals/constants';
+import type { RegisterId } from '../../internals/labelable-provider/LabelableContext';
 import { REASONS } from '../../internals/reasons';
 import { NullStore } from '../../utils/popups/NullStore';
 import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
@@ -44,6 +45,8 @@ type Context = PopupStoreContext<PopoverRootChangeEventDetails> & {
   readonly stickIfOpenTimeout: Timeout;
   // Only a press of a trigger reads it, so it is not a part of the state.
   stickIfOpen: boolean;
+  registerTitleId: RegisterId;
+  registerDescriptionId: RegisterId;
 };
 
 const selectors = {
@@ -191,5 +194,7 @@ function createInitialContext(): Context {
     beforeContentFocusGuardRef: shallowRef<HTMLElement | null>(null),
     stickIfOpenTimeout: new Timeout(),
     stickIfOpen: true,
+    registerTitleId: NOOP,
+    registerDescriptionId: NOOP,
   };
 }
