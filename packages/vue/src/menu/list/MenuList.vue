@@ -37,7 +37,8 @@ defineSlots<{
 const { store, orientation } = useMenuRootContext();
 
 // In a filterable menu the popup is the dialog that holds the input, and the input points at the
-// list with `aria-controls`. The list then does not take the role from the popup.
+// list with `aria-controls`. The filter gives the list its id and its label, and the list hands the
+// keys that land on it back to the input.
 const filterList = useMenuFilterImpl()?.useList({ id: () => props.id });
 
 const listId = useVaseUiId(() => props.id);
