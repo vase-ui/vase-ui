@@ -795,6 +795,7 @@ The focus helpers of a popup are in `src/utils/popups/focus`.
 - The deactivation moves the focus to `<body>`, so the initial focus moves again at the activation. The popup keeps its open state.
 - The deactivation returns no focus. The reference usually leaves the document with the popup, and an older element of the list would get the focus.
 - The state for the portal and the guards do not read the flag. `KeepAlive` takes the guards of the portal out of the document with the part, and the same guards must return.
+- `enqueueFocus(element, options)` focuses an element in the next animation frame, or at once with `sync`. The call returns a function that cancels its frame. The module keeps one pending focus for the page, so a later call cancels the frame of an earlier call. The focus manager and the list navigation share it. Do not copy it.
 
 ### Popup portal
 
@@ -885,6 +886,26 @@ The interaction composables of a popup are in `src/utils/popups/interactions`.
 - The frame and the touch timer stop when the part unmounts and when `KeepAlive` deactivates the part. A frame or a touch timer that waits still opens its popup when `enabled` becomes `false` or the store changes, as in Base UI.
 - `useOpenInteractionType(open)` returns `openMethod` as a `Readonly<Ref>` and `triggerProps`, a plain object of listeners. `open` is a ref or a getter.
 - A store that keeps the type uses `useOpenMethodTriggerProps(open, setOpenMethod)`.
+
+### Popup list navigation
+
+`useListNavigation(store, options)` moves the highlight of a list with the arrow keys, with real focus or with virtual focus. The code is in `src/utils/popups/interactions/useListNavigation.ts`.
+
+- A root calls it one time in `setup`. It also works while the popup is closed, because a key of the reference opens the popup.
+- The result is a `ComputedRef` of one object with `reference`, `floating`, `item` and `trigger`. `reference` and `floating` can hold `aria-activedescendant`, which changes. `item` and `trigger` hold only listeners, and each is one object for the life of the composable. An item part that gets `item` as a prop thus renders again only when its own state changes.
+- Base UI gives an empty object while `enabled` is `false`. Here each handler does nothing in that state, except that the `keydown` handler of the popup still gives a key to the list above. The result has no `aria-activedescendant`.
+- The composable does not write the active index. It calls `onNavigate`, and the consumer writes the index or declines. The next key starts from the index of the consumer.
+- `listRef` is a ref of the array of the item elements, such as `elementsRef` of the item registry. The composable reads it only in a handler and after a DOM update, so it does not follow a change of the list. A family that must follow the list does that itself, as in Base UI.
+- `onNavigate` is a plain function. `disabledIndices` is a plain member, because `toValue` calls a function. The composable reads it one time, so a function is the form that follows a change.
+- `grid` is a ref or a getter of the navigator: `grid: () => (props.grid ? gridNavigation : undefined)`. A family can then change the navigator with a prop. The composable imports the navigator only as a type, so a family with no grid does not hold the grid code. Each other option is a value, a ref or a getter.
+- The navigator is `gridNavigation` of `src/utils/popups/interactions`. It is not `gridNavigation` of the composite, which uses a cell map.
+- Six effects of Base UI are the blocks of one function, in the sequence of Base UI. The function runs in `onMounted` and in one `watch` with `flush: 'post'`. Separate post watchers run in the sequence of the writes, so they lose the sequence of Base UI ([Focus helpers](#focus-helpers)). Five blocks keep the values of their last run and run when one of them changed. The sixth block records the open state and the mounted state for the next run.
+- The orientation goes to `context.orientation` of the store in `onBeforeMount`, and a `watch` follows a change. A list below reads it through the popup tree. A server render writes nothing to the store. A store with a frozen context, such as `getEmptyRootStore()`, throws at that write, so give the composable the store of the root.
+- The popup element of a list above does not get the `keydown` of a list below that `Teleport` moved. Thus each `useListNavigation` call provides one function with a plain `Symbol()` key, and it injects the function of the call above it.
+- The `keydown` handler of the popup element gives a key that no handler stopped to the function of the list above (`VUE-46`). The list above does nothing when its popup element holds the target, because the DOM gives it the event. A list that is not enabled also gives the list above a key that it gets from below.
+- The list above is the nearest call of `useListNavigation` above the component in the component tree, and not the popup element around it in the DOM. A popup between the two lists that has no list navigation takes no part.
+- A component calls `useListNavigation` one time. A second call in the same component replaces the function that the first call provides.
+- `KeepAlive` takes the list out of the document, and the active item loses the focus. While `KeepAlive` holds the list, the composable stops its frames. At the activation, the active item gets the focus again, and the highlight does not change.
 
 ### Toast store
 
@@ -1114,7 +1135,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - The listener ignores an event whose target is not the form of the input. The callback runs in a 0 ms timeout, because the browser resets the controls after the listeners of the event. It does not run when a listener prevented the event.
 - After a reset the error of the field is out of date. The function that `useClearFieldError` returns cancels the pending validation and removes the message that the field put on the input. It also clears the validity of the field, and the error of the form for the name of the field.
 - Base UI can decide in a microtask that runs after the handlers of the ancestors. React runs all its handlers in one native listener, so its microtask comes after them. For a real key press, the browser runs the microtasks after each listener. Use a 0 ms timeout. `Checkbox.Root` does this for Enter. Its handler keeps the default prevented, and it gives the event own properties `defaultPrevented` and `preventDefault` until the timeout. A listener of an ancestor then reads `false`, and it can still prevent the submit.
-- A teleported child popup has two links to its parent: the popup tree and the `provide` chain of `useDismiss`. See [Popup dismissal](#popup-dismissal).
+- A teleported child popup has three links to its parent: the popup tree, the `provide` chain of `useDismiss` and the `provide` chain of `useListNavigation`. See [Popup dismissal](#popup-dismissal) and [Popup list navigation](#popup-list-navigation).
 - An outside press and a focus-out treat the popup of a descendant node as inside.
 - `KeepAlive` is the counterpart of `React.Activity`. Under `KeepAlive`, a part keeps its state. In `onDeactivated` it releases the scroll lock, the modal marks, the document listeners and the timers. In `onActivated` it takes them back.
 - A dialog reports its open state to the dialog above it. While `KeepAlive` holds the dialog, it reports that it is closed. The dialog above is then the top dialog again, so Escape closes it. The report comes back at the activation.
