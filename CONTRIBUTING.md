@@ -1753,10 +1753,10 @@ This section is the contract of the test helpers. Each helper must obey it. The 
 - `user` is `userEvent.setup({ document })` of `@testing-library/user-event`, at the version that upstream pins.
 - `user` waits for a timer after each action, so it does not return under a fake clock that does not move. A fake clock that moves with real time can end a timer of a part between two awaited steps.
 - After a mount, a `rerender` or a `setProps`, the helper waits until `Date.now()` gives a later millisecond. Vue skips the second and later listeners of an event that occurs in the millisecond when Vue attached them.
-- When `vi.getMockedSystemTime()` gives a time, the helper first moves that clock by 16 ms with `vi.setSystemTime`. A mocked clock does not move by itself. Fake timers and a call of `vi.setSystemTime` with no fake timers both mock the clock.
-- `vi.setSystemTime` runs no timer. It moves each pending timer by the same time, so each timer keeps its delay.
+- When `vi.getMockedSystemTime()` gives a time, the helper first moves that clock by 16 ms with `vi.setSystemTime`. A mocked clock does not move while the helper waits. Fake timers and a call of `vi.setSystemTime` with no fake timers both mock the clock.
+- `vi.setSystemTime` runs no timer. It moves each pending fake timer by the same time, so each timer keeps its delay.
 - The fake clock of Vitest runs a frame each 16 ms from the time when fake timers start. The move is one whole frame, so each frame callback stays in its frame. A frame callback that the mount requests runs at the next `vi.advanceTimersToNextFrame()`.
-- Each move makes `Date.now()` 16 ms later. A part that measures a time with `Date.now()`, such as the store of Toast, thus measures 16 ms more than its timers waited.
+- Each move makes a mocked `Date.now()` 16 ms later. A part that measures a time with `Date.now()`, such as the store of Toast, thus measures 16 ms more than its timers waited.
 - Fake timers with a `toFake` list that has no `Date` keep the real `Date.now()`. The helper then also waits for a later millisecond of the real clock.
 - `waitForLaterMillisecond()` waits until `Date.now()` gives a later millisecond, as `render` does after a mount. `#test-utils` exports it. A test calls it after an action that mounts the target of the next event, such as a click that opens a popup. Without the wait, Vue can skip the listener of the target, because the event comes in the millisecond when Vue attached that listener.
 - `fireEvent` is a function of the test helpers. It dispatches the event, waits for `nextTick()` and returns the result of the dispatch. Upstream tests read that result, which is `false` when a listener prevents the default action.

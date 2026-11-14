@@ -34,9 +34,9 @@ export async function waitForLaterMillisecond() {
   const start = Date.now();
   const mockedTime = vi.getMockedSystemTime();
   if (mockedTime) {
-    // A mocked clock does not move by itself, so the loop below would not end. `vi.setSystemTime`
-    // runs no timer and moves each pending timer with the clock, but the frames stay at their
-    // times. A move of one whole frame thus keeps each frame callback in its frame.
+    // A mocked clock does not move during the loop below, so the loop would not end.
+    // `vi.setSystemTime` runs no timer and moves each pending timer with the clock, but the frames
+    // stay at their times. A move of one whole frame thus keeps each frame callback in its frame.
     vi.setSystemTime(mockedTime.getTime() + FAKE_FRAME_DURATION);
   }
   // Fake timers can leave `Date` real.
