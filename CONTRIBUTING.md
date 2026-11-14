@@ -1994,8 +1994,8 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - ESLint writes no fix into a page. `pnpm lint:fix` leaves each report on a page for hand work.
 - ESLint does not expand an include. It reads `README.md` and `THANKS.md` as pages, because `docs/index.md` and `docs/thanks.md` include them. When a page includes a file that `PAGE_FILES` in `eslint.config.js` lacks, add the file to the list. `pnpm test:lint-rules` fails for such a file.
 - When an option of `markdown` in `docs/.vitepress/config.ts` changes the HTML of a page, give the option to `createMarkdownRenderer` in `eslint.config.js`.
-- ESLint reads syntax, not values. It cannot see a name that a value holds. Examples are a `v-bind` object from an import, a computed key or member from a variable, and a template literal with an expression.
-- ESLint does not see the name in the arguments of `Reflect.set` or `Object.defineProperty`. It does not see `write` on a document that a variable holds, when the name of the variable does not end in `document`.
+- ESLint reads syntax, not values. It cannot see a name that a value holds. Examples are a computed key or member from a variable, a template literal with an expression, and the name in the arguments of `Reflect.set`.
+- ESLint does not see `write` on a document that a variable holds, when the name of the variable does not end in `document`.
 - ESLint does not see HTML in a URL, such as the `:src` of an iframe with a `data:` or `blob:` URL. The rules do not apply to a script file outside `docs` that a `docs` file imports.
 - Because of these limits, a page shows text from `parity/` and from Base UI commits only through a component in `docs/.vitepress/components`.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
