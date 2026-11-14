@@ -11,10 +11,11 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextAnimationsRead,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
-  waitFor,
   within,
 } from '#test-utils';
 import FieldErrorHydration from './FieldErrorHydration.test.vue';
@@ -395,11 +396,6 @@ describe('<Field.Error />', () => {
     it('triggers enter animation via data-starting-style when mounting', async () => {
       globalThis.VASE_UI_ANIMATIONS_DISABLED = false;
 
-      let transitionFinished = false;
-      function notifyTransitionFinished() {
-        transitionFinished = true;
-      }
-
       const style = `
         .animation-test-error {
           transition: opacity 1ms;
@@ -427,12 +423,7 @@ describe('<Field.Error />', () => {
             </button>
             <Field.Root>
               <Field.Control required />
-              <Field.Error
-                class="animation-test-error"
-                data-testid="error"
-                match={showError.value}
-                onTransitionend={notifyTransitionFinished}
-              >
+              <Field.Error class="animation-test-error" data-testid="error" match={showError.value}>
                 Message
               </Field.Error>
             </Field.Root>
@@ -440,13 +431,13 @@ describe('<Field.Error />', () => {
         );
       });
 
-      const { user } = await render(<Test />);
+      const { container, user } = await render(<Test />);
       expect(screen.queryByTestId('error')).toBe(null);
 
-      await user.click(screen.getByText('Show'));
-
-      await waitFor(() => {
-        expect(transitionFinished).toBe(true);
+      // The error mounts with the click, so the wait is on its container.
+      await nextEvent(container, 'transitionend', {
+        after: 'transitionrun',
+        action: () => user.click(screen.getByText('Show')),
       });
 
       expect(screen.getByTestId('error')).not.toBe(null);
@@ -466,7 +457,6 @@ describe('<Field.Error />', () => {
           animation: test-anim 100ms;
         }
       `;
-      const textsAtStart: string[] = [];
 
       await render(
         <div>
@@ -476,27 +466,29 @@ describe('<Field.Error />', () => {
             validate={(value) => (value === 'bad' ? 'Bad value' : null)}
           >
             <Field.Control />
-            <Field.Error
-              class="animation-test-error"
-              data-testid="error"
-              onAnimationstart={(event: Event) => {
-                textsAtStart.push((event.currentTarget as HTMLElement).textContent ?? '');
-              }}
-            />
+            <Field.Error class="animation-test-error" data-testid="error" />
           </Field.Root>
         </div>,
       );
 
       const input = screen.getByRole<HTMLInputElement>('textbox');
       await fireEvent.input(input, { target: { value: 'bad' } });
-      expect(screen.getByTestId('error')).toHaveTextContent('Bad value');
+      const error = screen.getByTestId('error');
+      expect(error).toHaveTextContent('Bad value');
 
-      await fireEvent.input(input, { target: { value: 'good' } });
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('error')).toBe(null);
+      // After a stall, one frame can start and end the exit, and the part then removes the error.
+      // Chromium then sends no `animationstart` to it, so the case reads the text when the part
+      // reads its animations.
+      const animations = await nextAnimationsRead(error, {
+        action: () => fireEvent.input(input, { target: { value: 'good' } }),
       });
-      expect(textsAtStart).toEqual(['Bad value']);
+      expect(animations).toHaveLength(1);
+      expect(error.textContent).toBe('Bad value');
+
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
     });
 
     it('applies data-ending-style before unmount', async () => {
@@ -539,16 +531,21 @@ describe('<Field.Error />', () => {
       });
 
       await render(<Test />);
-      expect(screen.getByTestId('error')).not.toBe(null);
+      const error = screen.getByTestId('error');
+      expect(error).not.toBe(null);
+
+      const read = nextAnimationsRead(error);
 
       // `user.click` can yield a frame, which is long enough for the 1ms animation to finish.
       await fireEvent.click(screen.getByText('Hide'));
 
-      expect(screen.getByTestId('error')).toHaveAttribute('data-ending-style');
+      expect(error).toHaveAttribute('data-ending-style');
 
-      await waitFor(() => {
-        expect(screen.queryByTestId('error')).toBe(null);
-      });
+      const animations = await read;
+      await Promise.all(animations.map((animation) => animation.finished));
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
     });
   });
 
