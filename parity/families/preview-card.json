@@ -32,42 +32,6 @@
       "reason": "The file tests `PreviewCard.Viewport`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The other cases of the file open the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/root/PreviewCardRoot.detached-triggers.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The cases of the file have no counterpart yet. Some of them need the focus of the trigger or the shared suite `detachedTriggersConformanceTests`. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
-      "describe": ["<PreviewCard.Positioner />", "multiline inline trigger"],
-      "title": "positions the popup relative to the side-aligned rect when opened via focus",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The case opens the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/positioner/PreviewCardPositioner.test.tsx",
-      "describe": ["<PreviewCard.Positioner />", "multiline inline trigger"],
-      "title": "clears hovered-line coords when opened via focus",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The case opens the card on the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
-      "upstream": "packages/react/src/preview-card/trigger/PreviewCardTrigger.test.tsx",
-      "describe": ["<PreviewCard.Trigger />"],
-      "title": "stays closed when focus returns to the trigger after leaving the window, once the card has unmounted",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/preview-card/viewport/PreviewCardViewport.tsx",
-      "reason": "The case needs the focus of the trigger, and `PreviewCard.Trigger` does not open the card on focus yet. `PreviewCard.Viewport` is the last part of the family, so the row names its file."
-    },
-    {
       "upstream": "docs/src/app/(docs)/react/components/preview-card/types.md",
       "entry": "Root",
       "kind": "waits-on",
