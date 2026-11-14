@@ -32,7 +32,7 @@ function createControlledGroup(initialValue: string, disabled?: string) {
   const Group = defineComponent(() => () => (
     <RadioGroup
       value={value.value}
-      onValueChange={(next: string) => {
+      onValueChange={(next: string | null) => {
         value.value = next;
       }}
     >

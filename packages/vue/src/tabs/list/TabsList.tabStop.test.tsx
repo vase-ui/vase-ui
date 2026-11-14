@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
 import { Tabs } from '@vase-ui/vue/tabs';
-import { createRenderer, fireEvent, flushMicrotasks, screen } from '#test-utils';
+import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 
 function readTabindexes() {
   return screen.getAllByRole('tab').map((tab) => tab.tabIndex);
@@ -10,8 +10,8 @@ function readTabindexes() {
 describe('VUE-51: the tab stop of <Tabs.List /> follows the active tab', () => {
   const { render } = createRenderer();
 
-  it('moves the tab stop to the active tab when the focus leaves the list, with manual activation', async () => {
-    await render(
+  it('enters the list on the active tab after the focus leaves it, with manual activation', async () => {
+    const { user } = await render(
       <Tabs.Root defaultValue={0}>
         <Tabs.List>
           <Tabs.Tab value={0} />
@@ -22,18 +22,19 @@ describe('VUE-51: the tab stop of <Tabs.List /> follows the active tab', () => {
       </Tabs.Root>,
     );
     const [firstTab, secondTab] = screen.getAllByRole('tab');
-    firstTab.focus();
-    await flushMicrotasks();
-    await fireEvent.keyDown(firstTab, { key: 'ArrowRight' });
-    await flushMicrotasks();
+    await user.keyboard('{Tab}');
+    await user.keyboard('{ArrowRight}');
     expect(secondTab).toHaveFocus();
     expect(readTabindexes()).toEqual([-1, 0, -1]);
 
-    screen.getByRole('tabpanel').focus();
-    await flushMicrotasks();
-
-    expect(firstTab).toHaveAttribute('aria-selected', 'true');
+    await user.keyboard('{Tab}');
+    expect(screen.getByRole('tabpanel')).toHaveFocus();
     expect(readTabindexes()).toEqual([0, -1, -1]);
+
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+    expect(firstTab).toHaveFocus();
+    expect(firstTab).toHaveAttribute('aria-selected', 'true');
   });
 
   it('moves the tab stop to the first enabled tab when the value becomes null', async () => {
