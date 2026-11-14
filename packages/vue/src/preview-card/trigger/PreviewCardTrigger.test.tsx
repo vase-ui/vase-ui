@@ -174,6 +174,19 @@ describe('<PreviewCard.Trigger />', () => {
     expect(link).not.toHaveAttribute('data-popup-open');
   });
 
+  it('gives the link an id, and no ARIA attribute, role or tabindex', async () => {
+    await render(
+      <PreviewCard.Root defaultOpen>
+        <PreviewCard.Trigger href="#preview">Link</PreviewCard.Trigger>
+      </PreviewCard.Root>,
+    );
+
+    const link = screen.getByRole('link', { name: 'Link' });
+    expect(link.tagName).toBe('A');
+    expect(link.id).toMatch(/^vase-ui-/);
+    expect(link.getAttributeNames().sort()).toEqual(['data-popup-open', 'href', 'id']);
+  });
+
   it('throws without PreviewCard.Root or a handle', async () => {
     await expect(render(<PreviewCard.Trigger />)).rejects.toThrow(
       'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',

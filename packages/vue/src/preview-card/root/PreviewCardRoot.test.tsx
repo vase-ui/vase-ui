@@ -75,19 +75,6 @@ describe('<PreviewCard.Root />', () => {
       expect(link).toHaveAttribute('data-popup-open');
       expect(events).toEqual([['openChange', false, REASONS.escapeKey, 'link']]);
     });
-
-    it('gives the link an id, and no ARIA attribute, role or tabindex', async () => {
-      await render(
-        <PreviewCard.Root defaultOpen>
-          <PreviewCard.Trigger href="#preview">Link</PreviewCard.Trigger>
-        </PreviewCard.Root>,
-      );
-
-      const link = screen.getByRole('link', { name: 'Link' });
-      expect(link.tagName).toBe('A');
-      expect(link.id).toMatch(/^vase-ui-/);
-      expect(link.getAttributeNames().sort()).toEqual(['data-popup-open', 'href', 'id']);
-    });
   });
 
   describe('dismissal', () => {
