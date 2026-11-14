@@ -2273,42 +2273,46 @@ describe('<Combobox.Root />', () => {
           const App = defineComponent(() => {
             const renders = shallowRef(0);
 
-            return () => (
-              <Combobox.Root
-                items={['apple', 'banana', 'blueberry', 'cherry']}
-                defaultValue="banana"
-                inputValue="b"
-                onInputValueChange={() => {}}
-                defaultOpen
-              >
-                <Combobox.Portal>
-                  <Combobox.Positioner>
-                    <Combobox.Popup>
-                      <Combobox.Input data-testid="input" />
-                      <ClearActiveIndexButton />
-                      <button
-                        type="button"
-                        data-render={renders.value}
-                        onClick={() => {
-                          renders.value++;
-                        }}
-                      >
-                        Rerender
-                      </button>
-                      <Combobox.List>
-                        {{
-                          item: ({ item }: { item: string }) => (
-                            <Combobox.Item key={item} value={item}>
-                              {item}
-                            </Combobox.Item>
-                          ),
-                        }}
-                      </Combobox.List>
-                    </Combobox.Popup>
-                  </Combobox.Positioner>
-                </Combobox.Portal>
-              </Combobox.Root>
-            );
+            return () => {
+              // The button changes `renders`, so `App` and the root render again.
+              void renders.value;
+
+              return (
+                <Combobox.Root
+                  items={['apple', 'banana', 'blueberry', 'cherry']}
+                  defaultValue="banana"
+                  inputValue="b"
+                  onInputValueChange={() => {}}
+                  defaultOpen
+                >
+                  <Combobox.Portal>
+                    <Combobox.Positioner>
+                      <Combobox.Popup>
+                        <Combobox.Input data-testid="input" />
+                        <ClearActiveIndexButton />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            renders.value++;
+                          }}
+                        >
+                          Rerender
+                        </button>
+                        <Combobox.List>
+                          {{
+                            item: ({ item }: { item: string }) => (
+                              <Combobox.Item key={item} value={item}>
+                                {item}
+                              </Combobox.Item>
+                            ),
+                          }}
+                        </Combobox.List>
+                      </Combobox.Popup>
+                    </Combobox.Positioner>
+                  </Combobox.Portal>
+                </Combobox.Root>
+              );
+            };
           });
 
           const { user } = await render(<App />);
