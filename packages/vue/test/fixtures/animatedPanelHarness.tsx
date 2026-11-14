@@ -7,6 +7,7 @@ import AnimatedPanel from './AnimatedPanel.vue';
 
 export const TRANSITION = 'animated-panel-transition';
 export const ANIMATION = 'animated-panel-animation';
+export const LONG_EXIT = 'animated-panel-long-exit';
 
 /**
  * Records the `openChangeComplete` events of a panel, and lets a test wait for the next one.
