@@ -801,12 +801,12 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
           { name: 'when wrappers are removed', nestings: [3, 2, 1, 0], recreateHandle: false },
           { name: 'when wrappers are added', nestings: [0, 1, 2, 3], recreateHandle: false },
           {
-            name: 'during Fast Refresh-like handle recreation',
+            name: 'during Fast Refresh-like handle changes',
             nestings: [1, 1, 1],
             recreateHandle: true,
           },
           {
-            name: 'when reparented during Fast Refresh-like handle recreation',
+            name: 'when reparented during a handle change',
             nestings: [3, 2, 1, 0],
             recreateHandle: true,
           },
