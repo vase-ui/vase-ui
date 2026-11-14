@@ -184,11 +184,7 @@ export function popupFocusPropsTests(config: PopupFocusPropsTestsConfig) {
 
         const trigger = getTrigger();
 
-        // The click of user-event is a `PointerEvent` with no pointer type, and the trigger reads
-        // the type of the click. The mouse press is thus dispatched directly.
-        trigger.focus();
-        await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
-        await fireEvent.click(trigger, { detail: 1 });
+        await user.click(trigger);
         await waitFor(() => {
           expect(initialFocusSpy).toHaveBeenLastCalledWith('mouse');
         });

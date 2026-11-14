@@ -59,6 +59,23 @@ describe('useEnhancedClickHandler', () => {
     expect(handler).toHaveBeenLastCalledWith(click, 'touch');
   });
 
+  it.each([
+    { name: 'mouse', pointerType: 'mouse' },
+    { name: 'touch', pointerType: 'touch' },
+  ])(
+    'gives the type of a $name pointerdown to a click that is a PointerEvent with an empty pointer type',
+    async ({ pointerType }) => {
+      const { handler, button } = await renderButton();
+
+      await fireEvent(button, pointerdown(pointerType));
+      const click = new PointerEvent('click', { pointerType: '', detail: 1, bubbles: true });
+      await fireEvent(button, click);
+
+      expect(handler).toHaveBeenCalledTimes(2);
+      expect(handler).toHaveBeenLastCalledWith(click, pointerType);
+    },
+  );
+
   it('forgets the type of a pointerdown after the click', async () => {
     const { handler, button } = await renderButton();
 
