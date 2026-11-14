@@ -8,6 +8,8 @@
     "packages/react/src/utils/getCssDimensions.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/getPseudoElementBounds.test.ts",
+    "packages/react/src/utils/getPseudoElementBounds.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
     "packages/react/src/utils/popups/positioning/arrow.ts",
@@ -17,6 +19,7 @@
     "packages/react/src/utils/popups/positioning/useFloating.test.tsx",
     "packages/react/src/utils/popups/positioning/useFloating.ts",
     "packages/react/src/utils/popups/positioning/usePositioner.tsx",
+    "packages/react/src/utils/resolveAriaLabelledBy.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.test.ts",
@@ -38,6 +41,7 @@
     "packages/react/src/utils/getCssDimensions.ts",
     "packages/react/src/utils/getElementTransform.ts",
     "packages/react/src/utils/getFiniteAnimations.ts",
+    "packages/react/src/utils/getPseudoElementBounds.ts",
     "packages/react/src/utils/popups/positioning/CommonPositionerCssVars.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginConstants.ts",
     "packages/react/src/utils/popups/positioning/adaptiveOriginMiddleware.ts",
@@ -45,6 +49,7 @@
     "packages/react/src/utils/popups/positioning/hideMiddleware.ts",
     "packages/react/src/utils/popups/positioning/useFloating.ts",
     "packages/react/src/utils/popups/positioning/usePositioner.tsx",
+    "packages/react/src/utils/resolveAriaLabelledBy.ts",
     "packages/react/src/utils/resolveRef.ts",
     "packages/react/src/utils/resolveStyle.ts",
     "packages/react/src/utils/scrollEdges.ts",
@@ -68,6 +73,35 @@
           "conditions": [
             "skipIf(isJSDOM)"
           ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/utils/getPseudoElementBounds.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "getPseudoElementBounds"
+          ],
+          "title": "does not read pseudo-element styles in jsdom",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "getPseudoElementBounds"
+          ],
+          "title": "includes pseudo-element bounds in browsers",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "getPseudoElementBounds"
+          ],
+          "title": "allows up to 5px of mouse drift around element bounds"
         }
       ]
     },

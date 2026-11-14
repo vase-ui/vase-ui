@@ -3,6 +3,7 @@
   "upstreamPaths": [
     "packages/react/src/utils/popups/*",
     "packages/react/src/utils/popups/floating-root/**",
+    "packages/react/src/utils/popups/value-popup/**",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "sources": [
@@ -31,6 +32,7 @@
     "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
     "packages/react/src/utils/popups/usePopupHandleStore.ts",
     "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+    "packages/react/src/utils/popups/value-popup/ValuePopupStore.ts",
     "packages/react/test/popupStoreTestUtils.tsx"
   ],
   "typeTests": [

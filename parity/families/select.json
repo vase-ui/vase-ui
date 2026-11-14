@@ -1,0 +1,527 @@
+{
+  "upstreamPaths": [
+    "packages/react/src/select/**",
+    "docs/src/app/(docs)/react/components/select/**"
+  ],
+  "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "exceptions": [
+    {
+      "upstream": "packages/react/src/select/arrow/SelectArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/arrow/SelectArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/backdrop/SelectBackdrop.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Backdrop`."
+    },
+    {
+      "upstream": "packages/react/src/select/backdrop/SelectBackdropDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Backdrop`."
+    },
+    {
+      "upstream": "packages/react/src/select/group-label/SelectGroupLabel.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.GroupLabel`."
+    },
+    {
+      "upstream": "packages/react/src/select/group/SelectGroup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Group`."
+    },
+    {
+      "upstream": "packages/react/src/select/group/SelectGroupContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Group`."
+    },
+    {
+      "upstream": "packages/react/src/select/index.ts",
+      "kind": "waits-on",
+      "reason": "The file is the entry point of Select. It comes in the last pull request of the family, so the package exports nothing of Select before then."
+    },
+    {
+      "upstream": "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ItemIndicator`."
+    },
+    {
+      "upstream": "packages/react/src/select/item-indicator/SelectItemIndicatorDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ItemIndicator`."
+    },
+    {
+      "upstream": "packages/react/src/select/item-text/SelectItemText.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ItemText`."
+    },
+    {
+      "upstream": "packages/react/src/select/item/SelectItem.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "packages/react/src/select/item/SelectItemContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "packages/react/src/select/item/SelectItemDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "packages/react/src/select/list/SelectList.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.List`."
+    },
+    {
+      "upstream": "packages/react/src/select/popup/SelectPopup.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/select/popup/SelectPopupDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/select/popup/utils.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/select/portal/SelectPortal.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositionerContext.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositionerCssVars.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositionerDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow` and `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrowDataAttributes.ts",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/separator/SelectSeparator.tsx",
+      "kind": "waits-on",
+      "reason": "Vase UI does not have `Select.Separator`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositioner.spec.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/arrow/SelectArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/arrow/SelectArrow.tsx",
+      "reason": "Vase UI does not have `Select.Arrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/backdrop/SelectBackdrop.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/backdrop/SelectBackdrop.tsx",
+      "reason": "Vase UI does not have `Select.Backdrop`."
+    },
+    {
+      "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/group-label/SelectGroupLabel.tsx",
+      "reason": "Vase UI does not have `Select.GroupLabel`."
+    },
+    {
+      "upstream": "packages/react/src/select/group/SelectGroup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/group/SelectGroup.tsx",
+      "reason": "Vase UI does not have `Select.Group`."
+    },
+    {
+      "upstream": "packages/react/src/select/item-indicator/SelectItemIndicator.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
+      "reason": "Vase UI does not have `Select.ItemIndicator`."
+    },
+    {
+      "upstream": "packages/react/src/select/item-text/SelectItemText.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item-text/SelectItemText.tsx",
+      "reason": "Vase UI does not have `Select.ItemText`."
+    },
+    {
+      "upstream": "packages/react/src/select/item/SelectItem.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "packages/react/src/select/list/SelectList.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/list/SelectList.tsx",
+      "reason": "Vase UI does not have `Select.List`."
+    },
+    {
+      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/popup/SelectPopup.tsx",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "packages/react/src/select/portal/SelectPortal.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/portal/SelectPortal.tsx",
+      "reason": "Vase UI does not have `Select.Portal`."
+    },
+    {
+      "upstream": "packages/react/src/select/positioner/SelectPositioner.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-arrow/SelectScrollArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow` and `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "describe": ["<Select.Root />", "server-side rendering"],
+      "title": "does not link Select.Label before hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/select/root/SelectRoot.node.test.tsx",
+      "reason": "The case renders on a server only. Vase UI links the label in the server HTML (VUE-38). The block \"VUE-38: a label of the select\" asserts `aria-labelledby` in the server HTML, with the label before and after the trigger."
+    },
+    {
+      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The other cases and the suite calls render the popup parts and the items of Select, or they need its list navigation, its focus manager, its modal state or its scroll arrows. Vase UI does not have them. The scroll arrows are the last part of the family, so the row names their file."
+    },
+    {
+      "upstream": "packages/react/src/select/store.test.tsx",
+      "describe": ["select store synchronization"],
+      "title": "publishes synchronized values in a single store transaction",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The case sets the `modal` prop of `Select.Root`, which comes with the modal state of Select. The scroll arrows are the last part of the family, so the row names their file."
+    },
+    {
+      "upstream": "packages/react/src/select/store.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The other cases render `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
+      "describe": ["<Select.Trigger />"],
+      "title": "closes an aligned popup when focus lands on the trigger so it is not obscured",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
+    },
+    {
+      "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
+      "describe": ["<Select.Trigger />", "style hooks"],
+      "title": "sets data-popup-side to the resolved side when alignItemWithTrigger is active",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
+      "reason": "The case needs the popup placed over the trigger (`alignItemWithTrigger`), which Vase UI does not have. The scroll arrows are the last part of the family, so the row names their file."
+    },
+    {
+      "upstream": "packages/react/src/select/trigger/SelectTrigger.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The other cases render `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/select/value/SelectValue.test.tsx",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "The other cases render `Select.Portal`, `Select.Positioner`, `Select.Popup` and `Select.Item`, which Vase UI does not have."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Root",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports `Select.Root`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Trigger",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports `Select.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Value",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports `Select.Value`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Icon",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports `Select.Icon`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "List",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/list/SelectList.tsx",
+      "reason": "Vase UI does not have `Select.List`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/portal/SelectPortal.tsx",
+      "reason": "Vase UI does not have `Select.Portal`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Backdrop",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/backdrop/SelectBackdrop.tsx",
+      "reason": "Vase UI does not have `Select.Backdrop`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Positioner",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Popup",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/popup/SelectPopup.tsx",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Arrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/arrow/SelectArrow.tsx",
+      "reason": "Vase UI does not have `Select.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Item",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Group",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/group/SelectGroup.tsx",
+      "reason": "Vase UI does not have `Select.Group`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "GroupLabel",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/group-label/SelectGroupLabel.tsx",
+      "reason": "Vase UI does not have `Select.GroupLabel`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Separator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/separator/SelectSeparator.tsx",
+      "reason": "Vase UI does not have `Select.Separator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "Label",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports `Select.Label`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "ItemText",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item-text/SelectItemText.tsx",
+      "reason": "Vase UI does not have `Select.ItemText`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "ItemIndicator",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
+      "reason": "Vase UI does not have `Select.ItemIndicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "ScrollUpArrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "ScrollDownArrow",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/arrow/SelectArrow.tsx",
+      "reason": "Vase UI does not have `Select.Arrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectBackdropDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/backdrop/SelectBackdrop.tsx",
+      "reason": "Vase UI does not have `Select.Backdrop`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectIconDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports the attribute names of `Select.Icon`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectItemDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item/SelectItem.tsx",
+      "reason": "Vase UI does not have `Select.Item`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectItemIndicatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/item-indicator/SelectItemIndicator.tsx",
+      "reason": "Vase UI does not have `Select.ItemIndicator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectPopupDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/popup/SelectPopup.tsx",
+      "reason": "Vase UI does not have `Select.Popup`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectPositionerCssVariables",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectPositionerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/positioner/SelectPositioner.tsx",
+      "reason": "Vase UI does not have `Select.Positioner`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectScrollDownArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-down-arrow/SelectScrollDownArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollDownArrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectScrollUpArrowDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/scroll-up-arrow/SelectScrollUpArrow.tsx",
+      "reason": "Vase UI does not have `Select.ScrollUpArrow`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectSeparatorDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/separator/SelectSeparator.tsx",
+      "reason": "Vase UI does not have `Select.Separator`."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectTriggerDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports the attribute names of `Select.Trigger`. Vase UI does not have that entry point."
+    },
+    {
+      "upstream": "docs/src/app/(docs)/react/components/select/types.md",
+      "entry": "SelectValueDataAttributes",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/select/index.ts",
+      "reason": "The entry point of Select exports the attribute names of `Select.Value`. Vase UI does not have that entry point."
+    }
+  ],
+  "surfaceAdditions": [],
+  "returnTypeDifferences": [],
+  "notApplicableCommits": []
+}

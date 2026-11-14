@@ -49,9 +49,10 @@ export interface SelectTriggerProps<Value = any>
 </script>
 
 <script setup lang="ts" generic="Value = any">
-import { computed } from 'vue';
-import { toRaw } from 'vue';
-import { contains } from '../../common/shadowDom';
+import { computed, onDeactivated, onScopeDispose, toRaw } from 'vue';
+import { ownerDocument } from '../../common/owner';
+import { contains, getTarget } from '../../common/shadowDom';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { fieldValidityMapping } from '../../internals/field-constants';
 import { useFieldRootContext } from '../../internals/field-root-context';
 import { useSetFieldFocused } from '../../internals/field-root-context/useSetFieldFocused';
@@ -63,7 +64,9 @@ import {
 import type { StateAttributesMapping } from '../../internals/getStateAttributesProps';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useButton } from '../../internals/use-button';
+import { REASONS } from '../../internals/reasons';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { isMouseWithinBounds } from '../../utils/getPseudoElementBounds';
 import { getFloatingFocusElement } from '../../utils/popups/element';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
@@ -135,6 +138,42 @@ function setTriggerElement(trigger: HTMLElement | null) {
   }
 }
 
+// The document keeps the listener of the press that opens the popup until the release.
+let mouseUpDocument: Document | null = null;
+
+function removeMouseUpListener() {
+  mouseUpDocument?.removeEventListener('mouseup', handleMouseUp);
+  mouseUpDocument = null;
+}
+
+function handleMouseUp(mouseEvent: MouseEvent) {
+  mouseUpDocument = null;
+  const trigger = element.value;
+  if (!trigger) {
+    return;
+  }
+
+  const mouseUpTarget = getTarget(mouseEvent) as Element | null;
+
+  // Don't treat the release as an outside press when it lands on the trigger or inside
+  // the popup positioner (or their children).
+  if (
+    contains(trigger, mouseUpTarget) ||
+    contains(toRaw(store.state).positionerElement, mouseUpTarget)
+  ) {
+    return;
+  }
+
+  if (isMouseWithinBounds(mouseEvent, trigger)) {
+    return;
+  }
+
+  store.setOpen(false, createChangeEventDetails(REASONS.cancelOpen, mouseEvent));
+}
+
+onScopeDispose(removeMouseUpListener);
+onDeactivated(removeMouseUpListener);
+
 const state = computed<SelectTriggerState<Value>>(() => ({
   ...fieldState.value,
   open: isOpen.value,
@@ -186,6 +225,15 @@ const { element, elementProps } = useRenderElement('button', props, {
         if (validationMode.value === 'onBlur') {
           void validation.commit(toRaw(store.state).selectedValue);
         }
+      },
+      onMousedown(event: MouseEvent) {
+        if (isOpen.value) {
+          return;
+        }
+
+        removeMouseUpListener();
+        mouseUpDocument = ownerDocument(event.currentTarget as Element);
+        mouseUpDocument.addEventListener('mouseup', handleMouseUp, { once: true });
       },
     },
     attrs,

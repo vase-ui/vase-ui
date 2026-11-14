@@ -138,8 +138,8 @@ export type SelectRootOpenChangeEventDetails = SelectRootChangeEventDetails & {
 };
 </script>
 
-<script setup lang="ts" generic="Value = any, Multiple extends boolean | undefined = false">
-import { computed, nextTick, provide, shallowRef, watch } from 'vue';
+<script setup lang="ts" generic="Value, Multiple extends boolean | undefined = false">
+import { computed, nextTick, provide, shallowRef, toRaw, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { addEventListener } from '../../common/addEventListener';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../../common/empty';
@@ -239,6 +239,27 @@ const [selectedValue, setSelectedValue] = useControlled<any>({
 
 const { labelId, registerLabelId } = createLabelIdRegistry();
 
+function copyItems(items: SelectItems): SelectItems {
+  if (items === undefined) {
+    return undefined;
+  }
+  const rawItems = toRaw(items);
+  return Array.isArray(rawItems) ? [...rawItems] : { ...rawItems };
+}
+
+// A consumer can change a reactive `items` record in place. The deep `watch` sees that change.
+// The copy gives the store a new object to follow, because Vue tracks no `Object.hasOwn` of a
+// reactive proxy.
+const plainItems = shallowRef(copyItems(props.items));
+
+watch(
+  () => props.items,
+  (next) => {
+    plainItems.value = copyItems(next);
+  },
+  { deep: true },
+);
+
 const { store, open: isOpen, actions } = useSingleAnchorPopupRoot(
   props,
   (initialState, defaultPopupId) =>
@@ -258,7 +279,7 @@ const { store, open: isOpen, actions } = useSingleAnchorPopupRoot(
         itemToStringValue: props.itemToStringValue,
         isItemEqualToValue: comparer.value,
         selectedValue: selectedValue.value,
-        items: props.items,
+        items: plainItems.value,
         forceMounted: false,
         openMethod: null,
         activeIndex: null,
@@ -457,7 +478,7 @@ usePopupInteractionProps(store, () => ({
   activeTriggerProps: triggerProps,
   inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
   itemRoot: itemRoot.value,
-  items: props.items,
+  items: plainItems.value,
   itemToStringLabel: props.itemToStringLabel,
   itemToStringValue: props.itemToStringValue,
   isItemEqualToValue: comparer.value,

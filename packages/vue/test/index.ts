@@ -15,6 +15,7 @@ export * from './wait';
 export * from './animation';
 export { describeConformance } from './describeConformance';
 export { hiddenInputSizeTests } from './hiddenInputSizeTests';
+export { hiddenInputTypeTests } from './hiddenInputTypeTests';
 export { screen, waitFor, within } from '@testing-library/dom';
 export { fireEvent } from './fireEvent';
 export { flushMicrotasks } from './flushMicrotasks';
