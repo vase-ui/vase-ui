@@ -60,8 +60,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Firefox runs one test file at a time. Its files go in three shards, because one job for
-        # all of them is too slow. Change the three shard counts together.
+        # Firefox runs one test file at a time, so one job for all its files takes more than half
+        # of the time limit. The files go in three shards. Keep the count after the slash the same.
         include:
           - engine: chromium
           - engine: firefox
