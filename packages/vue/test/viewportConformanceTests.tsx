@@ -189,7 +189,7 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
           </DirectionProvider>,
         );
 
-        // The popup is visible after the first position pass, which reads the side.
+        // The positioner shows the popup after its first position pass. The side is then final.
         const popup = await screen.findByTestId('popup');
         await waitFor(() => {
           expect(popup).toBeVisible();
@@ -433,7 +433,8 @@ export function viewportConformanceTests(config: ViewportTestConfig) {
         await waitFor(() => {
           expect(screen.getByText('Content 1')).toBeVisible();
         });
-        // The containers animate only during a morph, so the first animation starts it.
+        // The containers have an animation only while the viewport transitions, so the first
+        // `animationstart` comes from the morph.
         await nextEvent(screen.getByTestId('viewport'), 'animationstart', {
           action: () => activateTrigger(screen.getByTestId('trigger2'), user),
         });
