@@ -20,7 +20,7 @@
       "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. The suite calls `dialogRootSharedTests` and `detachedTriggersConformanceTests` have no counterpart. The first needs a shared suite that Vase UI does not have. In the second, the two cases `allows controlling the open state and active trigger programmatically` fail for a modal dialog: after the close, the focus is on the active trigger and not on the button that opened the dialog."
+      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. The suite calls `dialogRootSharedTests` and `detachedTriggersConformanceTests` have no counterpart."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",

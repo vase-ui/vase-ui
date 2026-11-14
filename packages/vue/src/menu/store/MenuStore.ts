@@ -44,6 +44,11 @@ export type State<Payload> = PopupStoreState<Payload> & {
   /** The `Menu.List` element, which takes the `menu` role from the popup when rendered. */
   listElement: HTMLElement | null;
   /**
+   * The id that `Menu.List` renders. A read of `listElement.id` in a selector does not follow a
+   * change of the id, so the list writes the id here too.
+   */
+  listElementId: string | undefined;
+  /**
    * Props a filter root adds to its triggers (dialog semantics and the key relay to the input).
    * Published by the filter implementation so a plain menu never bundles them.
    */
@@ -139,7 +144,7 @@ const selectors = {
   /** The trigger's `aria-controls`: the list when one holds the `menu` role, else the popup. */
   triggerControlsId: (state: State<unknown>, triggerId: string | undefined) => {
     const popupId = popupStoreSelectors.triggerPopupId(state, triggerId);
-    return popupId ? state.listElement?.id || popupId : undefined;
+    return popupId ? state.listElementId || popupId : undefined;
   },
   filterTriggerProps: (state: State<unknown>) => state.filterTriggerProps,
   inputProps: (state: State<unknown>) => state.inputProps,
@@ -400,6 +405,7 @@ function createInitialState<Payload>(
     rootId: undefined,
     activeIndex: null,
     listElement: null,
+    listElementId: undefined,
     filterTriggerProps: EMPTY_OBJECT as PopupProps,
     inputProps: EMPTY_OBJECT as PopupProps,
     inputFocused: false,
