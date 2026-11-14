@@ -1,0 +1,106 @@
+<script lang="ts">
+import type { HTMLAttributes } from 'vue';
+import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
+import type { TimeClockRootState } from '../root/TimeClockRoot.vue';
+import type { TimeClockFaceNumber } from '../utils/clockViews';
+
+export type { TimeClockFaceNumber } from '../utils/clockViews';
+
+export interface TimeClockNumberState extends TimeClockRootState {
+  /**
+   * Whether the user cannot select the number, or the clock is disabled.
+   */
+  disabled: boolean;
+  /**
+   * Whether the time of the clock selects the number.
+   */
+  selected: boolean;
+  /**
+   * Whether the number is on the inner ring of a 24-hour face.
+   */
+  inner: boolean;
+}
+
+export interface TimeClockNumberProps
+  extends
+    VaseUIComponentProps<TimeClockNumberState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  /**
+   * The number of the face that the part shows.
+   * The `number` slot of `TimeClock.Face` gives it.
+   */
+  number: TimeClockFaceNumber;
+}
+</script>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { formatNumber } from '../../common/formatNumber';
+import { useIsHydrating } from '../../common/hydration';
+import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useRenderElement } from '../../internals/useRenderElement';
+import { useFormatLocale } from '../../utils/useFormatLocale';
+import { useTimeClockRootContext } from '../root/TimeClockRootContext';
+import { angleOfFaceNumber, radiusOfFaceNumber } from '../utils/clockViews';
+import * as TimeClockNumberCssVars from './TimeClockNumberCssVars';
+
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(defineProps<TimeClockNumberProps>(), { as: 'span' });
+
+defineSlots<{
+  default(props: { state: TimeClockNumberState }): unknown;
+  render: ComponentRenderFn<HTMLProps, TimeClockNumberState>;
+}>();
+
+const root = useTimeClockRootContext();
+const formatLocale = useFormatLocale(root.locale);
+const isHydrating = useIsHydrating();
+
+const state = computed<TimeClockNumberState>(() => {
+  const { number } = props;
+  const { selectedNumber } = root;
+  return {
+    ...root.state.value,
+    disabled: root.disabled.value || root.isNumberDisabled(number),
+    selected:
+      !root.empty.value &&
+      number.value === selectedNumber.value.value &&
+      number.inner === selectedNumber.value.inner,
+    inner: number.inner,
+  };
+});
+
+// A zero has two digits, as the time shows it.
+const text = computed(() =>
+  formatNumber(props.number.value, formatLocale.value, {
+    minimumIntegerDigits: props.number.value === 0 ? 2 : 1,
+    useGrouping: false,
+  }),
+);
+
+const { element, elementProps } = useRenderElement('span', props, {
+  state,
+  props: (attrs) => [
+    {
+      'aria-hidden': 'true',
+      // A server and a browser can have another version of the `Intl` data.
+      'data-allow-mismatch': isHydrating.value ? 'text' : undefined,
+      style: {
+        [TimeClockNumberCssVars.timeClockNumberAngle]: `${angleOfFaceNumber(root.view.value, props.number)}deg`,
+        [TimeClockNumberCssVars.timeClockNumberRadius]: radiusOfFaceNumber(props.number),
+      },
+    },
+    attrs,
+  ],
+});
+
+defineExpose({ element });
+</script>
+
+<template>
+  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+  <component :is="as" v-else v-bind="elementProps()"
+    ><slot :state="state">{{ text }}</slot></component
+  >
+</template>
