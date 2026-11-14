@@ -25,7 +25,7 @@ describe('<PreviewCard.Root />', () => {
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = PreviewCard.createHandle<string>();
-    const payloads: Array<string | undefined> = [];
+    const payloads: (string | undefined)[] = [];
     const state = shallowRef<{ open: boolean; triggerId: string | null }>({
       open: true,
       triggerId: 'first',
@@ -511,10 +511,10 @@ describe('<PreviewCard.Root />', () => {
 
   describe('popup tree', () => {
     it('registers the node of a nested card below the node of the outer card, in one tree', async () => {
-      const probes: Array<{
+      const probes: {
         tree: ReturnType<typeof useFloatingTree>['value'];
         parentId: string | null;
-      }> = [];
+      }[] = [];
       const TreeProbe = defineComponent({
         setup() {
           probes.push({ tree: useFloatingTree().value, parentId: useFloatingParentNodeId().value });
