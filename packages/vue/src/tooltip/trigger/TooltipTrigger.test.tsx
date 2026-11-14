@@ -325,6 +325,75 @@ describe('<Tooltip.Trigger />', () => {
     });
   });
 
+  describe('delay group', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function tick(ms: number) {
+      await flushMicrotasks();
+      await vi.advanceTimersByTimeAsync(ms);
+      await flushMicrotasks();
+    }
+
+    async function enter(trigger: HTMLElement) {
+      await fireEvent.mouseEnter(trigger);
+      await fireEvent.mouseMove(trigger);
+    }
+
+    it('ends the instant phase of its store when it replaces the trigger of an instant open', async () => {
+      const App = defineComponent(
+        (props: { triggerKey: string }) => () => (
+          <Tooltip.Provider delay={100}>
+            <Tooltip.Root>
+              <Tooltip.Trigger>One</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup>Content One</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+            <Tooltip.Root>
+              <Tooltip.Trigger key={props.triggerKey}>Two</Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Positioner>
+                  <Tooltip.Popup data-testid="popup-two">Content Two</Tooltip.Popup>
+                </Tooltip.Positioner>
+              </Tooltip.Portal>
+            </Tooltip.Root>
+          </Tooltip.Provider>
+        ),
+        { props: ['triggerKey'] },
+      );
+      const { setProps } = await render(<App triggerKey="first" />);
+
+      await enter(screen.getByRole('button', { name: 'One' }));
+      await tick(100);
+      expect(screen.queryByText('Content One')).not.toBe(null);
+
+      await fireEvent.mouseLeave(screen.getByRole('button', { name: 'One' }));
+      await enter(screen.getByRole('button', { name: 'Two' }));
+      await tick(0);
+      expect(screen.getByTestId('popup-two')).toHaveAttribute('data-instant', 'delay');
+
+      // The trigger that wrote the instant phase unmounts while its tooltip is open.
+      await setProps({ triggerKey: 'second' });
+      await tick(0);
+      expect(screen.queryByTestId('popup-two')).toBe(null);
+
+      await enter(screen.getByRole('button', { name: 'Two' }));
+      await tick(99);
+      expect(screen.queryByTestId('popup-two')).toBe(null);
+
+      await tick(1);
+      expect(screen.getByTestId('popup-two')).not.toHaveAttribute('data-instant');
+    });
+  });
+
   it('throws a descriptive error when rendered without a root or a handle', async () => {
     await expect(render(<Tooltip.Trigger>Trigger</Tooltip.Trigger>)).rejects.toThrow(
       'Vase UI: <Tooltip.Trigger> must be inside <Tooltip.Root>, or it must have a `handle`.',

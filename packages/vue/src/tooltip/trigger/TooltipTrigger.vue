@@ -58,7 +58,7 @@ export interface TooltipTriggerProps<Payload = unknown>
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
-import { computed, shallowRef, watch } from 'vue';
+import { computed, onMounted, shallowRef, watch } from 'vue';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useDelayGroup } from '../../utils/popups/delay-group/FloatingDelayGroup';
@@ -117,9 +117,13 @@ const { registerTrigger, isMountedByThisTrigger } = useTriggerDataForwarding(
 
 const providerDelay = useTooltipProviderContext();
 const delayGroup = useDelayGroup(store, { open: isOpenedByThisTrigger });
-watch([store, delayGroup.isInstantPhase], ([currentStore, isInstantPhase]) => {
-  currentStore.set('isInstantPhase', isInstantPhase);
-});
+function writeIsInstantPhase() {
+  store.value.set('isInstantPhase', delayGroup.isInstantPhase.value);
+}
+// A trigger that unmounts in its instant phase leaves the value `true` in the store. The write at
+// the mount of the next trigger ends that phase, as `useSyncedValue` of Base UI does.
+onMounted(writeIsInstantPhase);
+watch([store, delayGroup.isInstantPhase], writeIsInstantPhase);
 
 const isDisabled = computed(() => props.disabled || store.value.select('disabled'));
 const rootTriggerProps = computed(() =>
