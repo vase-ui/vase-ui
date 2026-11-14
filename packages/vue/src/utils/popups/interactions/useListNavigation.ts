@@ -315,7 +315,7 @@ export function useListNavigation(
       if (allowEscape && !isVirtual()) {
         warn(
           '`useListNavigation` has `allowEscape` and no `virtual`.',
-          'With real focus, the focus stays on an item, so the highlight cannot leave the list.',
+          'With real focus, an item of the list always has the focus.',
           'Set `virtual` to `true`, or remove `allowEscape`.',
         );
       }

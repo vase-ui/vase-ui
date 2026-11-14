@@ -600,7 +600,7 @@ describe('useListNavigation', () => {
 
       expect(warn.mock.calls.map(([message]) => message)).toEqual([
         'Vase UI: `useListNavigation` has `allowEscape` and no `loopFocus`. `allowEscape` has no effect while `loopFocus` is `false`. Set `loopFocus` to `true`, or remove `allowEscape`.',
-        'Vase UI: `useListNavigation` has `allowEscape` and no `virtual`. With real focus, the focus stays on an item, so the highlight cannot leave the list. Set `virtual` to `true`, or remove `allowEscape`.',
+        'Vase UI: `useListNavigation` has `allowEscape` and no `virtual`. With real focus, an item of the list always has the focus. Set `virtual` to `true`, or remove `allowEscape`.',
         'Vase UI: `useListNavigation` has a `grid` and the orientation "vertical". The horizontal arrow keys then do not move the highlight in the grid. Set `orientation` to "horizontal" or "both".',
       ]);
     });
