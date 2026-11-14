@@ -1,3 +1,14 @@
+import TooltipArrow from './arrow/TooltipArrow.vue';
+import type { TooltipArrowProps, TooltipArrowState } from './arrow/TooltipArrow.vue';
+import TooltipPopup from './popup/TooltipPopup.vue';
+import type { TooltipPopupProps, TooltipPopupState } from './popup/TooltipPopup.vue';
+import TooltipPortal from './portal/TooltipPortal.vue';
+import type { TooltipPortalProps, TooltipPortalState } from './portal/TooltipPortal.vue';
+import TooltipPositioner from './positioner/TooltipPositioner.vue';
+import type {
+  TooltipPositionerProps,
+  TooltipPositionerState,
+} from './positioner/TooltipPositioner.vue';
 import TooltipRoot from './root/TooltipRoot.vue';
 import type {
   TooltipRootActions,
@@ -30,6 +41,47 @@ export const Trigger: typeof TooltipTrigger = TooltipTrigger;
 export namespace Trigger {
   export type State = TooltipTriggerState;
   export type Props<Payload = unknown> = TooltipTriggerProps<Payload>;
+}
+
+/**
+ * A portal element that moves the popup to a different part of the DOM.
+ * By default, the portal element is appended to `<body>`.
+ * Renders a `<div>` element.
+ */
+export const Portal: typeof TooltipPortal = TooltipPortal;
+export namespace Portal {
+  export type State = TooltipPortalState;
+  export type Props = TooltipPortalProps;
+}
+
+/**
+ * Positions the tooltip against the trigger.
+ * Renders a `<div>` element.
+ */
+export const Positioner: typeof TooltipPositioner = TooltipPositioner;
+export namespace Positioner {
+  export type State = TooltipPositionerState;
+  export type Props = TooltipPositionerProps;
+}
+
+/**
+ * A container for the tooltip contents.
+ * Renders a `<div>` element.
+ */
+export const Popup: typeof TooltipPopup = TooltipPopup;
+export namespace Popup {
+  export type State = TooltipPopupState;
+  export type Props = TooltipPopupProps;
+}
+
+/**
+ * Displays an element positioned against the tooltip anchor.
+ * Renders a `<div>` element.
+ */
+export const Arrow: typeof TooltipArrow = TooltipArrow;
+export namespace Arrow {
+  export type State = TooltipArrowState;
+  export type Props = TooltipArrowProps;
 }
 
 export {

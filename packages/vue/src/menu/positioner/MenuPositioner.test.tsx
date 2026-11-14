@@ -1,11 +1,13 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, defineComponent, shallowRef, toValue } from 'vue';
+import type { FunctionalComponent } from 'vue';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
   describeConformance,
   fireEvent,
   flushMicrotasks,
+  positionerConformanceTests,
   screen,
   takeReportedMessages,
   waitFor,
@@ -53,6 +55,12 @@ function readLastOptions() {
     lazyFlip: toValue(options.lazyFlip),
   };
 }
+
+const Trigger: FunctionalComponent<Menu.Trigger.Props> = (props, { slots }) => (
+  <Menu.Trigger {...props} as="div" nativeButton={false}>
+    {slots.default?.()}
+  </Menu.Trigger>
+);
 
 // Puts its parts in a node of the popup tree, as a popup that holds a menu does.
 const ParentNode = defineComponent({
@@ -718,6 +726,28 @@ describe('<Menu.Positioner />', () => {
 
     expect(screen.getByTestId('positioner')).toHaveAttribute('data-instant', 'dismiss');
     expect(screen.getByTestId('popup')).toHaveAttribute('data-instant', 'dismiss');
+  });
+
+  positionerConformanceTests({
+    render,
+    createComponent: ({
+      root,
+      trigger,
+      positioner: { render: renderPositioner, ...positioner },
+      popup,
+    }) => (
+      <Menu.Root {...root}>
+        <Trigger {...trigger}>Trigger</Trigger>
+        <Menu.Portal>
+          <Menu.Positioner
+            {...positioner}
+            v-slots={renderPositioner ? { render: renderPositioner } : undefined}
+          >
+            <Menu.Popup {...popup}>Popup</Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>
+    ),
   });
 
   it('is not nested for a menu with no parent menu', async () => {

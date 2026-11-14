@@ -586,14 +586,6 @@
       "reason": "The case renders `Menubar`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />"],
-      "suite": "positionerConformanceTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/positionerConformanceTests.tsx",
-      "reason": "The shared suite is not in Vase UI yet."
-    },
-    {
       "upstream": "packages/react/src/menu/radio-group/MenuRadioGroup.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/radio-group/MenuRadioGroup.tsx",
