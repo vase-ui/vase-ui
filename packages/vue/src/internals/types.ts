@@ -48,7 +48,7 @@ export type WithVaseUIEvent<T> = {
  * function when the SFC has a required slot. At run time the SFC is a component object.
  * `@vue-ignore` hides the function type from the SFC compiler. Without it, the compiler gives `as`
  * the run-time type `[String, Function]`. The build of the package keeps that type but not
- * `skipCheck`, so Vue refuses a component object in the development build of a consumer.
+ * `skipCheck`, so Vue warns for a component object in the development build of a consumer.
  */
 export type GenericComponent = /* @vue-ignore */ (props: any, ...args: any[]) => unknown;
 
