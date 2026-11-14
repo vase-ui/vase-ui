@@ -1,5 +1,4 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import userEvent from '@testing-library/user-event';
 import {
   defineComponent,
   inject,
@@ -24,7 +23,7 @@ import {
   waitSingleFrame,
 } from '#test-utils';
 import CompositeList from '../../../../test/fixtures/CompositeListPart.vue';
-import { useFloating } from '../../../../test/fixtures/useFloating';
+import { useFloating } from '../../../../test/floating-ui-tests/useFloating';
 import { reset as resetWarnings } from '../../../common/warn';
 import { useCompositeListItem } from '../../../internals/composite/list/useCompositeListItem';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
@@ -1188,32 +1187,32 @@ describe('useListNavigation', () => {
       };
     });
 
-    await render(<Autocomplete />);
+    const { user } = await render(<Autocomplete />);
 
     screen.getByTestId('reference').focus();
     await flushMicrotasks();
-    await userEvent.keyboard('a');
+    await user.keyboard('a');
 
     expect(screen.getByTestId('floating')).toBeInTheDocument();
     expect(screen.getByTestId('active-index').textContent).toBe('');
 
-    await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     expect(screen.getByTestId('active-index').textContent).toBe('2');
 
-    await userEvent.keyboard('{Escape}');
+    await user.keyboard('{Escape}');
 
     expect(screen.getByTestId('active-index').textContent).toBe('');
 
-    await userEvent.keyboard('{Backspace}');
-    await userEvent.keyboard('a');
+    await user.keyboard('{Backspace}');
+    await user.keyboard('a');
 
     expect(screen.getByTestId('floating')).toBeInTheDocument();
     expect(screen.getByTestId('active-index').textContent).toBe('');
 
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     expect(screen.getByTestId('active-index').textContent).toBe('0');
   });
@@ -1846,12 +1845,12 @@ describe('useListNavigation', () => {
     });
 
     it('wraps ArrowUp to the last row in the full list for virtualized rows', async () => {
-      await render(<VirtualizedGridRows />);
+      const { user } = await render(<VirtualizedGridRows />);
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowUp}');
+      await user.keyboard('{ArrowUp}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1862,12 +1861,12 @@ describe('useListNavigation', () => {
     });
 
     it('clamps ArrowUp to the last item in a partial last row for virtualized rows', async () => {
-      await render(<VirtualizedGridRows totalItems={98} initialActiveIndex={4} />);
+      const { user } = await render(<VirtualizedGridRows totalItems={98} initialActiveIndex={4} />);
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowUp}');
+      await user.keyboard('{ArrowUp}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1878,12 +1877,14 @@ describe('useListNavigation', () => {
     });
 
     it('clamps ArrowDown into a partial last row for virtualized rows', async () => {
-      await render(<VirtualizedGridRows totalItems={98} initialActiveIndex={93} />);
+      const { user } = await render(
+        <VirtualizedGridRows totalItems={98} initialActiveIndex={93} />,
+      );
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowDown}');
+      await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1894,14 +1895,14 @@ describe('useListNavigation', () => {
     });
 
     it('does not wrap ArrowUp when loopFocus is false for virtualized rows', async () => {
-      await render(
+      const { user } = await render(
         <VirtualizedGridRows totalItems={98} initialActiveIndex={4} loopFocus={false} />,
       );
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowUp}');
+      await user.keyboard('{ArrowUp}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1912,14 +1913,14 @@ describe('useListNavigation', () => {
     });
 
     it('still clamps ArrowDown into a partial last row when loopFocus is false', async () => {
-      await render(
+      const { user } = await render(
         <VirtualizedGridRows totalItems={98} initialActiveIndex={93} loopFocus={false} />,
       );
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowDown}');
+      await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1930,14 +1931,14 @@ describe('useListNavigation', () => {
     });
 
     it('falls back left in a partial last row when the preferred candidate is disabled', async () => {
-      await render(
+      const { user } = await render(
         <VirtualizedGridRows totalItems={98} initialActiveIndex={93} disabledIndices={[97]} />,
       );
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowDown}');
+      await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -1948,12 +1949,14 @@ describe('useListNavigation', () => {
     });
 
     it('falls back left when the preferred candidate is hidden', async () => {
-      await render(<VirtualizedGridRows initialActiveIndex={9} hiddenIndices={[14]} />);
+      const { user } = await render(
+        <VirtualizedGridRows initialActiveIndex={9} hiddenIndices={[14]} />,
+      );
 
       screen.getByTestId('virtual-grid-reference').focus();
       await flushMicrotasks();
 
-      await userEvent.keyboard('{ArrowDown}');
+      await user.keyboard('{ArrowDown}');
 
       await waitFor(() => {
         expect(screen.getByTestId('virtual-grid-active-index')).toHaveAttribute(
@@ -2081,7 +2084,7 @@ describe('useListNavigation', () => {
   });
 
   it('grid navigation with changing list items', async () => {
-    await render(<EmojiPicker />);
+    const { user } = await render(<EmojiPicker />);
 
     await fireEvent.click(screen.getByRole('button'));
 
@@ -2093,15 +2096,15 @@ describe('useListNavigation', () => {
       expect(input).toHaveFocus();
     });
 
-    await userEvent.keyboard('appl');
+    await user.keyboard('appl');
     const initialActiveIndex = activeIndicator.getAttribute('data-active-index');
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     await waitFor(() => {
       expect(activeIndicator.getAttribute('data-active-index')).not.toBe(initialActiveIndex);
     });
 
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     await waitFor(() => {
       expect(activeIndicator.getAttribute('data-active-index')).not.toBe(initialActiveIndex);
@@ -2111,7 +2114,7 @@ describe('useListNavigation', () => {
   });
 
   it('grid navigation with disabled list items', async () => {
-    const { unmount } = await render(<EmojiPicker />);
+    const { unmount, user } = await render(<EmojiPicker />);
 
     await fireEvent.click(screen.getByRole('button'));
 
@@ -2123,16 +2126,16 @@ describe('useListNavigation', () => {
       expect(input).toHaveFocus();
     });
 
-    await userEvent.keyboard('o');
+    await user.keyboard('o');
     const initialActiveIndex = activeIndicator.getAttribute('data-active-index');
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     expect(screen.getByLabelText('orange')).not.toHaveAttribute('data-active');
     await waitFor(() => {
       expect(activeIndicator.getAttribute('data-active-index')).not.toBe(initialActiveIndex);
     });
 
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     await waitFor(() => {
       expect(activeIndicator.getAttribute('data-active-index')).not.toBe(initialActiveIndex);
@@ -2155,10 +2158,10 @@ describe('useListNavigation', () => {
     });
 
     const nextInitialActiveIndex = nextActiveIndicator.getAttribute('data-active-index');
-    await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{ArrowRight}');
-    await userEvent.keyboard('{ArrowUp}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowRight}');
+    await user.keyboard('{ArrowUp}');
 
     await waitFor(() => {
       expect(nextActiveIndicator.getAttribute('data-active-index')).not.toBe(
@@ -2169,7 +2172,7 @@ describe('useListNavigation', () => {
   });
 
   it('selectedIndex changing does not steal focus', async () => {
-    await render(<ListboxFocus />);
+    const { user } = await render(<ListboxFocus />);
 
     // TODO: This feels like a bug. It's the animation frame callback from `enqueueFocus` sometimes
     // kicking in after the click instead before, which causes flakeyness in this test as the wrong
@@ -2178,7 +2181,7 @@ describe('useListNavigation', () => {
       expect(document.activeElement).toHaveRole('option');
     });
 
-    await userEvent.click(screen.getByTestId('reference'));
+    await user.click(screen.getByTestId('reference'));
 
     await waitFor(() => {
       expect(screen.getByTestId('reference')).toHaveFocus();
@@ -2235,23 +2238,23 @@ describe('useListNavigation', () => {
       );
     });
 
-    await render(<ComboboxApp />);
+    const { user } = await render(<ComboboxApp />);
 
     screen.getByRole('combobox').focus();
     await flushMicrotasks();
 
-    await userEvent.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}');
 
     await waitFor(() => {
       expect(screen.getByTestId('item-0')).toHaveFocus();
     });
 
-    await userEvent.keyboard('{End}');
+    await user.keyboard('{End}');
 
     expect(screen.getByTestId('item-0')).toHaveFocus();
 
-    await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{Home}');
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Home}');
 
     await waitFor(() => {
       expect(screen.getByTestId('item-1')).toHaveFocus();
@@ -2606,6 +2609,41 @@ describe('useListNavigation', () => {
 
       expect(activeIndexOf('root')).toBe('3');
       expect(item('four')).toHaveFocus();
+    });
+
+    it('moves in a grid of a list below, and closes that list for Escape', async () => {
+      const image: Entry = {
+        label: 'image',
+        orientation: 'horizontal',
+        options: { grid: () => gridNavigation },
+        items: ['.png', '.jpg', '.svg', '.gif'],
+      };
+      await render(
+        <Tree>
+          <NestedList label="root" items={['one', image]} />
+        </Tree>,
+      );
+      await keyDown(part('trigger-root'), 'ArrowDown');
+      await waitFor(() => expect(item('one')).toHaveFocus());
+      await keyDown(part('menu-root'), 'ArrowDown');
+      expect(part('trigger-image')).toHaveFocus();
+      await keyDown(part('trigger-image'), 'ArrowRight');
+      await waitFor(() => expect(item('.png')).toHaveFocus());
+
+      await keyDown(part('menu-image'), 'ArrowRight');
+      expect(item('.jpg')).toHaveFocus();
+      await keyDown(part('menu-image'), 'ArrowDown');
+      expect(item('.gif')).toHaveFocus();
+      await keyDown(part('menu-image'), 'ArrowLeft');
+      expect(item('.svg')).toHaveFocus();
+      await keyDown(part('menu-image'), 'ArrowUp');
+      expect(item('.png')).toHaveFocus();
+      expect(activeIndexOf('root')).toBe('1');
+
+      // A horizontal grid uses each arrow key, so Escape is the close key of the list below.
+      await keyDown(part('menu-image'), 'Escape');
+      expect(isOpen('image')).toBe(false);
+      expect(part('trigger-image')).toHaveFocus();
     });
 
     it('does not give a key that a list in the middle stops to the list above it', async () => {
