@@ -942,7 +942,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>
@@ -1060,7 +1060,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>
@@ -1097,7 +1097,7 @@ describe('<Select.Item />', () => {
             <Select.Value data-testid="value" />
           </Select.Trigger>
           <Select.Portal>
-            <Select.Positioner>
+            <Select.Positioner alignItemWithTrigger>
               <Select.Popup>
                 <Select.Item value="one">one</Select.Item>
                 <Select.Item value="two">two</Select.Item>

@@ -46,8 +46,8 @@ async function settleReset() {
   await flushMicrotasks();
 }
 
-// The trigger mounts the items in a 0 ms timer after it gets the focus. A browser delays a nested
-// timer by 4 ms or more, so `flushMicrotasks` can resolve before the items mount.
+// The trigger mounts the items in a 0 ms timer after it gets the focus. `flushMicrotasks` resolves
+// in the next task, and a browser can run that task before the task of the timer.
 async function focusTrigger(trigger: HTMLElement) {
   trigger.focus();
   await waitFor(() => {

@@ -117,14 +117,6 @@
       "reason": "The case renders `Select.ScrollUpArrow`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/select/popup/SelectPopup.test.tsx",
-      "describe": ["<Select.Popup />"],
-      "suite": "popupFocusPropsTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/select/scroll-arrow/SelectScrollArrow.tsx",
-      "reason": "Vase UI does not have the shared suite `popupFocusPropsTests`. The scroll arrows are the last part of the family, so the row names their file."
-    },
-    {
       "upstream": "packages/react/src/select/store.test.tsx",
       "describe": ["select store synchronization"],
       "title": "synchronizes an updated disabled prop after descendant ref callbacks",

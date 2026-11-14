@@ -1,5 +1,5 @@
-import { afterEach, expect, describe, it, vi } from 'vitest';
-import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
+import { afterEach, expect, describe, it, onTestFinished, vi } from 'vitest';
+import { createSSRApp, defineComponent, h, KeepAlive, shallowRef } from 'vue';
 import type { Component, CSSProperties } from 'vue';
 import { DirectionProvider } from '@vase-ui/vue/direction-provider';
 import { Toolbar } from '@vase-ui/vue/toolbar';
@@ -11,10 +11,13 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  popupFocusPropsTests,
+  renderOnServer,
   screen,
   takeReportedMessages,
   waitFor,
 } from '#test-utils';
+import SelectPopupHydration from './SelectPopupHydration.test.vue';
 
 const isWebKit = platform.engine.webkit;
 
@@ -1758,6 +1761,26 @@ describe('<Select.Popup />', () => {
     expect(finalFocus).toHaveBeenLastCalledWith('keyboard');
   });
 
+  popupFocusPropsTests({
+    render,
+    initialFocus: false,
+    triggerRole: 'combobox',
+    alwaysMounted: true,
+    createComponent: ({ children, finalFocus }) => (
+      <Select.Root>
+        <Select.Trigger>Open</Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup finalFocus={finalFocus}>
+              {children}
+              <Select.Item value="close">Close</Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    ),
+  });
+
   it('keeps the transform styles of the popup after it places the selected item over the trigger', async () => {
     await render(
       <div style={{ paddingTop: '200px', minHeight: '600px' }}>
@@ -1832,6 +1855,37 @@ describe('<Select.Popup />', () => {
     expect(
       styles.some((element) => element.textContent?.includes('.vase-ui-disable-scrollbar')),
     ).toBe(true);
+  });
+
+  it('hydrates a popup that is not in a portal, and then keeps only the shared style element', async () => {
+    const readSharedStyles = () =>
+      Array.from(document.head.querySelectorAll('style')).filter((element) =>
+        element.textContent?.includes('.vase-ui-disable-scrollbar'),
+      );
+    const serverHtml = await renderOnServer('src/select/popup/SelectPopupHydration.test.vue');
+    const container = document.createElement('div');
+    document.body.append(container);
+    container.innerHTML = serverHtml;
+    const popup = container.querySelector('[data-testid="popup"]');
+    // The rule of the server HTML hides the native scrollbar before the page hydrates.
+    expect(popup).toHaveClass('vase-ui-disable-scrollbar');
+    expect(container.querySelectorAll('style')).toHaveLength(1);
+    expect(readSharedStyles()).toHaveLength(0);
+
+    const app = createSSRApp(SelectPopupHydration);
+    onTestFinished(() => {
+      app.unmount();
+      container.remove();
+    });
+    app.mount(container);
+
+    await waitFor(() => {
+      expect(readSharedStyles()).toHaveLength(1);
+    });
+    expect(container.querySelector('style')).toBe(null);
+    // A mismatch makes Vue discard the server nodes and render new nodes.
+    expect(container.querySelector('[data-testid="popup"]')).toBe(popup);
+    expect(takeReportedMessages()).toEqual([]);
   });
 
   it('VUE-5: closes a popup that is placed over the trigger for a window resize only while KeepAlive shows it', async () => {

@@ -79,6 +79,28 @@ describe('<Select.Root /> on a server', () => {
     expect(readAttributes(html, 'group-label')).toHaveProperty('aria-hidden', 'true');
   });
 
+  it('renders the style element that hides the native scrollbar before a popup that is placed over the trigger', async () => {
+    const html = await renderToString(
+      <Select.Root defaultOpen defaultValue="a">
+        <Select.Trigger />
+        <Select.Positioner data-testid="positioner">
+          <Select.Popup data-testid="popup">
+            <Select.Item value="a">a</Select.Item>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Root>,
+    );
+
+    expect(readAttributes(html, 'positioner')).toMatchObject({
+      'data-side': 'none',
+      style: 'position:fixed;',
+    });
+    expect(readAttributes(html, 'popup')).toHaveProperty('class', 'vase-ui-disable-scrollbar');
+    expect(withoutComments(html)).toMatch(
+      /<style>\.vase-ui-disable-scrollbar\{scrollbar-width:none\}[^<]*<\/style><div[^>]*data-testid="popup"/,
+    );
+  });
+
   it('renders the label of the value and the hidden input of a closed select', async () => {
     const html = await renderToString(
       <Select.Root id="font" name="font" defaultValue="serif" items={{ serif: 'Serif' }}>

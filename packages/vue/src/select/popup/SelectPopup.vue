@@ -65,6 +65,7 @@ import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
 import { useDomEffect } from '../../utils/popups/useDomEffect';
 import { getMaxScrollOffset, SCROLL_EDGE_TOLERANCE_PX } from '../../utils/scrollEdges';
+import StyleDisableScrollbar from '../../utils/StyleDisableScrollbar.vue';
 import { styleDisableScrollbar, useStyleDisableScrollbar } from '../../utils/styles';
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -524,6 +525,8 @@ const { element, elementProps } = useRenderElement('div', props, {
   },
 });
 
+// `StyleDisableScrollbar` gives the server HTML its style element. A popup that is not in a portal
+// is in the server HTML, and it hides its native scrollbar before the page hydrates.
 useStyleDisableScrollbar(element);
 
 defineExpose({ element });
@@ -589,6 +592,7 @@ function unsetTransformStyles(popup: HTMLElement) {
 </script>
 
 <template>
+  <StyleDisableScrollbar />
   <FloatingFocusManager
     :store="store"
     :modal="false"

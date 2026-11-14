@@ -693,8 +693,6 @@ useFormReset(inputElement, (event) => {
   } else {
     clearFieldError(selectedValue.value);
   }
-
-  void nextTick(writeValueToInput);
 });
 
 watch(
