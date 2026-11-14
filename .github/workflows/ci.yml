@@ -152,6 +152,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
+      - run: pnpm test:node
       - run: pnpm test:chromium
 
   required:
