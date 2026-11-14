@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { defineComponent, shallowRef } from 'vue';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { defineComponent, shallowRef, Teleport } from 'vue';
 import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
+import { reset as resetWarnings } from '../../common/warn';
 import { useFilterDropdownRoot } from './FilterDropdownRoot';
 import type {
   FilterDropdownRootChangeEventDetails,
@@ -48,6 +49,106 @@ describe('<FilterDropdown.Root />', () => {
     expect(list).toHaveAttribute('tabindex', '-1');
     expect(input).toHaveAttribute('aria-controls', list.id);
     expect(input).not.toHaveAttribute('aria-activedescendant');
+  });
+
+  it('keeps focus on the input when the list or popup background is clicked', async () => {
+    const { user } = await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup id={undefined} data-testid="popup">
+          <FilterDropdown.Input aria-label="Filter countries" />
+          <FilterDropdown.List id={undefined} />
+        </FilterDropdown.Popup>
+      </TestFilterDropdownRoot>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter countries' });
+    const list = screen.getByRole('menu');
+
+    await user.click(input);
+    await user.click(list);
+    expect(input).toHaveFocus();
+
+    await user.click(screen.getByTestId('popup'));
+
+    expect(input).toHaveFocus();
+  });
+
+  it('focuses the input when the pointer enters or the popup itself receives focus', async () => {
+    const { user } = await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup id={undefined} data-testid="popup" tabindex={-1}>
+          <FilterDropdown.Input aria-label="Filter countries" />
+          <FilterDropdown.List id={undefined}>
+            <div role="menuitem">Canada</div>
+          </FilterDropdown.List>
+        </FilterDropdown.Popup>
+        <button type="button">Outside</button>
+      </TestFilterDropdownRoot>,
+    );
+
+    const input = screen.getByRole('searchbox', { name: 'Filter countries' });
+    const outside = screen.getByRole('button', { name: 'Outside' });
+    const popup = screen.getByTestId('popup');
+
+    outside.focus();
+    await flushMicrotasks();
+    await user.hover(popup);
+    expect(input).toHaveFocus();
+
+    outside.focus();
+    popup.focus();
+    await flushMicrotasks();
+    expect(input).toHaveFocus();
+  });
+
+  it('does not focus a parent input when the pointer enters a portalled nested popup', async () => {
+    const { user } = await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup id={undefined} data-testid="parent-popup">
+          <FilterDropdown.Input aria-label="Filter parent items" />
+          <TestFilterDropdownRoot open value="">
+            <Teleport to={document.body}>
+              <FilterDropdown.Popup id={undefined} data-testid="child-popup">
+                <FilterDropdown.Input aria-label="Filter child items" />
+              </FilterDropdown.Popup>
+            </Teleport>
+          </TestFilterDropdownRoot>
+        </FilterDropdown.Popup>
+      </TestFilterDropdownRoot>,
+    );
+
+    const parentInput = screen.getByRole('searchbox', { name: 'Filter parent items' });
+    const childInput = screen.getByRole('searchbox', { name: 'Filter child items' });
+
+    parentInput.focus();
+    await flushMicrotasks();
+    await user.hover(screen.getByTestId('child-popup'));
+
+    expect(childInput).toHaveFocus();
+  });
+
+  it('does not focus a parent input when the pointer enters an inline nested popup', async () => {
+    const { user } = await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup id={undefined} data-testid="parent-popup">
+          <FilterDropdown.Input aria-label="Filter parent items" />
+          <TestFilterDropdownRoot open value="">
+            <FilterDropdown.Popup id={undefined} data-testid="child-popup">
+              <FilterDropdown.Input aria-label="Filter child items" />
+            </FilterDropdown.Popup>
+          </TestFilterDropdownRoot>
+        </FilterDropdown.Popup>
+      </TestFilterDropdownRoot>,
+    );
+
+    const parentInput = screen.getByRole('searchbox', { name: 'Filter parent items' });
+    const childInput = screen.getByRole('searchbox', { name: 'Filter child items' });
+
+    parentInput.focus();
+    await flushMicrotasks();
+    await user.hover(screen.getByTestId('child-popup'));
+
+    expect(childInput).toHaveFocus();
   });
 
   it('updates relationships when id props change', async () => {
@@ -181,6 +282,72 @@ describe('useFilterDropdownRoot', () => {
 
     expect(rootContext?.inputFocusVisible.value).toBe(true);
     expect(rootContext?.keyboardModality.value).toBe(true);
+  });
+
+  it('compares a later query with the query of the mount', async () => {
+    const value = shallowRef('a');
+    const setActiveIndex = vi.fn();
+    const Host = defineComponent(() => {
+      useFilterDropdownRoot({
+        open: true,
+        value,
+        listRef: shallowRef([]),
+        getActiveIndex: getNoActiveIndex,
+        setActiveIndex,
+      });
+      return () => null;
+    });
+    await render(<Host />);
+    expect(setActiveIndex).not.toHaveBeenCalled();
+
+    value.value = '';
+    await flushMicrotasks();
+
+    // No item is registered, so only the change of the query clears the highlight.
+    expect(setActiveIndex).toHaveBeenCalledWith(null);
+  });
+});
+
+describe('useMenuFilterPopup', () => {
+  const { render } = createRenderer();
+
+  function spyOnWarnings() {
+    resetWarnings();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    onTestFinished(() => {
+      warn.mockRestore();
+    });
+    return warn;
+  }
+
+  const message =
+    'Vase UI: A filterable menu opened without a <Menu.Input>. The focus then has no input to stay on, so the user cannot type a query. Render the input inside <Menu.Popup>, or remove <Menu.FilterProvider> for a menu that does not filter.';
+
+  it('warns when the popup mounts open with no input', async () => {
+    const warn = spyOnWarnings();
+
+    await render(
+      <TestFilterDropdownRoot open value="">
+        <FilterDropdown.Popup />
+      </TestFilterDropdownRoot>,
+    );
+
+    expect(warn.mock.calls).toEqual([[message]]);
+  });
+
+  it('warns when the popup opens later with no input', async () => {
+    const warn = spyOnWarnings();
+
+    const { setProps } = await render(
+      <TestFilterDropdownRoot open={false} value="">
+        <FilterDropdown.Popup />
+      </TestFilterDropdownRoot>,
+    );
+    expect(warn).not.toHaveBeenCalled();
+
+    await setProps({ open: true });
+
+    expect(warn.mock.calls).toEqual([[message]]);
   });
 });
 

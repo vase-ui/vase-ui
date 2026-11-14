@@ -78,11 +78,6 @@
       "reason": "Vase UI does not have the filter parts of Menu."
     },
     {
-      "upstream": "packages/react/src/menu/filter-root/useMenuFilterPopup.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have the filter parts of Menu."
-    },
-    {
       "upstream": "packages/react/src/menu/filter-root/useMenuFilterRoot.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have the filter parts of Menu."
