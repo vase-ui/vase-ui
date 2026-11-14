@@ -173,6 +173,16 @@ export type DismissElementProps = Required<
 >;
 
 /**
+ * The props that `useListNavigation` returns. `item` and `trigger` hold only listeners, and each
+ * is one object for the life of the composable. Each handler does nothing while the composable is
+ * not enabled, so the object always has the four members. The one exception is the `keydown`
+ * handler of `floating`: it still gives a key to the list above.
+ */
+export type ListNavigationElementProps = Required<
+  Pick<ElementProps, 'reference' | 'floating' | 'item' | 'trigger'>
+>;
+
+/**
  * The props that `useClick` returns. Each handler does nothing while the composable is not enabled,
  * so the object always has the `reference` member.
  */

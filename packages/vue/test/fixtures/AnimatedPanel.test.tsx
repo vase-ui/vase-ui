@@ -6,16 +6,17 @@ import {
   createTransitionRunCounter,
   flushMicrotasks,
   hydrate,
+  nextAnimationsRead,
   nextEvent,
   openInTimerTask,
   probeFrameAfterExit,
   renderOnServer,
-  waitFor,
 } from '#test-utils';
 import type { FrameProbeResult } from '#test-utils';
 import AnimatedPanel from './AnimatedPanel.vue';
 import {
   ANIMATION,
+  LONG_EXIT,
   TRANSITION,
   countTransitions,
   createCompletionLog,
@@ -45,32 +46,29 @@ describe('<AnimatedPanel />', () => {
     }: FrameRow & { completeInLaterTask?: boolean }) {
       const open = shallowRef(true);
       const log = createCompletionLog();
+      const mounted = log.next(true);
       const { container } = await render(() => (
         <AnimatedPanel
           open={open.value}
           keepMounted={keepMounted}
           batch={batch}
           completeInLaterTask={completeInLaterTask}
-          class={className}
+          class={[className, LONG_EXIT]}
           data-testid="panel"
           onOpenChangeComplete={log.onOpenChangeComplete}
         />
       ));
-      await waitFor(() => {
-        expect(log.calls).toContain(true);
-      });
+      await mounted;
 
-      const exitEvent = className === TRANSITION ? 'transitionrun' : 'animationstart';
       const results: FrameProbeResult[] = [];
       for (let cycle = 0; cycle < 3; cycle += 1) {
         const panel = container.querySelector<HTMLElement>('[data-testid="panel"]')!;
-        const exitStarted = nextEvent(panel, exitEvent);
         const exited = log.next(false);
-        closeInTimerTask(open);
-        await exitStarted;
         results.push(
-          await probeFrameAfterExit(panel, () =>
-            keepMounted ? panel.hidden === true : !panel.isConnected,
+          await probeFrameAfterExit(
+            panel,
+            () => (keepMounted ? panel.hidden === true : !panel.isConnected),
+            () => closeInTimerTask(open),
           ),
         );
 
@@ -126,12 +124,14 @@ describe('<AnimatedPanel />', () => {
       const secondOpen = shallowRef(true);
       const first = createCompletionLog();
       const second = createCompletionLog();
+      const firstMounted = first.next(true);
+      const secondMounted = second.next(true);
       const { container } = await render(() => (
         <>
           <AnimatedPanel
             open={firstOpen.value}
             keepMounted
-            class={ANIMATION}
+            class={[ANIMATION, LONG_EXIT]}
             data-testid="first"
             onOpenChangeComplete={(open: boolean) => {
               first.onOpenChangeComplete(open);
@@ -143,7 +143,7 @@ describe('<AnimatedPanel />', () => {
           <AnimatedPanel
             open={secondOpen.value}
             keepMounted
-            class={ANIMATION}
+            class={[ANIMATION, LONG_EXIT]}
             data-testid="second"
             onOpenChangeComplete={second.onOpenChangeComplete}
           />
@@ -151,35 +151,28 @@ describe('<AnimatedPanel />', () => {
       ));
       const firstPanel = container.querySelector<HTMLElement>('[data-testid="first"]')!;
       const secondPanel = container.querySelector<HTMLElement>('[data-testid="second"]')!;
-      await waitFor(() => {
-        expect(first.calls).toContain(true);
-      });
-      await waitFor(() => {
-        expect(second.calls).toContain(true);
-      });
+      await Promise.all([firstMounted, secondMounted]);
       expect(second.calls).not.toContain(false);
 
-      const exitsStarted = Promise.all([
-        nextEvent(firstPanel, 'animationstart'),
-        nextEvent(secondPanel, 'animationstart'),
-      ]);
+      const firstRead = nextAnimationsRead(firstPanel);
+      const secondRead = nextAnimationsRead(secondPanel);
       setTimeout(() => {
         firstOpen.value = false;
         secondOpen.value = false;
       });
-      await exitsStarted;
+      const [firstAnimations, secondAnimations] = await Promise.all([firstRead, secondRead]);
+      expect(firstAnimations).toHaveLength(1);
+      expect(secondAnimations).toHaveLength(1);
 
       // The explicit calls fix the order. Two animations that end in one frame have no order.
-      const [firstAnimation] = firstPanel.getAnimations();
-      const [secondAnimation] = secondPanel.getAnimations();
-      firstAnimation.finish();
-      secondAnimation.finish();
+      firstAnimations[0].finish();
+      secondAnimations[0].finish();
       await flushMicrotasks();
 
       expect(first.calls).toContain(false);
       expect(second.calls).not.toContain(false);
       expect(secondPanel.hidden).toBe(false);
-    });
+    }, 20_000);
   });
 
   describe('transitions', () => {

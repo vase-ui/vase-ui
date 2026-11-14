@@ -148,8 +148,6 @@ const ParentPopupElementContext: InjectionKey<() => HTMLElement | null> = Symbol
 // marks last.
 const ParentMarksCountContext: InjectionKey<Readonly<Ref<number>>> = Symbol();
 
-const CLICK_TRIGGER_IDENTIFIER = createAttribute('click-trigger');
-
 function getEventType(event: Event, lastInteractionType?: InteractionType): InteractionType {
   const win = ownerWindow(getTarget(event));
   if (event instanceof win.KeyboardEvent) {
@@ -301,6 +299,7 @@ import { activeElement, closest, contains, getTarget } from '../../../common/sha
 import { useAnimationFrame } from '../../../common/useAnimationFrame';
 import { useTimeout } from '../../../common/useTimeout';
 import { isElementVisible } from '../../../internals/composite/listIndex';
+import { CLICK_TRIGGER_IDENTIFIER } from '../../../internals/constants';
 import { createChangeEventDetails } from '../../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../../internals/reasons';
 import { resolveElement } from '../../../internals/resolveElement';

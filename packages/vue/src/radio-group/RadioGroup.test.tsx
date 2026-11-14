@@ -3196,6 +3196,73 @@ describe('<RadioGroup />', () => {
     });
   });
 
+  describe('BUG-1425: a required group with no value after blur', () => {
+    function renderGroup(validationMode?: Form.ValidationMode) {
+      return render(
+        <div>
+          <Field.Root name="fruit" validationMode={validationMode} data-testid="root">
+            <RadioGroup required>
+              <Radio.Root value="a" data-testid="a" />
+              <Radio.Root value="b" data-testid="b" />
+            </RadioGroup>
+            <Field.Error match="valueMissing" data-testid="error">
+              required
+            </Field.Error>
+          </Field.Root>
+          <button type="button">After</button>
+        </div>,
+      );
+    }
+
+    it('is invalid when the focus leaves the group, with no change before', async () => {
+      const { user } = await renderGroup('onBlur');
+      const group = screen.getByRole('radiogroup');
+
+      screen.getByTestId('a').focus();
+      screen.getByTestId('b').focus();
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(group).not.toHaveAttribute('aria-invalid');
+
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('error')).toHaveTextContent('required');
+      expect(group).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('a')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(screen.getByTestId('root')).not.toHaveAttribute('data-dirty');
+    });
+
+    it('is valid again when the user picks a radio', async () => {
+      const { user } = await renderGroup('onBlur');
+
+      screen.getByTestId('a').focus();
+      await user.tab();
+
+      expect(screen.getByTestId('error')).toBeInTheDocument();
+
+      await user.click(screen.getByTestId('b'));
+
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid');
+      expect(screen.getByTestId('root')).toHaveAttribute('data-valid', '');
+    });
+
+    it('stays valid when the focus leaves the group, with the default validation mode', async () => {
+      const { user } = await renderGroup();
+
+      screen.getByTestId('a').focus();
+      await user.tab();
+
+      expect(screen.getByRole('button', { name: 'After' })).toHaveFocus();
+      expect(screen.getByTestId('root')).toHaveAttribute('data-touched', '');
+      expect(screen.queryByTestId('error')).toBe(null);
+      expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-invalid');
+    });
+  });
+
   describe('a radio that mounts and unmounts', () => {
     function createApp() {
       const mounted = shallowRef(false);

@@ -16,6 +16,7 @@ const PANEL_CONTENT = 'This is panel content';
 
 const TRANSITION = 'collapsible-transition-panel';
 const ANIMATION = 'collapsible-animation-panel';
+const LONG_EXIT = 'collapsible-long-exit-panel';
 
 const STYLE = `
   .${TRANSITION} {
@@ -59,6 +60,17 @@ const STYLE = `
 
   .${ANIMATION}[data-closed] {
     animation: collapsible-slide-up 100ms linear;
+  }
+
+  /* The exit of a panel that a test moves to its end must not end by itself. A late frame can end
+     a short exit before the part reads its animations. Each rule is for one kind, because a panel
+     with a transition and an animation gets a warning. */
+  .${TRANSITION}.${LONG_EXIT}[data-ending-style] {
+    transition-duration: 100s;
+  }
+
+  .${ANIMATION}.${LONG_EXIT}[data-closed] {
+    animation-duration: 100s;
   }
 `;
 
@@ -160,7 +172,11 @@ describe('<Collapsible.Panel /> transitions', () => {
 
     async function probeCycles({ className, ...row }: FrameRow) {
       const open = shallowRef(false);
-      const { container, getPanel, isGone } = await renderPanel(open, className, row);
+      const { container, getPanel, isGone } = await renderPanel(
+        open,
+        `${className} ${LONG_EXIT}`,
+        row,
+      );
 
       // The end event of an exit can come after the removal of the panel. The wait for the end of an
       // enter ignores each end event that comes before the start of that enter.
@@ -176,12 +192,11 @@ describe('<Collapsible.Panel /> transitions', () => {
         });
 
         const panel = getPanel()!;
-        const exitStarted = nextEvent(panel, startEvent);
-        closeInTimerTask(open);
-        await exitStarted;
         results.push(
-          await probeFrameAfterExit(panel, () =>
-            row.keepMounted ? panel.hidden === true : !panel.isConnected,
+          await probeFrameAfterExit(
+            panel,
+            () => (row.keepMounted ? panel.hidden === true : !panel.isConnected),
+            () => closeInTimerTask(open),
           ),
         );
 
