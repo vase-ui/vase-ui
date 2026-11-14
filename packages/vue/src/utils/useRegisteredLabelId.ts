@@ -71,7 +71,7 @@ function hasAriaLabel(attrs: Record<string, unknown>) {
 
 /**
  * The label calls it. It gives the id of the label to the root.
- * While `KeepAlive` holds the label, the root does not have the id.
+ * When `KeepAlive` deactivates the label, the root does not have the id until the activation.
  * @param idProp The `id` of the consumer. It wins over `defaultLabelId`.
  * @param setLabelId The setter that `useLabelId` returns.
  * @param defaultLabelId The id that the root made, so that the id equals the id in the server HTML.
@@ -96,7 +96,8 @@ export function useRegisteredLabelId(
 
   setLabelId(id.value);
   // `KeepAlive` runs the `onActivated` hooks from the last part to the first part. A write in the
-  // hook would give the root the first label of a branch. A watcher runs in the order of the labels.
+  // hook would give the root the first label of a branch. The watchers run in the order in which the
+  // labels mounted.
   watch([id, isDeactivated], ([nextId, deactivated], [previousId]) => {
     if (deactivated) {
       setLabelId((current) => (current === previousId ? undefined : current));

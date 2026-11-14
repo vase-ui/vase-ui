@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, KeepAlive, onDeactivated, shallowRef } from 'vue';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { useLabelId, useRegisteredLabelId } from './useRegisteredLabelId';
 import type { LabelIdSetter } from './useRegisteredLabelId';
@@ -190,6 +190,56 @@ describe('useRegisteredLabelId', () => {
       expect(target).not.toHaveAttribute('aria-labelledby');
 
       labelId.value = 'label-c';
+      await flushMicrotasks();
+      expect(target).not.toHaveAttribute('aria-labelledby');
+
+      visible.value = true;
+      await flushMicrotasks();
+      expect(target).toHaveAttribute('aria-labelledby', 'label-c');
+    });
+
+    it('removes the old id when the id of the label changes in the deactivation', async () => {
+      const visible = shallowRef(true);
+      const labelId = shallowRef('label-a');
+      const Branch = defineComponent(
+        (props: { setLabelId: LabelIdSetter; defaultLabelId: string }) => {
+          // `KeepAlive` runs the hook of the label before this hook. The watcher of the label then
+          // gets the new id and the flag in one run.
+          onDeactivated(() => {
+            labelId.value = 'label-c';
+          });
+
+          return () => (
+            <Label
+              id={labelId.value}
+              setLabelId={props.setLabelId}
+              defaultLabelId={props.defaultLabelId}
+            >
+              Label
+            </Label>
+          );
+        },
+        { props: ['setLabelId', 'defaultLabelId'] },
+      );
+      const App = defineComponent(() => {
+        const { labelId: rootLabelId, defaultLabelId, setLabelId } = useLabelId();
+
+        return () => (
+          <>
+            <div data-testid="target" aria-labelledby={rootLabelId.value} />
+            <KeepAlive>
+              {visible.value ? (
+                <Branch setLabelId={setLabelId} defaultLabelId={defaultLabelId.value} />
+              ) : null}
+            </KeepAlive>
+          </>
+        );
+      });
+      await render(<App />);
+      const target = screen.getByTestId('target');
+      expect(target).toHaveAttribute('aria-labelledby', 'label-a');
+
+      visible.value = false;
       await flushMicrotasks();
       expect(target).not.toHaveAttribute('aria-labelledby');
 
