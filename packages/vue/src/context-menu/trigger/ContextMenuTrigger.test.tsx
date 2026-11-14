@@ -4,7 +4,9 @@ import {
   createRenderer,
   describeConformance,
   fireEvent,
+  fireTouch,
   flushMicrotasks,
+  isJSDOM,
   screen,
   takeReportedMessages,
 } from '#test-utils';
@@ -46,17 +48,6 @@ function createContextMenuEvent(init: MouseEventInit = {}) {
   return new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, ...init });
 }
 
-// WebKit on a desktop cannot make a `Touch`, so the event gets a `touches` list by hand.
-function fireTouch(
-  element: Element,
-  type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
-  points: { clientX: number; clientY: number }[] = [],
-) {
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.defineProperty(event, 'touches', { value: points });
-  return fireEvent(element, event);
-}
-
 async function advance(milliseconds: number) {
   vi.advanceTimersByTime(milliseconds);
   await flushMicrotasks();
@@ -81,6 +72,272 @@ describe('<ContextMenu.Trigger />', () => {
     },
   }));
 
+  it('should open menu on right click (context menu event)', async () => {
+    await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    await fireEvent.contextMenu(trigger);
+    await flushMicrotasks();
+
+    expect(screen.queryByRole('menu')).not.toBe(null);
+  });
+
+  it('adds open state attributes', async () => {
+    // `user` waits for a timer of the browser, so this case uses real timers.
+    vi.useRealTimers();
+    const { user } = await render(
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    expect(trigger).toHaveAttribute('data-popup-open', '');
+
+    await user.keyboard('{Escape}');
+    expect(trigger).not.toHaveAttribute('data-popup-open');
+  });
+
+  it('should call onOpenChange when menu is opened via right click', async () => {
+    const onOpenChange = vi.fn();
+
+    await render(
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    await fireEvent.contextMenu(trigger);
+    await flushMicrotasks();
+
+    expect(onOpenChange.mock.lastCall?.[0]).toBe(true);
+  });
+
+  it('does not cancel opening menu on mouseup after mousedown outside before 500ms', async () => {
+    const onOpenChange = vi.fn();
+
+    await render(
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    await fireEvent.mouseDown(trigger);
+    await fireEvent.contextMenu(trigger);
+
+    await advance(499);
+
+    expect(onOpenChange.mock.calls.length).toBe(1);
+    expect(onOpenChange.mock.lastCall?.[0]).toBe(true);
+
+    await fireEvent.mouseUp(document.body);
+
+    await advance(1);
+
+    expect(onOpenChange.mock.calls.length).toBe(1);
+  });
+
+  it('cancels opening menu on mouseup after mousedown outside after 500ms', async () => {
+    const onOpenChange = vi.fn();
+
+    await render(
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const trigger = screen.getByTestId('trigger');
+    await fireEvent.mouseDown(trigger);
+    await fireEvent.contextMenu(trigger);
+
+    await advance(501);
+
+    await fireEvent.mouseUp(document.body);
+
+    expect(onOpenChange.mock.calls.length).toBe(2);
+    expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
+  });
+
+  it('keeps the menu open when the context-menu gesture ends inside its positioner', async () => {
+    const onOpenChange = vi.fn();
+
+    await render(
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner data-testid="positioner">
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    await fireEvent.contextMenu(screen.getByTestId('trigger'));
+    await advance(501);
+    await fireEvent.mouseUp(screen.getByTestId('positioner'));
+
+    expect(onOpenChange.mock.calls).toHaveLength(1);
+    expect(screen.queryByRole('menu')).not.toBe(null);
+  });
+
+  it('aborts the pending document mouseup listener when the trigger unmounts', async () => {
+    const onOpenChange = vi.fn();
+    const showTrigger = shallowRef(true);
+
+    await render(() => (
+      <ContextMenu.Root onOpenChange={onOpenChange}>
+        {showTrigger.value && (
+          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        )}
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ));
+    await fireEvent.contextMenu(screen.getByTestId('trigger'));
+
+    showTrigger.value = false;
+    await flushMicrotasks();
+
+    await advance(501);
+    await fireEvent.mouseUp(document.body);
+
+    expect(onOpenChange.mock.calls).toHaveLength(1);
+    expect(screen.queryByRole('menu')).not.toBe(null);
+  });
+
+  describe('prop: disabled', () => {
+    it('does not open on right-click when disabled', async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <ContextMenu.Root disabled onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="popup" />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await fireEvent.contextMenu(trigger);
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(onOpenChange.mock.calls.length).toBe(0);
+    });
+
+    it('does not block the native context menu when disabled', async () => {
+      await render(
+        <ContextMenu.Root disabled>
+          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="popup" />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+
+      trigger.dispatchEvent(event);
+      await flushMicrotasks();
+
+      expect(event.defaultPrevented).toBe(false);
+    });
+  });
+
+  it('blocks native context menus on both internal and external backdrops', async () => {
+    await render(
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger>Right click me</ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Backdrop data-testid="backdrop" />
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const internalBackdrop = document.querySelector(
+      '[data-vase-ui-portal] > [data-vase-ui-inert][role="presentation"]',
+    )!;
+    const externalBackdrop = screen.getByTestId('backdrop');
+    const internalEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const externalEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    const outsideEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+
+    internalBackdrop.dispatchEvent(internalEvent);
+    externalBackdrop.dispatchEvent(externalEvent);
+    document.body.dispatchEvent(outsideEvent);
+
+    expect(internalEvent.defaultPrevented).toBe(true);
+    expect(externalEvent.defaultPrevented).toBe(true);
+    expect(outsideEvent.defaultPrevented).toBe(false);
+  });
+
+  it('blocks native context menus in a portal mounted inside the trigger DOM subtree', async () => {
+    const portalContainer = shallowRef<HTMLDivElement | null>(null);
+
+    await render(() => (
+      <ContextMenu.Root defaultOpen>
+        <ContextMenu.Trigger>
+          Right click me
+          <div ref={portalContainer} />
+        </ContextMenu.Trigger>
+        <ContextMenu.Portal container={portalContainer}>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup data-testid="popup" />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>
+    ));
+    await flushMicrotasks();
+
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    screen.getByTestId('popup').dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+  });
+
   it('blocks the native context menu when onContextMenu skips the Base UI handler', async () => {
     await render(
       <ContextMenu.Root>
@@ -97,6 +354,227 @@ describe('<ContextMenu.Trigger />', () => {
     screen.getByTestId('trigger').dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  describe.skipIf(isJSDOM)('long press', () => {
+    it('should open menu on long press on touchscreen devices', async () => {
+      await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+
+      await advance(500);
+
+      expect(screen.queryByRole('menu')).not.toBe(null);
+    });
+
+    it('should cancel long press when touch moves beyond threshold', async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+
+      // Simulate touch move (more than 10px movement)
+      // This should cancel the long press
+      await fireTouch.move(trigger, { touches: [{ clientX: 120, clientY: 100 }] });
+
+      await advance(500);
+
+      expect(screen.queryByRole('menu')).toBe(null);
+      expect(onOpenChange.mock.calls.length).toBe(0);
+    });
+
+    it('keeps a pending long press when touch movement stays within the threshold', async () => {
+      await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 105, clientY: 105 }] });
+
+      await advance(500);
+
+      expect(screen.queryByRole('menu')).not.toBe(null);
+    });
+
+    it('cancels a pending long press when the touch ends', async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.end(trigger);
+      await advance(500);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByRole('menu')).toBe(null);
+    });
+
+    it('cancels a pending long press when the gesture becomes multi-touch', async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      const firstTouch = { clientX: 100, clientY: 100 };
+      const touches = [firstTouch, { clientX: 120, clientY: 100 }];
+
+      await fireTouch.start(trigger, { touches: [firstTouch] });
+      await fireTouch.move(trigger, { touches });
+      await fireTouch.move(trigger, { touches: [firstTouch] });
+      await advance(500);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByRole('menu')).toBe(null);
+
+      await fireTouch.end(trigger);
+      await fireTouch.start(trigger, { touches: [firstTouch] });
+      await fireTouch.start(trigger, { touches });
+      await advance(500);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+      expect(screen.queryByRole('menu')).toBe(null);
+    });
+
+    it('delays outside-press dismissal after opening from a long press', async () => {
+      await render(
+        <ContextMenu.Root>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await advance(500);
+
+      await fireEvent.mouseDown(document.body);
+      expect(screen.queryByRole('menu')).not.toBe(null);
+
+      await advance(500);
+      await fireEvent.mouseDown(document.body);
+      expect(screen.queryByRole('menu')).toBe(null);
+    });
+
+    it('does not open on long press when disabled', async () => {
+      const onOpenChange = vi.fn();
+
+      await render(
+        <ContextMenu.Root disabled onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+          <ContextMenu.Portal>
+            <ContextMenu.Positioner>
+              <ContextMenu.Popup data-testid="popup" />
+            </ContextMenu.Positioner>
+          </ContextMenu.Portal>
+        </ContextMenu.Root>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+
+      await advance(500);
+
+      expect(screen.queryByTestId('popup')).toBe(null);
+      expect(onOpenChange.mock.calls.length).toBe(0);
+    });
+  });
+
+  it('should handle nested context menus correctly', async () => {
+    await render(
+      <ContextMenu.Root>
+        <ContextMenu.Trigger data-testid="outer-trigger">
+          outer
+          <ContextMenu.Root>
+            <ContextMenu.Trigger>inner</ContextMenu.Trigger>
+            <ContextMenu.Portal>
+              <ContextMenu.Positioner>
+                <ContextMenu.Popup data-testid="inner-menu" />
+              </ContextMenu.Positioner>
+            </ContextMenu.Portal>
+          </ContextMenu.Root>
+        </ContextMenu.Trigger>
+        <ContextMenu.Portal>
+          <ContextMenu.Positioner>
+            <ContextMenu.Popup data-testid="outer-menu" />
+          </ContextMenu.Positioner>
+        </ContextMenu.Portal>
+      </ContextMenu.Root>,
+    );
+
+    const innerTrigger = screen.getByText('inner');
+    const outerTrigger = screen.getByText('outer');
+
+    await fireEvent.contextMenu(innerTrigger);
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('inner-menu')).not.toBe(null);
+    expect(screen.queryByTestId('outer-menu')).toBe(null);
+
+    await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('inner-menu')).toBe(null);
+
+    await fireEvent.contextMenu(outerTrigger);
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('outer-menu')).not.toBe(null);
+    expect(screen.queryByTestId('inner-menu')).toBe(null);
   });
 
   describe('the open at the pointer', () => {
@@ -142,7 +620,7 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
 
       expect(probe.context.allowMouseUpTriggerRef.value).toBe(false);
 
@@ -180,53 +658,9 @@ describe('<ContextMenu.Trigger />', () => {
 
       expect(onContextmenu).not.toHaveBeenCalled();
     });
-
-    it('opens only the inner menu for an event on the trigger of a root in a trigger', async () => {
-      const outer = vi.fn();
-      const inner = vi.fn();
-      const { getByTestId } = await render(
-        <ContextMenu.Root onOpenChange={outer}>
-          <ContextMenu.Trigger data-testid="outer">
-            outer
-            <ContextMenu.Root onOpenChange={inner}>
-              <ContextMenu.Trigger data-testid="inner">inner</ContextMenu.Trigger>
-            </ContextMenu.Root>
-          </ContextMenu.Trigger>
-        </ContextMenu.Root>,
-      );
-
-      await fireEvent.contextMenu(getByTestId('inner'));
-
-      expect(inner).toHaveBeenCalledTimes(1);
-      expect(outer).not.toHaveBeenCalled();
-
-      await fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
-      await fireEvent.contextMenu(getByTestId('outer'));
-
-      expect(inner).toHaveBeenCalledTimes(2);
-      expect(inner.mock.lastCall?.[0]).toBe(false);
-      expect(outer).toHaveBeenCalledTimes(1);
-      expect(outer.mock.lastCall?.[0]).toBe(true);
-    });
   });
 
   describe('the mouseup of the press', () => {
-    it('keeps the menu open for a mouseup in the first 500 ms', async () => {
-      const onOpenChange = vi.fn();
-      const { getByTestId } = await render(
-        <ContextMenu.Root onOpenChange={onOpenChange}>
-          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
-        </ContextMenu.Root>,
-      );
-
-      await fireEvent.contextMenu(getByTestId('trigger'));
-      await advance(499);
-      await fireEvent.mouseUp(document.body);
-      await advance(1);
-
-      expect(onOpenChange).toHaveBeenCalledTimes(1);
-    });
-
     it('closes the menu with the reason cancel-open for a mouseup after 500 ms', async () => {
       const calls: unknown[] = [];
       const probe = createProbe();
@@ -254,89 +688,9 @@ describe('<ContextMenu.Trigger />', () => {
       ]);
       expect(probe.context.allowMouseUpTriggerRef.value).toBe(false);
     });
-
-    it('keeps the menu open for a mouseup in the positioner element', async () => {
-      const onOpenChange = vi.fn();
-      const probe = createProbe();
-      const { getByTestId } = await render(
-        <ContextMenu.Root onOpenChange={onOpenChange}>
-          <probe.Probe />
-          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
-          <div data-testid="positioner">
-            <span data-testid="inside" />
-          </div>
-        </ContextMenu.Root>,
-      );
-      probe.store.set('positionerElement', getByTestId('positioner'));
-      await flushMicrotasks();
-
-      expect(probe.context.positionerRef.value).toBe(getByTestId('positioner'));
-
-      await fireEvent.contextMenu(getByTestId('trigger'));
-      await advance(501);
-      await fireEvent.mouseUp(getByTestId('inside'));
-
-      expect(onOpenChange).toHaveBeenCalledTimes(1);
-      expect(probe.store.state.open).toBe(true);
-    });
-
-    it('removes the mouseup listener when the trigger unmounts', async () => {
-      const onOpenChange = vi.fn();
-      const probe = createProbe();
-      const shown = shallowRef(true);
-      const { getByTestId } = await render(() => (
-        <ContextMenu.Root onOpenChange={onOpenChange}>
-          <probe.Probe />
-          {shown.value ? (
-            <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
-          ) : null}
-        </ContextMenu.Root>
-      ));
-
-      await fireEvent.contextMenu(getByTestId('trigger'));
-      shown.value = false;
-      await flushMicrotasks();
-      await advance(501);
-      await fireEvent.mouseUp(document.body);
-
-      expect(onOpenChange).toHaveBeenCalledTimes(1);
-      // The listener of the press would write `false`.
-      expect(probe.context.allowMouseUpTriggerRef.value).toBe(true);
-    });
   });
 
   describe('an outside press', () => {
-    it('closes at once after a contextmenu event, and only after 500 ms after a long press', async () => {
-      const onOpenChange = vi.fn();
-      const { getByTestId } = await render(
-        <ContextMenu.Root onOpenChange={onOpenChange}>
-          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
-        </ContextMenu.Root>,
-      );
-      const trigger = getByTestId('trigger');
-      const pressOutside = () => fireEvent.pointerDown(document.body, { pointerType: 'mouse' });
-
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await advance(500);
-      await pressOutside();
-
-      expect(onOpenChange).toHaveBeenCalledTimes(1);
-
-      await advance(500);
-      await pressOutside();
-
-      expect(onOpenChange).toHaveBeenCalledTimes(2);
-      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
-      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('outside-press');
-
-      await fireEvent.contextMenu(trigger);
-      await pressOutside();
-
-      expect(onOpenChange).toHaveBeenCalledTimes(4);
-      expect(onOpenChange.mock.lastCall?.[0]).toBe(false);
-      expect(onOpenChange.mock.lastCall?.[1].reason).toBe('outside-press');
-    });
-
     it('closes the open menu and opens it at the new point for a second right press', async () => {
       const calls: unknown[] = [];
       const probe = createProbe();
@@ -391,44 +745,6 @@ describe('<ContextMenu.Trigger />', () => {
     });
   });
 
-  describe('a disabled root', () => {
-    it.each([
-      {
-        name: 'a contextmenu event',
-        async press(trigger: Element) {
-          const event = createContextMenuEvent();
-          trigger.dispatchEvent(event);
-          await flushMicrotasks();
-          expect(event.defaultPrevented).toBe(false);
-        },
-      },
-      {
-        name: 'a long press with a finger',
-        async press(trigger: Element) {
-          await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-        },
-      },
-      {
-        name: 'a long press with a stylus',
-        async press(trigger: Element) {
-          await fireEvent.pointerDown(trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
-        },
-      },
-    ])('does not open for $name', async ({ press }) => {
-      const onOpenChange = vi.fn();
-      const { getByTestId } = await render(
-        <ContextMenu.Root disabled onOpenChange={onOpenChange}>
-          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
-        </ContextMenu.Root>,
-      );
-
-      await press(getByTestId('trigger'));
-      await advance(500);
-
-      expect(onOpenChange).not.toHaveBeenCalled();
-    });
-  });
-
   describe('the native menu', () => {
     it('stays closed on the backdrop elements of the context and nowhere else', async () => {
       const probe = createProbe();
@@ -466,7 +782,7 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(499);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -495,8 +811,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [point]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [point] });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -511,61 +827,24 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 110, clientY: 90 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 110, clientY: 90 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
     });
 
-    it.each([{ type: 'touchend' as const }, { type: 'touchcancel' as const }])(
-      'cancels when the touch gets $type',
-      async ({ type }) => {
-        const onOpenChange = vi.fn();
-        const { getByTestId } = await render(
-          <ContextMenu.Root onOpenChange={onOpenChange}>
-            <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
-          </ContextMenu.Root>,
-        );
-        const trigger = getByTestId('trigger');
-
-        await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-        await fireTouch(trigger, type);
-        await advance(500);
-
-        expect(onOpenChange).not.toHaveBeenCalled();
-      },
-    );
-
-    it.each([
-      {
-        name: 'at the start',
-        async press(trigger: Element) {
-          await fireTouch(trigger, 'touchstart', [
-            { clientX: 100, clientY: 100 },
-            { clientX: 120, clientY: 100 },
-          ]);
-        },
-      },
-      {
-        name: 'in a move',
-        async press(trigger: Element) {
-          await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-          await fireTouch(trigger, 'touchmove', [
-            { clientX: 100, clientY: 100 },
-            { clientX: 120, clientY: 100 },
-          ]);
-        },
-      },
-    ])('cancels for a second finger $name', async ({ press }) => {
+    it('cancels when the touch gets touchcancel', async () => {
       const onOpenChange = vi.fn();
       const { getByTestId } = await render(
         <ContextMenu.Root onOpenChange={onOpenChange}>
           <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
         </ContextMenu.Root>,
       );
+      const trigger = getByTestId('trigger');
 
-      await press(getByTestId('trigger'));
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.cancel(trigger);
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -587,7 +866,7 @@ describe('<ContextMenu.Trigger />', () => {
         </ContextMenu.Root>,
       );
 
-      await fireTouch(getByTestId('trigger'), 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(getByTestId('trigger'), { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -610,8 +889,8 @@ describe('<ContextMenu.Trigger />', () => {
       );
       const trigger = getByTestId('trigger');
 
-      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 140, clientY: 100 }]);
+      await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
+      await fireTouch.move(trigger, { touches: [{ clientX: 140, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
@@ -630,7 +909,7 @@ describe('<ContextMenu.Trigger />', () => {
         </ContextMenu.Root>,
       );
 
-      await fireTouch(getByTestId('trigger'), 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch.start(getByTestId('trigger'), { touches: [{ clientX: 100, clientY: 100 }] });
       await advance(500);
 
       expect(onOpenChange).toHaveBeenCalledTimes(1);
@@ -746,6 +1025,24 @@ describe('<ContextMenu.Trigger />', () => {
         expect(onOpenChange).not.toHaveBeenCalled();
       },
     );
+
+    it('does not open for a disabled root', async () => {
+      const onOpenChange = vi.fn();
+      const { getByTestId } = await render(
+        <ContextMenu.Root disabled onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+
+      await fireEvent.pointerDown(getByTestId('trigger'), {
+        pointerType: 'pen',
+        clientX: 50,
+        clientY: 50,
+      });
+      await advance(500);
+
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('a trigger around the trigger', () => {
@@ -753,7 +1050,7 @@ describe('<ContextMenu.Trigger />', () => {
       {
         name: 'a finger',
         press: (trigger: Element) =>
-          fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]),
+          fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] }),
       },
       {
         name: 'a stylus',
@@ -811,7 +1108,7 @@ describe('<ContextMenu.Trigger />', () => {
     expect(countCalls(removeListener, 'contextmenu')).toBe(0);
 
     // A long press and the listener of the mouseup wait.
-    await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+    await fireTouch.start(trigger, { touches: [{ clientX: 100, clientY: 100 }] });
     await fireEvent.contextMenu(trigger);
 
     expect(onOpenChange).toHaveBeenCalledTimes(1);

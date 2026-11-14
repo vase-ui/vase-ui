@@ -11,118 +11,17 @@
       "reason": "The file is the entry point of Context Menu. It comes in the last pull request of the family, so the package exports nothing of Context Menu before then."
     },
     {
-      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "kind": "waits-on",
-      "reason": "The part is `Menu.Positioner` with other defaults, and Vase UI does not have `Menu.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositionerCssVars.ts",
-      "kind": "waits-on",
-      "reason": "The file exports the constants of `Menu.Positioner` again, and Vase UI does not have them."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/positioner/ContextMenuPositionerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "The file exports the constants of `Menu.Positioner` again, and Vase UI does not have them."
-    },
-    {
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.Positioner`, `ContextMenu.Popup` and `ContextMenu.Item`, which Vase UI does not have."
+      "reason": "The case renders `ContextMenu.Item`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/context-menu/root/ContextMenuRoot.test.tsx",
       "describe": ["<ContextMenu.Root />"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "Each case renders the popup parts and `ContextMenu.Item`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "should open menu on right click (context menu event)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "adds open state attributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "should call onOpenChange when menu is opened via right click",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "does not cancel opening menu on mouseup after mousedown outside before 500ms",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "cancels opening menu on mouseup after mousedown outside after 500ms",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "keeps the menu open when the context-menu gesture ends inside its positioner",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "aborts the pending document mouseup listener when the trigger unmounts",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "blocks native context menus in a portal mounted inside the trigger DOM subtree",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "should handle nested context menus correctly",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />", "prop: disabled"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "Each case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />", "long press"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "Each case renders `ContextMenu.Portal`, `ContextMenu.Positioner` and `ContextMenu.Popup`, which Vase UI does not have."
+      "reason": "Each case renders `ContextMenu.Item` or a submenu, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
@@ -131,14 +30,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
       "reason": "The case renders `ContextMenu.SubmenuRoot` and `ContextMenu.SubmenuTrigger`, which Vase UI does not have. The trigger also lacks the check of the root owner id at the `mouseup`, which needs `findRootOwnerId` of Menu."
-    },
-    {
-      "upstream": "packages/react/src/context-menu/trigger/ContextMenuTrigger.test.tsx",
-      "describe": ["<ContextMenu.Trigger />"],
-      "title": "blocks native context menus on both internal and external backdrops",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The case renders `ContextMenu.Backdrop` and reads the internal backdrop of a modal menu, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -165,99 +56,99 @@
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Portal",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The part is `Menu.Portal`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports `ContextMenu.Portal`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Backdrop",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The part is `Menu.Backdrop`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports `ContextMenu.Backdrop`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Positioner",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The part is `Menu.Positioner`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports `ContextMenu.Positioner`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Popup",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The part is `Menu.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports `ContextMenu.Popup`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Arrow",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The part is `Menu.Arrow`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports `ContextMenu.Arrow`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuArrowDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuBackdropDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuPopupDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuPositionerCssVariables",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "ContextMenuPositionerDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/context-menu/positioner/ContextMenuPositioner.tsx",
-      "reason": "The constants are those of the Menu part, which Vase UI does not have."
+      "waitsOn": "packages/react/src/context-menu/index.ts",
+      "reason": "The entry point of Context Menu exports these constants. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Item",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Item`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.Item`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "LinkItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.LinkItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.LinkItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "Group",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.Group`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.Group`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "GroupLabel",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.GroupLabel`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.GroupLabel`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
@@ -271,49 +162,49 @@
       "entry": "CheckboxItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.CheckboxItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "CheckboxItemIndicator",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.CheckboxItemIndicator`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.CheckboxItemIndicator`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioGroup",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioGroup`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioGroup`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioItem",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItem`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioItem`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "RadioItemIndicator",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.RadioItemIndicator`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.RadioItemIndicator`. The Context Menu family does not export it again yet."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "SubmenuRoot",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuRoot`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.SubmenuRoot`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
       "entry": "SubmenuTrigger",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/root/ContextMenuRoot.non-mac.test.tsx",
-      "reason": "The part is `Menu.SubmenuTrigger`, which the family exports with the items of Menu. Vase UI does not have the items of Menu."
+      "reason": "The part is `Menu.SubmenuTrigger`, which Vase UI does not have."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/context-menu/types.md",
