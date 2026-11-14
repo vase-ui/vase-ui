@@ -36,7 +36,7 @@ The package is published with the `next` tag, so each command above names that t
 
 ### Portals
 
-A component that renders a popup, such as [Tooltip](/components/tooltip) or [Preview Card](/components/preview-card), puts the popup in a portal. By default, the portal is in `<body>`, outside the root element of your app.
+A component that renders a popup, such as [Dialog](/components/dialog) or [Popover](/components/popover), puts the popup in a portal. By default, the portal is in `<body>`, outside the root element of your app.
 
 Give the root element the style `isolation: isolate`. In a Vue app, the root element is the element that `createApp().mount()` gets, such as `#app`. In a Nuxt app, it is `#__nuxt`.
 

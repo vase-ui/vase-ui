@@ -49,13 +49,13 @@ iOS has no standard tooltip gesture for touch. Android can show a tooltip on a l
 
 ### Infotips
 
-A popup that opens when the pointer is on an info icon is a popover, not a tooltip. Use Popover with `openOnHover` on its trigger, so that touch users and screen reader users can get the content.
+A popup that opens when the pointer is on an info icon is a popover, not a tooltip. Use [Popover](/components/popover) with `openOnHover` on its trigger, so that touch users and screen reader users can get the content.
 
 Look at the purpose of the trigger. If the trigger only opens the popup, use a popover. If the trigger has a different purpose, use a tooltip.
 
 ### Description text
 
-A tooltip is for sighted users. It does not give important information to touch users or to assistive technology. If the user must have the description to understand the element, show it as text on the page. If the space is small, use Popover.
+A tooltip is for sighted users. It does not give important information to touch users or to assistive technology. If the user must have the description to understand the element, show it as text on the page. If the space is small, use [Popover](/components/popover).
 
 An icon trigger with no text label must show its purpose with its icon, because a mobile screen can hide the text label.
 

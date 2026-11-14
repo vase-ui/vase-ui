@@ -1285,6 +1285,9 @@ function viewportProps() {
 }
 
 // As in Base UI, this part renders `Dialog.Viewport` and makes no element of its own.
+// The template has one form for `#render` and one for the content. A `v-if` on a slot template
+// makes the slots of `Dialog.Viewport` dynamic. Vue then renders `Dialog.Viewport` again each time
+// this part renders. It also renders again each part in that slot that has slot content.
 const viewport = useTemplateRef('viewport');
 const element = computed(() => viewport.value?.element ?? null);
 
@@ -1292,11 +1295,13 @@ defineExpose({ element });
 </script>
 
 <template>
-  <DialogViewport ref="viewport" v-bind="viewportProps()">
-    <template v-if="$slots.render" #render="slotProps">
+  <DialogViewport v-if="$slots.render" ref="viewport" v-bind="viewportProps()">
+    <template #render="slotProps">
       <slot name="render" v-bind="slotProps" />
     </template>
-    <template v-if="$slots.default" #default="slotProps">
+  </DialogViewport>
+  <DialogViewport v-else ref="viewport" v-bind="viewportProps()">
+    <template #default="slotProps">
       <slot v-bind="slotProps" />
     </template>
   </DialogViewport>
