@@ -887,3 +887,98 @@ describe('VUE-70: the result of a props function', () => {
     expect(mergePropsN<'div'>([])).toEqual({});
   });
 });
+
+describe('VUE-82: the scope of preventVaseUIHandler()', () => {
+  function appendParentAndChild() {
+    const parent = document.createElement('div');
+    const child = document.createElement('button');
+    parent.append(child);
+    document.body.append(parent);
+    return { parent, child };
+  }
+
+  it('runs the handlers of a parent element after a call in a child element', () => {
+    const log: string[] = [];
+    const parentProps = mergeProps<'div'>(
+      { onClick: () => log.push('parent part') },
+      { onClick: () => log.push('parent consumer') },
+    );
+    const childProps = mergeProps<'button'>(
+      { onClick: () => log.push('child part') },
+      {
+        onClick(event) {
+          log.push('child consumer');
+          event.preventVaseUIHandler();
+        },
+      },
+    );
+    const { parent, child } = appendParentAndChild();
+
+    try {
+      parent.addEventListener('click', (event) => parentProps.onClick?.(event));
+      child.addEventListener('click', (event) => childProps.onClick?.(event));
+      child.click();
+    } finally {
+      parent.remove();
+    }
+
+    expect(log).toEqual(['child consumer', 'parent consumer', 'parent part']);
+  });
+
+  it('runs the bubble handlers after a call in a capture handler of a parent', () => {
+    const log: string[] = [];
+    const parentProps = mergeProps<any>(
+      {
+        onClickCapture: () => log.push('parent capture part'),
+        onClick: () => log.push('parent part'),
+      },
+      {
+        onClickCapture(event: VaseUIEvent<MouseEvent>) {
+          log.push('parent capture consumer');
+          event.preventVaseUIHandler();
+        },
+        onClick: () => log.push('parent consumer'),
+      },
+    );
+    const childProps = mergeProps<'button'>(
+      { onClick: () => log.push('child part') },
+      { onClick: () => log.push('child consumer') },
+    );
+    const { parent, child } = appendParentAndChild();
+
+    try {
+      parent.addEventListener('click', parentProps.onClickCapture, { capture: true });
+      parent.addEventListener('click', parentProps.onClick);
+      child.addEventListener('click', (event) => childProps.onClick?.(event));
+      child.click();
+    } finally {
+      parent.remove();
+    }
+
+    expect(log).toEqual([
+      'parent capture consumer',
+      'child consumer',
+      'child part',
+      'parent consumer',
+      'parent part',
+    ]);
+  });
+
+  it.each([
+    { name: 'a lone earlier handler', earlierNames: ['earlier'] },
+    { name: 'a merged earlier handler', earlierNames: ['left', 'right'] },
+  ])('runs $name that a props function calls after its call', ({ earlierNames }) => {
+    const log: string[] = [];
+    const [left, right] = earlierNames.map((name) => ({ onClick: () => log.push(name) }));
+
+    const mergedProps = mergeProps<'button'>(left, right, (props) => ({
+      onClick(event) {
+        event.preventVaseUIHandler();
+        props.onClick?.(event);
+      },
+    }));
+    mergedProps.onClick?.(new PointerEvent('click'));
+
+    expect(log).toEqual(earlierNames.toReversed());
+  });
+});

@@ -1083,6 +1083,42 @@ describe('<Menu.Popup />', () => {
     expect(popup).toHaveAttribute('data-open');
   });
 
+  it('VUE-82: keeps the focus on an item whose keydown listener calls preventVaseUIHandler()', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item
+                onKeydown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventVaseUIHandler();
+                  }
+                }}
+              >
+                One
+              </Menu.Item>
+              <Menu.Item>Two</Menu.Item>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    screen.getByRole('button', { name: 'Open' }).focus();
+    await flushMicrotasks();
+    await user.keyboard('[ArrowDown]');
+    const one = await screen.findByRole('menuitem', { name: 'One' });
+    await waitFor(() => expect(one).toHaveFocus());
+    await waitForLaterMillisecond();
+
+    await user.keyboard('[ArrowDown]');
+    await waitSingleFrame();
+
+    expect(one).toHaveFocus();
+  });
+
   it('BUG-5410: closes the menu for a press in a same-origin iframe', async () => {
     const frame = document.createElement('iframe');
     frame.srcdoc = '<button style="width: 80px; height: 40px">in the frame</button>';
