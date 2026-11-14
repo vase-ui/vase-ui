@@ -62,6 +62,8 @@ export default defineConfig({
     return family === undefined ? undefined : { apiReference: readApiReference(family) };
   },
   themeConfig: {
+    logo: { light: '/wordmark-light.svg', dark: '/wordmark-dark.svg', alt: 'Vase UI' },
+    siteTitle: false,
     nav,
     sidebar,
     outline: { level: [2, 3] },
