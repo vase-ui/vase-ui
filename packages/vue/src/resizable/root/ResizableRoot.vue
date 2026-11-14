@@ -110,8 +110,9 @@ export interface ResizableRootActions {
    */
   setLayout: (layout: ResizableRootLayout) => void;
   /**
-   * Gives the panels the layout that they had at the start: the `defaultLayout` of the root, and
-   * the `defaultSize` of each panel that it does not name.
+   * Gives the panels the layout that they had at the start: the `defaultLayout` of the root.
+   * A panel that it does not name takes its `defaultSize`, or an equal share of the space that is
+   * left.
    * The change has the reason `'imperative-action'`. It does nothing when the root has that layout
    * already.
    */
