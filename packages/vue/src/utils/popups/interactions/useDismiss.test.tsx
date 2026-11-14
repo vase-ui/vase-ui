@@ -2147,6 +2147,34 @@ describe('useDismiss', () => {
       await fireEvent.click(document.body);
       expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     });
+
+    // Vue skips a Vue listener that it attached in the millisecond of an event when an earlier Vue
+    // listener got that event. The frozen clock puts the open and the press in one millisecond.
+    it('keeps a popup in a portal open for a drag out of it in the millisecond of its open', async () => {
+      const outside = addOutsideElement();
+      await render(
+        <Popup
+          name="popup"
+          defaultOpen={false}
+          portalContainer={document.body}
+          dismiss={{ outsidePressEvent: 'intentional' }}
+        />,
+      );
+      const dateNow = vi.spyOn(Date, 'now').mockReturnValue(Date.now());
+      onTestFinished(() => dateNow.mockRestore());
+
+      await fireEvent.click(screen.getByTestId('popup-trigger'));
+      await flushMicrotasks();
+      const popup = screen.getByTestId('popup');
+      await fireEvent.pointerDown(popup, mouse);
+      await fireEvent.mouseDown(popup);
+      await fireEvent.pointerUp(outside, mouse);
+      await fireEvent.mouseUp(outside);
+      await fireEvent.click(document.body, { detail: 1 });
+      await flushMicrotasks();
+
+      expect(isOpen('popup')).toBe(true);
+    });
   });
 
   it('nested floating elements with different portal containers', async () => {

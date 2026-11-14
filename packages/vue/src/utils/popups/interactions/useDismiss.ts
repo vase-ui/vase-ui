@@ -9,7 +9,7 @@ import {
   toValue,
   watch,
 } from 'vue';
-import type { InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
+import type { InjectionKey, MaybeRefOrGetter } from 'vue';
 import {
   getComputedStyle,
   getParentNode,
@@ -258,9 +258,10 @@ export function useDismiss(
     clearInsideComponentTreeTimeout.start(0, clearInsideComponentTree);
   }
 
-  // The portal of this popup holds its backdrop and its other parts outside the popup element. A
-  // press there is outside this popup and inside the popups above, so only they get the marker.
-  // A portal of a part below this popup is inside this popup too.
+  // The portal of this popup can hold its backdrop and its other parts outside the popup element.
+  // A press there is outside this popup and inside the popups above, so only they get the marker.
+  // A portal below this popup that no popup owns, such as `NavigationMenu.Portal`, is inside this
+  // popup.
   function markInsidePortal(portal: Element) {
     if (contains(portal, getStore().select('positionerElement'))) {
       parent?.markInsideComponentTree();
@@ -1027,29 +1028,29 @@ export function useDismiss(
 }
 
 /**
- * Counts a press in the portal element of a popup part as inside the popups above the popup of the
- * portal. Call it in the `setup` of the portal, with the ref of its element. It does nothing when
- * no popup is above the portal.
+ * Counts a press in the portal element of a popup as inside the popups above that popup. Call it in
+ * the `setup` of the portal, with its element as a ref or a getter. It adds no listener when no
+ * `useDismiss` call is above the portal.
  *
- * The portal element holds each part of its popup, such as the backdrop, and the popup element is
- * only one of them. A press in a part outside the popup element reaches no listener of the popup
- * element. The press counts as outside the popup of the portal. A popup owns the portal when its
- * positioner element is in it. A portal that no popup owns counts as inside the nearest popup
+ * The portal element can hold parts of the popup outside the popup element, such as the backdrop
+ * and the positioner. A press on such a part reaches no listener of the popup element. The press
+ * counts as outside the popup that owns the portal. A popup owns the portal when its positioner
+ * element is in the portal element. A portal that no popup owns counts as inside the nearest popup
  * above it.
  *
- * The listeners are DOM listeners. Vue stamps an event in the first Vue listener that gets it, and
- * it skips each later listener that was attached in that millisecond or after it. A Vue listener
- * on the portal element would get a press first. The listeners of the popup element could then
- * miss a press in the millisecond of the open.
+ * The composable adds its listeners with `addEventListener`. Vue stamps an event in the first Vue
+ * listener that gets it. Vue then skips each later listener that it attached in that millisecond
+ * or after it. A Vue listener on the portal element would get a press first. The listeners of the
+ * popup element could then miss a press in the millisecond of the open.
  */
-export function useDismissPortal(portal: Readonly<Ref<Element | null>>) {
+export function useDismissPortal(portal: MaybeRefOrGetter<Element | null>): void {
   const parent = inject(DismissParentContext, undefined);
   if (!parent) {
     return;
   }
 
   watch(
-    portal,
+    () => toValue(portal),
     (element, _previousElement, onCleanup) => {
       if (!element) {
         return;
