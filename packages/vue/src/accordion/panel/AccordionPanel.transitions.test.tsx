@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { shallowRef } from 'vue';
 import { Accordion } from '@vase-ui/vue/accordion';
-import { createRenderer, createTransitionRunCounter, nextEvent, waitFor } from '#test-utils';
+import {
+  createRenderer,
+  createTransitionRunCounter,
+  nextAnimationsRead,
+  nextEvent,
+  waitFor,
+  waitSingleFrame,
+} from '#test-utils';
 
 const PANEL_CONTENT = 'This is panel content';
 
@@ -83,22 +90,27 @@ describe('<Accordion.Panel /> transitions', () => {
           return panel === null || panel.hasAttribute('hidden');
         };
 
+        // The open panel reads its animations in the frame after the mount. The next read of the
+        // panel is then the read of its exit.
+        await waitSingleFrame();
+
         let from = 'a';
         let to = 'b';
         for (let cycle = 0; cycle < 6; cycle += 1) {
-          // The end event of the previous exit can come after the panel is hidden.
-          const ended = nextEvent(container, 'transitionend', { after: 'transitionrun' });
-          changeValueInTimerTask(value, [to]);
-          await ended;
-
           const closing = from;
           const opening = to;
-          await waitFor(
-            () => {
-              expect(isGone(closing)).toBe(true);
-            },
-            { timeout: 3000 },
+          // The end event of the previous exit can come after the panel is hidden.
+          const ended = nextEvent(container, 'transitionend', { after: 'transitionrun' });
+          // The browser cancels a finished transition when the panel goes. Its `finished` is then a
+          // new promise that never settles, so the case gets each promise at the read.
+          const exited = nextAnimationsRead(getPanel(closing)!).then((animations) =>
+            Promise.all(animations.map((animation) => animation.finished)),
           );
+          changeValueInTimerTask(value, [to]);
+          await Promise.all([ended, exited]);
+          await waitFor(() => {
+            expect(isGone(closing)).toBe(true);
+          });
           await waitFor(() => {
             expect(getPanel(opening)!.style.getPropertyValue('--accordion-panel-height')).toBe(
               'auto',
