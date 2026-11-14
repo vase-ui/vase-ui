@@ -42,9 +42,11 @@
     },
     {
       "upstream": "packages/react/src/combobox/items/createItems.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have."
+      "describe": ["Combobox.createItems", "integration"],
+      "title": "resolves a server-rendered defaultValue label from the external window",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/items/createItems.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
     },
     {
       "upstream": "packages/react/src/combobox/label/ComboboxLabel.test.tsx",
@@ -77,6 +79,68 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
       "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Some cases that have no counterpart render a part that Vase UI does not have, such as `Combobox.Empty`."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />"],
+      "suite": "popupListConformanceTests",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The shared suite is not in Vase UI yet. The pull request that adds the keys of Menu ports it."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "server-side rendering"],
+      "title": "sets combobox aria attributes on the input",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "server-side rendering"],
+      "title": "sets combobox aria attributes on the trigger when input is inside popup",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
+      "reason": "A server render runs in Node with no DOM. The case is in the test file that the Node project runs, with the same title."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "server-side rendering"],
+      "title": "does not link Combobox.Label to trigger before hydration",
+      "kind": "replaced",
+      "test": "packages/vue/src/combobox/root/ComboboxRoot.node.test.tsx",
+      "reason": "The case renders on a server only. Vase UI links the label in the server HTML (VUE-51). The case \"VUE-51: names the trigger with a label that comes before it\" asserts that link. The case \"names the trigger that comes before it\" of `ComboboxLabel.node.test.tsx` asserts it for a label after the trigger."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "input inside popup composition"],
+      "title": "clears a single-select query and restores the selection when reopening during the close animation",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
+      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />", "input inside popup composition"],
+      "title": "preserves a typed query when input reopens single-select during the close animation",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/combobox/empty/ComboboxEmpty.tsx",
+      "reason": "The case renders `Combobox.Empty`, which Vase UI does not have."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />"],
+      "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
+      "kind": "not-applicable",
+      "reason": "React sends the press of a portal up the React tree, so the popup knows that the press is inside it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the popup. The popup thus gets no such press."
+    },
+    {
+      "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
+      "describe": ["<Combobox.Root />"],
+      "title": "does not navigate the list with arrow keys from portalled controls inside the popup",
+      "kind": "not-applicable",
+      "reason": "React sends the key of a portal up the React tree, so the list could get it. A Vue key goes up the DOM only, and a `Teleport` puts its content outside the list. The list thus gets no such key."
     },
     {
       "upstream": "packages/react/src/combobox/status/ComboboxStatus.iOS.test.tsx",
