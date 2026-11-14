@@ -178,9 +178,10 @@ describe('<Popover.Popup />', () => {
         </ToolbarPopover>,
       );
 
+      // The toolbar itself still navigates with the same key, so a passing assertion below can't
+      // come from an inert toolbar.
       await user.keyboard('[Tab]');
       expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
-
       await user.keyboard('[ArrowRight]');
       const trigger = screen.getByRole('button', { name: 'Open' });
       await waitFor(() => {
@@ -200,6 +201,8 @@ describe('<Popover.Popup />', () => {
       expect(screen.getByRole('button', { name: 'Last' })).not.toHaveFocus();
     });
 
+    // Shielding the toolbar must not disable the keys inside the popup: only propagation is
+    // stopped, so native caret movement in popup content keeps working.
     it('keeps composite keys working inside the popup content', async () => {
       const { user } = await render(
         <ToolbarPopover>

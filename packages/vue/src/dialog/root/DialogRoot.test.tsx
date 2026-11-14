@@ -1626,7 +1626,7 @@ describe('<Dialog.Root />', () => {
               <Popover.Root open={props.popoverOpen} onOpenChange={onPopoverOpenChange}>
                 <Popover.Portal>
                   <Popover.Positioner>
-                    <Popover.Popup data-testid="popover" />
+                    <Popover.Popup initialFocus={false} data-testid="popover" />
                   </Popover.Positioner>
                 </Popover.Portal>
               </Popover.Root>

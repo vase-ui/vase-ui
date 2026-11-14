@@ -200,6 +200,7 @@ describe('<Popover.Trigger />', () => {
       await user.keyboard('[Tab]');
       expect(document.activeElement).not.toBe(trigger);
     });
+
     it('does not open on hover when disabled', async () => {
       const { user } = await render(
         <Popover.Root>
