@@ -129,7 +129,11 @@ defineSlots<{
 }>();
 
 const store = useDialogRootContext();
-const { swipeDirection, frontmostHeight, swipeAreaActiveRef } = useDrawerRootContext();
+const {
+  swipeDirection: rootSwipeDirection,
+  frontmostHeight,
+  swipeAreaActiveRef,
+} = useDrawerRootContext();
 const providerContext = useDrawerProviderContext();
 
 const swipeActive = shallowRef(false);
@@ -156,7 +160,7 @@ function resetDragDelta() {
 }
 
 const resolvedSwipeDirection = computed(
-  () => props.swipeDirection ?? oppositeSwipeDirection[swipeDirection.value],
+  () => props.swipeDirection ?? oppositeSwipeDirection[rootSwipeDirection.value],
 );
 const dismissDirection = computed(() => oppositeSwipeDirection[resolvedSwipeDirection.value]);
 const enabled = computed(() => !props.disabled && (!open.value || swipeActive.value));
@@ -262,7 +266,8 @@ function applySwipeMovement() {
       ? closedOffset + Math.sqrt(clampedDisplacement - closedOffset)
       : clampedDisplacement;
   const remaining = closedOffset - dampedDisplacement;
-  const directionSign = dismissDirection.value === 'left' || dismissDirection.value === 'up' ? -1 : 1;
+  const directionSign =
+    dismissDirection.value === 'left' || dismissDirection.value === 'up' ? -1 : 1;
   const movement = remaining * directionSign;
   const isHorizontal = dismissDirection.value === 'left' || dismissDirection.value === 'right';
   const movementX = isHorizontal ? movement : 0;
@@ -425,8 +430,8 @@ const swipe = useSwipeDismiss({
 });
 
 // The commit that opens the drawer re-renders the popup, resetting `--swipe-movement-*` to `0px`
-// (the viewport isn't swiping). Re-assert after the DOM mutation but before paint. No deps: must
-// run on every commit the swipe area participates in.
+// (the viewport isn't swiping). Re-assert after the DOM mutation but before paint. It must run
+// after each render of the swipe area.
 onUpdated(() => {
   if (swipeActive.value && appliedSwipeStyles) {
     applySwipeMovement();
@@ -477,7 +482,7 @@ const { element, elementProps } = useRenderElement('div', props, {
   state,
   ref: [
     registerTrigger,
-    (swipeArea) => {
+    (swipeArea: HTMLElement | null) => {
       swipeAreaElement.value = swipeArea;
     },
   ],

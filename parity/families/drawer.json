@@ -46,9 +46,7 @@
     },
     {
       "upstream": "packages/react/src/drawer/provider/DrawerProvider.test.tsx",
-      "describe": [
-        "<Drawer.Provider />"
-      ],
+      "describe": ["<Drawer.Provider />"],
       "title": "releases closed drawers once they are removed",
       "kind": "replaced",
       "test": "packages/vue/src/drawer/provider/DrawerProvider.node.test.tsx",
@@ -80,18 +78,14 @@
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "describe": [
-        "<Drawer.SwipeArea />"
-      ],
+      "describe": ["<Drawer.SwipeArea />"],
       "title": "works before a generated swipe area id is available",
       "kind": "not-applicable",
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
     },
     {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "describe": [
-        "<Drawer.SwipeArea />"
-      ],
+      "describe": ["<Drawer.SwipeArea />"],
       "title": "registers the swipe area once a generated id becomes available",
       "kind": "not-applicable",
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."

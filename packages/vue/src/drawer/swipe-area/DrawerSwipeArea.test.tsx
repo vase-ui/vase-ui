@@ -7,6 +7,8 @@ import {
   firePointer,
   fireTouch,
   flushMicrotasks,
+  hydrate,
+  renderOnServer,
   screen,
   waitFor,
 } from '#test-utils';
@@ -16,6 +18,7 @@ import { useDialogRootContext } from '../../dialog/root/DialogRootContext';
 import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import { useDrawerRootContext } from '../root/DrawerRootContext';
+import DrawerSwipeAreaHydration from './DrawerSwipeAreaHydration.test.vue';
 
 type Point = {
   x: number;
@@ -347,8 +350,7 @@ describe('<Drawer.SwipeArea />', () => {
     });
     const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
 
-    let dispatched = false;
-    dispatched = screen.getByTestId('swipe-area').dispatchEvent(event);
+    const dispatched = screen.getByTestId('swipe-area').dispatchEvent(event);
     await flushMicrotasks();
     expect(dispatched).toBe(true);
     expect(event.defaultPrevented).toBe(false);
@@ -551,6 +553,30 @@ describe('<Drawer.SwipeArea />', () => {
     expect(handleOpenChange).not.toHaveBeenCalled();
   });
 
+  it('hydrates the swipe areas of a closed and an open drawer with no message', async () => {
+    const serverHtml = await renderOnServer(
+      'src/drawer/swipe-area/DrawerSwipeAreaHydration.test.vue',
+      {},
+    );
+    const template = document.createElement('template');
+    template.innerHTML = serverHtml;
+    const closed = template.content.querySelector<HTMLElement>('[data-testid="closed-swipe-area"]');
+    const open = template.content.querySelector<HTMLElement>('[data-testid="open-swipe-area"]');
+    expect(closed?.getAttribute('role')).toBe('presentation');
+    expect(closed?.getAttribute('aria-hidden')).toBe('true');
+    expect(closed?.getAttribute('data-closed')).toBe('');
+    expect(closed?.getAttribute('data-swipe-direction')).toBe('up');
+    expect(closed?.id).not.toBe('');
+    expect(closed?.style.touchAction).toBe('pan-x');
+    expect(closed?.style.pointerEvents).toBe('');
+    expect(open?.getAttribute('data-open')).toBe('');
+    expect(open?.getAttribute('data-swipe-direction')).toBe('left');
+    expect(open?.style.touchAction).toBe('pan-y');
+    expect(open?.style.pointerEvents).toBe('none');
+
+    await hydrate(DrawerSwipeAreaHydration, { serverHtml });
+  });
+
   describe('with a test popup', () => {
     it('renders a presentation element with the touch action of its direction, and takes no pointer event while it cannot open the drawer', async () => {
       const open = shallowRef(false);
@@ -689,9 +715,7 @@ describe('<Drawer.SwipeArea />', () => {
       await swipeLeft(screen.getByTestId('swipe-area'), 100, 40, {
         beforeRelease() {
           expect(screen.getByTestId('backdrop')).toHaveAttribute('data-swiping', '');
-          expect(screen.getByTestId('backdrop').style.getPropertyValue('--drawer-height')).toBe(
-            '',
-          );
+          expect(screen.getByTestId('backdrop').style.getPropertyValue('--drawer-height')).toBe('');
           expect(screen.getByTestId('indent').style.getPropertyValue('--drawer-height')).toBe('');
         },
       });
@@ -770,8 +794,15 @@ describe('<Drawer.SwipeArea />', () => {
         open ? 'data-open' : 'data-closed',
         '',
       );
-      expect(handleOpenChange.mock.calls.map(([nextOpen, details]) => [nextOpen, details.reason])).toEqual(
-        open ? [[true, 'swipe']] : [[true, 'swipe'], [false, 'swipe']],
+      expect(
+        handleOpenChange.mock.calls.map(([nextOpen, details]) => [nextOpen, details.reason]),
+      ).toEqual(
+        open
+          ? [[true, 'swipe']]
+          : [
+              [true, 'swipe'],
+              [false, 'swipe'],
+            ],
       );
     });
 
@@ -920,9 +951,9 @@ describe('<Drawer.SwipeArea />', () => {
       await startOpeningSwipe(swipeArea);
       const popup = screen.getByTestId('popup');
       expect(popup).toHaveAttribute('data-swiping', '');
-      expect(screen.getByTestId('indent').style.getPropertyValue('--drawer-swipe-progress')).not.toBe(
-        '0',
-      );
+      expect(
+        screen.getByTestId('indent').style.getPropertyValue('--drawer-swipe-progress'),
+      ).not.toBe('0');
 
       disabled.value = true;
       await flushMicrotasks();

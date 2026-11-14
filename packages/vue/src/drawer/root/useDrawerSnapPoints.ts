@@ -1,4 +1,12 @@
-import { computed, onActivated, onDeactivated, onMounted, onScopeDispose, shallowRef, watch } from 'vue';
+import {
+  computed,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onScopeDispose,
+  shallowRef,
+  watch,
+} from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 import { getComputedStyle } from '@floating-ui/utils/dom';
 import { clamp } from '../../common/clamp';
