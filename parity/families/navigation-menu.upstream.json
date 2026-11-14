@@ -1,0 +1,2376 @@
+{
+  "commit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
+  "upstreamPaths": [
+    "packages/react/src/navigation-menu/**",
+    "docs/src/app/(docs)/react/components/navigation-menu/**"
+  ],
+  "sources": [
+    "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.tsx",
+    "packages/react/src/navigation-menu/arrow/NavigationMenuArrowDataAttributes.ts",
+    "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.tsx",
+    "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdropDataAttributes.ts",
+    "packages/react/src/navigation-menu/content/NavigationMenuContent.tsx",
+    "packages/react/src/navigation-menu/content/NavigationMenuContentDataAttributes.ts",
+    "packages/react/src/navigation-menu/icon/NavigationMenuIcon.tsx",
+    "packages/react/src/navigation-menu/icon/NavigationMenuIconDataAttributes.ts",
+    "packages/react/src/navigation-menu/index.parts.ts",
+    "packages/react/src/navigation-menu/index.ts",
+    "packages/react/src/navigation-menu/item/NavigationMenuItem.tsx",
+    "packages/react/src/navigation-menu/item/NavigationMenuItemContext.ts",
+    "packages/react/src/navigation-menu/link/NavigationMenuLink.tsx",
+    "packages/react/src/navigation-menu/link/NavigationMenuLinkDataAttributes.ts",
+    "packages/react/src/navigation-menu/list/NavigationMenuDismissContext.ts",
+    "packages/react/src/navigation-menu/list/NavigationMenuList.tsx",
+    "packages/react/src/navigation-menu/popup/NavigationMenuPopup.tsx",
+    "packages/react/src/navigation-menu/popup/NavigationMenuPopupCssVars.ts",
+    "packages/react/src/navigation-menu/popup/NavigationMenuPopupDataAttributes.ts",
+    "packages/react/src/navigation-menu/portal/NavigationMenuPortal.tsx",
+    "packages/react/src/navigation-menu/portal/NavigationMenuPortalContext.ts",
+    "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.tsx",
+    "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerContext.ts",
+    "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerCssVars.ts",
+    "packages/react/src/navigation-menu/positioner/NavigationMenuPositionerDataAttributes.ts",
+    "packages/react/src/navigation-menu/root/NavigationMenuRoot.tsx",
+    "packages/react/src/navigation-menu/root/NavigationMenuRootContext.ts",
+    "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.tsx",
+    "packages/react/src/navigation-menu/trigger/NavigationMenuTriggerDataAttributes.ts",
+    "packages/react/src/navigation-menu/utils/constants.ts",
+    "packages/react/src/navigation-menu/utils/isOutsideMenuEvent.ts",
+    "packages/react/src/navigation-menu/utils/setSharedFixedSize.ts",
+    "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.tsx"
+  ],
+  "typeTests": [
+    "packages/react/src/navigation-menu/link/NavigationMenuLink.spec.tsx",
+    "packages/react/src/navigation-menu/root/NavigationMenuRoot.spec.tsx"
+  ],
+  "cases": [
+    {
+      "file": "packages/react/src/navigation-menu/arrow/NavigationMenuArrow.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Arrow />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Arrow />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NavigationMenu.Positioner>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/backdrop/NavigationMenuBackdrop.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Backdrop />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/content/NavigationMenuContent.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Content />"
+          ],
+          "suite": "describeConformance",
+          "conditions": [
+            "skip"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />",
+            "server-side rendering"
+          ],
+          "title": "keeps the content mounted (hidden) in the DOM when keepMounted is true"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />",
+            "server-side rendering"
+          ],
+          "title": "does not keep the content mounted in the DOM when keepMounted is false"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />"
+          ],
+          "title": "keeps the content mounted (hidden) post-hydration when keepMounted is true"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />"
+          ],
+          "title": "does not keep the content mounted post-hydration when keepMounted is false"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />"
+          ],
+          "title": "moves content into the popup and keeps it there when switching triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Content />"
+          ],
+          "title": "keeps content mounted inside the popup when closed if the portal is kept mounted"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/icon/NavigationMenuIcon.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Icon />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Icon />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NavigationMenu.Item>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/item/NavigationMenuItem.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Item />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/link/NavigationMenuLink.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Link />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Link />",
+            "prop: closeOnClick"
+          ],
+          "title": "closes the menu when clicking a link when true",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Link />",
+            "prop: closeOnClick"
+          ],
+          "title": "does not close the menu when clicking a link when false",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Link />",
+            "prop: active"
+          ],
+          "title": "when `true`, renders with aria-current=\"page\""
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Link />",
+            "prop: active"
+          ],
+          "title": "when `false`, does not render with aria-current=\"page\""
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Link />"
+          ],
+          "title": "keeps the menu open when a link loses focus without a related target"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/list/NavigationMenuList.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.List />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.List />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NavigationMenu.Root>"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.List />"
+          ],
+          "title": "stops vertical navigation keys from escaping the list"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.List />",
+            "item removal"
+          ],
+          "title": "navigates from the focused trigger after an earlier item is removed"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/popup/NavigationMenuPopup.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Popup />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/portal/NavigationMenuPortal.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Portal />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/positioner/NavigationMenuPositioner.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Positioner />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Positioner />"
+          ],
+          "title": "uses the layout viewport"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Positioner />"
+          ],
+          "title": "throws a descriptive error when rendered outside <NavigationMenu.Portal>"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/root/NavigationMenuRoot.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Root />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />"
+          ],
+          "title": "does not apply aria-orientation to the top-level list or root element"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />"
+          ],
+          "title": "does not apply aria-orientation to nested lists or root elements"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "opens on hover with mouse input"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "blocks pointer events on the list while traversing from a top-level trigger to the popup"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "reapplies top-level safePolygon pointer events after returning from the popup and switching triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "keeps top-level safePolygon pointer events active when switching directly to a different trigger"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "clears top-level safePolygon pointer events on trigger pointerdown"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "scopes safePolygon pointer events to the document for a custom list element"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "blocks pointer events on sibling top-level triggers when opened through real hover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "opens on click with mouse input"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not open on hover with touch input"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "reports %s activation direction when switching in either direction"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "opens on click with touch input"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "restores hover open after a touch click closes outside",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "restores hover open after touching a nested submenu trigger and closing outside",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "restores hover open after a quick click then trigger switch"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "closes after pointerdown on a link in a hover-open popup when pointer leaves"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not close menu when clicking a different trigger with mouse"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not close menu when clicking a different trigger on touch"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "returns focus to trigger when closing menu"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "respects focus outside when clicking menu"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not restore focus to the trigger when closed via hover"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "interactions"
+          ],
+          "title": "does not restore focus to the trigger when focus moves outside"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "patient click threshold"
+          ],
+          "title": "stays open if hovered then clicked within the patient threshold"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "patient click threshold"
+          ],
+          "title": "closes if hovered then clicked after the patient threshold"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: defaultValue"
+          ],
+          "title": "should respect defaultValue"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: defaultValue"
+          ],
+          "title": "disables popup and arrow transitions while a kept portal opens"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should call onValueChange when value changes"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not open when onValueChange cancels the interaction"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "does not emit a duplicate onValueChange when switching items via keyboard"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "treats a falsy item value (%s) as a valid open value"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "should be controlled by value prop"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "preserves popup size when controlled value closes externally"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "preserves popup size when controlled value closes externally with keepMounted portal"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: onValueChange"
+          ],
+          "title": "clears activation direction when controlled value closes externally after switching triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: delay"
+          ],
+          "title": "respects custom delay value"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: closeDelay"
+          ],
+          "title": "respects custom closeDelay value"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not open on hover when the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not open on click when the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not open on touch when the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: disabled"
+          ],
+          "title": "does not open via keyboard when the trigger is disabled"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "automatically unmounts with an actions ref and completes closing once"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "keeps the popup mounted until the unmount action completes closing"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "closes through the `close` action so `onValueChange` can opt out"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "keeps the opt-out when the `close` action is called again while closed"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "keeps the opt-out when focus leaves the trigger during a manual exit"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "ignores `unmount` while the popup is open"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "still unmounts on a later close after `unmount` was called while open"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: actionsRef"
+          ],
+          "title": "unmounts immediately when called while the popup is closing"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "prop: side"
+          ],
+          "title": "pins the popup to the right edge when side is %s so it grows leftward"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "moves focus through the menu correctly"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "closes the menu when tabbing forward out"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "closes after tabbing out of arbitrary tabbable content"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "returns focus to the trigger when no viewport focus guard is rendered"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "returns to the last submenu item when shift+tabbing after tabbing out of it"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "tabbing"
+          ],
+          "title": "closes the menu when tabbing back out"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested popups"
+          ],
+          "title": "keeps a hover-open menu open when pointerdown happens on a nested dialog trigger"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested popups"
+          ],
+          "title": "keeps the menu open when interacting with a nested dialog"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested popups"
+          ],
+          "title": "keeps the menu open when interacting with a nested popover"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "opens nested menu on hover and stays open when hovering over nested popup"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "handles inline nested menu without positioner/popup correctly"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "keeps parent menu open when hovering inline nested triggers without defaultValue"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "closes the parent menu after a nested submenu closes on delayed hover-out"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "closes the parent menu when a nested link with closeOnClick is clicked"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "calls onValueChange on the parent root when nested closeOnClick link is clicked"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus"
+          ],
+          "title": "closes all levels when a deeply nested link with closeOnClick is clicked"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "renders viewport content correctly for inline nested menu"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "switches content in viewport when hovering different nested triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "scopes inline safePolygon pointer events to the submenu list while traversing to the viewport"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "keeps an inline submenu open while traversing toward a viewport on the %s"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "clears inline safePolygon pointer events when the pointer leaves the traversal path"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "keeps inline safePolygon pointer events when returning to the original trigger before traversing again"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "closes inline nested viewport when parent menu closes"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "maintains inline viewport state when hovering between triggers and content"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "handles click interactions on inline nested menu triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "adds popup-open data attributes to the active icon"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "treats a falsy value (%s) as open for inline nested trigger interactions"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "propagates a nested close with a falsy open value to the parent root"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "allows arrow key navigation to submenu triggers"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "allows arrow key navigation with 3+ levels of nesting"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "updates popup sizing when inline nested content is inserted while active"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "does not animate popup sizing when nested default content mounts during opening"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "does not animate popup sizing when kept nested default content first moves into the portal"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "updates popup sizing when switching kept inline nested content"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "updates popup sizing when a kept nested content hidden attribute changes"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "keeps inline mutation resize interruptible when content updates again mid-transition"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "preserves the current size when an interrupted mutation temporarily measures zero"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "updates popup sizing when the window is resized while the popup is open"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "updates popup sizing immediately when switching to a keepMounted trigger"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "ignores the initial open size reset once a trigger switch has started"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "seeds the popup width from the exiting panel when reopening after hovering a top-level link"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "closes on the short exit path after switching content",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "does not collapse auto-sized popup to zero on close if measurement temporarily returns 0"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "tabs from the last link of the last nested panel to the next top-level trigger"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "tabs between nested triggers and links without opening inactive panels"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root />",
+            "nested menus",
+            "inline nested viewport"
+          ],
+          "title": "returns to the last inline submenu item when shift+tabbing after leaving it"
+        },
+        {
+          "describe": [
+            "initial open"
+          ],
+          "title": "suppresses the positioner transition for the first frame while initially open"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/root/NavigationMenuRoot.webkit.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Root /> (Safari)"
+          ],
+          "title": "blocks top-level pointer events for hover-open menus"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Root /> (Safari)"
+          ],
+          "title": "keeps nested safePolygon pointer events scoped on WebKit"
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/root/NavigationMenuRootContext.test.ts",
+      "rows": [
+        {
+          "describe": [
+            "NavigationMenuRootContext"
+          ],
+          "title": "sets a development display name"
+        },
+        {
+          "describe": [
+            "NavigationMenuRootContext"
+          ],
+          "title": "omits the display name in production",
+          "conditions": [
+            "skipIf(!isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/trigger/NavigationMenuTrigger.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "suite": "describeConformance"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "applies the data-disabled style hook only when disabled"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "opens a vertical menu with the mirrored arrow key in RTL mode"
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "keeps focus on the trigger when opened with %s",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "handles focus and positioner height",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "handles positioner width correctly",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "repositions the positioner when switching triggers via hover",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "does not let a previously hovered trigger reapply popup sizes after a later switch",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "does not let interrupted mutation resizing reapply popup sizes after a later switch",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "releases the pointer-events lock on the list when the open trigger unmounts",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        },
+        {
+          "describe": [
+            "<NavigationMenu.Trigger />"
+          ],
+          "title": "releases the pointer-events lock when the pointer sweeps across a trigger without the menu opening",
+          "conditions": [
+            "skipIf(isJSDOM)"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "packages/react/src/navigation-menu/viewport/NavigationMenuViewport.test.tsx",
+      "rows": [
+        {
+          "describe": [
+            "<NavigationMenu.Viewport />"
+          ],
+          "suite": "describeConformance"
+        }
+      ]
+    }
+  ],
+  "surface": [
+    {
+      "file": "docs/src/app/(docs)/react/components/navigation-menu/types.md",
+      "parts": [
+        {
+          "name": "Root",
+          "tag": "nav",
+          "props": [
+            {
+              "name": "defaultValue",
+              "required": false,
+              "type": "Value | null",
+              "default": "null"
+            },
+            {
+              "name": "value",
+              "required": false,
+              "type": "Value | null",
+              "default": "null"
+            },
+            {
+              "name": "onValueChange",
+              "required": false,
+              "type": "((value: Value | null, eventDetails: NavigationMenu.Root.ChangeEventDetails) => void)",
+              "default": null
+            },
+            {
+              "name": "actionsRef",
+              "required": false,
+              "type": "React.RefObject<NavigationMenu.Root.Actions | null>",
+              "default": null
+            },
+            {
+              "name": "onOpenChangeComplete",
+              "required": false,
+              "type": "((open: boolean) => void)",
+              "default": null
+            },
+            {
+              "name": "delay",
+              "required": false,
+              "type": "number",
+              "default": "50"
+            },
+            {
+              "name": "closeDelay",
+              "required": false,
+              "type": "number",
+              "default": "50"
+            },
+            {
+              "name": "orientation",
+              "required": false,
+              "type": "'horizontal' | 'vertical'",
+              "default": "'horizontal'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Root.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Root.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Root.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuRootState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "nested",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuRootState = {\n    open: boolean;\n    nested: boolean;\n};"
+          },
+          "actions": {
+            "name": "NavigationMenuRootActions",
+            "members": [
+              "unmount",
+              "close"
+            ],
+            "code": "type NavigationMenuRootActions = {\n    unmount: () => void;\n    close: () => void;\n};"
+          },
+          "changeEventReason": {
+            "name": "NavigationMenuRootChangeEventReason",
+            "values": [
+              "trigger-press",
+              "trigger-hover",
+              "outside-press",
+              "list-navigation",
+              "focus-out",
+              "escape-key",
+              "link-press",
+              "imperative-action",
+              "none"
+            ],
+            "code": "type NavigationMenuRootChangeEventReason = 'trigger-press' | 'trigger-hover' | 'outside-press' | 'list-navigation' | 'focus-out' | 'escape-key' | 'link-press' | 'imperative-action' | 'none';"
+          },
+          "changeEventDetails": {
+            "name": "NavigationMenuRootChangeEventDetails",
+            "code": "type NavigationMenuRootChangeEventDetails = ({\n    reason: 'trigger-press';\n    event: MouseEvent | PointerEvent | TouchEvent | KeyboardEvent;\n} | {\n    reason: 'trigger-hover';\n    event: MouseEvent;\n} | {\n    reason: 'outside-press';\n    event: MouseEvent | PointerEvent | TouchEvent;\n} | {\n    reason: 'list-navigation';\n    event: KeyboardEvent;\n} | {\n    reason: 'focus-out';\n    event: KeyboardEvent | FocusEvent;\n} | {\n    reason: 'escape-key';\n    event: KeyboardEvent;\n} | {\n    reason: 'link-press';\n    event: MouseEvent | PointerEvent;\n} | {\n    reason: 'imperative-action';\n    event: Event;\n} | {\n    reason: 'none';\n    event: Event;\n}) & {\n    cancel: () => void;\n    allowPropagation: () => void;\n    isCanceled: boolean;\n    isPropagationAllowed: boolean;\n    trigger: Element | undefined;\n    preventUnmountOnClose: () => void;\n};"
+          },
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Trigger",
+          "tag": "button",
+          "props": [
+            {
+              "name": "nativeButton",
+              "required": false,
+              "type": "boolean",
+              "default": "true"
+            },
+            {
+              "name": "disabled",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Trigger.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Trigger.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Trigger.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuTriggerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "disabled",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuTriggerState = {\n    open: boolean;\n    disabled: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            },
+            {
+              "name": "data-pressed",
+              "type": null
+            },
+            {
+              "name": "data-disabled",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Icon",
+          "tag": null,
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Icon.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Icon.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Icon.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuIconState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuIconState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-popup-open",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "List",
+          "tag": "ul",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.List.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.List.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.List.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuListState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuListState = {\n    open: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Portal",
+          "tag": "div",
+          "props": [
+            {
+              "name": "container",
+              "required": false,
+              "type": "HTMLElement | ShadowRoot | React.RefObject<HTMLElement | ShadowRoot | null> | null",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Portal.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Portal.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Portal.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuPortalState",
+            "fields": [],
+            "code": "type NavigationMenuPortalState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Backdrop",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Backdrop.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Backdrop.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Backdrop.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuBackdropState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              }
+            ],
+            "code": "type NavigationMenuBackdropState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Positioner",
+          "tag": "div",
+          "props": [
+            {
+              "name": "disableAnchorTracking",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "align",
+              "required": false,
+              "type": "Align",
+              "default": "'center'"
+            },
+            {
+              "name": "alignOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "side",
+              "required": false,
+              "type": "Side",
+              "default": "'bottom'"
+            },
+            {
+              "name": "sideOffset",
+              "required": false,
+              "type": "number | OffsetFunction",
+              "default": "0"
+            },
+            {
+              "name": "arrowPadding",
+              "required": false,
+              "type": "number",
+              "default": "5"
+            },
+            {
+              "name": "anchor",
+              "required": false,
+              "type": "Element | VirtualElement | React.RefObject<Element | null> | (() => Element | VirtualElement | null) | null",
+              "default": null
+            },
+            {
+              "name": "collisionAvoidance",
+              "required": false,
+              "type": "CollisionAvoidance",
+              "default": null
+            },
+            {
+              "name": "collisionBoundary",
+              "required": false,
+              "type": "Boundary",
+              "default": "'clipping-ancestors'"
+            },
+            {
+              "name": "collisionPadding",
+              "required": false,
+              "type": "Padding",
+              "default": "5"
+            },
+            {
+              "name": "sticky",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "positionMethod",
+              "required": false,
+              "type": "'absolute' | 'fixed'",
+              "default": "'absolute'"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Positioner.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Positioner.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Positioner.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuPositionerState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "instant",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuPositionerState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n    instant: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-instant",
+              "type": null
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--anchor-height",
+              "type": "number"
+            },
+            {
+              "name": "--anchor-width",
+              "type": "number"
+            },
+            {
+              "name": "--available-height",
+              "type": "number"
+            },
+            {
+              "name": "--available-width",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-height",
+              "type": "number"
+            },
+            {
+              "name": "--positioner-width",
+              "type": "number"
+            },
+            {
+              "name": "--transform-origin",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Popup",
+          "tag": "nav",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Popup.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Popup.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Popup.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuPopupState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "anchorHidden",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuPopupState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    side: Side;\n    align: Align;\n    anchorHidden: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-anchor-hidden",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": [
+            {
+              "name": "--popup-height",
+              "type": "number"
+            },
+            {
+              "name": "--popup-width",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Arrow",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Arrow.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Arrow.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Arrow.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuArrowState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "side",
+                "optional": false,
+                "type": "Side"
+              },
+              {
+                "name": "align",
+                "optional": false,
+                "type": "Align"
+              },
+              {
+                "name": "uncentered",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuArrowState = {\n    open: boolean;\n    side: Side;\n    align: Align;\n    uncentered: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-uncentered",
+              "type": null
+            },
+            {
+              "name": "data-align",
+              "type": "'start' | 'center' | 'end'"
+            },
+            {
+              "name": "data-side",
+              "type": "'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start'"
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Item",
+          "tag": "li",
+          "props": [
+            {
+              "name": "value",
+              "required": false,
+              "type": "any",
+              "default": null
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Item.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Item.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Item.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuItemState",
+            "fields": [],
+            "code": "type NavigationMenuItemState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Content",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Content.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Content.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "keepMounted",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Content.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuContentState",
+            "fields": [
+              {
+                "name": "open",
+                "optional": false,
+                "type": "boolean"
+              },
+              {
+                "name": "transitionStatus",
+                "optional": false,
+                "type": "TransitionStatus"
+              },
+              {
+                "name": "activationDirection",
+                "optional": false,
+                "type": "'left' | 'right' | 'up' | 'down' | null"
+              }
+            ],
+            "code": "type NavigationMenuContentState = {\n    open: boolean;\n    transitionStatus: TransitionStatus;\n    activationDirection: 'left' | 'right' | 'up' | 'down' | null;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-open",
+              "type": null
+            },
+            {
+              "name": "data-closed",
+              "type": null
+            },
+            {
+              "name": "data-activation-direction",
+              "type": "'left' | 'right' | 'up' | 'down'"
+            },
+            {
+              "name": "data-starting-style",
+              "type": null
+            },
+            {
+              "name": "data-ending-style",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        },
+        {
+          "name": "Viewport",
+          "tag": "div",
+          "props": [
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Viewport.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Viewport.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: HTMLProps, state: NavigationMenu.Viewport.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuViewportState",
+            "fields": [],
+            "code": "type NavigationMenuViewportState = {};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [],
+          "cssVariables": []
+        },
+        {
+          "name": "Link",
+          "tag": "a",
+          "props": [
+            {
+              "name": "closeOnClick",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "active",
+              "required": false,
+              "type": "boolean",
+              "default": "false"
+            },
+            {
+              "name": "className",
+              "required": false,
+              "type": "string | ((state: NavigationMenu.Link.State) => string | undefined)",
+              "default": null
+            },
+            {
+              "name": "style",
+              "required": false,
+              "type": "React.CSSProperties | ((state: NavigationMenu.Link.State) => React.CSSProperties | undefined)",
+              "default": null
+            },
+            {
+              "name": "render",
+              "required": false,
+              "type": "ReactElement | ((props: React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, state: NavigationMenu.Link.State) => ReactElement)",
+              "default": null
+            }
+          ],
+          "state": {
+            "name": "NavigationMenuLinkState",
+            "fields": [
+              {
+                "name": "active",
+                "optional": false,
+                "type": "boolean"
+              }
+            ],
+            "code": "type NavigationMenuLinkState = {\n    active: boolean;\n};"
+          },
+          "actions": null,
+          "changeEventReason": null,
+          "changeEventDetails": null,
+          "dataAttributes": [
+            {
+              "name": "data-active",
+              "type": null
+            }
+          ],
+          "cssVariables": []
+        }
+      ],
+      "functions": [],
+      "types": [
+        {
+          "name": "Root.Value",
+          "code": "type NavigationMenuRootValue<TValue = any> = TValue | null;"
+        }
+      ],
+      "additionalTypes": [
+        {
+          "name": "NavigationMenuArrowDataAttributes",
+          "code": "declare namespace NavigationMenuArrowDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const side: 'data-side';\n    const align: 'data-align';\n    const uncentered: 'data-uncentered';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "uncentered",
+              "value": "data-uncentered"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuBackdropDataAttributes",
+          "code": "declare namespace NavigationMenuBackdropDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuContentDataAttributes",
+          "code": "declare namespace NavigationMenuContentDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const activationDirection: 'data-activation-direction';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "activationDirection",
+              "value": "data-activation-direction"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuIconDataAttributes",
+          "code": "declare namespace NavigationMenuIconDataAttributes {\n    const popupOpen: 'data-popup-open';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuLinkDataAttributes",
+          "code": "declare namespace NavigationMenuLinkDataAttributes {\n    const active: 'data-active';\n}",
+          "constants": [
+            {
+              "name": "active",
+              "value": "data-active"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuPopupCssVariables",
+          "code": "declare namespace NavigationMenuPopupCssVariables {\n    const popupWidth: '--popup-width';\n    const popupHeight: '--popup-height';\n}",
+          "constants": [
+            {
+              "name": "popupWidth",
+              "value": "--popup-width"
+            },
+            {
+              "name": "popupHeight",
+              "value": "--popup-height"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuPopupDataAttributes",
+          "code": "declare namespace NavigationMenuPopupDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const startingStyle: 'data-starting-style';\n    const endingStyle: 'data-ending-style';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "startingStyle",
+              "value": "data-starting-style"
+            },
+            {
+              "name": "endingStyle",
+              "value": "data-ending-style"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuPositionerCssVariables",
+          "code": "declare namespace NavigationMenuPositionerCssVariables {\n    const availableWidth: '--available-width';\n    const availableHeight: '--available-height';\n    const anchorWidth: '--anchor-width';\n    const anchorHeight: '--anchor-height';\n    const transformOrigin: '--transform-origin';\n    const positionerWidth: '--positioner-width';\n    const positionerHeight: '--positioner-height';\n}",
+          "constants": [
+            {
+              "name": "availableWidth",
+              "value": "--available-width"
+            },
+            {
+              "name": "availableHeight",
+              "value": "--available-height"
+            },
+            {
+              "name": "anchorWidth",
+              "value": "--anchor-width"
+            },
+            {
+              "name": "anchorHeight",
+              "value": "--anchor-height"
+            },
+            {
+              "name": "transformOrigin",
+              "value": "--transform-origin"
+            },
+            {
+              "name": "positionerWidth",
+              "value": "--positioner-width"
+            },
+            {
+              "name": "positionerHeight",
+              "value": "--positioner-height"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuPositionerDataAttributes",
+          "code": "declare namespace NavigationMenuPositionerDataAttributes {\n    const open: 'data-open';\n    const closed: 'data-closed';\n    const anchorHidden: 'data-anchor-hidden';\n    const side: 'data-side';\n    const align: 'data-align';\n    const instant: 'data-instant';\n}",
+          "constants": [
+            {
+              "name": "open",
+              "value": "data-open"
+            },
+            {
+              "name": "closed",
+              "value": "data-closed"
+            },
+            {
+              "name": "anchorHidden",
+              "value": "data-anchor-hidden"
+            },
+            {
+              "name": "side",
+              "value": "data-side"
+            },
+            {
+              "name": "align",
+              "value": "data-align"
+            },
+            {
+              "name": "instant",
+              "value": "data-instant"
+            }
+          ]
+        },
+        {
+          "name": "NavigationMenuTriggerDataAttributes",
+          "code": "declare namespace NavigationMenuTriggerDataAttributes {\n    const popupOpen: 'data-popup-open';\n    const pressed: 'data-pressed';\n    const disabled: 'data-disabled';\n}",
+          "constants": [
+            {
+              "name": "popupOpen",
+              "value": "data-popup-open"
+            },
+            {
+              "name": "pressed",
+              "value": "data-pressed"
+            },
+            {
+              "name": "disabled",
+              "value": "data-disabled"
+            }
+          ]
+        }
+      ],
+      "externalTypes": [
+        {
+          "name": "Side",
+          "code": "type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';"
+        },
+        {
+          "name": "Align",
+          "code": "type Align = 'start' | 'center' | 'end';"
+        },
+        {
+          "name": "OffsetFunction",
+          "code": "type OffsetFunction = (data: {\n    side: 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';\n    align: 'start' | 'center' | 'end';\n    anchor: {\n        width: number;\n        height: number;\n    };\n    positioner: {\n        width: number;\n        height: number;\n    };\n}) => number;"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "file": "docs/src/app/(docs)/react/components/navigation-menu/page.mdx",
+      "referenceTags": [
+        "TypesNavigationMenu.Root",
+        "TypesNavigationMenu.List",
+        "TypesNavigationMenu.Item",
+        "TypesNavigationMenu.Trigger",
+        "TypesNavigationMenu.Icon",
+        "TypesNavigationMenu.Content",
+        "TypesNavigationMenu.Link",
+        "TypesNavigationMenu.Backdrop",
+        "TypesNavigationMenu.Portal",
+        "TypesNavigationMenu.Positioner",
+        "TypesNavigationMenu.Popup",
+        "TypesNavigationMenu.Viewport",
+        "TypesNavigationMenu.Arrow"
+      ]
+    }
+  ]
+}

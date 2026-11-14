@@ -231,6 +231,10 @@ The template of each such part has two lines and no wrapper component:
 - When the attributes start empty, a spread reads no key. A `computed` then does not see an attribute that comes later.
 - The render function runs again on each change of the attributes.
 - A part with a void default tag (`img`, `input`) has no default slot.
+- A part whose default tag depends on its context, such as `NavigationMenu.Root`, has no default for `as`.
+- It decides the tag one time in `setup`. It gives the tag to `useRenderElement` as the first argument.
+- Its template binds `:is="as ?? defaultTag"` in the second line.
+- Base UI documents the default tag. When the family has an entry point, the family file needs a `not-applicable` exception row for the prop row `render`.
 - A part that renders no element has only `<slot />`. It does not set `inheritAttrs`. Vue then shows a warning in a development build when the part gets an attribute or a listener. With `inheritAttrs: false`, Vue drops them and shows nothing.
 
 A part that Base UI writes as another part renders that part and no element of its own. `Toolbar.Separator` and `Input` are the examples:
@@ -872,6 +876,7 @@ A part that is in a composite only in some trees:
 
 - `Toggle` is a composite item only in a `ToggleGroup`. `ToggleGroup` is a composite root only outside a `Toolbar.Root`. In a toolbar, the toggles register with the root of the toolbar. `toggle/Toggle.vue` and `toggle-group/ToggleGroup.vue` are the models.
 - `Radio.Root` is an item only in a `RadioGroup`.
+- `NavigationMenu.List` is a composite root only when its root is not nested. A nested list also leaves out its key handler, so that the arrow keys reach the outer root. `navigation-menu/list/NavigationMenuList.vue` is the model.
 - The part reads the context that decides with `inject`, in `setup`. It calls `useCompositeItem` or `useCompositeRoot` only when that context allows it: `const compositeItem = groupContext ? useCompositeItem({ … }) : undefined`.
 - The choice is made one time, because a component keeps its provider chain from the moment that Vue makes it. `KeepAlive` and `Teleport` do not change that chain.
 - `useCompositeItem` throws when it has no composite root, so a part cannot call it in each tree.
