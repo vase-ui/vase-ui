@@ -22,6 +22,7 @@ import { resolvePopupLabel } from '../../internals/resolvePopupLabel';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { useKeepAliveElementRef } from '../../utils/popups/useKeepAliveElementRef';
 import { useMenuFilterImpl } from '../filter-root/MenuFilterContext';
 import { useMenuRootContext } from '../root/MenuRootContext';
 
@@ -87,7 +88,7 @@ function getListProps(attrs: Record<string, any>) {
 
 const { element, elementProps } = useRenderElement('div', props, {
   state,
-  ref: filterList ? undefined : setListElement,
+  ref: filterList ? undefined : useKeepAliveElementRef(setListElement),
   props: (attrs) => (filterList ? filterList.props(attrs) : getListProps(attrs)),
 });
 

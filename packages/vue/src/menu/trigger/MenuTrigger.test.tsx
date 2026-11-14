@@ -1303,6 +1303,49 @@ describe('<Menu.Trigger />', () => {
       expect(popup.isConnected).toBe(true);
       expect(trigger).toHaveAttribute('aria-controls', popup.id);
     });
+
+    it('names the popup while KeepAlive holds the list', async () => {
+      const List = defineComponent({
+        setup: () => () => (
+          <Menu.List data-testid="list">
+            <Menu.Item>Item</Menu.Item>
+          </Menu.List>
+        ),
+      });
+      const Other = defineComponent({ setup: () => () => <span /> });
+      const visible = shallowRef(true);
+      await render(() => (
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup data-testid="popup">
+                <KeepAlive>{visible.value ? <List key="list" /> : <Other key="other" />}</KeepAlive>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      ));
+      await flushMicrotasks();
+      const trigger = screen.getByRole('button', { name: 'Open' });
+      const popup = screen.getByTestId('popup');
+      const list = screen.getByTestId('list');
+      expect(list.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+
+      visible.value = false;
+      await flushMicrotasks();
+
+      expect(list.isConnected).toBe(false);
+      expect(popup.id).not.toBe('');
+      expect(trigger).toHaveAttribute('aria-controls', popup.id);
+
+      visible.value = true;
+      await flushMicrotasks();
+
+      expect(list.isConnected).toBe(true);
+      expect(trigger).toHaveAttribute('aria-controls', list.id);
+    });
   });
 
   // This case is the last one of the file. In Vue 3.5.12, a `setup` that throws leaves the current
