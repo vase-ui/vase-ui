@@ -1050,6 +1050,8 @@ describe('<Combobox.Input />', () => {
       );
 
       const input = screen.getByRole('combobox');
+      expect(screen.getByRole('listbox')).not.toBe(null);
+
       await fireEvent.compositionStart(input);
       await fireEvent.input(input, { target: { value: '' } });
 

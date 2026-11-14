@@ -37,8 +37,8 @@ const chipsRef = shallowRef<(HTMLButtonElement | null)[]>([]);
 useCompositeList({ elementsRef: chipsRef });
 provide(ComboboxChipsContext, { chipsRef });
 
-// A template can mount the chips that replace these chips before it unmounts these chips. The old
-// chips then clear the container of the root only when the root holds their own element.
+// A template can mount the chips part that replaces this part before it unmounts this part. The
+// part then clears the container of the root only when the root holds its own container.
 let ownContainer: HTMLElement | null = null;
 function setChipsContainer(container: HTMLElement | null) {
   if (container !== null || store.context.chipsContainerRef.value === ownContainer) {
