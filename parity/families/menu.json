@@ -285,31 +285,31 @@
       "describe": ["<Menu.Popup />"],
       "title": "does not move focus behind a modal dialog to $name when an item hides the menu trigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case presses the trigger, and it checks where the focus goes when the menu closes. The trigger of Vase UI has no press yet, and the popup has no focus management."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />"],
       "title": "keeps focus on an input that autofocuses when the trigger is hidden as the menu closes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />"],
       "suite": "popupFocusPropsTests",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The suite gives `finalFocus` to the popup and presses the trigger. The popup of Vase UI has no focus management yet, and the trigger has no press."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The suite presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopup.test.tsx",
       "describe": ["<Menu.Popup />", "prop: finalFocus"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The cases press the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
@@ -324,14 +324,6 @@
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
       "reason": "The case presses the trigger to open or close the menu. The trigger of Vase UI has no press yet."
-    },
-    {
-      "upstream": "packages/react/src/menu/portal/MenuPortal.test.tsx",
-      "describe": ["<Menu.Portal />", "prop: container"],
-      "title": "mounts and focuses an initially open menu inside an ancestor ref (controlled=$controlled, keepMounted=$keepMounted)",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -384,19 +376,19 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys, move the focus and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
@@ -420,8 +412,8 @@
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
       "describe": ["<Menu.Trigger />", "tabbing backward from the open trigger"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case needs the focus management of the menu. The popup and the trigger of Vase UI have no focus management yet."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -494,8 +486,8 @@
       "describe": ["<Menu.Item />"],
       "title": "preserves focus moved by onClick after $press activation",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
-      "reason": "The case gives `finalFocus` to the popup and presses the trigger. The popup of Vase UI has no focus management yet, and the trigger has no press."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case presses the trigger to open the menu. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/item/MenuItem.test.tsx",
@@ -574,7 +566,7 @@
       "title": "toggles with Space after closing during typeahead and reopening",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case presses the trigger, moves the focus with the menu, and moves the highlight with the keys or with a typeahead. Menu has none of these yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+      "reason": "The case presses the trigger, and it moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "packages/react/src/menu/checkbox-item/MenuCheckboxItem.test.tsx",
@@ -770,7 +762,7 @@
       "title": "focuses the list rather than the presentational popup on a pointer open",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case presses the trigger, moves the focus with the menu, and moves the highlight with the keys or with a typeahead. Menu has none of these yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+      "reason": "The case presses the trigger, and it moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "packages/react/src/menu/list/MenuList.test.tsx",
@@ -778,7 +770,7 @@
       "title": "enters the list from the end with ArrowUp after a pointer open without looping",
       "kind": "waits-on",
       "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "The case presses the trigger, moves the focus with the menu, and moves the highlight with the keys or with a typeahead. Menu has none of these yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+      "reason": "The case presses the trigger, and it moves the highlight with the keys or with a typeahead. Menu has neither yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
