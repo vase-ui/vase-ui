@@ -23,12 +23,14 @@ import {
 import { BasePopupHandle } from './popupHandle';
 import { PopupTriggerMap } from './popupTriggerMap';
 import {
+  BasePopupStore,
   createInitialPopupStoreState,
   createPopupOpenState,
   createPopupStoreContext,
   popupStoreSelectors,
 } from './store';
 import type {
+  PopupOpenChangeEventDetails,
   PopupStoreContext,
   PopupStoreSelectors,
   PopupStoreState,
@@ -790,7 +792,19 @@ describe('popupId selector', () => {
   });
 
   it('prefers an explicit popup element id over the default popup id', () => {
-    const store = createTestPopupStore();
+    // The `setState` of `BasePopupStore` copies the `id` of the popup element to the state, and a
+    // bare store has no such step.
+    class PopupStore extends BasePopupStore<
+      PopupStoreState<unknown>,
+      PopupStoreContext<PopupOpenChangeEventDetails>,
+      PopupStoreSelectors,
+      PopupOpenChangeEventDetails
+    > {}
+    const store = new PopupStore(
+      createInitialPopupStoreState(),
+      createPopupStoreContext(),
+      popupStoreSelectors,
+    );
     const popupElement = document.createElement('div');
     popupElement.id = 'explicit-popup-id';
 

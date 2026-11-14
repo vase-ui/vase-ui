@@ -972,6 +972,20 @@ describe('BasePopupStore', () => {
 
       expect(popupId.value).toBe(expected);
     });
+
+    it('stops following the id of a popup element that unmounts', async () => {
+      const store = new TestPopupStore(() => {});
+      const popup = document.createElement('div');
+      store.set('popupElement', popup);
+      store.set('popupElement', null);
+      store.steps.splice(0);
+
+      popup.id = 'custom';
+      await flushMicrotasks();
+
+      // One write of the store is one call of `setState`, so the case counts those calls.
+      expect(store.steps).toEqual([]);
+    });
   });
 
   describe('setState', () => {
