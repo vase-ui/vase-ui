@@ -127,11 +127,11 @@ Do not put a part in `<AnimatePresence>`: a portal part renders a `<Teleport>`, 
 
 You can also give `motion.div` to the `as` prop. The template then cannot read the `state` of the popup, so `animate` reads a controlled `open`.
 
-<<< ../examples/animation/MotionAsProp.vue{10,14-16}
+<<< ../examples/animation/MotionAsProp.vue{10,15-17}
 
 ### Animate a popup that stays in the DOM
 
-A popup stays in the DOM while it is closed when its portal has `keepMounted`. The same code animates it. Vase UI hides the closed popup.
+A popup stays in the DOM while it is closed when its portal has `keepMounted`. The same code animates it, but `initial` is `false`. The popup mounts closed, so it starts with the closed style of `animate`. Vase UI hides the closed popup.
 
 <DemoFrame>
   <MotionKeepMounted />

@@ -7,6 +7,7 @@ import {
   fireEvent,
   flushMicrotasks,
   isJSDOM,
+  nextAnimationsRead,
   screen,
   waitFor,
   waitForPositioned,
@@ -550,17 +551,6 @@ describe('<Popover.Root />', () => {
     type NumberPayload = { payload: number | undefined };
 
     /**
-     * Waits until the element has an animation, and ends each animation that it has.
-     */
-    async function finishAnimations(element: Element) {
-      await waitFor(() => {
-        expect(element.getAnimations().length).toBeGreaterThan(0);
-      });
-      element.getAnimations().forEach((animation) => animation.finish());
-      await flushMicrotasks();
-    }
-
-    /**
      * Ends the animation of the positioner, so that the move to the other trigger completes. A
      * move that finds no animation completes at once.
      */
@@ -575,13 +565,14 @@ describe('<Popover.Root />', () => {
     }
 
     /**
-     * Renders two detached hover triggers with a real position transition on the
-     * positioner and a real exit transition on the popup, then hands the popover
-     * off from trigger 1 to trigger 2 so `instantType` is `trigger-change`.
+     * Renders two detached hover triggers with an animation on the positioner and an exit
+     * transition on the popup, then hands the popover off from trigger 1 to trigger 2 so
+     * `instantType` is `trigger-change`.
      *
      * `instantsWhileEnding` records the `instant` state of every closing render,
      * which is the only way to observe a stale value that a later render clears
-     * before the DOM can be asserted on.
+     * before the DOM can be asserted on. `switchAnimations` are the animations that the move to
+     * trigger 2 waits for.
      */
     async function renderHoverDetachedTriggers({
       popupChildren,
@@ -667,17 +658,15 @@ describe('<Popover.Root />', () => {
         expect(screen.getByTestId('content').textContent).toBe('1');
       });
 
-      await utils.user.hover(trigger2);
+      const switchAnimations = await nextAnimationsRead(screen.getByTestId('positioner'), {
+        action: () => utils.user.hover(trigger2),
+      });
       await waitFor(() => {
         expect(screen.getByTestId('content').textContent).toBe('2');
       });
 
       if (settle) {
         await settleTriggerChange();
-      } else {
-        // The positioner reads its animations in the frame after the move.
-        await waitSingleFrame();
-        await waitSingleFrame();
       }
 
       // The handoff itself legitimately renders `trigger-change` while closing
@@ -689,6 +678,7 @@ describe('<Popover.Root />', () => {
         trigger1,
         trigger2,
         instantsWhileEnding,
+        switchAnimations,
         popup: screen.getByTestId('popup'),
       };
     }
@@ -739,8 +729,10 @@ describe('<Popover.Root />', () => {
       // Leaving and returning mid-exit keeps the positioner mounted and the
       // trigger unchanged, so nothing re-runs the effect to cancel the pending
       // switch callback. A slow switch keeps it pending across the reopen.
-      const { user, trigger2 } = await renderHoverDetachedTriggers({ settle: false });
-      const positioner = screen.getByTestId('positioner');
+      const { user, trigger2, switchAnimations } = await renderHoverDetachedTriggers({
+        settle: false,
+      });
+      expect(switchAnimations.length).toBeGreaterThan(0);
 
       await user.unhover(trigger2);
       await waitFor(() => {
@@ -753,7 +745,7 @@ describe('<Popover.Root />', () => {
       });
 
       const reopenedPopup = screen.getByTestId('popup');
-      await finishAnimations(positioner);
+      switchAnimations.forEach((animation) => animation.finish());
       await waitSingleFrame();
       await flushMicrotasks();
 
@@ -839,8 +831,11 @@ describe('<Popover.Root />', () => {
       await settleTriggerChange();
 
       endingInstants.length = 0;
-      open.value = false;
-      await flushMicrotasks();
+      const exitAnimations = nextAnimationsRead(screen.getByTestId('popup'), {
+        action: () => {
+          open.value = false;
+        },
+      });
       await waitFor(() => {
         expect(endingInstants.length).toBeGreaterThan(0);
       });
@@ -849,7 +844,7 @@ describe('<Popover.Root />', () => {
 
       // Reopening on the same trigger, again purely through props, must not
       // inherit the `trigger-change` the earlier switch had stored.
-      await finishAnimations(screen.getByTestId('popup'));
+      (await exitAnimations).forEach((animation) => animation.finish());
       await waitFor(() => {
         expect(screen.queryByTestId('popup')).toBe(null);
       });
@@ -962,13 +957,12 @@ describe('<Popover.Root />', () => {
       });
       await waitForPositioned(screen.getByTestId('positioner'));
 
-      await user.hover(trigger2);
+      const switchAnimations = await nextAnimationsRead(screen.getByTestId('positioner'), {
+        action: () => user.hover(trigger2),
+      });
       await waitFor(() => {
         expect(openedTriggerIds).toEqual(['trigger-1', 'trigger-2']);
       });
-      // The positioner reads its animations in the frame after the move.
-      await waitSingleFrame();
-      await waitSingleFrame();
       // Request the close while the switch is still animating.
       await user.unhover(trigger2);
       await waitFor(() => {
@@ -976,7 +970,7 @@ describe('<Popover.Root />', () => {
       });
 
       // The switch ends before the consumer commits the close.
-      await finishAnimations(screen.getByTestId('positioner'));
+      switchAnimations.forEach((animation) => animation.finish());
       await waitFor(() => {
         expect(instantsWhileClosePending).toContain('trigger-change');
       });
@@ -991,13 +985,10 @@ describe('<Popover.Root />', () => {
     });
 
     it('does not restore the trigger-change instant after a hover close has started', async () => {
-      const { user, trigger2, popup } = await renderHoverDetachedTriggers({ settle: false });
-
-      const positioner = screen.getByTestId('positioner');
-      await waitFor(() => {
-        expect(positioner.getAnimations().length).toBeGreaterThan(0);
+      const { user, trigger2, popup, switchAnimations } = await renderHoverDetachedTriggers({
+        settle: false,
       });
-      const switchAnimations = positioner.getAnimations();
+      expect(switchAnimations.length).toBeGreaterThan(0);
 
       await user.unhover(trigger2);
       await waitFor(() => {
