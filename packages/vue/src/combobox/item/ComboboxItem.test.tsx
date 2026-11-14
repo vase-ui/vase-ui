@@ -9,8 +9,8 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
 import type { HTMLProps } from '../../internals/types';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxItemRenders from './ComboboxItemRenders.test.vue';
@@ -791,10 +791,9 @@ describe('<Combobox.Item />', () => {
         submittedValues.push(new FormData(event.target as HTMLFormElement).get('fruit'));
       };
 
-      // `submitOnItemClick` is a prop of `Autocomplete.Root`, which the fixture stands for.
       const { user } = await render(
         <form onSubmit={handleSubmit}>
-          <AutocompleteRootPart name="fruit" defaultOpen submitOnItemClick>
+          <Autocomplete.Root name="fruit" defaultOpen submitOnItemClick>
             <Combobox.Input />
             <Combobox.Portal>
               <Combobox.Positioner>
@@ -806,7 +805,7 @@ describe('<Combobox.Item />', () => {
                 </Combobox.Popup>
               </Combobox.Positioner>
             </Combobox.Portal>
-          </AutocompleteRootPart>
+          </Autocomplete.Root>
         </form>,
       );
 

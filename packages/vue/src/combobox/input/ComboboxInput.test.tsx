@@ -12,9 +12,9 @@ import {
   screen,
   within,
 } from '#test-utils';
-import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import ComboboxPartsReplacement from '../../../test/fixtures/ComboboxPartsReplacement.vue';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import ComboboxInputHydration from './ComboboxInputHydration.test.vue';
@@ -415,9 +415,9 @@ describe('<Combobox.Input />', () => {
     it('gives the form one entry for the name in the selection mode none', async () => {
       await render(
         <form data-testid="form">
-          <AutocompleteRootPart name="search" defaultInputValue="ma">
+          <Autocomplete.Root name="search" defaultValue="ma">
             <Combobox.Input />
-          </AutocompleteRootPart>
+          </Autocomplete.Root>
         </form>,
       );
 

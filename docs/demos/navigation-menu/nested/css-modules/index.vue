@@ -30,42 +30,43 @@ const CaretRightIcon: FunctionalComponent = () =>
     [h('path', { d: 'M6 12V4l4.5 4z' })],
   );
 
+const base = import.meta.env.BASE_URL;
+
 const overviewLinks = [
   {
-    href: '/react/overview/quick-start',
+    href: `${base}quick-start`,
     title: 'Quick Start',
     description: 'Install and assemble your first component.',
   },
   {
-    href: '/react/overview/accessibility',
-    title: 'Accessibility',
-    description: 'Learn how we build accessible components.',
+    href: `${base}parity`,
+    title: 'Parity',
+    description: 'See which components are complete and which are not started.',
   },
   {
-    href: '/react/overview/releases',
-    title: 'Releases',
-    description: 'See what’s new in the latest Base UI versions.',
+    href: `${base}thanks`,
+    title: 'Thanks',
+    description: 'Meet the people whose work Vase UI carries.',
   },
 ] as const;
 
 const handbookLinks = [
   {
-    href: '/react/handbook/styling',
+    href: `${base}quick-start#style-a-part`,
     title: 'Styling',
     description:
-      'Base UI components can be styled with plain CSS, Tailwind CSS, CSS-in-JS, or CSS Modules.',
+      'Vase UI components can be styled with plain CSS, CSS Modules, or utility classes.',
   },
   {
-    href: '/react/handbook/animation',
+    href: `${base}components/navigation-menu#closing-animations`,
     title: 'Animation',
     description:
-      'Base UI components can be animated with CSS transitions, CSS animations, or JavaScript libraries.',
+      'Vase UI components can be animated with CSS transitions, CSS animations, or JavaScript.',
   },
   {
-    href: '/react/handbook/composition',
+    href: `${base}utils/use-render`,
     title: 'Composition',
-    description:
-      'Base UI components can be replaced and composed with your own existing components.',
+    description: 'Vase UI components can be replaced and composed with your own components.',
   },
 ] as const;
 </script>
@@ -95,7 +96,7 @@ const handbookLinks = [
                   <NavigationMenu.Item>
                     <NavigationMenu.Trigger :class="styles.LinkCard">
                       <span :class="styles.LinkTitle">Handbook</span>
-                      <p :class="styles.LinkDescription">How to use Base UI effectively.</p>
+                      <p :class="styles.LinkDescription">How to use Vase UI effectively.</p>
                       <NavigationMenu.Icon :class="styles.NestedIcon">
                         <CaretRightIcon />
                       </NavigationMenu.Icon>

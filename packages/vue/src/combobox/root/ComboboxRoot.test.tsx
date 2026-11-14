@@ -14,11 +14,11 @@ import {
   screen,
   waitFor,
 } from '#test-utils';
-import AutocompleteRootPart from '../../../test/fixtures/AutocompleteRootPart.vue';
 import ComboboxInputPart from '../../../test/fixtures/ComboboxInputPart.vue';
 import ComboboxListPart from '../../../test/fixtures/ComboboxListPart.vue';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
+import * as Autocomplete from '../../autocomplete/index.parts';
 import * as Combobox from '../index.parts';
 import type { ComboboxStore } from '../store';
 import { useComboboxInputValueContext, useComboboxRootContext } from './ComboboxRootContext';
@@ -808,9 +808,9 @@ describe('<Combobox.Root />', () => {
     it('the input has the name when the root selects nothing', async () => {
       await render(
         <form data-testid="form">
-          <AutocompleteRootPart name="search" items={cities}>
+          <Autocomplete.Root name="search" items={cities}>
             <ComboboxInputPart />
-          </AutocompleteRootPart>
+          </Autocomplete.Root>
         </form>,
       );
 
@@ -1033,14 +1033,14 @@ describe('<Combobox.Root />', () => {
       const handleInputValueChange = vi.fn();
       await render(
         <form data-testid="form">
-          <AutocompleteRootPart
+          <Autocomplete.Root
             name="search"
             items={cities}
-            defaultInputValue="os"
-            onInputValueChange={handleInputValueChange}
+            defaultValue="os"
+            onValueChange={handleInputValueChange}
           >
             <ComboboxInputPart />
-          </AutocompleteRootPart>
+          </Autocomplete.Root>
         </form>,
       );
       await type('mal');
@@ -1143,9 +1143,9 @@ describe('<Combobox.Root />', () => {
             validate={validate}
             validationMode="onChange"
           >
-            <AutocompleteRootPart items={cities} defaultInputValue="ma">
+            <Autocomplete.Root items={cities} defaultValue="ma">
               <ComboboxInputPart />
-            </AutocompleteRootPart>
+            </Autocomplete.Root>
             <Field.Error data-testid="error" />
           </Field.Root>
         </Form>,
@@ -1247,9 +1247,9 @@ describe('<Combobox.Root />', () => {
     it('writes the text of the input in mode none', async () => {
       const handleInputValueChange = vi.fn();
       await render(
-        <AutocompleteRootPart items={cities} onInputValueChange={handleInputValueChange}>
+        <Autocomplete.Root items={cities} onValueChange={handleInputValueChange}>
           <ComboboxInputPart />
-        </AutocompleteRootPart>,
+        </Autocomplete.Root>,
       );
 
       await autofill('Oslo');

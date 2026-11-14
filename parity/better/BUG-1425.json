@@ -1,6 +1,6 @@
 {
   "id": "BUG-1425",
   "evidence": ["https://github.com/mui/base-ui/issues/1425"],
-  "behavior": "When `validationMode` is `onBlur`, a required Radio Group with no value is invalid after the focus leaves it. The group or its field needs a `name`. In that mode, a required Select with no value is invalid after the focus leaves its trigger, and after an outside press closes its popup. Base UI shows no error until the form is submitted.",
+  "behavior": "When `validationMode` is `onBlur`, a required Radio Group with no value is invalid after the focus leaves it. The group or its field needs a `name`. In that mode, a required Select with no value is invalid after the focus leaves its trigger, and after an outside press closes its popup. A required Combobox with a selection mode and no value, whose trigger is the control, is invalid after the focus leaves its trigger, and after an outside press or a focus that leaves closes its popup. A Combobox whose input is outside the popup keeps the rule of a text field. Base UI shows no error until the form is submitted.",
   "dueWith": "packages/react/src/radio-group/RadioGroup.tsx"
 }
