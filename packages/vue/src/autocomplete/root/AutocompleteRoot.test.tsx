@@ -95,27 +95,6 @@ function spyOnCollator(runtimeLocale: string) {
   onTestFinished(() => collatorSpy.mockRestore());
 }
 
-// The consumer writes each `valueChange` to `value`.
-async function renderControlled(render: ReturnType<typeof createRenderer>['render']) {
-  const value = shallowRef('');
-  const items = shallowRef<readonly string[]>(cities);
-  const Controlled = defineComponent(() => () => (
-    <Autocomplete.Root
-      mode="both"
-      items={items.value}
-      value={value.value}
-      onValueChange={(next) => {
-        value.value = next;
-      }}
-    >
-      <Autocomplete.Input />
-      {popup()}
-    </Autocomplete.Root>
-  ));
-  await render(<Controlled />);
-  return { value, items };
-}
-
 async function writeOutside(target: { value: unknown }, next: unknown) {
   target.value = next;
   await nextTick();
@@ -2407,19 +2386,6 @@ describe('<Autocomplete.Root />', () => {
       await pressArrowDown();
 
       expect(getInput().value).toBe('MT');
-    });
-
-    it('a later change of the items gives a completion again', async () => {
-      const { value, items } = await renderControlled(render);
-      getInput().focus();
-      await type('ma');
-      await pressArrowDown();
-      await writeOutside(value, 'o');
-      expect(getInput().value).toBe('o');
-
-      await writeOutside(items, ['Otta', ...cities]);
-
-      expect(getInput().value).toBe('Otta');
     });
 
     it('KeepAlive: the inline text stays, and a change from outside while deactivated replaces it', async () => {

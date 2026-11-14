@@ -8,7 +8,7 @@
     {
       "upstream": "packages/react/src/autocomplete/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Autocomplete. It exports the parts of Combobox under the names of Autocomplete, and Vase UI does not have all of those parts yet."
+      "reason": "The file is the entry point of Autocomplete. It exports `Empty` and `Status`, and Vase UI does not have `Combobox.Empty` and `Combobox.Status` yet."
     },
     {
       "upstream": "packages/react/src/autocomplete/root/AutocompleteRoot.test.tsx",
