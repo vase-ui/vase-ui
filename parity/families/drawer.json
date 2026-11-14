@@ -6,11 +6,6 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/drawer/index.ts",
-      "kind": "waits-on",
-      "reason": "The file is the entry point of Drawer. It exports the parts, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/drawer/popup/DrawerPopup.test.tsx",
       "describe": ["<Drawer.Popup />"],
       "title": "warns without relying on React owner-stack support",
@@ -26,18 +21,6 @@
       "reason": "The case forces a garbage collection through `node:v8`, so Base UI runs it only in jsdom. A browser has no `node:v8`. The case is in the test file that the Node project runs, with the same title. It reads the context of the provider from a server render."
     },
     {
-      "upstream": "packages/react/src/drawer/root/DrawerRoot.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/drawer/swipe-area/DrawerSwipeArea.test.tsx",
       "describe": ["<Drawer.SwipeArea />"],
       "title": "works before a generated swipe area id is available",
@@ -50,197 +33,41 @@
       "title": "registers the swipe area once a generated id becomes available",
       "kind": "not-applicable",
       "reason": "The case mocks `useId` to give `undefined` at first, as in React 17. `useVaseUiId` gives an id in `setup`, so the swipe area has its id in its first render."
-    },
-    {
-      "upstream": "packages/react/src/drawer/viewport/DrawerViewport.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The file imports the entry point of Drawer, which Vase UI does not have."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Root",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Root`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Provider",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Provider`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Trigger",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Portal",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Portal`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Backdrop",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Popup",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Content",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Content`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Title",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Title`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Description",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Description`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Close",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Viewport",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Indent",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Indent`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "IndentBackground",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.IndentBackground`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "SwipeArea",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.SwipeArea`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "VirtualKeyboardProvider",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.VirtualKeyboardProvider`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "createHandle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.createHandle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "Handle",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports `Drawer.Handle`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerBackdropCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the CSS variable names of `Drawer.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerBackdropDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.Backdrop`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerCloseDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.Close`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerPopupCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the CSS variable names of `Drawer.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerPopupDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.Popup`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerSwipeAreaDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.SwipeArea`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerTriggerDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.Trigger`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerViewportCssVariables",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the CSS variable names of `Drawer.Viewport`. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "docs/src/app/(docs)/react/components/drawer/types.md",
-      "entry": "DrawerViewportDataAttributes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/drawer/index.ts",
-      "reason": "The entry point of Drawer exports the attribute names of `Drawer.Viewport`. Vase UI does not have that entry point."
     }
   ],
-  "surfaceAdditions": [],
-  "returnTypeDifferences": [],
+  "surfaceAdditions": [
+    {
+      "entry": "Trigger",
+      "prop": "disabled",
+      "reason": "The part gives `disabled` to `Dialog.Trigger`, which reads it for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the trigger, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "SwipeArea",
+      "prop": "id",
+      "reason": "The part reads `id` to register the swipe area as a trigger in the store of the drawer, and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the swipe area, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Title",
+      "prop": "id",
+      "reason": "`Drawer.Title` is `Dialog.Title`. The part gives `id` to the root for `aria-labelledby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the title, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Description",
+      "prop": "id",
+      "reason": "`Drawer.Description` is `Dialog.Description`. The part gives `id` to the root for `aria-describedby` and follows a change of it, so it is a declared prop. Base UI reads it from the native attributes of the description, and `types.md` has no row for a native attribute."
+    },
+    {
+      "entry": "Close",
+      "prop": "disabled",
+      "reason": "`Drawer.Close` is `Dialog.Close`. The part reads `disabled` for its state and for `useButton`, so it is a declared prop. Base UI reads it from the native attributes of the button, and `types.md` has no row for a native attribute."
+    }
+  ],
+  "returnTypeDifferences": [
+    {
+      "entry": "createHandle",
+      "returns": "DrawerHandle<Payload>",
+      "reason": "`Drawer.Handle` is the class `DrawerHandle`. The declaration of the function names the class, and Base UI documents the same class by its name in the namespace."
+    }
+  ],
   "notApplicableCommits": []
 }

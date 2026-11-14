@@ -1,4 +1,5 @@
 import { markRaw, shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 import { AnimationFrame } from '../../common/useAnimationFrame';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -77,7 +78,9 @@ export class BasePopupHandle<
    * `null` when no root is attached. The imperative methods do nothing while it is `null`. A
    * `computed` that reads the handle follows each change of this ref.
    */
-  private readonly attachedStoreRef = shallowRef<Store | null>(null);
+  // For a type parameter, the return type of `shallowRef<Store | null>()` is a conditional type that
+  // TypeScript does not resolve, and `.value` is then `any`. The annotation keeps `Store | null`.
+  private readonly attachedStoreRef: ShallowRef<Store | null> = shallowRef(null);
 
   protected readonly fallbackStore: HandleStore;
 
