@@ -345,8 +345,8 @@ export function useCollapsiblePanel(
 
   function completeClose() {
     // The effect aborts the wait only when it runs again, and the `finished` promise of an
-    // animation can resolve before that. The unmount of a panel that has opened again would
-    // remove it from the DOM.
+    // animation can resolve before that. `animationend` also comes at the end of an enter
+    // animation. In both cases the panel can be open, and an unmount removes an open panel.
     if (isOpen()) {
       return;
     }
@@ -395,9 +395,9 @@ export function useCollapsiblePanel(
   watch([isMounted, isOpen, panelTransitionStatus], runCloseEffect, { flush: 'post' });
 
   // The close effect reads the animations of the panel two frames after the ending style. A late
-  // frame can end a keyframe exit before that read. The panel then has its open style again, and
-  // the browser would paint it. The browser sends `animationend` in the frame of the end, before
-  // the paint.
+  // frame can end a keyframe exit before that read, and the panel then has its open style again.
+  // The browser sends `animationend` in the frame of the end, before the paint. So this listener
+  // completes the close before the browser paints the open panel.
   function handleAnimationEnd(event: AnimationEvent) {
     const element = event.currentTarget as HTMLElement;
     if (
