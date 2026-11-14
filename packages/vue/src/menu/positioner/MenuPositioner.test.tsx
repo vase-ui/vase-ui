@@ -103,6 +103,29 @@ describe('<Menu.Positioner />', () => {
     expect(readLastOptions().lazyFlip).toBe(false);
   });
 
+  it('enables lazy flipping for a filter menu', async () => {
+    useAnchorPositioningSpy.mockClear();
+    await render(
+      <Menu.FilterProvider>
+        <Menu.Root open>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Input aria-label="Filter" />
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </Menu.FilterProvider>,
+    );
+
+    // `'placement'` and not `true`: the filter menu locks the alignment as well as the side, so a
+    // popup that flipped once does not jitter back while typing resizes it. Combobox stays on
+    // `true` (side only), which is what it shipped with.
+    expect(readLastOptions().lazyFlip).toBe('placement');
+  });
+
   describeConformance(<Menu.Positioner />, () => ({
     render: (node) => {
       return render(
