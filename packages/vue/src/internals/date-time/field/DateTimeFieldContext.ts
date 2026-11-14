@@ -86,19 +86,19 @@ export interface DateTimeFieldContext {
     details: DateTimeFieldChangeEventDetails,
   ) => void;
   pasteText: (text: string, event: ClipboardEvent) => void;
-  /** Gives the focus to the segment `direction` places after `from`, or before it when negative. */
+  /** Gives the focus to the segment after `from`, or to the segment before it when `direction` is -1. */
   moveFocus: (from: HTMLInputElement, direction: 1 | -1) => void;
   registerSegment: (element: HTMLInputElement) => void;
   unregisterSegment: (element: HTMLInputElement) => void;
   setFocused: (focused: boolean) => void;
   handleSegmentBlur: (event: FocusEvent) => void;
-  /** A press on the `Input` outside a segment gives the focus to the first empty segment. */
+  /** A press on the `Input` outside a segment gives the focus to the first empty segment, else to the first segment. */
   handleInputPress: (event: MouseEvent) => void;
   /** The part gives it to the `ref` of its element. */
   setRootElement: (element: unknown) => void;
   /** The element that the root part exposes as `inputElement`. */
   hiddenInputElement: Readonly<Ref<HTMLInputElement | null>>;
-  /** The props of the element of the root, with the attributes of the consumer merged in. */
+  /** The sets of props of the root element in merge order. The part gives the function to `useRenderElement` as `props`. */
   getRootProps: (attrs: Record<string, any>) => Record<string, any>[];
   hiddenInputProps: () => Record<string, unknown>;
   clear: (event?: MouseEvent | KeyboardEvent) => void;

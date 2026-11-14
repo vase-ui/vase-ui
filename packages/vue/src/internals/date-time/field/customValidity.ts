@@ -32,9 +32,8 @@ function formatTime(time: Temporal.PlainTime, locale: Intl.LocalesArgument | und
 }
 
 /**
- * The `min` and `max` of the hidden input, as text. Only the native types have them. A native
- * `datetime-local` input limits the day, so a limit that has no day for its end gets the first or
- * the last time of that day.
+ * The `min` and `max` of the hidden input, as text. Only the native types have them. `minDate` and
+ * `maxDate` limit whole days, so a date and time gets the first and the last moment of those days.
  */
 export function getInputLimits(
   kind: TemporalKind,
