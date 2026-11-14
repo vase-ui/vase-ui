@@ -84,7 +84,7 @@ In `defineProps`, the flat names `UseRenderComponentProps` and `UseRenderElement
 
 ## Migrating from asChild
 
-Some libraries give a component an `asChild` prop. The component then renders its child in place of its own element. Vase UI has no `asChild` prop. Use the `as` prop to set a tag or a component. Use the `#render` slot to bind `props` on your own element.
+Some libraries give a component an `asChild` prop. The component then renders its child in place of its own element. Vase UI has no `asChild` prop. Use the `as` prop to set a tag or a component. Use the `#render` slot to bind `props` on your own element. The [composition guide](/handbook/composition) has more on both.
 
 `useRender` lets you build a component that has both:
 
