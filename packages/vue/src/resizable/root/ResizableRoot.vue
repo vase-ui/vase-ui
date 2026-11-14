@@ -84,6 +84,7 @@ export type ResizableRootCommitEventDetails =
 <script setup lang="ts">
 import { computed, onMounted, onScopeDispose, provide, shallowRef, watch } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
+import { ownerWindow } from '../../common/owner';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';
 import { useCompositeList } from '../../internals/composite/list/useCompositeList';
@@ -167,10 +168,6 @@ const [requested, setRequested] = useControlled<ResizableRootLayout>({
   state: 'layout',
 });
 
-// Each panel and handle gets its place among the others from this list. A server gives the places
-// in the order of `setup`.
-useCompositeList({ elementsRef: shallowRef([]) });
-
 const registered = shallowRef<readonly ResizablePanelRegistration[]>([]);
 const panels = computed(() => registered.value.toSorted((a, b) => a.index.value - b.index.value));
 const constraints = computed<PanelConstraints[]>(() =>
@@ -213,23 +210,30 @@ if (process.env.NODE_ENV !== 'production') {
 // The panels register in `setup`, before the mount. The layout of that first state is the layout
 // that the consumer asked for, so it has no change event.
 let mounted = false;
-const registrationVersion = shallowRef(0);
+
+// Each panel and handle gets its place among the others from this list. A server gives the places
+// in the order of `setup`. After the mount, the list calls this function when a panel or a handle
+// comes or goes, and after it sorted them. The layout of the consumer then names the panels that
+// the root shows, and the panels that are not mounted keep their entries.
+function syncLayoutWithPanels() {
+  if (
+    mounted &&
+    !areLayoutsEqual(toRequestedLayout(shown.value, requested.value), requested.value)
+  ) {
+    changeLayout(shown.value, createChangeEventDetails(REASONS.none));
+  }
+}
+
+useCompositeList({ elementsRef: shallowRef([]), onMapChange: syncLayoutWithPanels });
+
 onMounted(() => {
   mounted = true;
 });
 
-function notifyRegistration() {
-  if (mounted) {
-    registrationVersion.value += 1;
-  }
-}
-
 function registerPanel(panel: ResizablePanelRegistration) {
   registered.value = [...registered.value, panel];
-  notifyRegistration();
   onScopeDispose(() => {
     registered.value = registered.value.filter((entry) => entry !== panel);
-    notifyRegistration();
   });
 }
 
@@ -248,18 +252,6 @@ function commitLayout(layout: ResizableRootLayout, details: ResizableRootCommitE
   emit('layoutCommitted', layout, details);
 }
 
-// A panel that mounts or unmounts gives the other panels another share. The requested layout
-// follows it, so the layout of the consumer always names the panels that the root shows.
-watch(
-  registrationVersion,
-  () => {
-    if (!areLayoutsEqual(toRequestedLayout(shown.value, requested.value), requested.value)) {
-      changeLayout(shown.value, createChangeEventDetails(REASONS.none));
-    }
-  },
-  { flush: 'post' },
-);
-
 function startDragging() {
   if (dragging.value) {
     return false;
@@ -276,14 +268,24 @@ function stopDragging() {
   }
 }
 
-// The handles and other elements of the root are not in the panel space.
+// The panel space is the room that the panels share: the sizes of their content boxes. The handles,
+// the gaps and the other elements of the root are not in it, and a panel adds its own padding and
+// border to its size.
 function getPanelSpace() {
   const horizontal = props.orientation === 'horizontal';
   let space = 0;
-  for (const panel of panels.value) {
-    const rect = panel.element.value?.getBoundingClientRect();
-    if (rect) {
-      space += horizontal ? rect.width : rect.height;
+  for (const { element } of panels.value) {
+    if (element.value) {
+      const rect = element.value.getBoundingClientRect();
+      const style = ownerWindow(element.value).getComputedStyle(element.value);
+      const edges = horizontal
+        ? [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth]
+        : [style.paddingTop, style.paddingBottom, style.borderTopWidth, style.borderBottomWidth];
+      const size = horizontal ? rect.width : rect.height;
+      space += Math.max(
+        size - edges.reduce((total, edge) => total + Number.parseFloat(edge), 0),
+        0,
+      );
     }
   }
   return space;

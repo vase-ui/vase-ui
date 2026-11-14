@@ -30,8 +30,6 @@ export namespace Root {
 
 /**
  * A part of the layout that a handle resizes.
- * Give the panel no padding and no border, because the size of a panel adds them. Put them on an
- * element in the panel.
  * Renders a `<div>` element.
  */
 export const Panel: typeof ResizablePanel = ResizablePanel;

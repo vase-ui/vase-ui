@@ -216,27 +216,36 @@ describe('<Resizable.Root />', () => {
       expect(calls[0]?.[1]).toEqual({ a: 43.334, b: 23.333, c: 33.333 });
     });
 
-    it('keeps the layout and emits no update:layout when a listener cancels the change', async () => {
-      const onUpdate = vi.fn();
-      const onCommitted = vi.fn();
-      await render(
-        <Three
-          root={{
-            onLayoutChange: (_layout: unknown, details: { cancel: () => void }) => {
-              details.cancel();
-            },
-            'onUpdate:layout': onUpdate,
-            onLayoutCommitted: onCommitted,
-          }}
-        />,
-      );
+    it.each([
+      { name: 'a drag', act: () => drag('handle-a', 100) },
+      {
+        name: 'a key',
+        act: () => fireEvent.keyDown(screen.getByTestId('handle-a'), { key: 'ArrowRight' }),
+      },
+    ])(
+      'keeps the layout, and emits no update:layout and no layoutCommitted, when a listener cancels the change of $name',
+      async ({ act }) => {
+        const onUpdate = vi.fn();
+        const onCommitted = vi.fn();
+        await render(
+          <Three
+            root={{
+              onLayoutChange: (_layout: unknown, details: { cancel: () => void }) => {
+                details.cancel();
+              },
+              'onUpdate:layout': onUpdate,
+              onLayoutCommitted: onCommitted,
+            }}
+          />,
+        );
 
-      await drag('handle-a', 100);
+        await act();
 
-      expect(onUpdate).not.toHaveBeenCalled();
-      expect(onCommitted).not.toHaveBeenCalled();
-      expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
-    });
+        expect(onUpdate).not.toHaveBeenCalled();
+        expect(onCommitted).not.toHaveBeenCalled();
+        expect(grows('a', 'b', 'c')).toEqual(['33.334', '33.333', '33.333']);
+      },
+    );
 
     it('emits nothing at the mount', async () => {
       const handlers = {

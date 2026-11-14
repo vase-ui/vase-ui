@@ -287,6 +287,61 @@ describe('<Resizable.Panel />', () => {
     });
   });
 
+  describe('padding and border', () => {
+    // The size of a panel is a share of the room that the panels share, which is the sum of their
+    // content boxes. A panel adds its padding and border to that share.
+    it.each([
+      { name: 'horizontal', orientation: 'horizontal', axis: 'clientX' },
+      { name: 'vertical', orientation: 'vertical', axis: 'clientY' },
+    ] as const)(
+      'keeps the handle under the pointer when the panels of a $name root have padding and a border',
+      async ({ orientation, axis }) => {
+        await renderPanels({
+          root: { orientation },
+          panels: [
+            { style: { padding: '20px', border: '5px solid' } },
+            { style: { padding: '10px 0 0 10px' } },
+          ],
+        });
+        const content = (index: number) => {
+          const panel = screen.getByTestId(`panel-${index}`);
+          const rect = panel.getBoundingClientRect();
+          const style = getComputedStyle(panel);
+          return orientation === 'horizontal'
+            ? rect.width -
+                [
+                  style.paddingLeft,
+                  style.paddingRight,
+                  style.borderLeftWidth,
+                  style.borderRightWidth,
+                ]
+                  .map(Number.parseFloat)
+                  .reduce((total, edge) => total + edge, 0)
+            : rect.height -
+                [
+                  style.paddingTop,
+                  style.paddingBottom,
+                  style.borderTopWidth,
+                  style.borderBottomWidth,
+                ]
+                  .map(Number.parseFloat)
+                  .reduce((total, edge) => total + edge, 0);
+        };
+        const first = content(0);
+        const second = content(1);
+        const handle = screen.getByTestId('handle-1');
+        const pointer = { pointerId: 1, pointerType: 'mouse' };
+
+        await fireEvent.pointerDown(handle, { ...pointer, [axis]: 0, buttons: 1 });
+        await fireEvent.pointerMove(handle, { ...pointer, [axis]: 60, buttons: 1 });
+        await fireEvent.pointerUp(handle, { ...pointer, [axis]: 60 });
+
+        expect(content(0) - first).toBeCloseTo(60, 0);
+        expect(second - content(1)).toBeCloseTo(60, 0);
+      },
+    );
+  });
+
   describe('state', () => {
     it('gives the orientation and the size to the slot and to stateClass', async () => {
       await renderPanels({
