@@ -8,8 +8,7 @@ export interface FocusGuardProps extends /* @vue-ignore */ HTMLAttributes {}
 import { onMounted, shallowRef } from 'vue';
 import { getFocusGuardAttributes, isFocusGuardButton } from './focusGuardAttributes';
 
-// As in Base UI, the attributes of the guard win over those of a consumer. A `style` key in the
-// `v-bind` object replaces the `style` of a consumer.
+// As in Base UI, the attributes of the guard win over those of a consumer, `style` included.
 defineOptions({ inheritAttrs: false });
 defineProps<FocusGuardProps>();
 
