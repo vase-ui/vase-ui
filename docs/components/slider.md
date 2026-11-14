@@ -42,11 +42,11 @@ Import the component and assemble its parts:
 
 Each `Slider.Thumb` renders an `<input type="range">` in its element. The inputs give the slider the form behavior of a native range input. A slider with a `name` submits the value of each thumb under that name. A disabled slider submits nothing.
 
-A reset of the form puts an uncontrolled slider back to `defaultValue`. A controlled slider does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
+A reset of the form puts an uncontrolled slider back to `defaultValue`, or to `min` when it has none. A controlled slider does not change. In a `Field`, a reset clears the error of the field. The reset starts no validation.
 
 Bind the value with `v-model:value`. The root emits `valueChange` with the new value and `eventDetails`, and then `update:value`. To stop the change, call `eventDetails.cancel()` before the `valueChange` listener returns. The root then emits no `update:value` and keeps its value.
 
-In the server HTML, the root already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no `aria-label` or `aria-labelledby` of its own. The label can come before or after the control.
+In the server HTML, the root already has the id of `Slider.Label` in `aria-labelledby`. So does the input of each thumb that has no name of its own from `aria-label`, `aria-labelledby` or `getAriaLabel`. The label can come before or after the control.
 
 ## Examples
 
