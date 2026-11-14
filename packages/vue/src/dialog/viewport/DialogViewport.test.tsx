@@ -5,6 +5,7 @@ import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
 import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
 import * as Dialog from '../index.parts';
 import type { DialogStore } from '../store/DialogStore';
+import DialogViewportReplacement from './DialogViewportReplacement.test.vue';
 
 describe('<Dialog.Viewport />', () => {
   const { render } = createRenderer();
@@ -142,5 +143,20 @@ describe('<Dialog.Viewport />', () => {
     await flushMicrotasks();
 
     expect(store.select('viewportElement')).toBe(null);
+  });
+
+  // The compiled template of the fixture mounts the new viewport before it unmounts the old
+  // viewport. A render function in TSX reuses the viewport component, so it does not show this
+  // order.
+  it('keeps the element of the new viewport in the store when a template replaces the viewport', async () => {
+    let store!: DialogStore<unknown>;
+    const { setProps } = await render(
+      <DialogViewportReplacement first onStore={(value) => (store = value)} />,
+    );
+    expect(store.select('viewportElement')).toBe(screen.getByTestId('first'));
+
+    await setProps({ first: false });
+
+    expect(store.select('viewportElement')).toBe(screen.getByTestId('second'));
   });
 });

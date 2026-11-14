@@ -606,6 +606,8 @@ provide(NumberFieldRootContext, {
   hasPendingCommitRef,
   name: inputName,
   nameProp: computed(() => props.name),
+  value: numberValue,
+  disabled: isDisabled,
   inputMode,
   getAllowedNonNumericKeys,
   min: computed(() => props.min),
