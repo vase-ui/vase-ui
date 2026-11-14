@@ -425,6 +425,8 @@ export function popupListConformanceTests(config: PopupListTestConfig) {
           await openWithMouse(user);
 
           await userEvent.hover(getItem(1));
+          // The first real move into the page has no movement, and WebKit's list ignores it.
+          await fireEvent.mouseMove(getItem(1), { movementX: 1 });
           await flushMicrotasks();
           await waitFor(() => {
             expect(getHighlightedIndex()).toBe(1);
