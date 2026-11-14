@@ -2004,6 +2004,7 @@ describe('<Menu.Root />', () => {
 
       await user.keyboard('{ArrowDown}');
       await user.keyboard('{ArrowDown}'); // Share
+      expect(screen.getByRole('menuitem', { name: 'Share' })).toHaveFocus();
       await user.keyboard('{ArrowDown}'); // loops back to Add to Library
 
       expect(screen.queryByRole('menuitem', { name: 'Add to Library' })).toHaveFocus();
@@ -2064,8 +2065,9 @@ describe('<Menu.Root />', () => {
       );
 
       const submenuListener = vi.fn();
-      const stop = watch(() => submenuStore!.select('rootId'), submenuListener, { flush: 'sync' });
+      const stop = watch(() => submenuStore!.select('rootId'), submenuListener);
       parentStore!.set('rootId', 'next-root-id');
+      await flushMicrotasks();
       stop();
 
       expect(submenuListener).toHaveBeenCalled();
