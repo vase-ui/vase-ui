@@ -40,6 +40,7 @@ import { useIsHydrating } from '../../common/hydration';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useFormatLocale } from '../../utils/useFormatLocale';
+import { useTimeClockFaceContext } from '../face/TimeClockFaceContext';
 import { useTimeClockRootContext } from '../root/TimeClockRootContext';
 import { angleOfFaceNumber, radiusOfFaceNumber } from '../utils/clockViews';
 import * as TimeClockNumberCssVars from './TimeClockNumberCssVars';
@@ -54,6 +55,7 @@ defineSlots<{
 }>();
 
 const root = useTimeClockRootContext();
+const face = useTimeClockFaceContext(true);
 const formatLocale = useFormatLocale(root.locale);
 const isHydrating = useIsHydrating();
 
@@ -79,8 +81,16 @@ const text = computed(() =>
   }),
 );
 
+let unregister: (() => void) | undefined;
+
+function registerElement(element: HTMLElement | null) {
+  unregister?.();
+  unregister = element ? face?.registerNumber(element, () => props.number) : undefined;
+}
+
 const { element, elementProps } = useRenderElement('span', props, {
   state,
+  ref: registerElement,
   props: (attrs) => [
     {
       'aria-hidden': 'true',

@@ -35,7 +35,11 @@ export interface TimeClockRootContext {
   isNumberDisabled: (number: TimeClockFaceNumber) => boolean;
   isDayPeriodDisabled: (dayPeriod: TimeClockDayPeriodValue) => boolean;
   setDragging: (dragging: boolean) => void;
-  selectNumber: (number: TimeClockFaceNumber, details: TimeClockRootChangeEventDetails) => void;
+  /**
+   * Returns `false` when the clock does not take the number: a disabled number, a disabled or read
+   * only clock, or a change that a listener cancels.
+   */
+  selectNumber: (number: TimeClockFaceNumber, details: TimeClockRootChangeEventDetails) => boolean;
   /** Goes a number of places forward, or back for a negative number, to the next number that is not disabled. */
   stepNumber: (places: number, details: TimeClockRootChangeEventDetails) => void;
   selectEdge: (edge: 'first' | 'last', details: TimeClockRootChangeEventDetails) => void;

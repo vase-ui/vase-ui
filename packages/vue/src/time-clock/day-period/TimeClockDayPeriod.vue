@@ -77,10 +77,8 @@ const text = computed(() => {
     { hour: 'numeric', hour12: true },
     formatLocale.value,
   );
-  return (
-    format.formatToParts(epochMilliseconds).find((part) => part.type === 'dayPeriod')?.value ??
-    props.value.toUpperCase()
-  );
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- A 12-hour format of each locale has a day period.
+  return format.formatToParts(epochMilliseconds).find((part) => part.type === 'dayPeriod')!.value;
 });
 
 const { getButtonProps, buttonRef } = useButton({

@@ -200,8 +200,8 @@ const emit = defineEmits<{
   valueChange: [value: Value, eventDetails: TimeClockRootChangeEventDetails];
   'update:value': [value: Value];
   /**
-   * Callback fired when the user commits the time: when a drag ends, and when the user presses
-   * Enter or Space on the face.
+   * Callback fired when the user commits the time: when a press or a drag that selects a number
+   * ends, and when the user presses Enter or Space on the face.
    * A commit also shows the next view.
    * **Warning**: This is a generic event, not a change event.
    *
@@ -438,7 +438,7 @@ provide(TimeClockRootContext, {
   setDragging(newDragging) {
     dragging.value = newDragging;
   },
-  selectNumber,
+  selectNumber: (number, details) => selectNumber(number, details) !== null,
   stepNumber,
   selectEdge,
   selectDayPeriod,

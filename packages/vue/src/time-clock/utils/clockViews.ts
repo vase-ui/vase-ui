@@ -164,7 +164,10 @@ export function radiusOfFaceNumber(number: TimeClockFaceNumber): number {
   return number.inner ? INNER_RING_RADIUS : 1;
 }
 
-/** The number that a point of the face selects, from its `angle` and its distance `ratio` from the center. */
+/**
+ * The number that a point of the face selects, from its `angle` and from its distance to the center
+ * as a `ratio` of the radius of the outer ring.
+ */
 export function faceNumberOfPoint(
   view: TimeClockView,
   hourCycle: TimeClockHourCycle,

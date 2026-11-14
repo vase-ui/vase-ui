@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { h, nextTick, shallowRef } from 'vue';
-import type { Component } from 'vue';
+import type { Component, CSSProperties } from 'vue';
 import { TimeClock } from '@vase-ui/vue/time-clock';
 import type { TimeClockFaceNumber } from '@vase-ui/vue/time-clock';
 import type { HTMLProps } from '@vase-ui/vue/types';
@@ -429,6 +429,44 @@ describe('<TimeClock.Face />', () => {
       expect(lastValue(onValueChange)).toBe('00:30:00');
     });
 
+    it('selects the ring of a press from the places of the numbers', async () => {
+      const onValueChange = vi.fn();
+      // The style puts the outer ring at 0.75 of the radius of the face, and the inner ring at 0.48.
+      const numberStyle: CSSProperties = {
+        position: 'absolute',
+        left: '90px',
+        top: '90px',
+        width: '20px',
+        height: '20px',
+        transform:
+          'rotate(var(--time-clock-number-angle)) translateY(calc(var(--time-clock-number-radius) * -75px)) rotate(calc(var(--time-clock-number-angle) * -1))',
+      };
+      await render(
+        <TimeClock.Root
+          locale="en-US"
+          hourCycle={24}
+          defaultValue={time('10:30')}
+          onValueChange={onValueChange}
+        >
+          <TimeClock.Face
+            data-testid="face"
+            style={{ ...faceStyle, position: 'relative' }}
+            v-slots={{
+              number: ({ number }: { number: TimeClockFaceNumber }) => (
+                <TimeClock.Number number={number} style={numberStyle} />
+              ),
+            }}
+          />
+        </TimeClock.Root>,
+      );
+      const face = screen.getByTestId('face');
+
+      await fireEvent.pointerDown(face, { ...mouse, ...pointOnFace(face, 90, 0.75) });
+      expect(lastValue(onValueChange)).toBe('03:30:00');
+      await fireEvent.pointerMove(face, { ...mouse, ...pointOnFace(face, 90, 0.48) });
+      expect(lastValue(onValueChange)).toBe('15:30:00');
+    });
+
     it('selects the minute that is nearest to a press, in the step of the view', async () => {
       const { onValueChange, result } = renderClock({ defaultView: 'minute', minuteStep: 5 });
       await result;
@@ -469,6 +507,22 @@ describe('<TimeClock.Face />', () => {
       // 9 o'clock holds a time of the range, but 09:15 is before it.
       await fireEvent.pointerMove(face, { ...mouse, ...pointOnFace(face, 270) });
       expect(lastValue(onValueChange)).toBe('09:30:00');
+    });
+
+    it('commits nothing at the release of a press on a disabled number', async () => {
+      const { onValueChange, onValueCommitted, onViewChange, result } = renderClock({
+        minTime: time('09:30'),
+      });
+      await result;
+      const face = screen.getByTestId('face');
+
+      // 3 o'clock is before the least time.
+      await fireEvent.pointerDown(face, { ...mouse, ...pointOnFace(face, 90) });
+      await fireEvent.pointerUp(face, { ...mouse, ...pointOnFace(face, 90) });
+
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(onValueCommitted).not.toHaveBeenCalled();
+      expect(onViewChange).not.toHaveBeenCalled();
     });
   });
 

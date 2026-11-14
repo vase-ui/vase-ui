@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { angleOfPoint, angleOfPosition, positionOfAngle, ratioOfPoint } from './clockGeometry';
+import {
+  angleOfPoint,
+  angleOfPosition,
+  outerRingRadius,
+  positionOfAngle,
+  ratioOfPoint,
+} from './clockGeometry';
 
 // A face that does not start at the origin, so a point is not an offset from the center.
 const rect = { left: 20, top: 40, width: 200, height: 200 };
@@ -25,14 +31,24 @@ describe('angleOfPoint', () => {
 });
 
 describe('ratioOfPoint', () => {
-  it('is 0 at the center and 1 at the edge of the face', () => {
-    expect(ratioOfPoint(center, rect)).toBe(0);
-    expect(ratioOfPoint({ x: center.x + 100, y: center.y }, rect)).toBe(1);
+  it('is 0 at the center and 1 at the radius', () => {
+    expect(ratioOfPoint(center, rect, 80)).toBe(0);
+    expect(ratioOfPoint({ x: center.x, y: center.y + 80 }, rect, 80)).toBe(1);
+  });
+});
+
+describe('outerRingRadius', () => {
+  it('is the mean distance of the centers of the numbers from the center of the face', () => {
+    const number = (x: number, y: number) => ({ left: x - 10, top: y - 10, width: 20, height: 20 });
+
+    expect(
+      outerRingRadius(rect, [number(center.x, center.y - 70), number(center.x + 80, center.y)]),
+    ).toBe(75);
   });
 
-  it('measures the radius from the shorter side of a face that is not square', () => {
+  it('is half of the shorter side of a face with no numbers', () => {
     const wide = { left: 0, top: 0, width: 300, height: 100 };
-    expect(ratioOfPoint({ x: 150, y: 100 }, wide)).toBe(1);
+    expect(outerRingRadius(wide, [])).toBe(50);
   });
 });
 

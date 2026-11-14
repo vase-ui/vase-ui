@@ -160,7 +160,7 @@ describe('<TimeClock.DayPeriod />', () => {
 
     it.each([
       { name: 'a read only clock', extra: { readOnly: true } },
-      { name: 'a clock that has no time after the least time', extra: { minTime: time('13:00') } },
+      { name: 'a day period before the least time', extra: { minTime: time('13:00') } },
     ])('is ignored for $name', async ({ extra }) => {
       const { onValueChange, result } = renderClock({ defaultValue: time('14:00'), ...extra });
       const { user } = await result;
@@ -199,7 +199,7 @@ describe('<TimeClock.DayPeriod />', () => {
         pm: false,
       },
       {
-        name: 'a present time that is out of the limits, for the other half of the day',
+        name: 'a time that is out of the limits',
         extra: { minTime: time('13:00'), maxTime: time('17:00') },
         am: true,
         pm: false,

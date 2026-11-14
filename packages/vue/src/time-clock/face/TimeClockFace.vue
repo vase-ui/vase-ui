@@ -36,7 +36,7 @@ import { useRenderElement } from '../../internals/useRenderElement';
 import { mergeProps } from '../../merge-props';
 import { useFormatLocale } from '../../utils/useFormatLocale';
 import { useTimeClockRootContext } from '../root/TimeClockRootContext';
-import { angleOfPoint, ratioOfPoint } from '../utils/clockGeometry';
+import { angleOfPoint, outerRingRadius, ratioOfPoint } from '../utils/clockGeometry';
 import { faceNumber, faceNumberOfPoint, gridOf, pagePlaces } from '../utils/clockViews';
 import type { TimeClockFaceNumber } from '../utils/clockViews';
 import TimeClockFaceChildren from './TimeClockFaceChildren.vue';
@@ -70,8 +70,12 @@ const { state } = root;
 const formatLocale = useFormatLocale(root.locale);
 
 const inputElement = shallowRef<HTMLInputElement | null>(null);
-// The pointer of the press or drag that is in progress.
+const numberElements = new Map<HTMLElement, () => TimeClockFaceNumber>();
+// The pointer of the press or drag that is in progress, the radius of the outer ring that it
+// measured, and whether it selected a number.
 let activePointerId: number | null = null;
+let pressRadius = 0;
+let pressSelected = false;
 
 const grid = computed(() => gridOf(root.view.value, root.hourCycle.value, root.step.value));
 const label = computed(() =>
@@ -127,18 +131,37 @@ function inputProps() {
   );
 }
 
-provide(TimeClockFaceContext, { inputProps });
+provide(TimeClockFaceContext, {
+  inputProps,
+  registerNumber(element, number) {
+    numberElements.set(element, number);
+    return () => {
+      numberElements.delete(element);
+    };
+  },
+});
 
-function faceNumberOfEvent(event: PointerEvent): TimeClockFaceNumber {
+// The style sheet of the consumer places the numbers, so a press measures the outer ring.
+function measureOuterRing(face: HTMLElement): number {
+  const outerNumbers = [...numberElements]
+    .filter(([, number]) => !number().inner)
+    .map(([element]) => element.getBoundingClientRect());
+  return outerRingRadius(face.getBoundingClientRect(), outerNumbers);
+}
+
+function selectNumberOfEvent(event: PointerEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
   const point = { x: event.clientX, y: event.clientY };
-  return faceNumberOfPoint(
+  const number = faceNumberOfPoint(
     root.view.value,
     root.hourCycle.value,
     root.step.value,
     angleOfPoint(point, rect),
-    ratioOfPoint(point, rect),
+    ratioOfPoint(point, rect, pressRadius),
   );
+  if (root.selectNumber(number, createChangeEventDetails(REASONS.drag, event))) {
+    pressSelected = true;
+  }
 }
 
 function endPress(event: PointerEvent) {
@@ -161,6 +184,8 @@ function onPointerdown(event: PointerEvent) {
     return;
   }
   activePointerId = event.pointerId;
+  pressRadius = measureOuterRing(face);
+  pressSelected = false;
   try {
     face.setPointerCapture(event.pointerId);
   } catch {
@@ -171,22 +196,24 @@ function onPointerdown(event: PointerEvent) {
   // The press cancels the default action, so the browser does not move the focus or select text.
   event.preventDefault();
   inputElement.value?.focus({ preventScroll: true });
-  root.selectNumber(faceNumberOfEvent(event), createChangeEventDetails(REASONS.drag, event));
+  selectNumberOfEvent(event);
 }
 
 function onPointermove(event: PointerEvent) {
-  if (event.pointerId !== activePointerId) {
-    return;
+  if (event.pointerId === activePointerId) {
+    selectNumberOfEvent(event);
   }
-  root.selectNumber(faceNumberOfEvent(event), createChangeEventDetails(REASONS.drag, event));
 }
 
+// A press that selected no number, such as a press on a disabled number, commits nothing.
 function onPointerup(event: PointerEvent) {
   if (event.pointerId !== activePointerId) {
     return;
   }
   endPress(event);
-  root.commit(createGenericEventDetails(REASONS.drag, event));
+  if (pressSelected) {
+    root.commit(createGenericEventDetails(REASONS.drag, event));
+  }
 }
 
 function onPointercancel(event: PointerEvent) {

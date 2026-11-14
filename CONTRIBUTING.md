@@ -783,7 +783,7 @@ The date and time families call `Temporal` and `Intl` directly, through the func
 - `displayCalendar` gives the calendar in which a part shows a value: the `calendar` prop, else the calendar of the value when it is not ISO, else the calendar of the locale. A year and month shows in that calendar only where the calendar has the same months.
 - `Intl` and `Temporal` do not have the same calendars. A part reads the calendar of a locale only through `localeCalendar`, which gives `gregory` when `Temporal` has no such calendar.
 - `today(timeZone)` gives today, and the `today` prop wins over it. The `timeZone` prop wins over the zone of a zoned value, and that zone wins over the zone of the runtime.
-- The style of `TimeClock.Hand` and `TimeClock.Number` has only CSS variables: an angle and a ratio of the radius of the face. They set no position. The style sheet of the consumer places them, so the server HTML is exact. `time-clock/utils/clockGeometry.ts` turns a point of the face into an angle and a ratio.
+- The style of `TimeClock.Hand` and `TimeClock.Number` has only CSS variables: an angle and a ratio of the radius of the face. They set no position. The style sheet of the consumer places them, so the server HTML is exact. `time-clock/utils/clockGeometry.ts` turns a point of the face into an angle and a ratio. A press measures the radius of the outer ring from the boxes of the numbers.
 
 ### Popup store
 

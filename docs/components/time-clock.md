@@ -48,11 +48,11 @@ A clock with no value shows the time of `referenceDate`, or 00:00. The first pic
 
 The face shows one unit at a time: the hours, the minutes or the seconds. The `view` prop, or `v-model:view`, sets the unit. The `defaultView` prop sets the unit of an uncontrolled clock. A `TimeClock.ViewTrigger` shows its unit when the user presses it.
 
-The root emits `valueCommitted` when a press or a drag ends, and when the user presses Enter or Space on the face. A commit shows the next unit, up to `granularity`. The default `granularity` is `minute`.
+The root emits `valueCommitted` when a press or a drag that selects a number ends, and when the user presses Enter or Space on the face. A commit shows the next unit, up to `granularity`. The default `granularity` is `minute`.
 
 ## Hour cycle
 
-A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press that is near the center selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
+A 12-hour face has the hours 1 to 12. `TimeClock.DayPeriod` moves the time to the other half of the day and keeps the rest of the time. A 24-hour face has the hours 1 to 12 on an outer ring, and the hours 13 to 23 and 00 on an inner ring. A press nearer to the center than the middle between the two rings selects the inner ring. `TimeClock.DayPeriod` renders nothing on a 24-hour face.
 
 The `hourCycle` prop sets the hour cycle. With no prop, the hour cycle of the locale applies.
 
@@ -75,13 +75,15 @@ The parts set no position. They write the angle of the hand and of each number a
 
 Give the face `position: relative`. The hand, the numbers and the range input are placed in the face. The style sheet of the first demo places each of them.
 
+A press measures the outer ring from the boxes of the numbers, so the rings of a 24-hour face can have any size. With no numbers, the outer ring is at the edge of the face.
+
 `TimeClock.Hand` renders nothing while the clock has no value. It has `data-between-numbers` when the time is between two numbers, for example the minute 37.
 
 ## Examples
 
 ### 24-hour face
 
-Set `hourCycle="24"` for a face with an inner ring.
+Set `:hour-cycle="24"` for a face with an inner ring.
 
 <DemoFrame>
   <DemoTimeClockTwentyFourHours />
@@ -131,7 +133,7 @@ Set `minuteStep` for a step of the minutes, and `minTime` and `maxTime` for the 
 
 The server HTML has the angle variables of the hand and of each number, and the values of the range input. The face is thus exact before the page hydrates.
 
-A server does not know the locale of the visitor. With no `locale`, the texts and the hour cycle are those of `en-US` until the app mounts. Then the locale of the browser applies. Give `locale` and `hourCycle` to make the server HTML equal to the final page.
+A server does not know the locale of the visitor. With no `locale`, the texts and the hour cycle are those of `en-US` until the app mounts. Then the locale of the browser applies. Give `locale` to make the server HTML equal to the final page.
 
 ## Keyboard
 
