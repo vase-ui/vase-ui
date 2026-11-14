@@ -165,9 +165,7 @@ const { getButtonProps, buttonRef } = useButton({
 // In a menubar the trigger is an item of the composite of the menubar.
 const compositeItem = isInMenubar ? useCompositeItem() : undefined;
 
-const parentMenubarHasSubmenuOpen = computed(
-  () => menubarContext?.hasSubmenuOpen.value ?? false,
-);
+const parentMenubarHasSubmenuOpen = computed(() => menubarContext?.hasSubmenuOpen.value ?? false);
 
 // The handlers that one safe polygon makes share its timer, so each trigger has its own.
 const handleClose = safePolygon({ blockPointerEvents: !isInMenubar });

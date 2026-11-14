@@ -386,7 +386,9 @@ describe('<Menu.Positioner />', () => {
   });
 
   describe('collision avoidance', () => {
-    function SubmenuApp(props: { collisionAvoidance?: Menu.Positioner.Props['collisionAvoidance'] }) {
+    function SubmenuApp(props: {
+      collisionAvoidance?: Menu.Positioner.Props['collisionAvoidance'];
+    }) {
       return (
         <Menu.Root open>
           <Menu.Trigger>Actions</Menu.Trigger>

@@ -310,15 +310,18 @@ describe('<Menu.SubmenuTrigger />', () => {
     it.each([
       { name: 'by default', highlightItemOnHover: true },
       { name: 'with highlightItemOnHover false', highlightItemOnHover: false },
-    ])('highlights the trigger when the pointer enters it $name', async ({ highlightItemOnHover }) => {
-      await renderSubmenu({ root: { highlightItemOnHover }, trigger: { openOnHover: false } });
-      const trigger = screen.getByRole('menuitem', { name: 'More' });
-      expect(trigger).not.toHaveAttribute('data-highlighted');
+    ])(
+      'highlights the trigger when the pointer enters it $name',
+      async ({ highlightItemOnHover }) => {
+        await renderSubmenu({ root: { highlightItemOnHover }, trigger: { openOnHover: false } });
+        const trigger = screen.getByRole('menuitem', { name: 'More' });
+        expect(trigger).not.toHaveAttribute('data-highlighted');
 
-      await fireEvent.mouseEnter(trigger);
+        await fireEvent.mouseEnter(trigger);
 
-      expect(trigger.hasAttribute('data-highlighted')).toBe(highlightItemOnHover);
-    });
+        expect(trigger.hasAttribute('data-highlighted')).toBe(highlightItemOnHover);
+      },
+    );
 
     it('clears the highlight of the trigger when the focus leaves it', async () => {
       await renderSubmenu({ trigger: { openOnHover: false } });
