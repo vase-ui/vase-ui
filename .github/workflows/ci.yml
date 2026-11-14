@@ -153,6 +153,10 @@ jobs:
       - run: pnpm --filter @vase-ui/vue add --save-dev --save-exact vue@3.6.0-rc.15
       - run: pnpm --filter @vase-ui/vue exec playwright install --with-deps chromium
       - run: pnpm test:chromium
+      # The project `vapor` mounts each test in a Vapor app. It also runs when the step above
+      # fails, so that the job shows both results.
+      - if: ${{ !cancelled() }}
+        run: pnpm test:vapor
 
   required:
     # Do not use `always()`. It starts this job in a cancelled run. The job waits for a runner

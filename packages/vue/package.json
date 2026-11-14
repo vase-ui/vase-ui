@@ -47,12 +47,13 @@
     "build": "tsdown",
     "typecheck": "node scripts/writeBarrel.ts && vue-tsc --noEmit --project tsconfig.build.json && vue-tsc --noEmit --project tsconfig.test.json",
     "check:package": "node scripts/checkPackage.ts",
-    "test": "vitest run",
+    "test": "vitest run --project '!vapor'",
     "test:node": "vitest run --project node",
     "test:browser": "vitest run --project chromium --project firefox --project webkit",
     "test:chromium": "vitest run --project chromium",
     "test:firefox": "vitest run --project firefox",
     "test:webkit": "vitest run --project webkit",
+    "test:vapor": "vitest run --project vapor",
     "prepack": "pnpm build && cp ../../LICENSE ../../THIRD_PARTY_NOTICES.md ../../README.md ."
   },
   "dependencies": {

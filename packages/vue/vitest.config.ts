@@ -48,6 +48,7 @@ export default defineConfig({
         extends: true,
         test: {
           include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'],
+          provide: { testApp: 'vdom' },
           exclude: [...configDefaults.exclude, '**/*.node.test.{ts,tsx}'],
           browser: {
             enabled: true,
@@ -80,6 +81,8 @@ export default defineConfig({
                 }),
               },
               { browser: 'webkit', name: 'webkit' },
+              // Each test app is a Vapor app. The project needs Vue 3.6, so `pnpm test` leaves it out.
+              { browser: 'chromium', name: 'vapor', provide: { testApp: 'vapor' } },
             ],
           },
         },
