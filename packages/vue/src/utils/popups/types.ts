@@ -183,6 +183,13 @@ export type ListNavigationElementProps = Required<
 >;
 
 /**
+ * The props that `useTypeahead` returns. `reference` and `floating` are one object of listeners
+ * for the life of the composable. Each handler does nothing while the composable is not enabled,
+ * so the object always has the two members.
+ */
+export type TypeaheadElementProps = Required<Pick<ElementProps, 'reference' | 'floating'>>;
+
+/**
  * The props that `useClick` returns. Each handler does nothing while the composable is not enabled,
  * so the object always has the `reference` member.
  */
