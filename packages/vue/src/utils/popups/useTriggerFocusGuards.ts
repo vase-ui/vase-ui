@@ -4,19 +4,10 @@ import { contains } from '../../common/shadowDom';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import type { VaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import { createAttribute } from './createAttribute';
 import { createFocusGuardElement } from './focus/createFocusGuardElement';
 import { getTabbableNearElement, isOutsideEvent } from './focus/tabbable';
 import { useElementSiblings } from './focus/useElementSiblings';
 import type { ElementSiblings } from './focus/useElementSiblings';
-
-// The guards that a portal renders around its place in the document have `data-type="outside"`.
-function isPortalGuard(element: Element) {
-  return (
-    element.hasAttribute(createAttribute('focus-guard')) &&
-    element.getAttribute('data-type') === 'outside'
-  );
-}
 
 /**
  * The part of a popup store that the focus guards of a trigger use. The stores of Popover and Menu
@@ -32,15 +23,23 @@ export interface TriggerFocusGuardStore {
      */
     readonly beforeTriggerFocusGuardRef: ShallowRef<HTMLElement | null>;
     readonly beforeContentFocusGuardRef: ShallowRef<HTMLElement | null>;
+    readonly afterContentFocusGuardRef: ShallowRef<HTMLElement | null>;
     readonly triggerFocusTargetRef: ShallowRef<HTMLElement | null>;
   };
 }
 
 /**
  * Keeps a focus guard before and after the element of a popup trigger while `enabled` is `true`.
- * A guard that gets the focus closes the popup and moves the focus to the tabbable element on its
- * side. A focus that comes from outside the popup onto the guard after the trigger goes into the
- * popup.
+ * The guards give an open popup one place in the tab order, right after its trigger.
+ *
+ * A focus that leaves the trigger backward, or the popup forward, goes onto a guard. The guard
+ * closes the popup and moves the focus to the tabbable element on its side.
+ *
+ * The guard before the trigger also gets the focus from any other element. It asks for the close,
+ * and it focuses the trigger when the popup stays open.
+ *
+ * The guard after the trigger sends a focus from the trigger, or from no element, to the start of
+ * the popup. It sends a focus from any other element to the end of the popup. It asks for no close.
  *
  * The guards are not in the template, so the trigger keeps one root node.
  */
@@ -53,41 +52,55 @@ export function useTriggerFocusGuards(
     event: FocusEvent,
     direction: 1 | -1,
     positionerElement: HTMLElement | null,
+    entersTrigger: boolean,
   ) {
     const guard = event.currentTarget as HTMLElement;
     toValue(store).setOpen(false, createChangeEventDetails(REASONS.focusOut, event, guard));
-    // The close can change the tab order. The search below reads the DOM after the update.
+    // The close can change the tab order. The code below reads the DOM after the update.
     await nextTick();
+    const trigger = toValue(triggerElement);
     // The guards of the trigger follow the `open` state. A guard that is still in the document thus
-    // shows that the popup stayed open, and a guard of its portal can send the focus back into the
-    // popup. The trigger has no reference to the guards of its portal, so the search then skips the
-    // outside guards of each portal. After a close, the outside guard of another open popup is a
-    // real next element. The search always skips the guards of the trigger and the content of the
-    // popup. It starts at the trigger, also when the `tabindex` of the trigger is -1, so the
-    // trigger keeps the focus when no other element is tabbable.
-    const stayedOpen = guard.isConnected;
+    // shows that the popup stayed open. The focus then goes to the trigger, the one place of the
+    // popup in the tab order.
+    if (entersTrigger && guard.isConnected) {
+      trigger?.focus();
+      return;
+    }
+    // The search skips the guards of the trigger and the content of the popup. It starts at the
+    // trigger, also when the `tabindex` of the trigger is -1, so the trigger keeps the focus when no
+    // other element is tabbable.
     getTabbableNearElement(
-      toValue(triggerElement),
+      trigger,
       direction,
       (element) =>
         contains(positionerElement, element) ||
         element === guards?.before ||
-        element === guards?.after ||
-        (stayedOpen && isPortalGuard(element)),
+        element === guards?.after,
     )?.focus();
   }
 
+  // The focus comes from the trigger when Shift+Tab leaves the trigger. A focus from any other
+  // element, or from no element, enters from outside.
   function handlePreFocusGuardFocus(event: FocusEvent) {
-    void closeAndFocus(event, -1, toValue(store).select('positionerElement'));
+    const entersTrigger = !contains(toValue(triggerElement), event.relatedTarget as Element | null);
+    void closeAndFocus(event, -1, toValue(store).select('positionerElement'), entersTrigger);
   }
 
+  // A focus with no origin has no direction. The Tab key from a trigger that a press did not focus
+  // (WebKit, and Firefox on macOS) gives such a focus. It goes to the start of the popup, as a focus
+  // from the trigger does and as in Base UI.
   function handleFocusTargetFocus(event: FocusEvent) {
     const current = toValue(store);
     const positionerElement = current.select('positionerElement');
     if (positionerElement && isOutsideEvent(event, positionerElement)) {
-      current.context.beforeContentFocusGuardRef.value?.focus();
+      const origin = event.relatedTarget as Element | null;
+      const contentGuardRef =
+        origin === null || contains(toValue(triggerElement), origin)
+          ? current.context.beforeContentFocusGuardRef
+          : current.context.afterContentFocusGuardRef;
+      contentGuardRef.value?.focus();
     } else {
-      void closeAndFocus(event, 1, positionerElement);
+      void closeAndFocus(event, 1, positionerElement, false);
     }
   }
 

@@ -90,6 +90,7 @@ type Context = PopupStoreContext<MenuRootChangeEventDetails> & {
   readonly triggerFocusTargetRef: ShallowRef<HTMLElement | null>;
   readonly beforeTriggerFocusGuardRef: ShallowRef<HTMLElement | null>;
   readonly beforeContentFocusGuardRef: ShallowRef<HTMLElement | null>;
+  readonly afterContentFocusGuardRef: ShallowRef<HTMLElement | null>;
   /**
    * The event of the menu's last open change, unlike `openEvent`, which keeps the event of a
    * click open when a hover open follows. Cleared once the menu is closed.
@@ -373,6 +374,7 @@ function createInitialContext(): Context {
     triggerFocusTargetRef: shallowRef<HTMLElement | null>(null),
     beforeTriggerFocusGuardRef: shallowRef<HTMLElement | null>(null),
     beforeContentFocusGuardRef: shallowRef<HTMLElement | null>(null),
+    afterContentFocusGuardRef: shallowRef<HTMLElement | null>(null),
     lastOpenChangeEvent: undefined,
     allowTouchToClose: true,
     allowTouchToCloseTimeout: new Timeout(),

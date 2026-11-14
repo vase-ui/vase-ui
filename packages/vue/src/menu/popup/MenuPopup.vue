@@ -288,6 +288,7 @@ defineExpose({ element });
     :previous-focusable-element="activeTriggerElement"
     :next-focusable-element="parent.type === undefined ? getNextFocusableElement : undefined"
     :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
+    :after-content-focus-guard-ref="store.context.afterContentFocusGuardRef"
   >
     <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
     <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
