@@ -42,7 +42,7 @@
       "upstream": "packages/react/src/combobox/clear/ComboboxClear.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the items, the chips, the trigger, the value or `Autocomplete.Root`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case that has no counterpart renders the items, the chips, the trigger or the value, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/collection/ComboboxCollection.test.tsx",
@@ -210,7 +210,7 @@
       "upstream": "packages/react/src/combobox/store.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/combobox/index.ts",
-      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case renders `Autocomplete.Root`, or `Combobox.Trigger` and `Combobox.List`, which Vase UI does not have."
+      "reason": "The file imports the entry point of Combobox, which Vase UI does not have. Each case renders `Autocomplete.Trigger`, `Autocomplete.Portal` or `Combobox.Trigger`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/combobox/trigger/ComboboxTrigger.test.tsx",
