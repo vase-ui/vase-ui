@@ -190,10 +190,6 @@ export namespace Backdrop {
 /**
  * Positions the popup against the trigger.
  * Renders a `<div>` element.
- *
- * The part has more than one root node: the internal backdrop of a modal popup, then its element.
- * A rule of `<style scoped>` thus does not match its element, and `v-show` has no effect on it. Use
- * `:deep()`, a CSS module, a `style` binding or `v-if`.
  */
 export const Positioner: typeof ComboboxPositioner = ComboboxPositioner;
 export namespace Positioner {
