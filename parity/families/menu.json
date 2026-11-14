@@ -118,24 +118,9 @@
       "reason": "Vase UI does not have the filter parts of Menu. They need the internal filter dropdown."
     },
     {
-      "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have this file of the `submenu-root` folder of Menu. The pull request that adds the part ports it."
-    },
-    {
       "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
       "kind": "waits-on",
-      "reason": "Vase UI does not have this file of the `submenu-root` folder of Menu. The pull request that adds the part ports it."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have this file of the `submenu-trigger` folder of Menu. The pull request that adds the part ports it."
-    },
-    {
-      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have this file of the `submenu-trigger` folder of Menu. The pull request that adds the part ports it."
+      "reason": "Only the filter parts of Menu give members to this context: the element that takes the focus back and two key handlers. Vase UI does not have the filter parts, so each read of the context would give nothing, and Vase UI does not have the context yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
@@ -161,14 +146,6 @@
       "upstream": "packages/react/src/menu/viewport/MenuViewportDataAttributes.ts",
       "kind": "waits-on",
       "reason": "Vase UI does not have this file of the `viewport` folder of Menu. The pull request that adds the part ports it."
-    },
-    {
-      "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.test.tsx",
-      "describe": ["<Menu.Backdrop />"],
-      "title": "sets `pointer-events: none` style on backdrop if opened by hover",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover. The trigger of Vase UI has no hover yet."
     },
     {
       "upstream": "packages/react/src/menu/backdrop/MenuBackdrop.test.tsx",
@@ -315,8 +292,8 @@
       "upstream": "packages/react/src/menu/popup/MenuPopupEnterTransition.test.tsx",
       "describe": ["Menu enter transition"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Each case of the block that has no counterpart opens the root menu with a press of its trigger, with the mouse or the keyboard. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/popup/MenuPopupTransitionState.test.tsx",
@@ -335,35 +312,11 @@
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "collision avoidance"],
-      "title": "uses the popup default for a submenu",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />", "collision avoidance"],
-      "title": "uses the collisionAvoidance prop over the default",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
       "describe": ["<Menu.Positioner />", "layout viewport"],
       "title": "uses the visual viewport for a context menu submenu",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/context-menu/index.ts",
       "reason": "The case renders `ContextMenu.SubmenuRoot`. The entry point of Context Menu exports that part. Vase UI does not have that entry point."
-    },
-    {
-      "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
-      "describe": ["<Menu.Positioner />"],
-      "title": "closes an open submenu with a sibling reason when its controlled parent closes",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "reason": "The case renders `Menu.SubmenuRoot`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/positioner/MenuPositioner.test.tsx",
@@ -376,37 +329,94 @@
       "upstream": "packages/react/src/menu/root/MenuRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger and move the highlight with the keys. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger and move the highlight with the keys. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/root/MenuRoot.triggerless.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases press the trigger, move the highlight with the keys and open submenus. Vase UI has none of these yet."
+      "reason": "The cases press the trigger and move the highlight with the keys. Vase UI has none of these yet."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.screenReaderPress.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The file tests a part that Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Five cases open the root menu with a press of its trigger, which has no press in Vase UI yet. Two cases render `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "keeps a hover-opened submenu open when pressing %s",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The file tests a part that Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case opens the root menu with a press of its trigger, which has no press in Vase UI yet. It also needs the focus that the list navigation of Menu gives to a hovered item."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "keeps a submenu open on direct trigger focus but closes it on guard return",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no press and no keys yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "closes a submenu when its focus guard is in a shadow-root portal",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "The case opens the menus with the keys Tab and Enter, and it opens the submenu with an arrow key. Menu has no press and no keys yet."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "opens the submenu with $openKey and highlights a single item in $direction direction",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The case opens the submenu with an arrow key. Menu has no keys yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "sets tabIndex to 0 on the submenu trigger after opening the submenu with a keydown event",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The case opens the submenu with an arrow key. Menu has no keys yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />"],
+      "title": "uses the label prop for text navigation",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
+      "reason": "The case moves the highlight with a typeahead. Menu has no keys and no typeahead yet. The pull request that adds the keys also ports the shared suite `popupListConformanceTests`."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
+      "title": "warns without an owner stack when React cannot provide one",
+      "kind": "not-applicable",
+      "reason": "`captureOwnerStack` is a React API. The warning of Vase UI has no owner stack."
+    },
+    {
+      "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.test.tsx",
+      "describe": ["<Menu.SubmenuTrigger />", "prop: disabled"],
+      "title": "does not inspect rendered disabled elements in production",
+      "kind": "replaced",
+      "test": "packages/vue/src/menu/submenu-trigger/MenuSubmenuTrigger.node.test.tsx",
+      "reason": "The case needs a production build. Vitest sets `process.env.NODE_ENV` when it transforms a file for a browser, so only the Node project can change it. A server render calls no `onMounted` hook, so the Node case asserts only that a server render in a production build gives no warning."
     },
     {
       "upstream": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.voiceOver.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "The file tests a part that Vase UI does not have."
+      "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
+      "reason": "Each case opens the root menu with a press of its trigger, which has no press in Vase UI yet. Two cases also open the submenu with a key and check where the focus goes, and Menu has no keys yet. `MenuSubmenuTrigger.voiceOver.test.tsx` has cases of its own for the expanded state."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -429,7 +439,7 @@
       "title": "removes the hover mouseup listener when unmounted before mouseup",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and checks the `mouseup` listener of the hover. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The case opens the menu on hover and checks the `mouseup` listener that the press code of the trigger adds after a hover open. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -437,7 +447,7 @@
       "title": "a hover-opened menu in a shadow root $name",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and releases the mouse button. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The case opens the menu on hover and releases the mouse button. The `mouseup` listener that closes the menu is part of the press code of the trigger, and the trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -458,7 +468,7 @@
       "describe": ["<Menu.Trigger />", "impatient clicks with `openOnHover=true`"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and releases the mouse button. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The cases open the menu on hover and press the trigger. The trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -466,7 +476,7 @@
       "title": "keeps a hover-opened menu open when mouseup lands outside the trigger DOM but within its bounds",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The case opens the menu on hover and releases the mouse button. The trigger and the popup of Vase UI have no hover and no press yet."
+      "reason": "The case opens the menu on hover and releases the mouse button. The `mouseup` listener that closes the menu is part of the press code of the trigger, and the trigger of Vase UI has no press yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/MenuTrigger.test.tsx",
@@ -888,15 +898,15 @@
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "SubmenuRoot",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-root/MenuSubmenuRoot.tsx",
-      "reason": "Vase UI does not have `Menu.SubmenuRoot`."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `Menu.SubmenuRoot`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "SubmenuTrigger",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTrigger.tsx",
-      "reason": "Vase UI does not have `Menu.SubmenuTrigger`."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `Menu.SubmenuTrigger`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
@@ -1063,8 +1073,8 @@
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",
       "entry": "MenuSubmenuTriggerDataAttributes",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/submenu-trigger/MenuSubmenuTriggerDataAttributes.ts",
-      "reason": "Vase UI does not have the file that `MenuSubmenuTriggerDataAttributes` comes from."
+      "waitsOn": "packages/react/src/menu/index.ts",
+      "reason": "The entry point of Menu exports `MenuSubmenuTriggerDataAttributes`. Vase UI does not have that entry point."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/menu/types.md",

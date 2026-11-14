@@ -49,10 +49,27 @@ describe('<Menu.Backdrop />', () => {
     },
   );
 
-  it.each([
-    { name: 'a hover', reason: REASONS.triggerHover, pointerEvents: 'none' },
-    { name: 'a press', reason: REASONS.triggerPress, pointerEvents: '' },
-  ])('sets the pointer events of the backdrop when $name opened the menu', async (testCase) => {
+  it('sets `pointer-events: none` style on backdrop if opened by hover', async () => {
+    const { user } = await render(
+      <Menu.Root>
+        <Menu.Trigger delay={0} openOnHover>
+          Open
+        </Menu.Trigger>
+        <Menu.Portal>
+          <Menu.Backdrop data-testid="backdrop" />
+          <Menu.Positioner>
+            <Menu.Popup />
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    await user.hover(screen.getByText('Open'));
+
+    expect(screen.getByTestId('backdrop').style.pointerEvents).toBe('none');
+  });
+
+  it('does not set the pointer events of the backdrop when a press opened the menu', async () => {
     const probe = createMenuStoreProbe();
 
     await render(
@@ -64,11 +81,11 @@ describe('<Menu.Backdrop />', () => {
 
     probe.store.setOpen(
       true,
-      createChangeEventDetails(testCase.reason, new MouseEvent('mousedown')),
+      createChangeEventDetails(REASONS.triggerPress, new MouseEvent('mousedown')),
     );
     await flushMicrotasks();
 
-    expect(screen.getByTestId('backdrop').style.pointerEvents).toBe(testCase.pointerEvents);
+    expect(screen.getByTestId('backdrop').style.pointerEvents).toBe('');
   });
 
   it('gives its element to the context menu above it, and takes it back at the unmount', async () => {
