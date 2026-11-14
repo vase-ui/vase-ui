@@ -6,5 +6,8 @@ defineProps<{ swapped: boolean }>();
 
 <template>
   <Popover.Popup v-if="swapped" data-testid="new">New</Popover.Popup>
-  <Popover.Popup v-if="!swapped" data-testid="old">Old</Popover.Popup>
+  <Popover.Popup v-if="!swapped" data-testid="old">
+    Old
+    <Popover.Close>Close</Popover.Close>
+  </Popover.Popup>
 </template>

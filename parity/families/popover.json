@@ -6,94 +6,9 @@
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
   "exceptions": [
     {
-      "upstream": "packages/react/src/popover/arrow/PopoverArrow.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Arrow`. The part needs `Popover.Positioner`, which gives the position of the arrow."
-    },
-    {
-      "upstream": "packages/react/src/popover/arrow/PopoverArrowDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Arrow`."
-    },
-    {
-      "upstream": "packages/react/src/popover/backdrop/PopoverBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/popover/backdrop/PopoverBackdropDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Backdrop`."
-    },
-    {
-      "upstream": "packages/react/src/popover/close/PopoverClose.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Close`."
-    },
-    {
-      "upstream": "packages/react/src/popover/description/PopoverDescription.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Description`."
-    },
-    {
       "upstream": "packages/react/src/popover/index.ts",
       "kind": "waits-on",
       "reason": "The file is the entry point of Popover. It exports the parts. Vase UI does not have all of them."
-    },
-    {
-      "upstream": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Popup`. The part needs `Popover.Portal` and `Popover.Positioner`, and it needs the focus manager of the popup."
-    },
-    {
-      "upstream": "packages/react/src/popover/popup/PopoverPopupCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/popover/popup/PopoverPopupDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Popup`."
-    },
-    {
-      "upstream": "packages/react/src/popover/portal/PopoverPortal.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Portal`."
-    },
-    {
-      "upstream": "packages/react/src/popover/portal/PopoverPortalContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Portal`."
-    },
-    {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Positioner`. The part needs `Popover.Portal`."
-    },
-    {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositionerContext.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositionerCssVars.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositionerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Positioner`."
-    },
-    {
-      "upstream": "packages/react/src/popover/title/PopoverTitle.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Title`."
-    },
-    {
-      "upstream": "packages/react/src/popover/utils/closePart.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `Popover.Close`. `Popover.Close` and `Popover.Popup` share the file."
     },
     {
       "upstream": "packages/react/src/popover/utils/constants.ts",
@@ -116,142 +31,145 @@
       "reason": "Vase UI does not have `Popover.Viewport`."
     },
     {
-      "upstream": "packages/react/src/popover/arrow/PopoverArrow.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/arrow/PopoverArrow.tsx",
-      "reason": "Each case of the file renders `Popover.Arrow`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/backdrop/PopoverBackdrop.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/backdrop/PopoverBackdrop.tsx",
-      "reason": "Each case of the file renders `Popover.Backdrop`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/close/PopoverClose.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/close/PopoverClose.tsx",
-      "reason": "Each case of the file renders `Popover.Close`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/description/PopoverDescription.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/description/PopoverDescription.tsx",
-      "reason": "Each case of the file renders `Popover.Description`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case of the file renders `Popover.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/popup/PopoverPopupTransitionState.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case of the file renders `Popover.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/portal/PopoverPortal.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/portal/PopoverPortal.tsx",
-      "reason": "Each case of the file renders `Popover.Portal`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositioner.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "reason": "Each case of the file renders `Popover.Positioner`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/popover/title/PopoverTitle.test.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/title/PopoverTitle.tsx",
-      "reason": "Each case of the file renders `Popover.Title`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/popover/viewport/PopoverViewport.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
       "reason": "Each case of the file renders `Popover.Viewport`, which Vase UI does not have."
     },
     {
-      "upstream": "packages/react/src/popover/positioner/PopoverPositioner.spec.tsx",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/positioner/PopoverPositioner.tsx",
-      "reason": "The type test renders `Popover.Positioner`, which Vase UI does not have."
-    },
-    {
       "upstream": "packages/react/src/popover/root/PopoverRoot.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case of the file renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
+      "reason": "The other cases of the file have no counterpart yet. Many of them need the focus management, the hover open, the modal state or the viewport of Popover, which Vase UI does not have. Vase UI ports them after `Popover.Viewport`, the last part of the family, so the row names its file."
+    },
+    {
+      "upstream": "packages/react/src/popover/backdrop/PopoverBackdrop.test.tsx",
+      "describe": ["<Popover.Backdrop />"],
+      "title": "sets `pointer-events: none` style on backdrop if opened by hover",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case opens the popover with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
+    },
+    {
+      "upstream": "packages/react/src/popover/backdrop/PopoverBackdrop.test.tsx",
+      "describe": ["<Popover.Backdrop />"],
+      "title": "does not set `pointer-events: none` style on backdrop if opened by click",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case renders a trigger with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
+    },
+    {
+      "upstream": "packages/react/src/popover/close/PopoverClose.test.tsx",
+      "describe": ["<Popover.Close />"],
+      "title": "enables modal focus management when `modal=%s` and close is rendered",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case expects the modal marks of the focus manager on the elements outside the popup. `Popover.Popup` does not have the focus manager yet."
+    },
+    {
+      "upstream": "packages/react/src/popover/close/PopoverClose.test.tsx",
+      "describe": ["<Popover.Close />"],
+      "title": "does not enable modal focus management when close is not rendered",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case expects no modal marks of the focus manager. `Popover.Popup` does not have the focus manager yet, so the case cannot fail."
+    },
+    {
+      "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
+      "describe": ["<Popover.Popup />"],
+      "suite": "popupFocusPropsTests",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The suite tests `initialFocus` and `finalFocus`. `Popover.Popup` does not have the focus manager or these props yet."
+    },
+    {
+      "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
+      "describe": ["<Popover.Popup />"],
+      "title": "focuses the popup when the active element becomes display:none",
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case expects the focus to move into the popup when it opens. `Popover.Popup` does not have the focus manager yet."
+    },
+    {
+      "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
+      "describe": ["<Popover.Popup />", "openOnHover: delay + click"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case renders a trigger with `openOnHover` and `delay`, which Vase UI does not have. It also expects the focus back on the trigger after the close. The file of the row has the default of `delay`."
+    },
+    {
+      "upstream": "packages/react/src/popover/popup/PopoverPopup.test.tsx",
+      "describe": ["<Popover.Popup />", "inside a toolbar"],
+      "kind": "waits-on",
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "Each case opens the popover and expects the focus on an element of the popup. `Popover.Popup` does not have the focus manager yet."
     },
     {
       "upstream": "packages/react/src/popover/root/PopoverRoot.detached-triggers.test.tsx",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each other case of the file renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/viewport/PopoverViewport.tsx",
+      "reason": "The other cases of the file have no counterpart yet. Many of them need the focus management, the hover open or the viewport of Popover, which Vase UI does not have. Vase UI ports them after `Popover.Viewport`, the last part of the family, so the row names its file."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "prop: disabled"],
+      "title": "does not open on hover when disabled",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case renders a trigger with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "openOnHover opened by touch"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "Each case renders triggers with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "style hooks"],
       "title": "should have the data-popup-open but not the data-pressed attribute when open by hover",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case opens the popover with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "style hooks"],
       "title": "should not have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true` and `delay=0`",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case renders a trigger with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "style hooks"],
       "title": "should have the data-popup-open and data-pressed attributes when open by click when `openOnHover=true`",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "The case renders a trigger with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "impatient clicks with `openOnHover=true`"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "Each case renders a trigger with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />", "opened by hover"],
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "Each case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/popover/utils/constants.ts",
+      "reason": "Each case opens the popover with `openOnHover` of `Popover.Trigger`, which Vase UI does not have. The file of the row has the default of `delay`."
     },
     {
       "upstream": "packages/react/src/popover/trigger/PopoverTrigger.test.tsx",
       "describe": ["<Popover.Trigger />"],
       "title": "should toggle closed with Enter or Space when rendering a <div>",
       "kind": "waits-on",
-      "waitsOn": "packages/react/src/popover/popup/PopoverPopup.tsx",
-      "reason": "The case renders `Popover.Portal`, `Popover.Positioner` and `Popover.Popup`, which Vase UI does not have."
+      "waitsOn": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
+      "reason": "The case expects Shift+Tab to move the focus from the popup back to the trigger. It needs the focus manager of `Popover.Popup`, which moves the focus into the popup when it opens."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/popover/types.md",

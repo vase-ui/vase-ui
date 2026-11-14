@@ -5,7 +5,6 @@ import * as Popover from '../index.parts';
 import {
   createRenderer,
   describeConformance,
-  fireEvent,
   flushMicrotasks,
   screen,
   takeReportedMessages,
@@ -97,6 +96,31 @@ describe('<Popover.Popup />', () => {
     hasClose.value = false;
     await flushMicrotasks();
 
+    expect(handle.store.state.focusManagerModal).toBe(false);
+  });
+
+  // The compiled template of the fixture mounts the new popup before it unmounts the old popup. A
+  // render function in TSX reuses the popup component, so it does not show this order.
+  it('gives the focus manager the modal state of a new popup that replaces the old popup', async () => {
+    const handle = Popover.createHandle<unknown>();
+    const swapped = shallowRef(false);
+    await render(() => (
+      <Popover.Root defaultOpen modal handle={handle}>
+        <Popover.Portal>
+          <Popover.Positioner>
+            <PopoverPopupReplace swapped={swapped.value} />
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+    ));
+    await screen.findByTestId('old');
+    await flushMicrotasks();
+    expect(handle.store.state.focusManagerModal).toBe(true);
+
+    swapped.value = true;
+    await flushMicrotasks();
+
+    expect(screen.queryByTestId('old')).toBe(null);
     expect(handle.store.state.focusManagerModal).toBe(false);
   });
 
