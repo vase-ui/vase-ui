@@ -9,17 +9,21 @@ import {
   hiddenInputSizeTests,
   hiddenInputTypeTests,
   hydrate,
+  isJSDOM,
   renderOnServer,
   screen,
   wait,
   waitFor,
 } from '#test-utils';
+import { platform } from '../../common/platform';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
 import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
 import { useSelectRootContext } from './SelectRootContext';
 import SelectRootHydration from './SelectRootHydration.test.vue';
+
+const isWebKit = platform.engine.webkit;
 
 type ChangeDetails = Select.Root.ChangeEventDetails;
 type OpenChangeDetails = Select.Root.OpenChangeEventDetails;
@@ -40,6 +44,15 @@ async function setValueAsItem(value: unknown) {
 async function settleReset() {
   vi.advanceTimersByTime(0);
   await flushMicrotasks();
+}
+
+// The trigger mounts the items in a 0 ms timer after it gets the focus. `flushMicrotasks` resolves
+// in the next task, and a browser can run that task before the task of the timer.
+async function focusTrigger(trigger: HTMLElement) {
+  trigger.focus();
+  await waitFor(() => {
+    expect(document.querySelectorAll('[role="option"]').length).toBeGreaterThan(0);
+  });
 }
 
 function getHiddenInput() {
@@ -91,6 +104,94 @@ describe('<Select.Root />', () => {
 
       await user.keyboard('[Tab]');
       expect(trigger).toHaveFocus();
+    });
+
+    it('does not commit a value with Enter on a highlighted item', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await flushMicrotasks();
+
+      await user.keyboard('{ArrowDown}');
+      await screen.findByRole('listbox');
+      await user.keyboard('{Enter}');
+
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
+    });
+
+    it('does not commit a value with typeahead on a closed trigger', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="apple">apple</Select.Item>
+                <Select.Item value="banana">banana</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await focusTrigger(screen.getByTestId('trigger'));
+
+      await user.keyboard('b');
+
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
+    });
+
+    it.skipIf(isJSDOM)('moves the highlight with typeahead while the popup is open', async () => {
+      const handleValueChange = vi.fn();
+      const { user } = await render(
+        <Select.Root defaultOpen onValueChange={handleValueChange} readOnly>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value data-testid="value" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="apple">apple</Select.Item>
+                <Select.Item value="banana">banana</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const apple = await screen.findByRole('option', { name: 'apple' });
+      const banana = screen.getByRole('option', { name: 'banana' });
+
+      apple.focus();
+      await flushMicrotasks();
+
+      await user.keyboard('b');
+
+      await waitFor(() => {
+        expect(banana).toHaveAttribute('data-highlighted');
+      });
+      expect(handleValueChange.mock.calls.length).toBe(0);
+      expect(screen.getByTestId('value').textContent).toBe('');
     });
   });
 
@@ -278,6 +379,555 @@ describe('<Select.Root />', () => {
 
       expect(handleFormSubmit).toHaveBeenCalledTimes(1);
       expect(handleFormSubmit.mock.lastCall?.[0]).toEqual({ font: 'sans' });
+    });
+  });
+
+  describe('typeahead', () => {
+    it('matches an item by its label when the rendered text differs', async () => {
+      const { user } = await render(
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner alignItemWithTrigger={false}>
+              <Select.Popup>
+                <Select.Item value="us" label="United States">
+                  <Select.ItemText>Option 1</Select.ItemText>
+                </Select.Item>
+                <Select.Item value="fr" label="France">
+                  <Select.ItemText>Option 2</Select.ItemText>
+                </Select.Item>
+                <Select.Item value="ca" label="Canada">
+                  <Select.ItemText>Option 3</Select.ItemText>
+                </Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      screen.getByTestId('trigger').focus();
+      await flushMicrotasks();
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Option 1' })).toHaveFocus();
+      });
+
+      // Only the label matches; the rendered text is "Option 2".
+      await user.keyboard('fr');
+
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Option 2' })).toHaveFocus();
+      });
+    });
+
+    it('starts a new search after focus leaves the select', async () => {
+      const { user } = await render(
+        <div>
+          <Select.Root>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apple">apple</Select.Item>
+                  <Select.Item value="banana">banana</Select.Item>
+                  <Select.Item value="avocado">avocado</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+          <button data-testid="outside">outside</button>
+        </div>,
+      );
+
+      const trigger = screen.getByTestId('trigger');
+      await focusTrigger(trigger);
+      await user.keyboard('b');
+      expect(screen.getByTestId('value').textContent).toBe('banana');
+
+      // Leaving and returning within the typeahead timeout must not continue the "b" search.
+      screen.getByTestId('outside').focus();
+      await focusTrigger(trigger);
+      await user.keyboard('a');
+
+      expect(screen.getByTestId('value').textContent).toBe('avocado');
+    });
+
+    it.skipIf(isJSDOM)(
+      'does not trigger selection when Space is pressed during text navigation',
+      async () => {
+        const handleItemClick = vi.fn();
+        const handleValueChange = vi.fn();
+
+        const { user } = await render(
+          <Select.Root defaultOpen onValueChange={handleValueChange}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="one" onClick={() => handleItemClick()}>
+                    Item One
+                  </Select.Item>
+                  <Select.Item value="two" onClick={() => handleItemClick()}>
+                    Item Two
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>,
+        );
+        await flushMicrotasks();
+
+        const options = screen.getAllByRole('option');
+
+        options[0]!.focus();
+        await flushMicrotasks();
+
+        await user.keyboard('Item T');
+
+        expect(handleItemClick.mock.calls.length > 0).toBe(false);
+        expect(handleValueChange.mock.calls.length > 0).toBe(false);
+
+        await waitFor(() => {
+          expect(options[1]).toHaveFocus();
+        });
+      },
+    );
+
+    it('skips disabled items and commits the next match via typeahead on a closed trigger', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>(null);
+        return () => (
+          <Select.Root
+            value={value.value}
+            onValueChange={(next: string | null) => {
+              value.value = next;
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apricot" disabled>
+                    apricot
+                  </Select.Item>
+                  <Select.Item value="avocado">avocado</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+
+      // "apricot" and "avocado" both start with "a", but "apricot" is disabled. A single "a"
+      // keypress must skip the disabled "apricot" and land on "avocado" — like native `<select>`
+      // and arrow-key navigation — not stop on (or bail at) the disabled match.
+      await focusTrigger(trigger);
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('avocado');
+    });
+
+    it('commits typeahead on a closed trigger when items are provided', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>(null);
+        return () => (
+          <Select.Root
+            items={{ apple: 'Apple', cherry: 'Cherry' }}
+            value={value.value}
+            onValueChange={(next: string | null) => {
+              value.value = next;
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apple">Apple</Select.Item>
+                  <Select.Item value="cherry">Cherry</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+
+      // The popup is never opened. With `items` provided the value-change effect no longer
+      // force-mounts, so this pins the load-bearing claim that the trigger's own onFocus
+      // force-mount still registers the list for closed-trigger typeahead.
+      await focusTrigger(trigger);
+      await user.keyboard('c');
+      expect(valueEl.textContent).toBe('Cherry');
+    });
+
+    it('commits nothing when the only typeahead match is disabled (closed trigger)', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>(null);
+        return () => (
+          <Select.Root
+            value={value.value}
+            onValueChange={(next: string | null) => {
+              value.value = next;
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="cherry">cherry</Select.Item>
+                  <Select.Item value="banana" disabled>
+                    banana
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+
+      // "banana" is the only "b" item and it's disabled, so there is no selectable match.
+      await focusTrigger(trigger);
+      await user.keyboard('b');
+      expect(valueEl.textContent).toBe('');
+    });
+
+    it('does not let a disabled double-letter item block rapid cycling among enabled matches', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>(null);
+        return () => (
+          <Select.Root
+            value={value.value}
+            onValueChange={(next: string | null) => {
+              value.value = next;
+            }}
+          >
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="aaron" disabled>
+                    aaron
+                  </Select.Item>
+                  <Select.Item value="apple">apple</Select.Item>
+                  <Select.Item value="avocado">avocado</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        );
+      });
+
+      const { user } = await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+
+      // The disabled "aaron" has a doubled first letter, which would otherwise disable
+      // rapid same-letter cycling. Because disabled items are skipped while matching, they
+      // must not count toward that guard: pressing "a" twice should cycle apple -> avocado.
+      await focusTrigger(trigger);
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('apple');
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('avocado');
+    });
+
+    it.skipIf(isJSDOM)(
+      'skips disabled items when highlighting via typeahead on an open popup',
+      async () => {
+        const { user } = await render(
+          <Select.Root defaultOpen>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="apricot" disabled>
+                    apricot
+                  </Select.Item>
+                  <Select.Item value="avocado">avocado</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>,
+        );
+
+        const apricot = await screen.findByRole('option', { name: 'apricot' });
+        const avocado = screen.getByRole('option', { name: 'avocado' });
+
+        avocado.focus();
+        await flushMicrotasks();
+
+        // Open-state typeahead highlights via `activeIndex` (the closed branch commits the value
+        // instead). Typing "a" must skip the disabled "apricot" and highlight "avocado".
+        await user.keyboard('a');
+
+        await waitFor(() => {
+          expect(avocado).toHaveAttribute('data-highlighted');
+        });
+        expect(apricot).not.toHaveAttribute('data-highlighted');
+      },
+    );
+
+    it('starts from the first match after value reset (closed)', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>(null);
+        return () => (
+          <>
+            <button
+              data-testid="reset"
+              onClick={() => {
+                value.value = null;
+              }}
+            >
+              Reset
+            </button>
+            <Select.Root
+              value={value.value}
+              onValueChange={(next: string | null) => {
+                value.value = next;
+              }}
+            >
+              <Select.Trigger data-testid="trigger">
+                <Select.Value data-testid="value" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="a1">A1</Select.Item>
+                    <Select.Item value="a2">A2</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+      const resetBtn = screen.getByTestId('reset');
+
+      await focusTrigger(trigger);
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('a1');
+
+      await user.click(resetBtn);
+
+      await focusTrigger(trigger);
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('a1');
+    });
+
+    it('does not jump matches after a closed-state value reset', async () => {
+      const App = defineComponent(() => {
+        const value = shallowRef<string | null>('dog');
+        return () => (
+          <>
+            <button
+              data-testid="set-car"
+              onClick={() => {
+                value.value = 'car';
+              }}
+            >
+              Set car
+            </button>
+            <Select.Root
+              value={value.value}
+              onValueChange={(next: string | null) => {
+                value.value = next;
+              }}
+            >
+              <Select.Trigger data-testid="trigger">
+                <Select.Value data-testid="value" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="car">car</Select.Item>
+                    <Select.Item value="cat">cat</Select.Item>
+                    <Select.Item value="dog">dog</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </>
+        );
+      });
+
+      const { user } = await render(<App />);
+
+      const trigger = screen.getByTestId('trigger');
+      const valueEl = screen.getByTestId('value');
+      const setCarButton = screen.getByTestId('set-car');
+
+      expect(valueEl.textContent).toBe('dog');
+
+      await user.click(setCarButton);
+      expect(valueEl.textContent).toBe('car');
+
+      await focusTrigger(trigger);
+      await user.keyboard('c');
+      expect(valueEl.textContent).toBe('cat');
+
+      await user.keyboard('a');
+      expect(valueEl.textContent).toBe('cat');
+    });
+  });
+
+  describe('prop: highlightItemOnHover', () => {
+    it.skipIf(isWebKit)('highlights an item on mouse move by default', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionB = screen.getByRole('option', { name: 'b' });
+      await user.hover(optionB);
+
+      await waitFor(() => {
+        expect(optionB).toHaveAttribute('data-highlighted');
+      });
+    });
+
+    it.skipIf(isJSDOM)(
+      'highlights the first item after opening when alignItemWithTrigger is active and no value is selected',
+      async () => {
+        await render(
+          <div style={{ paddingTop: '120px', paddingLeft: '24px' }}>
+            <Select.Root>
+              <Select.Trigger data-testid="trigger" style={{ width: '120px', height: '36px' }}>
+                <Select.Value placeholder="Pick one" />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup style={{ maxHeight: 'none' }}>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                    <Select.Item value="c">c</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await fireEvent.pointerDown(trigger, { pointerType: 'mouse' });
+        await fireEvent.mouseDown(trigger);
+
+        const optionA = await screen.findByRole('option', { name: 'a' });
+
+        await waitFor(() => {
+          expect(optionA).toHaveAttribute('data-highlighted');
+        });
+      },
+    );
+
+    it('does not highlight items from mouse movement when disabled', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionB = screen.getByRole('option', { name: 'b' });
+      await user.hover(optionB);
+
+      await flushMicrotasks();
+
+      expect(optionB).not.toHaveAttribute('data-highlighted');
+    });
+
+    it('does not remove highlight when mousing out of popup when disabled', async () => {
+      const { user } = await render(
+        <Select.Root defaultOpen highlightItemOnHover={false}>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+                <Select.Item value="c">c</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      await flushMicrotasks();
+      const optionA = screen.getByRole('option', { name: 'a' });
+      await user.hover(optionA);
+
+      const popup = screen.getByRole('listbox');
+      await waitFor(() => {
+        expect(popup).toHaveFocus();
+      });
+
+      await user.keyboard('{ArrowDown}');
+
+      await waitFor(() => {
+        expect(optionA).toHaveAttribute('data-highlighted');
+      });
+
+      await user.unhover(popup);
+
+      await waitFor(() => {
+        expect(optionA).toHaveAttribute('data-highlighted');
+      });
     });
   });
 
@@ -710,7 +1360,8 @@ describe('<Select.Root />', () => {
           <Select.Trigger />
           <Select.Portal>
             <Select.Positioner>
-              <Select.Popup>
+              {/* The trigger mounts the items when it gets the focus back. */}
+              <Select.Popup finalFocus={false}>
                 <Select.Item value="a">a</Select.Item>
                 <Select.Item value="b">b</Select.Item>
               </Select.Popup>

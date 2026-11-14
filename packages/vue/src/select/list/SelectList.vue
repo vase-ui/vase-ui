@@ -15,6 +15,8 @@ import { toRaw } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { LIST_FUNCTIONAL_STYLES } from '../popup/utils';
+import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
 
 defineOptions({ inheritAttrs: false });
@@ -27,6 +29,7 @@ defineSlots<{
 }>();
 
 const store = useSelectRootContext();
+const { alignItemWithTriggerActive } = useSelectPositionerContext();
 const state: SelectListState = EMPTY_OBJECT;
 
 let listElement: HTMLElement | null = null;
@@ -49,6 +52,10 @@ const { element, elementProps } = useRenderElement('div', props, {
       role: 'listbox',
       'aria-multiselectable': store.select('multiple') || undefined,
       'aria-readonly': store.select('readOnly') || undefined,
+      onScroll(event: Event) {
+        store.context.scrollHandlerRef.value?.(event.currentTarget as HTMLDivElement);
+      },
+      style: alignItemWithTriggerActive.value ? LIST_FUNCTIONAL_STYLES : undefined,
     },
     attrs,
   ],

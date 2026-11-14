@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { Teleport, computed, defineComponent, shallowRef } from 'vue';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   fireEvent,
@@ -1256,13 +1256,7 @@ describe('<Tooltip.Root />', () => {
       const App = defineComponent({
         setup: () => () => (
           <>
-            {/* The real pointer of the browser can rest on the trigger and open the tooltip. */}
-            <Tooltip.Trigger
-              handle={tooltip}
-              id="trigger"
-              delay={0}
-              style={{ pointerEvents: 'none' }}
-            >
+            <Tooltip.Trigger handle={tooltip} id="trigger" delay={0}>
               Toggle
             </Tooltip.Trigger>
             <button type="button" onClick={() => tooltip.open('trigger')}>
@@ -1915,7 +1909,7 @@ describe('<Tooltip.Root />', () => {
               },
             }}
           >
-            <Tooltip.Trigger style={{ pointerEvents: 'none' }}>Trigger</Tooltip.Trigger>
+            <Tooltip.Trigger>Trigger</Tooltip.Trigger>
           </Tooltip.Root>
         ),
       });
@@ -2033,7 +2027,7 @@ describe('<Tooltip.Root />', () => {
       const isOpen = computed(() => handle.isOpen);
       expect(isOpen.value).toBe(false);
       const { unmount } = await render(
-        <div style={{ pointerEvents: 'none' }}>
+        <div>
           <Tooltip.Trigger handle={handle} id="one">
             One
           </Tooltip.Trigger>
