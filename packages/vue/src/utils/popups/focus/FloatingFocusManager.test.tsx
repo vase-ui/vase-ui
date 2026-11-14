@@ -2073,22 +2073,36 @@ describe('FloatingFocusManager', () => {
     });
 
     describe('popup in the content of a modal popup', () => {
+      // With `middle`, the popup is in a popup whose focus manager is disabled, and that popup is
+      // in the content of the modal popup.
       const Popups = defineComponent({
-        props: { disabled: Boolean },
-        setup: (props) => () => (
-          <Popup portal role="dialog" manager={{ disabled: props.disabled }}>
-            {{
-              default: () => [
-                <input data-testid="one" />,
-                <Popup name="child-" portal role="dialog" />,
-              ],
-            }}
-          </Popup>
-        ),
+        props: { disabled: Boolean, middle: Boolean },
+        setup: (props) => () => {
+          const child = <Popup name="child-" portal role="dialog" />;
+          return (
+            <Popup portal role="dialog" manager={{ disabled: props.disabled }}>
+              {{
+                default: () => [
+                  <input data-testid="one" />,
+                  props.middle ? (
+                    <Popup name="middle-" portal manager={{ disabled: true }}>
+                      {{ default: () => child }}
+                    </Popup>
+                  ) : (
+                    child
+                  ),
+                ],
+              }}
+            </Popup>
+          );
+        },
       });
 
-      async function openBoth() {
+      async function openEach(middle = false) {
         await openPopup();
+        if (middle) {
+          await openPopup(document, 'middle-');
+        }
         await openPopup(document, 'child-');
         await waitFor(() => expect(screen.getByTestId('child-one')).toHaveFocus());
       }
@@ -2103,7 +2117,7 @@ describe('FloatingFocusManager', () => {
       it('keeps the popup above hidden when that popup takes its marks later', async () => {
         const disabled = shallowRef(true);
         await render(() => <Popups disabled={disabled.value} />);
-        await openBoth();
+        await openEach();
         expect(marks()).toEqual(marksOfChildOnTop);
 
         disabled.value = false;
@@ -2112,10 +2126,15 @@ describe('FloatingFocusManager', () => {
         expect(marks()).toEqual(marksOfChildOnTop);
       });
 
-      it('keeps the popup above hidden after KeepAlive puts the two popups back', async () => {
+      it.each([
+        { name: 'two popups', middle: false },
+        { name: 'three popups, the middle one disabled', middle: true },
+      ])('keeps the popup above hidden after KeepAlive puts $name back', async ({ middle }) => {
         const shown = shallowRef(true);
-        await render(() => <KeepAlive>{shown.value ? <Popups /> : null}</KeepAlive>);
-        await openBoth();
+        await render(() => (
+          <KeepAlive>{shown.value ? <Popups middle={middle} /> : null}</KeepAlive>
+        ));
+        await openEach(middle);
         expect(marks()).toEqual(marksOfChildOnTop);
 
         shown.value = false;
