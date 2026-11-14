@@ -30,6 +30,13 @@ function createPointerDownEvent(elm: HTMLElement) {
   });
 }
 
+// Firefox ends a scrub 20 ms after the `pointerup`, so the wait lets each engine end it.
+async function releasePointer() {
+  window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+  await wait(20);
+  await flushMicrotasks();
+}
+
 function createPointerMoveEvent({ movementX = 0, movementY = 0 }) {
   currentPos = {
     clientX: currentPos.clientX + movementX,
@@ -63,11 +70,14 @@ describe('<NumberField.ScrubArea />', () => {
   });
 
   describe('touch input', () => {
-    function createTouch(target: EventTarget) {
-      if (typeof Touch === 'function') {
-        return new Touch({ identifier: 1, target, clientX: 0, clientY: 0 });
-      }
-      return { clientX: 0, clientY: 0 };
+    // Firefox has no `Touch` and no `TouchEvent` on a desktop, and WebKit refuses `new Touch()`.
+    // The case thus gives the touches to a plain event, as `pasteText` gives `clipboardData`.
+    function fireTouchStart(target: HTMLElement, touchCount: number) {
+      const event = new Event('touchstart', { bubbles: true, cancelable: true });
+      Object.defineProperty(event, 'touches', {
+        value: Array.from({ length: touchCount }, () => ({ clientX: 0, clientY: 0 })),
+      });
+      return fireEvent(target, event);
     }
 
     async function renderScrubArea() {
@@ -82,17 +92,13 @@ describe('<NumberField.ScrubArea />', () => {
 
     it('blocks scrolling for a single-touch scrub', async () => {
       const { scrubArea } = await renderScrubArea();
-      const notCanceled = await fireEvent.touchStart(scrubArea, {
-        touches: [createTouch(scrubArea)],
-      });
+      const notCanceled = await fireTouchStart(scrubArea, 1);
       expect(notCanceled).toBe(false);
     });
 
     it('leaves multi-touch gestures such as pinch-zoom to the browser', async () => {
       const { scrubArea } = await renderScrubArea();
-      const notCanceled = await fireEvent.touchStart(scrubArea, {
-        touches: [createTouch(scrubArea), createTouch(scrubArea)],
-      });
+      const notCanceled = await fireTouchStart(scrubArea, 2);
       expect(notCanceled).toBe(true);
     });
   });
@@ -262,8 +268,7 @@ describe('<NumberField.ScrubArea />', () => {
       expect(pointerUpListener).toBeDefined();
       expect(pointerMoveListener).toBeDefined();
 
-      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
-      await flushMicrotasks();
+      await releasePointer();
 
       expect(root).not.toHaveAttribute('data-scrubbing');
       expect(screen.queryByTestId('cursor')).toBe(null);
@@ -371,8 +376,7 @@ describe('<NumberField.ScrubArea />', () => {
     // One or more changes depending on pixel sensitivity and environment
     expect(onValueChange.mock.calls.length).toBeGreaterThan(0);
 
-    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
-    await flushMicrotasks();
+    await releasePointer();
 
     expect(onValueCommitted.mock.calls.length).toBe(1);
 
@@ -493,8 +497,7 @@ describe('<NumberField.ScrubArea />', () => {
         expect(screen.getByTestId('root')).not.toHaveAttribute('data-scrubbing');
         expect(screen.queryByTestId('cursor')).toBe(null);
 
-        window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
-        await flushMicrotasks();
+        await releasePointer();
 
         expect(onValueCommitted).not.toHaveBeenCalled();
       } finally {
