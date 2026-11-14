@@ -187,8 +187,6 @@ A family can land in more than one pull request. Its `index.ts` then comes in th
 
 A part that Base UI takes from another family is exported again and not copied: `export { Separator } from '../separator'` in `index.parts.ts`. `index.ts` exports the component, the props type, the state type and the data attributes of that part under the prefix of the family: `OTPFieldSeparator`, `OTPFieldSeparatorProps`, `OTPFieldSeparatorState` and `OTPFieldSeparatorDataAttributes`. `pnpm parity:check` needs the last two, because the `types.md` of the family names them.
 
-Where Base UI gives such a part a file of its own, that file exports the part under the new name with `typeof`. `drawer/close/DrawerClose.ts` is the model. The Base UI state type of that file can have fewer keys than the state type of the original part. The Vase UI type then omits the other keys: `AutocompleteItemState` omits `selected`.
-
 ## API convention
 
 ### Parts that render an element
@@ -261,7 +259,7 @@ A root that Base UI writes as the root of another family renders that root. `Con
 Base UI can also give a part of another family a new name and new types, such as `DrawerTitle = DialogTitle as DrawerTitle`. That part is then the part of the other family:
 
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
-- Its props and state types are aliases of the types of the other part.
+- Its props and state types are aliases of the types of the other part. Where the Base UI state type has fewer keys, the Vase UI state type omits the other keys: `AutocompleteItemState` is `Omit<ComboboxItemState, 'selected'>`.
 - `Drawer.Title`, `Drawer.Description` and `Drawer.Close` are the examples.
 - The exception is a part whose props have a text of their own in Base UI, such as `ContextMenu.Positioner`. That part is an SFC that renders the other part, as `Toolbar.Separator` does. Its props interface then holds the text of Base UI for those props.
 
