@@ -1,20 +1,45 @@
 import { expect, describe, it } from 'vitest';
-import { defineComponent, h, nextTick, onMounted, ref, warn } from 'vue';
+import {
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  onScopeDispose,
+  onUnmounted,
+  ref,
+  warn,
+} from 'vue';
 import { hydrate, renderOnServer } from '#test-utils';
 import ClassedElement from './fixtures/ClassedElement.vue';
 import HydrationFixture from './fixtures/HydrationFixture.vue';
+import LabelForControl from './fixtures/LabelForControl.vue';
 import PlainPart from './fixtures/PlainPart.vue';
 import StyledElement from './fixtures/StyledElement.vue';
 
 const FIXTURE = 'test/fixtures/HydrationFixture.vue';
 const STYLED_ELEMENT = 'test/fixtures/StyledElement.vue';
 const CLASSED_ELEMENT = 'test/fixtures/ClassedElement.vue';
+const LABEL_FOR_CONTROL = 'test/fixtures/LabelForControl.vue';
 
 describe('hydrate', () => {
   it('passes for the clean fixture', async () => {
     const serverHtml = await renderOnServer(FIXTURE);
 
     await hydrate(HydrationFixture, { serverHtml });
+  });
+
+  it('passes for a label that names a control with `for`', async () => {
+    const serverHtml = await renderOnServer(LABEL_FOR_CONTROL);
+
+    const { container } = await hydrate(LabelForControl, { serverHtml });
+
+    // The control finds the label in the document after the mount.
+    const label = container.querySelector('label')!;
+    expect(label.id).not.toBe('');
+    expect(container.querySelector('[role="checkbox"]')).toHaveAttribute(
+      'aria-labelledby',
+      label.id,
+    );
   });
 
   it('fails for a seeded text mismatch', async () => {
@@ -183,7 +208,7 @@ describe('hydrate', () => {
 
     await hydrate(HydrationFixture, { serverHtml });
 
-    // One run when the helper inserts the server HTML, and one run in the client-only render.
+    // One run in the client-only render, and one run when the helper inserts the server HTML.
     expect(globals.vaseUiHydrationScriptRuns).toBe(runsBefore + 2);
   });
 
@@ -192,13 +217,30 @@ describe('hydrate', () => {
 
     await hydrate(HydrationFixture, { serverHtml });
   });
+
+  it('removes the client-only render when its unmount throws', async () => {
+    const ThrowingOnUnmount = defineComponent({
+      setup() {
+        onScopeDispose(() => {
+          throw new Error('error raised in the unmount');
+        });
+        return () => h('i', { class: 'throwing-on-unmount' });
+      },
+    });
+
+    await expect(
+      hydrate(ThrowingOnUnmount, { serverHtml: '<i class="throwing-on-unmount"></i>' }),
+    ).rejects.toThrow('error raised in the unmount');
+
+    expect(document.querySelector('.throwing-on-unmount')).toBeNull();
+  });
 });
 
 describe('after a hydration', () => {
-  it('removes the containers when the test ends', async ({ onTestFinished }) => {
+  it('removes the container when the test ends', async ({ onTestFinished }) => {
     const hydrated: { container?: HTMLElement } = {};
 
-    // The hooks of `onTestFinished` run in reverse order, so this hook runs after the hooks of
+    // The hooks of `onTestFinished` run in reverse order, so this hook runs after the hook of
     // `hydrate`.
     onTestFinished(() => {
       expect(hydrated.container?.isConnected).toBe(false);
@@ -210,4 +252,27 @@ describe('after a hydration', () => {
 
     expect(container.isConnected).toBe(true);
   });
+
+  it(
+    'fails a test in which the unmount of the hydrated app makes Vue warn',
+    { fails: true },
+    async () => {
+      let isHydrated = false;
+      const WarningOnUnmount = defineComponent({
+        setup() {
+          onUnmounted(() => {
+            if (isHydrated) {
+              warn('warning raised in the unmount');
+            }
+          });
+          return () => h('i');
+        },
+      });
+
+      await hydrate(WarningOnUnmount, { serverHtml: '<i></i>' });
+
+      // The client-only app is gone, so only the unmount at the end of the test warns.
+      isHydrated = true;
+    },
+  );
 });
