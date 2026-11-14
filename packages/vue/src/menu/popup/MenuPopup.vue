@@ -43,7 +43,7 @@ export interface MenuPopupProps
 </script>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, watch } from 'vue';
+import { computed, onScopeDispose, toRaw, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
@@ -142,7 +142,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     (popup) => {
       // A compiled template can mount a new popup before it unmounts the old one. The old popup
       // then must not clear the element of the new one.
-      if (popup !== null || store.context.popupRef.value === popupElement) {
+      if (popup !== null || toRaw(store.state).popupElement === popupElement) {
         store.context.popupRef.value = popup;
         store.set('popupElement', popup);
       }
