@@ -712,7 +712,7 @@ The state of a popup is in a store. The code is in `src/utils/popups`. `tooltip/
 - A server render calls no `ref` callback, so it registers no trigger.
 - A registration changes `triggerCount` only while the popup is open.
 - The registration of the active trigger gives its element to the store, and its data while the popup is open. The registration of another trigger claims an open popup that has no active trigger, unless the popup opened with no trigger. The popup then gets the element and the data of that trigger. The activation of a trigger by `KeepAlive` claims no popup, because the root picks the trigger.
-- `Menu.SubmenuTrigger` gives no data to the store, so it registers with `useTriggerRegistration`. Base UI also writes the active trigger to the store when the part registers. `useImplicitActiveTrigger` does this work for an open submenu, because a submenu has one trigger.
+- A submenu has one trigger. `Menu.SubmenuTrigger` thus registers with `useTriggerRegistration`, and a `watch` writes its `closeDelay` to the store. Base UI also writes the active trigger to the store when the part registers. `useImplicitActiveTrigger` does this work for an open submenu.
 - While a trigger owns the mounted popup, each change of its data goes to the store.
 - `KeepAlive` leaves the entry of a trigger in its place. The two hooks of the trigger only set a flag, and a `watch` of the flag calls `setActive` of the trigger map. Each reader of the map then skips the entry while the trigger is deactivated.
 - When the flag changes, the registration updates `triggerCount`. After the activation, the active trigger gives its data to the store again.

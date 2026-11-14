@@ -42,7 +42,7 @@
       "describe": ["<Menubar />", "when using $name"],
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "Most cases of the block press a trigger of the menubar, and the others move the focus or the highlight with the keys. The trigger of Vase UI has no press yet, and Menu has no keys yet. The case `role > sets aria-orientation on the root element` renders only the menubar, in the `describe.for` of the three test menubars. `Menubar.test.tsx` has cases of its own for the role and for `aria-orientation` of the menubar."
+      "reason": "Most cases of the block press a trigger of the menubar, or they move the focus or the highlight with the keys. The trigger of Vase UI has no press yet, and Menu has no keys yet. Four cases need neither: `hover behavior > should not open submenus on hover when no submenu is already open`, and the three `role` cases for the role and `aria-orientation` of the menubar and for the role of its triggers. They are in the `describe.for` of the three test menubars, and they are ported with the block. Until then, cases of our own assert the same: `Menubar.test.tsx` for the role and for `aria-orientation` of the menubar, and `menu/trigger/MenuTrigger.test.tsx` for the role of a trigger in a menubar and for a hover while no menu of the menubar is open."
     },
     {
       "upstream": "packages/react/src/menubar/Menubar.test.tsx",

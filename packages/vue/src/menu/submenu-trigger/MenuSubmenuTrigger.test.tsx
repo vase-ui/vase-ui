@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import * as Menu from '../index.parts';
 import {
@@ -66,6 +66,18 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     });
   }
 
+  // A case that asserts the state before a delay ends runs the delay with a fake clock.
+  function useFakeClock() {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    return async (ms: number) => {
+      vi.advanceTimersByTime(ms);
+      await flushMicrotasks();
+    };
+  }
+
   it('opens the submenu on hover, and names the submenu in its attributes', async () => {
     await renderSubmenu({ trigger: { delay: 0 } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
@@ -108,36 +120,43 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
   });
 
   it('stays open when the pointer comes back to its trigger before the close delay ends', async () => {
+    const tick = useFakeClock();
     await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
     const alpha = screen.getByRole('menuitem', { name: 'Alpha' });
     await hover(trigger);
-    await screen.findByTestId('submenu');
+    await tick(0);
+    expect(trigger).toHaveAttribute('data-popup-open');
 
     await fireEvent.mouseMove(alpha);
+    await tick(39);
     await fireEvent.mouseMove(trigger);
-    await wait(80);
-    await flushMicrotasks();
-    expect(screen.queryByTestId('submenu')).not.toBe(null);
+    await tick(80);
+    expect(trigger).toHaveAttribute('data-popup-open');
 
     await fireEvent.mouseMove(alpha);
-    await wait(80);
-    await flushMicrotasks();
-    expect(screen.queryByTestId('submenu')).toBe(null);
+    await tick(39);
+    expect(trigger).toHaveAttribute('data-popup-open');
+
+    await tick(1);
+    expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
   it('closes a submenu that hover opened when the pointer leaves the submenu, after the close delay', async () => {
+    const tick = useFakeClock();
     await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
-    await hover(screen.getByRole('menuitem', { name: 'More' }));
-    const positioner = await screen.findByTestId('submenu-positioner');
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await hover(trigger);
+    await tick(0);
+    const positioner = screen.getByTestId('submenu-positioner');
 
     await fireEvent.mouseEnter(positioner);
     await fireEvent.mouseLeave(positioner, { relatedTarget: document.body });
-    expect(screen.queryByTestId('submenu')).not.toBe(null);
+    await tick(39);
+    expect(trigger).toHaveAttribute('data-popup-open');
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('submenu')).toBe(null);
-    });
+    await tick(1);
+    expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
   it('opens the submenu on the first move over the trigger, with no enter event', async () => {
@@ -149,17 +168,18 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
   });
 
   it('cancels a hover open that waits for its delay at a mouseout with no mouseleave', async () => {
+    const tick = useFakeClock();
     await renderSubmenu({ trigger: { delay: 20 } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
 
     await hover(trigger);
+    await tick(19);
     await fireEvent.mouseOut(trigger, {
       relatedTarget: screen.getByRole('menuitem', { name: 'Alpha' }),
     });
-    await wait(60);
-    await flushMicrotasks();
+    await tick(60);
 
-    expect(screen.queryByTestId('submenu')).toBe(null);
+    expect(trigger).not.toHaveAttribute('data-popup-open');
   });
 
   it('keeps a submenu that hover opened open for a keyboard click of its trigger', async () => {
@@ -232,6 +252,16 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     await renderSubmenu({ submenuRoot: { defaultOpen } });
 
     expect(screen.getByRole('menuitem', { name: 'More' })).toHaveAttribute('tabindex', tabindex);
+  });
+
+  it('has the tab stop while it is highlighted', async () => {
+    await renderSubmenu({ trigger: { openOnHover: false } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    expect(trigger).toHaveAttribute('tabindex', '-1');
+
+    await fireEvent.mouseEnter(trigger);
+
+    expect(trigger).toHaveAttribute('tabindex', '0');
   });
 
   it('opens the submenu with a mouse press when openOnHover is false, and a second press closes it', async () => {

@@ -120,7 +120,7 @@
     {
       "upstream": "packages/react/src/menu/submenu-root/MenuSubmenuRootContext.ts",
       "kind": "waits-on",
-      "reason": "Only the filter parts of Menu give members to this context: the element that takes the focus back and two key handlers. A plain submenu reads no member, so Vase UI does not have the context yet."
+      "reason": "Only the filter parts of Menu give members to this context: the element that takes the focus back and two key handlers. Vase UI does not have the filter parts, so each read of the context would give nothing, and Vase UI does not have the context yet."
     },
     {
       "upstream": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
