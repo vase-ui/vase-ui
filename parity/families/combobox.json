@@ -133,7 +133,7 @@
       "describe": ["<Combobox.Root />"],
       "title": "does not dismiss when pressing portalled content inside the popup but outside the list",
       "kind": "not-applicable",
-      "reason": "React sends the press of a portal up the React tree, so the popup knows that the press is inside it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the popup. The popup thus gets no such press."
+      "reason": "React sends the press of a portal up the React tree, so the popup knows that the press is inside it. A Vue press goes up the DOM only, and a `Teleport` puts its content outside the popup. The press is thus a press outside the popup, and it closes the popup."
     },
     {
       "upstream": "packages/react/src/combobox/root/ComboboxRoot.test.tsx",
