@@ -240,6 +240,22 @@ describe('<ContextMenu.Root />', () => {
   });
 
   describe('the parent of the menu', () => {
+    it('gives its parts a context for a menu that no press opened', async () => {
+      const probe = createProbe();
+      await render(
+        <ContextMenu.Root>
+          <probe.Probe />
+        </ContextMenu.Root>,
+      );
+      const { context } = probe;
+      const { x, y, width, height } = context.anchor.value.getBoundingClientRect();
+
+      expect([x, y, width, height]).toEqual([0, 0, 0, 0]);
+      expect(context.allowMouseUpTriggerRef.value).toBe(true);
+      expect(context.initialCursorPointRef.value).toBe(null);
+      expect(context.rootId.value).toEqual(expect.any(String));
+    });
+
     it('gives its menu the context menu as the parent, also below another menu', async () => {
       const probe = createProbe();
       const { unmount } = await render(

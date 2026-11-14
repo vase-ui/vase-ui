@@ -348,6 +348,28 @@ describe('<ContextMenu.Trigger />', () => {
       ]);
       expect(getAnchorRect(probe.context)).toEqual([120, 90, 0, 0]);
     });
+
+    it('keeps the menu open for the mouseup of a second right press', async () => {
+      const calls: unknown[] = [];
+      const { getByTestId } = await render(
+        <ContextMenu.Root onOpenChange={(open, details) => calls.push([open, details.reason])}>
+          <ContextMenu.Trigger data-testid="trigger">Right click me</ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+      const trigger = getByTestId('trigger');
+
+      await fireEvent.contextMenu(trigger);
+      await advance(500);
+      await fireEvent.pointerDown(trigger, { pointerType: 'mouse', button: 2 });
+      await fireEvent.contextMenu(trigger);
+      await fireEvent.mouseUp(document.body);
+
+      expect(calls).toEqual([
+        [true, 'trigger-press'],
+        [false, 'outside-press'],
+        [true, 'trigger-press'],
+      ]);
+    });
   });
 
   describe('a disabled root', () => {
@@ -442,7 +464,10 @@ describe('<ContextMenu.Trigger />', () => {
       expect(trigger).toHaveAttribute('data-popup-open', '');
     });
 
-    it('cancels for a move of more than 10 px', async () => {
+    it.each([
+      { axis: 'horizontal', point: { clientX: 111, clientY: 100 } },
+      { axis: 'vertical', point: { clientX: 100, clientY: 111 } },
+    ])('cancels for a move of more than 10 px on the $axis axis', async ({ point }) => {
       const onOpenChange = vi.fn();
       const { getByTestId } = await render(
         <ContextMenu.Root onOpenChange={onOpenChange}>
@@ -452,7 +477,7 @@ describe('<ContextMenu.Trigger />', () => {
       const trigger = getByTestId('trigger');
 
       await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
-      await fireTouch(trigger, 'touchmove', [{ clientX: 111, clientY: 100 }]);
+      await fireTouch(trigger, 'touchmove', [point]);
       await advance(500);
 
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -548,6 +573,49 @@ describe('<ContextMenu.Trigger />', () => {
 
       expect(onOpenChange).not.toHaveBeenCalled();
     });
+
+    it('lets a passive touchmove listener of the consumer stop the check of the move', async () => {
+      const onOpenChange = vi.fn();
+      const { getByTestId } = await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger
+            data-testid="trigger"
+            {...{
+              onTouchmovePassive: (event: Event & { preventVaseUIHandler: () => void }) =>
+                event.preventVaseUIHandler(),
+            }}
+          >
+            Long press me
+          </ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+      const trigger = getByTestId('trigger');
+
+      await fireTouch(trigger, 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await fireTouch(trigger, 'touchmove', [{ clientX: 140, clientY: 100 }]);
+      await advance(500);
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not let a touchstart listener with no modifier stop the long press', async () => {
+      const onOpenChange = vi.fn();
+      const { getByTestId } = await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger
+            data-testid="trigger"
+            onTouchstart={(event) => event.preventVaseUIHandler()}
+          >
+            Long press me
+          </ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+
+      await fireTouch(getByTestId('trigger'), 'touchstart', [{ clientX: 100, clientY: 100 }]);
+      await advance(500);
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('BUG-4854: a long press with a stylus', () => {
@@ -618,6 +686,24 @@ describe('<ContextMenu.Trigger />', () => {
         expect(onOpenChange).not.toHaveBeenCalled();
       },
     );
+
+    it('keeps the press while another pointer moves or leaves', async () => {
+      const onOpenChange = vi.fn();
+      const { getByTestId } = await render(
+        <ContextMenu.Root onOpenChange={onOpenChange}>
+          <ContextMenu.Trigger data-testid="trigger">Long press me</ContextMenu.Trigger>
+        </ContextMenu.Root>,
+      );
+      const trigger = getByTestId('trigger');
+
+      await fireEvent.pointerDown(trigger, { pointerType: 'pen', clientX: 50, clientY: 50 });
+      await fireEvent.pointerMove(trigger, { pointerType: 'touch', clientX: 100, clientY: 50 });
+      await fireEvent.pointerUp(trigger, { pointerType: 'touch', clientX: 100, clientY: 50 });
+      await fireEvent.pointerCancel(trigger, { pointerType: 'mouse' });
+      await advance(500);
+
+      expect(onOpenChange).toHaveBeenCalledTimes(1);
+    });
 
     it.each([{ pointerType: 'mouse' }, { pointerType: 'touch' }])(
       'starts no long press for a $pointerType pointer',
