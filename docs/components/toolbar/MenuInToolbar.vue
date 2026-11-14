@@ -6,11 +6,7 @@ import { Toolbar } from '@vase-ui/vue/toolbar';
 <template>
   <Toolbar.Root>
     <Menu.Root>
-      <Toolbar.Button>
-        <template #render="{ props }">
-          <Menu.Trigger v-bind="props" />
-        </template>
-      </Toolbar.Button>
+      <Toolbar.Button :as="Menu.Trigger" />
       <Menu.Portal><!-- Compose the rest of the menu --></Menu.Portal>
     </Menu.Root>
   </Toolbar.Root>
