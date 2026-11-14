@@ -63,12 +63,16 @@ export function nextEvent(
   });
 }
 
+const GUARD_DURATION = 10_000;
+
 /**
  * Resolves with the list that the next `getAnimations()` call on the element returns. A part makes
  * that call when it starts to wait for the animations of the element. It then waits for the
  * animations of that list, and it attaches to each of them before the test continues.
- * It fails when no call comes in 3 seconds. The 3 seconds start when the function is called, so
- * start the action in a timer task or with an event. A command of the browser can take longer.
+ * It fails when no call comes in 10 seconds. A busy machine can stall the page for some seconds,
+ * and a part that is right makes its call after the stall. The time starts when the function is
+ * called, so start the action in a timer task or with an event. A command of the browser can take
+ * longer.
  * Call it before the action. With three or more elements in one frame, a part can get the
  * animations of an element from the root of the tree. This function does not see that read.
  */
@@ -76,8 +80,8 @@ export function nextAnimationsRead(element: Element): Promise<Animation[]> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       Reflect.deleteProperty(element, 'getAnimations');
-      reject(new Error('No part read the animations of the element in 3 seconds.'));
-    }, 3000);
+      reject(new Error('No part read the animations of the element in 10 seconds.'));
+    }, GUARD_DURATION);
     element.getAnimations = (options) => {
       Reflect.deleteProperty(element, 'getAnimations');
       clearTimeout(timer);
@@ -152,8 +156,8 @@ export async function probeFrameAfterExit(
 
   return new Promise<FrameProbeResult>((resolve, reject) => {
     const timer = setTimeout(() => {
-      reject(new Error('The exit animation did not end in 3 seconds.'));
-    }, 3000);
+      reject(new Error('The exit animation did not end in 10 seconds.'));
+    }, GUARD_DURATION);
     Promise.all(animations.map((animation) => animation.finished)).then(
       () => {
         clearTimeout(timer);

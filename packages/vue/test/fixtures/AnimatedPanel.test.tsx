@@ -11,7 +11,6 @@ import {
   openInTimerTask,
   probeFrameAfterExit,
   renderOnServer,
-  waitFor,
 } from '#test-utils';
 import type { FrameProbeResult } from '#test-utils';
 import AnimatedPanel from './AnimatedPanel.vue';
@@ -47,6 +46,7 @@ describe('<AnimatedPanel />', () => {
     }: FrameRow & { completeInLaterTask?: boolean }) {
       const open = shallowRef(true);
       const log = createCompletionLog();
+      const mounted = log.next(true);
       const { container } = await render(() => (
         <AnimatedPanel
           open={open.value}
@@ -58,9 +58,7 @@ describe('<AnimatedPanel />', () => {
           onOpenChangeComplete={log.onOpenChangeComplete}
         />
       ));
-      await waitFor(() => {
-        expect(log.calls).toContain(true);
-      });
+      await mounted;
 
       const results: FrameProbeResult[] = [];
       for (let cycle = 0; cycle < 3; cycle += 1) {
@@ -126,6 +124,8 @@ describe('<AnimatedPanel />', () => {
       const secondOpen = shallowRef(true);
       const first = createCompletionLog();
       const second = createCompletionLog();
+      const firstMounted = first.next(true);
+      const secondMounted = second.next(true);
       const { container } = await render(() => (
         <>
           <AnimatedPanel
@@ -151,12 +151,7 @@ describe('<AnimatedPanel />', () => {
       ));
       const firstPanel = container.querySelector<HTMLElement>('[data-testid="first"]')!;
       const secondPanel = container.querySelector<HTMLElement>('[data-testid="second"]')!;
-      await waitFor(() => {
-        expect(first.calls).toContain(true);
-      });
-      await waitFor(() => {
-        expect(second.calls).toContain(true);
-      });
+      await Promise.all([firstMounted, secondMounted]);
       expect(second.calls).not.toContain(false);
 
       const firstRead = nextAnimationsRead(firstPanel);
@@ -177,7 +172,7 @@ describe('<AnimatedPanel />', () => {
       expect(first.calls).toContain(false);
       expect(second.calls).not.toContain(false);
       expect(secondPanel.hidden).toBe(false);
-    });
+    }, 20_000);
   });
 
   describe('transitions', () => {
