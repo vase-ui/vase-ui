@@ -88,9 +88,7 @@ describe('Popover popup transition state', () => {
     // The transition lasts longer than any phase of the test, so it cannot end before it is
     // observed on a busy runner. Each phase is finished explicitly instead of waited out.
     async function runPhase(action: () => Promise<void>) {
-      const animationsRead = nextAnimationsRead(popup);
-      await action();
-      const animations = await animationsRead;
+      const animations = await nextAnimationsRead(popup, { action });
       expect(animations.length).toBeGreaterThan(0);
       expect(completed).not.toHaveBeenCalled();
       animations.forEach((animation) => animation.finish());

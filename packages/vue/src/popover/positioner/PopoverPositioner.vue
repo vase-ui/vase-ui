@@ -41,6 +41,7 @@ export interface PopoverPositionerProps
 import { provide } from 'vue';
 import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
+import { useTriggerSwitchTransition } from '../../internals/useTriggerSwitchTransition';
 import { usePopupPositioner } from '../../utils/popups/popupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../utils/popups/tree/FloatingTree';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
@@ -81,6 +82,13 @@ const { element, elementProps, state, positioning, open } =
 
 provide(PopoverPositionerContext, positioning);
 provideFloatingNode(nodeId);
+
+useTriggerSwitchTransition({
+  store,
+  domReference: () => store.select('anchorElement'),
+  positionerElement: () => store.select('positionerElement'),
+  open,
+});
 
 useAnchoredPopupScrollLock(
   () =>
