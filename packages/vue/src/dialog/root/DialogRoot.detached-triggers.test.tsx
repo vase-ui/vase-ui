@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { createSSRApp, defineComponent, onMounted, shallowRef } from 'vue';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   detachedTriggersConformanceTests,
@@ -14,7 +15,6 @@ import {
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Popover from '../../popover/index.parts';
-import * as Dialog from '../index.parts';
 import DialogDelayedTriggerHydration from './DialogDelayedTriggerHydration.test.vue';
 import DialogDetachedTriggerHydration from './DialogDetachedTriggerHydration.test.vue';
 
@@ -360,6 +360,7 @@ describe('<Dialog.Root />', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
       });
       expect(trigger).toHaveAttribute('data-popup-open');
+      expect(within(container).getByRole('button', { name: 'Trigger' })).toBe(trigger);
       expect(takeReportedMessages()).toEqual([]);
     });
 
@@ -398,6 +399,7 @@ describe('<Dialog.Root />', () => {
       await waitFor(() => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
       });
+      expect(within(container).getByRole('button', { name: 'Trigger' })).toBe(trigger);
       expect(takeReportedMessages()).toEqual([]);
     });
 
@@ -605,6 +607,7 @@ describe('<Dialog.Root />', () => {
       });
       expect(screen.getByTestId('dirty-payload').textContent).toBe('8');
 
+      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Unmount dirty root' }));
       await flushMicrotasks();
       expect(handleB.isOpen).toBe(false);
@@ -976,6 +979,7 @@ describe('<Dialog.Root />', () => {
       });
 
       const updateButton = screen.getByRole('button', { name: 'Update payloads' });
+      await waitForLaterMillisecond();
       await user.click(updateButton);
       await waitFor(() => {
         expect(screen.getByTestId('content').textContent).toBe('8');
@@ -1038,6 +1042,7 @@ describe('<Dialog.Root />', () => {
         expect(screen.getByText('Dialog Content')).toBeVisible();
       });
 
+      await waitForLaterMillisecond();
       await user.click(screen.getByRole('button', { name: 'Unmount root' }));
       await flushMicrotasks();
       expect(screen.queryByText('Dialog Content')).toBe(null);
@@ -1117,6 +1122,7 @@ describe('<Dialog.Root />', () => {
       });
       expect(screen.getByTestId('payload').textContent).toBe('8');
 
+      await waitForLaterMillisecond();
       await user.click(
         within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
       );
@@ -1194,6 +1200,7 @@ describe('<Dialog.Root />', () => {
         screen.getByRole('dialog').getAttribute('id'),
       );
 
+      await waitForLaterMillisecond();
       await user.click(
         within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
       );
@@ -1273,6 +1280,7 @@ describe('<Dialog.Root />', () => {
         expect(screen.getByText('Dialog Content')).toBeVisible();
       });
 
+      await waitForLaterMillisecond();
       await user.click(
         within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
       );
@@ -1400,9 +1408,9 @@ describe('<Dialog.Root />', () => {
       const testDialog = Dialog.createHandle<() => number>();
 
       // The triggers are in their own component, so a change of their payloads does not render
-      // the root again. Each accessor reads a plain array, so the slot of the root does not
-      // depend on the payloads either. The case thus proves that the trigger forwards a new
-      // payload to the root.
+      // the root again. Each accessor returns a constant of one render of the triggers, so the
+      // slot of the root does not depend on the reactive payloads either. The case thus proves
+      // that the trigger forwards a new payload to the root.
       const Triggers = defineComponent(() => {
         const payloads = shallowRef([1, 2]);
         return () => {
@@ -1549,6 +1557,7 @@ describe('<Dialog.Root />', () => {
       );
       expect(screen.getByTestId('payload').textContent).toBe('7');
 
+      await waitForLaterMillisecond();
       await user.click(
         within(screen.getByRole('dialog')).getByRole('button', { name: 'Unmount root' }),
       );

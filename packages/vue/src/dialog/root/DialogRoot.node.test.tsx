@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 import { useDialogRootContext } from './DialogRootContext';
 
 function renderApp(render: () => unknown) {

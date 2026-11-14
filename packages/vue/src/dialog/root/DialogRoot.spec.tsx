@@ -1,5 +1,5 @@
 import { expectType } from '#test-utils';
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 
 const numberPayloadHandle = Dialog.createHandle<number>();
 

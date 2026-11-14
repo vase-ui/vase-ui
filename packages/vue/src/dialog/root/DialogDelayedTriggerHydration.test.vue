@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
 import type { Component } from 'vue';
-import * as Dialog from '../index.parts';
+import { Dialog } from '@vase-ui/vue/dialog';
 
 const props = defineProps<{
   handle?: Dialog.Handle<unknown> | undefined;

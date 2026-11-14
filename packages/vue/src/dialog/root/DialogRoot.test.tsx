@@ -14,6 +14,7 @@ import {
 import type { PropType } from 'vue';
 import { NumberField } from '@vase-ui/vue/number-field';
 import { ScrollArea } from '@vase-ui/vue/scroll-area';
+import { Dialog } from '@vase-ui/vue/dialog';
 import {
   createRenderer,
   dialogRootSharedTests,
@@ -43,7 +44,6 @@ import { useTimeout } from '../../common/useTimeout';
 import { REASONS } from '../../internals/reasons';
 import * as Popover from '../../popover/index.parts';
 import * as Select from '../../select/index.parts';
-import * as Dialog from '../index.parts';
 import { DialogStore } from '../store/DialogStore';
 import DialogRootHydration from './DialogRootHydration.test.vue';
 import { useDialogRootContext } from './DialogRootContext';
