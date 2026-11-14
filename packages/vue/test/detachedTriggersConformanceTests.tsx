@@ -5,6 +5,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
+import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
 import { flushMicrotasks } from './flushMicrotasks';
@@ -178,6 +179,9 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
   async function closeWith(interaction: OpenInteraction, user: UserEvent, trigger: HTMLElement) {
     if (interaction === 'click') {
       if (Close) {
+        // The close part mounts with the popup. Vue skips its listener for an event of that
+        // millisecond.
+        await waitForLaterMillisecond();
         await user.click(screen.getByText('Close popup'));
       } else {
         await user.keyboard('{Escape}');
