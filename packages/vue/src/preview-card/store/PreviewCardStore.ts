@@ -1,4 +1,7 @@
 import { NOOP } from '../../common/empty';
+import { REASONS } from '../../internals/reasons';
+import { updateInlineRectCoords } from '../../utils/popups/inlineRect';
+import type { InlineRectCoordsRef } from '../../utils/popups/inlineRect';
 import { NullStore } from '../../utils/popups/NullStore';
 import type { AdaptiveOriginMiddleware } from '../../utils/popups/positioning/adaptiveOriginConstants';
 import {
@@ -22,7 +25,9 @@ export type State<Payload> = PopupStoreState<Payload> & {
   closeDelay: number;
 };
 
-export type Context = PopupStoreContext<PreviewCardRootChangeEventDetails>;
+export type Context = PopupStoreContext<PreviewCardRootChangeEventDetails> & {
+  inlineRectCoordsRef: InlineRectCoordsRef;
+};
 
 const selectors = {
   ...popupStoreSelectors,
@@ -53,7 +58,7 @@ export class PreviewCardStore<Payload> extends BasePopupStore<
   constructor(initialState: Partial<State<Payload>>, defaultPopupId: string | undefined) {
     super(
       createInitialState<Payload>(initialState, defaultPopupId),
-      createPopupStoreContext(),
+      createInitialContext(),
       selectors,
     );
   }
@@ -62,7 +67,33 @@ export class PreviewCardStore<Payload> extends BasePopupStore<
     nextOpen: boolean,
     eventDetails: PreviewCardRootChangeEventDetails,
   ) {
+    const { inlineRectCoordsRef } = this.context;
+
+    // Keep the coordinates of the hover, so that the card is positioned against the hovered line
+    // of the link.
+    const event = eventDetails.event;
+    if (
+      nextOpen &&
+      eventDetails.reason === REASONS.triggerHover &&
+      eventDetails.trigger &&
+      'clientX' in event &&
+      'clientY' in event &&
+      inlineRectCoordsRef.current?.element !== eventDetails.trigger
+    ) {
+      updateInlineRectCoords(
+        inlineRectCoordsRef,
+        eventDetails.trigger,
+        event.clientX,
+        event.clientY,
+      );
+    }
+
     return getHoverPopupInstantType(nextOpen, eventDetails.reason);
+  }
+
+  protected override prepareUnmount() {
+    this.context.inlineRectCoordsRef.current = undefined;
+    return {};
   }
 }
 
@@ -74,7 +105,7 @@ export class PreviewCardStore<Payload> extends BasePopupStore<
 export function createNullPreviewCardStore<Payload>(): PreviewCardHandleStore<Payload> {
   const store = new NullStore<Readonly<State<Payload>>, Context, Selectors>(
     Object.freeze(createInitialState<Payload>(undefined)),
-    Object.freeze(createPopupStoreContext()),
+    Object.freeze(createInitialContext()),
     selectors,
   );
   return Object.assign(store, { setOpen: NOOP });
@@ -90,5 +121,12 @@ function createInitialState<Payload>(
     adaptiveOrigin: undefined,
     closeDelay: CLOSE_DELAY,
     ...initialState,
+  };
+}
+
+function createInitialContext(): Context {
+  return {
+    ...createPopupStoreContext(),
+    inlineRectCoordsRef: { current: undefined },
   };
 }

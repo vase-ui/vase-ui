@@ -247,6 +247,13 @@ A part that Base UI writes as another part renders that part and no element of i
 - Declare each event of that part with `defineEmits`. Vue then takes the listener out of `$attrs`. Listen to the event on that part. Emit it again at once with the same arguments. That part reads `details.isCanceled` after its emit returns, so a `details.cancel()` still stops `update:x`.
 - Expose the `element` of that part.
 
+A root that Base UI writes as the root of another family renders that root. `ContextMenu.Root` renders `Menu.Root`:
+
+- The root renders no element, so it does not set `inheritAttrs`, and it has no `#render` slot.
+- Its props interface extends an `Omit` of the props interface of the other root. The template binds each prop on the other root by name.
+- The rule above for events applies to the events of the other root.
+- It exposes the actions of the other root. Each exposed function calls the function of the same name on that root.
+
 Base UI can also give a part of another family a new name and new types, such as `DrawerTitle = DialogTitle as DrawerTitle`. That part is then the part of the other family:
 
 - Its file is a `.ts` file at the mapped path. It exports the SFC of the other part with the type `typeof` that SFC, and no wrapper component.
@@ -647,6 +654,7 @@ A root gives values to its parts with `provide` and `inject`. Use `progress/root
 - The context of Dialog is its store, as in Base UI. The root provides it, and `useDialogRootContext()` returns it. A part reads the state with `store.select(key)`. See [Popup store](#popup-store).
 - A part can provide the context of another family, where Base UI does this. `Accordion.Item` calls `useCollapsibleRoot` and provides `CollapsibleRootContext`. The trigger and the panel of the Accordion then read `useCollapsibleRootContext()`, and the panel uses `useCollapsiblePanel` with no change.
 - Such a part gives the context the members that the root of that family gives: the result of the composable, `onOpenChange` and `state`.
+- A root can provide `undefined` for the context of another family, to hide a provider above it. `ContextMenu.Root` does this for `MenuRootContext`, so its menu is not a part of a menu above it.
 
 ### Popup store
 
@@ -723,6 +731,7 @@ A popup tree holds one node for each popup below one root. The code is in `src/u
 - The tree that a part provides can change. `useFloatingTree()` then gives the new tree at once. Each node below moves to it with its `context` in the next flush. Read `.value` of the tree in a handler, a hook or a `watch`. Do not keep the store in a variable of `setup`. `FloatingTree` of Base UI keeps the tree of its first render.
 - Base UI sometimes calls a hook in a component below the `FloatingTree` of the same file, as `PopoverRoot.tsx` and `Menubar.tsx` do. Give the result of `provideFloatingTree()` to that composable as `externalTree`.
 - A root that starts a tree only when no root of its family is above it reads its own context with `use<Root>Context(true)` before it provides the context.
+- Such a root calls `provideFloatingTree()` only in that case. A root inside another root then uses the tree of the outer root. `preview-card/root/PreviewCardRoot.vue` is the model.
 - A node registers in `onBeforeMount`. A server render does not call that hook, so a tree gets no node on a server.
 - The hook runs before the `setup` of the parts below. Each of them thus finds the node when it is mounted.
 - The nodes are in the order of those hooks: a node comes before the nodes below it. In Base UI, it comes after them. Find a node by its id. Do not use its position in the list.
@@ -737,6 +746,7 @@ The positioning of a popup is in `src/internals/useAnchorPositioning.ts` and in 
 - A positioner part of a popup family calls `usePopupPositioner(store, props, options)` in `setup`. It takes the reactive props of the part, so do not destructure them. The result has `element`, `elementProps`, `state`, `positioning`, `open` and `mounted`.
 - `usePopupPositioner` calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner`. `options.positioning` replaces the positioning parameters that come from the props. It can also have `nodeId` and `externalTree`.
 - A part that registers a node in the popup tree calls `useFloatingNodeId()` before `usePopupPositioner`, and gives the id as `positioning: { nodeId }`. The positioning context then finds the node. `Tooltip.Positioner` registers no node, as in Base UI.
+- Where Base UI renders `FloatingNode` around the positioner, the part also calls `provideFloatingNode(nodeId)`. A popup below the part then registers its node as a child of this node. `preview-card/positioner/PreviewCardPositioner.vue` is the model.
 - `nodeId` and `externalTree` are each a value, a ref or a getter. A part whose popup can move to the node of another part gives getters. The context then moves to the new node, and the old node loses it (`VUE-43`).
 - `usePositioner` makes the props of the positioner element: `role="presentation"`, `hidden`, the styles, and `transition: none` while the transition status is `starting`. With `inert`, it adds `pointer-events: none`. The `style` of the consumer wins over these styles.
 - A positioner part that `usePopupPositioner` does not fit calls `useAnchorPositioning`, `useVaseUIFloating` and `usePositioner` itself. `test/fixtures/PositionerPart.vue` is the model for `useAnchorPositioning`.
@@ -1156,6 +1166,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - `useAnimationsFinished` uses this form for each completion that is not batched. Only microtasks wait, so the browser does not paint before the completion runs.
 - An error of a completion goes to `reportError`. The later completions still run.
 - An effect of upstream (`useEffect` or `useIsoLayoutEffect`) becomes a `watch` with a callback and no `immediate`. A server render does not run such a `watch`, except one with `flush: 'sync'`.
+- React runs the effects of an update from a discrete event, such as `pointerdown`, before the next event. A program can dispatch the next event in the same task, before the Vue flush. Where that event must get a listener that an effect adds, the effect is a `watch` with `flush: 'sync'`. `NumberField.ScrubArea` adds its `pointermove` and `pointerup` listeners in this way.
 - An effect that reads the DOM uses `onMounted(run)` plus `watch(sources, run, { flush: 'post' })`. `run` then runs at mount and after each DOM update that follows a change of a source. `useTransitionStatus`, `useOpenChangeComplete` and `useCollapsiblePanel` do this.
 - An effect that needs the element of the part, such as an observer, is a `watch` of the `element` of `useRenderElement` with `flush: 'post'`. Start the observer in the callback. Stop it in `onCleanup`. Vue runs the cleanup when the element changes and when the part unmounts. `scroll-area/viewport/ScrollAreaViewport.vue` is the model.
 - An effect of Base UI with no dependency list runs after each commit, so it also sees a DOM change of another component. A Vue component with the same props does not render again when its parent renders.
@@ -1225,6 +1236,7 @@ A handler key of a DOM event is `on` plus the DOM event name with one capital. V
 - A listener that Base UI adds with `{ passive: true }` also goes in the props, with the suffix `Passive` on its key. An example is `onTouchstartPassive` of `Slider.Control`. Vue reads the suffix and adds the listener with that option.
 - React adds the listener of `onTouchStart` as a passive listener. A part gives such a handler the suffix `Passive` too: `usePressAndHold` binds `onTouchstartPassive`. Without the suffix, the browser waits for the handler before it starts a scroll.
 - React adds the listener of `onTouchMove` as a passive listener also. A composable gives such a listener the suffix `Passive` when the listener calls no `preventDefault()`. `touchProps` of `useSwipeDismiss` has `onTouchstartPassive` and `onTouchmovePassive`.
+- `ContextMenu.Trigger` also binds `onTouchstartPassive` and `onTouchmovePassive`. A listener of the consumer stops such a handler with `event.preventVaseUIHandler()` only when it has the `.passive` modifier. A listener with no modifier has another key, so the handler of the part still runs.
 - An `<input>` part gives an uncontrolled default value with the key `value` on a server and with the key `defaultValue` in a browser. A server needs the key `value` to write the `value` attribute. In a browser, Vue sets the DOM property `value` again on each render, and that replaces the text that the user typed. The DOM property `defaultValue` is the `value` attribute, and Vue sets it only when its value changes. The key `^value` does not help, because a server of Vue 3.5.12 writes the attribute `^value`. `Toolbar.Input` and `Field.Control` are the examples.
 - A controlled `<input>` part writes the value of its prop to the input in `nextTick` after an event, when the two differ. Vue writes the DOM value only when the part renders. The part does not render when a listener cancels the change or the consumer keeps its value. React writes the prop back after each event. `Field.Control` is the example. The hidden input of `OTPField.Root` does this for the value of the root, also when the root is not controlled.
 - The wait for that write starts after the change that the event makes. A wait that starts before the change can end before the flush of a parent that takes the new value. The part then writes the old value to the input. A slot of `OTPField.Input` keeps this order for its character.
@@ -1682,6 +1694,7 @@ A family that Base UI documents in `docs/src/app/(docs)/react/utils/`, such as `
 - The page has the title and one intro line. It has the sections of the Base UI page, with the code in Vue. It also has each demo of the family and the API reference.
 - The front matter has `order: 1`. The group then shows its pages in the sequence of their titles.
 - A demo is `docs/demos/<family>/<demo>/css-modules/index.vue`. It keeps the elements, the text and the attributes of the Base UI file `demos/<demo>/css-modules/index.tsx`. Vase UI does not port the Tailwind demos.
+- A Base UI demo can import a file of `demos/<demo>` that is outside `css-modules`, such as `custom-sanitize/useInvalidFeedback.ts` of OTP Field. Port that file to the same path in `docs/demos/<family>`.
 - The style sheet of a demo is the Base UI file, byte for byte. Do not edit it. Prettier does not format it, because `.prettierignore` names `docs/demos/**/*.module.css`. The same CSS then proves that the data attributes and the CSS variables are those of Base UI. A demo has no `<style>` block, and ESLint refuses one.
 - `docs/demos/<family>/upstream.json` records the Base UI commit and the SHA-256 of each Base UI demo file at that commit. `pnpm docs:demos --upstream <path> <family>` writes the record and the style sheets. Do not edit the record.
 - A demo can import another entry point of Base UI, such as `@base-ui/react/toggle`. The record then has the key `entryPoints`. It has one row for each such demo: the folder of the demo and the sorted names of the entry points, as `"hero": ["slider"]`. A demo with no such import has no row.
