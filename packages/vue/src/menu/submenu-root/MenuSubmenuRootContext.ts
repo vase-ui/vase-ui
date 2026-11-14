@@ -3,8 +3,8 @@ import type { InjectionKey } from 'vue';
 import type { VaseUIEvent } from '../../internals/types';
 
 export interface MenuSubmenuRootContext {
-  /** The element that gets the focus when the submenu closes. `false` leaves the focus where it is. */
-  getReturnElement?: (() => HTMLElement | null | false) | undefined;
+  /** The element that gets the focus when a key closes the submenu. */
+  getReturnElement?: (() => HTMLElement | null) | undefined;
   onTriggerKeydown?: ((event: VaseUIEvent<KeyboardEvent>) => void) | undefined;
   onPopupKeydown?: ((event: KeyboardEvent) => void) | undefined;
 }
