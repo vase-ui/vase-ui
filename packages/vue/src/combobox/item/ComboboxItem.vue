@@ -100,25 +100,25 @@ const indexFromFilter = computed(() =>
     ? findItemIndex(flatFilteredValues.value, props.value, store.select('isItemEqualToValue'))
     : undefined,
 );
-const index = computed(() => props.index ?? indexFromFilter.value ?? listItem.index.value);
-const hasRegistered = computed(() => index.value !== -1);
+const itemIndex = computed(() => props.index ?? indexFromFilter.value ?? listItem.index.value);
+const hasRegistered = computed(() => itemIndex.value !== -1);
 
-const highlighted = computed(() => store.select('isActive', index.value));
+const highlighted = computed(() => store.select('isActive', itemIndex.value));
 const matchesSelectedValue = computed(() => store.select('isSelected', props.value));
 const selected = computed(() => matchesSelectedValue.value && selectable.value);
 
 const id = computed(() => {
   const rootId = itemRoot.value.id;
-  return rootId != null && hasRegistered.value ? `${rootId}-${index.value}` : undefined;
+  return rootId != null && hasRegistered.value ? `${rootId}-${itemIndex.value}` : undefined;
 });
 
-useDomEffect([hasRegistered, virtualized, index, () => props.index], () => {
+useDomEffect([hasRegistered, virtualized, itemIndex, () => props.index], () => {
   if (!hasRegistered.value || !(virtualized.value || props.index != null)) {
     return undefined;
   }
 
   const list = store.context.listRef.value;
-  const currentIndex = index.value;
+  const currentIndex = itemIndex.value;
   list[currentIndex] = element.value;
 
   return () => {
@@ -126,13 +126,13 @@ useDomEffect([hasRegistered, virtualized, index, () => props.index], () => {
   };
 });
 
-useDomEffect([hasRegistered, hasItems, index, () => props.value], () => {
+useDomEffect([hasRegistered, hasItems, itemIndex, () => props.value], () => {
   if (!hasRegistered.value || hasItems.value) {
     return undefined;
   }
 
   const visibleValues = store.context.valuesRef.value;
-  const currentIndex = index.value;
+  const currentIndex = itemIndex.value;
   visibleValues[currentIndex] = props.value;
 
   return () => {
@@ -141,7 +141,7 @@ useDomEffect([hasRegistered, hasItems, index, () => props.value], () => {
 });
 
 useDomEffect(
-  [hasRegistered, hasItems, index, () => props.value, () => itemRoot.value.isItemEqualToValue],
+  [hasRegistered, hasItems, itemIndex, () => props.value, () => itemRoot.value.isItemEqualToValue],
   () => {
     if (!hasRegistered.value || hasItems.value) {
       return;
@@ -156,7 +156,7 @@ useDomEffect(
     let nextIndex = selectedIndex;
     if (selectionMode === 'multiple' && Array.isArray(selectedValue)) {
       nextIndex = resolveSelectedIndex(
-        index.value,
+        itemIndex.value,
         props.value,
         store.context.valuesRef.value,
         selectedValue,
@@ -164,7 +164,7 @@ useDomEffect(
         nextIndex,
       );
     } else if (compareItemEquality(props.value, selectedValue, isItemEqualToValue)) {
-      nextIndex = index.value;
+      nextIndex = itemIndex.value;
     }
     store.set('selectedIndex', nextIndex);
   },
