@@ -1,6 +1,6 @@
 import { expect, describe, it } from 'vitest';
 import { defineComponent } from 'vue';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import {
   createRenderer,
   describeConformance,

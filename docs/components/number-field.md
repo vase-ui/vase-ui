@@ -27,7 +27,7 @@ A numeric input element with increment and decrement buttons, and a scrub area.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Give the input a `<label>` element, or put the number field in a `Field`.
+- **Form controls must have an accessible name**: Give the input a `<label>` element, or put the number field in a `Field`. See the [forms guide](/handbook/forms).
 
 ## Anatomy
 

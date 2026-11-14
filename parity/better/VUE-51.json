@@ -3,8 +3,9 @@
   "evidence": [
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/label/SelectLabel.tsx#L34-L42",
     "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/select/root/SelectRoot.test.tsx#L498-L516",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/combobox/root/ComboboxRoot.test.tsx#L767-L782",
     "https://vuejs.org/api/composition-api-lifecycle.html#onserverprefetch"
   ],
-  "behavior": "The server HTML of `Select.Trigger` has the id of `Select.Label` in `aria-labelledby`, in each order of the two parts. Base UI adds the attribute after the page hydrates.",
+  "behavior": "The server HTML of `Select.Trigger` and `Combobox.Trigger` has the id of the label part of the family in `aria-labelledby`, in each order of the two parts. Base UI adds the attribute after the page hydrates.",
   "dueWith": "packages/react/src/select/trigger/SelectTrigger.tsx"
 }

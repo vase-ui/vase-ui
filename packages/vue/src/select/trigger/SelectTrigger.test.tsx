@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KeepAlive, shallowRef } from 'vue';
 import { Field } from '@vase-ui/vue/field';
+import { Select } from '@vase-ui/vue/select';
 import {
   createRenderer,
   describeConformance,
@@ -12,7 +13,6 @@ import {
   wait,
   waitFor,
 } from '#test-utils';
-import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
 import SelectTriggerReplacement from './SelectTriggerReplacement.test.vue';
 

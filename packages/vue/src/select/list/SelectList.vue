@@ -15,6 +15,7 @@ import { toRaw } from 'vue';
 import { EMPTY_OBJECT } from '../../common/empty';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
+import { styleDisableScrollbar } from '../../utils/styles';
 import { LIST_FUNCTIONAL_STYLES } from '../popup/utils';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
@@ -56,6 +57,10 @@ const { element, elementProps } = useRenderElement('div', props, {
         store.context.scrollHandlerRef.value?.(event.currentTarget as HTMLDivElement);
       },
       style: alignItemWithTriggerActive.value ? LIST_FUNCTIONAL_STYLES : undefined,
+      class:
+        store.select('hasScrollArrows') && store.select('openMethod') !== 'touch'
+          ? styleDisableScrollbar.className
+          : undefined,
     },
     attrs,
   ],

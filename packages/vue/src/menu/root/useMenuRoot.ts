@@ -81,6 +81,18 @@ export interface UseMenuRootOptions {
    * @default true
    */
   allowEscape?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Whether the highlight clears when the pointer leaves an item. It is a value, a ref or a
+   * getter.
+   * @default true
+   */
+  resetOnPointerLeave?: MaybeRefOrGetter<boolean | undefined>;
+  /**
+   * Whether the root is disabled in addition to its `disabled` prop. It is a value, a ref or a
+   * getter. A filterable submenu follows the state of its parent menu.
+   * @default false
+   */
+  disabled?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 /**
@@ -91,7 +103,9 @@ export interface UseMenuRootOptions {
  * @param props The props of the root. A submenu root gives fewer props, because each prop is
  * optional.
  * @param options What the part gives: its emit functions and the internal props of Base UI.
- * @returns The payload of the active trigger and the actions that the part exposes.
+ * @returns The payload of the active trigger, the actions that the part exposes, and the context
+ * that the root provides. A component cannot inject what it provides, so a root that needs the
+ * context takes it from here.
  */
 export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: UseMenuRootOptions) {
   const { isSubmenu = false, virtualFocus = false } = options;
@@ -119,6 +133,10 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
   const rootId = useVaseUiId();
   const generatedPopupId = useVaseUiId();
   const renderedPopupId = shallowRef<string | undefined>(undefined);
+
+  function isDisabled() {
+    return (props.disabled ?? false) || (toValue(options.disabled) ?? false);
+  }
 
   // A registered `''` means the popup rendered with an explicitly empty id, so nothing may point
   // at the generated fallback.
@@ -150,7 +168,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
         {
           ...initialState,
           parent: parentFromContext,
-          disabled: props.disabled ?? false,
+          disabled: isDisabled(),
           highlightItemOnHover: props.highlightItemOnHover ?? true,
           modal: parentFromContext.type === undefined ? props.modal : undefined,
           rootId: rootId.value,
@@ -207,7 +225,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
 
   watch(
     () => ({
-      disabled: props.disabled ?? false,
+      disabled: isDisabled(),
       highlightItemOnHover: props.highlightItemOnHover ?? true,
       modal: parent.value.type === undefined ? props.modal : undefined,
       rootId: rootId.value,
@@ -401,6 +419,7 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     // filter highlights automatically.
     focusItemOnOpen: () => (virtualFocus ? store.select('keyboardOpen') : undefined),
     allowEscape: () => virtualFocus && loopFocus.value && allowEscape.value,
+    resetOnPointerLeave: options.resetOnPointerLeave,
     orientation,
     // A virtual-focus list can navigate on either axis, but its trigger always opens on the
     // vertical one.
@@ -534,6 +553,30 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     return rest;
   }
 
+  let previousPopup:
+    { floating: Record<string, unknown>; props: ReturnType<typeof mergeProps<'div'>> } | undefined;
+
+  // Under virtual focus the input holds `aria-activedescendant`, so the popup does not need it. The
+  // props of the popup then stay one object while the highlight moves. A new object renders the
+  // focus manager again, and Vue then patches each item again.
+  function getPopupProps() {
+    const { 'aria-activedescendant': _activeDescendant, ...floating } = listNavigation.value
+      .floating as Record<string, unknown>;
+    if (previousPopup === undefined || !isShallowEqual(previousPopup.floating, floating)) {
+      previousPopup = {
+        floating,
+        props: mergeProps(
+          FOCUSABLE_POPUP_PROPS,
+          popupListeners,
+          typeahead.floating,
+          floating,
+          dismiss.floating,
+        ),
+      };
+    }
+    return previousPopup.props;
+  }
+
   usePopupInteractionProps(store, () => ({
     activeTriggerProps: mergeProps(
       typeahead.reference,
@@ -547,13 +590,15 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
       interactionTypeProps,
     ),
     inactiveTriggerProps,
-    popupProps: mergeProps(
-      FOCUSABLE_POPUP_PROPS,
-      popupListeners,
-      typeahead.floating,
-      listNavigation.value.floating,
-      dismiss.floating,
-    ),
+    popupProps: virtualFocus
+      ? getPopupProps()
+      : mergeProps(
+          FOCUSABLE_POPUP_PROPS,
+          popupListeners,
+          typeahead.floating,
+          listNavigation.value.floating,
+          dismiss.floating,
+        ),
     itemProps: listNavigation.value.item,
     inputProps: virtualFocus ? listNavigation.value.reference : EMPTY_OBJECT,
   }));
@@ -580,5 +625,10 @@ export function useMenuRoot<Payload>(props: MenuRootProps<Payload>, options: Use
     provideFloatingTree(floatingTreeRoot);
   }
 
-  return { payload, actions };
+  return { payload, actions, context };
+}
+
+function isShallowEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
 }

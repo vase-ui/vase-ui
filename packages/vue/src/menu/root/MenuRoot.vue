@@ -154,6 +154,8 @@ export type MenuParent =
 </script>
 
 <script setup lang="ts" generic="Payload = unknown">
+import { inject, provide } from 'vue';
+import { MenuFilterProviderContext } from '../filter-provider/MenuFilterProviderContext';
 import { useMenuRoot } from './useMenuRoot';
 
 const props = withDefaults(defineProps<MenuRootProps<Payload>>(), {
@@ -205,7 +207,16 @@ defineSlots<{
   default(props: { payload: Payload | undefined }): unknown;
 }>();
 
-const { payload, actions } = useMenuRoot<Payload>(props, {
+// Only the root directly inside `Menu.FilterProvider` is filterable, so a plain
+// `Menu.SubmenuRoot` inside it stays plain.
+const filterProvider = inject(MenuFilterProviderContext, null);
+if (filterProvider !== null) {
+  provide(MenuFilterProviderContext, null);
+}
+const filterRoot = filterProvider?.useRoot();
+
+const { payload, actions, context } = useMenuRoot<Payload>(props, {
+  ...filterRoot?.rootOptions,
   onOpenChange(nextOpen, details) {
     emit('openChange', nextOpen, details);
     if (!details.isCanceled) {
@@ -219,6 +230,8 @@ const { payload, actions } = useMenuRoot<Payload>(props, {
     emit('itemHighlighted', highlightedItem, details);
   },
 });
+
+filterRoot?.provideDropdown(context);
 
 defineExpose(actions);
 </script>

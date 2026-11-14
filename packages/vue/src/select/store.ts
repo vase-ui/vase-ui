@@ -84,6 +84,11 @@ export type SelectStoreContext = ValuePopupContext<SelectRootOpenChangeEventDeta
    */
   setValue: (nextValue: any, eventDetails: SelectRootChangeEventDetails) => boolean;
   handleScrollArrowVisibility: (scroller: HTMLElement) => void;
+  /**
+   * Counts a mounted scroll arrow and returns the function that removes the count. The state
+   * `hasScrollArrows` is `true` while the count is more than zero.
+   */
+  registerScrollArrow: () => () => void;
 };
 
 export const selectors = {

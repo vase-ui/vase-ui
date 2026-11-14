@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import * as Select from '../index.parts';
 
 describe('<Select.Label />', () => {
   const { render } = createRenderer();

@@ -1,6 +1,6 @@
 import { expect, describe, it, vi } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import {
   createRenderer,
   describeConformance,

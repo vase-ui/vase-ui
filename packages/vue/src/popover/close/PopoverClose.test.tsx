@@ -9,7 +9,19 @@ import {
   fireEvent,
   flushMicrotasks,
   screen,
+  waitFor,
 } from '#test-utils';
+
+function isElementOrAncestorInert(element: HTMLElement) {
+  let current: HTMLElement | null = element;
+  while (current) {
+    if (current.getAttribute('aria-hidden') === 'true' || current.hasAttribute('inert')) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
 
 describe('<Popover.Close />', () => {
   const { render } = createRenderer();
@@ -170,6 +182,51 @@ describe('<Popover.Close />', () => {
     expect(handleOpenChange).toHaveBeenCalledTimes(1);
     expect(handleOpenChange.mock.calls[0][1].reason).toBe(REASONS.closePress);
     expect(handleOpenChange.mock.calls[0][1].trigger).toBe(undefined);
+  });
+
+  it.each([true, 'trap-focus'] as const)(
+    'enables modal focus management when `modal=%s` and close is rendered',
+    async (modal) => {
+      await render(
+        <div>
+          <button data-testid="outside">Outside</button>
+          <Popover.Root defaultOpen modal={modal}>
+            <Popover.Trigger>Trigger</Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Positioner>
+                <Popover.Popup>
+                  <Popover.Close aria-label="Close popover" />
+                </Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+
+      await waitFor(() => {
+        expect(isElementOrAncestorInert(screen.getByTestId('outside'))).toBe(true);
+      });
+    },
+  );
+
+  it('does not enable modal focus management when close is not rendered', async () => {
+    await render(
+      <div>
+        <button data-testid="outside">Outside</button>
+        <Popover.Root defaultOpen modal>
+          <Popover.Trigger>Trigger</Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner>
+              <Popover.Popup>Content</Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      </div>,
+    );
+    await flushMicrotasks();
+
+    expect(screen.getByText('Content')).toBeVisible();
+    expect(isElementOrAncestorInert(screen.getByTestId('outside'))).toBe(false);
   });
 
   it('does not close the popover while disabled', async () => {

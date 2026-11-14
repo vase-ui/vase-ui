@@ -27,7 +27,7 @@ Provides shared state to a series of radio buttons.
 
 ## Usage guidelines
 
-- **Form controls must have an accessible name**: Name the group with `aria-labelledby`, a `Field.Label` or a `Fieldset.Legend`. Name each radio with a `<label>` element, or with a `Field.Label` in a `Field.Item`. See [Labeling a radio group](#labeling-a-radio-group).
+- **Form controls must have an accessible name**: Name the group with `aria-labelledby`, a `Field.Label` or a `Fieldset.Legend`. Name each radio with a `<label>` element, or with a `Field.Label` in a `Field.Item`. See [Labeling a radio group](#labeling-a-radio-group) and the [forms guide](/handbook/forms).
 
 ## Anatomy
 

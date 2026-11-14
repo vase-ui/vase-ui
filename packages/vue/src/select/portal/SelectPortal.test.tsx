@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defineComponent, h } from 'vue';
 import type { Component } from 'vue';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
 import { createAttribute } from '../../utils/popups/createAttribute';
 import { useSelectRootContext } from '../root/SelectRootContext';

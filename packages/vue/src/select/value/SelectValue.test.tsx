@@ -1,6 +1,7 @@
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, h, shallowRef } from 'vue';
 import type { Component } from 'vue';
+import { Select } from '@vase-ui/vue/select';
 import {
   createRenderer,
   describeConformance,
@@ -9,7 +10,6 @@ import {
   screen,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
-import * as Select from '../index.parts';
 import type { SelectStore } from '../store';
 import SelectValueReplacement from './SelectValueReplacement.test.vue';
 

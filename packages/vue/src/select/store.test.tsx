@@ -1,9 +1,9 @@
 import { expect, vi, describe, it } from 'vitest';
 import { defineComponent, h } from 'vue';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, flushMicrotasks, screen } from '#test-utils';
 import { createChangeEventDetails } from '../internals/createBaseUIEventDetails';
 import { REASONS } from '../internals/reasons';
-import * as Select from './index.parts';
 import { useSelectRootContext } from './root/SelectRootContext';
 import type { SelectStore } from './store';
 

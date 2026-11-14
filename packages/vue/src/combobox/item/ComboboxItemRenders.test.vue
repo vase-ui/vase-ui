@@ -9,7 +9,7 @@ defineProps<{ items: string[]; onItemRender: () => void }>();
   <Combobox.Root :items="items" default-open>
     <Combobox.Input data-testid="input" />
     <Combobox.Portal>
-      <Combobox.Positioner>
+      <Combobox.Positioner data-testid="positioner">
         <Combobox.Popup>
           <Combobox.List>
             <template #item="{ item }">

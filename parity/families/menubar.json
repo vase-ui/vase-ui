@@ -4,15 +4,7 @@
     "docs/src/app/(docs)/react/components/menubar/**"
   ],
   "matchedCommit": "5aacdbb7852487518b982ea397885c8322a3ebc6",
-  "exceptions": [
-    {
-      "upstream": "packages/react/src/menubar/Menubar.test.tsx",
-      "describe": ["filterable menubar menus"],
-      "kind": "waits-on",
-      "waitsOn": "packages/react/src/menu/filter-provider/MenuFilterProvider.tsx",
-      "reason": "The case of the block renders `Menu.FilterProvider` and `Menu.Input`, which Vase UI does not have."
-    }
-  ],
+  "exceptions": [],
   "surfaceAdditions": [
     {
       "entry": "Menubar",

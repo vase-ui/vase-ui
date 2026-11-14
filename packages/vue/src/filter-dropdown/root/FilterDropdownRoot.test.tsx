@@ -1,9 +1,11 @@
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent, shallowRef, Teleport } from 'vue';
-import { createRenderer, flushMicrotasks, screen, waitFor } from '#test-utils';
+import type { PropType } from 'vue';
+import { createRenderer, fireEvent, flushMicrotasks, screen, waitFor } from '#test-utils';
 import * as FilterDropdown from '../../../test/filterDropdown';
 import { NOOP } from '../../common/empty';
 import { reset as resetWarnings } from '../../common/warn';
+import * as Menu from '../../menu/index.parts';
 import { useFilterDropdownRoot } from './FilterDropdownRoot';
 import type {
   FilterDropdownRootChangeEventDetails,
@@ -255,6 +257,134 @@ describe('<FilterDropdown.Root />', () => {
     await waitFor(() => {
       expect(status).toHaveTextContent('No matches for zzq');
     });
+  });
+
+  describe('prop: filter with null', () => {
+    const ServerResults = defineComponent({
+      props: {
+        items: { type: Array as PropType<string[]>, required: true },
+        autoHighlight: { type: Boolean, default: false },
+      },
+      setup: (props) => () => (
+        <Menu.FilterProvider autoHighlight={props.autoHighlight} filter={null}>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    {props.items.map((item) => (
+                      <Menu.Item key={item}>{item}</Menu.Item>
+                    ))}
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>
+      ),
+    });
+
+    it('clears a stale highlight when the item set changes', async () => {
+      const { user, setProps } = await render(<ServerResults items={['A', 'B', 'C']} />);
+
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+      // `null` runs no match pass, but the query still has to change for the highlight to be
+      // reconciled against the new results.
+      await fireEvent.input(input, { target: { value: 'q' } });
+      await waitFor(() => {
+        expect(input).toHaveFocus();
+      });
+      await user.keyboard('[ArrowDown][ArrowDown][ArrowDown]');
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('menuitem', { name: 'C' }).id,
+        );
+      });
+
+      // Results swap under the highlight. Leaving `activeIndex` alone would point the cursor at
+      // whatever moved into that slot, and Enter would run an item the user never chose.
+      await setProps({ items: ['X', 'Y', 'Z'] });
+      await flushMicrotasks();
+
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+    });
+
+    it('keeps autoHighlight seeding the first item', async () => {
+      const { setProps } = await render(<ServerResults items={['A', 'B']} autoHighlight />);
+      const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+
+      // The consumer owns matching, so the rendered set never changes here. Seeding must still
+      // follow the query.
+      await fireEvent.input(input, { target: { value: 'q' } });
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('menuitem', { name: 'A' }).id,
+        );
+      });
+
+      // A query that matches nothing, then results returning, must seed again rather than leave
+      // the list unhighlighted.
+      await setProps({ items: [] });
+      await flushMicrotasks();
+      expect(input).not.toHaveAttribute('aria-activedescendant');
+
+      await setProps({ items: ['X', 'Y'] });
+
+      await waitFor(() => {
+        expect(input).toHaveAttribute(
+          'aria-activedescendant',
+          screen.getByRole('menuitem', { name: 'X' }).id,
+        );
+      });
+    });
+  });
+
+  it('clears a stale highlight when items change with an empty query', async () => {
+    const Results = defineComponent({
+      props: { items: { type: Array as PropType<string[]>, required: true } },
+      setup: (props) => () => (
+        <Menu.FilterProvider>
+          <Menu.Root defaultOpen>
+            <Menu.Trigger>Actions</Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Positioner>
+                <Menu.Popup>
+                  <Menu.Input aria-label="Filter actions" />
+                  <Menu.List>
+                    {props.items.map((item) => (
+                      <Menu.Item key={item}>{item}</Menu.Item>
+                    ))}
+                  </Menu.List>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+        </Menu.FilterProvider>
+      ),
+    });
+
+    const { user, setProps } = await render(<Results items={['A', 'B']} />);
+    const input = screen.getByRole('searchbox', { name: 'Filter actions' });
+    await waitFor(() => {
+      expect(input).toHaveFocus();
+    });
+
+    await user.keyboard('[ArrowDown][ArrowDown]');
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      screen.getByRole('menuitem', { name: 'B' }).id,
+    );
+
+    await setProps({ items: ['B', 'A'] });
+    await flushMicrotasks();
+
+    expect(input).not.toHaveAttribute('aria-activedescendant');
   });
 });
 

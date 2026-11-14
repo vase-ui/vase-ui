@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import { createRenderer, describeConformance, screen, waitFor } from '#test-utils';
 
 describe('<Select.Group />', () => {

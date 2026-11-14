@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 
 // Vue writes a comment around each fragment and slot.
 function withoutComments(html: string) {

@@ -3,6 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import type { VaseUIComponentProps, WithVaseUIEvent } from '../../internals/types';
 import type { Align, Side } from '../../internals/useAnchorPositioning';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
+import type { FocusOption } from '../../utils/popups/focus/FloatingFocusManager.vue';
 
 export interface PopoverPopupState {
   /**
@@ -30,26 +31,60 @@ export interface PopoverPopupState {
 export interface PopoverPopupProps
   extends
     VaseUIComponentProps<PopoverPopupState>,
-    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
+  /**
+   * Determines the element to focus when the popover is opened.
+   * By default, focus moves to the first tabbable element inside the popup, except when the popover
+   * is opened by touch — then the popup itself is focused to avoid opening the virtual keyboard.
+   *
+   * - `false`: Do not move focus.
+   * - `true`: Move focus based on the default behavior (first tabbable element or popup).
+   * - An element, a component, or a ref of one: Move focus to that element.
+   * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
+   *   Return an element to focus, `true` to use the default behavior, `null` to fall back to the default behavior, or `false`/`undefined` to do nothing.
+   */
+  initialFocus?: FocusOption | undefined;
+  /**
+   * Determines the element to focus when the popover is closed.
+   *
+   * - `false`: Do not move focus.
+   * - `true`: Move focus based on the default behavior (trigger or previously focused element).
+   * - An element, a component, or a ref of one: Move focus to that element.
+   * - `function`: Called with the interaction type (`mouse`, `touch`, `pen`, or `keyboard`).
+   *   Return an element to focus, `true` to use the default behavior, `null` to fall back to the default behavior, or `false`/`undefined` to do nothing.
+   */
+  finalFocus?: FocusOption | undefined;
+}
 </script>
 
 <script setup lang="ts">
+import { isHTMLElement } from '@floating-ui/utils/dom';
 import { computed, watch } from 'vue';
 import { COMPOSITE_KEYS } from '../../internals/composite/composite';
 import { getDisabledMountTransitionStyles } from '../../internals/getDisabledMountTransitionStyles';
+import { REASONS } from '../../internals/reasons';
 import type { ComponentRenderFn, HTMLProps } from '../../internals/types';
 import { useOpenChangeComplete } from '../../internals/useOpenChangeComplete';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useToolbarRootContext } from '../../toolbar/root/ToolbarRootContext';
+import FloatingFocusManager from '../../utils/popups/focus/FloatingFocusManager.vue';
+import { useHoverPopupInteraction } from '../../utils/popups/interactions/useHoverPopupInteraction';
 import { popupTransitionStateMapping } from '../../utils/popups/popupStateMapping';
-import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
+import {
+  FOCUSABLE_POPUP_PROPS,
+  createDefaultInitialFocus,
+} from '../../utils/popups/popupStoreUtils';
 import { usePopoverPositionerContext } from '../positioner/PopoverPositionerContext';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import { useClosePartCount } from '../utils/closePart';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<PopoverPopupProps>(), { as: 'div' });
+const props = withDefaults(defineProps<PopoverPopupProps>(), {
+  as: 'div',
+  initialFocus: undefined,
+  finalFocus: undefined,
+});
 
 defineSlots<{
   default(props: { state: PopoverPopupState }): unknown;
@@ -62,7 +97,12 @@ const insideToolbar = useToolbarRootContext(true) !== undefined;
 const hasClosePart = useClosePartCount();
 
 const open = computed(() => store.select('open'));
+const mounted = computed(() => store.select('mounted'));
 const transitionStatus = computed(() => store.select('transitionStatus'));
+const activeTriggerElement = computed(() => {
+  const trigger = store.select('activeTriggerElement');
+  return isHTMLElement(trigger) ? trigger : undefined;
+});
 
 useOpenChangeComplete({
   open,
@@ -74,12 +114,25 @@ useOpenChangeComplete({
   },
 });
 
-// `immediate` also writes `false` for a popup that replaces a popup with a close part.
-watch(
-  () => store.select('modal') !== false && hasClosePart.value,
-  (focusManagerModal) => store.set('focusManagerModal', focusManagerModal),
-  { immediate: true },
+useHoverPopupInteraction(store, {
+  enabled: () => store.select('openOnHover') && !store.select('disabled'),
+  closeDelay: () => store.select('closeDelay'),
+});
+
+const defaultInitialFocus = createDefaultInitialFocus(store.context.popupRef);
+const resolvedInitialFocus = computed(() =>
+  props.initialFocus === undefined ? defaultInitialFocus : props.initialFocus,
 );
+
+const focusManagerModal = computed(() => store.select('modal') !== false && hasClosePart.value);
+// `immediate` also writes `false` for a popup that replaces a popup with a close part.
+watch(focusManagerModal, (modal) => store.set('focusManagerModal', modal), { immediate: true });
+
+// The trigger writes its guards to the store after the popup opens, so the focus manager reads the
+// refs when it needs them.
+function getInsideElements() {
+  return [store.context.beforeTriggerFocusGuardRef.value];
+}
 
 const state = computed<PopoverPopupState>(() => ({
   open: open.value,
@@ -132,6 +185,20 @@ defineExpose({ element });
 </script>
 
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
-  <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  <FloatingFocusManager
+    :store="store"
+    :open-interaction-type="store.select('openMethod')"
+    :modal="focusManagerModal"
+    :disabled="!mounted || store.select('openChangeReason') === REASONS.triggerHover"
+    :initial-focus="resolvedInitialFocus"
+    :return-focus="finalFocus"
+    restore-focus="popup"
+    :get-inside-elements="getInsideElements"
+    :previous-focusable-element="activeTriggerElement"
+    :next-focusable-element="store.context.triggerFocusTargetRef"
+    :before-content-focus-guard-ref="store.context.beforeContentFocusGuardRef"
+  >
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" />
+    <component :is="as" v-else v-bind="elementProps()"><slot :state="state" /></component>
+  </FloatingFocusManager>
 </template>

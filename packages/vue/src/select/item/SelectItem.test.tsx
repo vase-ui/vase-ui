@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, vi, describe, it } from 'vitest';
 import { defineComponent, shallowRef } from 'vue';
-import * as Select from '../index.parts';
+import { Select } from '@vase-ui/vue/select';
 import { platform } from '../../common/platform';
 import type { VaseUIEvent } from '../../internals/types';
 import {
