@@ -10,6 +10,8 @@ import {
   screen,
 } from '#test-utils';
 import DialogPopupPart from '../../../test/fixtures/DialogPopupPart.vue';
+import { DialogStoreProbe } from '../../../test/fixtures/dialogStoreProbe';
+import type { DialogStore } from '../../dialog/store/DialogStore';
 import * as Drawer from '../index.parts';
 import DrawerBackdropHydration from './DrawerBackdropHydration.test.vue';
 import DrawerBackdropReplacement from './DrawerBackdropReplacement.test.vue';
@@ -52,6 +54,26 @@ describe('<Drawer.Backdrop />', () => {
     await flushMicrotasks();
     expect(backdrop).toHaveAttribute('data-closed');
     expect(backdrop.style.pointerEvents).toBe('none');
+  });
+
+  it('shows the transition status of the drawer', async () => {
+    let store!: DialogStore<unknown>;
+    await render(
+      <Drawer.Root open>
+        <DialogStoreProbe onStore={(value) => (store = value)} />
+        <Drawer.Backdrop data-testid="backdrop" />
+      </Drawer.Root>,
+    );
+    const backdrop = screen.getByTestId('backdrop');
+
+    store.set('transitionStatus', 'starting');
+    await flushMicrotasks();
+    expect(backdrop).toHaveAttribute('data-starting-style');
+
+    store.set('transitionStatus', 'ending');
+    await flushMicrotasks();
+    expect(backdrop).toHaveAttribute('data-ending-style');
+    expect(backdrop).not.toHaveAttribute('data-starting-style');
   });
 
   it('gives the swipe variables their start values, and does not let the user select the backdrop', async () => {
