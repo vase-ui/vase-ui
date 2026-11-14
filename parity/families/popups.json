@@ -14,7 +14,7 @@
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/menu/trigger/useMixedToggleClickHandler.ts",
-      "reason": "The cases run for Popover and Menu. Vase UI does not have `Popover.Popup` and `Menu.Item`, and the trigger of Menu has no press yet."
+      "reason": "The cases run for Popover and Menu. `Popover.Popup` of Vase UI has no focus management and no `finalFocus` yet. Vase UI does not have `Menu.Item`, and the trigger of Menu has no press yet."
     },
     {
       "upstream": "packages/react/src/utils/popups/popupTriggerMap.test.ts",
