@@ -964,6 +964,44 @@ describe('useDismiss', () => {
       expect(screen.getByRole('tooltip')).toBeInTheDocument();
     });
 
+    it('does not dismiss when clicking portaled children', async () => {
+      const AppWithPortaledChildren = defineComponent({
+        setup() {
+          const open = shallowRef(true);
+          const { refs, context } = useFloating({
+            open,
+            onOpenChange: (value) => {
+              open.value = value;
+            },
+          });
+
+          const { getReferenceProps, getFloatingProps } = useTestInteractions([
+            useDismiss(context.rootStore),
+          ]);
+
+          return () => (
+            <>
+              <button {...getReferenceProps({ ref: refs.setReference })} />
+              {open.value && (
+                <div {...getFloatingProps({ ref: refs.setFloating })}>
+                  <FloatingPortal>
+                    <button data-testid="portaled-button" />
+                  </FloatingPortal>
+                </div>
+              )}
+            </>
+          );
+        },
+      });
+
+      await render(<AppWithPortaledChildren />);
+
+      await fireEvent.pointerDown(screen.getByTestId('portaled-button'), { bubbles: true });
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portaled-button')).toBeInTheDocument();
+    });
+
     it('outsidePress function guard', async () => {
       const { user } = await render(<App outsidePress={() => true} />);
       await user.click(document.body);

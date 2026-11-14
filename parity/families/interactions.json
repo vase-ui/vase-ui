@@ -16,14 +16,6 @@
       "reason": "The case asserts that Escape directly after `compositionend` keeps the popup open. Only WebKit sends `compositionend` before the `keydown` that ends a composition, so only WebKit needs that window. In the other engines Vase UI closes the popup (`BUG-6158`). The case \"ignores Escape for 5 ms after compositionend in WebKit\" tests the window in WebKit."
     },
     {
-      "upstream": "packages/react/src/utils/popups/interactions/useDismiss.test.tsx",
-      "describe": ["useDismiss", "options set to false"],
-      "title": "does not dismiss when clicking portaled children",
-      "kind": "replaced",
-      "test": "packages/vue/src/utils/popups/interactions/useDismiss.test.tsx",
-      "reason": "The case presses a plain button in a portal in the popup. Vue gives that event to no listener of the popup element, so that button is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/interactions/useListNavigation.test.tsx",
       "describe": ["useListNavigation"],
       "title": "focus management in nested lists",
