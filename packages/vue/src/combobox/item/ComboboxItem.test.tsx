@@ -15,6 +15,13 @@ import * as Combobox from '../index.parts';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import ComboboxItemRenders from './ComboboxItemRenders.test.vue';
 
+// WebKit sends a `mousemove` with no movement under a pointer that does not move, and the list
+// ignores such an event (https://github.com/mui/base-ui/issues/4002). The `mousemove` of
+// `user.hover` has no movement.
+async function moveOver(element: HTMLElement) {
+  await fireEvent.mouseMove(element, { movementX: 1 });
+}
+
 describe('<Combobox.Item />', () => {
   const { render } = createRenderer();
 
@@ -602,6 +609,7 @@ describe('<Combobox.Item />', () => {
       const item = screen.getByRole('option', { name: 'missing value' });
 
       await user.hover(item);
+      await moveOver(item);
 
       expect(input).not.toHaveAttribute('aria-activedescendant');
       expect(item).not.toHaveAttribute('data-highlighted');
@@ -709,12 +717,14 @@ describe('<Combobox.Item />', () => {
 
       const banana = screen.getByRole('option', { name: 'banana' });
       await user.hover(banana);
+      await moveOver(banana);
       await waitFor(() => {
         expect(banana).toHaveAttribute('data-highlighted');
       });
 
       const cherry = screen.getByRole('option', { name: 'cherry' });
       await user.hover(cherry);
+      await moveOver(cherry);
       await waitFor(() => {
         expect(cherry).toHaveAttribute('data-highlighted');
       });
