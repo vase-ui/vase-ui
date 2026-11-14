@@ -183,10 +183,10 @@ export function useCompositeRoot<Metadata>(
 
   // A reset of a form and a controlled value change the active item while the composite does not
   // have the focus. The tab stop then moves to the active item, so the Tab key enters the
-  // composite on that item, as it does for a native radio group. When the active item goes away,
-  // the tab stop moves to the first item that can hold it, as the APG radio pattern says for a
-  // group with no checked radio. While the composite has the focus, the highlight stays on the
-  // item that the user chose, and the keys continue from it.
+  // composite on that item, as it does for a native radio group. When the active item loses its
+  // state, the tab stop moves to the first item that can hold it, as the APG radio pattern says
+  // for a group with no checked radio. While the composite has the focus, the highlight stays on
+  // the item that the user chose, and the keys continue from it.
   // Limit: the observer and the focus test cover the element of the root only, as the search for
   // the tab stop of the server HTML does.
   function moveTabStopToActiveItem() {
@@ -197,11 +197,6 @@ export function useCompositeRoot<Metadata>(
     }
 
     const activeItem = findActiveItem(elements);
-    // A composite with no active item keeps the tab stop of the user. Thus the move runs only for
-    // a change of the active item.
-    if (activeItem === lastActiveItem) {
-      return;
-    }
     const previousActiveItem = lastActiveItem;
     lastActiveItem = activeItem;
 
@@ -214,9 +209,10 @@ export function useCompositeRoot<Metadata>(
       return;
     }
 
-    // An active item that leaves the list is a removal. `onMapChange` has already moved the tab
-    // stop for it, as in Base UI.
-    if (elements.includes(previousActiveItem)) {
+    // A composite that had no active item keeps the tab stop of the user. An active item that
+    // leaves the list is a removal, and `onMapChange` has already moved the tab stop for it, as in
+    // Base UI.
+    if (previousActiveItem && elements.includes(previousActiveItem)) {
       highlightIndex(elements.findIndex((_, index) => canHoldTabStop(elements, index)));
     }
   }

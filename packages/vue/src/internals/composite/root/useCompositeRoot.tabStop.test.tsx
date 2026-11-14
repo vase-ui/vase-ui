@@ -193,7 +193,7 @@ describe('VUE-51: the tab stop follows the active item', () => {
 
   describe('KeepAlive', () => {
     const NEW_ITEM = { name: 'moves the tab stop to a new active item', value: 'a' };
-    const NO_ITEM = { name: 'moves the tab stop when no item is active', value: null };
+    const NO_ITEM = { name: 'moves the tab stop for no active item', value: null };
 
     it.each([
       { ...NEW_ITEM, part: 'the items' },
