@@ -13,16 +13,6 @@
       "reason": "The pull request that first needs the file ports it, with its tests."
     },
     {
-      "upstream": "packages/react/src/utils/popups/InternalBackdrop.tsx",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
-      "upstream": "packages/react/src/utils/popups/useAnchoredPopupScrollLock.ts",
-      "kind": "waits-on",
-      "reason": "The pull request that first needs the file ports it, with its tests."
-    },
-    {
       "upstream": "packages/react/src/utils/popups/useTriggerFocusGuards.ts",
       "kind": "waits-on",
       "reason": "The pull request that first needs the file ports it, with its tests."
