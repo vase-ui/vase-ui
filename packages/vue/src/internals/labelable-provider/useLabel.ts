@@ -13,8 +13,11 @@ import { useRegisteredId } from './useRegisteredId';
  * `useRenderElement` as `props`: `props: (attrs) => [labelProps.value, attrs]`.
  */
 export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelReturnValue> {
-  const { controlId: contextControlId, registerLabelId: registerContextLabelId } =
-    useLabelableContext();
+  const {
+    controlId: contextControlId,
+    registerLabelId: registerContextLabelId,
+    reaches,
+  } = useLabelableContext();
 
   const ownId = useVaseUiId();
 
@@ -28,6 +31,8 @@ export function useLabel(params: UseLabelParameters = {}): ComputedRef<UseLabelR
       registerContextLabelId(source, getId);
       params.registerLabelId?.(source, getId);
     },
+    params.element,
+    reaches,
   );
 
   const resolveControlId = () => contextControlId.value ?? toValue(params.fallbackControlId);
@@ -106,9 +111,14 @@ export interface UseLabelParameters {
    * Registers the label with the root that owns it, as the labelable context does.
    * A root that has labels of its own makes the function with `createLabelIdRegistry()`.
    * The function gets a getter for the id of the label, and `undefined` when the label goes away.
-   * The getter returns `undefined` while `KeepAlive` has the label deactivated.
+   * The getter returns `undefined` while `KeepAlive` holds the label.
    */
   registerLabelId?: RegisterId | undefined;
+  /**
+   * The element of the label. With it, the getter of the labelable context also returns
+   * `undefined` for a label that mounts in a branch that `KeepAlive` holds.
+   */
+  element?: MaybeRefOrGetter<Element | null | undefined> | undefined;
   /**
    * A focus handler for a label that is not native.
    * If it is omitted, the click focuses the control that has the resolved id.

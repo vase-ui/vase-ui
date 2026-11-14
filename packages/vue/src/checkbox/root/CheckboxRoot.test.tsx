@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { createSSRApp, defineComponent, h, onMounted, shallowRef } from 'vue';
+import { createSSRApp, defineComponent, h, KeepAlive, onMounted, shallowRef } from 'vue';
 import { Checkbox } from '@vase-ui/vue/checkbox';
 import { CheckboxGroup } from '@vase-ui/vue/checkbox-group';
 import { Field } from '@vase-ui/vue/field';
@@ -3090,6 +3090,124 @@ describe('<Checkbox.Root />', () => {
       expect(handleKeydown.mock.results.at(-1)?.value).toBe(false);
       expect(handleSubmit).toHaveBeenCalledTimes(1);
       expect(screen.getByRole('checkbox')).toHaveAttribute('aria-checked', 'false');
+    });
+  });
+
+  describe('a checkbox that mounts while KeepAlive holds its branch', () => {
+    function createBranch(renderExtra: () => unknown) {
+      const visible = shallowRef(true);
+      const extra = shallowRef(false);
+      const Branch = defineComponent(() => () => <div>{extra.value ? renderExtra() : null}</div>);
+      const HeldBranch = defineComponent(() => () => (
+        <KeepAlive>{visible.value ? <Branch /> : null}</KeepAlive>
+      ));
+      async function mountWhileHeld() {
+        visible.value = false;
+        await flushMicrotasks();
+        extra.value = true;
+        await flushMicrotasks();
+      }
+      async function show() {
+        visible.value = true;
+        await flushMicrotasks();
+      }
+      return { HeldBranch, mountWhileHeld, show };
+    }
+
+    it('does not block the form while held, and blocks it after the show', async () => {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+        <Checkbox.Root key="box" required data-testid="box" />
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="terms">
+            <HeldBranch />
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await mountWhileHeld();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+      await show();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('box')).toHaveFocus();
+    });
+
+    it('does not block the form of its group while held, and blocks it after the show', async () => {
+      const handleSubmit = vi.fn();
+      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+        <Checkbox.Root key="b" value="b" required />
+      ));
+      const { user } = await render(() => (
+        <Form onFormSubmit={handleSubmit}>
+          <Field.Root name="fruits">
+            <CheckboxGroup defaultValue={[]}>
+              <Checkbox.Root value="a" />
+              <HeldBranch />
+            </CheckboxGroup>
+          </Field.Root>
+          <button type="submit">Submit</button>
+        </Form>
+      ));
+
+      await mountWhileHeld();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+      await show();
+      await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not in `aria-controls` of the parent checkbox while held', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+        <Checkbox.Root key="b" value="b" data-testid="b" />
+      ));
+      await render(() => (
+        <CheckboxGroup allValues={['b']}>
+          <Checkbox.Root parent data-testid="parent" />
+          <HeldBranch />
+        </CheckboxGroup>
+      ));
+      const parent = screen.getByTestId('parent');
+
+      await mountWhileHeld();
+
+      expect(parent).not.toHaveAttribute('aria-controls');
+
+      await show();
+
+      expect(parent).toHaveAttribute('aria-controls', screen.getByTestId('b').id);
+    });
+
+    it('does not give its id to the `for` of the label while held', async () => {
+      const { HeldBranch, mountWhileHeld, show } = createBranch(() => (
+        <Checkbox.Root key="box" id="box" />
+      ));
+      await render(() => (
+        <Field.Root>
+          <Field.Label data-testid="label">Terms</Field.Label>
+          <HeldBranch />
+        </Field.Root>
+      ));
+      const label = screen.getByTestId('label');
+
+      await mountWhileHeld();
+
+      expect(label).not.toHaveAttribute('for', 'box');
+
+      await show();
+
+      expect(label).toHaveAttribute('for', 'box');
     });
   });
 

@@ -74,7 +74,7 @@ defineSlots<{
 }>();
 
 const formatLocale = useFormatLocale(() => props.locale);
-const { defaultLabelId, setLabelId, getAriaLabelledBy } = useLabelId();
+const { labelRoot, getAriaLabelledBy } = useLabelId(() => element.value);
 
 // A `null` or non-finite value keeps the progress indeterminate.
 // Otherwise one clamped value and one percentage feed every output: the status, `aria-valuenow`,
@@ -124,8 +124,7 @@ provide(ProgressRootContext, {
   locale: computed(() => props.locale),
   percentageValue,
   value: computed(() => props.value),
-  setLabelId,
-  defaultLabelId,
+  labelRoot,
   state,
 });
 

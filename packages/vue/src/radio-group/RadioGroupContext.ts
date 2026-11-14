@@ -33,6 +33,8 @@ export interface RadioGroupContext<Value> {
    * that it gets. The group handles the first call for each `reset` event.
    */
   reset: (event: Event) => void;
+  /** Whether an id reference of the group reaches `element`. */
+  reaches: (element: Element) => boolean;
 }
 
 export const RadioGroupContext: InjectionKey<RadioGroupContext<any>> = Symbol();
