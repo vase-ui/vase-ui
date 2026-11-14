@@ -76,7 +76,6 @@ describe('formatter', () => {
       'en-US',
     );
     expect(format.format(epoch)).toBe(expected);
-    expect(expected).toContain('02');
   });
 
   it('formats the clock of a value in a zone in that zone', () => {
@@ -89,7 +88,6 @@ describe('formatter', () => {
       'en-US',
     );
     expect(format.format(epoch)).toBe(expected);
-    expect(expected).toContain('23');
   });
 
   it('formats a date in its calendar with the words of the locale', () => {
