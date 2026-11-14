@@ -16,6 +16,7 @@
       <li><NuxtLink to="/checkbox">Checkbox</NuxtLink></li>
       <li><NuxtLink to="/checkbox-group">Checkbox Group</NuxtLink></li>
       <li><NuxtLink to="/radio-group">Radio Group</NuxtLink></li>
+      <li><NuxtLink to="/slider">Slider</NuxtLink></li>
       <li><NuxtLink to="/scroll-area">Scroll Area</NuxtLink></li>
       <li><NuxtLink to="/field">Field</NuxtLink></li>
       <li><NuxtLink to="/tabs">Tabs</NuxtLink></li>
