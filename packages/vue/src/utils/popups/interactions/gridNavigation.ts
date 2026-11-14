@@ -20,7 +20,7 @@ import type { DisabledIndices } from '../../../internals/composite/listIndex';
 export function gridNavigation(
   event: KeyboardEvent,
   prevIndex: number,
-  listRef: Readonly<Ref<Array<HTMLElement | null>>>,
+  listRef: Readonly<Ref<(HTMLElement | null)[]>>,
   orientation: 'horizontal' | 'vertical' | 'both',
   loopFocus: boolean,
   rtl: boolean,

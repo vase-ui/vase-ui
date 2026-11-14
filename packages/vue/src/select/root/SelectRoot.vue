@@ -68,6 +68,15 @@ export interface SelectRootProps<Value, Multiple extends boolean | undefined = f
    */
   open?: boolean | undefined;
   /**
+   * Determines if the select enters a modal state when open.
+   * - `true`: user interaction is limited to the select: document page scroll is locked and pointer interactions on outside elements are disabled.
+   * - `false`: user interaction with the rest of the document is allowed.
+   *
+   * On touch devices, a `true` modal blocks outside taps but leaves the page scrollable unless the popup spans nearly the full viewport width, matching native iOS behavior.
+   * @default true
+   */
+  modal?: boolean | undefined;
+  /**
    * Data structure of the items rendered in the select popup.
    * When specified, `<Select.Value>` renders the label of the selected item instead of the raw value.
    * A label is a string, a number, or a function that returns the content of the label.
@@ -194,6 +203,7 @@ const props = withDefaults(defineProps<SelectRootProps<Value, Multiple>>(), {
   readOnly: false,
   required: false,
   highlightItemOnHover: true,
+  modal: true,
 });
 
 const emit = defineEmits<{
@@ -289,7 +299,7 @@ const {
         ...initialState,
         id: controlId.value,
         labelId: labelId.value,
-        modal: true,
+        modal: props.modal,
         selectionMode: isMultiple.value ? 'multiple' : 'single',
         disabled: isDisabled.value,
         readOnly: props.readOnly,
@@ -572,6 +582,7 @@ const itemRoot = computed(() => ({
 usePopupInteractionProps(store, () => ({
   id: controlId.value,
   labelId: labelId.value,
+  modal: props.modal,
   selectionMode: isMultiple.value ? ('multiple' as const) : ('single' as const),
   disabled: isDisabled.value,
   readOnly: props.readOnly,

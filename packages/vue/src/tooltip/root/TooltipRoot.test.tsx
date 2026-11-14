@@ -53,7 +53,7 @@ type TestTooltipProps = {
   popupProps?: Record<string, unknown>;
 };
 
-const testTooltipProps: Array<keyof TestTooltipProps> = [
+const testTooltipProps: (keyof TestTooltipProps)[] = [
   'rootProps',
   'triggerProps',
   'portalProps',
@@ -127,7 +127,7 @@ describe('<Tooltip.Root />', () => {
 
   it('keeps the payload while a controlled reopen moves to another trigger', async () => {
     const handle = Tooltip.createHandle<string>();
-    const payloads: Array<string | undefined> = [];
+    const payloads: (string | undefined)[] = [];
     const state = shallowRef<{ open: boolean; triggerId: string | null }>({
       open: true,
       triggerId: 'first',
@@ -2132,7 +2132,7 @@ describe('<Tooltip.Root />', () => {
       expect(popup).not.toHaveAttribute('data-instant');
 
       // The mark lasts only for the exit, so an observer records each value that it replaces.
-      const replacedValues: Array<string | null> = [];
+      const replacedValues: (string | null)[] = [];
       const observer = new MutationObserver((records) => {
         replacedValues.push(...records.map((record) => record.oldValue));
       });

@@ -399,14 +399,14 @@ describe('<ToggleGroup />', () => {
   });
 
   describe.skipIf(isJSDOM)('keyboard interactions', () => {
-    const arrowKeyCases: Array<{
+    const arrowKeyCases: {
       direction: TextDirection;
       orientation: Orientation;
       nextKey: string;
       prevKey: string;
       ignoredNextKey: string;
       ignoredPrevKey: string;
-    }> = [
+    }[] = [
       {
         direction: 'ltr',
         orientation: 'horizontal',

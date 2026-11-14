@@ -242,7 +242,7 @@ function overrideElementStyle(element: HTMLElement, property: string, value: str
 }
 
 function applyElementStyles(element: HTMLElement, styles: Record<string, string>) {
-  const restorers: Array<() => void> = [];
+  const restorers: (() => void)[] = [];
 
   for (const [key, value] of Object.entries(styles)) {
     restorers.push(overrideElementStyle(element, key, value));

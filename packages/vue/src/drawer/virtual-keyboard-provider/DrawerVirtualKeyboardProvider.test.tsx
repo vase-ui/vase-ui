@@ -175,7 +175,7 @@ function setScrollSize(element: HTMLElement, clientHeight: number, scrollHeight:
 // field in `focus()`, but Firefox and WebKit can reveal it after the case sets the position.
 function scrollInstantly(element: HTMLElement) {
   element.scrollTo = ((options?: ScrollToOptions | number) => {
-    if (typeof options === 'object' && options !== null && options.top !== undefined) {
+    if (typeof options === 'object' && options?.top !== undefined) {
       element.scrollTop = options.top;
     }
   }) as typeof element.scrollTo;
@@ -1675,7 +1675,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
     scroll.getBoundingClientRect = () => new DOMRect(0, 300, 320, scrollBottom - 300);
     setFieldTop(input, scroll, 650);
     const scrollToSpy = vi.fn((options?: ScrollToOptions | number) => {
-      if (typeof options === 'object' && options !== null && options.top !== undefined) {
+      if (typeof options === 'object' && options?.top !== undefined) {
         scroll.scrollTop = options.top;
       }
     });
@@ -2835,7 +2835,7 @@ describe('<Drawer.VirtualKeyboardProvider />', () => {
 
     function spyOnScrollTo(scroll: HTMLElement) {
       const scrollToSpy = vi.fn((options?: ScrollToOptions | number) => {
-        if (typeof options === 'object' && options !== null && options.top !== undefined) {
+        if (typeof options === 'object' && options?.top !== undefined) {
           scroll.scrollTop = options.top;
         }
       });

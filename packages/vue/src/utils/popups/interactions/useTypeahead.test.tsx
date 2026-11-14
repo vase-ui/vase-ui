@@ -28,7 +28,7 @@ interface MatchSpyProps {
 
 type ImplProps = MatchSpyProps &
   Pick<UseTypeaheadProps, 'onTyping'> & {
-    list?: Array<string> | undefined;
+    list?: string[] | undefined;
     open?: boolean | undefined;
     onOpenChange?: ((open: boolean) => void) | undefined;
     addUseClick?: boolean | undefined;
@@ -85,7 +85,7 @@ const comboboxProps = ['onMatch', 'onTyping', 'list', 'open'] as const;
 const Combobox = defineComponent(
   (
     props: MatchSpyProps &
-      Pick<UseTypeaheadProps, 'onTyping'> & { list?: Array<string>; open?: boolean },
+      Pick<UseTypeaheadProps, 'onTyping'> & { list?: string[]; open?: boolean },
   ) => {
     const { getReferenceProps, getFloatingProps } = useImpl(props);
     return () => (
@@ -99,7 +99,7 @@ const Combobox = defineComponent(
 );
 
 const ComboboxWithElementsRef = defineComponent(
-  (props: MatchSpyProps & { list?: Array<string>; hiddenIndices?: Array<number> }) => {
+  (props: MatchSpyProps & { list?: string[]; hiddenIndices?: number[] }) => {
     const activeIndex = shallowRef<null | number>(null);
     const open = shallowRef(true);
     const { refs, context } = useFloating({
@@ -109,7 +109,7 @@ const ComboboxWithElementsRef = defineComponent(
       },
     });
     const listRef = shallowRef(props.list ?? ['apple', 'apricot', 'banana']);
-    const elementsRef = shallowRef<Array<HTMLElement | null>>([]);
+    const elementsRef = shallowRef<(HTMLElement | null)[]>([]);
     const typeahead = useTypeahead(context.rootStore, {
       listRef,
       elementsRef,
@@ -276,7 +276,7 @@ describe('useTypeahead', () => {
   });
 
   const App1 = defineComponent(
-    (props: MatchSpyProps & { list: Array<string> }) => {
+    (props: MatchSpyProps & { list: string[] }) => {
       const { getReferenceProps, getFloatingProps, activeIndex, open } = useImpl(props);
       const inputRef = shallowRef<HTMLInputElement | null>(null);
 
@@ -419,7 +419,7 @@ describe('useTypeahead', () => {
     const List = defineComponent(
       (props: {
         options: Omit<Partial<UseTypeaheadProps>, 'listRef'>;
-        list: Array<string>;
+        list: string[];
         open?: boolean;
       }) => {
         const { refs, context } = useFloating({ open: () => props.open ?? true });

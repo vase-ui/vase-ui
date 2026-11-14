@@ -39,6 +39,7 @@ type HandlerValue = Handler | Handler[] | null | false | undefined;
 
 const EMPTY_PROPS = {};
 
+/* eslint-disable @typescript-eslint/unified-signatures -- The overloads are the public signature of Base UI, one for each count of props objects. */
 /**
  * Merges sets of Vue props. The rightmost set wins, as with `Object.assign`: its fields replace
  * the conflicting fields of the sets to its left. Event handlers, `class` and `style` have other
@@ -96,6 +97,7 @@ export function mergeProps<T extends ElementType>(
   a: InputProps<T>,
   b: InputProps<T>,
 ): MergedProps<T>;
+/* eslint-enable @typescript-eslint/unified-signatures */
 export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
   if (!c && !d && !e && !a) {
     return createInitialMergedProps(b);
@@ -134,7 +136,7 @@ export function mergeProps(a: any, b: any, c?: any, d?: any, e?: any) {
  */
 export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): MergedProps<T> {
   if (props.length === 0) {
-    return EMPTY_PROPS as MergedProps<T>;
+    return EMPTY_PROPS;
   }
   if (props.length === 1) {
     return createInitialMergedProps(props[0]) as MergedProps<T>;
@@ -153,7 +155,7 @@ export function mergePropsN<T extends ElementType>(props: InputProps<T>[]): Merg
 function createInitialMergedProps<T extends ElementType>(inputProps: InputProps<T>) {
   if (isPropsGetter(inputProps)) {
     // The code does not wrap a handler that a props getter returns. Such a handler keeps its rules.
-    return { ...inputProps(EMPTY_PROPS as MergedProps<T>) };
+    return { ...inputProps(EMPTY_PROPS) };
   }
 
   return copyInitialProps(inputProps);

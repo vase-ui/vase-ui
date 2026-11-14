@@ -10,6 +10,48 @@ import type { SelectStore } from './store';
 describe('select store synchronization', () => {
   const { render } = createRenderer();
 
+  it('publishes synchronized values in a single store transaction', async () => {
+    type Snapshot = { id: string | undefined; modal: boolean; disabled: boolean };
+    const snapshots: Snapshot[] = [];
+
+    // A part reads the store in its render. Each render records the values that it sees.
+    const SnapshotProbe = defineComponent(() => {
+      const store = useSelectRootContext();
+      return () => {
+        const { id, modal, disabled } = store.state;
+        snapshots.push({ id, modal, disabled });
+        return null;
+      };
+    });
+
+    const SynchronizationFixture = defineComponent({
+      props: {
+        id: { type: String, required: true },
+        modal: { type: Boolean, required: true },
+        disabled: { type: Boolean, required: true },
+      },
+      setup: (props) => () => (
+        <Select.Root id={props.id} modal={props.modal} disabled={props.disabled}>
+          <SnapshotProbe />
+          <Select.Trigger />
+        </Select.Root>
+      ),
+    });
+
+    const { setProps } = await render(<SynchronizationFixture id="first" modal disabled={false} />);
+    snapshots.length = 0;
+
+    await setProps({ id: 'second', modal: false, disabled: true });
+
+    expect(snapshots.some((snapshot) => snapshot.id === 'second' && snapshot.modal)).toBe(false);
+    expect(snapshots.some((snapshot) => snapshot.id === 'first' && !snapshot.modal)).toBe(false);
+    expect(snapshots.some((snapshot) => snapshot.id === 'second' && !snapshot.disabled)).toBe(
+      false,
+    );
+    expect(snapshots.some((snapshot) => snapshot.id === 'first' && snapshot.disabled)).toBe(false);
+    expect(snapshots).toContainEqual({ id: 'second', modal: false, disabled: true });
+  });
+
   it('provides setOpen to a descendant ref callback on the first commit', async () => {
     const handleOpenChange = vi.fn();
     let invoked = false;

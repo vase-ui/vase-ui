@@ -14,6 +14,7 @@ import type { FamilyFiles } from '../parity/repository.ts';
 import type { SurfaceFile, SurfacePart } from '../parity/typesMd.ts';
 import { createVaseProject } from '../parity/vaseSurface.ts';
 import type {
+  ClassSurface,
   ComponentSurface,
   FunctionSurface,
   MemberSurface,
@@ -25,6 +26,7 @@ import { docsFolderGlobs } from './upstreamDocs.ts';
 export interface ApiProp {
   name: string;
   type: string;
+  /** The text of the `@default` tag of the prop, or `null`. */
   default: string | null;
   required: boolean;
   description: string;
@@ -69,30 +71,51 @@ export interface ApiFunction extends FunctionSurface {
   name: string;
 }
 
+export interface ApiClass extends ClassSurface {
+  /** `Tooltip.Handle`. */
+  name: string;
+}
+
 export interface ApiType {
   /** `useRender.Parameters`. */
   name: string;
   properties: PropertySurface[];
+  /** The values of a union of strings, such as `ImageLoadingStatus`, in the sequence of the declaration. Empty for a type with properties. */
+  values: string[];
 }
 
 export interface ApiReference {
   parts: ApiPart[];
   functions: ApiFunction[];
+  classes: ApiClass[];
   types: ApiType[];
 }
 
 // Base UI puts `className`, `style` and `render` last. These are their Vue names.
 const SHARED_PROPS = ['stateClass', 'stateStyle', 'as'];
 
-function propsOf({ props }: ComponentSurface): ApiProp[] {
+// Vue gives `undefined` to a controlled prop, and a composable can calculate a default. The `@default`
+// tag gives the default that a user gets.
+function propsOf({ props }: ComponentSurface, defaults: Map<string, string | null>): ApiProp[] {
   const rank = (name: string): number => SHARED_PROPS.indexOf(name);
   return [...props]
-    .map(([name, prop]) => ({ name, ...prop }))
+    .map(([name, prop]) => ({ name, ...prop, default: defaults.get(name) ?? null }))
     .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, 'en'));
 }
 
 function membersOf(members: Map<string, MemberSurface>): ApiMember[] {
   return [...members].map(([name, { type, description }]) => ({ name, type, description }));
+}
+
+/** The text of the `@default` tag of each property of the exported type `typeName`. */
+function documentedDefaults(
+  project: VaseProject,
+  entryFile: string,
+  typeName: string,
+): Map<string, string | null> {
+  const match = project.findExports(entryFile, typeName).find(({ path }) => path === typeName);
+  const properties = (match && project.readProperties(match)) ?? [];
+  return new Map(properties.map(({ name, default: text }) => [name, text]));
 }
 
 function constantsOf(project: VaseProject, entryFile: string, namespace: string): ApiConstant[] {
@@ -124,7 +147,7 @@ export function buildApiParts(
         description: component.description,
         hasChildren:
           component.slots.get('render')?.props.some(({ name }) => name === 'children') === true,
-        props: propsOf(component),
+        props: propsOf(component, documentedDefaults(project, entryFile, `${flatName}Props`)),
         events: membersOf(component.emits),
         slots: [...component.slots].map(([name, slot]) => ({ name, ...slot })),
         exposed: membersOf(component.exposed),
@@ -183,20 +206,43 @@ export function buildApiFunctions(
 }
 
 /**
- * The types of a `types.md` that have one property or more, in its sequence. A name with no export
- * in the entry file is left out.
+ * The classes of a `types.md`: the names of its functions that are a class export, in their
+ * sequence. The parser of the `types.md` puts a class, such as `Handle`, with the functions.
+ */
+export function buildApiClasses(
+  project: VaseProject,
+  entryFile: string,
+  file: SurfaceFile,
+): ApiClass[] {
+  return file.functions.flatMap(({ name: title }) => {
+    const [match] = project.findExports(entryFile, title);
+    const surface = match && project.readClass(match);
+    return match && surface ? [{ name: match.path, ...surface }] : [];
+  });
+}
+
+/**
+ * The types and then the additional types of a `types.md`, in its sequence. The properties are in
+ * the sequence of their names. A type with no property is left out, unless it is a union of strings.
+ * So is a name with no export in the entry file.
  */
 export function buildApiTypes(
   project: VaseProject,
   entryFile: string,
   file: SurfaceFile,
 ): ApiType[] {
-  return file.types.flatMap(({ name }) => {
+  return [...file.types, ...file.additionalTypes].flatMap(({ name }) => {
     const match = project
       .findExports(entryFile, name.slice(name.lastIndexOf('.') + 1))
       .find(({ path }) => path === name);
-    const properties = match && project.readProperties(match);
-    return properties && properties.length > 0 ? [{ name, properties }] : [];
+    // TypeScript gives the properties of a mapped type, such as an `Omit`, in an order that changes
+    // with the order in which it reads the program.
+    const properties = ((match && project.readProperties(match)) ?? []).sort((a, b) =>
+      a.name.localeCompare(b.name, 'en'),
+    );
+    const values =
+      match && properties.length === 0 ? (project.readUnionValues(entryFile, name) ?? []) : [];
+    return properties.length > 0 || values.length > 0 ? [{ name, properties, values }] : [];
   });
 }
 
@@ -243,7 +289,9 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         `${extractFile(family)} has no types.md, so the API reference of ${family} has no source. Add the glob ${docsFolderGlobs(family)} to "upstreamPaths" in ${familyFile(family)}. Then run \`${extractCommand(family)}\`.`,
       );
     }
-    const vaseProject = (project ??= createVaseProject(join(root, 'packages/vue/tsconfig.json')));
+    const vaseProject = (project ??= createVaseProject(
+      join(root, 'packages/vue/tsconfig.build.json'),
+    ));
     const entryFileOf = (file: SurfaceFile): string =>
       join(root, VASE_SOURCE_ROOT, docsFolderOf(file), 'index.ts');
     const build = <T>(
@@ -264,6 +312,7 @@ export function createApiReferenceReader(root = REPOSITORY_ROOT): (family: strin
         ),
       ),
       functions: build(buildApiFunctions),
+      classes: build(buildApiClasses),
       types: build(buildApiTypes),
     };
   };

@@ -512,8 +512,10 @@ function handlePaste(event: ClipboardEvent) {
   // `type` with a selection-less one (`email`, `number`) is unsupported either way: the caret
   // restore below throws on those, so there is no working behavior to preserve here.
   const input = event.currentTarget as HTMLInputElement;
+  /* eslint-disable @typescript-eslint/no-non-null-assertion -- An input of `type="text"` always reports a selection range. */
   const selectionStart = input.selectionStart!;
   const selectionEnd = input.selectionEnd!;
+  /* eslint-enable @typescript-eslint/no-non-null-assertion */
   const nextText =
     inputValue.slice(0, selectionStart) + pastedData + inputValue.slice(selectionEnd);
 

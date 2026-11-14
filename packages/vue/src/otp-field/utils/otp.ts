@@ -52,7 +52,7 @@ export function normalizeOTPValueWithDetails(
   value: string | null | undefined,
   length: number,
   validationType: OTPValidationType,
-  normalizeValue?: ((value: string) => string) | undefined,
+  normalizeValue?: (value: string) => string,
 ): readonly [value: string, didRejectCharacters: boolean] {
   const strippedValue = stripOTPWhitespace(value);
   const validation = getOTPValidationConfig(validationType);
@@ -80,7 +80,7 @@ export function normalizeOTPValue(
   value: string | null | undefined,
   length: number,
   validationType: OTPValidationType,
-  normalizeValue?: ((value: string) => string) | undefined,
+  normalizeValue?: (value: string) => string,
 ) {
   return normalizeOTPValueWithDetails(value, length, validationType, normalizeValue)[0];
 }
@@ -95,7 +95,7 @@ export function replaceOTPValue(
   nextValue: string,
   length: number,
   validationType: OTPValidationType,
-  normalizeValue?: ((value: string) => string) | undefined,
+  normalizeValue?: (value: string) => string,
 ) {
   const normalizedValue = normalizeOTPValue(nextValue, length, validationType, normalizeValue);
   const prefix = currentValue.slice(0, index);
