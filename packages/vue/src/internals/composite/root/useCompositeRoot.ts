@@ -160,7 +160,7 @@ export function useCompositeRoot<Metadata>(
 
   // An item that is disabled or hidden must not be the entry point, as in `Tabs.Tab` of Base UI.
   // `isListIndexDisabled` reads `aria-disabled` only when the root has no `disabledIndices`.
-  function canHoldTabStop(elements: ReadonlyArray<HTMLElement | null>, index: number) {
+  function canHoldTabStop(elements: readonly (HTMLElement | null)[], index: number) {
     const element = elements[index];
     return (
       element != null &&
@@ -169,7 +169,7 @@ export function useCompositeRoot<Metadata>(
     );
   }
 
-  function readActiveItem(elements: ReadonlyArray<HTMLElement | null>) {
+  function readActiveItem(elements: readonly (HTMLElement | null)[]) {
     const index = elements.findIndex((element) => element?.hasAttribute(ACTIVE_COMPOSITE_ITEM));
     return {
       item: elements[index] ?? null,
