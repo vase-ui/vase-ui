@@ -8,7 +8,6 @@ import {
   isJSDOM,
   screen,
   waitFor,
-  waitForPositioned,
 } from '#test-utils';
 import type { HTMLProps } from '../../internals/types';
 import * as Autocomplete from '../../autocomplete/index.parts';
@@ -673,8 +672,6 @@ describe('<Combobox.Item />', () => {
       await waitFor(() => expect(screen.getByRole('listbox')).not.toBe(null));
       expect(screen.getAllByRole('option')).toHaveLength(3);
 
-      // The first position pass renders the positioner after the mount. The count starts after that pass.
-      await waitForPositioned(screen.getByTestId('positioner'));
       renderSpy.mockClear();
 
       // "a" matches all three items, so the filtered set is unchanged and every item stays mounted.
