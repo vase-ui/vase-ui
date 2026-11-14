@@ -12,7 +12,11 @@ export type IfEquals<T, U, Y = unknown, N = never> =
  * `Actual` is almost always `typeof value`.
  *
  * @example `expectType<number | string, typeof value>(value)`
- * If `typeof value` is not identical to `number | string`, `value` is not assignable to `never`.
- * TypeScript then shows a type error.
+ * If `typeof value` is not identical to `number | string`, the call needs a second argument.
+ * TypeScript then reports TS2554: "Expected 2 arguments, but got 1."
+ * The helper checks the count of the arguments, not the type of `value`.
+ * A `never` value is assignable to each type, so a type check cannot refuse it.
  */
-export function expectType<Expected, Actual>(_actual: IfEquals<Actual, Expected, Actual>): void {}
+export function expectType<Expected, Actual>(
+  ..._actual: IfEquals<Actual, Expected, [actual: Actual], [actual: Actual, typeMismatch: never]>
+): void {}
