@@ -1139,6 +1139,12 @@ describe('FloatingFocusManager', () => {
         focusBefore: false,
         focused: 'reference',
       },
+      {
+        name: 'null type, and the outside is inert',
+        manager: { openInteractionType: null, outsideElementsInert: true },
+        focusBefore: true,
+        focused: 'before',
+      },
     ])('moves the focus to the $focused when $name', async ({ manager, focusBefore, focused }) => {
       await render(
         <div>
