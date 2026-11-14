@@ -232,8 +232,13 @@ function addFrame({
   return { frame, loaded };
 }
 
-/** A real press in the iframe. The default position is on the button of `addFrame`. */
+/**
+ * A real press in the iframe. The default position is on the button of `addFrame`. Chromium sends
+ * the page no `pointerover` event for a press in a frame, so the test setup does not see the
+ * pointer. The helper moves the pointer to a point outside the page when the test ends.
+ */
 async function pressInFrame(frame: HTMLIFrameElement, position = { x: 20, y: 20 }) {
+  onTestFinished(() => userEvent.pointer({ coords: { x: -1, y: -1 } }));
   await userEvent.click(frame, { position });
   await flushMicrotasks();
 }

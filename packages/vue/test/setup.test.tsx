@@ -119,7 +119,7 @@ describe('real pointer between tests', () => {
   it('gets no hover event from the real pointer of the last test', async () => {
     const onPointerover = vi.fn();
     await render(<div style={SPOT} onPointerover={onPointerover} />);
-    // The browser sends the hover events of a pointer that does not move in the next frame.
+    // For a pointer that does not move, the browser sends the hover events in the next frame.
     await waitSingleFrame();
     await waitSingleFrame();
 
