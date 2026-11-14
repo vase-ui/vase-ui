@@ -1806,6 +1806,7 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     const popup = page.getByTestId('closed-popup');
 
     // The open menu is modal. Its backdrop covers the page until Escape closes the menu.
+    await page.getByTestId('open-popup').waitFor();
     await page.keyboard.press('Escape');
     await page.getByTestId('open-popup').waitFor({ state: 'detached' });
     expect(await popup.count()).toBe(0);
