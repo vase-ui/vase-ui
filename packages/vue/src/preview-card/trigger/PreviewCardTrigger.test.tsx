@@ -176,8 +176,12 @@ describe('<PreviewCard.Trigger />', () => {
 
   it('throws without PreviewCard.Root or a handle', async () => {
     await expect(render(<PreviewCard.Trigger />)).rejects.toThrow(
-      'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`.',
+      'Vase UI: <PreviewCard.Trigger> must be inside <PreviewCard.Root>, or it must have a `handle`. Without a root the trigger has no preview card to open. Put the trigger inside <PreviewCard.Root>, or pass a `handle`.',
     );
-    expect(takeReportedMessages()).toHaveLength(1);
+
+    // Vue also warns about the error of `setup`.
+    expect(takeReportedMessages()).toEqual([
+      expect.stringContaining('Unhandled error during execution of setup function'),
+    ]);
   });
 });
