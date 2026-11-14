@@ -788,10 +788,10 @@ function readOTPSlotValues(page: Page, testId: string) {
 // slot with it. The first empty slot is the tab stop. Only the hidden input has a name.
 async function expectOTPFieldPage(page: Page) {
   const labelId = await page.getByTestId('code-label').getAttribute('id');
+  const firstSlotId = await page.getByTestId('code-1').getAttribute('id');
   expect(labelId).toBeTruthy();
-  expect(await page.getByTestId('code-label').getAttribute('for')).toBe(
-    await page.getByTestId('code-1').getAttribute('id'),
-  );
+  expect(firstSlotId).toBeTruthy();
+  expect(await page.getByTestId('code-label').getAttribute('for')).toBe(firstSlotId);
   expect(await page.getByTestId('code').getAttribute('aria-labelledby')).toBe(labelId);
   expect(await readOTPSlots(page, 'code', 'aria-labelledby')).toEqual(Array(4).fill(labelId));
   expect(await readOTPSlotValues(page, 'code')).toEqual(['1', '2', '', '']);

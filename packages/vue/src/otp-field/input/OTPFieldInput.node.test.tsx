@@ -67,6 +67,7 @@ describe('<OTPField.Input />', () => {
         const labelTag = tag(html, /<label[^>]*data-testid="label"[^>]*>/);
         const labelId = attribute(labelTag, 'id');
         const slots = html.match(SLOT) ?? [];
+        const firstSlotId = attribute(slots[0] ?? '', 'id');
 
         expect(labelId).toBeTruthy();
         expect(slots.map((slot) => attribute(slot, 'aria-labelledby'))).toEqual(
@@ -76,7 +77,8 @@ describe('<OTPField.Input />', () => {
         expect(slots.map((slot) => attribute(slot, 'aria-describedby'))).toEqual(
           Array(4).fill(undefined),
         );
-        expect(attribute(labelTag, 'for')).toBe(attribute(slots[0] ?? '', 'id'));
+        expect(firstSlotId).toBeTruthy();
+        expect(attribute(labelTag, 'for')).toBe(firstSlotId);
       },
     );
   });
