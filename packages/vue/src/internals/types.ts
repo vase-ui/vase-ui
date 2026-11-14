@@ -28,7 +28,7 @@ type WithPreventVaseUIHandler<T> = T extends (event: infer E) => any
 interface AriaDescriptionAttribute {
   /**
    * Defines a string value that describes or annotates the current element.
-   * @see aria-describedby.
+   * @see aria-describedby
    */
   'aria-description'?: string | undefined;
 }
