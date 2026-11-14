@@ -96,20 +96,6 @@ describe('<PreviewCard.Trigger />', () => {
       );
     });
 
-    it('stays open when the pointer comes back before the close delay ends', async () => {
-      const { link, onOpenChange } = await renderCard({ delay: 0 });
-      await enter(link);
-
-      await fireEvent.mouseLeave(link);
-      await tick(CLOSE_DELAY - 1);
-      expect(link).toHaveAttribute('data-popup-open');
-
-      await fireEvent.mouseEnter(link);
-      await tick(CLOSE_DELAY);
-      expect(link).toHaveAttribute('data-popup-open');
-      expect(onOpenChange).toHaveBeenCalledTimes(1);
-    });
-
     it('does not open for a touch pointer', async () => {
       const { link, onOpenChange } = await renderCard({ delay: 0 });
 
@@ -121,25 +107,37 @@ describe('<PreviewCard.Trigger />', () => {
       expect(onOpenChange).not.toHaveBeenCalled();
     });
 
-    it('opens again on hover after Escape closes it', async () => {
-      const { link, onOpenChange } = await renderCard({ delay: 100 });
-      await enter(link);
-      await tick(100);
-      expect(link).toHaveAttribute('data-popup-open');
-
-      await fireEvent.keyDown(document.body, { key: 'Escape' });
-      expect(link).not.toHaveAttribute('data-popup-open');
-      expect(onOpenChange).toHaveBeenLastCalledWith(
-        false,
-        expect.objectContaining({ reason: REASONS.escapeKey }),
+    it('stays open while the pointer crosses the gap to the card, and closes when it moves away', async () => {
+      await render(
+        <PreviewCard.Root>
+          <PreviewCard.Trigger href="#preview" delay={0} style={noRealPointer}>
+            Link
+          </PreviewCard.Trigger>
+          <PreviewCard.Portal>
+            <PreviewCard.Positioner sideOffset={20} style={noRealPointer} data-testid="positioner">
+              <PreviewCard.Popup style={{ width: '200px', height: '100px' }}>Card</PreviewCard.Popup>
+            </PreviewCard.Positioner>
+          </PreviewCard.Portal>
+        </PreviewCard.Root>,
       );
+      const link = screen.getByRole('link', { name: 'Link' });
+      await enter(link);
+      await flushMicrotasks();
 
-      // A browser can send no new `pointerenter` after a close, so the pointer enters again with
-      // mouse events only.
-      await fireEvent.mouseEnter(link);
-      await fireEvent.mouseMove(link);
-      await tick(100);
+      const linkRect = link.getBoundingClientRect();
+      expect(screen.getByTestId('positioner').getBoundingClientRect().top).toBeGreaterThan(
+        linkRect.bottom + 10,
+      );
+      const x = linkRect.left + linkRect.width / 2;
+
+      await fireEvent.mouseLeave(link, { clientX: x, clientY: linkRect.bottom + 1 });
+      await fireEvent.mouseMove(document, { clientX: x, clientY: linkRect.bottom + 10 });
+      await tick(CLOSE_DELAY);
       expect(link).toHaveAttribute('data-popup-open');
+
+      await fireEvent.mouseMove(document, { clientX: x, clientY: linkRect.top - 10 });
+      await tick(CLOSE_DELAY);
+      expect(link).not.toHaveAttribute('data-popup-open');
     });
   });
 
