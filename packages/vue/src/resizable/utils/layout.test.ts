@@ -13,7 +13,7 @@ import {
   toRequestedLayout,
   validateLayout,
 } from './layout';
-import type { PanelConstraints } from './layout';
+import type { Layout, PanelConstraints } from './layout';
 
 const panel = (id: string, rest: Partial<PanelConstraints> = {}): PanelConstraints => ({
   id,
@@ -349,7 +349,13 @@ describe('layout', () => {
 
   // In each case, a sum of sizes with decimals misses a limit by a rounding error of floating point:
   // 0.2 + (99.8 - 98) is less than 2, and 10.4 + 59.7 is more than 70.1.
-  it.each([
+  it.each<{
+    name: string;
+    panels: PanelConstraints[];
+    start: Layout;
+    delta: number;
+    expected: Layout;
+  }>([
     {
       name: 'an expand from a collapsed size of 0.2',
       panels: [panel('a', { minSize: 2, collapsible: true, collapsedSize: 0.2 }), panel('b')],
