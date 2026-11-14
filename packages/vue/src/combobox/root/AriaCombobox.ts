@@ -254,7 +254,7 @@ export interface AriaComboboxProps<Value, Mode extends SelectionMode = 'none', I
    * A change of a reactive list in place shows in the list. To put the label of the selected value
    * back in an input that the user cleared, give a new list.
    */
-  items?: readonly any[] | readonly Group<any>[] | ComboboxItemCollection<Item, Value> | undefined;
+  items?: readonly any[] | readonly Group[] | ComboboxItemCollection<Item, Value> | undefined;
   /**
    * Filtered items to display in the list.
    * When provided, the list uses these items instead of filtering the `items` prop internally.
@@ -588,8 +588,8 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     state: 'inputValue',
   });
 
-  const listRef = shallowRef<Array<HTMLElement | null>>([]);
-  const labelsRef = shallowRef<Array<string | null>>([]);
+  const listRef = shallowRef<(HTMLElement | null)[]>([]);
+  const labelsRef = shallowRef<(string | null)[]>([]);
   /**
    * Contains the currently visible list of item values post-filtering.
    */
@@ -728,7 +728,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   );
 
   const flatItems = computed<readonly Item[]>(() =>
-    items.value ? flattenLeafItems<Item>(items.value as readonly Item[]) : EMPTY_ARRAY,
+    items.value ? flattenLeafItems<Item>(items.value) : EMPTY_ARRAY,
   );
 
   const filteredItems = computed<Item[] | Group<Item>[]>(() => {
@@ -738,7 +738,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     }
     const currentItems = items.value;
     if (!currentItems) {
-      return EMPTY_ARRAY as Item[];
+      return EMPTY_ARRAY;
     }
     const currentLimit = limit.value;
     const currentQuery = filterQuery.value;
@@ -803,7 +803,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     if (currentWindow && filteredItems.value === props.filteredItems) {
       return currentWindow.values;
     }
-    const flat = flattenLeafItems<Item>(filteredItems.value as readonly Item[]);
+    const flat = flattenLeafItems<Item>(filteredItems.value);
     const toValue = itemToValue.value;
     return toValue ? flat.map((item) => toValue(item)) : (flat as any[]);
   });
@@ -939,7 +939,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       if (open.value && closeQuery.value !== null) {
         closeQuery.value = null;
       }
-      const event = eventDetails.event as Event;
+      const event = eventDetails.event;
       const inputType = (event as InputEvent).inputType;
       // Treat composition commits as typed input; autofill may omit `inputType` or
       // report `insertReplacementText`.
@@ -1339,7 +1339,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
       // `readOnly` accepts no input, so no completion of any kind is offered.
       reference['aria-autocomplete'] = readOnly.value ? 'none' : (props.autoComplete ?? 'list');
     }
-    return reference as HTMLAttributes;
+    return reference;
   });
 
   // `readOnly` locks the value, not the interaction: the popup opens and can be browsed.
@@ -1400,7 +1400,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     popupProps,
     listProps,
     inputProps: inputProps.value,
-    activeTriggerProps: triggerProps as HTMLAttributes,
+    activeTriggerProps: triggerProps,
     inactiveTriggerProps: EMPTY_OBJECT as HTMLAttributes,
     itemRoot: itemRoot.value,
     openMethod: openMethod.value,
@@ -1455,7 +1455,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
   const hiddenValues = computed(() => {
     const value = selectedValue.value;
     if (!multiple.value || !Array.isArray(value) || !name.value) {
-      return EMPTY_ARRAY as string[];
+      return EMPTY_ARRAY;
     }
     return value.map((current) => stringifyAsValue(current, props.itemToStringValue));
   });
