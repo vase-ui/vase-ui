@@ -1693,7 +1693,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     resetOnPointerLeave: () => !(props.keepHighlight ?? false),
     orientation: () => (grid.value ? 'horizontal' : undefined),
     rtl: () => direction.value === 'rtl',
-    disabledIndices: EMPTY_ARRAY as number[],
+    disabledIndices: EMPTY_ARRAY,
     grid: () => (grid.value ? gridNavigation : undefined),
     onNavigate(nextActiveIndex, event) {
       // Ignore automatic navigation while closed, including selected-index sync for inline lists.
@@ -1740,7 +1740,7 @@ export function useAriaCombobox<Value, Mode extends SelectionMode = 'none', Item
     // list navigation state from DOM focus.
     const { onFocusin: _onFocusin, ...itemProps } = listNavigation.value.item;
     return {
-      props: itemProps as HTMLAttributes,
+      props: itemProps,
       id: id.value,
       selectionMode: selectionMode.value,
       disabled: disabled.value,
