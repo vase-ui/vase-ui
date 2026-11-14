@@ -15,9 +15,9 @@ const plainTime = Temporal.PlainTime.from('10:30');
 const dateTime = Temporal.PlainDateTime.from('2026-11-14T10:30');
 const zoned = Temporal.ZonedDateTime.from('2026-11-14T10:30[Europe/Paris]');
 
-export const props: TimeClock.Root.Props = {
+export const props: TimeClock.Root.Props<Temporal.PlainDateTime> = {
   value: null,
-  defaultValue: plainTime,
+  defaultValue: dateTime,
   view: 'minute',
   defaultView: 'hour',
   granularity: 'second',
@@ -35,7 +35,7 @@ export const props: TimeClock.Root.Props = {
   locale: 'de-DE',
   disabled: true,
   readOnly: true,
-} satisfies TimeClockRootProps;
+} satisfies TimeClockRootProps<Temporal.PlainDateTime>;
 export const state: TimeClock.Root.State = {
   view: 'hour',
   disabled: false,
@@ -78,13 +78,11 @@ export const referenceClock = (
     }}
   />
 );
+// With no value, no default and no reference, the first value is a plain time.
 export const noValueClock = (
   <TimeClock.Root
     onValueChange={(value) => {
-      expectType<
-        Temporal.PlainTime | Temporal.PlainDateTime | Temporal.ZonedDateTime,
-        typeof value
-      >(value);
+      expectType<Temporal.PlainTime, typeof value>(value);
     }}
     onViewChange={(view) => {
       expectType<TimeClockView, typeof view>(view);

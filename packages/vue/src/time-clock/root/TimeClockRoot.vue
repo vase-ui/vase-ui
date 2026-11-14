@@ -34,7 +34,7 @@ export interface TimeClockRootState {
   empty: boolean;
 }
 
-export interface TimeClockRootProps<Value extends TimeValue = TimeValue>
+export interface TimeClockRootProps<Value extends TimeValue = Temporal.PlainTime>
   extends
     VaseUIComponentProps<TimeClockRootState>,
     /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {
@@ -139,7 +139,7 @@ export type TimeClockRootCommitEventDetails =
   VaseUIGenericEventDetails<TimeClockRootCommitEventReason>;
 </script>
 
-<script setup lang="ts" generic="Value extends TimeValue = TimeValue">
+<script setup lang="ts" generic="Value extends TimeValue = Temporal.PlainTime">
 import { computed, provide, shallowRef, watch } from 'vue';
 import { useControlled } from '../../common/useControlled';
 import { warn } from '../../common/warn';

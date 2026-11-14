@@ -32,7 +32,7 @@ import type {
 export const Root: typeof TimeClockRoot = TimeClockRoot;
 export namespace Root {
   export type State = TimeClockRootState;
-  export type Props<Value extends TimeValue = TimeValue> = TimeClockRootProps<Value>;
+  export type Props<Value extends TimeValue = Temporal.PlainTime> = TimeClockRootProps<Value>;
   export type ChangeEventReason = TimeClockRootChangeEventReason;
   export type ChangeEventDetails = TimeClockRootChangeEventDetails;
   export type CommitEventReason = TimeClockRootCommitEventReason;
