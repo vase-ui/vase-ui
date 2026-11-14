@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { defineComponent, KeepAlive, shallowRef } from 'vue';
+import { defineComponent, h, KeepAlive, shallowRef } from 'vue';
 import { createRenderer, describeConformance, flushMicrotasks, screen } from '#test-utils';
-import * as NavigationMenu from '../index.parts';
+import { NavigationMenu } from '@vase-ui/vue/navigation-menu';
+
+type RenderSlotProps = Parameters<
+  NonNullable<InstanceType<typeof NavigationMenu.Portal>['$slots']['render']>
+>[0];
 
 describe('<NavigationMenu.Portal />', () => {
   const { render } = createRenderer();
@@ -37,6 +41,42 @@ describe('<NavigationMenu.Portal />', () => {
       </NavigationMenu.Root>,
     );
   }
+
+  describe('slot: render', () => {
+    it('puts the content of children in the element of the slot', async () => {
+      await render(
+        <NavigationMenu.Root defaultValue="one">
+          <NavigationMenu.List>
+            <NavigationMenu.Item value="one">
+              <NavigationMenu.Trigger>One</NavigationMenu.Trigger>
+              <NavigationMenu.Content>
+                <NavigationMenu.Link href="#one">Link of one</NavigationMenu.Link>
+              </NavigationMenu.Content>
+            </NavigationMenu.Item>
+          </NavigationMenu.List>
+          <NavigationMenu.Portal
+            v-slots={{
+              render: ({ props, children }: RenderSlotProps) => (
+                <section {...props} data-testid="portal">
+                  {h(children, null, () => (
+                    <NavigationMenu.Positioner>
+                      <NavigationMenu.Popup data-testid="popup">
+                        <NavigationMenu.Viewport />
+                      </NavigationMenu.Popup>
+                    </NavigationMenu.Positioner>
+                  ))}
+                </section>
+              ),
+            }}
+          />
+        </NavigationMenu.Root>,
+      );
+      await flushMicrotasks();
+
+      expect(screen.getByTestId('portal')).toContainElement(screen.getByTestId('popup'));
+      expect(screen.getByTestId('popup')).toContainElement(screen.getByText('Link of one'));
+    });
+  });
 
   it('renders nothing while the menu is closed', async () => {
     await renderMenu();
