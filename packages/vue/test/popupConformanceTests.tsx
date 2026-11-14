@@ -468,6 +468,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                   root: {
                     open: open.value,
                     onOpenChangeComplete,
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                     onOpenChange: async (nextOpen, eventDetails) => {
                       if (nextOpen) {
                         open.value = true;
@@ -710,6 +711,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
                 root: {
                   defaultOpen: true,
                   onOpenChangeComplete,
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- The case tests a handler that waits before it prevents the unmount.
                   onOpenChange: async (nextOpen, eventDetails) => {
                     if (!nextOpen) {
                       await Promise.resolve();
