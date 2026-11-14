@@ -8,29 +8,19 @@
     {
       "upstream": "packages/react/src/alert-dialog/index.ts",
       "kind": "waits-on",
-      "reason": "The file is the entry point of Alert Dialog. It exports the parts of Dialog under the names of Alert Dialog, and Vase UI does not have those parts."
+      "reason": "The file is the entry point of Alert Dialog. Until each Base UI case of the family has a counterpart, the tests import `index.parts.ts`."
     },
     {
       "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.spec.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The type test imports the entry point of Alert Dialog, which Vase UI does not have. It renders `AlertDialog.Trigger` and `AlertDialog.Portal`, which Vase UI does not have."
+      "reason": "The type test imports the entry point of Alert Dialog, which Vase UI does not have."
     },
     {
       "upstream": "packages/react/src/alert-dialog/root/AlertDialogRoot.test.tsx",
       "kind": "waits-on",
       "waitsOn": "packages/react/src/alert-dialog/index.ts",
-      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. Each case and each suite call renders `AlertDialog.Trigger`, `AlertDialog.Portal` or `AlertDialog.Popup`, which Vase UI does not have."
-    },
-    {
-      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTrigger.tsx",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `AlertDialog.Trigger`."
-    },
-    {
-      "upstream": "packages/react/src/alert-dialog/trigger/AlertDialogTriggerDataAttributes.ts",
-      "kind": "waits-on",
-      "reason": "Vase UI does not have `AlertDialog.Trigger`."
+      "reason": "The file imports the entry point of Alert Dialog, which Vase UI does not have. The suite calls `dialogRootSharedTests` and `detachedTriggersConformanceTests` have no counterpart. The first needs a shared suite that Vase UI does not have. In the second, the two cases `allows controlling the open state and active trigger programmatically` fail for a modal dialog: after the close, the focus is on the active trigger and not on the button that opened the dialog."
     },
     {
       "upstream": "docs/src/app/(docs)/react/components/alert-dialog/types.md",
