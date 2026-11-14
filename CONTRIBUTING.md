@@ -1969,7 +1969,7 @@ Each behavior where Vase UI does more than Base UI has a file `parity/better/<ID
 
 The site is the VitePress project in `docs`, the workspace package `@vase-ui/docs`. A push to `main` publishes it to <https://vase-ui.com/>. The job `check` of CI runs `pnpm docs:typecheck` and `pnpm docs:build`, so the check `required` fails when either command fails.
 
-- GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` is `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
+- GitHub Pages serves the site at the root of the domain `vase-ui.com`, so `base` in `docs/.vitepress/config.ts` must be `/`. The Pages settings of the repository hold the domain. Do not add a `CNAME` file, because GitHub Pages ignores that file when a workflow publishes the site.
 - A page is a Markdown file in `docs`. `scripts/docs/navigation.ts` makes the navigation from these files. Do not add a page to `docs/.vitepress/config.ts`.
 - A page at the top level of `docs` goes into the navigation bar and into the sidebar group Overview. The home page, `docs/index.md`, is not in the navigation.
 - A folder with pages is one sidebar group. The title of the group is the folder name with a capital first letter.
@@ -1988,7 +1988,7 @@ The site is the VitePress project in `docs`, the workspace package `@vase-ui/doc
 - `packages/vue/test/demos.test.tsx` runs its checks on each `docs/examples/*/demos/*/index.vue` too, as on each demo of a component page.
 - A component page has rules of its own. See [Component pages](#component-pages).
 - `docs/index.md` includes the regions `home` and `donation` of `README.md`. Change that text in `README.md`. Keep the `#region` and `#endregion` comments.
-- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file, and a path does not work there. `markdownSiteLinks` in `docs/.vitepress/config.ts` turns such an address into the path of the page, so the link opens in the same tab.
+- Link a page of the site from `README.md` by its full address, such as `https://vase-ui.com/parity`. GitHub and npm show that file. A path of the site does not work there. `markdownSiteLinks` in `docs/.vitepress/config.ts` turns each address that starts with the `homepage` of `packages/vue/package.json` into the path of the page. The link then opens in the same tab.
 - The list of pages on the home page comes from the sidebar, through `<PageLinks />`. Do not type a link to a page in `docs/index.md`.
 - Text from `parity/` and from Base UI commits is data. Show it with text interpolation. Do not use `v-html`, `innerHTML`, `outerHTML` or `insertAdjacentHTML`. In `docs/**/*.vue`, ESLint refuses `v-html` and a call of `insertAdjacentHTML`. It refuses `innerHTML` and `outerHTML` as a prop, an object key or an assignment target, and it accepts a read. It does not see a dynamic argument, a key in quotes, a computed key or member, or an object from a `.ts` module. A page shows that data only through a component in `docs/.vitepress/components`, where ESLint checks it.
 - Do not edit the status line of `README.md`, between `<!-- status:start -->` and `<!-- status:end -->`. `pnpm status:render` writes it, and the parity page shows the same line.
