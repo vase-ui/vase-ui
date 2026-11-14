@@ -1,0 +1,9 @@
+{
+  "id": "VUE-64",
+  "evidence": [
+    "https://vuejs.org/guide/built-ins/suspense.html",
+    "https://github.com/mui/base-ui/blob/5aacdbb7852487518b982ea397885c8322a3ebc6/packages/react/src/utils/popups/popupRoot.tsx#L299-L322"
+  ],
+  "behavior": "A popup root in a pending branch of `<Suspense>` does not attach its store to its handle. The handle, and each detached trigger, stay with the root that is mounted. The root attaches when Vue resolves the branch, before the `onMounted` hook of each part below it. A branch that Vue drops never attaches. Base UI has this rule for a render that React does not commit.",
+  "dueWith": "packages/react/src/utils/popups/popupRoot.tsx"
+}
