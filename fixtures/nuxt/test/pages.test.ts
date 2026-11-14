@@ -1120,6 +1120,41 @@ async function expectHydratedMenuPage(page: Page) {
   expect(await page.getByTestId('detached-popup').count()).toBe(0);
 }
 
+// A server renders no popup and no portal. Each trigger has the declaration that stops the callout
+// of a long press in Safari on iOS. The trigger of the open root has the open state.
+async function expectContextMenuPageOnServer(page: Page) {
+  const attributeNames = ['style', 'data-popup-open', 'data-pressed'];
+  const read = (testId: string) => readAttributes(page.getByTestId(testId), attributeNames);
+
+  expect(await read('closed')).toEqual({
+    style: '-webkit-touch-callout:none;',
+    'data-popup-open': null,
+    'data-pressed': null,
+  });
+  expect(await read('open')).toEqual({
+    style: '-webkit-touch-callout:none;',
+    'data-popup-open': '',
+    'data-pressed': '',
+  });
+  expect(await page.locator('[data-vase-ui-portal], [role="menu"]').count()).toBe(0);
+}
+
+// After the mount, the open root renders its popup in `<body>`.
+async function expectHydratedContextMenuPage(page: Page) {
+  const popup = page.getByTestId('open-popup');
+  expect(await popup.count()).toBe(1);
+  expect(
+    await popup.evaluate(
+      (element) => element.closest('[data-vase-ui-portal]')?.parentElement?.localName,
+    ),
+  ).toBe('body');
+  expect(await popup.getAttribute('role')).toBe('menu');
+  expect(await popup.getAttribute('data-open')).toBe('');
+  expect(await page.getByTestId('open').getAttribute('data-popup-open')).toBe('');
+  expect(await page.getByTestId('closed').getAttribute('data-popup-open')).toBeNull();
+  expect(await page.getByTestId('closed-popup').count()).toBe(0);
+}
+
 const PREVIEW_CARD_LINK_ATTRIBUTES = [
   'href',
   'data-popup-open',
@@ -1439,6 +1474,11 @@ const PAGES: PageCase[] = [
     expectHydratedPage: (page) => expectNavigationMenuPage(page, { hydrated: true }),
   },
   { path: '/menu', expectPage: expectMenuPageOnServer, expectHydratedPage: expectHydratedMenuPage },
+  {
+    path: '/context-menu',
+    expectPage: expectContextMenuPageOnServer,
+    expectHydratedPage: expectHydratedContextMenuPage,
+  },
   {
     path: '/preview-card',
     expectPage: expectPreviewCardPageOnServer,
@@ -1969,6 +2009,27 @@ describe.each(MODES)('in $name', async ({ dev }) => {
     await waitForTwoFrames(page);
 
     expect(await page.getByTestId('wide').textContent()).toBe('false');
+    expect(messages).toEqual([]);
+  });
+
+  it('opens a context menu for a right click on its trigger after hydration', async () => {
+    const page = await createPage('/context-menu');
+    const messages = collectMessages(page);
+    const trigger = page.getByTestId('closed');
+    const popup = page.getByTestId('closed-popup');
+
+    // The open menu is modal. Its backdrop covers the page until Escape closes the menu.
+    await page.getByTestId('open-popup').waitFor();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('open-popup').waitFor({ state: 'detached' });
+    expect(await popup.count()).toBe(0);
+
+    await trigger.click({ button: 'right' });
+    await popup.waitFor();
+
+    expect(await trigger.getAttribute('data-popup-open')).toBe('');
+    expect(await popup.getAttribute('role')).toBe('menu');
+    expect(await popup.evaluate((element) => element.closest('main') === null)).toBe(true);
     expect(messages).toEqual([]);
   });
 

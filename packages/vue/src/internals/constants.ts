@@ -3,6 +3,12 @@ import type { CSSProperties } from 'vue';
 export const DISABLED_TRANSITIONS_STYLE = { style: { transition: 'none' } };
 
 /**
+ * The time in milliseconds after the last key of a typeahead in which the next key continues the
+ * typed text.
+ */
+export const TYPEAHEAD_RESET_MS = 500;
+
+/**
  * The collision avoidance of a dropdown. Such a popup usually takes only the top and the bottom
  * side, and it limits its height with `var(--available-height)`.
  */

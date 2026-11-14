@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { defineComponent } from 'vue';
+import { DirectionProvider } from '@vase-ui/vue/direction-provider';
+import type { TextDirection } from '@vase-ui/vue/direction-provider';
 import * as Menu from '../index.parts';
 import {
   createRenderer,
@@ -121,7 +123,8 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
 
   it('stays open when the pointer comes back to its trigger before the close delay ends', async () => {
     const tick = useFakeClock();
-    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
+    const onOpenChange = vi.fn();
+    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 }, submenuRoot: { onOpenChange } });
     const trigger = screen.getByRole('menuitem', { name: 'More' });
     const alpha = screen.getByRole('menuitem', { name: 'Alpha' });
     await hover(trigger);
@@ -132,9 +135,20 @@ describe('<Menu.SubmenuTrigger /> on hover and on a press', () => {
     await tick(39);
     await fireEvent.mouseMove(trigger);
     await tick(80);
+
+    expect(trigger).toHaveAttribute('data-popup-open');
+    expect(onOpenChange.mock.calls.map(([open]) => open)).toEqual([true]);
+  });
+
+  it('closes after the close delay when the pointer moves over another item of the parent menu', async () => {
+    const tick = useFakeClock();
+    await renderSubmenu({ trigger: { delay: 0, closeDelay: 40 } });
+    const trigger = screen.getByRole('menuitem', { name: 'More' });
+    await hover(trigger);
+    await tick(0);
     expect(trigger).toHaveAttribute('data-popup-open');
 
-    await fireEvent.mouseMove(alpha);
+    await fireEvent.mouseMove(screen.getByRole('menuitem', { name: 'Alpha' }));
     await tick(39);
     expect(trigger).toHaveAttribute('data-popup-open');
 
@@ -399,6 +413,111 @@ describe('<Menu.SubmenuTrigger />', () => {
     expect(storeRef.current!.context.triggerElements.getById('first')).toBeUndefined();
     expect(storeRef.current!.context.triggerElements.getById('second')).toBe(submenuTrigger);
     expect(storeRef.current!.context.triggerElements.size).toBe(1);
+  });
+
+  function TestComponent({ direction }: { direction: TextDirection }) {
+    return (
+      <DirectionProvider direction={direction}>
+        <Menu.Root open>
+          <Menu.Trigger>Open menu</Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Positioner>
+              <Menu.Popup>
+                <Menu.Item>1</Menu.Item>
+                <Menu.SubmenuRoot>
+                  <Menu.SubmenuTrigger>2</Menu.SubmenuTrigger>
+                  <Menu.Portal>
+                    <Menu.Positioner>
+                      <Menu.Popup>
+                        <Menu.Item>2.1</Menu.Item>
+                        <Menu.Item>2.2</Menu.Item>
+                      </Menu.Popup>
+                    </Menu.Positioner>
+                  </Menu.Portal>
+                </Menu.SubmenuRoot>
+              </Menu.Popup>
+            </Menu.Positioner>
+          </Menu.Portal>
+        </Menu.Root>
+      </DirectionProvider>
+    );
+  }
+
+  it.each([
+    { direction: 'ltr', openKey: 'ArrowRight' },
+    { direction: 'rtl', openKey: 'ArrowLeft' },
+  ] as const)(
+    'opens the submenu with $openKey and highlights a single item in $direction direction',
+    async ({ direction, openKey }) => {
+      await render(<TestComponent direction={direction} />);
+      const submenuTrigger = screen.getByText('2');
+
+      await fireEvent.focus(submenuTrigger);
+      await fireEvent.keyDown(submenuTrigger, { key: openKey });
+
+      const submenuItems = await screen.findAllByRole('menuitem');
+      const submenuItem1 = submenuItems.find((item) => item.textContent === '2.1');
+
+      await waitFor(() => {
+        expect(submenuItem1).toHaveFocus();
+      });
+
+      // Only the first submenu item is highlighted; no other submenu or parent menu item is.
+      const highlightedItems = screen
+        .getAllByRole('menuitem')
+        .filter((item) => item.hasAttribute('data-highlighted'));
+      expect(highlightedItems).toEqual([submenuItem1]);
+    },
+  );
+
+  it('sets tabIndex to 0 on the submenu trigger after opening the submenu with a keydown event', async () => {
+    await render(<TestComponent direction="ltr" />);
+    const submenuTrigger = screen.getByText('2');
+
+    await fireEvent.focus(submenuTrigger);
+    await fireEvent.keyDown(submenuTrigger, { key: 'ArrowRight' });
+
+    await waitFor(() => {
+      expect(submenuTrigger).toHaveAttribute('tabIndex', '0');
+    });
+  });
+
+  it('uses the label prop for text navigation', async () => {
+    const { user } = await render(
+      <Menu.Root open>
+        <Menu.Portal>
+          <Menu.Positioner>
+            <Menu.Popup>
+              <Menu.Item>Alpha</Menu.Item>
+              <Menu.SubmenuRoot>
+                <Menu.SubmenuTrigger data-testid="submenu-trigger" label="Reports">
+                  More
+                </Menu.SubmenuTrigger>
+                <Menu.Portal>
+                  <Menu.Positioner>
+                    <Menu.Popup>
+                      <Menu.Item>Monthly</Menu.Item>
+                    </Menu.Popup>
+                  </Menu.Positioner>
+                </Menu.Portal>
+              </Menu.SubmenuRoot>
+            </Menu.Popup>
+          </Menu.Positioner>
+        </Menu.Portal>
+      </Menu.Root>,
+    );
+
+    // The open gives the focus to the popup in an animation frame. The key goes to the element that
+    // has the focus.
+    await waitFor(() => {
+      expect(screen.getAllByRole('menu')[0]).toHaveFocus();
+    });
+    await fireEvent.focus(screen.getByText('Alpha'));
+    await user.keyboard('r');
+
+    await waitFor(() => {
+      expect(screen.getByTestId('submenu-trigger')).toHaveFocus();
+    });
   });
 
   describe('prop: disabled', () => {
