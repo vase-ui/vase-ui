@@ -9,6 +9,8 @@ import type {
   ComboboxCollectionProps,
   ComboboxCollectionState,
 } from './collection/ComboboxCollection.vue';
+import ComboboxEmpty from './empty/ComboboxEmpty.vue';
+import type { ComboboxEmptyProps, ComboboxEmptyState } from './empty/ComboboxEmpty.vue';
 import ComboboxGroupLabel from './group-label/ComboboxGroupLabel.vue';
 import type {
   ComboboxGroupLabelProps,
@@ -63,6 +65,8 @@ import type {
   ComboboxSeparatorProps,
   ComboboxSeparatorState,
 } from './separator/ComboboxSeparator.vue';
+import ComboboxStatus from './status/ComboboxStatus.vue';
+import type { ComboboxStatusProps, ComboboxStatusState } from './status/ComboboxStatus.vue';
 import ComboboxTrigger from './trigger/ComboboxTrigger.vue';
 import type { ComboboxTriggerProps, ComboboxTriggerState } from './trigger/ComboboxTrigger.vue';
 import ComboboxValue from './value/ComboboxValue.vue';
@@ -159,6 +163,21 @@ export const List: typeof ComboboxList = ComboboxList;
 export namespace List {
   export type Props = ComboboxListProps;
   export type State = ComboboxListState;
+}
+
+/**
+ * Displays a status message whose content changes are announced politely to screen readers.
+ * Useful for conveying the status of an asynchronously loaded list.
+ * This component's root element must remain mounted in the DOM to announce
+ * changes consistently across screen readers. Avoid hiding or removing the
+ * component itself with `display: none`, `hidden`, `aria-hidden`, or conditional
+ * rendering. Prefer updating or conditionally rendering its children instead.
+ * Renders a `<div>` element.
+ */
+export const Status: typeof ComboboxStatus = ComboboxStatus;
+export namespace Status {
+  export type Props = ComboboxStatusProps;
+  export type State = ComboboxStatusState;
 }
 
 /**
@@ -288,6 +307,22 @@ export const Collection: typeof ComboboxCollection = ComboboxCollection;
 export namespace Collection {
   export type Props = ComboboxCollectionProps;
   export type State = ComboboxCollectionState;
+}
+
+/**
+ * Renders its children only when the list is empty.
+ * Requires the `items` prop on the root component.
+ * Announces changes politely to screen readers.
+ * This component's root element must remain mounted in the DOM to announce
+ * changes consistently across screen readers. Avoid hiding or removing the
+ * component itself with `display: none`, `hidden`, `aria-hidden`, or conditional
+ * rendering. Prefer updating or conditionally rendering its children instead.
+ * Renders a `<div>` element.
+ */
+export const Empty: typeof ComboboxEmpty = ComboboxEmpty;
+export namespace Empty {
+  export type Props = ComboboxEmptyProps;
+  export type State = ComboboxEmptyState;
 }
 
 /**
