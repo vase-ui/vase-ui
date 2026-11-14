@@ -70,7 +70,7 @@ describe('<Combobox.Status />', () => {
       await flushMicrotasks();
 
       expect(screen.getByRole('status')).toBe(screen.getByTestId('status'));
-      expect(screen.getByTestId('status').textContent).toBe('Searching…⁠');
+      expect(screen.getByTestId('status').textContent).toBe('Searching…\u2060');
 
       vi.advanceTimersByTime(INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY);
       await flushMicrotasks();
@@ -119,7 +119,7 @@ describe('<Combobox.Status />', () => {
 
       expect(screen.getByTestId('custom-status').tagName).toBe('P');
       expect(screen.getByRole('status')).toBe(screen.getByTestId('custom-status'));
-      expect(screen.getByTestId('custom-status').textContent).toBe('Searching…⁠');
+      expect(screen.getByTestId('custom-status').textContent).toBe('Searching…\u2060');
 
       vi.advanceTimersByTime(INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY);
       await flushMicrotasks();
@@ -132,7 +132,7 @@ describe('<Combobox.Status />', () => {
       await flushMicrotasks();
 
       const status = screen.getByTestId('status');
-      expect(status.textContent).toBe('Searching…⁠');
+      expect(status.textContent).toBe('Searching…\u2060');
 
       unmount();
 

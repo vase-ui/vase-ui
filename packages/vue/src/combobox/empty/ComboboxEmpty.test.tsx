@@ -3,6 +3,8 @@ import { createRenderer, describeConformance, flushMicrotasks, screen, waitFor }
 import type { HTMLProps } from '../../internals/types';
 import { INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY } from '../../internals/useInitialLiveRegionTextMutation';
 import * as Combobox from '../index.parts';
+import type { ComboboxStore } from '../store';
+import ComboboxEmptyReplacement from './ComboboxEmptyReplacement.test.vue';
 
 describe('<Combobox.Empty />', () => {
   const { render } = createRenderer();
@@ -160,7 +162,7 @@ describe('<Combobox.Empty />', () => {
       await flushMicrotasks();
 
       expect(screen.getByRole('status')).toBe(screen.getByTestId('empty'));
-      expect(screen.getByTestId('empty').textContent).toBe('No results⁠');
+      expect(screen.getByTestId('empty').textContent).toBe('No results\u2060');
 
       vi.advanceTimersByTime(INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY);
       await flushMicrotasks();
@@ -231,12 +233,27 @@ describe('<Combobox.Empty />', () => {
 
       expect(screen.getByTestId('custom-empty').tagName).toBe('P');
       expect(screen.getByRole('status')).toBe(screen.getByTestId('custom-empty'));
-      expect(screen.getByTestId('custom-empty').textContent).toBe('No results⁠');
+      expect(screen.getByTestId('custom-empty').textContent).toBe('No results\u2060');
 
       vi.advanceTimersByTime(INITIAL_LIVE_REGION_TEXT_MUTATION_RESET_DELAY);
       await flushMicrotasks();
 
       expect(screen.getByTestId('custom-empty').textContent).toBe('No results');
+    });
+  });
+
+  describe('Vue form of the empty part', () => {
+    it('keeps the element of an empty part that mounts before the old part unmounts', async () => {
+      let store!: ComboboxStore;
+      const { setProps } = await render(
+        <ComboboxEmptyReplacement first onStore={(value: ComboboxStore) => (store = value)} />,
+      );
+      expect(store.context.emptyRef.value).toBe(screen.getByTestId('first'));
+
+      await setProps({ first: false });
+
+      expect(screen.queryByTestId('first')).toBe(null);
+      expect(store.context.emptyRef.value).toBe(screen.getByTestId('second'));
     });
   });
 });
