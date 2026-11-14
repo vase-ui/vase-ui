@@ -23,10 +23,10 @@ export interface PopupPositionerPartProps
 </script>
 
 <script setup lang="ts">
-import { inject } from 'vue';
+import { inject, provide } from 'vue';
 import { usePopupPositioner } from '../../src/utils/popups/popupPositioner';
 import { provideFloatingNode, useFloatingNodeId } from '../../src/utils/popups/tree/FloatingTree';
-import { PopupFixtureContext } from './PopupFixture';
+import { PopupFixtureContext, PopupFixturePositionerContext } from './PopupFixture';
 
 defineOptions({ inheritAttrs: false });
 
@@ -53,6 +53,8 @@ const { element, elementProps, state, positioning } = usePopupPositioner(store, 
   keepMounted: () => props.keepMounted,
   positioning: { nodeId },
 });
+
+provide(PopupFixturePositionerContext, { side: positioning.side });
 
 defineExpose({ element, update: positioning.update });
 </script>
