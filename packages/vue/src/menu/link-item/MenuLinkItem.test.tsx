@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { computed, defineComponent, provide, inject, shallowRef } from 'vue';
 import type { InjectionKey, Ref } from 'vue';
 import * as Menu from '../index.parts';
-import { createRenderer, describeConformance, flushMicrotasks, isJSDOM, screen } from '#test-utils';
+import {
+  createRenderer,
+  describeConformance,
+  flushMicrotasks,
+  isJSDOM,
+  screen,
+  waitFor,
+} from '#test-utils';
 import { REASONS } from '../../internals/reasons';
 
 // A memory router: the link component writes its `to` to the location and prevents the navigation
@@ -131,6 +138,55 @@ describe('<Menu.LinkItem />', () => {
 
       expect(locationDisplay).toHaveTextContent('/');
     });
+
+    it.skipIf(isJSDOM)(
+      'does not navigate when Space is pressed during an active typeahead session',
+      async () => {
+        const { user } = await render(
+          <MemoryRouter initialEntry="/">
+            <Routes />
+
+            <LocationDisplay />
+
+            <Menu.Root open>
+              <Menu.Portal>
+                <Menu.Positioner>
+                  <Menu.Popup>
+                    <Menu.LinkItem as={Link} {...{ to: '/' }}>
+                      Item One
+                    </Menu.LinkItem>
+                    <Menu.LinkItem as={Link} {...{ to: '/two' }}>
+                      Item Two
+                    </Menu.LinkItem>
+                  </Menu.Popup>
+                </Menu.Positioner>
+              </Menu.Portal>
+            </Menu.Root>
+          </MemoryRouter>,
+        );
+
+        const [link1, link2] = screen.getAllByRole('menuitem');
+        const locationDisplay = screen.getByTestId('location');
+
+        link1.focus();
+        await flushMicrotasks();
+
+        await waitFor(() => {
+          expect(link1).toHaveFocus();
+        });
+
+        await user.keyboard('Item T');
+
+        await waitFor(() => {
+          expect(link2).toHaveFocus();
+        });
+
+        expect(locationDisplay).toHaveTextContent('/');
+
+        await user.keyboard('[Space]');
+        expect(locationDisplay).toHaveTextContent('/');
+      },
+    );
   });
 
   it.each([

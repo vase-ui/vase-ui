@@ -31,14 +31,6 @@
       "reason": "The case presses a plain element in a portal in the popup. Vue gives that event to no listener of the popup element, so that element is outside the popup. A press in a child popup that `Teleport` moved is inside (`VUE-4`). The case \"VUE-4: a press in a child popup that Teleport moved does not close the parent popup\" tests that press."
     },
     {
-      "upstream": "packages/react/src/select/root/SelectRoot.test.tsx",
-      "describe": ["<Select.Root />", "conformance"],
-      "suite": "popupListConformanceTests",
-      "kind": "waits-on",
-      "waitsOn": "packages/react/test/popupListConformanceTests.tsx",
-      "reason": "Vase UI does not have the shared suite `popupListConformanceTests`."
-    },
-    {
       "upstream": "packages/react/src/select/group-label/SelectGroupLabel.test.tsx",
       "describe": ["<Select.GroupLabel />"],
       "title": "replaces and unregisters its label in Strict Mode",
