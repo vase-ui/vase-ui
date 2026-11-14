@@ -395,7 +395,9 @@ test('each family page has an API reference with one part, function or type or m
 test('each prop and each event of each family page has a type, and each event has a description', () => {
   const missing = listFamilyPages(join(REPOSITORY_ROOT, 'docs')).flatMap(({ family }) =>
     read(family).parts.flatMap((apiPart) => [
-      ...apiPart.props.flatMap(({ name, type }) => (type ? [] : [`${apiPart.name} prop ${name}: type`])),
+      ...apiPart.props.flatMap(({ name, type }) =>
+        type ? [] : [`${apiPart.name} prop ${name}: type`],
+      ),
       ...apiPart.events.flatMap(({ name, type, description }) => [
         ...(type ? [] : [`${apiPart.name} event ${name}: type`]),
         ...(description ? [] : [`${apiPart.name} event ${name}: description`]),

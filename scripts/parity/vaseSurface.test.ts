@@ -304,7 +304,10 @@ for (const { kind, file, edits, part } of [
     file: POPUP,
     edits: [
       ['  disabled?: boolean | undefined;', `  disabled?: boolean | undefined;\n${LISTENER_PROP}`],
-      ['const attrs = useAttrs();', 'defineEmits<{\n  openChangeComplete: [open: boolean];\n}>();\n\nconst attrs = useAttrs();'],
+      [
+        'const attrs = useAttrs();',
+        'defineEmits<{\n  openChangeComplete: [open: boolean];\n}>();\n\nconst attrs = useAttrs();',
+      ],
     ],
     part: 'Popup',
   },
@@ -324,8 +327,10 @@ for (const { kind, file, edits, part } of [
 test('a prop that the SFC compiler reads and vue-component-meta lists under another name is an error', () => {
   assert.throws(
     () =>
-      withText(ROOT, [[OPEN_PROP, `${OPEN_PROP}\n  onVnodeMounted?: (() => void) | undefined;`]], () =>
-        project.readComponent(exportOf('Root')),
+      withText(
+        ROOT,
+        [[OPEN_PROP, `${OPEN_PROP}\n  onVnodeMounted?: (() => void) | undefined;`]],
+        () => project.readComponent(exportOf('Root')),
       ),
     /the SFC compiler reads the prop "onVnodeMounted", but vue-component-meta does not list it/,
   );

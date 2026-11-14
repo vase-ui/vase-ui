@@ -627,7 +627,10 @@ test('readEmits reads the arguments as the source writes them and the JSDoc, in 
   assert.deepEqual(
     [...readEmits(source, 'x.vue')],
     [
-      ['change', { type: '[value: string, details: ChangeDetails]', description: 'From a property.' }],
+      [
+        'change',
+        { type: '[value: string, details: ChangeDetails]', description: 'From a property.' },
+      ],
       ['update', { type: '[value: string]', description: 'From a call signature.' }],
       ['noDocs', { type: '[]', description: '' }],
     ],

@@ -169,7 +169,11 @@ export function readEmits(source: string, file: string): Map<string, MemberSurfa
           });
         } else if (ts.isCallSignatureDeclaration(member)) {
           const [first, ...rest] = member.parameters;
-          if (first?.type && ts.isLiteralTypeNode(first.type) && ts.isStringLiteral(first.type.literal)) {
+          if (
+            first?.type &&
+            ts.isLiteralTypeNode(first.type) &&
+            ts.isStringLiteral(first.type.literal)
+          ) {
             emits.set(first.type.literal.text, {
               type: `[${rest.map(print).join(', ')}]`,
               description: jsDocText(member),
@@ -342,8 +346,8 @@ export function createVaseProject(tsconfig: string): VaseProject {
     return parameter && typeChecker().getTypeOfSymbol(parameter);
   };
 
-  // The property of the props type is an intersection with the listener type that vue-tsc makes from
-  // the emit. Its type text and its documentation mix both, so the declaration gives them.
+  // The type of the property of the props type is the intersection of the declared type and the
+  // listener type that vue-tsc makes from the emit. The declaration keeps the declared type.
   const declaredProp = (component: ts.Symbol, name: string, file: string): PropSurface => {
     const declaration = propsTypeOf(component)
       ?.getProperty(name)
