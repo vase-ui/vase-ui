@@ -27,9 +27,12 @@ import { contains } from '../../common/shadowDom';
 import type { HTMLProps } from '../../internals/types';
 import { useVaseUiId } from '../../internals/useBaseUiId';
 import { useRenderElement } from '../../internals/useRenderElement';
+import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
+import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../utils/createElementSetter';
 import NavigationMenuViewportChildren from './NavigationMenuViewportChildren.vue';
+import { useNavigationMenuViewportGuards } from './useNavigationMenuViewportGuards';
 
 defineOptions({ inheritAttrs: false });
 
@@ -55,6 +58,11 @@ const {
   viewportInert,
   setViewportInert,
 } = useNavigationMenuRootContext();
+
+// In a positioner, the two inside focus guards are siblings of the element. With no positioner,
+// the element holds them.
+const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
+const guards = inPositioner ? useNavigationMenuViewportGuards(true) : undefined;
 
 const domReference = computed(() => {
   const store: PopupInteractionStore = floatingRootStore.value ?? EMPTY_ROOT_STORE;
@@ -92,7 +100,7 @@ const { element, elementProps } = useRenderElement('div', props, {
     {
       id: viewportId.value,
       onFocusout: handleFocusout,
-      inert: viewportInert.value ? true : undefined,
+      inert: !inPositioner && viewportInert.value ? true : undefined,
     },
     attrs,
   ],
@@ -104,6 +112,12 @@ defineExpose({ element });
 
 <!-- prettier-ignore -->
 <template>
-  <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
+  <template v-if="guards">
+    <FocusGuard :ref="guards.setBeforeInsideGuard" @focusin="guards.handleBeforeInsideFocusin" />
+    <slot v-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
+    <component :is="as" v-else v-bind="elementProps()"><NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren></component>
+    <FocusGuard :ref="guards.setAfterInsideGuard" @focusin="guards.handleAfterInsideFocusin" />
+  </template>
+  <slot v-else-if="$slots.render" name="render" :props="elementProps()" :state="state" :children="NavigationMenuViewportChildren" />
   <component :is="as" v-else v-bind="elementProps()"><NavigationMenuViewportChildren><slot :state="state" /></NavigationMenuViewportChildren></component>
 </template>

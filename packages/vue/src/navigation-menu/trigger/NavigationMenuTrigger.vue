@@ -110,7 +110,9 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useHoverTriggerInteraction } from '../../utils/popups/interactions/useHoverTriggerInteraction';
 import { pressableTriggerOpenStateMapping } from '../../utils/popups/popupStateMapping';
 import { useFloatingTree } from '../../utils/popups/tree/FloatingTree';
+import { getCssDimensions } from '../../utils/getCssDimensions';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
+import { useNavigationMenuDismissContext } from '../list/NavigationMenuDismissContext';
 import {
   useNavigationMenuRootContext,
   useNavigationMenuTreeContext,
@@ -119,6 +121,7 @@ import type { NavigationMenuRootChangeEventDetails } from '../root/NavigationMen
 import { NAVIGATION_MENU_TRIGGER_IDENTIFIER } from '../utils/constants';
 import { createElementSetter } from '../utils/createElementSetter';
 import { isOutsideMenuEvent } from '../utils/isOutsideMenuEvent';
+import { useNavigationMenuPopupSize } from './useNavigationMenuPopupSize';
 
 defineOptions({ inheritAttrs: false });
 
@@ -158,6 +161,7 @@ const {
 const { value: itemValue } = useNavigationMenuItemContext();
 const nodeId = useNavigationMenuTreeContext();
 const tree = useFloatingTree();
+const dismissProps = useNavigationMenuDismissContext();
 const direction = useDirection();
 
 const stickIfOpenTimeout = useTimeout();
@@ -181,10 +185,14 @@ const shouldBlockSafePolygonPointerEvents = computed(() => pointerType.value !==
 // default flush writes these variables.
 let renderedMounted = mounted.value;
 let renderedIsActiveItem = isActiveItem.value;
-watch([mounted, isActiveItem], ([isMounted, isActive]) => {
+let renderedValue = value.value;
+watch([mounted, isActiveItem, value], ([isMounted, isActive, currentValue]) => {
   renderedMounted = isMounted;
   renderedIsActiveItem = isActive;
+  renderedValue = currentValue;
 });
+
+const popupSize = useNavigationMenuPopupSize(itemValue, isActiveItem);
 
 function handleOpenChange(
   nextOpen: boolean,
@@ -367,12 +375,34 @@ function handleActivation(event: MouseEvent | KeyboardEvent) {
   }
 }
 
-function handleOpenEvent(event: MouseEvent | KeyboardEvent) {
+async function handleOpenEvent(event: MouseEvent | KeyboardEvent) {
   if (props.disabled) {
     return;
   }
 
+  const popup = popupElement.value;
+  const positioner = positionerElement.value;
+  if (!popup || !positioner) {
+    handleActivation(event);
+    return;
+  }
+
+  const { width, height } = getCssDimensions(popup);
+  const shouldSkipAutoSizeSync =
+    renderedValue != null &&
+    renderedValue !== itemValue.value &&
+    (event.type === 'click' || pointerType.value !== 'touch');
+
   handleActivation(event);
+
+  // The popup gets the size of the new content, so the DOM must show that content first.
+  await nextTick();
+
+  if (shouldSkipAutoSizeSync) {
+    popupSize.skipNextAutoSizeSync();
+  }
+
+  popupSize.handleValueChange(popup, positioner, width, height);
 }
 
 function handleSetPointerType(event: PointerEvent) {
@@ -448,6 +478,7 @@ const { element, elementProps } = useRenderElement('button', props, {
     compositeProps.value,
     click.reference,
     hoverProps,
+    dismissProps?.value?.reference,
     {
       // The key wins over the roving `tabindex` of the composite, so each trigger is a tab stop.
       tabindex: 0,

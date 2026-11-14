@@ -1,61 +1,39 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { markChildrenMounted } from '../../internals/useRenderElement';
 import FocusGuard from '../../utils/popups/focus/FocusGuard.vue';
-import {
-  getNextTabbable,
-  getPreviousTabbable,
-  isOutsideEvent,
-} from '../../utils/popups/focus/tabbable';
+import { useNavigationMenuPositionerContext } from '../positioner/NavigationMenuPositionerContext';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { createElementSetter } from '../utils/createElementSetter';
+import { useNavigationMenuViewportGuards } from './useNavigationMenuViewportGuards';
 
 defineSlots<{
   default(): unknown;
 }>();
 
-const {
-  floatingRootStore,
-  positionerElement,
-  viewportElement,
-  viewportTargetElement,
-  beforeInsideRef,
-  afterInsideRef,
-  beforeOutsideRef,
-  afterOutsideRef,
-} = useNavigationMenuRootContext();
+const { viewportTargetElement } = useNavigationMenuRootContext();
 
 markChildrenMounted();
 
-const hasGuards = computed(() => floatingRootStore.value !== undefined);
+// In a positioner, the viewport element holds the content itself, and its guards are siblings of
+// the element.
+const inPositioner = useNavigationMenuPositionerContext(true) !== undefined;
 
-const setBeforeInsideGuard = createElementSetter(beforeInsideRef);
-const setAfterInsideGuard = createElementSetter(afterInsideRef);
+const {
+  hasGuards,
+  setBeforeInsideGuard,
+  setAfterInsideGuard,
+  handleBeforeInsideFocusin,
+  handleAfterInsideFocusin,
+} = useNavigationMenuViewportGuards(false);
+
 const setViewportTarget = createElementSetter(viewportTargetElement);
-
-function handleBeforeInsideFocusin(event: FocusEvent) {
-  const referenceElement = positionerElement.value || viewportElement.value;
-
-  if (referenceElement && isOutsideEvent(event, referenceElement)) {
-    getNextTabbable(referenceElement)?.focus();
-  } else {
-    beforeOutsideRef.value?.focus();
-  }
-}
-
-function handleAfterInsideFocusin(event: FocusEvent) {
-  const referenceElement = positionerElement.value || viewportElement.value;
-
-  if (referenceElement && isOutsideEvent(event, referenceElement)) {
-    getPreviousTabbable(referenceElement)?.focus();
-  } else {
-    afterOutsideRef.value?.focus();
-  }
-}
 </script>
 
 <template>
-  <FocusGuard v-if="hasGuards" :ref="setBeforeInsideGuard" @focusin="handleBeforeInsideFocusin" />
-  <div :ref="setViewportTarget"><slot /></div>
-  <FocusGuard v-if="hasGuards" :ref="setAfterInsideGuard" @focusin="handleAfterInsideFocusin" />
+  <slot v-if="inPositioner" />
+  <template v-else>
+    <FocusGuard v-if="hasGuards" :ref="setBeforeInsideGuard" @focusin="handleBeforeInsideFocusin" />
+    <div :ref="setViewportTarget"><slot /></div>
+    <FocusGuard v-if="hasGuards" :ref="setAfterInsideGuard" @focusin="handleAfterInsideFocusin" />
+  </template>
 </template>

@@ -10,6 +10,7 @@
     "packages/react/src/internals/field-root-context/**",
     "packages/react/src/internals/filter.ts",
     "packages/react/src/internals/filter.test.ts",
+    "packages/react/src/internals/getDisabledMountTransitionStyles.ts",
     "packages/react/src/internals/getStateAttributesProps.ts",
     "packages/react/src/internals/getStateAttributesProps.test.ts",
     "packages/react/src/internals/handleHiddenInputInvalid.ts",
