@@ -46,7 +46,7 @@
       "describe": ["<Popover.Root />"],
       "title": "does not detach the consumer ref when the handle attaches to a root",
       "kind": "not-applicable",
-      "reason": "The case counts the calls of the ref callback of a consumer. React merges that callback with the ref callbacks of the part, and it makes a new merged ref when the store of the trigger changes. The consumer then gets a call with `null` and a new call. A part gives its own ref callbacks one time, in `setup`, so a change of the store changes none of them."
+      "reason": "The case counts the calls of the ref callback of a consumer. Base UI merges that callback with the ref callbacks of the part. A new merged ref for a change of the store would give the consumer a call with `null` and a new call, and the case guards against it. A part gives its own ref callbacks one time, in `setup`, and Vue does not merge the ref of a consumer with them. A change of the store thus changes no ref."
     }
   ],
   "surfaceAdditions": [
