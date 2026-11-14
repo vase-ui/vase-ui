@@ -408,13 +408,19 @@ describe('focus listeners of Menu.Input', () => {
     await waitFor(() => expect(input).toHaveFocus());
     await waitFor(() => expect(input).toHaveAttribute('data-highlighted'));
 
-    await setProps({ inputKey: 'second', autoFocus: false });
-    const replacement = screen.getByRole('searchbox', { name: 'Filter actions' });
-    expect(replacement).not.toBe(input);
-    await waitSingleFrame();
+    // Vue skips a listener only when the focus comes in the millisecond of the mount, so the case
+    // replaces the input three times.
+    let previous = input;
+    for (const inputKey of ['second', 'third', 'fourth']) {
+      await setProps({ inputKey, autoFocus: false });
+      const replacement = screen.getByRole('searchbox', { name: 'Filter actions' });
+      expect(replacement).not.toBe(previous);
+      previous = replacement;
+      await waitSingleFrame();
 
-    // Engines differ in whether they restore focus after removing the old input.
-    expect(replacement.hasAttribute('data-highlighted')).toBe(replacement.matches(':focus'));
+      // Engines differ in whether they restore focus after removing the old input.
+      expect(replacement.hasAttribute('data-highlighted')).toBe(replacement.matches(':focus'));
+    }
   });
 
   it('lets a focusin listener of the consumer stop the focus listeners of the input', async () => {

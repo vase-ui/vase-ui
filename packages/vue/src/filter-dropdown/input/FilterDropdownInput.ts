@@ -219,8 +219,9 @@ export function useFilterDropdownInput(
  * Vue listener received the event first. A popup can move the focus to a new input in that
  * millisecond.
  *
- * Vue attaches the listeners of the consumer when it mounts the input, before the function ref.
- * They thus run first, and `event.preventVaseUIHandler()` stops the listener of the part.
+ * Vue attaches the listeners that the input has at its mount before it calls the function ref. A
+ * listener of the consumer then runs first, and its `event.preventVaseUIHandler()` stops the
+ * listener of the part.
  *
  * @internal
  */
