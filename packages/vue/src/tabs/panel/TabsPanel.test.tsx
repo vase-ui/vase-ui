@@ -8,6 +8,7 @@ import {
   flushMicrotasks,
   hydrate,
   isJSDOM,
+  nextEvent,
   renderOnServer,
   screen,
   takeReportedMessages,
@@ -318,18 +319,17 @@ describe('<Tabs.Panel />', () => {
           </Tabs.Root>
         </div>
       ));
-      let transitionStarted = false;
-      container.addEventListener('transitionrun', () => {
-        transitionStarted = true;
+
+      // The panel mounts in the timer task, so the listener is on the container.
+      const transitionRun = await nextEvent(container, 'transitionrun', {
+        action: () => {
+          setTimeout(() => {
+            value.value = 'one';
+          });
+        },
       });
 
-      setTimeout(() => {
-        value.value = 'one';
-      });
-
-      await waitFor(() => {
-        expect(transitionStarted).toBe(true);
-      });
+      expect(transitionRun.target).toBe(container.querySelector('.animation-test-panel'));
     });
 
     it('applies data-ending-style before unmount', async () => {
