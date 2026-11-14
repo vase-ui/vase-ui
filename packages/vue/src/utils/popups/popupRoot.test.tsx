@@ -1608,11 +1608,10 @@ describe('usePopupRoot', () => {
 
       const triggers = readTriggers(container);
       expect(triggers).toEqual(client);
-      // `hydrate` mounts two apps, so an open popup is in the document two times. The portal puts
-      // the popup into the document after the mount, and `aria-controls` names it.
+      // The portal puts the popup into the document after the mount, and `aria-controls` names it.
       const controls = triggers.find((trigger) => trigger.open)?.controls;
       const popups = Array.from(document.querySelectorAll('[role="dialog"]'), (popup) => popup.id);
-      expect(popups).toEqual(controls ? [controls, controls] : []);
+      expect(popups).toEqual(controls ? [controls] : []);
     });
   });
 });
@@ -2005,6 +2004,25 @@ describe('usePopupRootSync', () => {
     unmount();
 
     expect(store.state.openMethod).toBe(null);
+  });
+
+  it('keeps openMethod while KeepAlive holds the root', async () => {
+    const store = createStoreWithOpenMethod();
+    const visible = shallowRef(true);
+    await render(() => (
+      <KeepAlive>
+        {visible.value ? <SyncTest key="root" store={store} open /> : <Other key="other" />}
+      </KeepAlive>
+    ));
+    store.set('openMethod', 'touch');
+
+    visible.value = false;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
+
+    visible.value = true;
+    await flushMicrotasks();
+    expect(store.state.openMethod).toBe('touch');
   });
 });
 

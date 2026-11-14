@@ -219,8 +219,10 @@ const { element, elementProps } = useRenderElement('button', props, {
         setTouched(true);
         setFocused(false);
 
+        // The field is not marked dirty when the user leaves a select that has no value, so a
+        // missing value counts with no earlier change.
         if (validationMode.value === 'onBlur') {
-          void validation.commit(toRaw(store.state).selectedValue);
+          void validation.commit(toRaw(store.state).selectedValue, true);
         }
       },
       onMousedown(event: MouseEvent) {

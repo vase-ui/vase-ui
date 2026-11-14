@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToString } from 'vue/server-renderer';
 import { Field } from '@vase-ui/vue/field';
+import * as Select from '../../select/index.parts';
 import FieldPartOrder from './FieldPartOrder.test.vue';
 
 // The generated id has another form in each version of Vue.
@@ -57,6 +58,21 @@ describe('<Field.Root /> on a server', () => {
     );
 
     expect(html).toBe(`<div><!--[--><input id="${readId(html)}"><!--]--></div>`);
+  });
+
+  it('does not set `aria-labelledby` during SSR when Field.Label is absent', async () => {
+    const html = await renderToString(
+      <Field.Root>
+        <Select.Root>
+          <Select.Trigger data-testid="trigger">
+            <Select.Value placeholder="Pick one" />
+          </Select.Trigger>
+        </Select.Root>
+      </Field.Root>,
+    );
+
+    expect(readAttribute(html, 'trigger', 'role')).toBe('combobox');
+    expect(readAttribute(html, 'trigger', 'aria-labelledby')).toBeUndefined();
   });
 });
 
