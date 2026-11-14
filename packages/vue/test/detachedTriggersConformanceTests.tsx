@@ -5,6 +5,7 @@ import { expect, vi, describe, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import { isJSDOM } from '../src/common/testUtils';
 import { REASONS } from '../src/internals/reasons';
+import { nextEvent } from './animation';
 import { waitForLaterMillisecond } from './createRenderer';
 import type { createRenderer } from './createRenderer';
 import { fireEvent } from './fireEvent';
@@ -223,10 +224,12 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
   // press causes no focus-out close. A popup that closes on an outside press, such as Popover, then
   // closes after the click listener of the button moved it: `useDismiss` runs its outside press
   // after that listener. React runs that listener at its root, after the outside press.
-  async function waitForFocusInPopup() {
-    await waitFor(() => {
-      expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
-    });
+  // A click of `user` focuses the button. The button gets the focus before the click, so the first
+  // `focusin` after the click is the initial focus of the popup.
+  async function clickAndWaitForFocusInPopup(user: UserEvent, button: HTMLElement) {
+    button.focus();
+    await nextEvent(document, 'focusin', { action: () => user.click(button) });
+    expect(screen.getByTestId('popup').contains(document.activeElement)).toBe(true);
   }
 
   async function waitForContent(text: string) {
@@ -457,14 +460,15 @@ export function detachedTriggersConformanceTests(config: DetachedTriggersTestCon
             const openTrigger2 = screen.getByRole('button', { name: 'Open Trigger 2' });
             const closeExternally = screen.getByRole('button', { name: 'Close externally' });
 
-            await user.click(openTrigger1);
+            if (Close) {
+              await clickAndWaitForFocusInPopup(user, openTrigger1);
+            } else {
+              await user.click(openTrigger1);
+            }
             await waitForLaterMillisecond();
             await waitForContent('1');
             expectActiveTrigger(1);
             await expectPositionerAlignedWith(getTrigger(1));
-            if (Close) {
-              await waitForFocusInPopup();
-            }
 
             await user.click(openTrigger2);
             await waitForContent('2');
