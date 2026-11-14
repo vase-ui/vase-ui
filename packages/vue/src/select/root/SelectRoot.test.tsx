@@ -501,25 +501,25 @@ describe('<Select.Root />', () => {
       expect(getFormData('font')).toEqual([]);
     });
 
-    it.each([{ name: 'input' }, { name: 'change' }])(
-      'keeps its value after an $name event that gives the input another value',
-      async ({ name }) => {
-        const handleValueChange = vi.fn();
-        await render(
-          <Select.Root name="font" defaultValue="serif" onValueChange={handleValueChange}>
-            <Select.Trigger />
-          </Select.Root>,
-        );
-        const input = getHiddenInput();
+    it.each([
+      { name: 'an input event', type: 'input' },
+      { name: 'a change event', type: 'change' },
+    ])('keeps its value after $name that gives the input another value', async ({ type }) => {
+      const handleValueChange = vi.fn();
+      await render(
+        <Select.Root name="font" defaultValue="serif" onValueChange={handleValueChange}>
+          <Select.Trigger />
+        </Select.Root>,
+      );
+      const input = getHiddenInput();
 
-        input.value = 'mono';
-        await fireEvent[name === 'input' ? 'input' : 'change'](input);
-        await flushMicrotasks();
+      input.value = 'mono';
+      await fireEvent[type === 'input' ? 'input' : 'change'](input);
+      await flushMicrotasks();
 
-        expect(input.value).toBe('serif');
-        expect(handleValueChange).toHaveBeenCalledTimes(0);
-      },
-    );
+      expect(input.value).toBe('serif');
+      expect(handleValueChange).toHaveBeenCalledTimes(0);
+    });
 
     it('writes its value to the input after a `pageshow` event', async () => {
       await render(
@@ -749,7 +749,10 @@ describe('<Select.Root />', () => {
         items: { sans: 'Sans-serif', serif: 'Serif' },
         label: 'after',
       };
-      const serverHtml = await renderOnServer('src/select/root/SelectRootHydration.test.vue', props);
+      const serverHtml = await renderOnServer(
+        'src/select/root/SelectRootHydration.test.vue',
+        props,
+      );
 
       const { container } = await hydrate(SelectRootHydration, { serverHtml, props });
 
@@ -761,7 +764,10 @@ describe('<Select.Root />', () => {
 
     it('hydrates a select with no value and a placeholder', async () => {
       const props = { id: 'font', placeholder: 'Pick a font' };
-      const serverHtml = await renderOnServer('src/select/root/SelectRootHydration.test.vue', props);
+      const serverHtml = await renderOnServer(
+        'src/select/root/SelectRootHydration.test.vue',
+        props,
+      );
 
       const { container } = await hydrate(SelectRootHydration, { serverHtml, props });
 

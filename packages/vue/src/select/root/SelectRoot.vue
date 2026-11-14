@@ -165,7 +165,10 @@ import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
 import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
-import { FOCUSABLE_POPUP_PROPS, usePopupInteractionProps } from '../../utils/popups/popupStoreUtils';
+import {
+  FOCUSABLE_POPUP_PROPS,
+  usePopupInteractionProps,
+} from '../../utils/popups/popupStoreUtils';
 import { createInitialPopupStoreState, createPopupStoreContext } from '../../utils/popups/store';
 import { SelectStore, selectors } from '../store';
 import { SelectRootContext } from './SelectRootContext';
@@ -260,7 +263,11 @@ watch(
   { deep: true },
 );
 
-const { store, open: isOpen, actions } = useSingleAnchorPopupRoot(
+const {
+  store,
+  open: isOpen,
+  actions,
+} = useSingleAnchorPopupRoot(
   props,
   (initialState, defaultPopupId) =>
     new SelectStore(
@@ -335,8 +342,7 @@ const { store, open: isOpen, actions } = useSingleAnchorPopupRoot(
 
       if (
         !nextOpen &&
-        (eventDetails.reason === REASONS.focusOut ||
-          eventDetails.reason === REASONS.outsidePress)
+        (eventDetails.reason === REASONS.focusOut || eventDetails.reason === REASONS.outsidePress)
       ) {
         setTouched(true);
         setFocused(false);

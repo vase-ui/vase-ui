@@ -10,7 +10,9 @@ export interface SelectIconState {
 }
 
 export interface SelectIconProps
-  extends VaseUIComponentProps<SelectIconState>, /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
+  extends
+    VaseUIComponentProps<SelectIconState>,
+    /* @vue-ignore */ WithVaseUIEvent<HTMLAttributes> {}
 </script>
 
 <script setup lang="ts">

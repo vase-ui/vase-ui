@@ -213,9 +213,7 @@ const { element, elementProps } = useRenderElement('button', props, {
       },
       onFocusout(event: FocusEvent) {
         // If focus is moving into the popup, don't count it as a blur.
-        if (
-          contains(toRaw(store.state).positionerElement, event.relatedTarget as Element | null)
-        ) {
+        if (contains(toRaw(store.state).positionerElement, event.relatedTarget as Element | null)) {
           return;
         }
 

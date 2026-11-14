@@ -284,9 +284,7 @@ describe('<Select.Value />', () => {
 
       await render(
         <Select.Root multiple>
-          <Select.Value
-            v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }}
-          />
+          <Select.Value v-slots={{ default: ({ value }: ValueSlotProps) => renderValue(value) }} />
         </Select.Root>,
       );
 
@@ -385,7 +383,7 @@ describe('<Select.Value />', () => {
     });
   });
 
-  describe('children of the #render slot', () => {
+  describe('#render slot', () => {
     it('shows the label of the value in the `children` component', async () => {
       await render(
         <Select.Root value="sans" items={{ sans: 'Sans-serif' }}>
@@ -403,10 +401,15 @@ describe('<Select.Value />', () => {
 
       expect(screen.getByTestId('value').textContent).toBe('Sans-serif');
     });
+  });
 
-    it('renders no text node when it has no label to show', async () => {
+  describe('a value with no label', () => {
+    it.each([
+      { name: 'a multiple select with no value', root: { multiple: true } },
+      { name: 'an empty string value', root: { defaultValue: '' } },
+    ])('renders no text node for $name', async ({ root }) => {
       await render(
-        <Select.Root multiple>
+        <Select.Root {...root}>
           <Select.Value data-testid="value" />
         </Select.Root>,
       );

@@ -185,7 +185,11 @@ describe('<Select.Trigger />', () => {
 
     it.each([
       { name: 'up to 5px off the trigger', target: () => document.body, clientX: 96 },
-      { name: 'on the content of the trigger', target: () => screen.getByTestId('text'), clientX: 10 },
+      {
+        name: 'on the content of the trigger',
+        target: () => screen.getByTestId('text'),
+        clientX: 10,
+      },
     ])('keeps the popup open when the press is released $name', async ({ target, clientX }) => {
       const trigger = await pressTrigger();
 
