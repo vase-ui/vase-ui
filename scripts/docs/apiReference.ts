@@ -142,10 +142,11 @@ interface EntryTypesFile {
 }
 
 /**
- * The entry file that the reference reads `part` from. A `types.md` can repeat a part of another
- * family: the `types.md` of Radio Group has `Root` and `Indicator` of Radio. The entry file of the
- * family has no export for such a part. The entry file of the family whose `types.md` has the same
- * part, with the same text, exports it. When no entry file exports the part, the result is `entryFile`.
+ * The entry file that exports `part`. It is `entryFile`, the entry file of the family of the
+ * `types.md`, when that file exports the part. A `types.md` can repeat a part of another family: the
+ * `types.md` of Radio Group has `Root` and `Indicator` of Radio. The entry file of the family whose
+ * `types.md` has the same part, with the same text, then exports it. When no file exports the part,
+ * the result is `entryFile`.
  */
 function findEntryFileOfPart(
   project: VaseProject,
