@@ -51,6 +51,10 @@ export default defineConfig({
               {
                 browser: 'firefox',
                 name: 'firefox',
+                // Firefox has one mouse for all its windows, and each test file that runs at the
+                // same time gets a window of its own. When the real pointer leaves the page of one
+                // window, Firefox can send the leave events to the page of another window.
+                fileParallelism: false,
                 provider: playwright({
                   contextOptions,
                   launchOptions: {

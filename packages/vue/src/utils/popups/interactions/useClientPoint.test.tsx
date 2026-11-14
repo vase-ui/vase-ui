@@ -107,17 +107,12 @@ const App = defineComponent({
             data-testid="reference"
             ref={refs.setReference}
             {...referenceProps}
-            style={{ width: 0, height: 0, pointerEvents: 'none' }}
+            style={{ width: 0, height: 0 }}
           >
             Reference
           </div>
           {isOpen.value && (
-            <div
-              data-testid="floating"
-              ref={refs.setFloating}
-              {...getFloatingProps()}
-              style={{ pointerEvents: 'none' }}
-            >
+            <div data-testid="floating" ref={refs.setFloating} {...getFloatingProps()}>
               Floating
             </div>
           )}
@@ -664,15 +659,10 @@ describe('rules with no Base UI case', () => {
                 floating.refs.setReference(element);
               }}
               {...clientPoint}
-              style={{ pointerEvents: 'none' }}
             />
             {(open.value || options.keepMounted) && (
               <Teleport to={options.container ?? 'body'} disabled={!options.container}>
-                <div
-                  data-testid="floating"
-                  ref={floating.refs.setFloating}
-                  style={{ pointerEvents: 'none' }}
-                />
+                <div data-testid="floating" ref={floating.refs.setFloating} />
               </Teleport>
             )}
           </>
@@ -945,7 +935,7 @@ describe('rules with no Base UI case', () => {
     const Part = defineComponent({
       setup() {
         const clientPoint = useClientPoint(store);
-        return () => <div {...clientPoint} style={{ pointerEvents: 'none' }} />;
+        return () => <div {...clientPoint} />;
       },
     });
     const { unmount } = await render(<Part />);

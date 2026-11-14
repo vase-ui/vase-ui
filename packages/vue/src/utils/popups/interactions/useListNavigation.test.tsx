@@ -779,7 +779,6 @@ const List = defineComponent({
         <>
           <Reference
             data-testid="reference"
-            style={{ pointerEvents: 'none' }}
             role={props.role}
             ref={refs.setReference}
             {...mergeProps(click, navigation.value.reference)}
@@ -787,7 +786,6 @@ const List = defineComponent({
           {open.value && (
             <div
               role="menu"
-              style={{ pointerEvents: 'none' }}
               ref={refs.setFloating}
               {...mergeProps(FLOATING_PROPS, navigation.value.floating)}
             >
