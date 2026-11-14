@@ -8,26 +8,26 @@ import { isElementDisabled } from '../../common/isElementDisabled';
 import { stopEvent } from '../../utils/popups/event';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP } from '../../utils/popups/constants';
 
-export type DisabledIndices = ReadonlyArray<number> | ((index: number) => boolean);
+export type DisabledIndices = readonly number[] | ((index: number) => boolean);
 
 export function isDifferentGridRow(index: number, cols: number, prevRow: number) {
   return Math.floor(index / cols) !== prevRow;
 }
 
-export function isIndexOutOfListBounds(list: ReadonlyArray<HTMLElement | null>, index: number) {
+export function isIndexOutOfListBounds(list: readonly (HTMLElement | null)[], index: number) {
   return index < 0 || index >= list.length;
 }
 
 export function getMinListIndex(
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
-  disabledIndices?: DisabledIndices | undefined,
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
+  disabledIndices?: DisabledIndices,
 ) {
   return findNonDisabledListIndex(listRef.value, { disabledIndices });
 }
 
 export function getMaxListIndex(
-  listRef: Readonly<Ref<ReadonlyArray<HTMLElement | null>>>,
-  disabledIndices?: DisabledIndices | undefined,
+  listRef: Readonly<Ref<readonly (HTMLElement | null)[]>>,
+  disabledIndices?: DisabledIndices,
 ) {
   return findNonDisabledListIndex(listRef.value, {
     decrement: true,
@@ -55,7 +55,7 @@ export interface ListStepOptions {
  * `wrapped` is `true` when the step jumps from one end of the list to the other.
  */
 export function getNextListIndex(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   currentIndex: number,
   options: ListStepOptions,
 ): { index: number; wrapped: boolean } {
@@ -86,7 +86,7 @@ export function getNextListIndex(
 }
 
 export function findNonDisabledListIndex(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   {
     startingIndex = -1,
     decrement = false,
@@ -112,7 +112,7 @@ export function findNonDisabledListIndex(
 }
 
 export function getGridNavigatedIndex(
-  list: Array<HTMLElement | null>,
+  list: (HTMLElement | null)[],
   {
     event,
     orientation,
@@ -175,7 +175,8 @@ export function getGridNavigatedIndex(
           currentRowIndex += 1;
           rows[currentRowIndex] = [];
         }
-        rows[currentRowIndex].push(idx);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The block above makes the row of `currentRowIndex` when the row changes.
+        rows[currentRowIndex]!.push(idx);
         rowIndexMap[idx] = currentRowIndex;
       });
     }
@@ -210,7 +211,8 @@ export function getGridNavigatedIndex(
         return undefined;
       }
 
-      const colInRow = rows[currentRow].indexOf(prevIndex);
+      /* eslint-disable @typescript-eslint/no-non-null-assertion -- Each row index is in `rows`, each row has an item, and `col` is in its row. */
+      const colInRow = rows[currentRow]!.indexOf(prevIndex);
       const step = direction === 'up' ? -1 : 1;
 
       for (let nextRow = currentRow + step, i = 0; i < rows.length; i += 1, nextRow += step) {
@@ -220,21 +222,22 @@ export function getGridNavigatedIndex(
           }
           nextRow = nextRow < 0 ? rows.length - 1 : 0;
           if (onLoop) {
-            const clampedCol = Math.min(colInRow, rows[nextRow].length - 1);
-            const targetItemIndex = rows[nextRow][clampedCol] ?? rows[nextRow][0];
+            const clampedCol = Math.min(colInRow, rows[nextRow]!.length - 1);
+            const targetItemIndex = rows[nextRow]![clampedCol] ?? rows[nextRow]![0]!;
             const returnedItemIndex = onLoop(event, prevIndex, targetItemIndex);
             nextRow = rowIndexMap[returnedItemIndex] ?? nextRow;
           }
         }
 
-        const targetRow = rows[nextRow];
+        const targetRow = rows[nextRow]!;
         for (let col = Math.min(colInRow, targetRow.length - 1); col >= 0; col -= 1) {
-          const candidate = targetRow[col];
+          const candidate = targetRow[col]!;
           if (!isListIndexDisabled(list, candidate, disabledIndices)) {
             return candidate;
           }
         }
       }
+      /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
       return undefined;
     };
@@ -542,7 +545,7 @@ export function getGridCellIndices(
 }
 
 export function isListIndexDisabled(
-  list: ReadonlyArray<HTMLElement | null>,
+  list: readonly (HTMLElement | null)[],
   index: number,
   disabledIndices?: DisabledIndices,
 ) {

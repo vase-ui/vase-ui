@@ -8,17 +8,9 @@ const STEP_EPSILON_FACTOR = 1e-10;
 // Equal to `STEP_EPSILON_FACTOR` only by coincidence — the two are independent and may diverge.
 const MAX_FLOATING_POINT_CLEANUP_DELTA = 1e-10;
 
-// The repo compiles against es2022 Intl types, so model NumberFormat v3 options locally.
-// Delete this once `lib` in `packages/vue/tsconfig.json` includes es2023.
-type NumberFormatOptionsWithRounding = Intl.NumberFormatOptions & {
-  roundingIncrement?: number | undefined;
-  roundingMode?: string | undefined;
-  roundingPriority?: string | undefined;
-};
-
 export function hasNumberFormatRoundingOptions(
-  format?: NumberFormatOptionsWithRounding,
-): format is NumberFormatOptionsWithRounding {
+  format?: Intl.NumberFormatOptions,
+): format is Intl.NumberFormatOptions {
   return (
     format?.maximumFractionDigits != null ||
     format?.minimumFractionDigits != null ||
@@ -30,7 +22,7 @@ export function hasNumberFormatRoundingOptions(
   );
 }
 
-export function removeFloatingPointErrors(value: number, format?: NumberFormatOptionsWithRounding) {
+export function removeFloatingPointErrors(value: number, format?: Intl.NumberFormatOptions) {
   if (!Number.isFinite(value)) {
     return value;
   }
@@ -63,7 +55,7 @@ export function removeFloatingPointErrors(value: number, format?: NumberFormatOp
     currencySign: 'standard',
     notation: format.notation === 'compact' ? 'standard' : format.notation,
     useGrouping: false,
-  } as NumberFormatOptionsWithRounding);
+  });
   const roundedText = formatter.format(value);
   const roundedValue = parseNumber(roundedText, 'en-US', format);
 
@@ -95,7 +87,7 @@ export function toValidatedNumber(
   minWithDefault: number,
   maxWithDefault: number,
   minWithZeroDefault: number,
-  format: NumberFormatOptionsWithRounding | undefined,
+  format: Intl.NumberFormatOptions | undefined,
   snapOnStep: boolean,
   small: boolean,
   shouldClamp: boolean,

@@ -1149,7 +1149,7 @@ describe('<Select.Popup />', () => {
 
   describe.skipIf(isJSDOM)('aligned popup scroll resizing', () => {
     const docEl = document.documentElement;
-    const restores: Array<() => void> = [];
+    const restores: (() => void)[] = [];
 
     function stubProperty(target: object, property: string, value: unknown) {
       const descriptor = Object.getOwnPropertyDescriptor(target, property);
@@ -1905,7 +1905,7 @@ describe('<Select.Popup />', () => {
   });
 
   it('VUE-5: closes a popup that is placed over the trigger for a window resize only while KeepAlive shows it', async () => {
-    const changes: Array<[boolean, string]> = [];
+    const changes: [boolean, string][] = [];
     const Page = defineComponent({
       name: 'Page',
       setup() {
@@ -1954,7 +1954,7 @@ describe('<Select.Popup />', () => {
   });
 
   it('VUE-5: keeps its open state under KeepAlive and hears no Escape while deactivated', async () => {
-    const changes: Array<[boolean, string]> = [];
+    const changes: [boolean, string][] = [];
     const Page = defineComponent({
       name: 'Page',
       setup() {

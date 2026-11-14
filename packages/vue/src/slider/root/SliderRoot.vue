@@ -320,7 +320,7 @@ const [valueUnwrapped, setValueUnwrapped] = useControlled<number | readonly numb
 });
 
 const controlElement = shallowRef<HTMLElement | null>(null);
-const thumbRefs = shallowRef<Array<HTMLElement | null>>([]);
+const thumbRefs = shallowRef<(HTMLElement | null)[]>([]);
 // The px distance between the pointer and the center of a pressed thumb.
 const pressedThumbCenterOffsetRef = shallowRef<number | null>(null);
 // The index of the pressed thumb, or the closest thumb if the `Control` was pressed.
@@ -523,7 +523,7 @@ watch(
 );
 
 function getThumbInputs() {
-  const inputs: Array<HTMLInputElement | null> = [];
+  const inputs: (HTMLInputElement | null)[] = [];
   thumbRefs.value.forEach((thumb, index) => {
     inputs[index] = thumb?.querySelector<HTMLInputElement>('input[type="range"]') ?? null;
   });

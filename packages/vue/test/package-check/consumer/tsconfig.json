@@ -5,6 +5,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "noEmit": true,
     "types": [],
     "skipLibCheck": false

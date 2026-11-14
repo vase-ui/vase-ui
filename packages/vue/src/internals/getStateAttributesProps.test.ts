@@ -73,7 +73,7 @@ describe('getStateAttributesProps', () => {
     };
 
     const result = getStateAttributesProps(state, {
-      checked: (value) => (value === true ? { 'data-state': 'checked' } : null),
+      checked: (value) => (value ? { 'data-state': 'checked' } : null),
     });
 
     expect(result).toEqual({

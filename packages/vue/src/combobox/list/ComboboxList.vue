@@ -55,7 +55,7 @@ if (!toRaw(store.state).virtualized) {
   // when the list unmounts. The labels of the rendered items count only for a force-mounted list,
   // where the autofill matches the rendered text. The registry takes one labels ref for its life,
   // so the list gives it a ref of its own and copies the labels that count.
-  const renderedLabels = shallowRef<Array<string | null>>([]);
+  const renderedLabels = shallowRef<(string | null)[]>([]);
   const countsRenderedLabels = () => !hasItems.value || store.select('forceMounted');
   useCompositeList({ elementsRef: store.context.listRef, labelsRef: renderedLabels });
   watch(

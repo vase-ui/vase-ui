@@ -77,7 +77,7 @@ const groupedItemsReadonly = [
 />;
 
 type Obj = { code: string };
-const objectValueItems: Array<{ value: Obj; label: string }> = [
+const objectValueItems: { value: Obj; label: string }[] = [
   { value: { code: 'a' }, label: 'apple' },
   { value: { code: 'b' }, label: 'banana' },
 ];

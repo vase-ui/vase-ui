@@ -233,7 +233,7 @@ describe('<Collapsible.Panel />', () => {
   });
 
   it('unmounts a panel that mounts after the close has already entered the ending phase', async () => {
-    const renderedStatuses: Array<string | undefined> = [];
+    const renderedStatuses: (string | undefined)[] = [];
 
     await render(
       <Collapsible.Root defaultOpen>

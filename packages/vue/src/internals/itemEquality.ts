@@ -113,7 +113,8 @@ export function resolveSelectedIndex<Item, Value>(
     // A later item only takes over once the current anchor stops being selected.
     return currentIndex != null &&
       index > currentIndex &&
-      selectedValueIncludes(selectedValues, registry[currentIndex], comparer)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `index` is an index of `registry` and is above `currentIndex`, so `registry[currentIndex]` exists.
+      selectedValueIncludes(selectedValues, registry[currentIndex]!, comparer)
       ? currentIndex
       : index;
   }
