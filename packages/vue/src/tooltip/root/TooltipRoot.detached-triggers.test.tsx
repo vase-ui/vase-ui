@@ -1,6 +1,6 @@
 import { vi, expect, describe, it, onTestFinished } from 'vitest';
 import { createSSRApp, defineComponent, shallowRef } from 'vue';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 import {
   createRenderer,
   detachedTriggersConformanceTests,
@@ -108,8 +108,8 @@ describe('<Tooltip.Root />', () => {
     Portal: Tooltip.Portal,
     Positioner: Tooltip.Positioner,
     Popup: Tooltip.Popup,
-    // Keeps the real browser pointer from hovering the triggers; the suite dispatches the events.
-    triggerProps: { delay: 0, style: { pointerEvents: 'none' } },
+    Viewport: Tooltip.Viewport,
+    triggerProps: { delay: 0 },
     openInteractions: ['hover', 'focus'],
     ariaExpanded: false,
     throwOnMissingTrigger: true,
@@ -317,19 +317,13 @@ describe('<Tooltip.Root />', () => {
           {{
             default: ({ payload }: NumberPayload) => (
               <>
-                <Tooltip.Trigger
-                  payload={1}
-                  delay={0}
-                  closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
-                >
+                <Tooltip.Trigger payload={1} delay={0} closeDelay={0}>
                   Trigger 1
                 </Tooltip.Trigger>
                 <Tooltip.Trigger
                   payload={2}
                   delay={0}
                   closeDelay={0}
-                  style={{ pointerEvents: 'none' }}
                   v-slots={{
                     render: ({ props }: { props: HTMLProps }) => (
                       <button {...props} id="custom-button" type="button">
@@ -554,20 +548,10 @@ describe('<Tooltip.Root />', () => {
       const testTooltip = Tooltip.createHandle<number>();
       await render(
         <div>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={1}
-            delay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={1} delay={0}>
             Trigger 1
           </Tooltip.Trigger>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={2}
-            disabled
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={2} disabled>
             Trigger 2
           </Tooltip.Trigger>
 
@@ -597,19 +581,13 @@ describe('<Tooltip.Root />', () => {
       const testTooltip = Tooltip.createHandle<number>();
       await render(
         <div>
-          <Tooltip.Trigger
-            handle={testTooltip}
-            payload={1}
-            delay={0}
-            style={{ pointerEvents: 'none' }}
-          >
+          <Tooltip.Trigger handle={testTooltip} payload={1} delay={0}>
             Trigger 1
           </Tooltip.Trigger>
           <Tooltip.Trigger
             handle={testTooltip}
             payload={2}
             delay={0}
-            style={{ pointerEvents: 'none' }}
             v-slots={{
               render: ({ props }: { props: HTMLProps }) => (
                 <button {...props} type="button" disabled>

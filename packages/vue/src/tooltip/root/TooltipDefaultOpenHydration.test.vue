@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue';
 import type { Component } from 'vue';
-import * as Tooltip from '../index.parts';
+import { Tooltip } from '@vase-ui/vue/tooltip';
 
 const props = defineProps<{
   handle?: Tooltip.Handle<unknown> | undefined;
