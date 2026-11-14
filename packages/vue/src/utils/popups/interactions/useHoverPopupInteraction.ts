@@ -1,4 +1,4 @@
-import { computed, toValue } from 'vue';
+import { computed, onMounted, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, WatchSource } from 'vue';
 import { isElement } from '@floating-ui/utils/dom';
 import { addEventListener } from '../../../common/addEventListener';
@@ -64,11 +64,14 @@ export function useHoverPopupInteraction(
     useDomEffect([intent, ...sources], () => run(intent.value));
   }
 
-  useIntentEffect([open], (hoverIntent) => {
+  // A popup can close while `KeepAlive` holds the part, so this effect also runs then.
+  function resetClosedIntent() {
     if (!open.value) {
-      hoverIntent.reset();
+      intent.value.reset();
     }
-  });
+  }
+  onMounted(resetClosedIntent);
+  watch([intent, open], resetClosedIntent, { flush: 'post' });
 
   // The store owns the intent, and the triggers use it too. This part stops what is in flight when
   // it unmounts, when its store changes and when `KeepAlive` deactivates it.
