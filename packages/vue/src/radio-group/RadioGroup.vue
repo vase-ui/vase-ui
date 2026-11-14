@@ -105,6 +105,10 @@ const emit = defineEmits<{
    * `undefined`.
    */
   valueChange: [value: Value, eventDetails: RadioGroupChangeEventDetails];
+  /**
+   * Event handler called after `valueChange` with the new value, unless a listener cancels the
+   * change. `v-model:value` uses it.
+   */
   'update:value': [value: Value];
 }>();
 
