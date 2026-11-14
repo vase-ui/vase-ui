@@ -609,29 +609,38 @@ describe('<OTPField.Root />', () => {
       });
 
       it.each([
-        { name: 'read-only', props: { readOnly: true } },
-        { name: 'disabled', props: { disabled: true } },
-      ])('ignores a code that autofill writes into a $name field', async ({ props }) => {
-        const handleValueChange = vi.fn();
-        const handleValueInvalid = vi.fn();
-        const { container } = await render(
-          <OTPFieldBase.Root
-            length={OTP_LENGTH}
-            name="otp"
-            defaultValue="12"
-            onValueChange={handleValueChange}
-            onValueInvalid={handleValueInvalid}
-            {...props}
-          />,
-        );
-        const hiddenInput = getHiddenInput(container);
+        { name: 'read-only', props: { readOnly: true }, type: 'input' },
+        { name: 'read-only', props: { readOnly: true }, type: 'change' },
+        { name: 'disabled', props: { disabled: true }, type: 'input' },
+        { name: 'disabled', props: { disabled: true }, type: 'change' },
+      ] as const)(
+        'ignores a code that autofill writes two times with `$type` into a $name field',
+        async ({ props, type }) => {
+          const handleValueChange = vi.fn();
+          const handleValueInvalid = vi.fn();
+          const { container } = await render(
+            <OTPFieldBase.Root
+              length={OTP_LENGTH}
+              name="otp"
+              defaultValue="12"
+              onValueChange={handleValueChange}
+              onValueInvalid={handleValueInvalid}
+              {...props}
+            />,
+          );
+          const hiddenInput = getHiddenInput(container);
 
-        await fillHiddenInput(hiddenInput, '12a34b56', ['input']);
+          await fillHiddenInput(hiddenInput, '12a34b56', [type]);
 
-        expect(hiddenInput.value).toBe('12');
-        expect(handleValueChange).not.toHaveBeenCalled();
-        expect(handleValueInvalid).not.toHaveBeenCalled();
-      });
+          expect(hiddenInput.value).toBe('12');
+
+          await fillHiddenInput(hiddenInput, '12a34b56', [type]);
+
+          expect(hiddenInput.value).toBe('12');
+          expect(handleValueChange).not.toHaveBeenCalled();
+          expect(handleValueInvalid).not.toHaveBeenCalled();
+        },
+      );
 
       it('ignores a code that a prevented event reports', async () => {
         const handleValueChange = vi.fn();
